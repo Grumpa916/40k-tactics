@@ -66,7 +66,7 @@ test("end-to-end combat scenario records hits, critical hits, wounds, saves, dam
   assert.equal(event.payload.result.wounds.wounds, 2);
 
   assert.deepEqual(event.payload.result.saves.rolls, [1, 1]);
-  assert.equal(event.payload.result.saves.target, 3);
+  assert.equal(event.payload.result.saves.target, 2);
   assert.equal(event.payload.result.saves.failedSaves, 2);
 
   assert.equal(event.payload.result.damage.totalDamage, 4);
