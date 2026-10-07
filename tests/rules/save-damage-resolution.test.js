@@ -24,7 +24,7 @@ test("damage resolution totals unsaved wound damage", () => {
 });
 
 test("full attack resolution composes attacks, wounds, saves, and damage", () => {
-  const values = [0.5, 0.5, 0.5, 0.5];
+  const values = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
   let index = 0;
   const result = resolveAttack({
     attacks: 2,
