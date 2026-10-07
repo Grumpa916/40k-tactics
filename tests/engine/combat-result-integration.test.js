@@ -82,8 +82,11 @@ test("combat transition carries damage prevention into final target damage", () 
   const target = next.units.find((unit) => unit.id === "t");
   const event = next.history.at(-1);
 
-  assert.equal(target.wounds, 4);
+  assert.equal(event.payload.profile.damagePrevention, 4);
+  assert.equal(event.payload.result.saves.failedSaves, 1);
   assert.equal(event.payload.result.damage.damagePrevention, 4);
+  assert.equal(event.payload.result.damage.damageRolls.length, 3);
+  assert.equal(target.wounds, 4);
   assert.equal(event.payload.result.damage.preventedDamage, 2);
   assert.equal(event.payload.result.damage.totalDamage, 2);
 });
