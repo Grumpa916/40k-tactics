@@ -10,6 +10,12 @@ export function applyTargetModifier(target, modifier = 0, { minimum = 2, maximum
   return Math.min(maximum, Math.max(minimum, target + modifier));
 }
 
+export function applyRollModifier(target, modifier = 0) {
+  normalizeModifier(modifier);
+  const cappedModifier = Math.min(1, Math.max(-1, modifier));
+  return applyTargetModifier(target, cappedModifier);
+}
+
 export function isCriticalHit(roll) {
   if (!Number.isInteger(roll)) throw new TypeError("A roll must be an integer.");
   return roll === 6;
