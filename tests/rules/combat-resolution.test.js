@@ -55,3 +55,29 @@ test("combat resolution rejects invalid inputs", () => {
     random: Math.random
   }), /positive integers/);
 });
+
+test("lethal hits convert critical hits into automatic wounds", () => {
+  const values = [0.99, 0.99, 0.1];
+  let index = 0;
+  const result = resolveAttackRoll({
+    attacks: 3, hitTarget: 4, lethalHits: true,
+    random: () => values[index++]
+  });
+  assert.equal(result.criticalHits, 2);
+  assert.equal(result.regularHits, 2);
+  assert.equal(result.lethalHitWounds, 2);
+  assert.equal(result.normalHitsForWounds, 0);
+});
+
+test("sustained hits add hits from critical hits", () => {
+  const values = [0.99, 0.99, 0.1];
+  let index = 0;
+  const result = resolveAttackRoll({
+    attacks: 3, hitTarget: 4, sustainedHits: 1,
+    random: () => values[index++]
+  });
+  assert.equal(result.criticalHits, 2);
+  assert.equal(result.sustainedHitCount, 2);
+  assert.equal(result.hits, 4);
+  assert.equal(result.normalHitsForWounds, 4);
+});
