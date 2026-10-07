@@ -10,6 +10,7 @@ export function resolveAttack({
   strength,
   toughness,
   woundModifier = 0,
+  devastatingWounds = false,
   save,
   ap = 0,
   saveModifier = 0,
@@ -22,16 +23,19 @@ export function resolveAttack({
     strength,
     toughness,
     woundModifier,
+    devastatingWounds,
     random
   });
   const totalWounds = woundResult.wounds + attackResult.lethalHitWounds;
+  const normalWounds = Math.max(0, totalWounds - woundResult.devastatingWoundCount);
   const saveResult = resolveSaveRoll({
-    wounds: totalWounds,
+    wounds: normalWounds,
     save,
     ap,
     saveModifier,
     random
   });
+  const devastatingDamage = woundResult.devastatingWoundCount * damage;
   const damageResult = resolveDamage({
     failedSaves: saveResult.failedSaves,
     damage
@@ -39,8 +43,18 @@ export function resolveAttack({
 
   return Object.freeze({
     attacks: attackResult,
-    wounds: Object.freeze({ ...woundResult, totalWounds, automaticWounds: attackResult.lethalHitWounds }),
+    wounds: Object.freeze({
+      ...woundResult,
+      totalWounds,
+      automaticWounds: attackResult.lethalHitWounds,
+      normalWounds,
+      devastatingDamage
+    }),
     saves: saveResult,
-    damage: damageResult
+    damage: Object.freeze({
+      ...damageResult,
+      devastatingDamage,
+      totalDamage: damageResult.totalDamage + devastatingDamage
+    })
   });
 }
