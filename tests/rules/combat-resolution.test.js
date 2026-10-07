@@ -81,3 +81,40 @@ test("sustained hits add hits from critical hits", () => {
   assert.equal(result.hits, 4);
   assert.equal(result.normalHitsForWounds, 4);
 });
+
+
+test("hit modifiers expose base and modified targets", () => {
+  const result = resolveAttackRoll({
+    attacks: 0,
+    hitTarget: 4,
+    hitModifier: 1,
+    random: Math.random
+  });
+  assert.equal(result.baseTarget, 4);
+  assert.equal(result.hitModifier, 1);
+  assert.equal(result.modifiedTarget, 5);
+});
+
+test("hit modifiers clamp at six", () => {
+  const result = resolveAttackRoll({
+    attacks: 0,
+    hitTarget: 5,
+    hitModifier: 4,
+    random: Math.random
+  });
+  assert.equal(result.baseTarget, 5);
+  assert.equal(result.modifiedTarget, 6);
+});
+
+test("negative hit modifiers improve the attack threshold", () => {
+  const values = [0.5, 0.66];
+  let i = 0;
+  const result = resolveAttackRoll({
+    attacks: 2,
+    hitTarget: 4,
+    hitModifier: -1,
+    random: () => values[i++]
+  });
+  assert.equal(result.modifiedTarget, 3);
+  assert.equal(result.hits, 2);
+});
