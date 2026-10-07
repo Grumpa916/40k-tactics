@@ -12,7 +12,8 @@ export {
   deployUnit,
   startFirstTurn,
   changePhase,
-  changeActivePlayer,
+  endTurn,
+  advanceBattleRound,
   completeBattle
 } from "./state-transitions.js";
 export { resolveUnitAttack } from "./combat-transitions.js";
