@@ -17,6 +17,45 @@ test("attack resolution uses an explicit hit threshold", () => {
   assert.equal(result.hits, 2);
 });
 
+test("variable attack dice resolve before deterministic hit rolls", () => {
+  const values = [0.34, 0.99, 0, 0.5];
+  let index = 0;
+  const result = resolveAttackRoll({
+    attacks: "D3+1",
+    hitTarget: 4,
+    random: () => values[index++]
+  });
+
+  assert.deepEqual(result.attackCount, {
+    characteristic: "D3+1",
+    rolls: [2],
+    modifier: 1,
+    total: 3
+  });
+  assert.deepEqual(result.rolls, [6, 1, 4]);
+  assert.equal(result.hits, 2);
+});
+
+test("multiple attack dice are summed before hit resolution", () => {
+  const values = [0, 0.99, ...Array(7).fill(0.5)];
+  let index = 0;
+  const result = resolveAttackRoll({
+    attacks: "2D6",
+    hitTarget: 4,
+    random: () => values[index++]
+  });
+
+  assert.deepEqual(result.attackCount.rolls, [1, 6]);
+  assert.equal(result.attackCount.total, 7);
+  assert.equal(result.rolls.length, 7);
+  assert.equal(result.hits, 7);
+});
+
+test("variable attack dice reject unsupported or zero-die expressions", () => {
+  assert.throws(() => resolveAttackRoll({ attacks: "D4", hitTarget: 4, random: Math.random }), /supported dice expression/);
+  assert.throws(() => resolveAttackRoll({ attacks: "0D6", hitTarget: 4, random: Math.random }), /at least one die/);
+});
+
 test("attack resolution supports different Ballistic or Weapon Skill thresholds", () => {
   const randomValues = [0.49, 0.5, 0.99];
   let index = 0;
