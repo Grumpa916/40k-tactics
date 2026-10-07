@@ -32,7 +32,7 @@ test("damage prevention does not alter damage when disabled", () => {
 });
 
 test("damage prevention composes through full attack resolution", () => {
-  const values = [0.5, 0.5, 0.1, 0.1, 0.99, 0.1, 0.99];
+  const values = [0.5, 0.5, 0.1, 0.99, 0.1, 0.99];
   let index = 0;
   const result = resolveAttack({
     attacks: 1,
