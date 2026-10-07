@@ -25,7 +25,11 @@ export function resolveUnitAttack(state, {
     throw new Error("Attacker and target units must be deployed.");
   }
 
-  const profile = buildAttackProfile({ unit: target.profile ?? target, weapon });
+  const profile = buildAttackProfile({
+    attacker: attacker.profile ?? attacker,
+    target: target.profile ?? target,
+    weapon
+  });
   const result = resolveAttack({ ...profile, random });
   const nextWounds = Math.max(0, (target.wounds ?? 0) - result.damage.totalDamage);
   const nextStatus = nextWounds === 0 ? UNIT_STATUS.DESTROYED : target.status;
