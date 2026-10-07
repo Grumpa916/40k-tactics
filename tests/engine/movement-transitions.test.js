@@ -7,6 +7,7 @@ import { resolveNormalMove } from "../../src/engine/movement-transitions.js";
 function movementState(overrides = {}) {
   return createGameState({
     phase: "movement",
+    turn: 1,
     activePlayer: "p1",
     battle: { id: "b1", status: "active", round: 1 },
     units: [createUnit({
@@ -24,30 +25,77 @@ function movementState(overrides = {}) {
   });
 }
 
-test("resolves a Normal Move for every model and records the move", () => {
+test("resolves one move to each model's destination and records the state change", () => {
   const state = movementState();
   const next = resolveNormalMove(state, {
     unitId: "u1",
     moves: [
-      { modelId: "m1", path: [{ x: 3, y: 0 }, { x: 3, y: 2 }] },
-      { modelId: "m2", path: [{ x: 1, y: 4 }] }
+      { modelId: "m1", position: { x: 3, y: 4 } },
+      { modelId: "m2", position: { x: 1, y: 4 } }
     ]
   });
 
-  assert.deepEqual(next.units[0].models, [
-    { id: "m1", position: { x: 3, y: 2 } },
-    { id: "m2", position: { x: 1, y: 4 } }
+  assert.deepEqual(next.units[0].models.map((model) => model.position), [
+    { x: 3, y: 4 },
+    { x: 1, y: 4 }
   ]);
   assert.deepEqual(state.units[0].models[0].position, { x: 0, y: 0 });
   assert.equal(next.history.at(-1).type, "unit.normal_move_resolved");
-  assert.equal(next.history.at(-1).payload.moves[0].movement, 6);
-  assert.deepEqual(next.history.at(-1).payload.moves[0].path, [
-    { x: 0, y: 0 },
-    { x: 3, y: 0 },
-    { x: 3, y: 2 }
-  ]);
+  assert.deepEqual(next.history.at(-1).payload.moves[0], {
+    modelId: "m1",
+    from: { x: 0, y: 0 },
+    to: { x: 3, y: 4 },
+    distance: 5,
+    movement: 6
+  });
 });
 
+test("rejects a destination beyond Movement", () => {
+  assert.throws(() => resolveNormalMove(movementState(), {
+    unitId: "u1",
+    moves: [
+      { modelId: "m1", position: { x: 7, y: 0 } },
+      { modelId: "m2", position: { x: 1, y: 1 } }
+    ]
+  }), /cannot move farther/);
+});
+
+test("rejects incomplete, duplicate, or malformed model destinations", () => {
+  assert.throws(() => resolveNormalMove(movementState(), {
+    unitId: "u1",
+    moves: [{ modelId: "m1", position: { x: 1, y: 0 } }]
+  }), /every model/);
+  assert.throws(() => resolveNormalMove(movementState(), {
+    unitId: "u1",
+    moves: [
+      { modelId: "m1", position: { x: 1, y: 0 } },
+      { modelId: "m1", position: { x: 2, y: 0 } }
+    ]
+  }), /exactly one/);
+  assert.throws(() => resolveNormalMove(movementState(), {
+    unitId: "u1",
+    moves: [
+      { modelId: "m1", position: { x: 1, y: 0 } },
+      { modelId: "m2", position: { x: NaN, y: 0 } }
+    ]
+  }), /valid battlefield position/);
+});
+
+test("enforces active player, deployed status, and Movement phase", () => {
+  const moves = [
+    { modelId: "m1", position: { x: 1, y: 0 } },
+    { modelId: "m2", position: { x: 2, y: 0 } }
+  ];
+  assert.throws(() => resolveNormalMove(movementState({ phase: "shooting" }), {
+    unitId: "u1", moves
+  }), /Movement phase/);
+  assert.throws(() => resolveNormalMove(movementState({ activePlayer: "p2" }), {
+    unitId: "u1", moves
+  }), /active player's/);
+  const undeployed = movementState();
+  undeployed.units[0] = { ...undeployed.units[0], status: UNIT_STATUS.RESERVES };
+  assert.throws(() => resolveNormalMove(undeployed, { unitId: "u1", moves }), /deployed/);
+});
 
 test("uses each model's own Movement characteristic when it differs", () => {
   const state = movementState({
@@ -70,69 +118,28 @@ test("uses each model's own Movement characteristic when it differs", () => {
   const next = resolveNormalMove(state, {
     unitId: "attached",
     moves: [
-      { modelId: "bodyguard", path: [{ x: 4, y: 0 }] },
-      { modelId: "leader", path: [{ x: 6, y: 1 }] }
+      { modelId: "bodyguard", position: { x: 4, y: 0 } },
+      { modelId: "leader", position: { x: 6, y: 1 } }
     ]
   });
   assert.equal(next.history.at(-1).payload.moves[0].movement, 4);
   assert.equal(next.history.at(-1).payload.moves[1].movement, 6);
 });
 
-test("rejects a model path that exceeds Movement even when its endpoint is close", () => {
-  assert.throws(() => resolveNormalMove(movementState(), {
-    unitId: "u1",
-    moves: [
-      { modelId: "m1", path: [{ x: 4, y: 0 }, { x: 0, y: 0 }] },
-      { modelId: "m2", path: [{ x: 1, y: 1 }] }
-    ]
-  }), /cannot move farther/);
-});
-
-test("rejects incomplete, duplicate, or malformed model paths", () => {
-  assert.throws(() => resolveNormalMove(movementState(), {
-    unitId: "u1",
-    moves: [{ modelId: "m1", path: [{ x: 1, y: 0 }] }]
-  }), /every model/);
-  assert.throws(() => resolveNormalMove(movementState(), {
-    unitId: "u1",
-    moves: [
-      { modelId: "m1", path: [{ x: 1, y: 0 }] },
-      { modelId: "m1", path: [{ x: 2, y: 0 }] }
-    ]
-  }), /exactly one/);
-});
-
-test("enforces active player, deployed status, and Movement phase", () => {
-  const moves = [
-    { modelId: "m1", path: [{ x: 1, y: 0 }] },
-    { modelId: "m2", path: [{ x: 2, y: 0 }] }
-  ];
-  assert.throws(() => resolveNormalMove(movementState({ phase: "shooting" }), {
-    unitId: "u1", moves
-  }), /Movement phase/);
-  assert.throws(() => resolveNormalMove(movementState({ activePlayer: "p2" }), {
-    unitId: "u1", moves
-  }), /active player's/);
-  const undeployed = movementState();
-  undeployed.units[0] = { ...undeployed.units[0], status: UNIT_STATUS.RESERVES };
-  assert.throws(() => resolveNormalMove(undeployed, { unitId: "u1", moves }), /deployed/);
-});
-
-
 test("a unit cannot make a second Normal Move in the same turn", () => {
-  const state = movementState({ turn: 4 });
+  const state = movementState();
   const first = resolveNormalMove(state, {
     unitId: "u1",
     moves: [
-      { modelId: "m1", path: [{ x: 1, y: 0 }] },
-      { modelId: "m2", path: [{ x: 2, y: 0 }] }
+      { modelId: "m1", position: { x: 1, y: 0 } },
+      { modelId: "m2", position: { x: 2, y: 0 } }
     ]
   });
   assert.throws(() => resolveNormalMove(first, {
     unitId: "u1",
     moves: [
-      { modelId: "m1", path: [{ x: 2, y: 0 }] },
-      { modelId: "m2", path: [{ x: 3, y: 0 }] }
+      { modelId: "m1", position: { x: 2, y: 0 } },
+      { modelId: "m2", position: { x: 3, y: 0 } }
     ]
   }), /one Normal Move per turn/);
 });
@@ -150,7 +157,7 @@ test("supports legacy single-position units as one-model units", () => {
   });
   const next = resolveNormalMove(state, {
     unitId: "solo",
-    moves: [{ modelId: "solo", path: [{ x: 6, y: 0 }] }]
+    moves: [{ modelId: "solo", position: { x: 6, y: 0 } }]
   });
   assert.deepEqual(next.units[0].position, { x: 6, y: 0 });
 });
