@@ -35,7 +35,7 @@ A battle round contains a start-of-round step, both players' turns, and an end-o
 
 The mission selects the first player for the battle round. After that player's turn ends, the opponent takes a turn. Once both turns end, the battle round ends and the next round begins.
 
-The engine records round and turn boundaries as events. `changePhase` advances one step at a time; `endTurn` records the next player; `advanceBattleRound` starts the next round with the first player.
+The engine records round and turn boundaries as events. `changePhase` advances one step at a time; `endTurn` records the next player; `advanceBattleRound` starts the next round with the first player.\n\n## Movement model\n\nA Normal Move is a command resolved only during the Movement phase for a deployed unit owned by the active player. Unit profiles supply the Movement characteristic. Units hold individual model positions; a legacy single-position unit is treated as a one-model unit. Each model submits an ordered path, and the engine sums segment distances against its Movement characteristic before applying any position changes. A successful unit move records one event.\n\nThis first movement slice validates ownership, phase, unit status, coordinates, path completeness, and movement distance. Board edges, terrain, model bases, engagement range, and unit coherency require additional battlefield geometry and are not inferred from point positions.
 
 ## V1 relationship
 
