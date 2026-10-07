@@ -6,8 +6,12 @@ function positionIsValid(position) {
   return position && Number.isFinite(position.x) && Number.isFinite(position.y);
 }
 
-function movementCharacteristic(unit) {
-  const value = unit.profile?.characteristics?.movement ?? unit.characteristics?.movement;
+function movementCharacteristic(unit, model) {
+  const value = model.profile?.characteristics?.movement ??
+    model.characteristics?.movement ??
+    model.movement ??
+    unit.profile?.characteristics?.movement ??
+    unit.characteristics?.movement;
   const match = typeof value === "string" ? value.match(/^\s*(\d+(?:\.\d+)?)\s*(?:\"|in)?\s*$/i) : null;
   const movement = typeof value === "number" ? value : match ? Number(match[1]) : NaN;
   if (!Number.isFinite(movement) || movement < 0) {
@@ -60,7 +64,6 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   }
 
   const models = getModels(unit);
-  const movement = movementCharacteristic(unit);
   if (!Array.isArray(moves) || moves.length !== models.length) {
     throw new Error("A Normal Move must include a path for every model in the unit.");
   }
@@ -77,6 +80,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   }
 
   const movedModels = models.map((model) => {
+    const movement = movementCharacteristic(unit, model);
     const path = pathsById.get(model.id);
     if (!path) throw new Error("A Normal Move must include a path for every model in the unit.");
     let previous = model.position;
@@ -88,7 +92,13 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     if (distance > movement + 1e-9) {
       throw new Error("A model cannot move farther than its Movement characteristic.");
     }
-    return { id: model.id, position: { ...path.at(-1) } };
+    return {
+      id: model.id,
+      position: { ...path.at(-1) },
+      path: [{ ...model.position }, ...path.map((point) => ({ ...point }))],
+      distance,
+      movement
+    };
   });
 
   const nextUnit = Array.isArray(unit.models) && unit.models.length > 0
@@ -100,8 +110,13 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     phase: state.phase,
     round: state.battle.round,
     turn: state.turn,
-    movement,
-    moves: movedModels.map((model) => ({ modelId: model.id, position: model.position }))
+    moves: movedModels.map((model) => ({
+      modelId: model.id,
+      position: model.position,
+      path: model.path,
+      distance: model.distance,
+      movement: model.movement
+    }))
   });
 
   return appendHistoryEntry({
