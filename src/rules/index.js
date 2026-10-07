@@ -10,6 +10,7 @@ export {
   isMeleeWeapon
 } from "./weapon-rules.js";
 export { resolveAttackRoll, resolveWoundRoll } from "./combat-resolution.js";
+export { normalizeModifier, applyTargetModifier, isCriticalHit } from "./combat-modifiers.js";
 export { resolveSaveRoll, resolveDamage } from "./save-damage-resolution.js";
 export { resolveAttack } from "./attack-resolution.js";
 export { buildAttackProfile } from "./combat-profile.js";
