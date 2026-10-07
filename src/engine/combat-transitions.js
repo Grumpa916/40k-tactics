@@ -2,19 +2,16 @@ import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
+import { buildAttackProfile } from "../rules/combat-profile.js";
 
 export function resolveUnitAttack(state, {
   attackerId,
   targetId,
-  attacks,
-  strength,
-  toughness,
-  save,
-  ap = 0,
-  damage = 1,
+  weapon,
   random
 } = {}) {
   if (!attackerId || !targetId) throw new TypeError("Attacker and target unit ids are required.");
+  if (!weapon) throw new TypeError("A weapon profile is required.");
   if (attackerId === targetId) throw new Error("Attacker and target must be different units.");
   if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
   if (state.phase !== "shooting" && state.phase !== "fight") {
@@ -28,17 +25,18 @@ export function resolveUnitAttack(state, {
     throw new Error("Attacker and target units must be deployed.");
   }
 
-  const result = resolveAttack({ attacks, strength, toughness, save, ap, damage, random });
+  const profile = buildAttackProfile({ unit: target.profile ?? target, weapon });
+  const result = resolveAttack({ ...profile, random });
   const nextWounds = Math.max(0, (target.wounds ?? 0) - result.damage.totalDamage);
   const nextStatus = nextWounds === 0 ? UNIT_STATUS.DESTROYED : target.status;
-  const event = createEvent("combat.attack_resolved", { attackerId, targetId, result });
+  const event = createEvent("combat.attack_resolved", {
+    attackerId, targetId, weaponId: weapon.id, profile, result
+  });
 
   return appendHistoryEntry({
     ...state,
     units: state.units.map((unit) =>
-      unit.id === targetId
-        ? { ...unit, wounds: nextWounds, status: nextStatus }
-        : unit
+      unit.id === targetId ? { ...unit, wounds: nextWounds, status: nextStatus } : unit
     )
   }, event);
 }

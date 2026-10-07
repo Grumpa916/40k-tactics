@@ -12,3 +12,4 @@ export {
 export { resolveAttackRoll, resolveWoundRoll } from "./combat-resolution.js";
 export { resolveSaveRoll, resolveDamage } from "./save-damage-resolution.js";
 export { resolveAttack } from "./attack-resolution.js";
+export { buildAttackProfile } from "./combat-profile.js";
