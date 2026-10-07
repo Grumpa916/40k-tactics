@@ -51,3 +51,31 @@ test("natural sixes are tracked as critical saves", () => {
   const result = resolveSaveRoll({ wounds: 2, save: 4, random: () => values[i++] });
   assert.equal(result.criticalSaves, 1);
 });
+
+test("damage resolution supports deterministic D3 damage", () => {
+  const values = [0.5, 0.1];
+  let index = 0;
+  const result = resolveDamage({
+    failedSaves: 2,
+    damage: "D3",
+    random: () => values[index++]
+  });
+  assert.deepEqual(result.damageValues, [2, 1]);
+  assert.equal(result.totalRawDamage, 3);
+  assert.equal(result.totalDamage, 3);
+});
+
+test("variable damage still applies prevention once per damage point", () => {
+  const values = [0.99, 0.0, 0.99, 0.0, 0.99];
+  let index = 0;
+  const result = resolveDamage({
+    failedSaves: 2,
+    damage: "D3",
+    damagePrevention: 4,
+    random: () => values[index++]
+  });
+  assert.deepEqual(result.damageValues, [3, 1]);
+  assert.equal(result.totalRawDamage, 4);
+  assert.equal(result.preventedDamage, 2);
+  assert.equal(result.totalDamage, 2);
+});
