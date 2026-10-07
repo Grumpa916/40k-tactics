@@ -42,9 +42,9 @@ function getModels(unit) {
 }
 
 /**
- * Resolve a Normal Move using per-model paths. Each path is a sequence of
- * battlefield points after that model's current position; segment lengths are
- * summed so a curved route cannot bypass the Movement characteristic.
+ * Resolve a Normal Move from each model's current position to its destination.
+ * The engine records positions and displacement; presentation may show a
+ * temporary drag path without storing that path in game state or history.
  */
 export function resolveNormalMove(state, { unitId, moves } = {}) {
   if (!unitId) throw new TypeError("Unit id is required.");
@@ -65,43 +65,38 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
 
   const models = getModels(unit);
   if (!Array.isArray(moves) || moves.length !== models.length) {
-    throw new Error("A Normal Move must include a path for every model in the unit.");
+    throw new Error("A Normal Move must include a destination for every model in the unit.");
   }
 
-  const pathsById = new Map();
+  const destinations = new Map();
   for (const move of moves) {
-    if (!move?.modelId || pathsById.has(move.modelId)) {
-      throw new Error("Each model must have exactly one movement path.");
+    if (!move?.modelId || destinations.has(move.modelId)) {
+      throw new Error("Each model must have exactly one movement destination.");
     }
-    if (!Array.isArray(move.path) || move.path.length === 0 || move.path.some((point) => !positionIsValid(point))) {
-      throw new TypeError("Each model movement path must contain valid battlefield points.");
+    if (!positionIsValid(move.position)) {
+      throw new TypeError("Each model movement destination must be a valid battlefield position.");
     }
-    pathsById.set(move.modelId, move.path);
+    destinations.set(move.modelId, move.position);
   }
 
-  const resolvedMoves = [];
+  const moveRecords = [];
   const movedModels = models.map((model) => {
+    const position = destinations.get(model.id);
+    if (!position) throw new Error("A Normal Move must include a destination for every model in the unit.");
     const movement = movementCharacteristic(unit, model);
-    const path = pathsById.get(model.id);
-    if (!path) throw new Error("A Normal Move must include a path for every model in the unit.");
-    let previous = model.position;
-    let distance = 0;
-    for (const point of path) {
-      distance += distanceBetween(previous, point);
-      previous = point;
-    }
+    const distance = distanceBetween(model.position, position);
     if (distance > movement + 1e-9) {
       throw new Error("A model cannot move farther than its Movement characteristic.");
     }
-    const position = { ...path.at(-1) };
-    resolvedMoves.push({
+    const destination = { ...position };
+    moveRecords.push({
       modelId: model.id,
-      position,
-      path: [{ ...model.position }, ...path.map((point) => ({ ...point }))],
+      from: { ...model.position },
+      to: destination,
       distance,
       movement
     });
-    return { ...model, position };
+    return { ...model, position: destination };
   });
 
   const nextUnit = Array.isArray(unit.models) && unit.models.length > 0
@@ -113,7 +108,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     phase: state.phase,
     round: state.battle.round,
     turn: state.turn,
-    moves: resolvedMoves
+    moves: moveRecords
   });
 
   return appendHistoryEntry({
