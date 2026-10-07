@@ -16,6 +16,7 @@ export {
   advanceBattleRound,
   completeBattle
 } from "./state-transitions.js";
+export { resolveNormalMove } from "./movement-transitions.js";
 export { resolveUnitAttack } from "./combat-transitions.js";
 export { registerCoreCommandHandlers } from "./register-core-commands.js";
 export { COMMAND_TYPES, commandTypeList } from "../commands/game-commands.js";
