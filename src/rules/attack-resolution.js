@@ -14,6 +14,8 @@ export function resolveAttack({
   save,
   invulnerableSave = null,
   cover = false,
+  saveReroll = "none",
+  saveRerollCount = null,
   ap = 0,
   saveModifier = 0,
   damage = 1,
@@ -36,6 +38,8 @@ export function resolveAttack({
     save,
     invulnerableSave,
     cover,
+    saveReroll,
+    saveRerollCount,
     ap,
     saveModifier,
     random
