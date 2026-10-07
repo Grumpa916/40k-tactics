@@ -10,6 +10,7 @@ export function resolveAttack({
   woundModifier = 0,
   save,
   ap = 0,
+  saveModifier = 0,
   damage = 1,
   random
 } = {}) {
@@ -25,6 +26,7 @@ export function resolveAttack({
     wounds: woundResult.wounds,
     save,
     ap,
+    saveModifier,
     random
   });
   const damageResult = resolveDamage({
