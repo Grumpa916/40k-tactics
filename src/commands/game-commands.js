@@ -6,7 +6,6 @@ export const COMMAND_TYPES = Object.freeze({
   CHANGE_PHASE: "turn.change_phase",
   END_TURN: "turn.end",
   ADVANCE_BATTLE_ROUND: "battle_round.advance",
-  CHANGE_ACTIVE_PLAYER: "turn.change_active_player",
   COMPLETE_BATTLE: "battle.complete",
   RESOLVE_ATTACK: "combat.resolve_attack"
 });
