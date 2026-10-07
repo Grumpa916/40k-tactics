@@ -9,3 +9,6 @@ export {
   isRangedWeapon,
   isMeleeWeapon
 } from "./weapon-rules.js";
+export { resolveAttackRoll, resolveWoundRoll } from "./combat-resolution.js";
+export { resolveSaveRoll, resolveDamage } from "./save-damage-resolution.js";
+export { resolveAttack } from "./attack-resolution.js";
