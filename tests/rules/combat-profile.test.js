@@ -24,7 +24,8 @@ test("builds a ranged attack profile from attacker, target, and weapon data", ()
     ap: 1,
     damage: 2,
     sustainedHits: 0,
-    lethalHits: false
+    lethalHits: false,
+    devastatingWounds: false
   });
 });
 
