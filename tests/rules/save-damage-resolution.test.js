@@ -81,7 +81,7 @@ test("variable damage still applies prevention once per damage point", () => {
 });
 
 test("invulnerable save is selected when better than modified armour", () => {
-  const values = [0.5, 0.99];
+  const values = [0.0, 0.99];
   let i = 0;
   const result = resolveSaveRoll({
     wounds: 2, save: 6, ap: 0, saveModifier: 2,
