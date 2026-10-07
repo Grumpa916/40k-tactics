@@ -83,7 +83,25 @@ test("enforces active player, deployed status, and Movement phase", () => {
   assert.throws(() => resolveNormalMove(undeployed, { unitId: "u1", moves }), /deployed/);
 });
 
-test("supports legacy single-position units as one-model units", () => {
+
+test("a unit cannot make a second Normal Move in the same turn", () => {
+  const state = movementState({ turn: 4 });
+  const first = resolveNormalMove(state, {
+    unitId: "u1",
+    moves: [
+      { modelId: "m1", path: [{ x: 1, y: 0 }] },
+      { modelId: "m2", path: [{ x: 2, y: 0 }] }
+    ]
+  });
+  assert.throws(() => resolveNormalMove(first, {
+    unitId: "u1",
+    moves: [
+      { modelId: "m1", path: [{ x: 2, y: 0 }] },
+      { modelId: "m2", path: [{ x: 3, y: 0 }] }
+    ]
+  }), /one Normal Move per turn/);
+});
+\ntest("supports legacy single-position units as one-model units", () => {
   const state = movementState({
     units: [createUnit({
       id: "solo",
