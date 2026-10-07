@@ -22,7 +22,14 @@ function distanceBetween(a, b) {
 
 function getModels(unit) {
   if (Array.isArray(unit.models) && unit.models.length > 0) {
-    return unit.models.map((model) => ({ id: model.id, position: model.position }));
+    const ids = new Set();
+    return unit.models.map((model) => {
+      if (!model?.id || ids.has(model.id) || !positionIsValid(model.position)) {
+        throw new Error("Each model must have a unique id and a valid battlefield position.");
+      }
+      ids.add(model.id);
+      return { id: model.id, position: model.position };
+    });
   }
   if (positionIsValid(unit.position)) {
     return [{ id: unit.id, position: unit.position }];
@@ -44,6 +51,13 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   if (!unit) throw new Error("Unit not found: " + unitId);
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may move.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can move.");
+  if (state.history.some((event) =>
+    event.type === "unit.normal_move_resolved" &&
+    event.payload?.unitId === unitId &&
+    event.payload?.turn === state.turn
+  )) {
+    throw new Error("A unit can make only one Normal Move per turn.");
+  }
 
   const models = getModels(unit);
   const movement = movementCharacteristic(unit);
@@ -85,6 +99,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     playerId: state.activePlayer,
     phase: state.phase,
     round: state.battle.round,
+    turn: state.turn,
     movement,
     moves: movedModels.map((model) => ({ modelId: model.id, position: model.position }))
   });
