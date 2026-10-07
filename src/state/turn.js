@@ -6,6 +6,12 @@ export const PHASES = Object.freeze([
   "fight"
 ]);
 
+export const TURN_STEPS = Object.freeze([
+  "start_turn",
+  ...PHASES,
+  "end_turn"
+]);
+
 export function createTurn({ number = 1, activePlayerId, phase = "command" } = {}) {
   if (!activePlayerId) {
     throw new TypeError("An active player is required.");
