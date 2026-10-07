@@ -101,7 +101,8 @@ test("a unit cannot make a second Normal Move in the same turn", () => {
     ]
   }), /one Normal Move per turn/);
 });
-\ntest("supports legacy single-position units as one-model units", () => {
+
+test("supports legacy single-position units as one-model units", () => {
   const state = movementState({
     units: [createUnit({
       id: "solo",
