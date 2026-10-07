@@ -4,3 +4,5 @@ export {
   executeCommand,
   clearCommandHandlers
 } from "./command-engine.js";
+export { appendHistoryEntry, getHistory } from "../state/history.js";
+export { createCommand } from "../commands/command.js";
