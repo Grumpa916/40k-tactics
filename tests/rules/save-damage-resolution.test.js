@@ -36,6 +36,9 @@ test("save modifiers adjust the post-AP target", () => {
   let i = 0;
   const result = resolveSaveRoll({ wounds: 3, save: 4, ap: 1, saveModifier: 1, random: () => values[i++] });
   assert.equal(result.baseTarget, 3);
+  assert.equal(result.armourBaseTarget, 4);
+  assert.equal(result.apModifier, -1);
+  assert.equal(result.postApArmourTarget, 3);
   assert.equal(result.target, 4);
   assert.equal(result.failedSaves, 1);
 });
@@ -149,4 +152,41 @@ test("cover does not modify an invulnerable save", () => {
   assert.equal(result.modifiedArmourTarget, 5);
   assert.equal(result.target, 4);
   assert.equal(result.saveType, "invulnerable");
+});
+
+
+test("defensive armour modifiers compose before save selection", () => {
+  const result = resolveSaveRoll({
+    wounds: 0,
+    save: 5,
+    ap: 1,
+    saveModifier: 1,
+    cover: true,
+    invulnerableSave: 5,
+    random: Math.random
+  });
+  assert.equal(result.armourBaseTarget, 5);
+  assert.equal(result.apModifier, -1);
+  assert.equal(result.postApArmourTarget, 4);
+  assert.equal(result.coverModifier, -1);
+  assert.equal(result.modifiedArmourTarget, 4);
+  assert.equal(result.invulnerableTarget, 5);
+  assert.equal(result.target, 4);
+  assert.equal(result.saveType, "armour");
+});
+
+test("invulnerable selection happens after all armour modifiers", () => {
+  const result = resolveSaveRoll({
+    wounds: 0,
+    save: 3,
+    ap: 0,
+    saveModifier: 1,
+    cover: true,
+    invulnerableSave: 3,
+    random: Math.random
+  });
+  assert.equal(result.modifiedArmourTarget, 3);
+  assert.equal(result.invulnerableTarget, 3);
+  assert.equal(result.target, 3);
+  assert.equal(result.saveType, "armour");
 });
