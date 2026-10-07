@@ -65,18 +65,19 @@ export function resolveWoundRoll({
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
   const baseTarget = strength >= toughness * 2 ? 2 : strength > toughness ? 3 : strength === toughness ? 4 : strength * 2 <= toughness ? 6 : 5;
-  const target = applyTargetModifier(baseTarget, woundModifier);
+  const modifiedTarget = applyTargetModifier(baseTarget, woundModifier);
   const rolls = Array.from({ length: hits }, () => Math.floor(random() * 6) + 1);
   const criticalWounds = rolls.filter((roll) => isCriticalHit(roll)).length;
-  const wounds = rolls.filter((roll) => roll >= target).length;
+  const wounds = rolls.filter((roll) => roll >= modifiedTarget).length;
   const devastatingWoundCount = devastatingWounds ? criticalWounds : 0;
   const normalWounds = Math.max(0, wounds - devastatingWoundCount);
 
   return Object.freeze({
     rolls,
     baseTarget,
-    target,
     woundModifier,
+    modifiedTarget,
+    target: modifiedTarget,
     devastatingWounds,
     criticalWounds,
     wounds,
