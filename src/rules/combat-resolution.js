@@ -14,7 +14,7 @@ export function resolveAttackRoll({
   lethalHits = false,
   random
 }) {
-  const attackDice = typeof attacks === "string" ? /^(\\d*)D([36])(?:\\+(\\d+))?$/.exec(attacks) : null;
+  const attackDice = typeof attacks === "string" ? /^(\d*)D([36])(?:\+(\d+))?$/.exec(attacks) : null;
   if ((!Number.isInteger(attacks) || attacks < 0) && !attackDice) {
     throw new RangeError("Attacks must be a non-negative integer or a supported dice expression.");
   }
