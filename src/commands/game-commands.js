@@ -5,7 +5,8 @@ export const COMMAND_TYPES = Object.freeze({
   START_FIRST_TURN: "turn.start_first",
   CHANGE_PHASE: "turn.change_phase",
   CHANGE_ACTIVE_PLAYER: "turn.change_active_player",
-  COMPLETE_BATTLE: "battle.complete"
+  COMPLETE_BATTLE: "battle.complete",
+  RESOLVE_ATTACK: "combat.resolve_attack"
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));
