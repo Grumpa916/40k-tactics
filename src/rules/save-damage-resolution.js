@@ -1,4 +1,4 @@
-import { applyRollModifier, isCriticalHit } from "./combat-modifiers.js";
+import { isCriticalHit } from "./combat-modifiers.js";
 
 export function resolveSaveRoll({
   wounds,
