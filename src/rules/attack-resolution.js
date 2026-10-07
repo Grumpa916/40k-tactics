@@ -24,8 +24,9 @@ export function resolveAttack({
     woundModifier,
     random
   });
+  const totalWounds = woundResult.wounds + attackResult.lethalHitWounds;
   const saveResult = resolveSaveRoll({
-    wounds: woundResult.wounds,
+    wounds: totalWounds,
     save,
     ap,
     saveModifier,
@@ -38,7 +39,7 @@ export function resolveAttack({
 
   return Object.freeze({
     attacks: attackResult,
-    wounds: woundResult,
+    wounds: Object.freeze({ ...woundResult, totalWounds, automaticWounds: attackResult.lethalHitWounds }),
     saves: saveResult,
     damage: damageResult
   });
