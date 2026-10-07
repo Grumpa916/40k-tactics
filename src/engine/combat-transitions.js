@@ -31,10 +31,26 @@ export function resolveUnitAttack(state, {
     weapon
   });
   const result = resolveAttack({ ...profile, random });
-  const nextWounds = Math.max(0, (target.wounds ?? 0) - result.damage.totalDamage);
-  const nextStatus = nextWounds === 0 ? UNIT_STATUS.DESTROYED : target.status;
+  const previousWounds = target.wounds ?? 0;
+  const nextWounds = Math.max(0, previousWounds - result.damage.totalDamage);
+  const previousStatus = target.status;
+  const nextStatus = nextWounds === 0 ? UNIT_STATUS.DESTROYED : previousStatus;
   const event = createEvent("combat.attack_resolved", {
-    attackerId, targetId, weaponId: weapon.id, profile, result
+    attackerId,
+    targetId,
+    weaponId: weapon.id,
+    phase: state.phase,
+    round: state.battle.round,
+    profile,
+    result,
+    stateDelta: {
+      target: {
+        woundsBefore: previousWounds,
+        woundsAfter: nextWounds,
+        statusBefore: previousStatus,
+        statusAfter: nextStatus
+      }
+    }
   });
 
   return appendHistoryEntry({
