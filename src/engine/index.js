@@ -6,3 +6,12 @@ export {
 } from "./command-engine.js";
 export { appendHistoryEntry, getHistory } from "../state/history.js";
 export { createCommand } from "../commands/command.js";
+export {
+  startBattle,
+  enterDeployment,
+  deployUnit,
+  startFirstTurn,
+  changePhase,
+  changeActivePlayer,
+  completeBattle
+} from "./state-transitions.js";
