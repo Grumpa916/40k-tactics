@@ -43,3 +43,30 @@ test("full attack resolution composes attacks, wounds, saves, and damage", () =>
   assert.equal(result.saves.failedSaves, 2);
   assert.equal(result.damage.totalDamage, 4);
 });
+
+import test from "node:test";
+import assert from "node:assert/strict";
+import { resolveSaveRoll } from "../../src/rules/save-damage-resolution.js";
+
+test("save modifiers adjust the post-AP target", () => {
+  const values = [0.49, 0.5, 0.99];
+  let i = 0;
+  const result = resolveSaveRoll({
+    wounds: 3, save: 4, ap: 1, saveModifier: 1, random: () => values[i++]
+  });
+  assert.equal(result.baseTarget, 3);
+  assert.equal(result.target, 4);
+  assert.equal(result.failedSaves, 1);
+});
+
+test("save modifiers clamp the target", () => {
+  assert.equal(resolveSaveRoll({ wounds: 0, save: 2, ap: 0, saveModifier: -5, random: Math.random }).target, 2);
+  assert.equal(resolveSaveRoll({ wounds: 0, save: 6, ap: -1, saveModifier: 5, random: Math.random }).target, 7);
+});
+
+test("natural sixes are tracked as critical saves", () => {
+  const values = [0.99, 0.5];
+  let i = 0;
+  const result = resolveSaveRoll({ wounds: 2, save: 4, random: () => values[i++] });
+  assert.equal(result.criticalSaves, 1);
+});
