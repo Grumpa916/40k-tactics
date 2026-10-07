@@ -1,10 +1,22 @@
-export function buildAttackProfile({ unit, weapon } = {}) {
-  if (!unit || !unit.characteristics) throw new TypeError("A unit profile is required.");
+export function buildAttackProfile({ attacker, target, weapon } = {}) {
+  if (!attacker || !attacker.characteristics) throw new TypeError("An attacker unit profile is required.");
+  if (!target || !target.characteristics) throw new TypeError("A target unit profile is required.");
   if (!weapon || !weapon.characteristics) throw new TypeError("A weapon profile is required.");
 
+  const attackerCharacteristics = attacker.characteristics;
+  const targetCharacteristics = target.characteristics;
+  const weaponCharacteristics = weapon.characteristics;
+
+  const hitTargetKey = weapon.type === "melee" ? "weaponSkill" : "ballisticSkill";
+  const hitTarget = attackerCharacteristics[hitTargetKey];
+
+  if (hitTarget === undefined) {
+    throw new Error("Attack profile is missing characteristic: " + hitTargetKey);
+  }
+
   const characteristics = {
-    ...unit.characteristics,
-    ...weapon.characteristics
+    ...targetCharacteristics,
+    ...weaponCharacteristics
   };
 
   for (const key of ["attacks", "strength", "toughness", "save", "damage"]) {
@@ -15,6 +27,8 @@ export function buildAttackProfile({ unit, weapon } = {}) {
 
   return Object.freeze({
     attacks: characteristics.attacks,
+    hitTarget,
+    hitTargetKey,
     strength: characteristics.strength,
     toughness: characteristics.toughness,
     save: characteristics.save,
