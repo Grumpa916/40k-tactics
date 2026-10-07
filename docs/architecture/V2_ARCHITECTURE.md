@@ -39,10 +39,11 @@ The engine records round and turn boundaries as events. `changePhase` advances o
 
 ## Movement model
 
-A Normal Move is a command resolved only during the Movement phase for a deployed unit owned by the active player. Unit profiles supply the Movement characteristic. Units hold individual model positions; a legacy single-position unit is treated as a one-model unit. Each model submits an ordered path, and the engine sums segment distances against its Movement characteristic before applying any position changes. A successful unit move records one event.
+A Normal Move is a command resolved during the Movement phase for a deployed unit owned by the active player. The unit holds individual model positions, and each model uses its own Movement characteristic when one is available; otherwise it inherits the unit profile's characteristic. This supports different movement values within one unit, including an attached Leader, without implementing attachment and detachment rules in this slice.
 
-This first movement slice validates ownership, phase, unit status, coordinates, path completeness, and movement distance. Board edges, terrain, model bases, engagement range, and unit coherency require additional battlefield geometry and are not inferred from point positions.
+The command supplies a destination for each model. The engine validates each model's displacement, updates positions, and records the from/to positions and distance in history. A UI may show a temporary drag path, but the core game state does not store or replay the path.
 
+This first movement slice does not model terrain, base shapes, engagement range, or unit coherency.
 ## V1 relationship
 
 Grumpa916/onoforge40k is the behavioral reference and regression oracle.
