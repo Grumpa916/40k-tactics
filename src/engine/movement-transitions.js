@@ -32,7 +32,7 @@ function getModels(unit) {
         throw new Error("Each model must have a unique id and a valid battlefield position.");
       }
       ids.add(model.id);
-      return { id: model.id, position: model.position };
+      return { ...model, position: model.position };
     });
   }
   if (positionIsValid(unit.position)) {
@@ -79,6 +79,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     pathsById.set(move.modelId, move.path);
   }
 
+  const resolvedMoves = [];
   const movedModels = models.map((model) => {
     const movement = movementCharacteristic(unit, model);
     const path = pathsById.get(model.id);
@@ -92,13 +93,15 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     if (distance > movement + 1e-9) {
       throw new Error("A model cannot move farther than its Movement characteristic.");
     }
-    return {
-      id: model.id,
-      position: { ...path.at(-1) },
+    const position = { ...path.at(-1) };
+    resolvedMoves.push({
+      modelId: model.id,
+      position,
       path: [{ ...model.position }, ...path.map((point) => ({ ...point }))],
       distance,
       movement
-    };
+    });
+    return { ...model, position };
   });
 
   const nextUnit = Array.isArray(unit.models) && unit.models.length > 0
@@ -110,13 +113,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     phase: state.phase,
     round: state.battle.round,
     turn: state.turn,
-    moves: movedModels.map((model) => ({
-      modelId: model.id,
-      position: model.position,
-      path: model.path,
-      distance: model.distance,
-      movement: model.movement
-    }))
+    moves: resolvedMoves
   });
 
   return appendHistoryEntry({
