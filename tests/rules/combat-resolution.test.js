@@ -118,3 +118,29 @@ test("negative hit modifiers improve the attack threshold", () => {
   assert.equal(result.modifiedTarget, 3);
   assert.equal(result.hits, 2);
 });
+
+
+test("wound modifiers expose base and modified targets", () => {
+  const result = resolveWoundRoll({
+    hits: 0, strength: 4, toughness: 4, woundModifier: 1, random: Math.random
+  });
+  assert.equal(result.baseTarget, 4);
+  assert.equal(result.woundModifier, 1);
+  assert.equal(result.modifiedTarget, 5);
+  assert.equal(result.target, 5);
+});
+
+test("negative wound modifiers improve the wound threshold", () => {
+  const values = [0.5, 0.66];
+  let i = 0;
+  const result = resolveWoundRoll({
+    hits: 2, strength: 4, toughness: 4, woundModifier: -1, random: () => values[i++]
+  });
+  assert.equal(result.modifiedTarget, 3);
+  assert.equal(result.wounds, 2);
+});
+
+test("wound modifiers clamp at two and six", () => {
+  assert.equal(resolveWoundRoll({hits: 0, strength: 8, toughness: 4, woundModifier: 5, random: Math.random}).modifiedTarget, 6);
+  assert.equal(resolveWoundRoll({hits: 0, strength: 4, toughness: 8, woundModifier: -5, random: Math.random}).modifiedTarget, 2);
+});
