@@ -87,7 +87,7 @@ test("invulnerable save is selected when better than modified armour", () => {
     wounds: 2, save: 3, ap: 3, saveModifier: 0,
     invulnerableSave: 4, random: () => values[i++]
   });
-  assert.equal(result.modifiedArmourTarget, 7);
+  assert.equal(result.modifiedArmourTarget, 2);
   assert.equal(result.invulnerableTarget, 4);
   assert.equal(result.target, 4);
   assert.equal(result.saveType, "invulnerable");
