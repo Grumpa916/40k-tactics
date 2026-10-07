@@ -5,6 +5,7 @@ export function resolveSaveRoll({
   save,
   ap = 0,
   saveModifier = 0,
+  cover = false,
   invulnerableSave = null,
   random
 }) {
@@ -12,13 +13,15 @@ export function resolveSaveRoll({
   if (!Number.isInteger(save) || save < 2 || save > 6) throw new RangeError("Save must be an integer from 2 to 6.");
   if (!Number.isInteger(ap)) throw new RangeError("Armour penetration must be an integer.");
   if (!Number.isInteger(saveModifier)) throw new TypeError("Save modifier must be an integer.");
+  if (typeof cover !== "boolean") throw new TypeError("Cover must be a boolean.");
   if (invulnerableSave !== null && (!Number.isInteger(invulnerableSave) || invulnerableSave < 2 || invulnerableSave > 6)) {
     throw new RangeError("Invulnerable save must be null or an integer from 2 to 6.");
   }
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
   const armourTarget = Math.min(7, Math.max(2, save - ap));
-  const modifiedArmourTarget = Math.min(7, Math.max(2, armourTarget + saveModifier));
+  const coverModifier = cover ? -1 : 0;
+  const modifiedArmourTarget = Math.min(7, Math.max(2, armourTarget + saveModifier + coverModifier));
   const invulnerableTarget = invulnerableSave;
   const usesInvulnerableSave = invulnerableTarget !== null && invulnerableTarget < modifiedArmourTarget;
   const target = usesInvulnerableSave ? invulnerableTarget : modifiedArmourTarget;
@@ -34,6 +37,8 @@ export function resolveSaveRoll({
     saveType,
     ap,
     saveModifier,
+    cover,
+    coverModifier,
     criticalSaves: rolls.filter((roll) => isCriticalHit(roll)).length,
     failedSaves: rolls.filter((roll) => roll < target).length
   });

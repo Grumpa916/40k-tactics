@@ -13,6 +13,7 @@ export function resolveAttack({
   devastatingWounds = false,
   save,
   invulnerableSave = null,
+  cover = false,
   ap = 0,
   saveModifier = 0,
   damage = 1,
@@ -34,6 +35,7 @@ export function resolveAttack({
     wounds: normalWounds,
     save,
     invulnerableSave,
+    cover,
     ap,
     saveModifier,
     random

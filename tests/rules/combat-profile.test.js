@@ -22,6 +22,7 @@ test("builds a ranged attack profile from attacker, target, and weapon data", ()
     toughness: 4,
     save: 3,
     invulnerableSave: null,
+    cover: false,
     ap: 1,
     damage: 2,
     damagePrevention: 0,
