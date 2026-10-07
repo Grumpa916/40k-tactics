@@ -23,6 +23,8 @@ test("builds a ranged attack profile from attacker, target, and weapon data", ()
     save: 3,
     invulnerableSave: null,
     cover: false,
+    saveReroll: "none",
+    saveRerollCount: null,
     ap: 1,
     damage: 2,
     damagePrevention: 0,
@@ -84,4 +86,15 @@ test("rejects incomplete combat data", () => {
     }),
     /missing characteristic: damage/
   );
+});
+
+
+test("exposes save reroll settings from target characteristics", () => {
+  const profile = buildAttackProfile({
+    attacker: { characteristics: { ballisticSkill: 4 } },
+    target: { characteristics: { toughness: 4, save: 4, saveReroll: "failed", saveRerollCount: 1 } },
+    weapon: { type: "ranged", characteristics: { attacks: 1, strength: 4, damage: 1 } }
+  });
+  assert.equal(profile.saveReroll, "failed");
+  assert.equal(profile.saveRerollCount, 1);
 });

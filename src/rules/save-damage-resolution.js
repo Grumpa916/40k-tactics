@@ -7,6 +7,8 @@ export function resolveSaveRoll({
   saveModifier = 0,
   cover = false,
   invulnerableSave = null,
+  saveReroll = "none",
+  saveRerollCount = null,
   random
 }) {
   if (!Number.isInteger(wounds) || wounds < 0) throw new RangeError("Wounds must be a non-negative integer.");
@@ -14,6 +16,8 @@ export function resolveSaveRoll({
   if (!Number.isInteger(ap)) throw new RangeError("Armour penetration must be an integer.");
   if (!Number.isInteger(saveModifier)) throw new TypeError("Save modifier must be an integer.");
   if (typeof cover !== "boolean") throw new TypeError("Cover must be a boolean.");
+  if (!["none", "ones", "failed"].includes(saveReroll)) throw new RangeError("Save reroll must be none, ones, or failed.");
+  if (saveRerollCount !== null && (!Number.isInteger(saveRerollCount) || saveRerollCount < 1)) throw new RangeError("Save reroll count must be null or a positive integer.");
   if (invulnerableSave !== null && (!Number.isInteger(invulnerableSave) || invulnerableSave < 2 || invulnerableSave > 6)) {
     throw new RangeError("Invulnerable save must be null or an integer from 2 to 6.");
   }
@@ -28,10 +32,20 @@ export function resolveSaveRoll({
   const usesInvulnerableSave = invulnerableTarget !== null && invulnerableTarget < modifiedArmourTarget;
   const target = usesInvulnerableSave ? invulnerableTarget : modifiedArmourTarget;
   const saveType = usesInvulnerableSave ? "invulnerable" : "armour";
-  const rolls = Array.from({ length: wounds }, () => Math.floor(random() * 6) + 1);
+  const initialRolls = Array.from({ length: wounds }, () => Math.floor(random() * 6) + 1);
+  const eligibleIndexes = initialRolls.reduce((indexes, roll, index) => {
+    const eligible = saveReroll === "ones" ? roll === 1 : saveReroll === "failed" ? roll < target : false;
+    if (eligible) indexes.push(index);
+    return indexes;
+  }, []);
+  const rerollIndexes = saveRerollCount === null ? eligibleIndexes : eligibleIndexes.slice(0, saveRerollCount);
+  const rerolledIndexes = new Set(rerollIndexes);
+  const rolls = initialRolls.map((roll, index) => rerolledIndexes.has(index) ? Math.floor(random() * 6) + 1 : roll);
 
   return Object.freeze({
     rolls,
+    initialRolls,
+    reroll: Object.freeze({ type: saveReroll, requestedCount: saveRerollCount, eligibleCount: eligibleIndexes.length, rerolledCount: rerollIndexes.length }),
     baseTarget: postApArmourTarget,
     armourBaseTarget,
     apModifier,

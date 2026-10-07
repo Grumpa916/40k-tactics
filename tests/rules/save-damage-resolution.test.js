@@ -190,3 +190,40 @@ test("invulnerable selection happens after all armour modifiers", () => {
   assert.equal(result.target, 3);
   assert.equal(result.saveType, "armour");
 });
+
+
+test("save reroll failed saves rerolls only eligible failures", () => {
+  const values = [0.0, 0.5, 0.99, 0.99];
+  let i = 0;
+  const result = resolveSaveRoll({
+    wounds: 3, save: 4, saveReroll: "failed", random: () => values[i++]
+  });
+  assert.deepEqual(result.initialRolls, [1, 4, 6]);
+  assert.deepEqual(result.rolls, [6, 4, 6]);
+  assert.equal(result.reroll.eligibleCount, 1);
+  assert.equal(result.reroll.rerolledCount, 1);
+  assert.equal(result.failedSaves, 0);
+});
+
+test("save reroll ones supports a deterministic limited count", () => {
+  const values = [0.0, 0.0, 0.99];
+  let i = 0;
+  const result = resolveSaveRoll({
+    wounds: 2, save: 4, saveReroll: "ones", saveRerollCount: 1, random: () => values[i++]
+  });
+  assert.deepEqual(result.initialRolls, [1, 1]);
+  assert.deepEqual(result.rolls, [6, 1]);
+  assert.equal(result.reroll.eligibleCount, 2);
+  assert.equal(result.reroll.rerolledCount, 1);
+});
+
+test("save reroll does not reroll successful saves", () => {
+  const values = [0.99, 0.99];
+  let i = 0;
+  const result = resolveSaveRoll({
+    wounds: 1, save: 4, saveReroll: "failed", random: () => values[i++]
+  });
+  assert.deepEqual(result.initialRolls, [6]);
+  assert.deepEqual(result.rolls, [6]);
+  assert.equal(result.reroll.rerolledCount, 0);
+});
