@@ -1,26 +1,34 @@
-export function resolveAttackRoll({ attacks, hitTarget, random }) {
+import { applyTargetModifier, isCriticalHit } from "./combat-modifiers.js";
+
+export function resolveAttackRoll({ attacks, hitTarget, hitModifier = 0, random }) {
   if (!Number.isInteger(attacks) || attacks < 0) {
     throw new RangeError("Attacks must be a non-negative integer.");
   }
   if (!Number.isInteger(hitTarget) || hitTarget < 2 || hitTarget > 6) {
     throw new RangeError("Hit target must be an integer from 2 to 6.");
   }
+  if (!Number.isInteger(hitModifier)) throw new TypeError("Hit modifier must be an integer.");
   if (typeof random !== "function") {
     throw new TypeError("A random function is required.");
   }
 
+  const modifiedTarget = applyTargetModifier(hitTarget, hitModifier);
   const rolls = Array.from({ length: attacks }, () => Math.floor(random() * 6) + 1);
   return Object.freeze({
     rolls,
     hitTarget,
-    hits: rolls.filter((roll) => roll >= hitTarget).length
+    hitModifier,
+    modifiedTarget,
+    hits: rolls.filter((roll) => roll >= modifiedTarget).length,
+    criticalHits: rolls.filter((roll) => isCriticalHit(roll)).length
   });
 }
 
-export function resolveWoundRoll({ hits, strength, toughness, random }) {
+export function resolveWoundRoll({ hits, strength, toughness, woundModifier = 0, random }) {
   if (!Number.isInteger(hits) || hits < 0) {
     throw new RangeError("Hits must be a non-negative integer.");
   }
+  if (!Number.isInteger(woundModifier)) throw new TypeError("Wound modifier must be an integer.");
   if (!Number.isInteger(strength) || !Number.isInteger(toughness) || strength < 1 || toughness < 1) {
     throw new RangeError("Strength and toughness must be positive integers.");
   }
@@ -28,11 +36,14 @@ export function resolveWoundRoll({ hits, strength, toughness, random }) {
     throw new TypeError("A random function is required.");
   }
 
-  const target = strength >= toughness * 2 ? 2 : strength > toughness ? 3 : strength === toughness ? 4 : strength * 2 <= toughness ? 6 : 5;
+  const baseTarget = strength >= toughness * 2 ? 2 : strength > toughness ? 3 : strength === toughness ? 4 : strength * 2 <= toughness ? 6 : 5;
+  const target = applyTargetModifier(baseTarget, woundModifier);
   const rolls = Array.from({ length: hits }, () => Math.floor(random() * 6) + 1);
   return Object.freeze({
     rolls,
-    wounds: rolls.filter((roll) => roll >= target).length,
-    target
+    baseTarget,
+    target,
+    woundModifier,
+    wounds: rolls.filter((roll) => roll >= target).length
   });
 }
