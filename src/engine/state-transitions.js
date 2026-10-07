@@ -193,18 +193,6 @@ export function advanceBattleRound(state) {
   }));
 }
 
-export function changeActivePlayer(state, { activePlayerId } = {}) {
-  requirePlayer(state, activePlayerId);
-  if (!state.battle || state.battle.status !== BATTLE_STATUS.ACTIVE) {
-    throw new Error("Battle must be active.");
-  }
-  return transition(state, "turn.active_player_changed", { activePlayerId }, (current) => ({
-    ...current,
-    activePlayer: activePlayerId,
-    battle: { ...current.battle, activePlayerId }
-  }));
-}
-
 export function completeBattle(state) {
   if (!state.battle || state.battle.status !== BATTLE_STATUS.ACTIVE) {
     throw new Error("Battle must be active before completion.");
