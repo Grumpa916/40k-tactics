@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { resolveAttack } from "../../src/rules/attack-resolution.js";
 
 test("devastating wounds convert critical wounds into unsavable damage", () => {
-  const values = [0.99, 0.99, 0.99, 0.1];
+  const values = [0.99, 0.99, 0.99, 0.99];
   let index = 0;
 
   const result = resolveAttack({
@@ -28,7 +28,7 @@ test("devastating wounds convert critical wounds into unsavable damage", () => {
 });
 
 test("non-critical wounds still use normal save resolution when devastating wounds are present", () => {
-  const values = [0.1, 0.99, 0.5];
+  const values = [0.1, 0.99, 0.5, 0.1];
   let index = 0;
 
   const result = resolveAttack({
