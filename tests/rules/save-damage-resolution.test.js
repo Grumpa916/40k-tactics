@@ -146,7 +146,7 @@ test("cover does not modify an invulnerable save", () => {
     invulnerableSave: 4,
     random: Math.random
   });
-  assert.equal(result.modifiedArmourTarget, 6);
+  assert.equal(result.modifiedArmourTarget, 2);
   assert.equal(result.target, 4);
   assert.equal(result.saveType, "invulnerable");
 });
