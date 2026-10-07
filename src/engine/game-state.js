@@ -1,16 +1,4 @@
-export const GAME_STATE_VERSION = 1;
-
-export function createGameState(overrides = {}) {
-  return {
-    version: GAME_STATE_VERSION,
-    phase: "setup",
-    turn: 0,
-    activePlayer: null,
-    battle: null,
-    units: [],
-    objectives: [],
-    commandPoints: {},
-    history: [],
-    ...overrides
-  };
-}
+export {
+  GAME_STATE_VERSION,
+  createGameState
+} from "../state/game-state.js";
