@@ -41,20 +41,19 @@ export function resolveDamage({
   }
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
-  const damageRolls = Array.from({ length: failedSaves }, () => {
+  const totalPreventionRolls = failedSaves * damage;
+  const damageRolls = Array.from({ length: totalPreventionRolls }, () => {
     const roll = damagePrevention > 0 ? Math.floor(random() * 6) + 1 : null;
-    return Object.freeze({ roll, damage, prevented: roll !== null && roll >= damagePrevention });
+    return Object.freeze({ roll, prevented: roll !== null && roll >= damagePrevention });
   });
-  const preventedWounds = damageRolls.filter((entry) => entry.prevented).length;
-  const unsavedWounds = failedSaves - preventedWounds;
-  const totalDamage = unsavedWounds * damage;
+  const preventedDamage = damageRolls.filter((entry) => entry.prevented).length;
+  const totalDamage = Math.max(0, totalPreventionRolls - preventedDamage);
 
   return Object.freeze({
     damagePerUnsavedWound: damage,
     damagePrevention,
     damageRolls,
-    preventedWounds,
-    unsavedWounds,
+    preventedDamage,
     totalDamage
   });
 }
