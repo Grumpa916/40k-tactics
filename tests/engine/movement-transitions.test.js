@@ -40,7 +40,42 @@ test("resolves a Normal Move for every model and records the move", () => {
   ]);
   assert.deepEqual(state.units[0].models[0].position, { x: 0, y: 0 });
   assert.equal(next.history.at(-1).type, "unit.normal_move_resolved");
-  assert.equal(next.history.at(-1).payload.movement, 6);
+  assert.equal(next.history.at(-1).payload.moves[0].movement, 6);
+  assert.deepEqual(next.history.at(-1).payload.moves[0].path, [
+    { x: 0, y: 0 },
+    { x: 3, y: 0 },
+    { x: 3, y: 2 }
+  ]);
+});
+
+
+test("uses each model's own Movement characteristic when it differs", () => {
+  const state = movementState({
+    units: [createUnit({
+      id: "attached",
+      ownerId: "p1",
+      name: "Bodyguard and Leader",
+      status: UNIT_STATUS.DEPLOYED,
+      profile: { characteristics: { movement: 4 } },
+      models: [
+        { id: "bodyguard", position: { x: 0, y: 0 } },
+        {
+          id: "leader",
+          position: { x: 0, y: 1 },
+          profile: { characteristics: { movement: "6\"" } }
+        }
+      ]
+    })]
+  });
+  const next = resolveNormalMove(state, {
+    unitId: "attached",
+    moves: [
+      { modelId: "bodyguard", path: [{ x: 4, y: 0 }] },
+      { modelId: "leader", path: [{ x: 6, y: 1 }] }
+    ]
+  });
+  assert.equal(next.history.at(-1).payload.moves[0].movement, 4);
+  assert.equal(next.history.at(-1).payload.moves[1].movement, 6);
 });
 
 test("rejects a model path that exceeds Movement even when its endpoint is close", () => {
