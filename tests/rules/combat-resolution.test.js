@@ -82,7 +82,6 @@ test("sustained hits add hits from critical hits", () => {
   assert.equal(result.normalHitsForWounds, 4);
 });
 
-
 test("hit modifiers expose base and modified targets", () => {
   const result = resolveAttackRoll({
     attacks: 0,
@@ -95,15 +94,24 @@ test("hit modifiers expose base and modified targets", () => {
   assert.equal(result.modifiedTarget, 5);
 });
 
-test("hit modifiers clamp at six", () => {
+test("hit modifiers are capped at plus one", () => {
   const result = resolveAttackRoll({
     attacks: 0,
-    hitTarget: 5,
+    hitTarget: 4,
     hitModifier: 4,
     random: Math.random
   });
-  assert.equal(result.baseTarget, 5);
-  assert.equal(result.modifiedTarget, 6);
+  assert.equal(result.modifiedTarget, 5);
+});
+
+test("negative hit modifiers are capped at minus one", () => {
+  const result = resolveAttackRoll({
+    attacks: 0,
+    hitTarget: 4,
+    hitModifier: -4,
+    random: Math.random
+  });
+  assert.equal(result.modifiedTarget, 3);
 });
 
 test("negative hit modifiers improve the attack threshold", () => {
@@ -118,7 +126,6 @@ test("negative hit modifiers improve the attack threshold", () => {
   assert.equal(result.modifiedTarget, 3);
   assert.equal(result.hits, 2);
 });
-
 
 test("wound modifiers expose base and modified targets", () => {
   const result = resolveWoundRoll({
@@ -140,7 +147,13 @@ test("negative wound modifiers improve the wound threshold", () => {
   assert.equal(result.wounds, 2);
 });
 
-test("wound modifiers clamp at two and six", () => {
-  assert.equal(resolveWoundRoll({hits: 0, strength: 8, toughness: 4, woundModifier: 5, random: Math.random}).modifiedTarget, 6);
-  assert.equal(resolveWoundRoll({hits: 0, strength: 4, toughness: 8, woundModifier: -5, random: Math.random}).modifiedTarget, 2);
+test("wound modifiers are capped at plus or minus one", () => {
+  assert.equal(
+    resolveWoundRoll({hits: 0, strength: 4, toughness: 4, woundModifier: 5, random: Math.random}).modifiedTarget,
+    5
+  );
+  assert.equal(
+    resolveWoundRoll({hits: 0, strength: 4, toughness: 4, woundModifier: -5, random: Math.random}).modifiedTarget,
+    3
+  );
 });

@@ -1,4 +1,4 @@
-import { applyTargetModifier, isCriticalHit } from "./combat-modifiers.js";
+import { applyRollModifier, isCriticalHit } from "./combat-modifiers.js";
 
 function validateExtraHits(value, name) {
   if (!Number.isInteger(value) || value < 0) {
@@ -22,7 +22,7 @@ export function resolveAttackRoll({
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
   const baseTarget = hitTarget;
-  const modifiedTarget = applyTargetModifier(baseTarget, hitModifier);
+  const modifiedTarget = applyRollModifier(baseTarget, hitModifier);
   const rolls = Array.from({ length: attacks }, () => Math.floor(random() * 6) + 1);
   const criticalHits = rolls.filter((roll) => isCriticalHit(roll)).length;
   const regularHits = rolls.filter((roll) => roll >= modifiedTarget).length;
@@ -65,7 +65,7 @@ export function resolveWoundRoll({
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
   const baseTarget = strength >= toughness * 2 ? 2 : strength > toughness ? 3 : strength === toughness ? 4 : strength * 2 <= toughness ? 6 : 5;
-  const modifiedTarget = applyTargetModifier(baseTarget, woundModifier);
+  const modifiedTarget = applyRollModifier(baseTarget, woundModifier);
   const rolls = Array.from({ length: hits }, () => Math.floor(random() * 6) + 1);
   const criticalWounds = rolls.filter((roll) => isCriticalHit(roll)).length;
   const wounds = rolls.filter((roll) => roll >= modifiedTarget).length;
