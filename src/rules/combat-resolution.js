@@ -8,7 +8,6 @@ export function resolveAttackRoll({ attacks, hitTarget, hitModifier = 0, random 
     throw new RangeError("Hit target must be an integer from 2 to 6.");
   }
   if (!Number.isInteger(hitModifier)) throw new TypeError("Hit modifier must be an integer.");
-  if (!Number.isInteger(woundModifier)) throw new TypeError("Wound modifier must be an integer.");
   if (typeof random !== "function") {
     throw new TypeError("A random function is required.");
   }
@@ -29,6 +28,7 @@ export function resolveWoundRoll({ hits, strength, toughness, woundModifier = 0,
   if (!Number.isInteger(hits) || hits < 0) {
     throw new RangeError("Hits must be a non-negative integer.");
   }
+  if (!Number.isInteger(woundModifier)) throw new TypeError("Wound modifier must be an integer.");
   if (!Number.isInteger(strength) || !Number.isInteger(toughness) || strength < 1 || toughness < 1) {
     throw new RangeError("Strength and toughness must be positive integers.");
   }
@@ -44,7 +44,6 @@ export function resolveWoundRoll({ hits, strength, toughness, woundModifier = 0,
     baseTarget,
     target,
     woundModifier,
-    wounds: rolls.filter((roll) => roll >= target).length,
-    target
+    wounds: rolls.filter((roll) => roll >= target).length
   });
 }
