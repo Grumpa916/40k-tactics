@@ -5,6 +5,8 @@ export function resolveAttack({
   attacks,
   hitTarget,
   hitModifier = 0,
+  sustainedHits = 0,
+  lethalHits = false,
   strength,
   toughness,
   woundModifier = 0,
@@ -14,9 +16,9 @@ export function resolveAttack({
   damage = 1,
   random
 } = {}) {
-  const attackResult = resolveAttackRoll({ attacks, hitTarget, hitModifier, random });
+  const attackResult = resolveAttackRoll({ attacks, hitTarget, hitModifier, sustainedHits, lethalHits, random });
   const woundResult = resolveWoundRoll({
-    hits: attackResult.hits,
+    hits: attackResult.normalHitsForWounds,
     strength,
     toughness,
     woundModifier,
