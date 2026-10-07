@@ -18,8 +18,10 @@ test("builds a ranged attack profile from attacker, target, and weapon data", ()
     attacks: 2,
     hitTarget: 3,
     hitTargetKey: "ballisticSkill",
+    hitModifier: 0,
     strength: 8,
     toughness: 4,
+    woundModifier: 0,
     save: 3,
     invulnerableSave: null,
     cover: false,
@@ -97,4 +99,15 @@ test("exposes save reroll settings from target characteristics", () => {
   });
   assert.equal(profile.saveReroll, "failed");
   assert.equal(profile.saveRerollCount, 1);
+});
+
+
+test("exposes hit and wound modifiers from combat characteristics", () => {
+  const profile = buildAttackProfile({
+    attacker: { characteristics: { ballisticSkill: 4 } },
+    target: { characteristics: { toughness: 4, save: 4, hitModifier: 1, woundModifier: -1 } },
+    weapon: { type: "ranged", characteristics: { attacks: 1, strength: 4, damage: 1 } }
+  });
+  assert.equal(profile.hitModifier, 1);
+  assert.equal(profile.woundModifier, -1);
 });
