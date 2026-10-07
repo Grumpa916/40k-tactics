@@ -1,4 +1,6 @@
-export const GAME_STATE_VERSION = 1;
+import { GAME_STATE_VERSION } from "./version.js";
+
+export { GAME_STATE_VERSION };
 
 export function createGameState(overrides = {}) {
   return {
