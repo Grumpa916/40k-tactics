@@ -70,7 +70,7 @@ test("combat transition carries damage prevention into final target damage", () 
     }
   };
 
-  const values = [0.5, 0.5, 0.1, 0.99, 0.1, 0.99];
+  const values = [0.99, 0.99, 0.0, 0.99, 0.1, 0.99];
   let index = 0;
   const next = resolveUnitAttack(state, {
     attackerId: "a",
