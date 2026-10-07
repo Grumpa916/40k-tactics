@@ -80,3 +80,26 @@ test("combat transition records a replayable combat event payload", () => {
     statusAfter: "deployed"
   });
 });
+
+
+test("combat transition preserves data-driven hit, wound, and save modifiers", () => {
+  const state = activeState();
+  const modifiedState = {
+    ...state,
+    units: state.units.map((unit) => unit.id === "target"
+      ? { ...unit, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 4, hitModifier: 0, woundModifier: 1, saveReroll: "failed", saveRerollCount: 1 } } }
+      : unit
+    )
+  };
+  const modifiedWeapon = { ...weapon, characteristics: { ...weapon.characteristics, attacks: 1, damage: 1 } };
+  const values = [0.5, 0.8, 0.0, 0.99];
+  let index = 0;
+  const next = resolveUnitAttack(modifiedState, { attackerId: "attacker", targetId: "target", weapon: modifiedWeapon, random: () => values[index++] });
+  const event = next.history.at(-1);
+  assert.equal(event.payload.profile.hitModifier, 0);
+  assert.equal(event.payload.profile.woundModifier, 1);
+  assert.equal(event.payload.profile.saveReroll, "failed");
+  assert.equal(event.payload.result.wounds.modifiedTarget, 5);
+  assert.equal(event.payload.result.saves.reroll.rerolledCount, 1);
+  assert.equal(event.payload.result.damage.totalDamage, 0);
+});
