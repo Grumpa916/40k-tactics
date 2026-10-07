@@ -15,6 +15,7 @@ export function resolveAttack({
   ap = 0,
   saveModifier = 0,
   damage = 1,
+  damagePrevention = 0,
   random
 } = {}) {
   const attackResult = resolveAttackRoll({ attacks, hitTarget, hitModifier, sustainedHits, lethalHits, random });
@@ -38,7 +39,9 @@ export function resolveAttack({
   const devastatingDamage = woundResult.devastatingWoundCount * damage;
   const damageResult = resolveDamage({
     failedSaves: saveResult.failedSaves,
-    damage
+    damage,
+    damagePrevention,
+    random
   });
 
   return Object.freeze({
