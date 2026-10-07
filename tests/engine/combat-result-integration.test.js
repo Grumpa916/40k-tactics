@@ -115,3 +115,37 @@ test("combat transition carries damage prevention into final target damage", () 
   assert.equal(event.payload.result.damage.preventedDamage, 2);
   assert.equal(event.payload.result.damage.totalDamage, 1);
 });
+
+test("combat transition resolves variable Devastating Wounds damage and prevention", () => {
+  const state = stateWithProfile({});
+  const weapon = {
+    id: "variable-dev-weapon",
+    name: "Variable Dev Weapon",
+    type: "ranged",
+    characteristics: {
+      attacks: 1,
+      strength: 8,
+      damage: "D6",
+      devastatingWounds: true,
+      damagePrevention: 4
+    }
+  };
+  const values = [0.99, 0.99, 0.5, 0.99, 0.1, 0.99, 0.1];
+  let index = 0;
+  const next = resolveUnitAttack(state, {
+    attackerId: "a",
+    targetId: "t",
+    weapon,
+    random: () => values[index++]
+  });
+  const target = next.units.find((unit) => unit.id === "t");
+  const result = next.history.at(-1).payload.result;
+
+  assert.equal(result.wounds.devastatingWoundCount, 1);
+  assert.equal(result.saves.rolls.length, 0);
+  assert.deepEqual(result.damage.devastatingDamageResult.damageValues, [4]);
+  assert.equal(result.damage.devastatingDamageResult.preventedDamage, 2);
+  assert.equal(result.damage.devastatingDamage, 2);
+  assert.equal(result.damage.totalDamage, 2);
+  assert.equal(target.wounds, 4);
+});
