@@ -48,6 +48,26 @@ test("save modifiers clamp the target", () => {
   assert.equal(resolveSaveRoll({ wounds: 0, save: 6, ap: -1, saveModifier: 5, random: Math.random }).target, 7);
 });
 
+test("save modifiers are capped at plus or minus one", () => {
+  const positive = resolveSaveRoll({
+    wounds: 0,
+    save: 4,
+    saveModifier: 5,
+    random: Math.random
+  });
+  assert.equal(positive.appliedSaveModifier, 1);
+  assert.equal(positive.modifiedArmourTarget, 5);
+
+  const negative = resolveSaveRoll({
+    wounds: 0,
+    save: 4,
+    saveModifier: -5,
+    random: Math.random
+  });
+  assert.equal(negative.appliedSaveModifier, -1);
+  assert.equal(negative.modifiedArmourTarget, 3);
+});
+
 test("natural sixes are tracked as critical saves", () => {
   const values = [0.99, 0.5];
   let i = 0;
