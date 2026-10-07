@@ -16,7 +16,7 @@ test("lethal hits bypass wound rolls but still enter save resolution", () => {
   });
 
   assert.equal(result.attacks.lethalHitWounds, 1);
-  assert.equal(result.wounds.rolls.length, 1);
+  assert.equal(result.wounds.rolls.length, 0);
   assert.equal(result.wounds.wounds, 0);
   assert.equal(result.wounds.totalWounds, 1);
   assert.equal(result.saves.rolls.length, 1);
@@ -31,7 +31,7 @@ test("sustained hits increase the number of wound rolls", () => {
     sustainedHits: 1,
     strength: 8,
     toughness: 4,
-    save: 7,
+    save: 6,
     random: () => values[index++]
   });
 
