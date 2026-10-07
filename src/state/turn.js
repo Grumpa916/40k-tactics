@@ -1,0 +1,17 @@
+export const PHASES = Object.freeze([
+  "command",
+  "movement",
+  "shooting",
+  "charge",
+  "fight"
+]);
+
+export function createTurn({ number = 1, activePlayerId, phase = "command" } = {}) {
+  if (!activePlayerId) {
+    throw new TypeError("An active player is required.");
+  }
+  if (!PHASES.includes(phase)) {
+    throw new RangeError("Unknown phase: " + phase);
+  }
+  return { number, activePlayerId, phase };
+}
