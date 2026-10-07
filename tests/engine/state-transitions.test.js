@@ -62,11 +62,14 @@ test("turns resolve in order and both player turns advance the battle round", ()
   state = startBattle(state, { battleId: "b1" });
   state = startFirstTurn(state, { activePlayerId: "p1" });
 
+  assert.throws(() => startFirstTurn(state, { activePlayerId: "missing" }), /Battle must be in deployment/);
   assert.throws(() => changePhase(state, { phase: "movement" }), /resolve in order/);
   assert.throws(() => endTurn(state, { nextActivePlayerId: "p2" }), /reach its end step/);
   assert.throws(() => advanceBattleRound(state), /Both players must finish/);
 
   state = advanceToEndOfTurn(state);
+  assert.throws(() => endTurn(state, { nextActivePlayerId: "p1" }), /other player/);
+  assert.throws(() => endTurn(state, { nextActivePlayerId: "missing" }), /must exist/);
   state = endTurn(state, { nextActivePlayerId: "p2" });
   assert.equal(state.phase, "start_turn");
   assert.equal(state.turn, 2);
