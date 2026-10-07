@@ -19,9 +19,11 @@ export function resolveSaveRoll({
   }
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
-  const armourTarget = Math.min(7, Math.max(2, save - ap));
+  const armourBaseTarget = Math.min(7, Math.max(2, save));
+  const apModifier = -ap;
+  const postApArmourTarget = Math.min(7, Math.max(2, armourBaseTarget + apModifier));
   const coverModifier = cover ? -1 : 0;
-  const modifiedArmourTarget = Math.min(7, Math.max(2, armourTarget + saveModifier + coverModifier));
+  const modifiedArmourTarget = Math.min(7, Math.max(2, postApArmourTarget + saveModifier + coverModifier));
   const invulnerableTarget = invulnerableSave;
   const usesInvulnerableSave = invulnerableTarget !== null && invulnerableTarget < modifiedArmourTarget;
   const target = usesInvulnerableSave ? invulnerableTarget : modifiedArmourTarget;
@@ -30,7 +32,12 @@ export function resolveSaveRoll({
 
   return Object.freeze({
     rolls,
-    baseTarget: armourTarget,
+    baseTarget: postApArmourTarget,
+    armourBaseTarget,
+    apModifier,
+    postApArmourTarget,
+    saveModifier,
+    coverModifier,
     modifiedArmourTarget,
     invulnerableTarget,
     target,
@@ -38,7 +45,6 @@ export function resolveSaveRoll({
     ap,
     saveModifier,
     cover,
-    coverModifier,
     criticalSaves: rolls.filter((roll) => isCriticalHit(roll)).length,
     failedSaves: rolls.filter((roll) => roll < target).length
   });
