@@ -8,8 +8,8 @@ test("combat transition consumes weapon and target data instead of raw attack pa
     phase: "shooting",
     battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
     units: [
-      { id: "a", ownerId: "p1", status: "deployed", wounds: 5, profile: { characteristics: { toughness: 4, save: 3 } } },
-      { id: "t", ownerId: "p2", status: "deployed", wounds: 5, profile: { characteristics: { toughness: 4, save: 3 } } }
+      { id: "a", ownerId: "p1", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } },
+      { id: "t", ownerId: "p2", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } }
     ]
   });
 
