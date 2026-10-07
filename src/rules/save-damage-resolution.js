@@ -28,13 +28,32 @@ export function resolveSaveRoll({
   });
 }
 
-export function resolveDamage({ failedSaves, damage = 1, random = Math.random }) {
+export function resolveDamage({
+  failedSaves,
+  damage = 1,
+  damagePrevention = 0,
+  random = Math.random
+}) {
   if (!Number.isInteger(failedSaves) || failedSaves < 0) throw new RangeError("Failed saves must be a non-negative integer.");
   if (!Number.isInteger(damage) || damage < 1) throw new RangeError("Damage must be a positive integer.");
+  if (!Number.isInteger(damagePrevention) || damagePrevention < 0 || damagePrevention > 6) {
+    throw new RangeError("Damage prevention must be an integer from 0 to 6.");
+  }
   if (typeof random !== "function") throw new TypeError("A random function is required.");
+
+  const totalPreventionRolls = failedSaves * damage;
+  const damageRolls = Array.from({ length: totalPreventionRolls }, () => {
+    const roll = damagePrevention > 0 ? Math.floor(random() * 6) + 1 : null;
+    return Object.freeze({ roll, prevented: roll !== null && roll >= damagePrevention });
+  });
+  const preventedDamage = damageRolls.filter((entry) => entry.prevented).length;
+  const totalDamage = Math.max(0, totalPreventionRolls - preventedDamage);
 
   return Object.freeze({
     damagePerUnsavedWound: damage,
-    totalDamage: failedSaves * damage
+    damagePrevention,
+    damageRolls,
+    preventedDamage,
+    totalDamage
   });
 }
