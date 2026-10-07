@@ -32,7 +32,7 @@ test("combat transition resolves an attack and updates target wounds", () => {
 
 test("combat transition marks a target destroyed when wounds reach zero", () => {
   const state = activeState();
-  const values = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9];
+  const values = [0.9, 0.9, 0.9, 0.9, 0.1, 0.1];
   let index = 0;
   const next = resolveUnitAttack(state, {
     attackerId: "attacker", targetId: "target", attacks: 2,
