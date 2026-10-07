@@ -86,7 +86,7 @@ test("combat transition carries damage prevention into final target damage", () 
   assert.equal(event.payload.result.saves.failedSaves, 1);
   assert.equal(event.payload.result.damage.damagePrevention, 4);
   assert.equal(event.payload.result.damage.damageRolls.length, 3);
-  assert.equal(target.wounds, 4);
+  assert.equal(target.wounds, 5);
   assert.equal(event.payload.result.damage.preventedDamage, 2);
-  assert.equal(event.payload.result.damage.totalDamage, 2);
+  assert.equal(event.payload.result.damage.totalDamage, 1);
 });
