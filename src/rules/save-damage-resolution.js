@@ -28,6 +28,13 @@ export function resolveSaveRoll({
   });
 }
 
+function resolveDamageValue(damage, random) {
+  if (Number.isInteger(damage) && damage >= 1) return { value: damage, roll: null };
+  if (damage === "D3") return { value: Math.floor(random() * 3) + 1, roll: Math.floor(random() * 3) + 1 };
+  if (damage === "D6") return { value: Math.floor(random() * 6) + 1, roll: Math.floor(random() * 6) + 1 };
+  throw new RangeError("Damage must be a positive integer, D3, or D6.");
+}
+
 export function resolveDamage({
   failedSaves,
   damage = 1,
@@ -35,25 +42,29 @@ export function resolveDamage({
   random = Math.random
 }) {
   if (!Number.isInteger(failedSaves) || failedSaves < 0) throw new RangeError("Failed saves must be a non-negative integer.");
-  if (!Number.isInteger(damage) || damage < 1) throw new RangeError("Damage must be a positive integer.");
   if (!Number.isInteger(damagePrevention) || damagePrevention < 0 || damagePrevention > 6) {
     throw new RangeError("Damage prevention must be an integer from 0 to 6.");
   }
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
-  const totalPreventionRolls = failedSaves * damage;
+  const damageResults = Array.from({ length: failedSaves }, () => resolveDamageValue(damage, random));
+  const damageValues = damageResults.map((entry) => entry.value);
+  const totalRawDamage = damageValues.reduce((sum, value) => sum + value, 0);
+  const totalPreventionRolls = totalRawDamage;
   const damageRolls = Array.from({ length: totalPreventionRolls }, () => {
     const roll = damagePrevention > 0 ? Math.floor(random() * 6) + 1 : null;
     return Object.freeze({ roll, prevented: roll !== null && roll >= damagePrevention });
   });
   const preventedDamage = damageRolls.filter((entry) => entry.prevented).length;
-  const totalDamage = Math.max(0, totalPreventionRolls - preventedDamage);
+  const totalDamage = Math.max(0, totalRawDamage - preventedDamage);
 
   return Object.freeze({
     damagePerUnsavedWound: damage,
+    damageValues,
     damagePrevention,
     damageRolls,
     preventedDamage,
+    totalRawDamage,
     totalDamage
   });
 }
