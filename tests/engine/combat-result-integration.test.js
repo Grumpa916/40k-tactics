@@ -56,6 +56,31 @@ test("combat transition carries Devastating Wounds into final target damage", ()
   assert.equal(event.payload.result.saves.rolls.length, 0);
 });
 
+test("combat transition records a resolved variable attack count", () => {
+  const state = stateWithProfile({});
+  const weapon = {
+    id: "variable-attacks",
+    name: "Variable Attacks",
+    type: "ranged",
+    characteristics: { attacks: "D3+1", strength: 8, damage: 1 }
+  };
+  const values = [0, 0.99, 0.99, 0.99, 0.99, 0, 0];
+  let index = 0;
+  const next = resolveUnitAttack(state, {
+    attackerId: "a",
+    targetId: "t",
+    weapon,
+    random: () => values[index++]
+  });
+  const target = next.units.find((unit) => unit.id === "t");
+  const event = next.history.at(-1);
+
+  assert.equal(event.payload.profile.attacks, "D3+1");
+  assert.equal(event.payload.result.attacks.attackCount.total, 2);
+  assert.deepEqual(event.payload.result.attacks.attackCount.rolls, [1]);
+  assert.equal(target.wounds, 4);
+});
+
 test("combat transition carries damage prevention into final target damage", () => {
   const state = stateWithProfile({});
   const weapon = {
