@@ -46,22 +46,39 @@ export function resolveAttackRoll({
   });
 }
 
-export function resolveWoundRoll({ hits, strength, toughness, woundModifier = 0, random }) {
+export function resolveWoundRoll({
+  hits,
+  strength,
+  toughness,
+  woundModifier = 0,
+  devastatingWounds = false,
+  random
+}) {
   if (!Number.isInteger(hits) || hits < 0) throw new RangeError("Hits must be a non-negative integer.");
   if (!Number.isInteger(woundModifier)) throw new TypeError("Wound modifier must be an integer.");
   if (!Number.isInteger(strength) || !Number.isInteger(toughness) || strength < 1 || toughness < 1) {
     throw new RangeError("Strength and toughness must be positive integers.");
   }
+  if (typeof devastatingWounds !== "boolean") throw new TypeError("Devastating wounds must be boolean.");
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
   const baseTarget = strength >= toughness * 2 ? 2 : strength > toughness ? 3 : strength === toughness ? 4 : strength * 2 <= toughness ? 6 : 5;
   const target = applyTargetModifier(baseTarget, woundModifier);
   const rolls = Array.from({ length: hits }, () => Math.floor(random() * 6) + 1);
+  const criticalWounds = rolls.filter((roll) => isCriticalHit(roll)).length;
+  const wounds = rolls.filter((roll) => roll >= target).length;
+  const devastatingWoundCount = devastatingWounds ? criticalWounds : 0;
+  const normalWounds = Math.max(0, wounds - devastatingWoundCount);
+
   return Object.freeze({
     rolls,
     baseTarget,
     target,
     woundModifier,
-    wounds: rolls.filter((roll) => roll >= target).length
+    devastatingWounds,
+    criticalWounds,
+    wounds,
+    devastatingWoundCount,
+    normalWounds
   });
 }
