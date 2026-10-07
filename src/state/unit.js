@@ -11,6 +11,8 @@ export function createUnit({
   status = UNIT_STATUS.RESERVES,
   wounds = null,
   position = null,
+  models = [],
+  profile = null,
   metadata = {}
 } = {}) {
   if (!id || !ownerId || !name) {
@@ -19,5 +21,8 @@ export function createUnit({
   if (!Object.values(UNIT_STATUS).includes(status)) {
     throw new RangeError("Unknown unit status: " + status);
   }
-  return { id, ownerId, name, status, wounds, position, metadata };
+  if (!Array.isArray(models)) {
+    throw new TypeError("Unit models must be an array.");
+  }
+  return { id, ownerId, name, status, wounds, position, models: [...models], profile, metadata };
 }

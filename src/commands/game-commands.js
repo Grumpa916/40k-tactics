@@ -7,6 +7,7 @@ export const COMMAND_TYPES = Object.freeze({
   END_TURN: "turn.end",
   ADVANCE_BATTLE_ROUND: "battle_round.advance",
   COMPLETE_BATTLE: "battle.complete",
+  RESOLVE_NORMAL_MOVE: "unit.normal_move",
   RESOLVE_ATTACK: "combat.resolve_attack"
 });
 

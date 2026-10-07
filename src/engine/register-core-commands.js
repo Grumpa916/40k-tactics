@@ -11,6 +11,7 @@ import {
   completeBattle
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
+import { resolveNormalMove } from "./movement-transitions.js";
 
 export function registerCoreCommandHandlers() {
   const handlers = [
@@ -22,6 +23,8 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.END_TURN, (state, command) => endTurn(state, command.payload)],
     [COMMAND_TYPES.ADVANCE_BATTLE_ROUND, (state) => advanceBattleRound(state)],
     [COMMAND_TYPES.COMPLETE_BATTLE, (state) => completeBattle(state)],
+    [COMMAND_TYPES.RESOLVE_NORMAL_MOVE, (state, command) =>
+      resolveNormalMove(state, command.payload)],
     [COMMAND_TYPES.RESOLVE_ATTACK, (state, command, context) =>
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ]

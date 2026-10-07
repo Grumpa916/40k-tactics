@@ -37,6 +37,13 @@ The mission selects the first player for the battle round. After that player's t
 
 The engine records round and turn boundaries as events. `changePhase` advances one step at a time; `endTurn` records the next player; `advanceBattleRound` starts the next round with the first player.
 
+## Movement model
+
+A Normal Move is a command resolved during the Movement phase for a deployed unit owned by the active player. The unit holds individual model positions, and each model uses its own Movement characteristic when one is available; otherwise it inherits the unit profile's characteristic. This supports different movement values within one unit, including an attached Leader, without implementing attachment and detachment rules in this slice.
+
+The command supplies a destination for each model. The engine validates each model's displacement, updates positions, and records the from/to positions and distance in history. A UI may show a temporary drag path, but the core game state does not store or replay the path.
+
+This first movement slice does not model terrain, base shapes, engagement range, or unit coherency.
 ## V1 relationship
 
 Grumpa916/onoforge40k is the behavioral reference and regression oracle.
