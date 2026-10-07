@@ -79,3 +79,34 @@ test("variable damage still applies prevention once per damage point", () => {
   assert.equal(result.preventedDamage, 2);
   assert.equal(result.totalDamage, 2);
 });
+
+test("invulnerable save is selected when better than modified armour", () => {
+  const values = [0.5, 0.99];
+  let i = 0;
+  const result = resolveSaveRoll({
+    wounds: 2, save: 3, ap: 3, saveModifier: 0,
+    invulnerableSave: 4, random: () => values[i++]
+  });
+  assert.equal(result.modifiedArmourTarget, 7);
+  assert.equal(result.invulnerableTarget, 4);
+  assert.equal(result.target, 4);
+  assert.equal(result.saveType, "invulnerable");
+  assert.equal(result.failedSaves, 1);
+});
+
+test("armour save remains selected when it is equal or better", () => {
+  const result = resolveSaveRoll({
+    wounds: 0, save: 3, ap: 0, invulnerableSave: 4, random: Math.random
+  });
+  assert.equal(result.target, 3);
+  assert.equal(result.saveType, "armour");
+});
+
+test("invulnerable saves are not modified by AP or save modifiers", () => {
+  const result = resolveSaveRoll({
+    wounds: 0, save: 3, ap: 5, saveModifier: 2, invulnerableSave: 4, random: Math.random
+  });
+  assert.equal(result.modifiedArmourTarget, 7);
+  assert.equal(result.target, 4);
+  assert.equal(result.saveType, "invulnerable");
+});
