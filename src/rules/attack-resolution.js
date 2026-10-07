@@ -12,6 +12,7 @@ export function resolveAttack({
   woundModifier = 0,
   devastatingWounds = false,
   save,
+  invulnerableSave = null,
   ap = 0,
   saveModifier = 0,
   damage = 1,
@@ -32,6 +33,7 @@ export function resolveAttack({
   const saveResult = resolveSaveRoll({
     wounds: normalWounds,
     save,
+    invulnerableSave,
     ap,
     saveModifier,
     random
