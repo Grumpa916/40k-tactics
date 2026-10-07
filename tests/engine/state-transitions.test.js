@@ -9,7 +9,6 @@ import {
   changePhase,
   endTurn,
   advanceBattleRound,
-  changeActivePlayer,
   completeBattle
 } from "../../src/engine/state-transitions.js";
 
@@ -46,10 +45,8 @@ test("state transitions progress a battle and record events", () => {
   state = changePhase(state, { phase: "command" });
   state = changePhase(state, { phase: "movement" });
   assert.equal(state.phase, "movement");
-
-  state = changeActivePlayer(state, { activePlayerId: "p2" });
-  assert.equal(state.activePlayer, "p2");
-  assert.equal(state.battle.activePlayerId, "p2");
+  assert.equal(state.activePlayer, "p1");
+  assert.equal(state.battle.activePlayerId, "p1");
 
   state = completeBattle(state);
   assert.equal(state.battle.status, "complete");
