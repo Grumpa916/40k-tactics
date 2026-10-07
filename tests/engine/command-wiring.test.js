@@ -77,6 +77,34 @@ test("turn commands advance both players and start the next battle round", () =>
   clearCommandHandlers();
 });
 
+
+test("normal move command updates per-model positions and records an event", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const state = createGameState({
+    phase: "movement",
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1 },
+    units: [createUnit({
+      id: "u1",
+      ownerId: "p1",
+      name: "Unit 1",
+      status: "deployed",
+      profile: { characteristics: { movement: 6 } },
+      models: [{ id: "m1", position: { x: 0, y: 0 } }]
+    })]
+  });
+
+  const next = executeCommand(state, createCommand(COMMAND_TYPES.RESOLVE_NORMAL_MOVE, {
+    unitId: "u1",
+    moves: [{ modelId: "m1", path: [{ x: 3, y: 4 }] }]
+  }));
+
+  assert.deepEqual(next.units[0].models[0].position, { x: 3, y: 4 });
+  assert.equal(next.history.at(-1).type, "unit.normal_move_resolved");
+  clearCommandHandlers();
+});
+
 test("core command registration rejects duplicate registration", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
