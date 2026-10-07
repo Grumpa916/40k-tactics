@@ -140,13 +140,13 @@ test("cover cannot improve an armour save beyond 2+", () => {
 test("cover does not modify an invulnerable save", () => {
   const result = resolveSaveRoll({
     wounds: 0,
-    save: 4,
-    ap: 3,
+    save: 6,
+    ap: 0,
     cover: true,
     invulnerableSave: 4,
     random: Math.random
   });
-  assert.equal(result.modifiedArmourTarget, 2);
+  assert.equal(result.modifiedArmourTarget, 5);
   assert.equal(result.target, 4);
   assert.equal(result.saveType, "invulnerable");
 });
