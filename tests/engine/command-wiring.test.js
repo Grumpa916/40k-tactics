@@ -7,6 +7,13 @@ import { clearCommandHandlers, executeCommand } from "../../src/engine/command-e
 import { registerCoreCommandHandlers } from "../../src/engine/register-core-commands.js";
 import { COMMAND_TYPES } from "../../src/commands/game-commands.js";
 
+function advanceToEndOfTurn(state) {
+  for (const phase of ["command", "movement", "shooting", "charge", "fight", "end_turn"]) {
+    state = executeCommand(state, createCommand(COMMAND_TYPES.CHANGE_PHASE, { phase }));
+  }
+  return state;
+}
+
 test("core commands execute through the command engine", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
@@ -27,22 +34,47 @@ test("core commands execute through the command engine", () => {
     activePlayerId: "p1"
   }));
   state = executeCommand(state, createCommand(COMMAND_TYPES.CHANGE_PHASE, {
+    phase: "command"
+  }));
+  state = executeCommand(state, createCommand(COMMAND_TYPES.CHANGE_PHASE, {
     phase: "movement"
   }));
 
   assert.equal(state.battle.status, "active");
   assert.equal(state.phase, "movement");
   assert.equal(state.units[0].status, "deployed");
-  assert.equal(state.history.length, 4);
+  assert.equal(state.history.length, 6);
   assert.deepEqual(
     state.history.map((event) => event.type),
     [
       "battle.started",
       "unit.deployed",
+      "battle.round_started",
       "turn.started",
+      "turn.phase_changed",
       "turn.phase_changed"
     ]
   );
+});
+
+test("turn commands advance both players and start the next battle round", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+
+  let state = createGameState({ players: [{ id: "p1" }, { id: "p2" }] });
+  state = executeCommand(state, createCommand(COMMAND_TYPES.START_BATTLE, { battleId: "b1" }));
+  state = executeCommand(state, createCommand(COMMAND_TYPES.START_FIRST_TURN, { activePlayerId: "p1" }));
+  state = advanceToEndOfTurn(state);
+  state = executeCommand(state, createCommand(COMMAND_TYPES.END_TURN, { nextActivePlayerId: "p2" }));
+  state = advanceToEndOfTurn(state);
+  state = executeCommand(state, createCommand(COMMAND_TYPES.END_TURN, { nextActivePlayerId: "p1" }));
+  state = executeCommand(state, createCommand(COMMAND_TYPES.ADVANCE_BATTLE_ROUND));
+
+  assert.equal(state.battle.round, 2);
+  assert.equal(state.turn, 3);
+  assert.equal(state.phase, "start_turn");
+  assert.equal(state.activePlayer, "p1");
+  clearCommandHandlers();
 });
 
 test("core command registration rejects duplicate registration", () => {
