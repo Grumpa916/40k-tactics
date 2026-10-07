@@ -30,8 +30,14 @@ export function resolveSaveRoll({
 
 function resolveDamageValue(damage, random) {
   if (Number.isInteger(damage) && damage >= 1) return { value: damage, roll: null };
-  if (damage === "D3") return { value: Math.floor(random() * 3) + 1, roll: Math.floor(random() * 3) + 1 };
-  if (damage === "D6") return { value: Math.floor(random() * 6) + 1, roll: Math.floor(random() * 6) + 1 };
+  if (damage === "D3") {
+    const roll = Math.floor(random() * 3) + 1;
+    return { value: roll, roll };
+  }
+  if (damage === "D6") {
+    const roll = Math.floor(random() * 6) + 1;
+    return { value: roll, roll };
+  }
   throw new RangeError("Damage must be a positive integer, D3, or D6.");
 }
 
