@@ -21,7 +21,8 @@ export function resolveAttackRoll({
   if (typeof lethalHits !== "boolean") throw new TypeError("Lethal hits must be boolean.");
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
-  const modifiedTarget = applyTargetModifier(hitTarget, hitModifier);
+  const baseTarget = hitTarget;
+  const modifiedTarget = applyTargetModifier(baseTarget, hitModifier);
   const rolls = Array.from({ length: attacks }, () => Math.floor(random() * 6) + 1);
   const criticalHits = rolls.filter((roll) => isCriticalHit(roll)).length;
   const regularHits = rolls.filter((roll) => roll >= modifiedTarget).length;
@@ -33,6 +34,7 @@ export function resolveAttackRoll({
   return Object.freeze({
     rolls,
     hitTarget,
+    baseTarget,
     hitModifier,
     modifiedTarget,
     sustainedHits,
