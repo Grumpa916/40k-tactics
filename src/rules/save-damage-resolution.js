@@ -26,8 +26,9 @@ export function resolveSaveRoll({
   const armourBaseTarget = Math.min(7, Math.max(2, save));
   const apModifier = -ap;
   const postApArmourTarget = Math.min(7, Math.max(2, armourBaseTarget + apModifier));
+  const appliedSaveModifier = Math.min(1, Math.max(-1, saveModifier));
   const coverModifier = cover ? -1 : 0;
-  const modifiedArmourTarget = Math.min(7, Math.max(2, postApArmourTarget + saveModifier + coverModifier));
+  const modifiedArmourTarget = Math.min(7, Math.max(2, postApArmourTarget + appliedSaveModifier + coverModifier));
   const invulnerableTarget = invulnerableSave;
   const usesInvulnerableSave = invulnerableTarget !== null && invulnerableTarget < modifiedArmourTarget;
   const target = usesInvulnerableSave ? invulnerableTarget : modifiedArmourTarget;
@@ -51,13 +52,13 @@ export function resolveSaveRoll({
     apModifier,
     postApArmourTarget,
     saveModifier,
+    appliedSaveModifier,
     coverModifier,
     modifiedArmourTarget,
     invulnerableTarget,
     target,
     saveType,
     ap,
-    saveModifier,
     cover,
     criticalSaves: rolls.filter((roll) => isCriticalHit(roll)).length,
     failedSaves: rolls.filter((roll) => roll < target).length
