@@ -36,6 +36,18 @@ test("builds a ranged attack profile from attacker, target, and weapon data", ()
   });
 });
 
+test("preserves variable attack characteristics from weapon data", () => {
+  const profile = buildAttackProfile({
+    attacker: { characteristics: { ballisticSkill: 4 } },
+    target,
+    weapon: {
+      type: "ranged",
+      characteristics: { attacks: "D6+1", strength: 4, damage: 1 }
+    }
+  });
+  assert.equal(profile.attacks, "D6+1");
+});
+
 test("melee attacks use Weapon Skill", () => {
   const profile = buildAttackProfile({
     attacker: { characteristics: { weaponSkill: 4 } },
