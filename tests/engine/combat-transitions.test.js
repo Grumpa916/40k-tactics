@@ -54,3 +54,29 @@ test("combat transition rejects attacks outside combat phases", () => {
     /shooting or fight/
   );
 });
+
+test("combat transition records a replayable combat event payload", () => {
+  const state = activeState();
+  const values = [0.9, 0.9, 0.9, 0.9, 0.1, 0.1];
+  let index = 0;
+  const next = resolveUnitAttack(state, {
+    attackerId: "attacker", targetId: "target", weapon,
+    random: () => values[index++]
+  });
+  const event = next.history.at(-1);
+
+  assert.equal(event.type, "combat.attack_resolved");
+  assert.equal(event.payload.attackerId, "attacker");
+  assert.equal(event.payload.targetId, "target");
+  assert.equal(event.payload.weaponId, "laser");
+  assert.equal(event.payload.phase, "shooting");
+  assert.equal(event.payload.round, 1);
+  assert.equal(event.payload.profile.damage, 2);
+  assert.equal(event.payload.result.damage.totalDamage, 4);
+  assert.deepEqual(event.payload.stateDelta.target, {
+    woundsBefore: 5,
+    woundsAfter: 1,
+    statusBefore: "deployed",
+    statusAfter: "deployed"
+  });
+});
