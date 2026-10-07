@@ -97,7 +97,7 @@ test("normal move command updates per-model positions and records an event", () 
 
   const next = executeCommand(state, createCommand(COMMAND_TYPES.RESOLVE_NORMAL_MOVE, {
     unitId: "u1",
-    moves: [{ modelId: "m1", path: [{ x: 3, y: 4 }] }]
+    moves: [{ modelId: "m1", position: { x: 3, y: 4 } }]
   }));
 
   assert.deepEqual(next.units[0].models[0].position, { x: 3, y: 4 });
