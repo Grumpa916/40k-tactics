@@ -28,11 +28,11 @@ test("devastating wounds convert critical wounds into unsavable damage", () => {
 });
 
 test("non-critical wounds still use normal save resolution when devastating wounds are present", () => {
-  const values = [0.1, 0.99, 0.5, 0.1];
+  const values = [0.5, 0.5, 0.1];
   let index = 0;
 
   const result = resolveAttack({
-    attacks: 2,
+    attacks: 1,
     hitTarget: 4,
     strength: 8,
     toughness: 4,
@@ -44,9 +44,10 @@ test("non-critical wounds still use normal save resolution when devastating woun
   });
 
   assert.equal(result.attacks.hits, 1);
-  assert.equal(result.wounds.criticalWounds, 1);
-  assert.equal(result.wounds.devastatingWoundCount, 1);
-  assert.equal(result.saves.rolls.length, 0);
+  assert.equal(result.wounds.criticalWounds, 0);
+  assert.equal(result.wounds.devastatingWoundCount, 0);
+  assert.equal(result.saves.rolls.length, 1);
+  assert.equal(result.saves.failedSaves, 1);
   assert.equal(result.damage.totalDamage, 2);
 });
 
