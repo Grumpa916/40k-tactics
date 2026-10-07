@@ -1,26 +1,37 @@
-import { applyTargetModifier, isCriticalHit } from "./combat-modifiers.js";
+import { isCriticalHit } from "./combat-modifiers.js";
 
 export function resolveSaveRoll({
   wounds,
   save,
   ap = 0,
   saveModifier = 0,
+  invulnerableSave = null,
   random
 }) {
   if (!Number.isInteger(wounds) || wounds < 0) throw new RangeError("Wounds must be a non-negative integer.");
   if (!Number.isInteger(save) || save < 2 || save > 6) throw new RangeError("Save must be an integer from 2 to 6.");
   if (!Number.isInteger(ap)) throw new RangeError("Armour penetration must be an integer.");
   if (!Number.isInteger(saveModifier)) throw new TypeError("Save modifier must be an integer.");
+  if (invulnerableSave !== null && (!Number.isInteger(invulnerableSave) || invulnerableSave < 2 || invulnerableSave > 6)) {
+    throw new RangeError("Invulnerable save must be null or an integer from 2 to 6.");
+  }
   if (typeof random !== "function") throw new TypeError("A random function is required.");
 
   const armourTarget = Math.min(7, Math.max(2, save - ap));
-  const target = Math.min(7, Math.max(2, armourTarget + saveModifier));
+  const modifiedArmourTarget = Math.min(7, Math.max(2, armourTarget + saveModifier));
+  const invulnerableTarget = invulnerableSave;
+  const usesInvulnerableSave = invulnerableTarget !== null && invulnerableTarget < modifiedArmourTarget;
+  const target = usesInvulnerableSave ? invulnerableTarget : modifiedArmourTarget;
+  const saveType = usesInvulnerableSave ? "invulnerable" : "armour";
   const rolls = Array.from({ length: wounds }, () => Math.floor(random() * 6) + 1);
 
   return Object.freeze({
     rolls,
     baseTarget: armourTarget,
+    modifiedArmourTarget,
+    invulnerableTarget,
     target,
+    saveType,
     ap,
     saveModifier,
     criticalSaves: rolls.filter((roll) => isCriticalHit(roll)).length,
