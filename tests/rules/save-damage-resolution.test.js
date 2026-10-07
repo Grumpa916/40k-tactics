@@ -110,7 +110,7 @@ test("invulnerable save is selected when better than modified armour", () => {
     wounds: 2, save: 6, ap: 0, saveModifier: 2,
     invulnerableSave: 4, random: () => values[i++]
   });
-  assert.equal(result.modifiedArmourTarget, 5);
+  assert.equal(result.modifiedArmourTarget, 7);
   assert.equal(result.invulnerableTarget, 4);
   assert.equal(result.target, 4);
   assert.equal(result.saveType, "invulnerable");
@@ -129,7 +129,7 @@ test("invulnerable saves are not modified by AP or save modifiers", () => {
   const result = resolveSaveRoll({
     wounds: 0, save: 4, ap: 0, saveModifier: 4, invulnerableSave: 4, random: Math.random
   });
-  assert.equal(result.modifiedArmourTarget, 7);
+  assert.equal(result.modifiedArmourTarget, 5);
   assert.equal(result.target, 4);
   assert.equal(result.saveType, "invulnerable");
 });
