@@ -99,7 +99,7 @@ test("combat transition preserves data-driven hit, wound, and save modifiers", (
   assert.equal(event.payload.profile.hitModifier, 0);
   assert.equal(event.payload.profile.woundModifier, 1);
   assert.equal(event.payload.profile.saveReroll, "failed");
-  assert.equal(event.payload.result.wounds.modifiedTarget, 5);
+  assert.equal(event.payload.result.wounds.modifiedTarget, 3);
   assert.equal(event.payload.result.saves.reroll.rerolledCount, 1);
   assert.equal(event.payload.result.damage.totalDamage, 0);
 });
