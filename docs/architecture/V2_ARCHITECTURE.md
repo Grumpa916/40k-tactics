@@ -17,6 +17,26 @@ User action -> Command -> Validation -> State transition -> Event/history -> UI 
 7. Infrastructure adapters such as Supabase remain outside the engine.
 8. Browser/UI code may depend on the application layer, but the engine must not depend on DOM APIs.
 
+## Rules edition
+
+V2 targets the Warhammer 40,000 11th edition core rules. V1 remains a behavioral reference, but any behavior carried forward must be checked against the V2 edition target.
+
+## Battle round and turn flow
+
+A battle round contains a start-of-round step, both players' turns, and an end-of-round step. Each player's turn contains a start-of-turn step, the five ordered phases, and an end-of-turn step:
+
+1. Start of Turn
+2. Command
+3. Movement
+4. Shooting
+5. Charge
+6. Fight
+7. End of Turn
+
+The mission selects the first player for the battle round. After that player's turn ends, the opponent takes a turn. Once both turns end, the battle round ends and the next round begins.
+
+The engine records round and turn boundaries as events. `changePhase` advances one step at a time; `endTurn` records the next player; `advanceBattleRound` starts the next round with the first player.
+
 ## V1 relationship
 
 Grumpa916/onoforge40k is the behavioral reference and regression oracle.
