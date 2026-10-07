@@ -28,6 +28,7 @@ test("full attack resolution composes attacks, wounds, saves, and damage", () =>
   let index = 0;
   const result = resolveAttack({
     attacks: 2,
+    hitTarget: 4,
     strength: 8,
     toughness: 4,
     save: 4,

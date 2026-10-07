@@ -3,6 +3,7 @@ import { resolveSaveRoll, resolveDamage } from "./save-damage-resolution.js";
 
 export function resolveAttack({
   attacks,
+  hitTarget,
   strength,
   toughness,
   save,
@@ -10,7 +11,7 @@ export function resolveAttack({
   damage = 1,
   random
 } = {}) {
-  const attackResult = resolveAttackRoll({ attacks, random });
+  const attackResult = resolveAttackRoll({ attacks, hitTarget, random });
   const woundResult = resolveWoundRoll({
     hits: attackResult.hits,
     strength,

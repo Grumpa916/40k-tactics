@@ -1,6 +1,9 @@
-export function resolveAttackRoll({ attacks, random }) {
+export function resolveAttackRoll({ attacks, hitTarget, random }) {
   if (!Number.isInteger(attacks) || attacks < 0) {
     throw new RangeError("Attacks must be a non-negative integer.");
+  }
+  if (!Number.isInteger(hitTarget) || hitTarget < 2 || hitTarget > 6) {
+    throw new RangeError("Hit target must be an integer from 2 to 6.");
   }
   if (typeof random !== "function") {
     throw new TypeError("A random function is required.");
@@ -9,7 +12,8 @@ export function resolveAttackRoll({ attacks, random }) {
   const rolls = Array.from({ length: attacks }, () => Math.floor(random() * 6) + 1);
   return Object.freeze({
     rolls,
-    hits: rolls.filter((roll) => roll >= 4).length
+    hitTarget,
+    hits: rolls.filter((roll) => roll >= hitTarget).length
   });
 }
 
