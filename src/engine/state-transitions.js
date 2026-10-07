@@ -57,8 +57,15 @@ export function deployUnit(state, { unitId, position } = {}) {
   }));
 }
 
+function requirePlayer(state, playerId) {
+  if (!playerId) throw new TypeError("An active player is required.");
+  if (state.players.length > 0 && !state.players.some((player) => player.id === playerId)) {
+    throw new Error("Active player must exist in the game state.");
+  }
+}
+
 export function startFirstTurn(state, { activePlayerId } = {}) {
-  if (!activePlayerId) throw new TypeError("An active player is required.");
+  requirePlayer(state, activePlayerId);
   if (!state.battle || state.battle.status !== BATTLE_STATUS.DEPLOYMENT) {
     throw new Error("Battle must be in deployment before the first turn.");
   }
@@ -105,13 +112,6 @@ export function changePhase(state, { phase } = {}) {
   }));
 }
 
-function requirePlayer(state, playerId) {
-  if (!playerId) throw new TypeError("An active player is required.");
-  if (state.players.length > 0 && !state.players.some((player) => player.id === playerId)) {
-    throw new Error("Active player must exist in the game state.");
-  }
-}
-
 export function endTurn(state, { nextActivePlayerId } = {}) {
   if (!state.battle || state.battle.status !== BATTLE_STATUS.ACTIVE) {
     throw new Error("Battle must be active.");
@@ -122,6 +122,12 @@ export function endTurn(state, { nextActivePlayerId } = {}) {
   requirePlayer(state, nextActivePlayerId);
   if (nextActivePlayerId === state.activePlayer) {
     throw new Error("The next turn must belong to the other player.");
+  }
+  if (state.players.length === 2) {
+    const opponent = state.players.find((player) => player.id !== state.activePlayer);
+    if (nextActivePlayerId !== opponent?.id) {
+      throw new Error("The next turn must belong to the opponent.");
+    }
   }
   if (!state.battle.firstPlayerId) {
     throw new Error("The first player for this battle round is not set.");
