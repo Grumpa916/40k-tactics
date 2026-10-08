@@ -5,6 +5,7 @@ import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getFightCandidates } from "../rules/fight-candidates.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
+import { createObjectiveState } from "../rules/objective-control-state.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -83,12 +84,12 @@ export function recordObjectiveControl(state, {
   for (const playerId of contestingPlayerIds) requirePlayer(state, playerId);
   if (controllerId) requirePlayer(state, controllerId);
 
-  const control = {
+  const control = createObjectiveState({
     id: objectiveId,
     controllerId,
-    contestingPlayerIds: [...new Set(contestingPlayerIds.filter(Boolean))],
+    contestingPlayerIds,
     controlState
-  };
+  });
 
   return transition(state, "objective.control_recorded", control, (current) => ({
     ...current,
