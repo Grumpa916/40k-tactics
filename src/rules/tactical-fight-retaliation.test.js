@@ -77,7 +77,7 @@ test("does not invent retaliation when no authoritative engagement exists", () =
         ownerId: "p1",
         status: "deployed",
         wounds: 8,
-        characteristics: { weaponSkill: 3 }
+        characteristics: { weaponSkill: 3, toughness: 4, save: 4 }
       },
       {
         id: "enemy",
