@@ -68,6 +68,9 @@ export function getShootingTargetPriorities(state, {
     // future exceptions should be supplied by authoritative unit/rule data.
     if (engaged) continue;
 
+    // Keep one coarse bucket beyond range as borderline; screen farther targets.
+    if (range != null && proximity.distance > range + RANGE_UNCERTAINTY_MARGIN) continue;
+
     let priority = proximityScore(proximity.band);
     priority += rangeScore(proximity.distance, range);
 
