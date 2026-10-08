@@ -1,6 +1,7 @@
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { getFightCandidates } from "../rules/fight-candidates.js";
 
 export function recordFightActivation(state, { unitId } = {}) {
   if (!unitId) throw new TypeError("Fight activation unit id is required.");
