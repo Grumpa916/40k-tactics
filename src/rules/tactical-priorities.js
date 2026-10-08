@@ -1,0 +1,72 @@
+import { getCombatHistorySummary } from "./combat-history-summary.js";
+import { getSpatialContext } from "./spatial-context.js";
+
+function unitById(state, unitId) {
+  return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
+}
+
+export function getTacticalPriorities(state, { playerId } = {}) {
+  if (!playerId) throw new TypeError("playerId is required.");
+
+  const combat = getCombatHistorySummary(state, { playerId });
+  const spatial = getSpatialContext(state, { playerId });
+  const priorities = [];
+
+  for (const unitSummary of combat.units) {
+    if (unitSummary.destroyed) continue;
+
+    if (unitSummary.chargesReceived.length > 0 || unitSummary.engagedWith.length > 0) {
+      priorities.push({
+        type: "engagement",
+        priority: 3,
+        unitId: unitSummary.unitId,
+        reason: unitSummary.engagedWith.length > 0
+          ? "Unit is currently engaged in Fight."
+          : "Unit was charged by an opponent."
+      });
+    }
+
+    if (unitSummary.damageTaken > 0) {
+      priorities.push({
+        type: "survival",
+        priority: 2,
+        unitId: unitSummary.unitId,
+        reason: "Unit has taken damage from the opponent."
+      });
+    }
+  }
+
+  for (const proximity of spatial.unitProximity) {
+    const other = unitById(state, proximity.otherUnitId);
+    if (!other || other.ownerId === playerId) continue;
+    if (proximity.band === "close" || proximity.band === "near") {
+      priorities.push({
+        type: "threat",
+        priority: proximity.band === "close" ? 3 : 2,
+        unitId: proximity.unitId,
+        targetUnitId: proximity.otherUnitId,
+        reason: "Enemy unit is approximately " + proximity.distance + " inches away."
+      });
+    }
+  }
+
+  for (const objective of spatial.objectiveProximity) {
+    if (objective.band === "close" || objective.band === "near") {
+      priorities.push({
+        type: "objective",
+        priority: objective.band === "close" ? 3 : 2,
+        unitId: objective.unitId,
+        objectiveId: objective.objectiveId,
+        reason: "Unit is approximately " + objective.distance + " inches from the objective."
+      });
+    }
+  }
+
+  priorities.sort((a, b) => b.priority - a.priority);
+
+  return {
+    playerId,
+    phase: state?.phase ?? null,
+    priorities
+  };
+}
