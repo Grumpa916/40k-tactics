@@ -41,8 +41,63 @@ test("returns Fight context, candidates, and completion availability", () => {
       normal: ["u2"],
       activated: []
     },
+    activations: [],
     canComplete: false
   });
+});
+
+test("returns current-turn Fight activations in event order", () => {
+  const state = fightState({
+    history: [
+      {
+        type: "fight.unit_activated",
+        payload: {
+          unitId: "u2",
+          playerId: "p2",
+          round: 2,
+          turn: 4,
+          fightsFirst: false
+        }
+      },
+      {
+        type: "fight.unit_activated",
+        payload: {
+          unitId: "u1",
+          playerId: "p1",
+          round: 2,
+          turn: 4,
+          fightsFirst: true
+        }
+      },
+      {
+        type: "fight.unit_activated",
+        payload: {
+          unitId: "u1",
+          playerId: "p1",
+          round: 1,
+          turn: 3,
+          fightsFirst: false
+        }
+      }
+    ]
+  });
+
+  assert.deepEqual(getFightState(state).activations, [
+    {
+      unitId: "u2",
+      playerId: "p2",
+      round: 2,
+      turn: 4,
+      fightsFirst: false
+    },
+    {
+      unitId: "u1",
+      playerId: "p1",
+      round: 2,
+      turn: 4,
+      fightsFirst: true
+    }
+  ]);
 });
 
 test("reports completion available after all candidates are activated", () => {
@@ -79,6 +134,22 @@ test("reports completion available after all candidates are activated", () => {
       normal: [],
       activated: ["u1", "u2"]
     },
+    activations: [
+      {
+        unitId: "u1",
+        playerId: null,
+        round: 2,
+        turn: 4,
+        fightsFirst: false
+      },
+      {
+        unitId: "u2",
+        playerId: null,
+        round: 2,
+        turn: 4,
+        fightsFirst: false
+      }
+    ],
     canComplete: true
   });
 });
@@ -119,6 +190,7 @@ test("handles missing optional state collections without mutating state", () => 
       normal: [],
       activated: []
     },
+    activations: [],
     canComplete: true
   });
   assert.deepEqual(state, before);
