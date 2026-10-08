@@ -6,6 +6,8 @@ function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
 }
 
+const RANGE_UNCERTAINTY_MARGIN = 3;
+
 function rangeFromWeapon(weapon) {
   const value = weapon?.characteristics?.range ?? weapon?.range;
   return Number.isFinite(value) ? value : null;
@@ -66,6 +68,9 @@ export function getShootingTargetPriorities(state, {
     // future exceptions should be supplied by authoritative unit/rule data.
     if (engaged) continue;
 
+    // Keep one coarse bucket beyond range as borderline; screen farther targets.
+    if (range != null && proximity.distance > range + RANGE_UNCERTAINTY_MARGIN) continue;
+
     let priority = proximityScore(proximity.band);
     priority += rangeScore(proximity.distance, range);
 
@@ -80,6 +85,7 @@ export function getShootingTargetPriorities(state, {
     }
 
     const reasons = [];
+    const rangeStatus = range == null ? "unknown" : proximity.distance <= range ? "within" : "borderline";
     if (proximity.band === "close" || proximity.band === "near") {
       reasons.push("Enemy is approximately " + proximity.distance + " inches away.");
     }
@@ -90,7 +96,7 @@ export function getShootingTargetPriorities(state, {
       reasons.push(
         proximity.distance <= range
           ? "Target is within the weapon's approximate range."
-          : "Target is beyond the weapon's approximate range."
+          : "Target is just beyond the weapon's approximate range; exact tabletop measurement is required."
       );
     }
 
@@ -102,6 +108,7 @@ export function getShootingTargetPriorities(state, {
       targetDistance: proximity.distance,
       targetBand: proximity.band,
       weaponId: weapon?.id ?? null,
+      rangeStatus,
       expectedDamage,
       reason: reasons.join(" ")
     });
