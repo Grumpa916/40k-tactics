@@ -45,6 +45,42 @@ function getCurrentTurnFightAttacks(state) {
     }));
 }
 
+function getFightActivationSummaries(activations, attacks) {
+  const attacksByUnit = new Map();
+
+  for (const attack of attacks) {
+    const current = attacksByUnit.get(attack.attackerId) ?? {
+      attackCount: 0,
+      totalDamage: 0,
+      targetIds: []
+    };
+
+    current.attackCount += 1;
+    current.totalDamage += attack.totalDamage;
+
+    if (!current.targetIds.includes(attack.targetId)) {
+      current.targetIds.push(attack.targetId);
+    }
+
+    attacksByUnit.set(attack.attackerId, current);
+  }
+
+  return activations.map((activation) => {
+    const combat = attacksByUnit.get(activation.unitId) ?? {
+      attackCount: 0,
+      totalDamage: 0,
+      targetIds: []
+    };
+
+    return {
+      ...activation,
+      attackCount: combat.attackCount,
+      totalDamage: combat.totalDamage,
+      targetIds: [...combat.targetIds]
+    };
+  });
+}
+
 export function getFightState(state) {
   const candidates = getFightCandidates(state);
   const battleActive = state?.battle?.status === "active";
@@ -54,6 +90,8 @@ export function getFightState(state) {
     inFightPhase &&
     candidates.fightsFirst.length === 0 &&
     candidates.normal.length === 0;
+  const activations = getCurrentTurnFightActivations(state);
+  const attacks = getCurrentTurnFightAttacks(state);
 
   return {
     phase: state?.phase ?? null,
@@ -61,8 +99,9 @@ export function getFightState(state) {
     turn: state?.turn ?? null,
     activePlayerId: state?.activePlayer ?? null,
     candidates,
-    activations: getCurrentTurnFightActivations(state),
-    attacks: getCurrentTurnFightAttacks(state),
+    activations,
+    attacks,
+    activationSummaries: getFightActivationSummaries(activations, attacks),
     canComplete
   };
 }

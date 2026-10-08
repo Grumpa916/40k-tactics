@@ -43,6 +43,7 @@ test("returns Fight context, candidates, and completion availability", () => {
     },
     activations: [],
     attacks: [],
+    activationSummaries: [],
     canComplete: false
   });
 });
@@ -211,6 +212,101 @@ test("returns current-turn Fight attack summaries in event order", () => {
   ]);
 });
 
+test("aggregates current-turn attacks into activation summaries", () => {
+  const state = fightState({
+    history: [
+      {
+        type: "fight.unit_activated",
+        payload: {
+          unitId: "u1",
+          playerId: "p1",
+          round: 2,
+          turn: 4,
+          fightsFirst: true
+        }
+      },
+      {
+        type: "fight.unit_activated",
+        payload: {
+          unitId: "u2",
+          playerId: "p2",
+          round: 2,
+          turn: 4,
+          fightsFirst: false
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u1",
+          targetId: "u2",
+          weaponId: "blade",
+          phase: "fight",
+          round: 2,
+          turn: 4,
+          result: { damage: { totalDamage: 3 } },
+          stateDelta: {
+            target: { woundsAfter: 4, statusAfter: "deployed" }
+          }
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u1",
+          targetId: "u2",
+          weaponId: "fist",
+          phase: "fight",
+          round: 2,
+          turn: 4,
+          result: { damage: { totalDamage: 2 } },
+          stateDelta: {
+            target: { woundsAfter: 2, statusAfter: "deployed" }
+          }
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u2",
+          targetId: "u1",
+          weaponId: "claw",
+          phase: "fight",
+          round: 2,
+          turn: 4,
+          result: { damage: { totalDamage: 1 } },
+          stateDelta: {
+            target: { woundsAfter: 4, statusAfter: "deployed" }
+          }
+        }
+      }
+    ]
+  });
+
+  assert.deepEqual(getFightState(state).activationSummaries, [
+    {
+      unitId: "u1",
+      playerId: "p1",
+      round: 2,
+      turn: 4,
+      fightsFirst: true,
+      attackCount: 2,
+      totalDamage: 5,
+      targetIds: ["u2"]
+    },
+    {
+      unitId: "u2",
+      playerId: "p2",
+      round: 2,
+      turn: 4,
+      fightsFirst: false,
+      attackCount: 1,
+      totalDamage: 1,
+      targetIds: ["u1"]
+    }
+  ]);
+});
+
 test("reports completion available after all candidates are activated", () => {
   const state = fightState({
     history: [
@@ -262,6 +358,28 @@ test("reports completion available after all candidates are activated", () => {
       }
     ],
     attacks: [],
+    activationSummaries: [
+      {
+        unitId: "u1",
+        playerId: null,
+        round: 2,
+        turn: 4,
+        fightsFirst: false,
+        attackCount: 0,
+        totalDamage: 0,
+        targetIds: []
+      },
+      {
+        unitId: "u2",
+        playerId: null,
+        round: 2,
+        turn: 4,
+        fightsFirst: false,
+        attackCount: 0,
+        totalDamage: 0,
+        targetIds: []
+      }
+    ],
     canComplete: true
   });
 });
@@ -304,6 +422,7 @@ test("handles missing optional state collections without mutating state", () => 
     },
     activations: [],
     attacks: [],
+    activationSummaries: [],
     canComplete: true
   });
   assert.deepEqual(state, before);
