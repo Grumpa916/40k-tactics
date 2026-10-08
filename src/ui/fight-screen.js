@@ -1,7 +1,7 @@
 import {
   getFightViewModel,
-  recordFightActivation,
-  completeFightPhase
+  activateFightUnit,
+  finishFightPhase
 } from "../application/fight-workflow.js";
 
 function escapeHtml(value) {
@@ -14,7 +14,11 @@ function escapeHtml(value) {
 }
 
 function ownerLabel(unit) {
-  return unit?.side === "self" ? "You" : unit?.side === "opponent" ? "Opponent" : unit?.ownerName ?? "Unknown";
+  return unit?.side === "self"
+    ? "You"
+    : unit?.side === "opponent"
+      ? "Opponent"
+      : unit?.ownerName ?? "Unknown";
 }
 
 function unitButton(unit, disabled) {
@@ -84,16 +88,17 @@ function activationRow(activation, index) {
 
 export function createFightScreen(
   container,
-  { state, perspectivePlayerId = null, onStateChange = null } = {}
+  { session, perspectivePlayerId = null } = {}
 ) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
   }
-
-  let currentState = state;
+  if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") {
+    throw new TypeError("A game session is required.");
+  }
 
   function render() {
-    const model = getFightViewModel(currentState, { perspectivePlayerId });
+    const model = getFightViewModel(session.getState(), { perspectivePlayerId });
     const hasFirst = model.candidates.fightsFirst.length > 0;
 
     container.innerHTML = `
@@ -138,28 +143,29 @@ export function createFightScreen(
 
     container.querySelectorAll("[data-fight-unit]").forEach((button) => {
       button.addEventListener("click", () => {
-        const unitId = button.getAttribute("data-fight-unit");
-        currentState = recordFightActivation(currentState, { unitId });
-        onStateChange?.(currentState);
-        render();
+        activateFightUnit(session, {
+          unitId: button.getAttribute("data-fight-unit")
+        });
       });
     });
 
     const complete = container.querySelector("[data-fight-complete]");
     complete?.addEventListener("click", () => {
-      currentState = completeFightPhase(currentState);
-      onStateChange?.(currentState);
-      render();
+      finishFightPhase(session);
     });
 
     return model;
   }
 
+  const unsubscribe = session.subscribe(render);
   render();
 
   return {
-    getState: () => currentState,
+    getState: () => session.getState(),
     render,
-    destroy: () => container.replaceChildren()
+    destroy: () => {
+      unsubscribe();
+      container.replaceChildren();
+    }
   };
 }
