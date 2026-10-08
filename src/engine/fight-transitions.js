@@ -2,6 +2,7 @@ import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getFightCandidates } from "../rules/fight-candidates.js";
+import { changePhase } from "./state-transitions.js";
 
 export function recordFightActivation(state, { unitId } = {}) {
   if (!unitId) throw new TypeError("Fight activation unit id is required.");
@@ -50,24 +51,5 @@ export function recordFightActivation(state, { unitId } = {}) {
 }
 
 export function completeFightPhase(state) {
-  if (!state.battle || state.battle.status !== "active") {
-    throw new Error("Battle must be active.");
-  }
-  if (state.phase !== "fight") {
-    throw new Error("Fight phase must be active before it can be completed.");
-  }
-
-  const candidates = getFightCandidates(state);
-  if (candidates.fightsFirst.length > 0 || candidates.normal.length > 0) {
-    throw new Error("Fight phase cannot be completed while Fight candidates remain.");
-  }
-
-  const nextState = {
-    ...state,
-    phase: "end_turn"
-  };
-  return appendHistoryEntry(nextState, createEvent("fight.phase_completed", {
-    round: state.battle.round,
-    turn: state.turn
-  }));
+  return changePhase(state, { phase: "end_turn" });
 }
