@@ -63,3 +63,5 @@ export { rankTacticalRecommendations, getTacticalOpportunityValue } from "./tact
 export { evaluateFightOpportunity } from "./tactical-fight-opportunity.js";
 
 export { getFightOpportunityRecommendations } from "./tactical-fight-opportunities.js";
+
+export { getBestFightRetaliation } from "./tactical-fight-retaliation.js";
