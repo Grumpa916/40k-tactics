@@ -14,7 +14,8 @@ export function evaluateFightOpportunity({
   retaliationExpectedDamage = 0,
   remainingWounds = 0,
   maxWounds = null,
-  targetWounds = null
+  targetWounds = null,
+  retaliationConfidence = "low"
 } = {}) {
   const offense = nonNegative(expectedDamage);
   const retaliation = nonNegative(retaliationExpectedDamage);
@@ -35,10 +36,9 @@ export function evaluateFightOpportunity({
     retaliationRisk >= 0.4 ? "moderate" :
     "low";
 
-  const confidence =
-    Number.isFinite(retaliationExpectedDamage) && retaliationExpectedDamage > 0
-      ? "moderate"
-      : "low";
+  const confidence = ["high", "moderate", "low"].includes(retaliationConfidence)
+    ? retaliationConfidence
+    : "low";
 
   return Object.freeze({
     expectedDamage: offense,
