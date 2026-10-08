@@ -47,3 +47,5 @@ export {
   SCORING_OPPORTUNITY_STATES,
   evaluateScoringOpportunity
 } from "./scoring-opportunity.js";
+
+export {\n  isScoringTimingDue,\n  evaluateScoringOpportunityAtTiming\n} from "./scoring-opportunity-timing.js";\n
