@@ -131,6 +131,38 @@ test("charge outcome command records success and post-roll targets", () => {
   clearCommandHandlers();
 });
 
+test("Fight activation command records the selected unit and Fights First status", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const state = createGameState({
+    phase: "fight",
+    turn: 2,
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { id: "b1", status: "active", round: 1 },
+    units: [
+      createUnit({ id: "u1", ownerId: "p1", name: "Charger", status: "deployed" })
+    ],
+    history: [{
+      type: "charge.outcome_recorded",
+      payload: {
+        unitId: "u1",
+        outcome: "successful",
+        round: 1,
+        turn: 2
+      }
+    }]
+  });
+
+  const next = executeCommand(state, createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, {
+    unitId: "u1"
+  }));
+
+  assert.equal(next.history.at(-1).type, "fight.unit_activated");
+  assert.equal(next.history.at(-1).payload.fightsFirst, true);
+  clearCommandHandlers();
+});
+
 test("core command registration rejects duplicate registration", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
