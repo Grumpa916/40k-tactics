@@ -6,6 +6,7 @@ import { resolveUnitAttack } from "../../src/engine/combat-transitions.js";
 function stateWithProfile(characteristics) {
   return createGameState({
     phase: "shooting",
+    turn: 1,
     battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
     units: [
       {
