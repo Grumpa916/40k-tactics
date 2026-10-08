@@ -58,6 +58,7 @@ function liveFightState() {
         payload: {
           unitId: "charged",
           outcome: "successful",
+          targetIds: ["opponent-first", "second-target"],
           round: 1,
           turn: 3
         }
@@ -67,8 +68,19 @@ function liveFightState() {
         payload: {
           unitId: "opponent-first",
           outcome: "successful",
+          targetIds: ["charged"],
           round: 1,
           turn: 3
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "normal",
+          targetId: "opponent-first",
+          phase: "fight",
+          round: 1,
+          turn: 2
         }
       }
     ]
@@ -175,8 +187,8 @@ test("live Fight workflow records both players, attacks, and completion", () => 
   const attacks = session.getState().history.filter(
     (event) => event.type === "combat.attack_resolved"
   );
-  assert.equal(attacks.length, 2);
-  assert.deepEqual(attacks.map((event) => event.payload.attackerId), [
+  assert.equal(attacks.length, 3);
+  assert.deepEqual(attacks.slice(-2).map((event) => event.payload.attackerId), [
     "charged",
     "opponent-first"
   ]);

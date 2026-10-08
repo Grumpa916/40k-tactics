@@ -130,3 +130,21 @@ test("Fight target options exclude friendly deployed units for a selected attack
 
   assert.deepEqual(options.targets.map((unit) => unit.unitId), ["target"]);
 });
+
+
+test("Fight target options use engagement history when it is available", () => {
+  const state = fightState();
+  state.units.push(createUnit({
+    id: "other-target", ownerId: "p2", name: "Other Enemy", status: "deployed", wounds: 5
+  }));
+  state.history = [
+    ...state.history,
+    {
+      type: "charge.outcome_recorded",
+      payload: { unitId: "attacker", outcome: "successful", targetIds: ["target"], round: 1, turn: 1 }
+    }
+  ];
+
+  const options = getFightAttackOptions(state, { attackerId: "attacker", perspectivePlayerId: "p1" });
+  assert.deepEqual(options.targets.map((unit) => unit.unitId), ["target"]);
+});

@@ -144,3 +144,21 @@ export function getFightStepStartEngagementState(state) {
     relationships: snapshot.relationships
   };
 }
+
+
+export function hasFightEngagementHistory(state) {
+  return eventSequence(state).some((event) =>
+    event?.type === FALL_BACK_EVENT ||
+    (event?.type === FIGHT_ATTACK_EVENT && event?.payload?.phase === "fight") ||
+    (event?.type === CHARGE_EVENT && Array.isArray(event?.payload?.targetIds))
+  );
+}
+
+export function areUnitsEngaged(state, firstUnitId, secondUnitId) {
+  if (!firstUnitId || !secondUnitId || firstUnitId === secondUnitId) return false;
+  const current = getFightEngagementState(state);
+  const key = pairKey(firstUnitId, secondUnitId);
+  return current.relationships.some((relationship) =>
+    pairKey(relationship.unitIds[0], relationship.unitIds[1]) === key
+  );
+}

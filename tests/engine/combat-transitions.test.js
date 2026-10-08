@@ -296,3 +296,20 @@ test("Shooting attacks reject a unit that Fell Back this turn", () => {
     /Fell Back cannot shoot/
   );
 });
+
+
+test("Fight attacks reject a known non-engaged target", () => {
+  const state = {
+    ...activeState(),
+    phase: "fight",
+    history: [
+      { type: "fight.unit_activated", payload: { unitId: "attacker", round: 1, turn: 1, fightsFirst: false } },
+      { type: "charge.outcome_recorded", payload: { unitId: "attacker", outcome: "successful", targetIds: ["target"], round: 1, turn: 1 } },
+      { type: "unit.fell_back", payload: { unitId: "attacker", phase: "movement", round: 1, turn: 1 } }
+    ]
+  };
+  assert.throws(
+    () => resolveUnitAttack(state, { attackerId: "attacker", targetId: "target", weapon: meleeWeapon, actualDamage: 0, random: () => 0.99 }),
+    /require the attacker and target to be engaged/
+  );
+});
