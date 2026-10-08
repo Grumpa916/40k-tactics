@@ -122,6 +122,128 @@ Preferred sequence:
 4. Build contextual Tactical Advisor UI.
 5. Use this Warmind reference when refining the broader landscape UI.
 
+
+## Battle Setup comparison — additional reference
+
+The additional October 7, 2026 screenshots show Warmind's full Battle Setup flow. The user correctly noted that this looks similar to the earlier V1 setup experience.
+
+### Ideas to consider adopting
+
+#### 1. Setup progress/navigation
+Warmind organizes setup into explicit stages:
+
+1. Game Size
+2. Muster Armies
+3. Determine Mission
+4. Create Battlefield
+5. Attacker/Defender
+6. Secondary Missions
+7. Deploy and Begin
+
+Useful concepts to consider:
+- visible setup progress
+- clear section titles
+- strong indication of required information
+- a final readiness gate
+- a "Show All" option so experienced players can avoid rigid navigation
+
+**Decision:** Consider the staged/checklist concept, but do not automatically reproduce seven sequential screens.
+
+#### 2. Setup validation
+Warmind clearly identifies missing requirements such as:
+- army disposition
+- opponent name
+- opponent faction
+- opponent detachment/disposition
+- first turn
+- other pre-battle choices
+
+**Decision: Adopt the principle.** V2 should make missing information obvious and prevent an invalid battle from silently starting.
+
+#### 3. Opponent roster entry options
+Warmind offers:
+- Scan QR
+- Auto Sync
+- Paste Their List
+- Choose From My Rosters
+- opponent name
+- opponent faction
+
+**Decision: Consider later.** The concept of giving the player several low-friction ways to establish opponent state is valuable for Tactical Advisor data quality. QR/auto-sync integration is not a current engine priority.
+
+#### 4. Terrain layout preview
+Warmind presents the selected terrain layout visually and allows the map to be enlarged.
+
+**Decision: Adopt the concept.** A large, readable terrain/setup diagram is valuable on iPad and aligns with previous V2 UI observations.
+
+#### 5. Terrain legend
+Warmind provides a clear visual key for:
+- dense terrain
+- light terrain
+- terrain plates
+- single terrain areas
+- separate terrain areas
+- home objective
+- central objective
+- expansion objective
+
+**Decision: Strongly consider.** This is useful because it converts a complicated terrain diagram into something understandable without requiring the player to remember symbols.
+
+#### 6. Pre-battle checklist
+Warmind explicitly lists:
+- declare battle formations
+- deploy armies
+- determine who goes first
+- resolve pre-battle rules
+
+**Decision: Adopt the concept.** V2 should eventually provide a concise pre-battle checklist, while keeping the actual workflow compatible with our existing deployment decisions.
+
+### Things to avoid
+
+#### 1. Recreating a long linear setup wizard just because Warmind uses one
+The screenshots resemble V1's setup structure. That similarity is informative, but it does not mean V2 should return to a cumbersome wizard.
+
+**Decision: Avoid unnecessary sequential screens.**
+
+Prefer:
+- compact setup sections
+- visible progress
+- Show All / overview capability
+- validation
+- direct access to the item that needs attention
+
+#### 2. Forcing unnecessary setup data
+Do not require information merely because another application collects it.
+
+Every setup field should answer:
+> Does this information materially improve game-state accuracy, rules validation, scoring, or Tactical Advisor capability?
+
+If not, it should not become mandatory.
+
+#### 3. Treating terrain/map imagery as legal authority
+Terrain diagrams are useful for setup and tactical context, but the same architectural rule applies:
+- visual map = context
+- rules/state = authority
+
+#### 4. Letting setup UI drive engine architecture
+Battle Setup should consume authoritative game state and commands. It should not become a parallel rules system.
+
+## Battle Setup design direction for V2
+
+The strongest combination of the Warmind reference and our existing V2 goals is:
+
+**Compact Setup Overview**
+→ **required-state validation**
+→ **terrain/mission context**
+→ **deployment**
+→ **pre-battle checklist**
+→ **Begin Battle**
+
+Experienced players should be able to move quickly through setup, while newer players can see what remains unresolved.
+
+The setup experience should feel like a **checklist with context**, not a seven-page form.
+
+
 ## Reference screenshots
 
 The October 7, 2026 Warmind screenshots supplied during the comparison showed:
