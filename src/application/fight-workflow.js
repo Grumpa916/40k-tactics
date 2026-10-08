@@ -143,7 +143,9 @@ export function getFightAttackOptions(
   if (!attackerId) {
     return {
       attackers,
-      targets: []
+      targets: state.units
+        .filter((unit) => unit?.status === "deployed" && !activated.has(unit?.id))
+        .map((unit) => describeUnit(state, unit.id, perspectivePlayerId))
     };
   }
 
