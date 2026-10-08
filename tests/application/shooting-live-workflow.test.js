@@ -83,7 +83,8 @@ test("live Shooting workflow records activation and ranged attack", () => {
   resolveShootingAttack(session, {
     attackerId: "shooter",
     targetId: "target",
-    weapon: rangedWeapon
+    weapon: rangedWeapon,
+    actualDamage: 0
   }, { random: () => 0.99 });
 
   const attacks = session.getState().history.filter(
@@ -91,6 +92,7 @@ test("live Shooting workflow records activation and ranged attack", () => {
   );
   assert.equal(attacks.length, 1);
   assert.equal(attacks[0].payload.phase, "shooting");
+  assert.equal(attacks[0].payload.actualDamage, 0);
 
   finishShootingPhase(session);
   assert.equal(session.getState().phase, "charge");

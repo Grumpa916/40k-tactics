@@ -39,7 +39,9 @@ function getCurrentTurnFightAttacks(state) {
       weaponId: event.payload.weaponId ?? null,
       round: event.payload.round,
       turn: event.payload.turn,
-      totalDamage: event.payload.result?.damage?.totalDamage ?? 0,
+      expectedDamage: event.payload.expectedDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
+      actualDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
+      totalDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       targetWoundsAfter: event.payload.stateDelta?.target?.woundsAfter ?? null,
       targetStatusAfter: event.payload.stateDelta?.target?.statusAfter ?? null
     }));

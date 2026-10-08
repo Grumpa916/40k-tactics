@@ -77,7 +77,7 @@ function attackRow(attack, state, gameData) {
   const status = attack.targetStatusAfter === "destroyed"
     ? "Destroyed"
     : attack.targetWoundsAfter == null ? "" : `${attack.targetWoundsAfter} wounds remaining`;
-  const result = `${attack.totalDamage ?? 0} damage${status ? ` · ${status}` : ""}`;
+  const result = `${attack.actualDamage ?? attack.totalDamage ?? 0} actual damage · ${attack.expectedDamage ?? attack.totalDamage ?? 0} expected${status ? ` · ${status}` : ""}`;
   return `
     <li class="fight-history__item">
       <span class="fight-history__number">⚔</span>
@@ -123,6 +123,7 @@ export function createFightScreen(
   let selectedAttackerId = null;
   let selectedWeaponId = null;
   let selectedTargetId = null;
+  let actualDamage = "";
 
   function render() {
     const state = session.getState();
@@ -166,7 +167,8 @@ export function createFightScreen(
             <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
             <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
-            <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Resolve Attack</button>
+            <label>Actual damage<input data-fight-damage type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(actualDamage)}" placeholder="0" ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}></label>
+            <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "" ? "" : "disabled"}>Record Attack</button>
           </div>
         </section>
 
@@ -206,6 +208,7 @@ export function createFightScreen(
       selectedAttackerId = attackerSelect.value || null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      actualDamage = "";
       render();
     });
     container.querySelector("[data-fight-weapon]")?.addEventListener("change", (event) => {
@@ -216,12 +219,20 @@ export function createFightScreen(
       selectedTargetId = event.target.value || null;
       render();
     });
+    container.querySelector("[data-fight-damage]")?.addEventListener("input", (event) => {
+      actualDamage = event.target.value;
+      const button = container.querySelector("[data-fight-attack]");
+      if (button) button.disabled = !(selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "");
+    });
     container.querySelector("[data-fight-attack]")?.addEventListener("click", () => {
       const weapon = weapons.find((item) => item.id === selectedWeaponId);
       if (!weapon) return;
-      resolveFightAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon });
-      selectedWeaponId = null;
+      const damage = Number(actualDamage);
+      if (!Number.isInteger(damage) || damage < 0) return;
+      resolveFightAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
       selectedTargetId = null;
+      actualDamage = "";
+      render();
     });
 
     container.querySelectorAll("[data-fight-unit]").forEach((button) => {

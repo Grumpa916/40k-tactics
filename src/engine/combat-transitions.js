@@ -30,6 +30,7 @@ export function resolveUnitAttack(state, {
   attackerId,
   targetId,
   weapon,
+  actualDamage = null,
   random
 } = {}) {
   if (!attackerId || !targetId) throw new TypeError("Attacker and target unit ids are required.");
@@ -64,11 +65,16 @@ export function resolveUnitAttack(state, {
     target: target.profile ?? target,
     weapon
   });
+  if (actualDamage !== null && (!Number.isInteger(actualDamage) || actualDamage < 0)) {
+    throw new TypeError("Actual damage must be a non-negative integer.");
+  }
   const result = resolveAttack({ ...profile, random });
+  const expectedDamage = result.damage.totalDamage;
+  const recordedDamage = actualDamage ?? expectedDamage;
   const previousWounds = target.wounds;
   const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
   const nextWounds = tracksWounds
-    ? Math.max(0, previousWounds - result.damage.totalDamage)
+    ? Math.max(0, previousWounds - recordedDamage)
     : previousWounds;
   const previousStatus = target.status;
   const nextStatus = tracksWounds && nextWounds === 0
@@ -83,6 +89,8 @@ export function resolveUnitAttack(state, {
     turn: state.turn,
     profile,
     result,
+    expectedDamage,
+    actualDamage: recordedDamage,
     stateDelta: {
       target: {
         woundsBefore: previousWounds,

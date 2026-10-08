@@ -195,6 +195,8 @@ test("returns current-turn Fight attack summaries in event order", () => {
       weaponId: "blade",
       round: 2,
       turn: 4,
+      expectedDamage: 3,
+      actualDamage: 3,
       totalDamage: 3,
       targetWoundsAfter: 2,
       targetStatusAfter: "deployed"
@@ -205,6 +207,8 @@ test("returns current-turn Fight attack summaries in event order", () => {
       weaponId: "claw",
       round: 2,
       turn: 4,
+      expectedDamage: 1,
+      actualDamage: 1,
       totalDamage: 1,
       targetWoundsAfter: 4,
       targetStatusAfter: "deployed"
