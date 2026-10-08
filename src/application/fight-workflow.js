@@ -136,8 +136,11 @@ export function getFightAttackOptions(
 ) {
   const fight = getFightState(state);
   const activated = new Set(fight.candidates.activated);
+  const attacked = new Set(
+    fight.attacks.map((attack) => attack.attackerId)
+  );
   const attackers = state.units
-    .filter((unit) => activated.has(unit?.id))
+    .filter((unit) => activated.has(unit?.id) && !attacked.has(unit?.id))
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 
   if (!attackerId) {
