@@ -152,56 +152,18 @@ export function getCombatHistorySummary(state, { playerId } = {}) {
     }
   }
 
-  const engagementModule = state;
-  let engagedWith = new Map(ownedUnits.map((unit) => [unit.id, []]));
+  const { getFightEngagementState } = await import("./fight-engagement-state.js");
+  const engagementState = getFightEngagementState(state);
+  const engagedWith = new Map(ownedUnits.map((unit) => [unit.id, []]));
 
-  // Importing the engagement rule here would create no cycle, but keeping this
-  // summary module focused on history makes its core data extraction reusable.
-  // Engagements are therefore derived directly from the authoritative charge,
-  // Fight, and Fall Back history below.
-  const relationships = new Map();
-
-  function pairKey(a, b) {
-    return [a, b].sort().join("::");
-  }
-
-  for (let index = 0; index < history.length; index += 1) {
-    const event = history[index];
-    if (event?.type === "unit.fell_back" && event.payload?.unitId) {
-      for (const [key, pair] of relationships) {
-        if (pair.includes(event.payload.unitId)) relationships.delete(key);
-      }
+  for (const relationship of engagementState.relationships) {
+    const [first, second] = relationship.unitIds;
+    if (engagedWith.has(first) && !engagedWith.get(first).includes(second)) {
+      engagedWith.get(first).push(second);
     }
-
-    if (event?.type === CHARGE_EVENT && event.payload?.outcome === "successful") {
-      for (const targetId of Array.isArray(event.payload?.targetIds) ? event.payload.targetIds : []) {
-        const a = event.payload?.unitId;
-        const b = targetId;
-        if (a && b && a !== b) relationships.set(pairKey(a, b), [a, b]);
-      }
+    if (engagedWith.has(second) && !engagedWith.get(second).includes(first)) {
+      engagedWith.get(second).push(first);
     }
-
-    if (
-      event?.type === COMBAT_ATTACK_EVENT &&
-      event.payload?.phase === "fight" &&
-      event.payload?.attackerId &&
-      event.payload?.targetId
-    ) {
-      const a = event.payload.attackerId;
-      const b = event.payload.targetId;
-      if (event.payload?.stateDelta?.target?.statusAfter === "destroyed") {
-        for (const [key, pair] of relationships) {
-          if (pair.includes(b)) relationships.delete(key);
-        }
-      } else if (a !== b) {
-        relationships.set(pairKey(a, b), [a, b]);
-      }
-    }
-  }
-
-  for (const [a, b] of relationships.values()) {
-    if (engagedWith.has(a) && !engagedWith.get(a).includes(b)) engagedWith.get(a).push(b);
-    if (engagedWith.has(b) && !engagedWith.get(b).includes(a)) engagedWith.get(b).push(a);
   }
 
   for (const summary of byUnit.values()) {
