@@ -1,6 +1,7 @@
 import { getFightCandidates } from "./fight-candidates.js";
 
 const FIGHT_ACTIVATION_EVENT = "fight.unit_activated";
+const COMBAT_ATTACK_EVENT = "combat.attack_resolved";
 
 function getCurrentTurnFightActivations(state) {
   const history = Array.isArray(state?.history) ? state.history : [];
@@ -17,6 +18,30 @@ function getCurrentTurnFightActivations(state) {
       round: event.payload.round ?? null,
       turn: event.payload.turn,
       fightsFirst: event.payload.fightsFirst === true
+    }));
+}
+
+function getCurrentTurnFightAttacks(state) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+
+  return history
+    .filter((event) =>
+      event?.type === COMBAT_ATTACK_EVENT &&
+      event?.payload?.phase === "fight" &&
+      event?.payload?.round === state?.battle?.round &&
+      event?.payload?.turn === state?.turn &&
+      event?.payload?.attackerId &&
+      event?.payload?.targetId
+    )
+    .map((event) => ({
+      attackerId: event.payload.attackerId,
+      targetId: event.payload.targetId,
+      weaponId: event.payload.weaponId ?? null,
+      round: event.payload.round,
+      turn: event.payload.turn,
+      totalDamage: event.payload.result?.damage?.totalDamage ?? 0,
+      targetWoundsAfter: event.payload.stateDelta?.target?.woundsAfter ?? null,
+      targetStatusAfter: event.payload.stateDelta?.target?.statusAfter ?? null
     }));
 }
 
@@ -37,6 +62,7 @@ export function getFightState(state) {
     activePlayerId: state?.activePlayer ?? null,
     candidates,
     activations: getCurrentTurnFightActivations(state),
+    attacks: getCurrentTurnFightAttacks(state),
     canComplete
   };
 }
