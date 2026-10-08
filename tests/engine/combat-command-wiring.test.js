@@ -26,7 +26,7 @@ test("combat command executes through the command engine and records history", (
       { id: "attacker", ownerId: "p1", name: "Attacker", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } },
       { id: "target", ownerId: "p2", name: "Target", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } }
     ],
-    objectives: [], commandPoints: {}, timers: {}, history: []
+    objectives: [], commandPoints: {}, timers: {}, history: [{ type: "shooting.unit_activated", payload: { unitId: "attacker", round: 1, turn: 1 } }]
   };
 
   const command = createCommand("combat.resolve_attack", {
