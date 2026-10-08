@@ -21,10 +21,7 @@ export function captureTurnStartSnapshot(state, {
 } = {}) {
   if (!Number.isInteger(turn) || turn < 0) throw new TypeError("turn must be a non-negative integer.");
   const snapshot = createTurnSnapshot(state, { turn, round, playerId });
-  return appendHistoryEntry(
-    withScoringState(state, snapshot),
-    createEvent("scoring.turn_snapshot_captured", { turn, round, playerId })
-  );
+  return withScoringState(state, snapshot);
 }
 
 export function recordMissionScoringEvent(state, {
