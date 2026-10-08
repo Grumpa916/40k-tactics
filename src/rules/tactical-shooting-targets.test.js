@@ -141,6 +141,32 @@ test("includes baseline expected damage when complete profiles are available", (
   assert.ok(close.destructionProbability < 1);
   assert.match(close.reason, /Baseline expected damage is approximately/);
   assert.match(close.reason, /Estimated destruction chance is approximately/);
+  assert.equal(close.impactClassification, "possible-destruction");
+});
+
+test("classifies high destruction probability as likely destruction", () => {
+  const state = baseState();
+  state.units.find((unit) => unit.id === "close-target").wounds = 1;
+  const result = getShootingTargetPriorities(state, { playerId: "p1", attackerId: "shooter",
+    weapon: { id: "rifle", type: "ranged", characteristics: { range: 24, attacks: 4, strength: 5, ap: -1, damage: 2 } } });
+  const close = result.priorities.find((item) => item.targetUnitId === "close-target");
+  assert.equal(close.impactClassification, "likely-destruction");
+});
+
+test("classifies meaningful non-lethal damage as severe degradation", () => {
+  const state = baseState();
+  state.units.find((unit) => unit.id === "close-target").wounds = 20;
+  const result = getShootingTargetPriorities(state, { playerId: "p1", attackerId: "shooter",
+    weapon: { id: "rifle", type: "ranged", characteristics: { range: 24, attacks: 14, strength: 5, ap: -1, damage: 2 } } });
+  const close = result.priorities.find((item) => item.targetUnitId === "close-target");
+  assert.equal(close.impactClassification, "likely-severe-degradation");
+});
+
+test("leaves incomplete profiles classified as unknown", () => {
+  const result = getShootingTargetPriorities(baseState(), { playerId: "p1", attackerId: "shooter",
+    weapon: { id: "incomplete", type: "ranged", characteristics: { range: 24 } } });
+  const close = result.priorities.find((item) => item.targetUnitId === "close-target");
+  assert.equal(close.impactClassification, "unknown");
 });
 
 test("keeps targets eligible when expected-damage profiles are incomplete", () => {
