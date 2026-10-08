@@ -7,7 +7,7 @@ import {
 } from "./mission-definition.js";
 import { createGameState } from "../engine/game-state.js";
 import { recordObjectiveControl, startBattle, startFirstTurn } from "../engine/state-transitions.js";
-import { PLAYER_ROLES } from "../state/roles.js";
+import { PLAYER_ROLES } from "../state/player.js";
 
 function createPlayer(id, role) {
   return { id, name: id, role };
