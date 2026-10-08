@@ -208,7 +208,7 @@ export function createFightScreen(
       selectedAttackerId = attackerSelect.value || null;
       selectedWeaponId = null;
       selectedTargetId = null;
-      actualDamage = "";
+      actualDamage = "0";
       render();
     });
     container.querySelector("[data-fight-weapon]")?.addEventListener("change", (event) => {
