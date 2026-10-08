@@ -7,7 +7,7 @@ const CONFIDENCE_WEIGHT = Object.freeze({
 const TYPE_VALUE = Object.freeze({
   scoring: 4,
   fight: 4,
-  shooting-target: 4,
+  "shooting-target": 4,
   charge: 3,
   engagement: 3,
   survival: 3,
