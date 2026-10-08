@@ -77,7 +77,6 @@ test("turn commands advance both players and start the next battle round", () =>
   clearCommandHandlers();
 });
 
-
 test("normal move command updates per-model positions and records an event", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
@@ -104,7 +103,6 @@ test("normal move command updates per-model positions and records an event", () 
   assert.equal(next.history.at(-1).type, "unit.normal_move_resolved");
   clearCommandHandlers();
 });
-
 
 test("charge outcome command records success and post-roll targets", () => {
   clearCommandHandlers();
@@ -160,6 +158,30 @@ test("Fight activation command records the selected unit and Fights First status
 
   assert.equal(next.history.at(-1).type, "fight.unit_activated");
   assert.equal(next.history.at(-1).payload.fightsFirst, true);
+  clearCommandHandlers();
+});
+
+test("Fight completion command advances to end of turn after candidates are exhausted", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  let state = createGameState({
+    phase: "fight",
+    turn: 2,
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { id: "b1", status: "active", round: 1 },
+    units: [
+      createUnit({ id: "u1", ownerId: "p1", name: "Unit 1", status: "deployed" })
+    ]
+  });
+
+  state = executeCommand(state, createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, {
+    unitId: "u1"
+  }));
+  state = executeCommand(state, createCommand(COMMAND_TYPES.COMPLETE_FIGHT_PHASE));
+
+  assert.equal(state.phase, "end_turn");
+  assert.equal(state.history.at(-1).type, "fight.phase_completed");
   clearCommandHandlers();
 });
 

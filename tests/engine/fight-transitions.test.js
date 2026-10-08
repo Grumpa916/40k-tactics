@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../../src/state/game-state.js";
 import { createUnit } from "../../src/state/unit.js";
-import { recordFightActivation } from "../../src/engine/fight-transitions.js";
+import {
+  recordFightActivation,
+  completeFightPhase
+} from "../../src/engine/fight-transitions.js";
 
 function fightState(overrides = {}) {
   return createGameState({
@@ -80,14 +83,12 @@ test("requires Fight phase, an active battle, and a deployed unit", () => {
   }), { unitId: "friendly" }), /must be deployed/);
 });
 
-test("prevents a unit from being activated twice in one turn", () => {
+test("rejects an already-activated unit through the Fight candidate gate", () => {
   const first = recordFightActivation(fightState(), { unitId: "friendly" });
-  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
-});
-
-test("rejects a unit that has already been activated this turn", () => {
-  const first = recordFightActivation(fightState(), { unitId: "friendly" });
-  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
+  assert.throws(
+    () => recordFightActivation(first, { unitId: "friendly" }),
+    /available Fight candidate/
+  );
 });
 
 test("rejects reserves even if they have a successful charge event", () => {
@@ -101,4 +102,26 @@ test("rejects reserves even if they have a successful charge event", () => {
     }]
   });
   assert.throws(() => recordFightActivation(state, { unitId: "reserve" }), /must be deployed/);
+});
+
+test("does not complete Fight while available candidates remain", () => {
+  assert.throws(
+    () => completeFightPhase(fightState()),
+    /Fight candidates remain/
+  );
+});
+
+test("completes Fight after all candidates are activated", () => {
+  let state = fightState();
+  state = recordFightActivation(state, { unitId: "friendly" });
+  state = recordFightActivation(state, { unitId: "enemy" });
+
+  const next = completeFightPhase(state);
+
+  assert.equal(next.phase, "end_turn");
+  assert.equal(next.history.at(-1).type, "fight.phase_completed");
+  assert.deepEqual(next.history.at(-1).payload, {
+    round: 1,
+    turn: 2
+  });
 });
