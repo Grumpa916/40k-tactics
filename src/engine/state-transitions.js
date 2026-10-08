@@ -4,6 +4,7 @@ import { PHASES, TURN_STEPS } from "../state/turn.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getFightCandidates } from "../rules/fight-candidates.js";
+import { getShootingCandidates } from "../rules/shooting-candidates.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -106,6 +107,24 @@ export function changePhase(state, { phase } = {}) {
   const nextPhase = TURN_STEPS[phaseIndex + 1];
   if (phaseIndex < 0 || phase !== nextPhase) {
     throw new Error("Turn steps must resolve in order.");
+  }
+
+  const isShootingCompletion = state.phase === "shooting" && phase === "charge";
+  if (isShootingCompletion) {
+    const candidates = getShootingCandidates(state);
+    if (candidates.available.length > 0) {
+      throw new Error("Shooting phase cannot be completed while eligible units remain.");
+    }
+
+    const completed = transition(state, "shooting.phase_completed", {
+      round: state.battle.round,
+      turn: state.turn
+    }, (current) => current);
+
+    return transition(completed, "turn.phase_changed", { phase }, (current) => ({
+      ...current,
+      phase
+    }));
   }
 
   const isFightCompletion = state.phase === "fight" && phase === "end_turn";

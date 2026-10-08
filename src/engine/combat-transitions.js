@@ -5,6 +5,16 @@ import { isMeleeWeapon } from "../rules/weapon-rules.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
 
+function wasActivatedToShootThisTurn(state, unitId) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  return history.some((event) =>
+    event?.type === "shooting.unit_activated" &&
+    event?.payload?.unitId === unitId &&
+    event?.payload?.round === state?.battle?.round &&
+    event?.payload?.turn === state?.turn
+  );
+}
+
 function wasActivatedToFightThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
   return history.some((event) =>
@@ -28,8 +38,14 @@ export function resolveUnitAttack(state, {
   if (state.phase !== "shooting" && state.phase !== "fight") {
     throw new Error("Attacks may only be resolved in shooting or fight.");
   }
+  if (state.phase === "shooting" && !wasActivatedToShootThisTurn(state, attackerId)) {
+    throw new Error("Shooting attack requires the unit to be activated first.");
+  }
   if (state.phase === "fight" && !wasActivatedToFightThisTurn(state, attackerId)) {
     throw new Error("Fight attack requires the unit to be activated first.");
+  }
+  if (state.phase === "shooting" && isMeleeWeapon(weapon)) {
+    throw new Error("Shooting attacks require a ranged weapon.");
   }
   if (state.phase === "fight" && !isMeleeWeapon(weapon)) {
     throw new Error("Fight attacks require a melee weapon.");

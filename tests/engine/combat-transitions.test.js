@@ -20,7 +20,11 @@ function activeState() {
     units: [
       { id: "attacker", ownerId: "p1", name: "Attacker", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 3 } } },
       { id: "target", ownerId: "p2", name: "Target", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 3 } } }
-    ]
+    ],
+    history: [{
+      type: "shooting.unit_activated",
+      payload: { unitId: "attacker", round: 1, turn: 1 }
+    }]
   });
 }
 
@@ -210,4 +214,44 @@ test("combat transition preserves data-driven hit, wound, and save modifiers", (
   assert.equal(event.payload.result.wounds.modifiedTarget, 3);
   assert.equal(event.payload.result.saves.reroll.rerolledCount, 1);
   assert.equal(event.payload.result.damage.totalDamage, 0);
+});
+
+
+test("Shooting attacks require a current-turn Shooting activation", () => {
+  const state = { ...activeState(), history: [] };
+  assert.throws(
+    () => resolveUnitAttack(state, {
+      attackerId: "attacker", targetId: "target", weapon
+    }),
+    /Shooting attack requires the unit to be activated/
+  );
+
+  const activated = {
+    ...state,
+    history: [{
+      type: "shooting.unit_activated",
+      payload: { unitId: "attacker", round: 1, turn: 1 }
+    }]
+  };
+  const next = resolveUnitAttack(activated, {
+    attackerId: "attacker", targetId: "target", weapon,
+    random: () => 0.99
+  });
+  assert.equal(next.history.at(-1).payload.phase, "shooting");
+});
+
+test("Shooting attacks reject melee weapons", () => {
+  const state = {
+    ...activeState(),
+    history: [{
+      type: "shooting.unit_activated",
+      payload: { unitId: "attacker", round: 1, turn: 1 }
+    }]
+  };
+  assert.throws(
+    () => resolveUnitAttack(state, {
+      attackerId: "attacker", targetId: "target", weapon: meleeWeapon
+    }),
+    /require a ranged weapon/
+  );
 });

@@ -6,11 +6,13 @@ import { resolveUnitAttack } from "../../src/engine/combat-transitions.js";
 test("combat transition consumes weapon and target data instead of raw attack parameters", () => {
   const state = createGameState({
     phase: "shooting",
+    turn: 1,
     battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
     units: [
       { id: "a", ownerId: "p1", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } },
       { id: "t", ownerId: "p2", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } }
-    ]
+    ],
+    history: [{ type: "shooting.unit_activated", payload: { unitId: "a", round: 1, turn: 1 } }]
   });
 
   const weapon = {
@@ -30,6 +32,6 @@ test("combat transition consumes weapon and target data instead of raw attack pa
   });
 
   assert.equal(next.units.find((unit) => unit.id === "t").wounds, 1);
-  assert.equal(next.history[0].payload.weaponId, "laser");
-  assert.equal(next.history[0].payload.profile.damage, 2);
+  assert.equal(next.history.at(-1).payload.weaponId, "laser");
+  assert.equal(next.history.at(-1).payload.profile.damage, 2);
 });
