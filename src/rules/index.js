@@ -27,3 +27,11 @@ export {
 export { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 export { getExpectedDamage } from "./expected-damage.js";
 export { getFireConcentrationAdvisory } from "./tactical-fire-concentration.js";
+export {
+  SCORING_EVIDENCE,
+  evaluateObjectiveControl,
+  evaluateUnitStatus,
+  evaluateUnitOwnership,
+  evaluateUnitDestruction,
+  evaluateTurnSnapshot
+} from "./scoring-eligibility.js";
