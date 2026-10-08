@@ -15,6 +15,21 @@ function scoringRecommendationPriority(action) {
   return 1;
 }
 
+function recommendationScore(item) {
+  if (item.type === "scoring") {
+    return item.priority * 10 + (item.candidates?.length ? 2 : 0);
+  }
+  return item.priority * 10;
+}
+
+function sortRecommendations(items) {
+  return items.sort((a, b) =>
+    recommendationScore(b) - recommendationScore(a) ||
+    (a.unitId ?? "").localeCompare(b.unitId ?? "") ||
+    (a.targetUnitId ?? "").localeCompare(b.targetUnitId ?? "")
+  );
+}
+
 function getScoringRecommendations(scoringActions) {
   if (!Array.isArray(scoringActions)) return [];
 
@@ -108,8 +123,10 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
     : null;
 
   const scoringRecommendations = getScoringRecommendations(scoringActions);
-  const recommendations = [...priorities, ...scoringRecommendations]
-    .sort((a, b) => b.priority - a.priority);
+  const recommendations = sortRecommendations([
+    ...priorities,
+    ...scoringRecommendations
+  ]);
 
   return {
     playerId,
