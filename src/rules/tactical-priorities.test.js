@@ -67,3 +67,37 @@ test("does not generate priorities for destroyed units", () => {
   const result = getTacticalPriorities(state, { playerId: "p1" });
   assert.equal(result.priorities.some((item) => item.unitId === "dead-unit"), false);
 });
+
+import { SCORING_EVIDENCE } from "./scoring-eligibility.js";
+import { SCORING_TIMINGS, createMissionDefinition } from "./mission-definition.js";
+
+test("exposes actionable scoring context alongside tactical priorities", () => {
+  const state = {
+    phase: "command",
+    units: [
+      { id: "my-unit", ownerId: "p1", status: "deployed", position: { x: 10, y: 10 } }
+    ],
+    objectives: [{ id: "obj-1", position: { x: 10, y: 10 } }],
+    history: []
+  };
+
+  const definition = createMissionDefinition({
+    id: "score-objective",
+    name: "Score Objective",
+    timing: SCORING_TIMINGS.COMMAND_PHASE,
+    conditions: [{
+      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+      args: { objectiveId: "obj-1", playerId: "p1", expected: "controlled" }
+    }]
+  });
+
+  const result = getTacticalPriorities(state, {
+    playerId: "p1",
+    scoringDefinitions: [definition],
+    scoringTiming: SCORING_TIMINGS.COMMAND_PHASE
+  });
+
+  assert.equal(result.scoringActions.length, 1);
+  assert.equal(result.scoringActions[0].actions[0].type, "secure-objective");
+  assert.equal(result.scoringActions[0].actions[0].candidates[0].unitId, "my-unit");
+});
