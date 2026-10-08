@@ -244,6 +244,104 @@ Experienced players should be able to move quickly through setup, while newer pl
 The setup experience should feel like a **checklist with context**, not a seven-page form.
 
 
+## Command Phase comparison — October 7, 2026 screenshots
+
+The additional Command Phase screenshots provide a strong reference for how V2 can present live-phase decisions without turning the Battle screen into a rulebook.
+
+### Ideas to consider adopting
+
+#### 1. Phase workspace rather than a separate phase application
+Warmind keeps the player inside the Round/Turn screen and presents the current phase as the active workspace.
+
+Useful structure:
+
+- Round / turn indicator
+- large **Next Phase** control
+- **Undo Last Action**
+- compact phase navigation: CMD / MOV / SHO / CHG / FGT / END
+- current phase content directly below
+
+**Decision: Adopt the interaction pattern.** V2 should keep the player in a persistent Battle context and make the current phase the workspace.
+
+#### 2. Contextual "Don't Forget" reminders
+Warmind surfaces phase-relevant rules such as **Shadow in the Warp** in a Command Phase reminder panel.
+
+**Decision: Adopt and extend.** V2 should eventually surface relevant army/mission/rule reminders automatically when the current game state makes them relevant. The Tactical Advisor should be able to progress from a reminder to a recommendation when sufficient authoritative state exists.
+
+#### 3. Modal decision sheets for special rules
+Examples include:
+- Hyper-adaptation selection
+- Beacon unit selection
+- Secondary Mission replacement
+
+The player makes a small number of meaningful choices without leaving the Battle screen.
+
+**Decision: Adopt.** Use iPad-friendly bottom-sheet/modal interactions for discrete decisions, while preserving the battle state underneath.
+
+#### 4. Minimal-input state collection
+The Beacon example demonstrates that useful future game state can be captured through one meaningful selection rather than extensive data entry.
+
+**Decision: Adopt the principle.** When the engine can determine the state, do not ask the player to re-enter it. Ask only for the decision/result that cannot be inferred.
+
+This aligns with the existing V2 rule:
+**Attacker -> Weapon -> Target -> Actual Damage**, not individual dice entry.
+
+#### 5. Hierarchical Command Phase information
+Warmind separates:
+- immediate phase actions/reminders
+- player's stratagems
+- reactive abilities
+- reference material
+
+Reference sections such as Core Stratagems, Army Rules, Detachments, Terrain, Primary Mission, and Secondary Missions remain collapsed until needed.
+
+**Decision: Adopt the information hierarchy.** Keep live-play decisions prominent and keep reference material accessible but collapsed.
+
+#### 6. Persistent battle-state summary
+Warmind keeps score, primary, secondary, and CP visible as persistent battle context.
+
+**Decision: Adopt the concept, not the exact implementation.** V2 should keep essential score/CP/battle-state information readily available without crowding the active phase workflow.
+
+#### 7. Event Log as authoritative history
+Warmind's Event Log provides a compact chronological record of meaningful actions.
+
+**Decision: Strongly adopt the concept, but make V2's event history more authoritative and tactically useful.** It should eventually record meaningful events such as opponent Shooting, Charge, and Fight, including resulting wounds/status and engagement changes. Those events should feed the Tactical Advisor rather than exist only as a display log.
+
+### Command Phase design principle
+
+> Surface the next meaningful decision instead of making the player search for the rule.
+
+Warmind pattern:
+**Rule -> Reminder -> Player decision**
+
+V2 target:
+**Game state -> Relevant rule/decision -> Tactical recommendation -> Player decision -> Authoritative event history**
+
+### Command Phase interaction principle
+
+Use the bottom-sheet/modal pattern for discrete decisions where appropriate:
+
+**Battle state remains underneath -> decision sheet opens -> player resolves the decision -> sheet closes -> Battle state remains intact.**
+
+Potential V2 uses include:
+- Hyper-adaptation selection
+- Shadow in the Warp
+- Secondary Mission replacement
+- special pre-battle choices
+- Fight eligibility decisions
+- combat resolution
+
+### Command Phase constraints
+
+Do not:
+- copy Warmind's exact visual styling
+- turn every rule into a modal
+- require manual entry for state the engine already knows
+- overload the live phase screen with every rule and statistic
+- replace authoritative history with a cosmetic event log
+
+The Command Phase reference supports the existing V2 goal of **minimal input, persistent context, contextual rules, and authoritative tactical history**.
+
 ## Reference screenshots
 
 The October 7, 2026 Warmind screenshots supplied during the comparison showed:
@@ -255,5 +353,14 @@ The October 7, 2026 Warmind screenshots supplied during the comparison showed:
 - Army rules and stratagems
 - Primary Missions
 - Fight Phase
+- Command Phase
+- Hyper-adaptations selection
+- Beacon unit selection
+- Secondary Mission replacement
+- Command Phase reminders
+- Command Phase stratagems and reactive abilities
+- Persistent scoring/CP state
+- Destroyed Units state
+- Event Log
 
 The screenshots are the visual source for the observations in this document.
