@@ -6,6 +6,7 @@ import { resolveUnitAttack } from "../../src/engine/combat-transitions.js";
 test("combat transition consumes weapon and target data instead of raw attack parameters", () => {
   const state = createGameState({
     phase: "shooting",
+    turn: 1,
     battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
     units: [
       { id: "a", ownerId: "p1", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } },
