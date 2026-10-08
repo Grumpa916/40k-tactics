@@ -1,15 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "./game-state.js";
-import { createPlayer } from "../state/player.js";
+import { createPlayer, PLAYER_ROLES } from "../state/player.js";
 import { recordObjectiveControl } from "./state-transitions.js";
 import { OBJECTIVE_CONTROL_STATES } from "../rules/objective-control-state.js";
 
 function state() {
   return createGameState({
     players: [
-      createPlayer({ id: "p1", name: "Player 1" }),
-      createPlayer({ id: "p2", name: "Player 2" })
+      createPlayer({ id: "p1", name: "Player 1", role: PLAYER_ROLES.PLAYER_ONE }),
+      createPlayer({ id: "p2", name: "Player 2", role: PLAYER_ROLES.PLAYER_TWO })
     ],
     objectives: [{ id: "obj-1", position: { x: 12, y: 12 } }]
   });
