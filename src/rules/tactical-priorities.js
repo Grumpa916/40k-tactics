@@ -3,6 +3,7 @@ import { getSpatialContext } from "./spatial-context.js";
 import { getScoringOpportunityAdvisories } from "./tactical-scoring-opportunities.js";
 import { getTacticalScoringActions } from "./tactical-scoring-actions.js";
 import { getTacticalCombatRecommendations } from "./tactical-combat-recommendations.js";
+import { rankTacticalRecommendations } from "./tactical-decision.js";
 
 function unitById(state, unitId) {
 
@@ -133,6 +134,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
     ...scoringRecommendations,
     ...combatRecommendations.recommendations
   ]);
+  const topRecommendations = rankTacticalRecommendations(recommendations, { limit: 5 });
 
   return {
     playerId,
@@ -141,6 +143,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
     scoringOpportunities,
     scoringActions,
     combatRecommendations,
-    recommendations
+    recommendations,
+    topRecommendations
   };
 }
