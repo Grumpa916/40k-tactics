@@ -114,7 +114,8 @@ export function getFightWeaponOptions(state, { attackerId, gameData = null } = {
 export function resolveFightAttack(session, {
   attackerId,
   targetId,
-  weapon
+  weapon,
+  actualDamage = null
 } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
@@ -124,7 +125,8 @@ export function resolveFightAttack(session, {
     createCommand(COMMAND_TYPES.RESOLVE_ATTACK, {
       attackerId,
       targetId,
-      weapon
+      weapon,
+      actualDamage
     }),
     context
   );
