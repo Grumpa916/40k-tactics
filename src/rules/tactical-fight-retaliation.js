@@ -22,9 +22,9 @@ function availableMeleeWeapons(unit) {
   });
 }
 
-function expectedDamage(attacker, target, weapon) {
+function expectedDamage(attacker, target, weapon, attackerRemainingWounds = attacker?.wounds) {
   try {
-    return getExpectedDamage({ attacker, target, weapon }).expectedDamage;
+    return getExpectedDamage({ attacker, target, weapon, attackerRemainingWounds }).expectedDamage;
   } catch {
     return null;
   }
@@ -61,7 +61,7 @@ function engagedOpponents(state, playerId, attackerId) {
  */
 export function getBestFightRetaliation(
   state,
-  { playerId, attackerId, retaliationOptions = [] } = {}
+  { playerId, attackerId, retaliationOptions = [], remainingWoundsByUnit = {}, destroyedUnitIds = [] } = {}
 ) {
   if (!playerId) throw new TypeError("playerId is required.");
   if (!attackerId) throw new TypeError("attackerId is required.");
@@ -72,17 +72,18 @@ export function getBestFightRetaliation(
   }
 
   const candidates = [];
+  const destroyed = new Set(Array.isArray(destroyedUnitIds) ? destroyedUnitIds : []);
 
   for (const option of Array.isArray(retaliationOptions) ? retaliationOptions : []) {
     const enemy = unitById(state, option?.unitId);
     const weapon = option?.weapon;
 
-    if (!enemy || enemy.ownerId === playerId || enemy.status === "destroyed") continue;
+    if (!enemy || enemy.ownerId === playerId || enemy.status === "destroyed" || destroyed.has(enemy.id)) continue;
     if (!weapon || weapon.type !== "melee") continue;
 
     const damage = Number.isFinite(option?.expectedDamage)
       ? option.expectedDamage
-      : expectedDamage(enemy, attacker, weapon);
+      : expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds);
 
     if (!Number.isFinite(damage)) continue;
 
@@ -98,7 +99,8 @@ export function getBestFightRetaliation(
   for (const enemyId of engagedOpponents(state, playerId, attackerId)) {
     const enemy = unitById(state, enemyId);
     for (const weapon of availableMeleeWeapons(enemy)) {
-      const damage = expectedDamage(enemy, attacker, weapon);
+      if (destroyed.has(enemy.id)) continue;
+      const damage = expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds);
       if (!Number.isFinite(damage)) continue;
 
       candidates.push({
