@@ -259,10 +259,12 @@ test("Shooting attacks reject melee weapons", () => {
 
 test("combat transition records actual damage separately from calculated damage", () => {
   const state = activeState();
+  const values = [0.9, 0.9, 0.1, 0.1];
+  let index = 0;
   const next = resolveUnitAttack(state, {
     attackerId: "attacker", targetId: "target", weapon,
     actualDamage: 1,
-    random: () => [0.9, 0.9, 0.1, 0.1][0]
+    random: () => values[index++]
   });
   const event = next.history.at(-1);
   assert.equal(event.payload.expectedDamage, 4);
