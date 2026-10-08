@@ -77,3 +77,18 @@ test("requires active player and Charge phase and prevents repeat attempts", () 
     unitId: "charger", succeeded: false
   }), /one charge per turn/);
 });
+
+
+test("Charge cannot be declared after Fall Back in the same turn", () => {
+  const fallenBack = {
+    ...chargeState(),
+    history: [{
+      type: "unit.fell_back",
+      payload: { unitId: "charger", playerId: "p1", phase: "movement", round: 1, turn: 1 }
+    }]
+  };
+  assert.throws(
+    () => recordChargeOutcome(fallenBack, { unitId: "charger", succeeded: false }),
+    /Fell Back cannot declare a charge/
+  );
+});
