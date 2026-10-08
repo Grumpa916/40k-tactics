@@ -1,4 +1,4 @@
-import { SCORING_ACTION_TYPES, getScoringActionContexts } from "./scoring-action-context.js";
+import { SCORING_ACTION_TYPES, getScoringActionContext } from "./scoring-action-context.js";
 import { getSpatialContext } from "./spatial-context.js";
 
 const CANDIDATE_BANDS = new Set(["close", "near", "mid"]);
@@ -19,7 +19,10 @@ export function getTacticalScoringActions(
     throw new TypeError("Scoring advisories are required.");
   }
 
-  const contexts = getScoringActionContexts(scoringAdvisories);
+  const contexts = (Array.isArray(scoringAdvisories.due) ? scoringAdvisories.due : [])
+    .map((evaluation) => evaluation?.opportunity)
+    .filter(Boolean)
+    .map((opportunity) => getScoringActionContext(opportunity));
   const spatial = getSpatialContext(state, { playerId });
 
   return contexts.map((context) => {
