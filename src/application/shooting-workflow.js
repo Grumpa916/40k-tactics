@@ -92,7 +92,8 @@ export function activateShootingUnit(session, {
 export function resolveShootingAttack(session, {
   attackerId,
   targetId,
-  weapon
+  weapon,
+  actualDamage = null
 } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
@@ -101,7 +102,8 @@ export function resolveShootingAttack(session, {
     createCommand(COMMAND_TYPES.RESOLVE_ATTACK, {
       attackerId,
       targetId,
-      weapon
+      weapon,
+      actualDamage
     }),
     context
   );
