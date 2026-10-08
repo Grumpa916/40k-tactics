@@ -21,7 +21,7 @@ function chargeState() {
     units: [
       createUnit({ id: "charger", ownerId: "p1", name: "Charger", status: "deployed", position: { x: 0, y: 0 } }),
       createUnit({ id: "near", ownerId: "p2", name: "Near Target", status: "deployed", position: { x: 6, y: 0 } }),
-      createUnit({ id: "borderline", ownerId: "p2", name: "Borderline Target", status: "deployed", position: { x: 13, y: 0 } }),
+      createUnit({ id: "borderline", ownerId: "p2", name: "Borderline Target", status: "deployed", position: { x: 14, y: 0 } }),
       createUnit({ id: "outside", ownerId: "p2", name: "Outside Target", status: "deployed", position: { x: 18, y: 0 } })
     ]
   });
