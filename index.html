@@ -38,6 +38,14 @@
     .fight-main-grid > .fight-section { margin-top: 0; }
     .fight-attack-entry { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 7px; align-items: end; }
     .fight-attack-entry label { display: grid; gap: 4px; font-size: 11px; opacity: .65; }
+    .damage-control { display: grid; gap: 5px; min-width: 150px; }
+    .damage-control__label { font-size: 11px; opacity: .65; }
+    .damage-control__buttons { display: grid; grid-template-columns: 44px minmax(42px, 1fr) 44px; min-height: 40px; }
+    .damage-control__buttons button { min-height: 40px; padding: 0; border: 1px solid #343a43; background: #171b21; color: inherit; font-size: 22px; line-height: 1; }
+    .damage-control__buttons button:first-child { border-radius: 8px 0 0 8px; }
+    .damage-control__buttons button:last-child { border-radius: 0 8px 8px 0; }
+    .damage-control__buttons strong { display: grid; place-items: center; min-height: 40px; border-top: 1px solid #343a43; border-bottom: 1px solid #343a43; background: #111419; font-size: 18px; }
+    .damage-control small { font-size: 10px; opacity: .45; line-height: 1.25; }
     .fight-attack-entry select { width: 100%; min-height: 40px; padding: 0 9px; border: 1px solid #343a43; border-radius: 8px; background: #171b21; color: inherit; font: inherit; }
     .fight-attack-entry button { min-height: 40px; padding: 0 13px; border: 0; border-radius: 8px; background: #e8ebef; color: #0b0d10; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .fight-attack-entry button:disabled { cursor: not-allowed; opacity: .3; }
