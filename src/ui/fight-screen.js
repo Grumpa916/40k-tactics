@@ -70,6 +70,26 @@ function candidateSection(title, candidates, blocked) {
   `;
 }
 
+function attackRow(attack, state, gameData) {
+  const attacker = state.units.find((unit) => unit?.id === attack.attackerId);
+  const target = state.units.find((unit) => unit?.id === attack.targetId);
+  const weapon = gameData?.weapons?.find((item) => item?.id === attack.weaponId);
+  const status = attack.targetStatusAfter === "destroyed"
+    ? "Destroyed"
+    : attack.targetWoundsAfter == null ? "" : `${attack.targetWoundsAfter} wounds remaining`;
+  const result = `${attack.totalDamage ?? 0} damage${status ? ` · ${status}` : ""}`;
+  return `
+    <li class="fight-history__item">
+      <span class="fight-history__number">⚔</span>
+      <span class="fight-history__main">
+        <strong>${escapeHtml(attacker?.name ?? attack.attackerId)} → ${escapeHtml(target?.name ?? attack.targetId)}</strong>
+        <span>${escapeHtml(weapon?.name ?? attack.weaponId ?? "Weapon")}</span>
+      </span>
+      <span class="fight-history__stats">${escapeHtml(result)}</span>
+    </li>
+  `;
+}
+
 function activationRow(activation, index) {
   const owner = escapeHtml(ownerLabel(activation.unit));
   const name = escapeHtml(activation.unit?.name ?? activation.unitId);
@@ -91,7 +111,7 @@ function activationRow(activation, index) {
 
 export function createFightScreen(
   container,
-  { session, perspectivePlayerId = null } = {}
+  { session, perspectivePlayerId = null, gameData = null } = {}
 ) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -158,6 +178,15 @@ export function createFightScreen(
             ${model.activations.length
               ? model.activations.map(activationRow).join("")
               : '<li class="fight-history__empty">No Fight activations recorded yet.</li>'}
+          </ol>
+        </section>
+        <section class="fight-section">
+          <div class="fight-section__heading">
+            <h2>Attack results</h2>
+            <span class="fight-section__hint">${model.attacks.length} recorded</span>
+          </div>
+          <ol class="fight-history">
+            ${model.attacks.length ? model.attacks.map((attack) => attackRow(attack, state, gameData)).join("") : '<li class="fight-history__empty">No attacks recorded yet.</li>'}
           </ol>
         </section>
 
