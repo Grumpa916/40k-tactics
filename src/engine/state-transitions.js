@@ -121,7 +121,11 @@ export function changePhase(state, { phase } = {}) {
       turn: state.turn
     }, (current) => current);
 
-    return transition(completed, "turn.phase_changed", { phase }, (current) => ({
+    return transition(completed, "turn.phase_changed", {
+      phase,
+      round: state.battle.round,
+      turn: state.turn
+    }, (current) => ({
       ...current,
       phase
     }));
@@ -139,13 +143,21 @@ export function changePhase(state, { phase } = {}) {
       turn: state.turn
     }, (current) => current);
 
-    return transition(completed, "turn.phase_changed", { phase }, (current) => ({
+    return transition(completed, "turn.phase_changed", {
+      phase,
+      round: state.battle.round,
+      turn: state.turn
+    }, (current) => ({
       ...current,
       phase
     }));
   }
 
-  return transition(state, "turn.phase_changed", { phase }, (current) => ({
+  return transition(state, "turn.phase_changed", {
+    phase,
+    round: state.battle.round,
+    turn: state.turn
+  }, (current) => ({
     ...current,
     phase
   }));
