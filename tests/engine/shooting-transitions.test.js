@@ -58,7 +58,6 @@ test("Shooting completion advances to Charge after all candidates are recorded",
   );
 });
 
-
 test("Shooting mission actions consume the activation without a combat event", () => {
   const next = recordShootingActivation(state(), {
     unitId: "p1-a",
@@ -87,7 +86,6 @@ test("Non-shoot Shooting activations require an action id", () => {
   );
 });
 
-
 test("Shooting cannot record a Shoot activation after Fall Back", () => {
   const fallenBack = {
     ...state(),
@@ -100,4 +98,33 @@ test("Shooting cannot record a Shoot activation after Fall Back", () => {
     () => recordShootingActivation(fallenBack, { unitId: "p1-a", actionType: "shoot" }),
     /Fell Back cannot shoot/
   );
+});
+
+test("Shooting supports the opponent when the active turn belongs to the opponent", () => {
+  const opponentTurn = createGameState({
+    ...state(),
+    activePlayer: "p2",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
+    units: [
+      { id: "p1-target", ownerId: "p1", name: "Your Unit", status: "deployed" },
+      { id: "p2-shooter", ownerId: "p2", name: "Opponent Shooter", status: "deployed" }
+    ]
+  });
+
+  assert.deepEqual(getShootingCandidates(opponentTurn).available, ["p2-shooter"]);
+
+  const next = recordShootingActivation(opponentTurn, {
+    unitId: "p2-shooter",
+    actionType: "shoot"
+  });
+
+  assert.deepEqual(getShootingCandidates(next).available, []);
+  assert.deepEqual(next.history.at(-1).payload, {
+    unitId: "p2-shooter",
+    playerId: "p2",
+    round: 1,
+    turn: 2,
+    actionType: "shoot",
+    actionId: null
+  });
 });
