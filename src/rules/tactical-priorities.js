@@ -2,6 +2,7 @@ import { getCombatHistorySummary } from "./combat-history-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getScoringOpportunityAdvisories } from "./tactical-scoring-opportunities.js";
 import { getTacticalScoringActions } from "./tactical-scoring-actions.js";
+import { getTacticalCombatRecommendations } from "./tactical-combat-recommendations.js";
 
 function unitById(state, unitId) {
 
@@ -49,7 +50,7 @@ function getScoringRecommendations(scoringActions) {
   );
 }
 
-export function getTacticalPriorities(state, { playerId, scoringDefinitions = [], scoringTiming = null } = {}) {
+export function getTacticalPriorities(state, { playerId, scoringDefinitions = [], scoringTiming = null, shootingContext = null } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
 
   const combat = getCombatHistorySummary(state, { playerId });
@@ -123,9 +124,14 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
     : null;
 
   const scoringRecommendations = getScoringRecommendations(scoringActions);
+  const combatRecommendations = getTacticalCombatRecommendations(state, {
+    playerId,
+    shootingContext
+  });
   const recommendations = sortRecommendations([
     ...priorities,
-    ...scoringRecommendations
+    ...scoringRecommendations,
+    ...combatRecommendations.recommendations
   ]);
 
   return {
@@ -134,6 +140,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
     priorities,
     scoringOpportunities,
     scoringActions,
+    combatRecommendations,
     recommendations
   };
 }
