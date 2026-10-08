@@ -5,6 +5,7 @@ export {
   activateFightUnit,
   resolveFightAttack,
   getFightAttackOptions,
+  getFightWeaponOptions,
   finishFightPhase
 } from "./fight-workflow.js";
 export { createGameSession } from "./game-session.js";

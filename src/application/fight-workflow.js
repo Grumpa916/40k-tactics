@@ -91,6 +91,26 @@ export function activateFightUnit(session, { unitId } = {}, context = {}) {
   );
 }
 
+export function getFightWeaponOptions(state, { attackerId, gameData = null } = {}) {
+  const attacker = state?.units?.find((unit) => unit?.id === attackerId);
+  if (!attacker) return [];
+
+  const weaponIds = Array.isArray(attacker.profile?.weaponIds)
+    ? attacker.profile.weaponIds
+    : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
+  const weapons = Array.isArray(gameData?.weapons) ? gameData.weapons : [];
+
+  return weaponIds
+    .map((weaponId) => weapons.find((weapon) => weapon?.id === weaponId))
+    .filter((weapon) => weapon?.type === "melee")
+    .map((weapon) => ({
+      id: weapon.id,
+      name: weapon.name ?? weapon.id,
+      type: weapon.type,
+      characteristics: { ...(weapon.characteristics ?? {}) }
+    }));
+}
+
 export function resolveFightAttack(session, {
   attackerId,
   targetId,
