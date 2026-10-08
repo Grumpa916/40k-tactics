@@ -19,3 +19,4 @@ export { getFightState } from "./fight-state.js";
 
 export { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 export { getExpectedDamage } from "./expected-damage.js";
+export { getFireConcentrationAdvisory } from "./tactical-fire-concentration.js";
