@@ -105,6 +105,32 @@ test("normal move command updates per-model positions and records an event", () 
   clearCommandHandlers();
 });
 
+
+test("charge outcome command records success and post-roll targets", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const state = createGameState({
+    phase: "charge",
+    turn: 2,
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1 },
+    units: [
+      createUnit({ id: "u1", ownerId: "p1", name: "Charger", status: "deployed" }),
+      createUnit({ id: "u2", ownerId: "p2", name: "Target", status: "deployed" })
+    ]
+  });
+
+  const next = executeCommand(state, createCommand(COMMAND_TYPES.RECORD_CHARGE_OUTCOME, {
+    unitId: "u1",
+    succeeded: true,
+    targetIds: ["u2"]
+  }));
+
+  assert.equal(next.history.at(-1).type, "charge.outcome_recorded");
+  assert.deepEqual(next.history.at(-1).payload.targetIds, ["u2"]);
+  clearCommandHandlers();
+});
+
 test("core command registration rejects duplicate registration", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();

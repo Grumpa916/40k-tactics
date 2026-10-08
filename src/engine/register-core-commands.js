@@ -12,6 +12,7 @@ import {
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
 import { resolveNormalMove } from "./movement-transitions.js";
+import { recordChargeOutcome } from "./charge-transitions.js";
 
 export function registerCoreCommandHandlers() {
   const handlers = [
@@ -25,6 +26,8 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.COMPLETE_BATTLE, (state) => completeBattle(state)],
     [COMMAND_TYPES.RESOLVE_NORMAL_MOVE, (state, command) =>
       resolveNormalMove(state, command.payload)],
+    [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) =>
+      recordChargeOutcome(state, command.payload)],
     [COMMAND_TYPES.RESOLVE_ATTACK, (state, command, context) =>
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ]
