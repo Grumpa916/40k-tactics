@@ -1,5 +1,6 @@
 import { getExpectedDamage } from "./expected-damage.js";
 import { evaluateFightOpportunity } from "./tactical-fight-opportunity.js";
+import { getBestFightRetaliation } from "./tactical-fight-retaliation.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
@@ -18,9 +19,9 @@ function expectedDamageForOption(attacker, target, weapon) {
 /**
  * Evaluate Fight options supplied by authoritative Fight UI context.
  *
- * This adapter deliberately does not discover targets from the map or infer
- * enemy retaliation. Each option must supply the selected attacker/target and
- * optionally the selected weapons plus an explicit retaliation estimate.
+ * This adapter does not use map geometry. Enemy retaliation is derived from
+ * authoritative Fight engagement history when known melee weapon profiles are
+ * available; explicit retaliation estimates remain supported for richer UI context.
  */
 export function getFightOpportunityRecommendations(
   state,
@@ -43,13 +44,43 @@ export function getFightOpportunityRecommendations(
           ? option.expectedDamage
           : expectedDamageForOption(attacker, target, option?.weapon);
 
+      const postAttackWounds = Number.isFinite(expectedDamage) && Number.isFinite(target.wounds)
+        ? Math.max(0, target.wounds - expectedDamage)
+        : target.wounds;
+
+      const postAttackTarget = postAttackWounds === target.wounds
+        ? target
+        : { ...target, wounds: postAttackWounds, status: postAttackWounds <= 0 ? "destroyed" : target.status };
+
+      const automaticRetaliation =
+        Number.isFinite(option?.retaliationExpectedDamage)
+          ? null
+          : getBestFightRetaliation(state, {
+              playerId,
+              attackerId: attacker.id,
+              retaliationOptions: option?.retaliationOptions
+            });
+
+      const retaliationExpectedDamage =
+        Number.isFinite(option?.retaliationExpectedDamage)
+          ? option.retaliationExpectedDamage
+          : postAttackTarget.status === "destroyed"
+            ? 0
+            : automaticRetaliation?.expectedDamage ?? 0;
+
+      const retaliationConfidence =
+        option?.retaliationConfidence ??
+        automaticRetaliation?.confidence ??
+        "low";
+
       const evaluation = evaluateFightOpportunity({
         expectedDamage,
-        retaliationExpectedDamage: option?.retaliationExpectedDamage ?? 0,
+        retaliationExpectedDamage,
+        remainingWounds: option?.remainingWounds ?? attacker.wounds ?? 0,
         remainingWounds: option?.remainingWounds ?? attacker.wounds ?? 0,
         maxWounds: option?.maxWounds ?? attacker.maxWounds ?? null,
         targetWounds: option?.targetWounds ?? target.wounds ?? null,
-        retaliationConfidence: option?.retaliationConfidence ?? "low"
+        retaliationConfidence
       });
 
       return {
