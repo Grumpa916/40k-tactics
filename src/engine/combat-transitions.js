@@ -54,6 +54,7 @@ export function resolveUnitAttack(state, {
     weaponId: weapon.id,
     phase: state.phase,
     round: state.battle.round,
+    turn: state.turn,
     profile,
     result,
     stateDelta: {
