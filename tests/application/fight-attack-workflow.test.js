@@ -6,6 +6,7 @@ import { clearCommandHandlers } from "../../src/engine/command-engine.js";
 import { registerCoreCommandHandlers } from "../../src/engine/register-core-commands.js";
 import {
   getFightAttackOptions,
+  getFightWeaponOptions,
   resolveFightAttack
 } from "../../src/application/fight-workflow.js";
 import { createGameSession } from "../../src/application/game-session.js";
@@ -85,4 +86,22 @@ test("Fight attack workflow dispatches the existing combat command", () => {
   assert.equal(event.payload.targetId, "target");
 
   clearCommandHandlers();
+});
+
+
+test("Fight weapon options resolve from unit weapon ids and game data", () => {
+  const state = fightState();
+  state.units[0].profile = {
+    ...state.units[0].profile,
+    weaponIds: ["blade", "bolter"]
+  };
+  const gameData = {
+    weapons: [
+      meleeWeapon,
+      { id: "bolter", name: "Bolter", type: "ranged", characteristics: { attacks: 2 } }
+    ]
+  };
+
+  const options = getFightWeaponOptions(state, { attackerId: "attacker", gameData });
+  assert.deepEqual(options.map((weapon) => weapon.id), ["blade"]);
 });
