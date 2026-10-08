@@ -1,4 +1,5 @@
 import { buildAttackProfile } from "./combat-profile.js";
+import { getWoundBracketModifiers } from "./wound-bracket.js";
 
 function expectedDice(expression) {
   if (Number.isInteger(expression) && expression >= 0) return expression;
@@ -77,12 +78,13 @@ function damagePreventionMultiplier(prevention) {
  * It uses the supplied profiles and known modifiers, but does not model
  * hidden cover, future abilities, positioning, or limited-count save rerolls.
  */
-export function getExpectedDamage({ attacker, target, weapon } = {}) {
+export function getExpectedDamage({ attacker, target, weapon, attackerRemainingWounds = attacker?.wounds } = {}) {
   const profile = buildAttackProfile({ attacker, target, weapon });
   const saveModifier = target?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
+  const woundBracket = getWoundBracketModifiers(attacker, { remainingWounds: attackerRemainingWounds });
   const attacks = expectedDice(profile.attacks);
 
-  const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier);
+  const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier + woundBracket.hitModifier);
   const criticalHits = attacks / 6;
   const regularHits = attacks * successProbability(hitTarget);
   const sustainedHits = criticalHits * profile.sustainedHits;

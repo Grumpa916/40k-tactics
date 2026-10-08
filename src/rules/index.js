@@ -67,5 +67,6 @@ export { getFightOpportunityRecommendations } from "./tactical-fight-opportuniti
 export { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 
 export { getPostFightTargetStates } from "./post-fight-target-states.js";
+export { getWoundBracketModifiers } from "./wound-bracket.js";
 
 export { getBestFightRetaliation } from "./tactical-fight-retaliation.js";
