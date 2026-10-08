@@ -84,3 +84,21 @@ test("prevents a unit from being activated twice in one turn", () => {
   const first = recordFightActivation(fightState(), { unitId: "friendly" });
   assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
 });
+
+test("rejects a unit that has already been activated this turn", () => {
+  const first = recordFightActivation(fightState(), { unitId: "friendly" });
+  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
+});
+
+test("rejects reserves even if they have a successful charge event", () => {
+  const state = fightState({
+    units: [
+      createUnit({ id: "reserve", ownerId: "p1", name: "Reserve", status: "reserves" })
+    ],
+    history: [{
+      type: "charge.outcome_recorded",
+      payload: { unitId: "reserve", outcome: "successful", round: 1, turn: 2 }
+    }]
+  });
+  assert.throws(() => recordFightActivation(state, { unitId: "reserve" }), /must be deployed/);
+});
