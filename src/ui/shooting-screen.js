@@ -52,7 +52,7 @@ export function createShootingScreen(container, {
   let selectedAttackerId = null;
   let selectedWeaponId = null;
   let selectedTargetId = null;
-  let actualDamage = "";
+  let actualDamage = "0";
 
   function clearPending() {
     pendingUnitId = null;
@@ -108,7 +108,7 @@ export function createShootingScreen(container, {
             <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
             <label>Actual damage<input data-shoot-damage type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(actualDamage)}" placeholder="0" ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}></label>
-            <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "" ? "" : "disabled"}>Record Attack</button>
+            <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
           </div>
         </section>
 
@@ -139,7 +139,7 @@ export function createShootingScreen(container, {
       const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId: unitId, gameData });
       selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
       selectedTargetId = null;
-      actualDamage = "";
+      actualDamage = "0";
       clearPending();
       render();
     });
@@ -176,7 +176,7 @@ export function createShootingScreen(container, {
       if (!Number.isInteger(damage) || damage < 0) return;
       resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
       selectedTargetId = null;
-      actualDamage = "";
+      actualDamage = "0";
       render();
     });
     container.querySelector("[data-complete]")?.addEventListener("click", () => finishShootingPhase(session));
