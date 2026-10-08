@@ -65,3 +65,5 @@ export { evaluateFightOpportunity } from "./tactical-fight-opportunity.js";
 export { getFightOpportunityRecommendations } from "./tactical-fight-opportunities.js";
 
 export { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
+
+export { getPostFightTargetStates } from "./post-fight-target-states.js";
