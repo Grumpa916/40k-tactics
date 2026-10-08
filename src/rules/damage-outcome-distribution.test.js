@@ -68,3 +68,25 @@ test("lethal hits and sustained hits are represented in the distribution", () =>
   assert.ok(Math.abs(result.totalProbability - 1) < 1e-12);
   assert.ok(result.outcomes.some((outcome) => outcome.damage >= 2));
 });
+
+
+test("applies wound degradation to damage outcome distributions", () => {
+  const base = getDamageOutcomeDistribution({
+    attacker: { wounds: 6, characteristics: { weaponSkill: 3 } },
+    target: { characteristics: { toughness: 4, save: 4 } },
+    weapon: { type: "melee", characteristics: { attacks: 4, strength: 4, ap: 0, damage: 1 } }
+  });
+  const degraded = getDamageOutcomeDistribution({
+    attacker: {
+      wounds: 4,
+      characteristics: {
+        weaponSkill: 3,
+        woundBrackets: [{ maxWoundsRemaining: 5, hitModifier: -1 }]
+      }
+    },
+    target: { characteristics: { toughness: 4, save: 4 } },
+    weapon: { type: "melee", characteristics: { attacks: 4, strength: 4, ap: 0, damage: 1 } }
+  });
+  assert.ok(degraded.expectedDamage < base.expectedDamage);
+  assert.equal(degraded.totalProbability, 1);
+});
