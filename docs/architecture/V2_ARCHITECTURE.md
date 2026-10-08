@@ -44,6 +44,10 @@ A Normal Move is a command resolved during the Movement phase for a deployed uni
 The command supplies a destination for each model. The engine validates each model's displacement, updates positions, and records the from/to positions and distance in history. A UI may show a temporary drag path, but the core game state does not store or replay the path.
 
 This first movement slice does not model terrain, base shapes, engagement range, or unit coherency.
+## Charge result recording
+
+During the Charge phase, the engine records the active player's reported outcome. A successful outcome includes the enemy targets selected after the physical roll; a failed attempt has no targets. The engine does not generate dice or simulate the charge move.
+
 ## V1 relationship
 
 Grumpa916/onoforge40k is the behavioral reference and regression oracle.
