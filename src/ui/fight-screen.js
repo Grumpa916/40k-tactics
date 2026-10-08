@@ -115,11 +115,11 @@ function fightAdvisory(attackerId, weaponId, targetId, state, weapons, perspecti
   const retaliation = Number.isFinite(recommendation.retaliationExpectedDamage)
     ? recommendation.retaliationExpectedDamage.toFixed(1)
     : "—";
-  const survival = Number.isFinite(recommendation.retaliationSurvivalProbability)
-    ? Math.round(recommendation.retaliationSurvivalProbability * 100) + "%"
+  const survival = Number.isFinite(recommendation.targetSurvivalProbability)
+    ? Math.round(recommendation.targetSurvivalProbability * 100) + "%"
     : "—";
-  const destruction = Number.isFinite(recommendation.retaliationDestructionProbability)
-    ? Math.round(recommendation.retaliationDestructionProbability * 100) + "%"
+  const destruction = Number.isFinite(recommendation.targetDestructionProbability)
+    ? Math.round(recommendation.targetDestructionProbability * 100) + "%"
     : "—";
 
   return `
