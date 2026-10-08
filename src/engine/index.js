@@ -20,5 +20,6 @@ export { resolveNormalMove } from "./movement-transitions.js";
 export { recordChargeOutcome } from "./charge-transitions.js";
 export { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 export { resolveUnitAttack } from "./combat-transitions.js";
+export { getFightState } from "../rules/fight-state.js";
 export { registerCoreCommandHandlers } from "./register-core-commands.js";
 export { COMMAND_TYPES, commandTypeList } from "../commands/game-commands.js";
