@@ -158,3 +158,18 @@ test("completes Fight after all candidates are activated", () => {
   });
   assert.equal(next.history.at(-1).payload.phase, "end_turn");
 });
+
+
+test("records an opponent Fight activation as Fights First", () => {
+  const state = fightState({
+    activePlayer: "p2",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
+    history: [{ type: "charge.outcome_recorded", payload: {
+      unitId: "enemy", playerId: "p2", outcome: "successful", targetIds: ["friendly"], round: 1, turn: 2
+    }}]
+  });
+  const next = recordFightActivation(state, { unitId: "enemy" });
+  assert.deepEqual(next.history.at(-1).payload, {
+    unitId: "enemy", playerId: "p2", round: 1, turn: 2, fightsFirst: true
+  });
+});
