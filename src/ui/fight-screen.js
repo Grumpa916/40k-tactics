@@ -242,7 +242,7 @@ export function createFightScreen(
       if (!Number.isInteger(damage) || damage < 0) return;
       resolveFightAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
       selectedTargetId = null;
-      actualDamage = "";
+      actualDamage = "0";
       render();
     });
 
