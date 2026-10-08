@@ -14,35 +14,43 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; background: #0b0d10; }
     button { font: inherit; }
-    .fight-screen { max-width: 900px; margin: 0 auto; padding: 28px 20px 40px; }
+    .fight-screen { max-width: 1180px; margin: 0 auto; padding: 24px 28px 32px; }
     .fight-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
-    .fight-kicker { font-size: 12px; letter-spacing: .14em; opacity: .6; }
-    h1 { margin: 4px 0 2px; font-size: 36px; }
-    .fight-header p { margin: 0; opacity: .65; }
-    .fight-status { border: 1px solid #353a42; border-radius: 999px; padding: 10px 14px; font-size: 13px; }
-    .fight-note { margin: 24px 0; padding: 14px 16px; border-radius: 12px; background: #161a20; color: #cdd2d9; line-height: 1.45; }
-    .fight-section { margin-top: 24px; }
-    .fight-section__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-    .fight-section h2 { margin: 0; font-size: 18px; }
-    .fight-section__hint, .fight-section__empty { font-size: 12px; opacity: .55; }
-    .fight-candidates { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
-    .fight-unit { text-align: left; padding: 16px; border: 1px solid #343a43; border-radius: 14px; background: #171b21; color: inherit; cursor: pointer; display: grid; gap: 5px; min-height: 110px; }
-    .fight-unit:hover:not(:disabled) { transform: translateY(-1px); border-color: #66707e; }
-    .fight-unit:disabled { cursor: not-allowed; opacity: .35; }
-    .fight-unit--self { border-left: 4px solid #72839b; }
-    .fight-unit--opponent { border-left: 4px solid #9b8272; }
+    .fight-kicker { font-size: 11px; letter-spacing: .14em; opacity: .55; }
+    h1 { margin: 3px 0 2px; font-size: 34px; }
+    .fight-header p { margin: 0; opacity: .6; }
+    .fight-status { border: 1px solid #353a42; border-radius: 999px; padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+    .fight-note { margin: 16px 0; padding: 10px 13px; border-radius: 10px; background: #14181d; color: #bfc5cd; font-size: 12px; line-height: 1.4; }
+    .fight-section { margin-top: 18px; }
+    .fight-section__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .fight-section h2 { margin: 0; font-size: 16px; }
+    .fight-section__hint, .fight-section__empty { font-size: 11px; opacity: .5; }
+    .fight-candidates { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 8px; }
+    .fight-unit { text-align: left; padding: 12px; border: 1px solid #343a43; border-radius: 10px; background: #171b21; color: inherit; cursor: pointer; display: grid; gap: 4px; min-height: 82px; }
+    .fight-unit:hover:not(:disabled), .fight-unit:focus-visible { transform: translateY(-1px); border-color: #66707e; }
+    .fight-unit:disabled { cursor: not-allowed; opacity: .3; }
+    .fight-unit--self { border-left: 3px solid #72839b; }
+    .fight-unit--opponent { border-left: 3px solid #9b8272; }
     .fight-unit__name { font-weight: 700; }
-    .fight-unit__owner { font-size: 13px; opacity: .7; }
-    .fight-unit__action { margin-top: auto; font-size: 12px; opacity: .55; }
-    .fight-history { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-    .fight-history__item { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center; padding: 11px 12px; border: 1px solid #2a2f36; border-radius: 10px; background: #12151a; }
-    .fight-history__number { opacity: .5; font-variant-numeric: tabular-nums; }
-    .fight-history__main { display: grid; gap: 2px; }
-    .fight-history__main span, .fight-history__stats { font-size: 12px; opacity: .6; }
-    .fight-history__empty { padding: 14px 0; opacity: .5; }
-    .fight-footer { margin-top: 28px; display: flex; justify-content: flex-end; }
-    .fight-complete { padding: 12px 18px; border: 0; border-radius: 10px; background: #e8ebef; color: #0b0d10; font-weight: 700; cursor: pointer; }
-    .fight-complete:disabled { cursor: not-allowed; opacity: .35; }
+    .fight-unit__owner { font-size: 12px; opacity: .65; }
+    .fight-unit__action { margin-top: auto; font-size: 11px; opacity: .45; }
+    .fight-main-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 18px; align-items: start; }
+    .fight-main-grid > .fight-section { margin-top: 0; }
+    .fight-attack-entry { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 7px; align-items: end; }
+    .fight-attack-entry label { display: grid; gap: 4px; font-size: 11px; opacity: .65; }
+    .fight-attack-entry select { width: 100%; min-height: 40px; padding: 0 9px; border: 1px solid #343a43; border-radius: 8px; background: #171b21; color: inherit; font: inherit; }
+    .fight-attack-entry button { min-height: 40px; padding: 0 13px; border: 0; border-radius: 8px; background: #e8ebef; color: #0b0d10; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .fight-attack-entry button:disabled { cursor: not-allowed; opacity: .3; }
+    .fight-history { list-style: none; padding: 0; margin: 0; display: grid; gap: 5px; }
+    .fight-history__item { display: grid; grid-template-columns: 26px 1fr auto; gap: 9px; align-items: center; padding: 8px 9px; border: 1px solid #272c33; border-radius: 8px; background: #111419; }
+    .fight-history__number { opacity: .45; font-variant-numeric: tabular-nums; font-size: 11px; }
+    .fight-history__main { display: grid; gap: 2px; min-width: 0; }
+    .fight-history__main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .fight-history__main span, .fight-history__stats { font-size: 11px; opacity: .55; }
+    .fight-history__empty { padding: 10px 0; opacity: .45; font-size: 12px; }
+    .fight-footer { margin-top: 18px; display: flex; justify-content: flex-end; }
+    .fight-complete { min-height: 40px; padding: 0 16px; border: 0; border-radius: 8px; background: #e8ebef; color: #0b0d10; font-weight: 700; cursor: pointer; }
+    .fight-complete:disabled { cursor: not-allowed; opacity: .3; }
     @media (max-width: 640px) {
       .fight-header { flex-direction: column; }
       .fight-status { align-self: flex-start; }
