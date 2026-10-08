@@ -167,7 +167,15 @@ export function createFightScreen(
             <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
             <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
-            <label>Actual damage<input data-fight-damage type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(actualDamage)}" placeholder="0" ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}></label>
+            <div class="damage-control">
+              <span class="damage-control__label">Actual damage</span>
+              <div class="damage-control__buttons">
+                <button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button>
+                <strong data-fight-damage-value">${escapeHtml(actualDamage)}</strong>
+                <button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button>
+              </div>
+              <small>Expected damage is calculated automatically and retained in the attack result.</small>
+            </div>
             <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
           </div>
         </section>
@@ -219,10 +227,13 @@ export function createFightScreen(
       selectedTargetId = event.target.value || null;
       render();
     });
-    container.querySelector("[data-fight-damage]")?.addEventListener("input", (event) => {
-      actualDamage = event.target.value;
-      const button = container.querySelector("[data-fight-attack]");
-      if (button) button.disabled = !(selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "");
+    container.querySelector("[data-fight-damage-minus]")?.addEventListener("click", () => {
+      actualDamage = String(Math.max(0, Number(actualDamage) - 1));
+      render();
+    });
+    container.querySelector("[data-fight-damage-plus]")?.addEventListener("click", () => {
+      actualDamage = String(Number(actualDamage) + 1);
+      render();
     });
     container.querySelector("[data-fight-attack]")?.addEventListener("click", () => {
       const weapon = weapons.find((item) => item.id === selectedWeaponId);
