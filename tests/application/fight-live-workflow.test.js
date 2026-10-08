@@ -104,14 +104,14 @@ test("Fight activation supports split attacks against multiple targets with actu
     targetId: "opponent-first",
     weapon: meleeWeapon,
     actualDamage: 1
-  }, { random: () => 0.99 });
+  }, { random: () => 0.1 });
 
   resolveFightAttack(session, {
     attackerId: "charged",
     targetId: "second-target",
     weapon: meleeWeapon,
     actualDamage: 2
-  }, { random: () => 0.99 });
+  }, { random: () => 0.1 });
 
   const model = getFightViewModel(session.getState(), { perspectivePlayerId: "p1" });
   assert.equal(model.attacks.length, 2);
