@@ -313,3 +313,33 @@ test("Fight attacks reject a known non-engaged target", () => {
     /require the attacker and target to be engaged/
   );
 });
+
+
+test("records an opponent Fight attack against my engaged unit", () => {
+  const base = activeState();
+  const state = {
+    ...base,
+    phase: "fight",
+    activePlayer: "p2",
+    battle: { ...base.battle, activePlayerId: "p2" },
+    units: base.units.map((unit) => unit.id === "attacker"
+      ? { ...unit, ownerId: "p2" } : { ...unit, ownerId: "p1" }),
+    history: [
+      { type: "charge.outcome_recorded", payload: {
+        unitId: "attacker", playerId: "p2", outcome: "successful", targetIds: ["target"], round: 1, turn: 1
+      }},
+      { type: "fight.unit_activated", payload: {
+        unitId: "attacker", playerId: "p2", round: 1, turn: 1, fightsFirst: true
+      }}
+    ]
+  };
+  const next = resolveUnitAttack(state, {
+    attackerId: "attacker", targetId: "target", weapon: meleeWeapon, actualDamage: 1, random: () => 0.99
+  });
+  const event = next.history.at(-1);
+  assert.equal(event.type, "combat.attack_resolved");
+  assert.equal(event.payload.attackerId, "attacker");
+  assert.equal(event.payload.targetId, "target");
+  assert.equal(event.payload.actualDamage, 1);
+  assert.equal(next.units.find((unit) => unit.id === "target").wounds, 4);
+});
