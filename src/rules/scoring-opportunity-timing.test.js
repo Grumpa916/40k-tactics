@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCORING_EVIDENCE, SCORING_TIMINGS, createMissionDefinition } from "./mission-definition.js";
+import { SCORING_TIMINGS, createMissionDefinition } from "./mission-definition.js";
+import { SCORING_EVIDENCE } from "./scoring-eligibility.js";
 import {
   evaluateScoringOpportunityAtTiming,
   isScoringTimingDue
