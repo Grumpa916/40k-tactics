@@ -116,3 +116,35 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
     units: state.units.map((item) => item.id === unitId ? nextUnit : item)
   }, event);
 }
+
+
+/**
+ * Record a Fall Back without inventing movement geometry. The movement UI may
+ * update model positions separately; this event is the authoritative gameplay
+ * fact used by later phases to determine eligibility and restrictions.
+ */
+export function recordFallBack(state, { unitId } = {}) {
+  if (!unitId) throw new TypeError("Unit id is required.");
+  if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
+  if (state.phase !== "movement") throw new Error("Fall Back may only be recorded in the Movement phase.");
+
+  const unit = state.units.find((item) => item.id === unitId);
+  if (!unit) throw new Error("Unit not found: " + unitId);
+  if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may Fall Back.");
+  if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can Fall Back.");
+  if (state.history.some((event) =>
+    event.type === "unit.fell_back" &&
+    event.payload?.unitId === unitId &&
+    event.payload?.turn === state.turn
+  )) {
+    throw new Error("A unit can Fall Back only once per turn.");
+  }
+
+  return appendHistoryEntry(state, createEvent("unit.fell_back", {
+    unitId,
+    playerId: state.activePlayer,
+    phase: state.phase,
+    round: state.battle.round,
+    turn: state.turn
+  }));
+}
