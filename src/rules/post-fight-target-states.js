@@ -9,14 +9,14 @@ import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
  * degradation correctly.
  */
 export function getPostFightTargetStates(
-  { target, attacker, weapon } = {},
+  { target, attacker, weapon, distribution: inlineDistribution = null } = {},
   { distribution = null } = {}
 ) {
   if (!target || !Number.isFinite(target.wounds) || target.wounds < 0) {
     throw new TypeError("A target with a non-negative wounds value is required.");
   }
 
-  const resolvedDistribution = distribution ??
+  const resolvedDistribution = inlineDistribution ?? distribution ??
     getDamageOutcomeDistribution({ attacker, target, weapon });
 
   if (!Array.isArray(resolvedDistribution?.outcomes)) {
