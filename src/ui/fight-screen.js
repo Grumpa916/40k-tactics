@@ -159,7 +159,8 @@ export function createFightScreen(
         ${candidateSection("Fights First", model.candidates.fightsFirst, false)}
         ${candidateSection("Normal", model.candidates.normal, hasFirst)}
 
-        <section class="fight-section">
+        <div class="fight-main-grid">
+          <section class="fight-section">
           <div class="fight-section__heading"><h2>Attack entry</h2><span class="fight-section__hint">Select an activated unit, weapon, then target</span></div>
           <div class="fight-attack-entry">
             <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
@@ -189,6 +190,8 @@ export function createFightScreen(
             ${model.attacks.length ? model.attacks.map((attack) => attackRow(attack, state, gameData)).join("") : '<li class="fight-history__empty">No attacks recorded yet.</li>'}
           </ol>
         </section>
+
+        </div>
 
         <footer class="fight-footer">
           <button class="fight-complete" type="button" data-fight-complete ${model.canComplete ? "" : "disabled"}>
