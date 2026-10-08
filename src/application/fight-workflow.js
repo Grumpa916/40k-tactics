@@ -91,6 +91,39 @@ export function activateFightUnit(session, { unitId } = {}, context = {}) {
   );
 }
 
+export function resolveFightAttack(session, {
+  attackerId,
+  targetId,
+  weapon
+} = {}, context = {}) {
+  if (!session || typeof session.dispatch !== "function") {
+    throw new TypeError("A game session is required.");
+  }
+
+  return session.dispatch(
+    createCommand(COMMAND_TYPES.RESOLVE_ATTACK, {
+      attackerId,
+      targetId,
+      weapon
+    }),
+    context
+  );
+}
+
+export function getFightAttackOptions(state, { perspectivePlayerId = null } = {}) {
+  const fight = getFightState(state);
+  const activated = new Set(fight.candidates.activated);
+
+  return {
+    attackers: state.units
+      .filter((unit) => activated.has(unit?.id))
+      .map((unit) => describeUnit(state, unit.id, perspectivePlayerId)),
+    targets: state.units
+      .filter((unit) => unit?.status === "deployed" && !activated.has(unit?.id))
+      .map((unit) => describeUnit(state, unit.id, perspectivePlayerId))
+  };
+}
+
 export function finishFightPhase(session, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
