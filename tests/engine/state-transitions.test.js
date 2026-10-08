@@ -89,6 +89,24 @@ test("turns resolve in order and both player turns advance the battle round", ()
   assert.equal(state.history.at(-1).type, "turn.started");
 });
 
+test("changePhase cannot bypass unfinished Fight activations", () => {
+  const state = createGameState({
+    phase: "fight",
+    turn: 2,
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { id: "b1", status: "active", round: 1 },
+    units: [
+      createUnit({ id: "friendly", ownerId: "p1", name: "Friendly", status: "deployed" })
+    ]
+  });
+
+  assert.throws(
+    () => changePhase(state, { phase: "end_turn" }),
+    /Fight candidates remain/
+  );
+});
+
 test("transitions reject invalid phase and missing battle state", () => {
   const state = createGameState();
   assert.throws(() => changePhase(state, { phase: "invalid" }), /Unknown turn step or phase/);

@@ -3,6 +3,7 @@ import { UNIT_STATUS } from "../state/unit.js";
 import { PHASES, TURN_STEPS } from "../state/turn.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { getFightCandidates } from "../rules/fight-candidates.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -106,6 +107,25 @@ export function changePhase(state, { phase } = {}) {
   if (phaseIndex < 0 || phase !== nextPhase) {
     throw new Error("Turn steps must resolve in order.");
   }
+
+  const isFightCompletion = state.phase === "fight" && phase === "end_turn";
+  if (isFightCompletion) {
+    const candidates = getFightCandidates(state);
+    if (candidates.fightsFirst.length > 0 || candidates.normal.length > 0) {
+      throw new Error("Fight phase cannot be completed while Fight candidates remain.");
+    }
+
+    const completed = transition(state, "fight.phase_completed", {
+      round: state.battle.round,
+      turn: state.turn
+    }, (current) => current);
+
+    return transition(completed, "turn.phase_changed", { phase }, (current) => ({
+      ...current,
+      phase
+    }));
+  }
+
   return transition(state, "turn.phase_changed", { phase }, (current) => ({
     ...current,
     phase

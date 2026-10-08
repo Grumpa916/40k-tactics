@@ -148,9 +148,13 @@ test("completes Fight after all candidates are activated", () => {
   const next = completeFightPhase(state);
 
   assert.equal(next.phase, "end_turn");
-  assert.equal(next.history.at(-1).type, "fight.phase_completed");
-  assert.deepEqual(next.history.at(-1).payload, {
+  assert.deepEqual(next.history.slice(-2).map((event) => event.type), [
+    "fight.phase_completed",
+    "turn.phase_changed"
+  ]);
+  assert.deepEqual(next.history.at(-2).payload, {
     round: 1,
     turn: 2
   });
+  assert.equal(next.history.at(-1).payload.phase, "end_turn");
 });
