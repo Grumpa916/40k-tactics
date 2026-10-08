@@ -58,6 +58,7 @@ function liveFightState() {
         payload: {
           unitId: "charged",
           outcome: "successful",
+          targetIds: ["opponent-first"],
           round: 1,
           turn: 3
         }
@@ -67,6 +68,7 @@ function liveFightState() {
         payload: {
           unitId: "opponent-first",
           outcome: "successful",
+          targetIds: ["charged"],
           round: 1,
           turn: 3
         }
