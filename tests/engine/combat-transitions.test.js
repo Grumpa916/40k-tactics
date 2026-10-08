@@ -262,7 +262,7 @@ test("combat transition records actual damage separately from calculated damage"
   const next = resolveUnitAttack(state, {
     attackerId: "attacker", targetId: "target", weapon,
     actualDamage: 1,
-    random: () => 0.99
+    random: () => [0.9, 0.9, 0.1, 0.1][0]
   });
   const event = next.history.at(-1);
   assert.equal(event.payload.expectedDamage, 4);
