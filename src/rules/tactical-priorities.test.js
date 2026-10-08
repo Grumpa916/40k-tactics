@@ -101,3 +101,37 @@ test("exposes actionable scoring context alongside tactical priorities", () => {
   assert.equal(result.scoringActions[0].actions[0].type, "secure-objective");
   assert.equal(result.scoringActions[0].actions[0].candidates[0].unitId, "my-unit");
 });
+
+test("ranks scoring actions into generic tactical recommendations", () => {
+  const state = {
+    phase: "command",
+    units: [
+      { id: "my-unit", ownerId: "p1", status: "deployed", position: { x: 10, y: 10 } }
+    ],
+    objectives: [{ id: "obj-1", position: { x: 10, y: 10 } }],
+    history: []
+  };
+
+  const definition = createMissionDefinition({
+    id: "score-objective",
+    name: "Score Objective",
+    timing: SCORING_TIMINGS.COMMAND_PHASE,
+    conditions: [{
+      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+      args: { objectiveId: "obj-1", playerId: "p1", expected: "controlled" }
+    }]
+  });
+
+  const result = getTacticalPriorities(state, {
+    playerId: "p1",
+    scoringDefinitions: [definition],
+    scoringTiming: SCORING_TIMINGS.COMMAND_PHASE
+  });
+
+  const scoring = result.recommendations.find((item) => item.type === "scoring");
+  assert.ok(scoring);
+  assert.equal(scoring.actionType, "secure-objective");
+  assert.equal(scoring.priority, 3);
+  assert.equal(scoring.unitId, "my-unit");
+  assert.equal(scoring.confidence, "high");
+});
