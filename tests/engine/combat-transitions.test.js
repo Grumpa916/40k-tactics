@@ -281,3 +281,18 @@ test("combat transition rejects invalid actual damage", () => {
     /non-negative integer/
   );
 });
+
+
+test("Shooting attacks reject a unit that Fell Back this turn", () => {
+  const state = {
+    ...activeState(),
+    history: [
+      { type: "unit.fell_back", payload: { unitId: "attacker", playerId: "p1", phase: "movement", round: 1, turn: 1 } },
+      { type: "shooting.unit_activated", payload: { unitId: "attacker", round: 1, turn: 1, actionType: "shoot" } }
+    ]
+  };
+  assert.throws(
+    () => resolveUnitAttack(state, { attackerId: "attacker", targetId: "target", weapon, random: () => 0.99 }),
+    /Fell Back cannot shoot/
+  );
+});

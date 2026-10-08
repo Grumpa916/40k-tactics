@@ -24,6 +24,15 @@ export function recordChargeOutcome(state, {
     throw new Error("Charging unit must be deployed.");
   }
   if (state.history.some((event) =>
+    event.type === "unit.fell_back" &&
+    event.payload?.unitId === unitId &&
+    event.payload?.round === state.battle.round &&
+    event.payload?.turn === state.turn
+  )) {
+    throw new Error("A unit that Fell Back cannot declare a charge this turn.");
+  }
+
+  if (state.history.some((event) =>
     event.type === "charge.outcome_recorded" &&
     event.payload?.unitId === unitId &&
     event.payload?.turn === state.turn

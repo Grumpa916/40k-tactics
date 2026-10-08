@@ -16,6 +16,16 @@ function wasActivatedToShootThisTurn(state, unitId) {
   );
 }
 
+function fellBackThisTurn(state, unitId) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  return history.some((event) =>
+    event?.type === "unit.fell_back" &&
+    event?.payload?.unitId === unitId &&
+    event?.payload?.round === state?.battle?.round &&
+    event?.payload?.turn === state?.turn
+  );
+}
+
 function wasActivatedToFightThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
   return history.some((event) =>
@@ -39,6 +49,9 @@ export function resolveUnitAttack(state, {
   if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
   if (state.phase !== "shooting" && state.phase !== "fight") {
     throw new Error("Attacks may only be resolved in shooting or fight.");
+  }
+  if (state.phase === "shooting" && fellBackThisTurn(state, attackerId)) {
+    throw new Error("A unit that Fell Back cannot shoot this turn.");
   }
   if (state.phase === "shooting" && !wasActivatedToShootThisTurn(state, attackerId)) {
     throw new Error("Shooting attack requires the unit to be activated first.");
