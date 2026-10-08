@@ -85,10 +85,9 @@ test("prevents a unit from being activated twice in one turn", () => {
   assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
 });
 
-
 test("rejects a unit that has already been activated this turn", () => {
   const first = recordFightActivation(fightState(), { unitId: "friendly" });
-  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /available Fight candidate/);
+  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
 });
 
 test("rejects reserves even if they have a successful charge event", () => {
@@ -101,5 +100,5 @@ test("rejects reserves even if they have a successful charge event", () => {
       payload: { unitId: "reserve", outcome: "successful", round: 1, turn: 2 }
     }]
   });
-  assert.throws(() => recordFightActivation(state, { unitId: "reserve" }), /available Fight candidate/);
+  assert.throws(() => recordFightActivation(state, { unitId: "reserve" }), /must be deployed/);
 });
