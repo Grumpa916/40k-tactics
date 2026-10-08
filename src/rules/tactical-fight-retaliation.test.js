@@ -107,7 +107,7 @@ test("does not invent retaliation when no authoritative engagement exists", () =
   assert.equal(result[0].confidence, "low");
 });
 
-test("does not retaliate after the attack destroys the target", () => {
+test("does not treat expected damage as a guaranteed kill", () => {
   const state = {
     units: [
       {
@@ -122,7 +122,7 @@ test("does not retaliate after the attack destroys the target", () => {
         ownerId: "p2",
         status: "deployed",
         wounds: 3,
-        characteristics: { weaponSkill: 3 },
+        characteristics: { weaponSkill: 3, toughness: 4, save: 4 },
         weapons: [{
           id: "claws",
           type: "melee",
@@ -145,9 +145,9 @@ test("does not retaliate after the attack destroys the target", () => {
     options: [{
       unitId: "attacker",
       targetUnitId: "enemy",
-      expectedDamage: 3
+      expectedDamage: 10
     }]
   });
 
-  assert.equal(result[0].retaliationExpectedDamage, 0);
+  assert.ok(result[0].retaliationExpectedDamage > 0);
 });
