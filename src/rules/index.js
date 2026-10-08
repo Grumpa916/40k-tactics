@@ -56,3 +56,4 @@ export {
 } from "./scoring-action-context.js";
 
 export { getTacticalScoringActions } from "./tactical-scoring-actions.js";
+export { getTacticalCombatRecommendations } from "./tactical-combat-recommendations.js";
