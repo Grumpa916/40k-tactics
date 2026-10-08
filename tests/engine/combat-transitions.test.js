@@ -31,6 +31,61 @@ test("combat transition resolves an attack from unit and weapon data", () => {
   assert.equal(next.history.at(-1).type, "combat.attack_resolved");
 });
 
+test("Fight attacks require a current-turn Fight activation", () => {
+  const state = { ...activeState(), phase: "fight" };
+  assert.throws(
+    () => resolveUnitAttack(state, {
+      attackerId: "attacker", targetId: "target", weapon
+    }),
+    /activated first/
+  );
+
+  const previousTurn = {
+    type: "fight.unit_activated",
+    payload: {
+      unitId: "attacker",
+      round: 1,
+      turn: 0,
+      fightsFirst: false
+    }
+  };
+  assert.throws(
+    () => resolveUnitAttack({ ...state, history: [previousTurn] }, {
+      attackerId: "attacker", targetId: "target", weapon
+    }),
+    /activated first/
+  );
+});
+
+test("Fight attacks are allowed after a current-turn activation", () => {
+  const state = {
+    ...activeState(),
+    phase: "fight",
+    history: [{
+      type: "fight.unit_activated",
+      payload: {
+        unitId: "attacker",
+        round: 1,
+        turn: 1,
+        fightsFirst: true
+      }
+    }]
+  };
+  const values = [0.9, 0.9, 0.9, 0.9, 0.1, 0.1];
+  let index = 0;
+
+  const next = resolveUnitAttack(state, {
+    attackerId: "attacker",
+    targetId: "target",
+    weapon,
+    random: () => values[index++]
+  });
+
+  assert.equal(next.units.find((unit) => unit.id === "target").wounds, 1);
+  assert.equal(next.history.at(-1).type, "combat.attack_resolved");
+  assert.equal(next.history.at(-1).payload.phase, "fight");
+});
+
 test("combat transition marks a target destroyed when wounds reach zero", () => {
   const state = activeState();
   const values = [0.9, 0.9, 0.9, 0.9, 0.1, 0.1];
