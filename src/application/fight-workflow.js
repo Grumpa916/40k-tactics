@@ -2,6 +2,7 @@ import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getFightState } from "../rules/fight-state.js";
+import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -165,7 +166,8 @@ export function getFightAttackOptions(
       .filter((unit) =>
         unit?.status === "deployed" &&
         unit?.id !== attackerId &&
-        unit?.ownerId !== attacker.ownerId
+        unit?.ownerId !== attacker.ownerId &&
+        (!hasFightEngagementHistory(state) || areUnitsEngaged(state, attackerId, unit.id))
       )
       .map((unit) => describeUnit(state, unit.id, perspectivePlayerId))
   };
