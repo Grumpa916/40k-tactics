@@ -58,7 +58,7 @@ function liveFightState() {
         payload: {
           unitId: "charged",
           outcome: "successful",
-          targetIds: ["opponent-first"],
+          targetIds: ["opponent-first", "second-target"],
           round: 1,
           turn: 3
         }
@@ -71,6 +71,16 @@ function liveFightState() {
           targetIds: ["charged"],
           round: 1,
           turn: 3
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "normal",
+          targetId: "opponent-first",
+          phase: "fight",
+          round: 1,
+          turn: 2
         }
       }
     ]
