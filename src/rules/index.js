@@ -35,3 +35,10 @@ export {
   evaluateUnitDestruction,
   evaluateTurnSnapshot
 } from "./scoring-eligibility.js";
+
+export {
+  SCORING_TIMINGS,
+  createScoringCondition,
+  createMissionDefinition,
+  evaluateMissionDefinition
+} from "./mission-definition.js";
