@@ -186,7 +186,7 @@ export function createFightScreen(
             <span class="fight-section__hint">${model.attacks.length} recorded</span>
           </div>
           <ol class="fight-history">
-            ${model.attacks.length ? model.attacks.map((attack) => attackRow(attack, state, gameData)).join("") : '<li class="fight-history__empty">No attacks recorded yet.</li>''}
+            ${model.attacks.length ? model.attacks.map((attack) => attackRow(attack, state, gameData)).join("") : '<li class="fight-history__empty">No attacks recorded yet.</li>'}
           </ol>
         </section>
 
