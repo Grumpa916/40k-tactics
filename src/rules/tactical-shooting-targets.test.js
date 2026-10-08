@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
+import { getShootingTargetPriorities, classifyShootingImpact } from "./tactical-shooting-targets.js";
 
 function baseState() {
   return {
@@ -210,4 +210,26 @@ test("keeps a borderline target just beyond approximate range", () => {
   assert.ok(borderline);
   assert.equal(borderline.rangeStatus, "borderline");
   assert.match(borderline.reason, /exact tabletop measurement is required/);
+});
+
+
+test("uses the updated destruction probability thresholds", () => {
+  const base = { expectedDamage: 1, targetWounds: 10 };
+
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.8 }),
+    "likely-destruction"
+  );
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.79 }),
+    "possible-destruction"
+  );
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.5 }),
+    "possible-destruction"
+  );
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.49 }),
+    "limited-impact"
+  );
 });
