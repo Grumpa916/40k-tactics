@@ -61,12 +61,14 @@ export function getShootingTargetPriorities(state, {
     const targetSummary = combat.units.find((unit) => unit.unitId === target.id);
     const engaged = targetSummary?.engagedWith?.includes(attackerId) ?? false;
 
+    // Normal Fight-engaged targets are not Shooting recommendations. Any
+    // future exceptions should be supplied by authoritative unit/rule data.
+    if (engaged) continue;
+
     let priority = proximityScore(proximity.band);
-    if (engaged) priority += 3;
     priority += rangeScore(proximity.distance, range);
 
     const reasons = [];
-    if (engaged) reasons.push("Target is currently engaged with this unit.");
     if (proximity.band === "close" || proximity.band === "near") {
       reasons.push("Enemy is approximately " + proximity.distance + " inches away.");
     }
