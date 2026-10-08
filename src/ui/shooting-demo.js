@@ -61,5 +61,8 @@ const session = createGameSession(state);
 createShootingScreen(document.getElementById("shooting-app"), {
   session,
   perspectivePlayerId: "p1",
-  gameData
+  gameData,
+  missionActions: [
+    { id: "cleanse", name: "Cleanse" }
+  ]
 });
