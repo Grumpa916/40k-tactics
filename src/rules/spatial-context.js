@@ -54,6 +54,7 @@ export function getSpatialContext(state, { playerId } = {}) {
   const unitProximity = [];
 
   for (const unit of ownedUnits) {
+    if (unit.status === "destroyed") continue;
     const origin = positions.get(unit.id);
     if (!origin) continue;
 
