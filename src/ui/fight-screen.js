@@ -232,6 +232,7 @@ export function createFightScreen(
       resolveFightAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
       selectedTargetId = null;
       actualDamage = "";
+      render();
     });
 
     container.querySelectorAll("[data-fight-unit]").forEach((button) => {
