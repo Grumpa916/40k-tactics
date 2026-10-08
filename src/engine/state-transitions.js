@@ -66,6 +66,38 @@ function requirePlayer(state, playerId) {
   }
 }
 
+export function recordObjectiveControl(state, {
+  objectiveId,
+  controllerId = null,
+  contestingPlayerIds = [],
+  controlState = null
+} = {}) {
+  if (!objectiveId) throw new TypeError("Objective id is required.");
+  if (!Array.isArray(contestingPlayerIds)) {
+    throw new TypeError("contestingPlayerIds must be an array.");
+  }
+
+  const objective = state.objectives.find((item) => item?.id === objectiveId);
+  if (!objective) throw new Error("Objective not found: " + objectiveId);
+
+  for (const playerId of contestingPlayerIds) requirePlayer(state, playerId);
+  if (controllerId) requirePlayer(state, controllerId);
+
+  const control = {
+    id: objectiveId,
+    controllerId,
+    contestingPlayerIds: [...new Set(contestingPlayerIds.filter(Boolean))],
+    controlState
+  };
+
+  return transition(state, "objective.control_recorded", control, (current) => ({
+    ...current,
+    objectives: current.objectives.map((item) =>
+      item.id === objectiveId ? { ...item, control } : item
+    )
+  }));
+}
+
 export function startFirstTurn(state, { activePlayerId } = {}) {
   requirePlayer(state, activePlayerId);
   if (!state.battle || state.battle.status !== BATTLE_STATUS.DEPLOYMENT) {
