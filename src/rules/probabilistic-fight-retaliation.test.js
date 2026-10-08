@@ -37,7 +37,7 @@ test("weights retaliation by post-Fight survival and degradation", () => {
   assert.equal(result.survivalProbability, 0.75);
   assert.equal(result.destructionProbability, 0.25);
   assert.equal(result.outcomes[2].retaliationExpectedDamage, 0);
-  assert.ok(result.outcomes[1].retaliationExpectedDamage > result.outcomes[0].retaliationExpectedDamage);
+  assert.ok(result.outcomes[1].retaliationExpectedDamage < result.outcomes[0].retaliationExpectedDamage);
   assert.ok(result.expectedRetaliationDamage > 0);
 });
 
