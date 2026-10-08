@@ -142,3 +142,28 @@ test("does not mutate state", () => {
 
   assert.deepEqual(state, before);
 });
+
+
+test("destroying a Fight target removes that unit from engagement state", () => {
+  const state = stateWithHistory([
+    {
+      type: "charge.outcome_recorded",
+      payload: { unitId: "a", outcome: "successful", targetIds: ["b"], round: 1, turn: 1 }
+    },
+    {
+      type: "combat.attack_resolved",
+      payload: {
+        phase: "fight",
+        attackerId: "a",
+        targetId: "b",
+        round: 1,
+        turn: 1,
+        stateDelta: { target: { statusAfter: "destroyed" } }
+      }
+    }
+  ]);
+
+  const result = getFightEngagementState(state);
+  assert.deepEqual(result.engagedUnitIds, []);
+  assert.deepEqual(result.relationships, []);
+});

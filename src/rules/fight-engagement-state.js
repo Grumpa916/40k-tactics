@@ -83,13 +83,21 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
       event.payload?.attackerId &&
       event.payload?.targetId
     ) {
-      addPair(
-        relationships,
-        event.payload.attackerId,
-        event.payload.targetId,
-        "fight",
-        index
-      );
+      if (event.payload?.stateDelta?.target?.statusAfter === "destroyed") {
+        for (const [key, relationship] of relationships) {
+          if (relationship.unitIds.includes(event.payload.targetId)) {
+            relationships.delete(key);
+          }
+        }
+      } else {
+        addPair(
+          relationships,
+          event.payload.attackerId,
+          event.payload.targetId,
+          "fight",
+          index
+        );
+      }
     }
   }
 
