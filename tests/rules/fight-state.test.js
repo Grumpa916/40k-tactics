@@ -42,6 +42,7 @@ test("returns Fight context, candidates, and completion availability", () => {
       activated: []
     },
     activations: [],
+    attacks: [],
     canComplete: false
   });
 });
@@ -100,6 +101,116 @@ test("returns current-turn Fight activations in event order", () => {
   ]);
 });
 
+test("returns current-turn Fight attack summaries in event order", () => {
+  const state = fightState({
+    history: [
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u1",
+          targetId: "u2",
+          weaponId: "blade",
+          phase: "fight",
+          round: 2,
+          turn: 4,
+          result: {
+            damage: { totalDamage: 3 }
+          },
+          stateDelta: {
+            target: {
+              woundsAfter: 2,
+              statusAfter: "deployed"
+            }
+          }
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u2",
+          targetId: "u1",
+          weaponId: "claw",
+          phase: "fight",
+          round: 2,
+          turn: 4,
+          result: {
+            damage: { totalDamage: 1 }
+          },
+          stateDelta: {
+            target: {
+              woundsAfter: 4,
+              statusAfter: "deployed"
+            }
+          }
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u1",
+          targetId: "u2",
+          weaponId: "old-blade",
+          phase: "fight",
+          round: 2,
+          turn: 3,
+          result: {
+            damage: { totalDamage: 5 }
+          },
+          stateDelta: {
+            target: {
+              woundsAfter: 0,
+              statusAfter: "destroyed"
+            }
+          }
+        }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          attackerId: "u1",
+          targetId: "u2",
+          weaponId: "gun",
+          phase: "shooting",
+          round: 2,
+          turn: 4,
+          result: {
+            damage: { totalDamage: 7 }
+          },
+          stateDelta: {
+            target: {
+              woundsAfter: 0,
+              statusAfter: "destroyed"
+            }
+          }
+        }
+      }
+    ]
+  });
+
+  assert.deepEqual(getFightState(state).attacks, [
+    {
+      attackerId: "u1",
+      targetId: "u2",
+      weaponId: "blade",
+      round: 2,
+      turn: 4,
+      totalDamage: 3,
+      targetWoundsAfter: 2,
+      targetStatusAfter: "deployed"
+    },
+    {
+      attackerId: "u2",
+      targetId: "u1",
+      weaponId: "claw",
+      round: 2,
+      turn: 4,
+      totalDamage: 1,
+      targetWoundsAfter: 4,
+      targetStatusAfter: "deployed"
+    }
+  ]);
+});
+
 test("reports completion available after all candidates are activated", () => {
   const state = fightState({
     history: [
@@ -150,6 +261,7 @@ test("reports completion available after all candidates are activated", () => {
         fightsFirst: false
       }
     ],
+    attacks: [],
     canComplete: true
   });
 });
@@ -191,6 +303,7 @@ test("handles missing optional state collections without mutating state", () => 
       activated: []
     },
     activations: [],
+    attacks: [],
     canComplete: true
   });
   assert.deepEqual(state, before);
