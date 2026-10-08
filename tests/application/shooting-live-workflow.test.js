@@ -84,15 +84,20 @@ test("live Shooting workflow records activation and ranged attack", () => {
     attackerId: "shooter",
     targetId: "target",
     weapon: rangedWeapon,
-    actualDamage: 0
+    actualDamage: 2
   }, { random: () => 0.99 });
 
-  const attacks = session.getState().history.filter(
+  const state = session.getState();
+  const attacks = state.history.filter(
     (event) => event.type === "combat.attack_resolved"
   );
   assert.equal(attacks.length, 1);
   assert.equal(attacks[0].payload.phase, "shooting");
-  assert.equal(attacks[0].payload.actualDamage, 0);
+  assert.equal(attacks[0].payload.actualDamage, 2);
+  assert.equal(attacks[0].payload.stateDelta.target.woundsAfter, 3);
+  assert.equal(attacks[0].payload.stateDelta.target.statusAfter, "deployed");
+  assert.equal(state.units.find((unit) => unit.id === "target").wounds, 3);
+  assert.equal(state.units.find((unit) => unit.id === "target").status, "deployed");
 
   finishShootingPhase(session);
   assert.equal(session.getState().phase, "charge");
@@ -210,6 +215,35 @@ test("live Shooting workflow records an opponent activation and attack against y
   assert.equal(attack.payload.phase, "shooting");
   assert.equal(attack.payload.actualDamage, 2);
   assert.equal(attack.payload.stateDelta.target.woundsAfter, 3);
+
+  clearCommandHandlers();
+});
+
+test("my Shooting turn applies recorded damage and destroyed status to the opponent unit", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+
+  const session = createGameSession(liveState());
+  activateShootingUnit(session, { unitId: "shooter", actionType: "shoot" });
+
+  resolveShootingAttack(session, {
+    attackerId: "shooter",
+    targetId: "target",
+    weapon: rangedWeapon,
+    actualDamage: 5
+  }, { random: () => 0.99 });
+
+  const state = session.getState();
+  const attack = state.history.find((event) => event.type === "combat.attack_resolved");
+
+  assert.equal(attack.payload.targetId, "target");
+  assert.equal(attack.payload.actualDamage, 5);
+  assert.equal(attack.payload.stateDelta.target.woundsBefore, 5);
+  assert.equal(attack.payload.stateDelta.target.woundsAfter, 0);
+  assert.equal(attack.payload.stateDelta.target.statusBefore, "deployed");
+  assert.equal(attack.payload.stateDelta.target.statusAfter, "destroyed");
+  assert.equal(state.units.find((unit) => unit.id === "target").wounds, 0);
+  assert.equal(state.units.find((unit) => unit.id === "target").status, "destroyed");
 
   clearCommandHandlers();
 });
