@@ -26,8 +26,8 @@ function proximityScore(band) {
 
 function classifyShootingImpact({ expectedDamage, destructionProbability, targetWounds } = {}) {
   if (!Number.isFinite(expectedDamage) || !Number.isFinite(destructionProbability) || !Number.isFinite(targetWounds) || targetWounds <= 0) return "unknown";
-  if (destructionProbability >= 0.75) return "likely-destruction";
-  if (destructionProbability >= 0.25) return "possible-destruction";
+  if (destructionProbability >= 0.8) return "likely-destruction";
+  if (destructionProbability >= 0.5) return "possible-destruction";
   if (expectedDamage >= targetWounds * 0.5) return "likely-severe-degradation";
   if (expectedDamage > 0) return "limited-impact";
   return "no-baseline-impact";
