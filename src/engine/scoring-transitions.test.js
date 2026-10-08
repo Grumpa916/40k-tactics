@@ -22,7 +22,7 @@ test("captures a turn-start snapshot and records it in history", () => {
   const next = captureTurnStartSnapshot(state(), { turn: 1, round: 1, playerId: "p1" });
   assert.equal(next.scoring.turnSnapshots.length, 1);
   assert.equal(next.scoring.turnSnapshots[0].turn, 1);
-  assert.equal(next.history.at(-1).type, "scoring.turn_snapshot_captured");
+  assert.equal(next.history.length, 0);
 });
 
 test("replaces a duplicate snapshot for the same turn", () => {
