@@ -10,7 +10,7 @@ const weapon = {
 
 const meleeWeapon = {
   id: "blade", name: "Blade", type: "melee",
-  characteristics: { attacks: 2, strength: 8, ap: 1, damage: 2 }
+  characteristics: { attacks: 2, strength: 8, weaponSkill: 4, ap: 1, damage: 2 }
 };
 
 function activeState() {
