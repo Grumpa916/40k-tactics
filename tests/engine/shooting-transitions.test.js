@@ -86,3 +86,18 @@ test("Non-shoot Shooting activations require an action id", () => {
     /action id is required/
   );
 });
+
+
+test("Shooting cannot record a Shoot activation after Fall Back", () => {
+  const fallenBack = {
+    ...state(),
+    history: [{
+      type: "unit.fell_back",
+      payload: { unitId: "p1-a", playerId: "p1", phase: "movement", round: 1, turn: 2 }
+    }]
+  };
+  assert.throws(
+    () => recordShootingActivation(fallenBack, { unitId: "p1-a", actionType: "shoot" }),
+    /Fell Back cannot shoot/
+  );
+});
