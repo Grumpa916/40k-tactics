@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
+import { getShootingTargetPriorities, classifyShootingImpact } from "./tactical-shooting-targets.js";
 
 function baseState() {
   return {
@@ -148,7 +148,7 @@ test("classifies high destruction probability as likely destruction", () => {
   const state = baseState();
   state.units.find((unit) => unit.id === "close-target").wounds = 1;
   const result = getShootingTargetPriorities(state, { playerId: "p1", attackerId: "shooter",
-    weapon: { id: "rifle", type: "ranged", characteristics: { range: 24, attacks: 4, strength: 5, ap: -1, damage: 2 } } });
+    weapon: { id: "rifle", type: "ranged", characteristics: { range: 24, attacks: 5, strength: 5, ap: -1, damage: 2 } } });
   const close = result.priorities.find((item) => item.targetUnitId === "close-target");
   assert.equal(close.impactClassification, "likely-destruction");
 });
@@ -210,4 +210,26 @@ test("keeps a borderline target just beyond approximate range", () => {
   assert.ok(borderline);
   assert.equal(borderline.rangeStatus, "borderline");
   assert.match(borderline.reason, /exact tabletop measurement is required/);
+});
+
+
+test("uses the updated destruction probability thresholds", () => {
+  const base = { expectedDamage: 1, targetWounds: 10 };
+
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.8 }),
+    "likely-destruction"
+  );
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.79 }),
+    "possible-destruction"
+  );
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.5 }),
+    "possible-destruction"
+  );
+  assert.equal(
+    classifyShootingImpact({ ...base, destructionProbability: 0.49 }),
+    "limited-impact"
+  );
 });
