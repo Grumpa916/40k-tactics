@@ -39,13 +39,13 @@ function expectedDamageValue(damage) {
   throw new RangeError("Damage must be a positive integer, D3, or D6.");
 }
 
-function saveFailureProbability(profile) {
+function saveFailureProbability(profile, saveModifier = 0) {
   const armourTarget = Math.min(
     7,
     Math.max(
       2,
       profile.save + (-profile.ap) +
-        Math.min(1, Math.max(-1, profile.saveModifier ?? 0)) +
+        Math.min(1, Math.max(-1, saveModifier)) +
         (profile.cover ? -1 : 0)
     )
   );
@@ -79,6 +79,7 @@ function damagePreventionMultiplier(prevention) {
  */
 export function getExpectedDamage({ attacker, target, weapon } = {}) {
   const profile = buildAttackProfile({ attacker, target, weapon });
+  const saveModifier = target?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
   const attacks = expectedDice(profile.attacks);
 
   const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier);
@@ -101,7 +102,7 @@ export function getExpectedDamage({ attacker, target, weapon } = {}) {
   const normalWounds = Math.max(0, normalWoundsTotal - devastatingWounds);
   const lethalWounds = lethalHitWounds;
 
-  const saveFailure = saveFailureProbability(profile);
+  const saveFailure = saveFailureProbability(profile, saveModifier);
   const unsavedNormalWounds = normalWounds * saveFailure;
   const damagePerUnsavedWound = expectedDamageValue(profile.damage);
   const preventionMultiplier = damagePreventionMultiplier(profile.damagePrevention);
