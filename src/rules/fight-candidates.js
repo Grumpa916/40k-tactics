@@ -35,15 +35,16 @@ export function getFightCandidates(state) {
 
   const deployed = units.filter((unit) =>
     unit?.status === UNIT_STATUS.DEPLOYED &&
-    unit?.id &&
-    !activated.has(unit.id)
+    unit?.id
   );
 
+  const available = deployed.filter((unit) => !activated.has(unit.id));
+
   return {
-    fightsFirst: deployed
+    fightsFirst: available
       .filter((unit) => fightsFirst.has(unit.id))
       .map((unit) => unit.id),
-    normal: deployed
+    normal: available
       .filter((unit) => !fightsFirst.has(unit.id))
       .map((unit) => unit.id),
     activated: deployed
