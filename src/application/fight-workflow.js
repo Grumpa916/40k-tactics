@@ -130,16 +130,39 @@ export function resolveFightAttack(session, {
   );
 }
 
-export function getFightAttackOptions(state, { perspectivePlayerId = null } = {}) {
+export function getFightAttackOptions(
+  state,
+  { attackerId = null, perspectivePlayerId = null } = {}
+) {
   const fight = getFightState(state);
   const activated = new Set(fight.candidates.activated);
+  const attackers = state.units
+    .filter((unit) => activated.has(unit?.id))
+    .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
+
+  if (!attackerId) {
+    return {
+      attackers,
+      targets: []
+    };
+  }
+
+  const attacker = state.units.find((unit) => unit?.id === attackerId);
+  if (!attacker || !activated.has(attackerId)) {
+    return {
+      attackers,
+      targets: []
+    };
+  }
 
   return {
-    attackers: state.units
-      .filter((unit) => activated.has(unit?.id))
-      .map((unit) => describeUnit(state, unit.id, perspectivePlayerId)),
+    attackers,
     targets: state.units
-      .filter((unit) => unit?.status === "deployed" && !activated.has(unit?.id))
+      .filter((unit) =>
+        unit?.status === "deployed" &&
+        unit?.id !== attackerId &&
+        unit?.ownerId !== attacker.ownerId
+      )
       .map((unit) => describeUnit(state, unit.id, perspectivePlayerId))
   };
 }
