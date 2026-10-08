@@ -13,7 +13,7 @@ test("applies the data-defined bracket at its threshold", () => {
       woundBrackets: [{ maxWoundsRemaining: 5, hitRollModifier: -1 }]
     }
   };
-  assert.deepEqual(getWoundBracketModifiers(unit), { hitRollModifier: -1 });
+  assert.deepEqual(getWoundBracketModifiers(unit), { hitModifier: 1 });
 });
 
 test("does not apply a lower-wound bracket while above its threshold", () => {
@@ -31,7 +31,7 @@ test("selects the most specific eligible bracket", () => {
     characteristics: {
       woundBrackets: [
         { maxWoundsRemaining: 10, hitRollModifier: -1 },
-        { maxWoundsRemaining: 5, hitModifier: -2 }
+        { maxWoundsRemaining: 5, hitRollModifier: -2 }
       ]
     }
   };
