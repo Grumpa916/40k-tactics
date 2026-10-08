@@ -2,53 +2,61 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getTacticalScoringActions } from "./tactical-scoring-actions.js";
 import { SCORING_EVIDENCE } from "./scoring-eligibility.js";
-import { createGameState } from "../engine/game-state.js";
-import { startBattle, startFirstTurn, recordObjectiveControl } from "../engine/state-transitions.js";
-import { PLAYER_ROLES } from "../state/player.js";
-import { getScoringOpportunityAdvisories } from "./tactical-scoring-opportunities.js";
-import { SCORING_TIMINGS, createMissionDefinition } from "./mission-definition.js";
-
-function player(id, role) {
-  return { id, name: id, role };
-}
 
 function baseState() {
-  let state = createGameState({
-    players: [player("p1", PLAYER_ROLES.PLAYER_ONE), player("p2", PLAYER_ROLES.PLAYER_TWO)],
-    objectives: [{ id: "obj-2", position: { x: 12, y: 12 } }],
+  return {
     units: [
       { id: "close", ownerId: "p1", status: "active", position: { x: 12, y: 12 } },
       { id: "near", ownerId: "p1", status: "active", position: { x: 21, y: 12 } },
       { id: "mid", ownerId: "p1", status: "active", position: { x: 33, y: 12 } },
       { id: "dead", ownerId: "p1", status: "destroyed", position: { x: 12, y: 12 } }
-    ]
-  });
-  state = startBattle(state, { battleId: "battle-1" });
-  return startFirstTurn(state, { activePlayerId: "p1" });
+    ],
+    objectives: [{ id: "obj-2", position: { x: 12, y: 12 } }]
+  };
 }
 
-function definition() {
-  return createMissionDefinition({
-    id: "score-obj-2",
-    name: "Score Objective 2",
-    timing: SCORING_TIMINGS.COMMAND_PHASE,
-    conditions: [{
-      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
-      args: { objectiveId: "obj-2", playerId: "p1", expected: "controlled" }
-    }]
-  });
+function advisories(eligible = false) {
+  return {
+    timing: "command-phase",
+    due: [{
+      definitionId: "score-obj-2",
+      timing: "command-phase",
+      due: true,
+      opportunity: {
+        definitionId: "score-obj-2",
+        timing: "command-phase",
+        eligible,
+        conditions: [{
+          evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+          eligible,
+          objectiveId: "obj-2",
+          playerId: "p1",
+          expected: "controlled",
+          actual: eligible ? "controlled" : "uncontrolled"
+        }]
+      }
+    }],
+    available: eligible ? [{
+      definitionId: "score-obj-2",
+      timing: "command-phase",
+      eligible: true,
+      conditions: [{
+        evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+        eligible: true,
+        objectiveId: "obj-2",
+        playerId: "p1",
+        expected: "controlled",
+        actual: "controlled"
+      }]
+    }] : [],
+    evaluations: []
+  };
 }
 
 test("provides approximate unit candidates for an unsatisfied objective action", () => {
-  const state = baseState();
-  const scoringAdvisories = getScoringOpportunityAdvisories(state, {
-    definitions: [definition()],
-    timing: SCORING_TIMINGS.COMMAND_PHASE
-  });
-
-  const result = getTacticalScoringActions(state, {
+  const result = getTacticalScoringActions(baseState(), {
     playerId: "p1",
-    scoringAdvisories
+    scoringAdvisories: advisories()
   });
 
   assert.equal(result.length, 1);
@@ -63,15 +71,9 @@ test("provides approximate unit candidates for an unsatisfied objective action",
 });
 
 test("does not select destroyed units or claim exact legality", () => {
-  const state = baseState();
-  const scoringAdvisories = getScoringOpportunityAdvisories(state, {
-    definitions: [definition()],
-    timing: SCORING_TIMINGS.COMMAND_PHASE
-  });
-
-  const result = getTacticalScoringActions(state, {
+  const result = getTacticalScoringActions(baseState(), {
     playerId: "p1",
-    scoringAdvisories
+    scoringAdvisories: advisories()
   });
 
   const candidates = result[0].actions[0].candidates;
@@ -81,17 +83,9 @@ test("does not select destroyed units or claim exact legality", () => {
 });
 
 test("keeps satisfied scoring opportunities out of action contexts", () => {
-  let state = baseState();
-  state = recordObjectiveControl(state, { objectiveId: "obj-2", controllerId: "p1" });
-
-  const scoringAdvisories = getScoringOpportunityAdvisories(state, {
-    definitions: [definition()],
-    timing: SCORING_TIMINGS.COMMAND_PHASE
-  });
-
-  const result = getTacticalScoringActions(state, {
+  const result = getTacticalScoringActions(baseState(), {
     playerId: "p1",
-    scoringAdvisories
+    scoringAdvisories: advisories(true)
   });
 
   assert.equal(result.length, 1);
