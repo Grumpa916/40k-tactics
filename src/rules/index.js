@@ -14,3 +14,4 @@ export { normalizeModifier, applyTargetModifier, isCriticalHit } from "./combat-
 export { resolveSaveRoll, resolveDamage } from "./save-damage-resolution.js";
 export { resolveAttack } from "./attack-resolution.js";
 export { buildAttackProfile } from "./combat-profile.js";
+export { getFightCandidates } from "./fight-candidates.js";
