@@ -107,7 +107,15 @@ export function createShootingScreen(container, {
             <div class="shoot-selected-shooter"><strong>${selectedAttackerId ? escapeHtml(model.activations.find((unit) => unit.unitId === selectedAttackerId)?.unit.name ?? selectedAttackerId) : "No shooter selected"}</strong><span>Selected shooter</span></div>
             <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
-            <label>Actual damage<input data-shoot-damage type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(actualDamage)}" placeholder="0" ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}></label>
+            <div class="damage-control">
+              <span class="damage-control__label">Actual damage</span>
+              <div class="damage-control__buttons">
+                <button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button>
+                <strong data-shoot-damage-value">${escapeHtml(actualDamage)}</strong>
+                <button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button>
+              </div>
+              <small>Expected damage is calculated automatically and retained in the attack result.</small>
+            </div>
             <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
           </div>
         </section>
@@ -164,10 +172,13 @@ export function createShootingScreen(container, {
 
     container.querySelector("[data-weapon]")?.addEventListener("change", (event) => { selectedWeaponId = event.target.value || null; render(); });
     container.querySelector("[data-target]")?.addEventListener("change", (event) => { selectedTargetId = event.target.value || null; render(); });
-    container.querySelector("[data-shoot-damage]")?.addEventListener("input", (event) => {
-      actualDamage = event.target.value;
-      const button = container.querySelector("[data-attack]");
-      if (button) button.disabled = !(selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "");
+    container.querySelector("[data-shoot-damage-minus]")?.addEventListener("click", () => {
+      actualDamage = String(Math.max(0, Number(actualDamage) - 1));
+      render();
+    });
+    container.querySelector("[data-shoot-damage-plus]")?.addEventListener("click", () => {
+      actualDamage = String(Number(actualDamage) + 1);
+      render();
     });
     container.querySelector("[data-attack]")?.addEventListener("click", () => {
       const weapon = weapons.find((item) => item.id === selectedWeaponId);
