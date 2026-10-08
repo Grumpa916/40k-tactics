@@ -24,6 +24,15 @@ function proximityScore(band) {
   }[band] ?? 0;
 }
 
+function classifyShootingImpact({ expectedDamage, destructionProbability, targetWounds } = {}) {
+  if (!Number.isFinite(expectedDamage) || !Number.isFinite(destructionProbability) || !Number.isFinite(targetWounds) || targetWounds <= 0) return "unknown";
+  if (destructionProbability >= 0.75) return "likely-destruction";
+  if (destructionProbability >= 0.25) return "possible-destruction";
+  if (expectedDamage >= targetWounds * 0.5) return "likely-severe-degradation";
+  if (expectedDamage > 0) return "limited-impact";
+  return "no-baseline-impact";
+}
+
 function rangeScore(distance, range) {
   if (range == null || distance == null) return 0;
   return distance <= range ? 2 : -2;
@@ -79,6 +88,7 @@ export function getShootingTargetPriorities(state, {
     let destructionProbability = null;
     let survivalProbability = null;
     let mostLikelyRemainingWounds = null;
+    let impactClassification = "unknown";
     if (weapon?.characteristics && attacker.characteristics && target.characteristics) {
       try {
         const distribution = getDamageOutcomeDistribution({ attacker, target, weapon });
@@ -91,6 +101,7 @@ export function getShootingTargetPriorities(state, {
           null
         );
         mostLikelyRemainingWounds = mostLikelyState?.remainingWounds ?? null;
+        impactClassification = classifyShootingImpact({ expectedDamage, destructionProbability, targetWounds: target.wounds });
         priority += Math.min(3, expectedDamage);
         priority += Math.min(2, destructionProbability * 2);
       } catch {
@@ -105,6 +116,9 @@ export function getShootingTargetPriorities(state, {
     }
     if (expectedDamage != null) {
       reasons.push("Baseline expected damage is approximately " + expectedDamage.toFixed(2) + ".");
+    }
+    if (impactClassification !== "unknown") {
+      reasons.push("Outcome profile: " + impactClassification.replaceAll("-", " ") + ".");
     }
     if (destructionProbability != null) {
       reasons.push("Estimated destruction chance is approximately " + (destructionProbability * 100).toFixed(0) + "%.");
@@ -130,6 +144,7 @@ export function getShootingTargetPriorities(state, {
       destructionProbability,
       survivalProbability,
       mostLikelyRemainingWounds,
+      impactClassification,
       reason: reasons.join(" ")
     });
   }
