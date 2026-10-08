@@ -1,22 +1,12 @@
 export { createGameState, GAME_STATE_VERSION } from "./game-state.js";
-export {
-  registerCommandHandler,
-  executeCommand,
-  clearCommandHandlers
-} from "./command-engine.js";
+export { registerCommandHandler, executeCommand, clearCommandHandlers } from "./command-engine.js";
 export { appendHistoryEntry, getHistory } from "../state/history.js";
 export { createCommand } from "../commands/command.js";
 export {
-  startBattle,
-  enterDeployment,
-  deployUnit,
-  startFirstTurn,
-  changePhase,
-  endTurn,
-  advanceBattleRound,
-  completeBattle,
-  recordObjectiveControl
+  startBattle, enterDeployment, deployUnit, startFirstTurn, changePhase,
+  endTurn, advanceBattleRound, completeBattle, recordObjectiveControl
 } from "./state-transitions.js";
+export { captureTurnStartSnapshot, recordMissionScoringEvent } from "./scoring-transitions.js";
 export { resolveNormalMove } from "./movement-transitions.js";
 export { recordChargeOutcome } from "./charge-transitions.js";
 export { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";

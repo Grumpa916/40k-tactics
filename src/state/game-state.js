@@ -15,6 +15,7 @@ export function createGameState(overrides = {}) {
     commandPoints: {},
     timers: {},
     history: [],
+    scoring: { turnSnapshots: [] },
     ...overrides
   };
 }

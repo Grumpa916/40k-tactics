@@ -6,6 +6,7 @@ import { appendHistoryEntry } from "../state/history.js";
 import { getFightCandidates } from "../rules/fight-candidates.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { createObjectiveState } from "../rules/objective-control-state.js";
+import { captureTurnStartSnapshot } from "./scoring-transitions.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -120,13 +121,19 @@ export function startFirstTurn(state, { activePlayerId } = {}) {
     }
   }));
 
-  return transition(roundStarted, "turn.started", { number: 1, activePlayerId }, (current) => ({
+  const turnStarted = transition(roundStarted, "turn.started", { number: 1, activePlayerId }, (current) => ({
     ...current,
     phase: "start_turn",
     turn: 1,
     activePlayer: activePlayerId,
     battle: { ...current.battle, activePlayerId }
   }));
+
+  return captureTurnStartSnapshot(turnStarted, {
+    turn: 1,
+    round: 1,
+    playerId: activePlayerId
+  });
 }
 
 export function changePhase(state, { phase } = {}) {
@@ -265,7 +272,7 @@ export function advanceBattleRound(state) {
   }));
 
   const turnNumber = state.turn + 1;
-  return transition(roundStarted, "turn.started", {
+  const turnStarted = transition(roundStarted, "turn.started", {
     number: turnNumber,
     activePlayerId: state.battle.firstPlayerId
   }, (current) => ({
@@ -275,6 +282,12 @@ export function advanceBattleRound(state) {
     activePlayer: current.battle.firstPlayerId,
     battle: { ...current.battle, activePlayerId: current.battle.firstPlayerId }
   }));
+
+  return captureTurnStartSnapshot(turnStarted, {
+    turn: turnNumber,
+    round: state.battle.round + 1,
+    playerId: state.battle.firstPlayerId
+  });
 }
 
 export function completeBattle(state) {
