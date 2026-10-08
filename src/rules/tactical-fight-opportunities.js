@@ -105,8 +105,8 @@ export function getFightOpportunityRecommendations(
         netCombatValue: evaluation.netCombatValue,
         risk: evaluation.risk,
         confidence: evaluation.confidence,
-        retaliationSurvivalProbability: probabilisticRetaliation?.survivalProbability ?? null,
-        retaliationDestructionProbability: probabilisticRetaliation?.destructionProbability ?? null,
+        targetSurvivalProbability: probabilisticRetaliation?.survivalProbability ?? null,
+        targetDestructionProbability: probabilisticRetaliation?.destructionProbability ?? null,
         reason: evaluation.risk === "high"
           ? "Strong offensive opportunity, but expected retaliation creates significant preservation risk."
           : evaluation.retaliationExpectedDamage > 0
