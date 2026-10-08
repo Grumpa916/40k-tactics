@@ -10,7 +10,8 @@ test("combat transition consumes weapon and target data instead of raw attack pa
     units: [
       { id: "a", ownerId: "p1", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } },
       { id: "t", ownerId: "p2", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } }
-    ]
+    ],
+    history: [{ type: "shooting.unit_activated", payload: { unitId: "a", round: 1, turn: 1 } }]
   });
 
   const weapon = {
