@@ -28,6 +28,8 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.COMPLETE_BATTLE, (state) => completeBattle(state)],
     [COMMAND_TYPES.RESOLVE_NORMAL_MOVE, (state, command) =>
       resolveNormalMove(state, command.payload)],
+    [COMMAND_TYPES.RECORD_FALL_BACK, (state, command) =>
+      recordFallBack(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) =>
       recordChargeOutcome(state, command.payload)],
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) =>
