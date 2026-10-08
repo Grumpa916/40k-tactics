@@ -97,12 +97,18 @@ export function getScoringActionContexts(scoringAdvisories, options = {}) {
     throw new TypeError("Scoring advisories are required.");
   }
 
-  const dueEvaluations = Array.isArray(scoringAdvisories.due)
-    ? scoringAdvisories.due
+  if (Array.isArray(scoringAdvisories.due)) {
+    return scoringAdvisories.due
+      .map((evaluation) => evaluation?.opportunity)
+      .filter(Boolean)
+      .map((opportunity) => getScoringActionContext(opportunity, options));
+  }
+
+  const available = Array.isArray(scoringAdvisories.available)
+    ? scoringAdvisories.available
     : [];
 
-  return dueEvaluations
-    .map((evaluation) => evaluation?.opportunity)
-    .filter(Boolean)
-    .map((opportunity) => getScoringActionContext(opportunity, options));
+  return available.map((opportunity) =>
+    getScoringActionContext(opportunity, options)
+  );
 }
