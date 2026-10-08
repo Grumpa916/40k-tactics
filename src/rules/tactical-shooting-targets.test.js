@@ -61,7 +61,7 @@ test("ranks nearby enemy targets ahead of distant targets", () => {
   assert.equal(result.priorities[0].weaponId, "rifle");
 });
 
-test("uses weapon range as an advisory signal without hiding targets", () => {
+test("screens targets clearly beyond the weapon range", () => {
   const result = getShootingTargetPriorities(baseState(), {
     playerId: "p1",
     attackerId: "shooter",
@@ -74,8 +74,7 @@ test("uses weapon range as an advisory signal without hiding targets", () => {
   });
 
   const far = result.priorities.find((item) => item.targetUnitId === "far-target");
-  assert.ok(far);
-  assert.match(far.reason, /beyond the weapon's approximate range/);
+  assert.equal(far, undefined);
 });
 
 test("does not recommend an enemy currently engaged with the shooting unit", () => {
@@ -150,4 +149,32 @@ test("keeps targets eligible when expected-damage profiles are incomplete", () =
 
   assert.equal(result.priorities.length, 2);
   assert.equal(result.priorities.every((item) => item.expectedDamage === null), true);
+});
+
+
+test("keeps a borderline target just beyond approximate range", () => {
+  const state = baseState();
+  state.units.push({
+    id: "borderline-target",
+    ownerId: "p2",
+    status: "deployed",
+    wounds: 5,
+    position: { x: 15, y: 0 },
+    characteristics: { toughness: 4, save: 4 }
+  });
+
+  const result = getShootingTargetPriorities(state, {
+    playerId: "p1",
+    attackerId: "shooter",
+    weapon: {
+      id: "short",
+      type: "ranged",
+      characteristics: { range: 12 }
+    }
+  });
+
+  const borderline = result.priorities.find((item) => item.targetUnitId === "borderline-target");
+  assert.ok(borderline);
+  assert.equal(borderline.rangeStatus, "borderline");
+  assert.match(borderline.reason, /exact tabletop measurement is required/);
 });
