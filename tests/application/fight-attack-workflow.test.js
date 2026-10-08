@@ -59,7 +59,7 @@ test("Fight attack options expose the activated attacker and deployed target", (
   const options = getFightAttackOptions(fightState(), { perspectivePlayerId: "p1" });
 
   assert.deepEqual(options.attackers.map((unit) => unit.unitId), ["attacker"]);
-  assert.deepEqual(options.targets.map((unit) => unit.unitId), ["attacker", "target"]);
+  assert.deepEqual(options.targets.map((unit) => unit.unitId), ["target"]);
 });
 
 test("Fight attack workflow dispatches the existing combat command", () => {
