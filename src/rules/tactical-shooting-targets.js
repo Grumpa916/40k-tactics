@@ -1,5 +1,6 @@
 import { getCombatHistorySummary } from "./combat-history-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
+import { getExpectedDamage } from "./expected-damage.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
@@ -68,9 +69,22 @@ export function getShootingTargetPriorities(state, {
     let priority = proximityScore(proximity.band);
     priority += rangeScore(proximity.distance, range);
 
+    let expectedDamage = null;
+    if (weapon?.characteristics && attacker.characteristics && target.characteristics) {
+      try {
+        expectedDamage = getExpectedDamage({ attacker, target, weapon }).expectedDamage;
+        priority += Math.min(3, expectedDamage);
+      } catch {
+        // Incomplete profiles remain eligible; expected damage is optional advisory data.
+      }
+    }
+
     const reasons = [];
     if (proximity.band === "close" || proximity.band === "near") {
       reasons.push("Enemy is approximately " + proximity.distance + " inches away.");
+    }
+    if (expectedDamage != null) {
+      reasons.push("Baseline expected damage is approximately " + expectedDamage.toFixed(2) + ".");
     }
     if (range != null) {
       reasons.push(
@@ -88,6 +102,7 @@ export function getShootingTargetPriorities(state, {
       targetDistance: proximity.distance,
       targetBand: proximity.band,
       weaponId: weapon?.id ?? null,
+      expectedDamage,
       reason: reasons.join(" ")
     });
   }
