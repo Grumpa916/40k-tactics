@@ -78,7 +78,6 @@ test("requires active player and Charge phase and prevents repeat attempts", () 
   }), /one charge per turn/);
 });
 
-
 test("Charge cannot be declared after Fall Back in the same turn", () => {
   const fallenBack = {
     ...chargeState(),
@@ -91,4 +90,32 @@ test("Charge cannot be declared after Fall Back in the same turn", () => {
     () => recordChargeOutcome(fallenBack, { unitId: "charger", succeeded: false }),
     /Fell Back cannot declare a charge/
   );
+});
+
+test("records an opponent successful Charge against my unit", () => {
+  const state = chargeState({
+    turn: 2,
+    activePlayer: "p2",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
+    units: [
+      createUnit({ id: "my-unit", ownerId: "p1", name: "My Unit", status: "deployed" }),
+      createUnit({ id: "opponent-charger", ownerId: "p2", name: "Opponent Charger", status: "deployed" })
+    ]
+  });
+
+  const next = recordChargeOutcome(state, {
+    unitId: "opponent-charger",
+    succeeded: true,
+    targetIds: ["my-unit"]
+  });
+
+  assert.deepEqual(next.history.at(-1).payload, {
+    unitId: "opponent-charger",
+    playerId: "p2",
+    outcome: "successful",
+    targetIds: ["my-unit"],
+    round: 1,
+    turn: 2
+  });
+  assert.deepEqual(next.units, state.units);
 });
