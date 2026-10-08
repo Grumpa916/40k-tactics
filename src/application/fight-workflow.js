@@ -153,7 +153,7 @@ export function getFightAttackOptions(
   }
 
   const attacker = state.units.find((unit) => unit?.id === attackerId);
-  if (!attacker || !activated.has(attackerId)) {
+  if (!attacker || !activated.has(attackerId) || attacked.has(attackerId)) {
     return {
       attackers,
       targets: []
