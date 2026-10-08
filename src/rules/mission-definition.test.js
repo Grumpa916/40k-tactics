@@ -25,7 +25,7 @@ function baseState() {
     units: [{ id: "u1", ownerId: "p1", status: "active" }]
   });
 
-  state = startBattle(state, { playerId: "p1" });
+  state = startBattle(state, { battleId: "battle-1" });
   state = startFirstTurn(state, { playerId: "p1" });
   return state;
 }
