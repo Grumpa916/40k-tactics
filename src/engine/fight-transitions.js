@@ -24,6 +24,13 @@ export function recordFightActivation(state, { unitId } = {}) {
     throw new Error("Unit is not an available Fight candidate.");
   }
 
+  if (
+    candidates.fightsFirst.length > 0 &&
+    candidates.normal.includes(unitId)
+  ) {
+    throw new Error("Fights First candidates must be activated before normal Fight candidates.");
+  }
+
   if (state.history.some((event) =>
     event.type === "fight.unit_activated" &&
     event.payload?.unitId === unitId &&
