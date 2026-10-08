@@ -4,7 +4,8 @@ import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
  * Convert a damage distribution into possible post-Fight target states.
  *
  * Expected damage is deliberately not used as a deterministic state change.
- * Each outcome is clamped to the target's current wounds and retains its
+ * A precomputed distribution may be supplied directly when the combat profile
+ * is unavailable. Each outcome is clamped to the target's current wounds and retains its
  * probability, allowing later retaliation logic to weight survival and
  * degradation correctly.
  */
