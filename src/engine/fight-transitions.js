@@ -17,6 +17,13 @@ export function recordFightActivation(state, { unitId } = {}) {
   if (state.players.length > 0 && !state.players.some((player) => player.id === unit.ownerId)) {
     throw new Error("Fight activation unit owner must be a player in the game.");
   }
+
+  const candidates = getFightCandidates(state);
+  const isCandidate = candidates.fightsFirst.includes(unitId) || candidates.normal.includes(unitId);
+  if (!isCandidate) {
+    throw new Error("Unit is not an available Fight candidate.");
+  }
+
   if (state.history.some((event) =>
     event.type === "fight.unit_activated" &&
     event.payload?.unitId === unitId &&
@@ -40,4 +47,27 @@ export function recordFightActivation(state, { unitId } = {}) {
     fightsFirst: chargedThisTurn
   });
   return appendHistoryEntry(state, event);
+}
+
+export function completeFightPhase(state) {
+  if (!state.battle || state.battle.status !== "active") {
+    throw new Error("Battle must be active.");
+  }
+  if (state.phase !== "fight") {
+    throw new Error("Fight phase must be active before it can be completed.");
+  }
+
+  const candidates = getFightCandidates(state);
+  if (candidates.fightsFirst.length > 0 || candidates.normal.length > 0) {
+    throw new Error("Fight phase cannot be completed while Fight candidates remain.");
+  }
+
+  const nextState = {
+    ...state,
+    phase: "end_turn"
+  };
+  return appendHistoryEntry(nextState, createEvent("fight.phase_completed", {
+    round: state.battle.round,
+    turn: state.turn
+  }));
 }
