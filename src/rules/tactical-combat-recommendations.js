@@ -4,6 +4,7 @@ import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getSpatialContext } from "./spatial-context.js";
 
 const CHARGE_MAX_DISTANCE = 12;
+const CHARGE_RANGE_UNCERTAINTY_MARGIN = 3;
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
@@ -28,12 +29,15 @@ function chargeCandidates(state, { playerId }) {
 
     // A charge roll can reach at most 12 inches. Because map distance is
     // deliberately coarse, this is an eligibility screen, not exact legality.
-    if (proximity.distance > CHARGE_MAX_DISTANCE) continue;
+    // Keep one coarse bucket beyond the maximum charge distance as borderline.
+    // Map distance is advisory; exact tabletop measurement remains authoritative.
+    if (proximity.distance > CHARGE_MAX_DISTANCE + CHARGE_RANGE_UNCERTAINTY_MARGIN) continue;
 
+    const rangeStatus = proximity.distance <= CHARGE_MAX_DISTANCE ? "within" : "borderline";
     const confidence =
+      rangeStatus === "borderline" ? "low" :
       proximity.distance <= 6 ? "high" :
-      proximity.distance < CHARGE_MAX_DISTANCE ? "moderate" :
-      "low";
+      "moderate";
 
     candidates.push({
       type: "charge",
@@ -43,8 +47,9 @@ function chargeCandidates(state, { playerId }) {
       targetDistance: proximity.distance,
       targetBand: proximity.band,
       confidence,
-      reason: confidence === "low"
-        ? "Enemy is approximately at the maximum charge distance; exact legality requires the tabletop measurement."
+      rangeStatus,
+      reason: rangeStatus === "borderline"
+        ? "Enemy is just beyond the maximum charge distance; exact tabletop measurement is required."
         : "Enemy is within the approximate maximum charge envelope."
     });
   }
