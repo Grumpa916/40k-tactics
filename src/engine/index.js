@@ -14,7 +14,8 @@ export {
   changePhase,
   endTurn,
   advanceBattleRound,
-  completeBattle
+  completeBattle,
+  recordObjectiveControl
 } from "./state-transitions.js";
 export { resolveNormalMove } from "./movement-transitions.js";
 export { recordChargeOutcome } from "./charge-transitions.js";

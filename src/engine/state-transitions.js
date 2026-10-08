@@ -5,6 +5,7 @@ import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getFightCandidates } from "../rules/fight-candidates.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
+import { createObjectiveState } from "../rules/objective-control-state.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -64,6 +65,38 @@ function requirePlayer(state, playerId) {
   if (state.players.length > 0 && !state.players.some((player) => player.id === playerId)) {
     throw new Error("Active player must exist in the game state.");
   }
+}
+
+export function recordObjectiveControl(state, {
+  objectiveId,
+  controllerId = null,
+  contestingPlayerIds = [],
+  controlState = null
+} = {}) {
+  if (!objectiveId) throw new TypeError("Objective id is required.");
+  if (!Array.isArray(contestingPlayerIds)) {
+    throw new TypeError("contestingPlayerIds must be an array.");
+  }
+
+  const objective = state.objectives.find((item) => item?.id === objectiveId);
+  if (!objective) throw new Error("Objective not found: " + objectiveId);
+
+  for (const playerId of contestingPlayerIds) requirePlayer(state, playerId);
+  if (controllerId) requirePlayer(state, controllerId);
+
+  const control = createObjectiveState({
+    id: objectiveId,
+    controllerId,
+    contestingPlayerIds,
+    controlState
+  });
+
+  return transition(state, "objective.control_recorded", control, (current) => ({
+    ...current,
+    objectives: current.objectives.map((item) =>
+      item.id === objectiveId ? { ...item, control } : item
+    )
+  }));
 }
 
 export function startFirstTurn(state, { activePlayerId } = {}) {
