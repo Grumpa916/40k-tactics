@@ -144,6 +144,26 @@ test("includes baseline expected damage when complete profiles are available", (
   assert.equal(close.impactClassification, "limited-impact");
 });
 
+test("exposes decision-oriented Shooting opportunity context", () => {
+  const result = getShootingTargetPriorities(baseState(), {
+    playerId: "p1",
+    attackerId: "shooter",
+    weapon: {
+      id: "rifle",
+      type: "ranged",
+      characteristics: { range: 24, attacks: 4, strength: 5, ap: -1, damage: 2 }
+    }
+  });
+
+  const close = result.priorities.find((item) => item.targetUnitId === "close-target");
+  assert.ok(close);
+  assert.equal(close.rangeConfidence, "moderate");
+  assert.equal(close.confidence, "moderate");
+  assert.equal(close.targetImpact, close.expectedDamage / 5);
+  assert.equal(close.normalizedImpact, close.targetImpact);
+  assert.match(close.recommendationReason, /Limited baseline impact/);
+});
+
 test("classifies high destruction probability as likely destruction", () => {
   const state = baseState();
   state.units.find((unit) => unit.id === "close-target").wounds = 1;
