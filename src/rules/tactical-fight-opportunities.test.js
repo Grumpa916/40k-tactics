@@ -101,3 +101,36 @@ test("rejects options that do not belong to the player's army", () => {
 
   assert.deepEqual(result, []);
 });
+
+
+test("uses probabilistic retaliation when Fight weapon data is available", () => {
+  const state = {
+    units: [
+      {
+        id: "attacker", ownerId: "p1", status: "deployed", wounds: 8,
+        characteristics: { weaponSkill: 3, toughness: 4, save: 4 },
+        weapons: [{ id: "blade", type: "melee", characteristics: { attacks: 4, strength: 4, ap: 0, damage: 1 } }]
+      },
+      {
+        id: "enemy", ownerId: "p2", status: "deployed", wounds: 1,
+        characteristics: { weaponSkill: 3, toughness: 4, save: 4 },
+        weapons: [{ id: "claws", type: "melee", characteristics: { attacks: 4, strength: 4, ap: 0, damage: 1 } }]
+      }
+    ],
+    history: [{
+      type: "charge.outcome_recorded",
+      payload: { unitId: "enemy", outcome: "successful", targetIds: ["attacker"] }
+    }]
+  };
+
+  const result = getFightOpportunityRecommendations(state, {
+    playerId: "p1",
+    options: [{ unitId: "attacker", targetUnitId: "enemy", weapon: state.units[0].weapons[0] }]
+  });
+
+  assert.equal(result.length, 1);
+  assert.ok(result[0].retaliationExpectedDamage > 0);
+  assert.ok(result[0].retaliationSurvivalProbability > 0);
+  assert.ok(result[0].retaliationDestructionProbability > 0);
+  assert.ok(result[0].retaliationSurvivalProbability < 1);
+});
