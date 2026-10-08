@@ -133,3 +133,101 @@ test("does not mutate state", () => {
   result.activated.push("unexpected");
   assert.deepEqual(state, before);
 });
+
+
+test("uses engagement-aware eligibility when engagement history is available", () => {
+  const state = fightState({
+    history: [
+      {
+        type: "turn.phase_changed",
+        payload: { phase: "fight", round: 1, turn: 2 }
+      },
+      {
+        type: "charge.outcome_recorded",
+        payload: {
+          unitId: "charged",
+          outcome: "successful",
+          targetIds: ["normal"],
+          round: 1,
+          turn: 2
+        }
+      }
+    ]
+  });
+
+  assert.deepEqual(getFightCandidates(state), {
+    fightsFirst: ["charged"],
+    normal: ["normal"],
+    activated: []
+  });
+});
+
+test("does not keep a unit Fight-eligible after it Falls Back and disengages", () => {
+  const state = fightState({
+    history: [
+      {
+        type: "turn.phase_changed",
+        payload: { phase: "fight", round: 1, turn: 2 }
+      },
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          phase: "fight",
+          attackerId: "charged",
+          targetId: "normal",
+          round: 1,
+          turn: 1
+        }
+      },
+      {
+        type: "unit.fell_back",
+        payload: {
+          unitId: "charged",
+          round: 1,
+          turn: 2
+        }
+      }
+    ]
+  });
+
+  assert.deepEqual(getFightCandidates(state), {
+    fightsFirst: [],
+    normal: [],
+    activated: []
+  });
+});
+
+test("preserves Fight-step-start eligibility after later disengagement", () => {
+  const state = fightState({
+    history: [
+      {
+        type: "combat.attack_resolved",
+        payload: {
+          phase: "fight",
+          attackerId: "charged",
+          targetId: "normal",
+          round: 1,
+          turn: 1
+        }
+      },
+      {
+        type: "turn.phase_changed",
+        payload: { phase: "fight", round: 1, turn: 2 }
+      },
+      {
+        type: "unit.fell_back",
+        payload: {
+          unitId: "normal",
+          round: 1,
+          turn: 2
+        }
+      }
+    ]
+  });
+
+  assert.deepEqual(getFightCandidates(state), {
+    fightsFirst: [],
+    normal: ["charged", "normal"],
+    activated: []
+  });
+});
