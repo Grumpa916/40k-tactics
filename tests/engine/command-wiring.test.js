@@ -181,7 +181,10 @@ test("Fight completion command advances to end of turn after candidates are exha
   state = executeCommand(state, createCommand(COMMAND_TYPES.COMPLETE_FIGHT_PHASE));
 
   assert.equal(state.phase, "end_turn");
-  assert.equal(state.history.at(-1).type, "fight.phase_completed");
+  assert.deepEqual(state.history.slice(-2).map((event) => event.type), [
+    "fight.phase_completed",
+    "turn.phase_changed"
+  ]);
   clearCommandHandlers();
 });
 
