@@ -32,6 +32,6 @@ test("combat transition consumes weapon and target data instead of raw attack pa
   });
 
   assert.equal(next.units.find((unit) => unit.id === "t").wounds, 1);
-  assert.equal(next.history[0].payload.weaponId, "laser");
-  assert.equal(next.history[0].payload.profile.damage, 2);
+  assert.equal(next.history.at(-1).payload.weaponId, "laser");
+  assert.equal(next.history.at(-1).payload.profile.damage, 2);
 });
