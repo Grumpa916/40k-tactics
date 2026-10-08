@@ -85,3 +85,37 @@ test("does not award VP", () => {
 
   assert.equal(result.available[0].points, undefined);
 });
+
+
+test("provides generic condition context for due scoring opportunities", () => {
+  const result = getScoringOpportunityAdvisories(baseState(), {
+    definitions: [definition("blocked")],
+    timing: SCORING_TIMINGS.COMMAND_PHASE
+  });
+
+  assert.equal(result.due.length, 1);
+  assert.equal(result.advisories.length, 1);
+  assert.equal(result.advisories[0].definitionId, "blocked");
+  assert.equal(result.advisories[0].available, false);
+  assert.equal(result.advisories[0].conditions.length, 1);
+  assert.equal(result.advisories[0].conditions[0].evidence, SCORING_EVIDENCE.OBJECTIVE_CONTROL);
+  assert.equal(result.advisories[0].conditions[0].status, "not-satisfied");
+  assert.equal(result.advisories[0].conditions[0].details.actual, "uncontrolled");
+});
+
+test("reports satisfied condition context without adding scoring rules", () => {
+  let state = baseState();
+  state = recordObjectiveControl(state, {
+    objectiveId: "obj-1",
+    controllerId: "p1"
+  });
+
+  const result = getScoringOpportunityAdvisories(state, {
+    definitions: [definition("available")],
+    timing: SCORING_TIMINGS.COMMAND_PHASE
+  });
+
+  assert.equal(result.advisories[0].available, true);
+  assert.equal(result.advisories[0].conditions[0].status, "satisfied");
+  assert.equal(result.advisories[0].conditions[0].details.actual, "controlled");
+});
