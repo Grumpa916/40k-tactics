@@ -69,35 +69,6 @@ test("Fight attack options expose the activated attacker and deployed target", (
   assert.deepEqual(attackerSpecific.targets.map((unit) => unit.unitId), ["target"]);
 });
 
-
-test("Fight attacker options exclude units whose attack is already recorded", () => {
-  const state = fightState();
-  state.history.push({
-    type: "combat.attack_resolved",
-    payload: {
-      attackerId: "attacker",
-      targetId: "target",
-      weaponId: "blade",
-      phase: "fight",
-      round: 1,
-      turn: 1,
-      result: { damage: { totalDamage: 1 } }
-    }
-  });
-
-  const options = getFightAttackOptions(state, { perspectivePlayerId: "p1" });
-
-  assert.deepEqual(options.attackers.map((unit) => unit.unitId), []);
-  assert.deepEqual(options.targets.map((unit) => unit.unitId), ["target"]);
-
-  const attackerSpecific = getFightAttackOptions(state, {
-    attackerId: "attacker",
-    perspectivePlayerId: "p1"
-  });
-  assert.deepEqual(attackerSpecific.attackers, []);
-  assert.deepEqual(attackerSpecific.targets, []);
-});
-
 test("Fight attack workflow dispatches the existing combat command", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();

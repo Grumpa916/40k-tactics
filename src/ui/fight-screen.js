@@ -161,7 +161,7 @@ export function createFightScreen(
 
         <div class="fight-main-grid">
           <section class="fight-section">
-          <div class="fight-section__heading"><h2>Attack entry</h2><span class="fight-section__hint">Select an activated unit that still needs its attack, then weapon and target</span></div>
+          <div class="fight-section__heading"><h2>Attack entry</h2><span class="fight-section__hint">Select an activated unit, weapon, then target</span></div>
           <div class="fight-attack-entry">
             <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
             <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
