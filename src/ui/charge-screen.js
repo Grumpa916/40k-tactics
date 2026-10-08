@@ -15,7 +15,7 @@ function escapeHtml(value) {
 
 function targetRow(item, selected) {
   const warning = item.rangeStatus === "borderline"
-    ? "<span class="charge-target__warning">Exact tabletop measurement required</span>"
+    ? '<span class="charge-target__warning">Exact tabletop measurement required</span>'
     : "";
   return [
     "<label class="charge-target charge-target--", escapeHtml(item.rangeStatus), "">",
