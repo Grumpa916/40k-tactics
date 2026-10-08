@@ -1,3 +1,5 @@
+import test from "node:test";
+import assert from "node:assert/strict";
 import {
   SCORING_TIMINGS,
   createMissionDefinition,
@@ -41,9 +43,9 @@ test("creates a declarative mission definition", () => {
     ]
   });
 
-  expect(definition.id).toBe("hold-center");
-  expect(definition.timing).toBe(SCORING_TIMINGS.END_OF_TURN);
-  expect(definition.conditions).toHaveLength(1);
+  assert.equal(definition.id, "hold-center");
+  assert.equal(definition.timing, SCORING_TIMINGS.END_OF_TURN);
+  assert.equal(definition.conditions.length, 1);
 });
 
 test("evaluates all declared conditions without awarding points", () => {
@@ -66,10 +68,10 @@ test("evaluates all declared conditions without awarding points", () => {
 
   const result = evaluateMissionDefinition(state, definition);
 
-  expect(result.eligible).toBe(true);
-  expect(result.conditions).toHaveLength(1);
-  expect(result.conditions[0].actual).toBe("controlled");
-  expect(result.points).toBeUndefined();
+  assert.equal(result.eligible, true);
+  assert.equal(result.conditions.length, 1);
+  assert.equal(result.conditions[0].actual, "controlled");
+  assert.equal(result.points, undefined);
 });
 
 test("requires every declared condition to be satisfied", () => {
@@ -91,8 +93,8 @@ test("requires every declared condition to be satisfied", () => {
 
   const result = evaluateMissionDefinition(state, definition);
 
-  expect(result.eligible).toBe(false);
-  expect(result.conditions.every((condition) => condition.eligible)).toBe(false);
+  assert.equal(result.eligible, false);
+  assert.equal(result.conditions.every((condition) => condition.eligible), false);
 });
 
 test("supports command-phase timing without changing evidence evaluation", () => {
@@ -111,16 +113,16 @@ test("supports command-phase timing without changing evidence evaluation", () =>
 
   const result = evaluateMissionDefinition(state, definition);
 
-  expect(result.timing).toBe(SCORING_TIMINGS.COMMAND_PHASE);
-  expect(result.eligible).toBe(true);
+  assert.equal(result.timing, SCORING_TIMINGS.COMMAND_PHASE);
+  assert.equal(result.eligible, true);
 });
 
 test("rejects unsupported evidence and timing", () => {
-  expect(() => createScoringCondition({ evidence: "unknown" })).toThrow();
-  expect(() => createMissionDefinition({
+  assert.throws(() => createScoringCondition({ evidence: "unknown" }));
+  assert.throws(() => createMissionDefinition({
     id: "bad",
     name: "Bad",
     timing: "after-every-phase",
     conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 1 } }]
-  })).toThrow();
+  }));
 });
