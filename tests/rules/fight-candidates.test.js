@@ -192,7 +192,7 @@ test("does not keep a unit Fight-eligible after it Falls Back and disengages", (
 
   assert.deepEqual(getFightCandidates(state), {
     fightsFirst: [],
-    normal: ["normal"],
+    normal: [],
     activated: []
   });
 });
@@ -227,7 +227,7 @@ test("preserves Fight-step-start eligibility after later disengagement", () => {
 
   assert.deepEqual(getFightCandidates(state), {
     fightsFirst: [],
-    normal: ["charged"],
+    normal: ["charged", "normal"],
     activated: []
   });
 });
