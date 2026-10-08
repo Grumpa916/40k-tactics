@@ -61,11 +61,35 @@ test("surfaces shooting recommendations through the unified combat layer", () =>
   assert.equal(result.shooting[0].confidence, "high");
 });
 
-test("surfaces charge candidates only inside the approximate maximum charge envelope", () => {
-  const state = { ...baseState(), phase: "charge" };
+test("surfaces charge candidates inside or just beyond the approximate maximum charge envelope", () => {
+  const state = {
+    ...baseState(),
+    phase: "charge",
+    units: [
+      ...baseState().units,
+      {
+        id: "borderline-target",
+        ownerId: "p2",
+        status: "deployed",
+        position: { x: 14, y: 0 }
+      },
+      {
+        id: "outside-target",
+        ownerId: "p2",
+        status: "deployed",
+        position: { x: 16, y: 0 }
+      }
+    ]
+  };
   const result = getTacticalCombatRecommendations(state, { playerId: "p1" });
 
   assert.ok(result.charge.some((item) => item.targetUnitId === "near-target"));
+  const borderline = result.charge.find((item) => item.targetUnitId === "borderline-target");
+  assert.ok(borderline);
+  assert.equal(borderline.rangeStatus, "borderline");
+  assert.equal(borderline.confidence, "low");
+  assert.match(borderline.reason, /exact tabletop measurement is required/);
+  assert.equal(result.charge.some((item) => item.targetUnitId === "outside-target"), false);
   assert.equal(result.charge.some((item) => item.targetUnitId === "far-target"), false);
   assert.equal("legal" in result.charge[0], false);
   assert.equal("canReach" in result.charge[0], false);
