@@ -1,4 +1,5 @@
 import { buildAttackProfile } from "./combat-profile.js";
+import { getWoundBracketModifiers } from "./wound-bracket.js";
 
 function targetAfterModifier(target, modifier = 0) {
   const cappedModifier = Math.min(1, Math.max(-1, modifier));
@@ -142,19 +143,21 @@ function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
  * advisory infrastructure and does not model hidden cover, future abilities,
  * positioning, or limited-count rerolls.
  */
-export function getDamageOutcomeDistribution({ attacker, target, weapon } = {}) {
+export function getDamageOutcomeDistribution({ attacker, target, weapon, attackerRemainingWounds = attacker?.wounds } = {}) {
   const profile = buildAttackProfile({ attacker, target, weapon });
   const saveModifier = target?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
+  const woundBracket = getWoundBracketModifiers(attacker, { remainingWounds: attackerRemainingWounds });
   const woundTargetValue = targetAfterModifier(
     woundTarget(profile.strength, profile.toughness),
     profile.woundModifier
   );
   const saveFailure = singleSaveFailureProbability(profile, saveModifier);
+  const hitModifier = profile.hitModifier + woundBracket.hitModifier;
   const outcomes = new Map();
 
   for (const [attackCount, attackCountProbability] of attackCountValues(profile.attacks)) {
     let distribution = new Map([[0, 1]]);
-    const perAttack = oneAttackDistribution(profile, woundTargetValue, saveFailure);
+    const perAttack = oneAttackDistribution({ ...profile, hitModifier }, woundTargetValue, saveFailure);
     for (let index = 0; index < attackCount; index += 1) {
       distribution = convolve(distribution, perAttack);
     }
