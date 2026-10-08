@@ -10,7 +10,7 @@ const weapon = {
 
 const meleeWeapon = {
   id: "blade", name: "Blade", type: "melee",
-  characteristics: { attacks: 2, strength: 8, weaponSkill: 4, ap: 1, damage: 2 }
+  characteristics: { attacks: 2, strength: 8, ap: 1, damage: 2 }
 };
 
 function activeState() {
@@ -18,8 +18,8 @@ function activeState() {
     phase: "shooting", turn: 1, activePlayer: "p1",
     battle: { id: "battle-1", missionId: null, status: "active", round: 1, activePlayerId: "p1" },
     units: [
-      { id: "attacker", ownerId: "p1", name: "Attacker", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } },
-      { id: "target", ownerId: "p2", name: "Target", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, toughness: 4, save: 3 } } }
+      { id: "attacker", ownerId: "p1", name: "Attacker", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 3 } } },
+      { id: "target", ownerId: "p2", name: "Target", status: "deployed", wounds: 5, profile: { characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 3 } } }
     ]
   });
 }
