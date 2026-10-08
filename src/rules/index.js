@@ -42,3 +42,8 @@ export {
   createMissionDefinition,
   evaluateMissionDefinition
 } from "./mission-definition.js";
+
+export {
+  SCORING_OPPORTUNITY_STATES,
+  evaluateScoringOpportunity
+} from "./scoring-opportunity.js";
