@@ -342,9 +342,82 @@ Do not:
 
 The Command Phase reference supports the existing V2 goal of **minimal input, persistent context, contextual rules, and authoritative tactical history**.
 
+## Movement and Shooting Phase comparison — October 8, 2026 screenshots
+
+The additional screenshots show a particularly useful Warmind pattern: the **upper portion of the Battle screen changes by phase, while the lower portion remains essentially stable**.
+
+### Key observation
+
+The Movement and Shooting screenshots retain the same lower battle-context structure:
+
+- Core Stratagems
+- Army Rules
+- Detachments
+- Terrain Layout
+- Primary Mission
+- Secondary Missions
+- Score / CP state
+- Destruction/unit state
+- Event Log
+- Battle/end controls
+
+Only the active phase workspace near the top changes.
+
+**Decision: Strongly consider this persistent-shell architecture for V2.**
+
+Conceptually:
+
+```
++------------------------------------------------------+
+| ROUND / TURN / NEXT PHASE / UNDO / PHASE NAVIGATION |
++------------------------------------------------------+
+|                                                      |
+|              ACTIVE PHASE WORKSPACE                  |
+|                                                      |
+|   Command: reminders / decisions                     |
+|   Movement: movement / reactions                      |
+|   Shooting: targets / combat entry                    |
+|   Charge: eligibility / charge resolution             |
+|   Fight: eligible units / combat entry                |
+|                                                      |
++------------------------------------------------------+
+|              PERSISTENT BATTLE CONTEXT               |
+| Core Rules | Mission | Secondaries | Score | History |
++------------------------------------------------------+
+```
+
+This is a stronger model than treating each phase as a separate screen.
+
+### Why this is valuable for V2
+
+- The player learns one interface rather than a different interface for every phase.
+- Important battle context does not disappear when changing phases.
+- The Tactical Advisor can occupy the active workspace without requiring a separate navigation path.
+- Opponent-turn history can be recorded within the same persistent shell.
+- Rules and reference material remain available but do not have to dominate the active phase.
+- The architecture supports the user's goal of reducing taps and cognitive load during live play.
+
+### Additional observation: phase navigation is structural, not contextual
+
+Warmind's CMD / MOV / SHO / CHG / FGT / END controls remain in the same location while the phase content changes.
+
+**Decision: Consider adopting the structural consistency.**
+
+The content should change; the navigation should not.
+
+### Constraint
+
+The persistent lower half should not become a dumping ground.
+
+For V2:
+- keep frequently needed context visible;
+- collapse lower-priority reference material;
+- surface only relevant rules/reminders;
+- let the Tactical Advisor prioritize what matters now.
+
 ## Reference screenshots
 
-The October 7, 2026 Warmind screenshots supplied during the comparison showed:
+The October 7–8, 2026 Warmind screenshots supplied during the comparison showed:
 
 - Home/dashboard
 - New Roster
@@ -362,5 +435,8 @@ The October 7, 2026 Warmind screenshots supplied during the comparison showed:
 - Persistent scoring/CP state
 - Destroyed Units state
 - Event Log
+- Movement Phase
+- Shooting Phase
+- Persistent lower battle-context shell across phases
 
 The screenshots are the visual source for the observations in this document.
