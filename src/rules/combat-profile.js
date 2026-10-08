@@ -34,7 +34,6 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     toughness: characteristics.toughness,
     woundModifier: characteristics.woundModifier ?? 0,
     save: characteristics.save,
-    saveModifier: characteristics.saveModifier ?? 0,
     invulnerableSave: characteristics.invulnerableSave ?? null,
     cover: characteristics.cover ?? false,
     saveReroll: characteristics.saveReroll ?? "none",
