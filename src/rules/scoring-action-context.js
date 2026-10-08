@@ -97,6 +97,13 @@ export function getScoringActionContexts(scoringAdvisories, options = {}) {
     throw new TypeError("Scoring advisories are required.");
   }
 
+  if (Array.isArray(scoringAdvisories.due)) {
+    return scoringAdvisories.due
+      .map((evaluation) => evaluation?.opportunity)
+      .filter(Boolean)
+      .map((opportunity) => getScoringActionContext(opportunity, options));
+  }
+
   const available = Array.isArray(scoringAdvisories.available)
     ? scoringAdvisories.available
     : [];
