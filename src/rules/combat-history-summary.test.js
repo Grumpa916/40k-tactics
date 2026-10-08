@@ -98,7 +98,7 @@ test("summarizes opponent shooting, charge, fight, damage, and current engagemen
   assert.equal(mine.chargesReceived.length, 1);
   assert.equal(mine.fights.length, 1);
   assert.deepEqual(mine.engagedWith, ["enemy-charger"]);
-  assert.equal(summary.opponentActions.length, 3);
+  assert.equal(summary.opponentActions.length, 4);
 });
 
 test("destroyed targets are no longer reported as engaged", () => {
