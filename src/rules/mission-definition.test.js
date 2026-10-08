@@ -1,10 +1,10 @@
 import {
-  SCORING_EVIDENCE,
   SCORING_TIMINGS,
   createMissionDefinition,
   createScoringCondition,
   evaluateMissionDefinition
 } from "./mission-definition.js";
+import { SCORING_EVIDENCE } from "./scoring-eligibility.js";
 import { createGameState } from "../engine/game-state.js";
 import { recordObjectiveControl, startBattle, startFirstTurn } from "../engine/state-transitions.js";
 import { PLAYER_ROLES } from "../state/player.js";
