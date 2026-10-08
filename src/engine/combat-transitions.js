@@ -1,6 +1,7 @@
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { isMeleeWeapon } from "../rules/weapon-rules.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
 
@@ -29,6 +30,9 @@ export function resolveUnitAttack(state, {
   }
   if (state.phase === "fight" && !wasActivatedToFightThisTurn(state, attackerId)) {
     throw new Error("Fight attack requires the unit to be activated first.");
+  }
+  if (state.phase === "fight" && !isMeleeWeapon(weapon)) {
+    throw new Error("Fight attacks require a melee weapon.");
   }
 
   const attacker = state.units.find((unit) => unit.id === attackerId);
