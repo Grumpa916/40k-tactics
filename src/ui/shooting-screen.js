@@ -42,6 +42,9 @@ function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspe
   const destruction = Number.isFinite(recommendation.destructionProbability) ? Math.round(recommendation.destructionProbability * 100) + "%" : "—";
   const survival = Number.isFinite(recommendation.survivalProbability) ? Math.round(recommendation.survivalProbability * 100) + "%" : "—";
   const impact = recommendation.impactClassification === "unknown" ? "Unknown" : recommendation.impactClassification.replaceAll("-", " ");
+  const targetImpact = Number.isFinite(recommendation.normalizedImpact) ? Math.round(recommendation.normalizedImpact * 100) + "%" : "—";
+  const confidence = recommendation.confidence ? recommendation.confidence : "low";
+  const rangeConfidence = recommendation.rangeConfidence ? recommendation.rangeConfidence : "low";
   return `
     <aside class="shoot-advisory" data-shoot-advisory>
       <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>\${escapeHtml(recommendation.rangeStatus)} range</span></div>
@@ -49,9 +52,11 @@ function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspe
         <div><strong>\${expected}</strong><span>expected damage</span></div>
         <div><strong>\${destruction}</strong><span>destruction chance</span></div>
         <div><strong>\${survival}</strong><span>target survival</span></div>
+        <div><strong>\${targetImpact}</strong><span>target impact</span></div>
         <div><strong>\${escapeHtml(impact)}</strong><span>outcome profile</span></div>
       </div>
-      <p>\${escapeHtml(recommendation.reason)}</p>
+      <p>\${escapeHtml(recommendation.recommendationReason || recommendation.reason)}</p>
+      <small>Advisor confidence: \${escapeHtml(confidence)} · Range confidence: \${escapeHtml(rangeConfidence)}</small>
     </aside>
   `;
 }
