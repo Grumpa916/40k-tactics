@@ -81,7 +81,7 @@ test("applies wound degradation to damage outcome distributions", () => {
       wounds: 4,
       characteristics: {
         weaponSkill: 3,
-        woundBrackets: [{ maxWoundsRemaining: 5, hitModifier: -1 }]
+        woundBrackets: [{ maxWoundsRemaining: 5, hitRollModifier: -1 }]
       }
     },
     target: { characteristics: { toughness: 4, save: 4 } },
