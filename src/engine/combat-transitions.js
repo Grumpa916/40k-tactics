@@ -4,6 +4,7 @@ import { appendHistoryEntry } from "../state/history.js";
 import { isMeleeWeapon } from "../rules/weapon-rules.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
+import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
 
 function wasActivatedToShootThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
@@ -71,6 +72,10 @@ export function resolveUnitAttack(state, {
   if (!attacker || !target) throw new Error("Attacker and target units must exist.");
   if (attacker.status !== UNIT_STATUS.DEPLOYED || target.status !== UNIT_STATUS.DEPLOYED) {
     throw new Error("Attacker and target units must be deployed.");
+  }
+
+  if (state.phase === "fight" && hasFightEngagementHistory(state) && !areUnitsEngaged(state, attackerId, targetId)) {
+    throw new Error("Fight attacks require the attacker and target to be engaged.");
   }
 
   const profile = buildAttackProfile({
