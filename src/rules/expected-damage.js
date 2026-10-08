@@ -45,7 +45,7 @@ function saveFailureProbability(profile) {
     Math.max(
       2,
       profile.save + (-profile.ap) +
-        Math.min(1, Math.max(-1, profile.hitModifier ?? 0)) +
+        Math.min(1, Math.max(-1, profile.saveModifier ?? 0)) +
         (profile.cover ? -1 : 0)
     )
   );
