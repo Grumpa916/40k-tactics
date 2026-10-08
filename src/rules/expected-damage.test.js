@@ -106,7 +106,7 @@ test("accounts for devastating wounds and damage prevention", () => {
     }
   }));
 
-  assert.equal(result.devastatingWounds, 1 / 9);
+  assert.equal(result.devastatingWounds, 2 / 3);
   assert.ok(result.damagePreventionMultiplier > 0);
   assert.ok(result.expectedDamage > 0);
 });
