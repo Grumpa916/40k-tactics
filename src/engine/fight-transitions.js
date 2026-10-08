@@ -39,19 +39,12 @@ export function recordFightActivation(state, { unitId } = {}) {
     throw new Error("A unit can be activated to fight only once per turn.");
   }
 
-  const chargedThisTurn = state.history.some((event) =>
-    event.type === "charge.outcome_recorded" &&
-    event.payload?.unitId === unitId &&
-    event.payload?.outcome === "successful" &&
-    event.payload?.round === state.battle.round &&
-    event.payload?.turn === state.turn
-  );
   const event = createEvent("fight.unit_activated", {
     unitId,
     playerId: unit.ownerId,
     round: state.battle.round,
     turn: state.turn,
-    fightsFirst: chargedThisTurn
+    fightsFirst: candidates.fightsFirst.includes(unitId)
   });
   return appendHistoryEntry(state, event);
 }
