@@ -8,6 +8,11 @@ const weapon = {
   characteristics: { attacks: 2, strength: 8, ap: 1, damage: 2 }
 };
 
+const meleeWeapon = {
+  id: "blade", name: "Blade", type: "melee",
+  characteristics: { attacks: 2, strength: 8, ap: 1, damage: 2 }
+};
+
 function activeState() {
   return createGameState({
     phase: "shooting", turn: 1, activePlayer: "p1",
@@ -35,7 +40,7 @@ test("Fight attacks require a current-turn Fight activation", () => {
   const state = { ...activeState(), phase: "fight" };
   assert.throws(
     () => resolveUnitAttack(state, {
-      attackerId: "attacker", targetId: "target", weapon
+      attackerId: "attacker", targetId: "target", weapon: meleeWeapon
     }),
     /activated first/
   );
@@ -51,7 +56,7 @@ test("Fight attacks require a current-turn Fight activation", () => {
   };
   assert.throws(
     () => resolveUnitAttack({ ...state, history: [previousTurn] }, {
-      attackerId: "attacker", targetId: "target", weapon
+      attackerId: "attacker", targetId: "target", weapon: meleeWeapon
     }),
     /activated first/
   );
@@ -77,7 +82,7 @@ test("Fight attacks are allowed after a current-turn activation", () => {
   const next = resolveUnitAttack(state, {
     attackerId: "attacker",
     targetId: "target",
-    weapon,
+    weapon: meleeWeapon,
     random: () => values[index++]
   });
 
@@ -85,6 +90,31 @@ test("Fight attacks are allowed after a current-turn activation", () => {
   assert.equal(next.history.at(-1).type, "combat.attack_resolved");
   assert.equal(next.history.at(-1).payload.phase, "fight");
   assert.equal(next.history.at(-1).payload.turn, 1);
+});
+
+test("Fight attacks reject ranged weapons after activation", () => {
+  const state = {
+    ...activeState(),
+    phase: "fight",
+    history: [{
+      type: "fight.unit_activated",
+      payload: {
+        unitId: "attacker",
+        round: 1,
+        turn: 1,
+        fightsFirst: false
+      }
+    }]
+  };
+
+  assert.throws(
+    () => resolveUnitAttack(state, {
+      attackerId: "attacker",
+      targetId: "target",
+      weapon
+    }),
+    /require a melee weapon/
+  );
 });
 
 test("combat transition marks a target destroyed when wounds reach zero", () => {
@@ -137,7 +167,6 @@ test("combat transition records a replayable combat event payload", () => {
     statusAfter: "deployed"
   });
 });
-
 
 test("combat transition preserves data-driven hit, wound, and save modifiers", () => {
   const state = activeState();
