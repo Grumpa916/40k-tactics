@@ -24,6 +24,14 @@ export function recordShootingActivation(state, {
   const unit = state.units.find((item) => item.id === unitId);
   if (!unit) throw new Error("Shooting activation unit not found: " + unitId);
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Shooting activation unit must be deployed.");
+  if (actionType === "shoot" && state.history.some((event) =>
+    event?.type === "unit.fell_back" &&
+    event?.payload?.unitId === unitId &&
+    event?.payload?.round === state.battle.round &&
+    event?.payload?.turn === state.turn
+  )) {
+    throw new Error("A unit that Fell Back cannot shoot this turn.");
+  }
   if (!unit.ownerId) throw new Error("Shooting activation unit must have an owner.");
 
   const activePlayerId = state.activePlayer ?? state.battle.activePlayerId ?? null;
