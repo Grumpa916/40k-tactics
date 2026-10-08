@@ -133,7 +133,14 @@ test("includes baseline expected damage when complete profiles are available", (
   assert.ok(close);
   assert.equal(typeof close.expectedDamage, "number");
   assert.ok(close.expectedDamage > 0);
+  assert.equal(typeof close.destructionProbability, "number");
+  assert.equal(typeof close.survivalProbability, "number");
+  assert.equal(typeof close.mostLikelyRemainingWounds, "number");
+  assert.ok(close.destructionProbability >= 0 && close.destructionProbability <= 1);
+  assert.ok(close.survivalProbability >= 0 && close.survivalProbability <= 1);
+  assert.ok(close.destructionProbability < 1);
   assert.match(close.reason, /Baseline expected damage is approximately/);
+  assert.match(close.reason, /Estimated destruction chance is approximately/);
 });
 
 test("keeps targets eligible when expected-damage profiles are incomplete", () => {

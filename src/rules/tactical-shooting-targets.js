@@ -1,6 +1,7 @@
 import { getCombatHistorySummary } from "./combat-history-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
-import { getExpectedDamage } from "./expected-damage.js";
+import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
+import { getPostFightTargetStates } from "./post-fight-target-states.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
@@ -75,12 +76,25 @@ export function getShootingTargetPriorities(state, {
     priority += rangeScore(proximity.distance, range);
 
     let expectedDamage = null;
+    let destructionProbability = null;
+    let survivalProbability = null;
+    let mostLikelyRemainingWounds = null;
     if (weapon?.characteristics && attacker.characteristics && target.characteristics) {
       try {
-        expectedDamage = getExpectedDamage({ attacker, target, weapon }).expectedDamage;
+        const distribution = getDamageOutcomeDistribution({ attacker, target, weapon });
+        const postTarget = getPostFightTargetStates({ target, attacker, weapon, distribution });
+        expectedDamage = distribution.expectedDamage;
+        destructionProbability = postTarget.destructionProbability;
+        survivalProbability = postTarget.survivalProbability;
+        const mostLikelyState = postTarget.states.reduce((best, state) =>
+          !best || state.probability > best.probability ? state : best,
+          null
+        );
+        mostLikelyRemainingWounds = mostLikelyState?.remainingWounds ?? null;
         priority += Math.min(3, expectedDamage);
+        priority += Math.min(2, destructionProbability * 2);
       } catch {
-        // Incomplete profiles remain eligible; expected damage is optional advisory data.
+        // Incomplete profiles remain eligible; probabilistic impact is optional advisory data.
       }
     }
 
@@ -91,6 +105,9 @@ export function getShootingTargetPriorities(state, {
     }
     if (expectedDamage != null) {
       reasons.push("Baseline expected damage is approximately " + expectedDamage.toFixed(2) + ".");
+    }
+    if (destructionProbability != null) {
+      reasons.push("Estimated destruction chance is approximately " + (destructionProbability * 100).toFixed(0) + "%.");
     }
     if (range != null) {
       reasons.push(
@@ -110,6 +127,9 @@ export function getShootingTargetPriorities(state, {
       weaponId: weapon?.id ?? null,
       rangeStatus,
       expectedDamage,
+      destructionProbability,
+      survivalProbability,
+      mostLikelyRemainingWounds,
       reason: reasons.join(" ")
     });
   }
