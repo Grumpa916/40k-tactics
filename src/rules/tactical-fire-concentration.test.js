@@ -88,7 +88,7 @@ test("combines expected firepower from currently available friendly units", () =
 
 test("classifies enough combined firepower as a concentration opportunity", () => {
   const state = baseState();
-  state.units.find((unit) => unit.id === "target").wounds = 3;
+  state.units.find((unit) => unit.id === "target").wounds = 2;
 
   const result = getFireConcentrationAdvisory(state, {
     playerId: "p1",
