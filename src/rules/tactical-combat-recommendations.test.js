@@ -132,3 +132,39 @@ test("does not recommend destroyed units as charge candidates", () => {
   const result = getTacticalCombatRecommendations(state, { playerId: "p1" });
   assert.equal(result.charge.some((item) => item.unitId === "fighter"), false);
 });
+
+test("preserves Shooting opportunity confidence through the unified combat layer", () => {
+  const state = {
+    ...baseState(),
+    phase: "shooting",
+    units: [
+      ...baseState().units,
+      {
+        id: "borderline-target",
+        ownerId: "p2",
+        status: "deployed",
+        wounds: 5,
+        position: { x: 27, y: 0 },
+        characteristics: { toughness: 4, save: 4 }
+      }
+    ]
+  };
+
+  const result = getTacticalCombatRecommendations(state, {
+    playerId: "p1",
+    shootingContext: {
+      attackerId: "shooter",
+      weapon: {
+        id: "rifle",
+        type: "ranged",
+        characteristics: { range: 24 }
+      }
+    }
+  });
+
+  const borderline = result.shooting.find((item) => item.targetUnitId === "borderline-target");
+  assert.ok(borderline);
+  assert.equal(borderline.rangeStatus, "borderline");
+  assert.equal(borderline.rangeConfidence, "low");
+  assert.equal(borderline.confidence, "low");
+});
