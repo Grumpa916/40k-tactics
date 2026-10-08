@@ -13,21 +13,24 @@ function baseState() {
         id: "shooter",
         ownerId: "p1",
         status: "deployed",
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
+        characteristics: { ballisticSkill: 3 }
       },
       {
         id: "close-target",
         ownerId: "p2",
         status: "deployed",
         wounds: 5,
-        position: { x: 6, y: 0 }
+        position: { x: 6, y: 0 },
+        characteristics: { toughness: 4, save: 4 }
       },
       {
         id: "far-target",
         ownerId: "p2",
         status: "deployed",
         wounds: 5,
-        position: { x: 30, y: 0 }
+        position: { x: 30, y: 0 },
+        characteristics: { toughness: 4, save: 4 }
       },
       {
         id: "dead-target",
@@ -113,4 +116,38 @@ test("does not recommend destroyed targets", () => {
   });
 
   assert.equal(result.priorities.some((item) => item.targetUnitId === "dead-target"), false);
+});
+
+
+test("includes baseline expected damage when complete profiles are available", () => {
+  const result = getShootingTargetPriorities(baseState(), {
+    playerId: "p1",
+    attackerId: "shooter",
+    weapon: {
+      id: "rifle",
+      type: "ranged",
+      characteristics: { range: 24, attacks: 4, strength: 5, ap: -1, damage: 2 }
+    }
+  });
+
+  const close = result.priorities.find((item) => item.targetUnitId === "close-target");
+  assert.ok(close);
+  assert.equal(typeof close.expectedDamage, "number");
+  assert.ok(close.expectedDamage > 0);
+  assert.match(close.reason, /Baseline expected damage is approximately/);
+});
+
+test("keeps targets eligible when expected-damage profiles are incomplete", () => {
+  const result = getShootingTargetPriorities(baseState(), {
+    playerId: "p1",
+    attackerId: "shooter",
+    weapon: {
+      id: "incomplete",
+      type: "ranged",
+      characteristics: { range: 24 }
+    }
+  });
+
+  assert.equal(result.priorities.length, 2);
+  assert.equal(result.priorities.every((item) => item.expectedDamage === null), true);
 });
