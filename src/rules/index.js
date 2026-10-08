@@ -49,3 +49,8 @@ export {
 } from "./scoring-opportunity.js";
 
 export {\n  isScoringTimingDue,\n  evaluateScoringOpportunityAtTiming\n} from "./scoring-opportunity-timing.js";\n
+export {
+  SCORING_ACTION_TYPES,
+  getScoringActionContext,
+  getScoringActionContexts
+} from "./scoring-action-context.js";
