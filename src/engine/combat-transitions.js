@@ -11,7 +11,8 @@ function wasActivatedToShootThisTurn(state, unitId) {
     event?.type === "shooting.unit_activated" &&
     event?.payload?.unitId === unitId &&
     event?.payload?.round === state?.battle?.round &&
-    event?.payload?.turn === state?.turn
+    event?.payload?.turn === state?.turn &&
+    (event?.payload?.actionType ?? "shoot") === "shoot"
   );
 }
 
