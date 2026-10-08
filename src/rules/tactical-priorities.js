@@ -1,6 +1,7 @@
 import { getCombatHistorySummary } from "./combat-history-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getScoringOpportunityAdvisories } from "./tactical-scoring-opportunities.js";
+import { getTacticalScoringActions } from "./tactical-scoring-actions.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
@@ -72,10 +73,18 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
       })
     : null;
 
+  const scoringActions = scoringOpportunities
+    ? getTacticalScoringActions(state, {
+        playerId,
+        scoringAdvisories: scoringOpportunities
+      })
+    : null;
+
   return {
     playerId,
     phase: state?.phase ?? null,
     priorities,
-    scoringOpportunities
+    scoringOpportunities,
+    scoringActions
   };
 }
