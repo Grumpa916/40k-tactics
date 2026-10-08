@@ -46,8 +46,8 @@ export function getFightCandidates(state) {
     normal: deployed
       .filter((unit) => !fightsFirst.has(unit.id))
       .map((unit) => unit.id),
-    activated: units
-      .filter((unit) => activated.has(unit?.id))
+    activated: deployed
+      .filter((unit) => activated.has(unit.id))
       .map((unit) => unit.id)
   };
 }
