@@ -61,6 +61,12 @@ test("Fight attack options expose the activated attacker and deployed target", (
 
   assert.deepEqual(options.attackers.map((unit) => unit.unitId), ["attacker"]);
   assert.deepEqual(options.targets.map((unit) => unit.unitId), ["target"]);
+
+  const attackerSpecific = getFightAttackOptions(fightState(), {
+    attackerId: "attacker",
+    perspectivePlayerId: "p1"
+  });
+  assert.deepEqual(attackerSpecific.targets.map((unit) => unit.unitId), ["target"]);
 });
 
 test("Fight attack workflow dispatches the existing combat command", () => {
@@ -104,4 +110,23 @@ test("Fight weapon options resolve from unit weapon ids and game data", () => {
 
   const options = getFightWeaponOptions(state, { attackerId: "attacker", gameData });
   assert.deepEqual(options.map((weapon) => weapon.id), ["blade"]);
+});
+
+
+test("Fight target options exclude friendly deployed units for a selected attacker", () => {
+  const state = fightState();
+  state.units.push(createUnit({
+    id: "friendly",
+    ownerId: "p1",
+    name: "Friendly",
+    status: "deployed",
+    wounds: 5
+  }));
+
+  const options = getFightAttackOptions(state, {
+    attackerId: "attacker",
+    perspectivePlayerId: "p1"
+  });
+
+  assert.deepEqual(options.targets.map((unit) => unit.unitId), ["target"]);
 });
