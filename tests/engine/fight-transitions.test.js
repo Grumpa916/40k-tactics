@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../../src/state/game-state.js";
 import { createUnit } from "../../src/state/unit.js";
-import { recordFightActivation } from "../../src/engine/fight-transitions.js";
+import {
+  recordFightActivation,
+  completeFightPhase
+} from "../../src/engine/fight-transitions.js";
 
 function fightState(overrides = {}) {
   return createGameState({
@@ -101,4 +104,26 @@ test("rejects reserves even if they have a successful charge event", () => {
     }]
   });
   assert.throws(() => recordFightActivation(state, { unitId: "reserve" }), /must be deployed/);
+});
+
+test("does not complete Fight while available candidates remain", () => {
+  assert.throws(
+    () => completeFightPhase(fightState()),
+    /Fight candidates remain/
+  );
+});
+
+test("completes Fight after all candidates are activated", () => {
+  let state = fightState();
+  state = recordFightActivation(state, { unitId: "friendly" });
+  state = recordFightActivation(state, { unitId: "enemy" });
+
+  const next = completeFightPhase(state);
+
+  assert.equal(next.phase, "end_turn");
+  assert.equal(next.history.at(-1).type, "fight.phase_completed");
+  assert.deepEqual(next.history.at(-1).payload, {
+    round: 1,
+    turn: 2
+  });
 });
