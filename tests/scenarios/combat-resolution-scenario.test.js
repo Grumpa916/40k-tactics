@@ -15,6 +15,7 @@ test("end-to-end combat scenario records hits, critical hits, wounds, saves, dam
       round: 1,
       activePlayerId: "p1"
     },
+    history: [{ type: "shooting.unit_activated", payload: { unitId: "attacker", round: 1, turn: 1 } }],
     units: [
       {
         id: "attacker",
