@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../../src/state/game-state.js";
 import { createUnit, UNIT_STATUS } from "../../src/state/unit.js";
-import { resolveNormalMove } from "../../src/engine/movement-transitions.js";
+import { resolveNormalMove, recordFallBack } from "../../src/engine/movement-transitions.js";
 
 function movementState(overrides = {}) {
   return createGameState({
@@ -160,4 +160,33 @@ test("supports legacy single-position units as one-model units", () => {
     moves: [{ modelId: "solo", position: { x: 6, y: 0 } }]
   });
   assert.deepEqual(next.units[0].position, { x: 6, y: 0 });
+});
+
+
+test("records a Fall Back as an authoritative movement event without changing position", () => {
+  const state = movementState();
+  const next = recordFallBack(state, { unitId: "u1" });
+
+  assert.deepEqual(next.units[0].models.map((model) => model.position), [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 }
+  ]);
+  assert.deepEqual(next.history.at(-1).payload, {
+    unitId: "u1",
+    playerId: "p1",
+    phase: "movement",
+    round: 1,
+    turn: 1
+  });
+  assert.equal(next.history.at(-1).type, "unit.fell_back");
+});
+
+test("enforces active player, deployed status, Movement phase, and one Fall Back per turn", () => {
+  assert.throws(() => recordFallBack(movementState({ phase: "shooting" }), { unitId: "u1" }), /Movement phase/);
+  assert.throws(() => recordFallBack(movementState({ activePlayer: "p2" }), { unitId: "u1" }), /active player's/);
+  const undeployed = movementState();
+  undeployed.units[0] = { ...undeployed.units[0], status: UNIT_STATUS.RESERVES };
+  assert.throws(() => recordFallBack(undeployed, { unitId: "u1" }), /deployed/);
+  const first = recordFallBack(movementState(), { unitId: "u1" });
+  assert.throws(() => recordFallBack(first, { unitId: "u1" }), /only once per turn/);
 });
