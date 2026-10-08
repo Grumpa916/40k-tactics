@@ -155,9 +155,9 @@ test("classifies high destruction probability as likely destruction", () => {
 
 test("classifies meaningful non-lethal damage as severe degradation", () => {
   const state = baseState();
-  state.units.find((unit) => unit.id === "close-target").wounds = 20;
+  state.units.find((unit) => unit.id === "close-target").wounds = 10;
   const result = getShootingTargetPriorities(state, { playerId: "p1", attackerId: "shooter",
-    weapon: { id: "rifle", type: "ranged", characteristics: { range: 24, attacks: 30, strength: 5, ap: -1, damage: 1 } } });
+    weapon: { id: "rifle", type: "ranged", characteristics: { range: 24, attacks: 20, strength: 5, ap: -1, damage: 1 } } });
   const close = result.priorities.find((item) => item.targetUnitId === "close-target");
   assert.equal(close.impactClassification, "likely-severe-degradation");
 });
