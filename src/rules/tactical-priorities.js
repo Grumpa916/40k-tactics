@@ -4,7 +4,34 @@ import { getScoringOpportunityAdvisories } from "./tactical-scoring-opportunitie
 import { getTacticalScoringActions } from "./tactical-scoring-actions.js";
 
 function unitById(state, unitId) {
+
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
+}
+
+function scoringRecommendationPriority(action) {
+  const confidence = action?.candidates?.[0]?.confidence;
+  if (confidence === "high") return 3;
+  if (confidence === "moderate") return 2;
+  return 1;
+}
+
+function getScoringRecommendations(scoringActions) {
+  if (!Array.isArray(scoringActions)) return [];
+
+  return scoringActions.flatMap((context) =>
+    (Array.isArray(context?.actions) ? context.actions : [])
+      .filter((action) => action?.type && action.type !== "condition-satisfied")
+      .map((action) => ({
+        type: "scoring",
+        priority: scoringRecommendationPriority(action),
+        actionType: action.type,
+        objectiveId: action.objectiveId,
+        unitId: action.candidates?.[0]?.unitId ?? null,
+        confidence: action.candidates?.[0]?.confidence ?? "low",
+        reason: action.reason,
+        candidates: action.candidates ?? []
+      }))
+  );
 }
 
 export function getTacticalPriorities(state, { playerId, scoringDefinitions = [], scoringTiming = null } = {}) {
@@ -80,11 +107,16 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
       })
     : null;
 
+  const scoringRecommendations = getScoringRecommendations(scoringActions);
+  const recommendations = [...priorities, ...scoringRecommendations]
+    .sort((a, b) => b.priority - a.priority);
+
   return {
     playerId,
     phase: state?.phase ?? null,
     priorities,
     scoringOpportunities,
-    scoringActions
+    scoringActions,
+    recommendations
   };
 }
