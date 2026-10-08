@@ -26,7 +26,7 @@ function baseState() {
   });
 
   state = startBattle(state, { battleId: "battle-1" });
-  state = startFirstTurn(state, { playerId: "p1" });
+  state = startFirstTurn(state, { activePlayerId: "p1" });
   return state;
 }
 
