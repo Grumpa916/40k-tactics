@@ -91,6 +91,35 @@ test("rejects an already-activated unit through the Fight candidate gate", () =>
   );
 });
 
+test("enforces Fights First priority before normal candidates", () => {
+  const state = fightState({
+    history: [{
+      type: "charge.outcome_recorded",
+      payload: {
+        unitId: "friendly",
+        outcome: "successful",
+        round: 1,
+        turn: 2
+      }
+    }]
+  });
+
+  assert.throws(
+    () => recordFightActivation(state, { unitId: "enemy" }),
+    /Fights First candidates must be activated before normal/
+  );
+
+  const first = recordFightActivation(state, { unitId: "friendly" });
+  const next = recordFightActivation(first, { unitId: "enemy" });
+
+  assert.deepEqual(
+    next.history.slice(-2).map((event) => event.type),
+    ["fight.unit_activated", "fight.unit_activated"]
+  );
+  assert.equal(next.history.at(-2).payload.fightsFirst, true);
+  assert.equal(next.history.at(-1).payload.fightsFirst, false);
+});
+
 test("rejects reserves even if they have a successful charge event", () => {
   const state = fightState({
     units: [
