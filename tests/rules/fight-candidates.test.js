@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createGameState } from "../../src/state/game-state.js";
 import { createUnit } from "../../src/state/unit.js";
 import { getFightCandidates } from "../../src/rules/fight-candidates.js";
+import { recordChargeOutcome } from "../../src/engine/charge-transitions.js";
 
 function fightState(overrides = {}) {
   return createGameState({
@@ -134,7 +135,6 @@ test("does not mutate state", () => {
   assert.deepEqual(state, before);
 });
 
-
 test("uses engagement-aware eligibility when engagement history is available", () => {
   const state = fightState({
     history: [
@@ -228,6 +228,51 @@ test("preserves Fight-step-start eligibility after later disengagement", () => {
   assert.deepEqual(getFightCandidates(state), {
     fightsFirst: [],
     normal: ["charged", "normal"],
+    activated: []
+  });
+});
+
+test("opponent Charge on their turn makes my unit Fight-eligible on my next turn", () => {
+  const opponentChargeState = createGameState({
+    phase: "charge",
+    turn: 2,
+    activePlayer: "p2",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
+    units: [
+      createUnit({ id: "my-unit", ownerId: "p1", name: "My Unit", status: "deployed" }),
+      createUnit({ id: "opponent-charger", ownerId: "p2", name: "Opponent Charger", status: "deployed" })
+    ]
+  });
+
+  const afterCharge = recordChargeOutcome(opponentChargeState, {
+    unitId: "opponent-charger",
+    succeeded: true,
+    targetIds: ["my-unit"]
+  });
+
+  assert.deepEqual(afterCharge.history.at(-1).payload, {
+    unitId: "opponent-charger",
+    playerId: "p2",
+    outcome: "successful",
+    targetIds: ["my-unit"],
+    round: 1,
+    turn: 2
+  });
+
+  const myNextTurn = {
+    ...afterCharge,
+    phase: "fight",
+    turn: 3,
+    activePlayer: "p1",
+    battle: {
+      ...afterCharge.battle,
+      activePlayerId: "p1"
+    }
+  };
+
+  assert.deepEqual(getFightCandidates(myNextTurn), {
+    fightsFirst: [],
+    normal: ["my-unit", "opponent-charger"],
     activated: []
   });
 });
