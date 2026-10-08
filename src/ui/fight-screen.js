@@ -1,6 +1,9 @@
 import {
   getFightViewModel,
+  getFightAttackOptions,
+  getFightWeaponOptions,
   activateFightUnit,
+  resolveFightAttack,
   finishFightPhase
 } from "../application/fight-workflow.js";
 
@@ -97,9 +100,24 @@ export function createFightScreen(
     throw new TypeError("A game session is required.");
   }
 
+  let selectedAttackerId = null;
+  let selectedWeaponId = null;
+  let selectedTargetId = null;
+
   function render() {
-    const model = getFightViewModel(session.getState(), { perspectivePlayerId });
+    const state = session.getState();
+    const model = getFightViewModel(state, { perspectivePlayerId });
     const hasFirst = model.candidates.fightsFirst.length > 0;
+    const attackOptions = getFightAttackOptions(state, { attackerId: selectedAttackerId, perspectivePlayerId });
+    const weapons = getFightWeaponOptions(state, { attackerId: selectedAttackerId, gameData });
+
+    if (!attackOptions.attackers.some((unit) => unit.unitId === selectedAttackerId)) {
+      selectedAttackerId = null;
+      selectedWeaponId = null;
+      selectedTargetId = null;
+    }
+    if (!weapons.some((weapon) => weapon.id === selectedWeaponId)) selectedWeaponId = null;
+    if (!attackOptions.targets.some((unit) => unit.unitId === selectedTargetId)) selectedTargetId = null;
 
     container.innerHTML = `
       <main class="fight-screen">
@@ -122,6 +140,16 @@ export function createFightScreen(
         ${candidateSection("Normal", model.candidates.normal, hasFirst)}
 
         <section class="fight-section">
+          <div class="fight-section__heading"><h2>Attack entry</h2><span class="fight-section__hint">Select an activated unit, weapon, then target</span></div>
+          <div class="fight-attack-entry">
+            <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
+            <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
+            <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
+            <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Resolve Attack</button>
+          </div>
+        </section>
+
+        <section class="fight-section">
           <div class="fight-section__heading">
             <h2>Activation history</h2>
             <span class="fight-section__hint">${model.activations.length} recorded</span>
@@ -140,6 +168,29 @@ export function createFightScreen(
         </footer>
       </main>
     `;
+
+    const attackerSelect = container.querySelector("[data-fight-attacker]");
+    attackerSelect?.addEventListener("change", () => {
+      selectedAttackerId = attackerSelect.value || null;
+      selectedWeaponId = null;
+      selectedTargetId = null;
+      render();
+    });
+    container.querySelector("[data-fight-weapon]")?.addEventListener("change", (event) => {
+      selectedWeaponId = event.target.value || null;
+      render();
+    });
+    container.querySelector("[data-fight-target]")?.addEventListener("change", (event) => {
+      selectedTargetId = event.target.value || null;
+      render();
+    });
+    container.querySelector("[data-fight-attack]")?.addEventListener("click", () => {
+      const weapon = weapons.find((item) => item.id === selectedWeaponId);
+      if (!weapon) return;
+      resolveFightAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon });
+      selectedWeaponId = null;
+      selectedTargetId = null;
+    });
 
     container.querySelectorAll("[data-fight-unit]").forEach((button) => {
       button.addEventListener("click", () => {
