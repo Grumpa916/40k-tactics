@@ -130,7 +130,7 @@ test("uses probabilistic retaliation when Fight weapon data is available", () =>
 
   assert.equal(result.length, 1);
   assert.ok(result[0].retaliationExpectedDamage > 0);
-  assert.ok(result[0].retaliationSurvivalProbability > 0);
-  assert.ok(result[0].retaliationDestructionProbability > 0);
-  assert.ok(result[0].retaliationSurvivalProbability < 1);
+  assert.ok(result[0].targetSurvivalProbability > 0);
+  assert.ok(result[0].targetDestructionProbability > 0);
+  assert.ok(result[0].targetSurvivalProbability < 1);
 });
