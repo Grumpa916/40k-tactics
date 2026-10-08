@@ -84,15 +84,20 @@ test("live Shooting workflow records activation and ranged attack", () => {
     attackerId: "shooter",
     targetId: "target",
     weapon: rangedWeapon,
-    actualDamage: 0
+    actualDamage: 2
   }, { random: () => 0.99 });
 
-  const attacks = session.getState().history.filter(
+  const state = session.getState();
+  const attacks = state.history.filter(
     (event) => event.type === "combat.attack_resolved"
   );
   assert.equal(attacks.length, 1);
   assert.equal(attacks[0].payload.phase, "shooting");
-  assert.equal(attacks[0].payload.actualDamage, 0);
+  assert.equal(attacks[0].payload.actualDamage, 2);
+  assert.equal(attacks[0].payload.stateDelta.target.woundsAfter, 3);
+  assert.equal(attacks[0].payload.stateDelta.target.statusAfter, "deployed");
+  assert.equal(state.units.find((unit) => unit.id === "target").wounds, 3);
+  assert.equal(state.units.find((unit) => unit.id === "target").status, "deployed");
 
   finishShootingPhase(session);
   assert.equal(session.getState().phase, "charge");
@@ -103,7 +108,6 @@ test("live Shooting workflow records activation and ranged attack", () => {
 
   clearCommandHandlers();
 });
-
 
 test("live Shooting workflow records a mission action as the unit's phase choice", () => {
   clearCommandHandlers();
@@ -139,6 +143,107 @@ test("live Shooting workflow records a mission action as the unit's phase choice
 
   finishShootingPhase(session);
   assert.equal(session.getState().phase, "charge");
+
+  clearCommandHandlers();
+});
+
+test("live Shooting workflow records an opponent activation and attack against your unit", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+
+  const state = createGameState({
+    phase: "shooting",
+    turn: 2,
+    activePlayer: "p2",
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
+    units: [
+      createUnit({
+        id: "your-unit",
+        ownerId: "p1",
+        name: "Your Unit",
+        status: "deployed",
+        wounds: 5,
+        profile: {
+          characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 3 }
+        }
+      }),
+      createUnit({
+        id: "opponent-shooter",
+        ownerId: "p2",
+        name: "Opponent Shooter",
+        status: "deployed",
+        wounds: 5,
+        profile: {
+          weaponIds: ["rifle"],
+          characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 3 }
+        }
+      })
+    ]
+  });
+
+  const session = createGameSession(state);
+  activateShootingUnit(session, { unitId: "opponent-shooter", actionType: "shoot" });
+
+  const model = getShootingViewModel(session.getState(), { perspectivePlayerId: "p1" });
+  assert.equal(model.candidates.length, 0);
+  assert.equal(model.activations[0].unit.side, "opponent");
+  assert.equal(model.activations[0].playerId, "p2");
+
+  assert.deepEqual(
+    getShootingTargetOptions(session.getState(), {
+      attackerId: "opponent-shooter",
+      perspectivePlayerId: "p1"
+    }).map((unit) => unit.unitId),
+    ["your-unit"]
+  );
+
+  resolveShootingAttack(session, {
+    attackerId: "opponent-shooter",
+    targetId: "your-unit",
+    weapon: rangedWeapon,
+    actualDamage: 2
+  }, { random: () => 0.99 });
+
+  const history = session.getState().history;
+  const activation = history.find((event) => event.type === "shooting.unit_activated");
+  const attack = history.find((event) => event.type === "combat.attack_resolved");
+
+  assert.equal(activation.payload.playerId, "p2");
+  assert.equal(attack.payload.attackerId, "opponent-shooter");
+  assert.equal(attack.payload.targetId, "your-unit");
+  assert.equal(attack.payload.phase, "shooting");
+  assert.equal(attack.payload.actualDamage, 2);
+  assert.equal(attack.payload.stateDelta.target.woundsAfter, 3);
+
+  clearCommandHandlers();
+});
+
+test("my Shooting turn applies recorded damage and destroyed status to the opponent unit", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+
+  const session = createGameSession(liveState());
+  activateShootingUnit(session, { unitId: "shooter", actionType: "shoot" });
+
+  resolveShootingAttack(session, {
+    attackerId: "shooter",
+    targetId: "target",
+    weapon: rangedWeapon,
+    actualDamage: 5
+  }, { random: () => 0.99 });
+
+  const state = session.getState();
+  const attack = state.history.find((event) => event.type === "combat.attack_resolved");
+
+  assert.equal(attack.payload.targetId, "target");
+  assert.equal(attack.payload.actualDamage, 5);
+  assert.equal(attack.payload.stateDelta.target.woundsBefore, 5);
+  assert.equal(attack.payload.stateDelta.target.woundsAfter, 0);
+  assert.equal(attack.payload.stateDelta.target.statusBefore, "deployed");
+  assert.equal(attack.payload.stateDelta.target.statusAfter, "destroyed");
+  assert.equal(state.units.find((unit) => unit.id === "target").wounds, 0);
+  assert.equal(state.units.find((unit) => unit.id === "target").status, "destroyed");
 
   clearCommandHandlers();
 });
