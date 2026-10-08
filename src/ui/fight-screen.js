@@ -123,7 +123,7 @@ export function createFightScreen(
   let selectedAttackerId = null;
   let selectedWeaponId = null;
   let selectedTargetId = null;
-  let actualDamage = "";
+  let actualDamage = "0";
 
   function render() {
     const state = session.getState();
@@ -168,7 +168,7 @@ export function createFightScreen(
             <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
             <label>Actual damage<input data-fight-damage type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(actualDamage)}" placeholder="0" ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}></label>
-            <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "" ? "" : "disabled"}>Record Attack</button>
+            <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
           </div>
         </section>
 
