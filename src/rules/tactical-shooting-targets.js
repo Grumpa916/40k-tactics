@@ -47,6 +47,7 @@ export function getShootingTargetPriorities(state, {
   }
 
   const combat = getCombatHistorySummary(state, { playerId });
+  const attackerSummary = combat.units.find((unit) => unit.unitId === attackerId);
   const spatial = getSpatialContext(state, { playerId });
   const proximities = spatial.unitProximity.filter(
     (item) => item.unitId === attackerId
@@ -58,8 +59,7 @@ export function getShootingTargetPriorities(state, {
     const target = unitById(state, proximity.otherUnitId);
     if (!target || target.ownerId === playerId || target.status === "destroyed") continue;
 
-    const targetSummary = combat.units.find((unit) => unit.unitId === target.id);
-    const engaged = targetSummary?.engagedWith?.includes(attackerId) ?? false;
+    const engaged = attackerSummary?.engagedWith?.includes(target.id) ?? false;
 
     // Normal Fight-engaged targets are not Shooting recommendations. Any
     // future exceptions should be supplied by authoritative unit/rule data.
