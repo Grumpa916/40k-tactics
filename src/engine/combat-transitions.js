@@ -4,6 +4,16 @@ import { appendHistoryEntry } from "../state/history.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
 
+function wasActivatedToFightThisTurn(state, unitId) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  return history.some((event) =>
+    event?.type === "fight.unit_activated" &&
+    event?.payload?.unitId === unitId &&
+    event?.payload?.round === state?.battle?.round &&
+    event?.payload?.turn === state?.turn
+  );
+}
+
 export function resolveUnitAttack(state, {
   attackerId,
   targetId,
@@ -16,6 +26,9 @@ export function resolveUnitAttack(state, {
   if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
   if (state.phase !== "shooting" && state.phase !== "fight") {
     throw new Error("Attacks may only be resolved in shooting or fight.");
+  }
+  if (state.phase === "fight" && !wasActivatedToFightThisTurn(state, attackerId)) {
+    throw new Error("Fight attack requires the unit to be activated first.");
   }
 
   const attacker = state.units.find((unit) => unit.id === attackerId);
