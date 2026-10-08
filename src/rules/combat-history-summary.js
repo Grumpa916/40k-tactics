@@ -1,3 +1,5 @@
+import { getFightEngagementState } from "./fight-engagement-state.js";
+
 const COMBAT_ATTACK_EVENT = "combat.attack_resolved";
 const CHARGE_EVENT = "charge.outcome_recorded";
 const FIGHT_ACTIVATION_EVENT = "fight.unit_activated";
@@ -152,7 +154,6 @@ export function getCombatHistorySummary(state, { playerId } = {}) {
     }
   }
 
-  const { getFightEngagementState } = await import("./fight-engagement-state.js");
   const engagementState = getFightEngagementState(state);
   const engagedWith = new Map(ownedUnits.map((unit) => [unit.id, []]));
 
