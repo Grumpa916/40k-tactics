@@ -110,3 +110,25 @@ test("accounts for devastating wounds and damage prevention", () => {
   assert.ok(result.damagePreventionMultiplier > 0);
   assert.ok(result.expectedDamage > 0);
 });
+
+
+test("applies a unit's data-defined wound degradation to hit probability", () => {
+  const base = getExpectedDamage({
+    attacker: { wounds: 6, characteristics: { weaponSkill: 3 } },
+    target: { characteristics: { toughness: 4, save: 4 } },
+    weapon: { type: "melee", characteristics: { attacks: 4, strength: 4, ap: 0, damage: 1 } }
+  });
+  const degraded = getExpectedDamage({
+    attacker: {
+      wounds: 4,
+      characteristics: {
+        weaponSkill: 3,
+        woundBrackets: [{ maxWoundsRemaining: 5, hitModifier: -1 }]
+      }
+    },
+    target: { characteristics: { toughness: 4, save: 4 } },
+    weapon: { type: "melee", characteristics: { attacks: 4, strength: 4, ap: 0, damage: 1 } }
+  });
+  assert.ok(degraded.expectedDamage < base.expectedDamage);
+  assert.equal(degraded.hitProbability, 0.5);
+});
