@@ -415,6 +415,194 @@ For V2:
 - surface only relevant rules/reminders;
 - let the Tactical Advisor prioritize what matters now.
 
+## Charge and Fight Phase comparison — October 8, 2026 screenshots
+
+The Charge and Fight screenshots reinforce the persistent-shell model and add several useful interaction ideas.
+
+### 1. Phase workspace can be rules-aware without changing the overall layout
+
+The Charge and Fight phases use the same structural header:
+
+- Round / turn
+- Your Turn
+- Next Phase
+- Undo Last Action
+- CMD / MOV / SHO / CHG / FGT / END navigation
+
+The phase-specific content then changes underneath.
+
+**Decision: Adopt the structural consistency across all six live phases.**
+
+The phase should determine the content, not the overall screen architecture.
+
+### 2. Separate "My actions" from "Opponent can react"
+
+Charge and Fight both visually distinguish:
+
+- **STRATAGEMS [YOU]**
+- **J CAN REACT**
+
+The distinction is valuable because it answers two questions immediately:
+
+1. What can I do now?
+2. What can my opponent do in response?
+
+**Decision: Strongly consider this information split for V2.**
+
+For V2 this could become:
+
+- **YOU CAN ACT**
+- **OPPONENT CAN REACT**
+- **RELEVANT RULES / ADVISOR**
+
+This is especially relevant to the opponent-turn-history project because the app needs to understand both the active player's action and the opposing player's possible response.
+
+### 3. Eligibility and unavailable-state explanations
+
+The Core Stratagems section does more than simply list abilities. It identifies why something cannot be used:
+
+- Fight Only
+- Command Only
+- Shooting Only
+- Movement Only
+- Not Round 1
+- Need 2 CP
+- Opponent Turn
+- Your Turn
+
+The UI also shows CP availability for each side.
+
+**Decision: Adopt the principle.**
+
+V2 should prefer:
+
+**Rule/ability → eligibility → reason if unavailable → available action**
+
+rather than simply hiding unavailable options.
+
+This can eventually support Tactical Advisor explanations such as:
+> "Available because X."
+> "Unavailable because Y."
+> "Potentially useful because Z."
+
+### 4. Contextual CP actions
+
+Warmind can show the actual spend action immediately under an eligible stratagem, including whose CP is available.
+
+Example pattern:
+
+**SPEND 1 CP — You: 2 available**
+
+**Decision: Consider adopting the interaction pattern.**
+
+For V2, this could eventually become a rules-aware action row rather than requiring the player to navigate away to spend CP.
+
+### 5. Expanded reference sections remain below the active phase
+
+The Charge/Fight screens show that Core Stratagems can be expanded while the active phase workspace remains above.
+
+This reinforces an important distinction:
+
+- **active phase = primary workspace**
+- **reference material = secondary workspace**
+- **both can coexist in one Battle context**
+
+**Decision: Adopt the hierarchy, while keeping the default state compact.**
+
+### 6. Fight Phase is a particularly strong candidate for contextual Advisor integration
+
+The Fight screenshot contains many possible stratagems and reactive abilities, but the player still needs to determine:
+
+- which unit fights
+- which enemy is eligible
+- what combat action is relevant
+- whether a reactive stratagem matters
+- whether CP should be spent
+
+This is exactly the type of decision space where V2's Tactical Advisor could eventually add value.
+
+Potential future structure:
+
+**Eligible Fight**
+→ **Select unit**
+→ **Relevant enemy/engagement state**
+→ **Advisor recommendation**
+→ **Combat entry**
+→ **Actual damage**
+→ **Authoritative event**
+
+The Advisor should reduce decision burden rather than add another screen.
+
+## End-of-turn / end-of-round comparison — October 8, 2026 screenshots
+
+The end-of-turn screenshots provide another useful interaction pattern: **scoring is handled as a focused decision sheet over the existing Battle screen**.
+
+### 1. Scoring sheet preserves Battle context
+
+When the player opens a Primary or Secondary scoring decision, the underlying Battle screen remains visible but dimmed.
+
+The scoring sheet contains only the information needed to resolve that decision.
+
+**Decision: Adopt the focused decision-sheet pattern.**
+
+This fits the existing V2 preference for bottom-sheet/modal decisions without turning the Battle screen into a collection of separate pages.
+
+### 2. Primary scoring uses explicit criteria
+
+The Primary scoring sheet presents individual scoring conditions with checkboxes and a calculated VP total.
+
+The player does not need to manually calculate the score.
+
+**Decision: Adopt the principle.**
+
+V2 should eventually make scoring:
+
+**Authoritative state → eligible scoring conditions → player confirmation where necessary → calculated VP → event history**
+
+rather than:
+
+**player manually remembers rules → calculates points → types score.**
+
+### 3. Secondary scoring provides meaningful choices
+
+The Secondary scoring sheet shows the actual scoring condition and provides explicit choices such as:
+
+- Score It
+- Keep / roll over
+- Discard for CP
+
+This is a strong example of a **small decision with several meaningful outcomes**.
+
+**Decision: Adopt the interaction principle.**
+
+Whenever the engine knows the available choices, present those choices directly instead of making the player navigate through the secondary-card reference.
+
+### 4. End-of-round should be treated as a state transition
+
+The End/Next Round workflow is more than another phase button.
+
+It is an opportunity for V2 to:
+
+- resolve end-of-turn scoring
+- finalize authoritative events
+- update destroyed/status state
+- update CP
+- update mission state
+- prepare the next turn
+- surface important reminders for the next Command Phase
+
+**Decision: Strongly consider an explicit end-of-round state transition layer.**
+
+This should be engine-driven, not merely a UI transition.
+
+### 5. Scoring sheets reinforce the "decision, not data entry" principle
+
+The strongest common pattern across the Warmind screenshots is:
+
+> The application determines what is possible and asks the player only to confirm or choose the meaningful result.
+
+This aligns directly with V2's core philosophy of minimal live-game input.
+
 ## Reference screenshots
 
 The October 7–8, 2026 Warmind screenshots supplied during the comparison showed:
@@ -437,6 +625,10 @@ The October 7–8, 2026 Warmind screenshots supplied during the comparison showe
 - Event Log
 - Movement Phase
 - Shooting Phase
+- Charge Phase
+- Fight Phase
+- Primary scoring decision sheet
+- Secondary scoring decision sheet
 - Persistent lower battle-context shell across phases
 
 The screenshots are the visual source for the observations in this document.
