@@ -135,3 +135,34 @@ test("ranks scoring actions into generic tactical recommendations", () => {
   assert.equal(scoring.unitId, "my-unit");
   assert.equal(scoring.confidence, "high");
 });
+
+test("ranks scoring recommendations deterministically while preserving existing priorities", () => {
+  const state = {
+    phase: "command",
+    units: [
+      { id: "my-unit", ownerId: "p1", status: "deployed", position: { x: 10, y: 10 } }
+    ],
+    objectives: [{ id: "obj-1", position: { x: 10, y: 10 } }],
+    history: []
+  };
+
+  const definition = createMissionDefinition({
+    id: "score-objective",
+    name: "Score Objective",
+    timing: SCORING_TIMINGS.COMMAND_PHASE,
+    conditions: [{
+      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+      args: { objectiveId: "obj-1", playerId: "p1", expected: "controlled" }
+    }]
+  });
+
+  const result = getTacticalPriorities(state, {
+    playerId: "p1",
+    scoringDefinitions: [definition],
+    scoringTiming: SCORING_TIMINGS.COMMAND_PHASE
+  });
+
+  assert.ok(result.recommendations.length > 0);
+  assert.equal(result.recommendations[0].type, "scoring");
+  assert.equal(result.recommendations[0].confidence, "high");
+});
