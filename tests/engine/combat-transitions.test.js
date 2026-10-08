@@ -214,7 +214,7 @@ test("combat transition preserves data-driven hit, wound, and save modifiers", (
 
 
 test("Shooting attacks require a current-turn Shooting activation", () => {
-  const state = activeState();
+  const state = { ...activeState(), history: [] };
   assert.throws(
     () => resolveUnitAttack(state, {
       attackerId: "attacker", targetId: "target", weapon
