@@ -55,7 +55,7 @@ function destructionFromEvent(event) {
   return event.payload?.targetId
     ? {
         unitId: event.payload.targetId,
-        ownerId: event.payload.targetOwnerId ?? null,
+        ownerId: event.payload.targetOwnerId ?? (Array.isArray(state?.units) ? state.units.find((unit) => unit.id === event.payload.targetId)?.ownerId ?? null : null),
         source: event.type,
         attackerId: event.payload.attackerId ?? null,
         phase: event.payload.phase ?? null
