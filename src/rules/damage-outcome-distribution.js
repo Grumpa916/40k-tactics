@@ -75,7 +75,7 @@ function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) 
   const woundProbability = successProbability(woundTargetValue);
   const criticalWoundProbability = profile.devastatingWounds ? 1 / 6 : 0;
   const normalWoundProbability = Math.max(0, woundProbability - criticalWoundProbability);
-  addProbability(result, 0, 1 - (normalWoundProbability + criticalWoundProbability));
+  addProbability(result, 0, 1 - (normalWoundProbability * saveFailure + criticalWoundProbability));
   for (const [damage, probability] of damageValues(profile.damage)) {
     addProbability(result, damage, normalWoundProbability * saveFailure * probability);
     addProbability(result, damage, criticalWoundProbability * probability);
