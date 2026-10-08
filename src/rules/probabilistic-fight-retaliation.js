@@ -72,6 +72,6 @@ export function getProbabilisticFightRetaliation(
     expectedRetaliationDamage,
     survivalProbability: postAttack.survivalProbability,
     destructionProbability: postAttack.destructionProbability,
-    confidence: "moderate"
+    confidence: outcomes.some((outcome) => outcome.retaliation !== null) ? "moderate" : "low"
   });
 }

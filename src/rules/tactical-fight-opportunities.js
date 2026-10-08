@@ -1,6 +1,7 @@
 import { getExpectedDamage } from "./expected-damage.js";
 import { evaluateFightOpportunity } from "./tactical-fight-opportunity.js";
 import { getBestFightRetaliation } from "./tactical-fight-retaliation.js";
+import { getProbabilisticFightRetaliation } from "./probabilistic-fight-retaliation.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
@@ -47,10 +48,26 @@ export function getFightOpportunityRecommendations(
       // Expected damage is an average, not a guaranteed result. Do not
       // convert it into a deterministic kill. Retaliation therefore remains
       // available whenever the enemy is an authoritative engaged candidate.
+      const probabilisticRetaliation =
+        Number.isFinite(option?.retaliationExpectedDamage) || !option?.weapon
+          ? null
+          : (() => {
+              try {
+                return getProbabilisticFightRetaliation(state, {
+                  playerId,
+                  attackerId: attacker.id,
+                  targetId: target.id,
+                  weapon: option.weapon
+                });
+              } catch {
+                return null;
+              }
+            })();
+
       const automaticRetaliation =
         Number.isFinite(option?.retaliationExpectedDamage)
           ? null
-          : getBestFightRetaliation(state, {
+          : probabilisticRetaliation ?? getBestFightRetaliation(state, {
               playerId,
               attackerId: attacker.id,
               retaliationOptions: option?.retaliationOptions
@@ -59,7 +76,7 @@ export function getFightOpportunityRecommendations(
       const retaliationExpectedDamage =
         Number.isFinite(option?.retaliationExpectedDamage)
           ? option.retaliationExpectedDamage
-          : automaticRetaliation?.expectedDamage ?? 0;
+          : probabilisticRetaliation?.expectedRetaliationDamage ?? automaticRetaliation?.expectedDamage ?? 0;
 
       const retaliationConfidence =
         option?.retaliationConfidence ??
@@ -88,6 +105,8 @@ export function getFightOpportunityRecommendations(
         netCombatValue: evaluation.netCombatValue,
         risk: evaluation.risk,
         confidence: evaluation.confidence,
+        retaliationSurvivalProbability: probabilisticRetaliation?.survivalProbability ?? null,
+        retaliationDestructionProbability: probabilisticRetaliation?.destructionProbability ?? null,
         reason: evaluation.risk === "high"
           ? "Strong offensive opportunity, but expected retaliation creates significant preservation risk."
           : evaluation.retaliationExpectedDamage > 0
