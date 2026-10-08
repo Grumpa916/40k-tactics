@@ -1,4 +1,5 @@
 import { getFightCandidates } from "./fight-candidates.js";
+import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getSpatialContext } from "./spatial-context.js";
 
@@ -13,6 +14,7 @@ function chargeCandidates(state, { playerId }) {
   if (state?.phase !== "charge") return [];
 
   const spatial = getSpatialContext(state, { playerId });
+  const engagedUnitIds = new Set(getFightEngagementState(state).engagedUnitIds);
   const candidates = [];
 
   for (const proximity of spatial.unitProximity) {
@@ -22,6 +24,7 @@ function chargeCandidates(state, { playerId }) {
     if (!attacker || !target) continue;
     if (attacker.ownerId !== playerId || target.ownerId === playerId) continue;
     if (attacker.status === "destroyed" || target.status === "destroyed") continue;
+    if (engagedUnitIds.has(attacker.id)) continue;
 
     // A charge roll can reach at most 12 inches. Because map distance is
     // deliberately coarse, this is an eligibility screen, not exact legality.
