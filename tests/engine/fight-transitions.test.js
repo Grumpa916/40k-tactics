@@ -83,14 +83,12 @@ test("requires Fight phase, an active battle, and a deployed unit", () => {
   }), { unitId: "friendly" }), /must be deployed/);
 });
 
-test("prevents a unit from being activated twice in one turn", () => {
+test("rejects an already-activated unit through the Fight candidate gate", () => {
   const first = recordFightActivation(fightState(), { unitId: "friendly" });
-  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
-});
-
-test("rejects a unit that has already been activated this turn", () => {
-  const first = recordFightActivation(fightState(), { unitId: "friendly" });
-  assert.throws(() => recordFightActivation(first, { unitId: "friendly" }), /only once per turn/);
+  assert.throws(
+    () => recordFightActivation(first, { unitId: "friendly" }),
+    /available Fight candidate/
+  );
 });
 
 test("rejects reserves even if they have a successful charge event", () => {
