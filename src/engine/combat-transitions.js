@@ -48,10 +48,15 @@ export function resolveUnitAttack(state, {
     weapon
   });
   const result = resolveAttack({ ...profile, random });
-  const previousWounds = target.wounds ?? 0;
-  const nextWounds = Math.max(0, previousWounds - result.damage.totalDamage);
+  const previousWounds = target.wounds;
+  const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
+  const nextWounds = tracksWounds
+    ? Math.max(0, previousWounds - result.damage.totalDamage)
+    : previousWounds;
   const previousStatus = target.status;
-  const nextStatus = nextWounds === 0 ? UNIT_STATUS.DESTROYED : previousStatus;
+  const nextStatus = tracksWounds && nextWounds === 0
+    ? UNIT_STATUS.DESTROYED
+    : previousStatus;
   const event = createEvent("combat.attack_resolved", {
     attackerId,
     targetId,

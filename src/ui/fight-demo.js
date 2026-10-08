@@ -37,6 +37,7 @@ const state = createGameState({
       ownerId: "p1",
       name: "Captain",
       status: "deployed",
+      wounds: 10,
       profile: {
         weaponIds: ["power-sword"],
         characteristics: { weaponSkill: 3, toughness: 4, save: 3 }
@@ -47,7 +48,9 @@ const state = createGameState({
       ownerId: "p2",
       name: "Enemy Champion",
       status: "deployed",
+      wounds: 10,
       profile: {
+        weaponIds: ["power-sword"],
         characteristics: { weaponSkill: 4, toughness: 4, save: 4 }
       }
     }),
@@ -56,6 +59,7 @@ const state = createGameState({
       ownerId: "p1",
       name: "Battleline Squad",
       status: "deployed",
+      wounds: 10,
       profile: {
         weaponIds: ["power-sword"],
         characteristics: { weaponSkill: 4, toughness: 4, save: 4 }
@@ -66,7 +70,9 @@ const state = createGameState({
       ownerId: "p2",
       name: "Enemy Guard",
       status: "deployed",
+      wounds: 10,
       profile: {
+        weaponIds: ["power-sword"],
         characteristics: { weaponSkill: 4, toughness: 3, save: 5 }
       }
     })

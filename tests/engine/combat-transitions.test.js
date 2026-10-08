@@ -131,6 +131,28 @@ test("combat transition marks a target destroyed when wounds reach zero", () => 
   assert.equal(target.status, "destroyed");
 });
 
+test("combat transition preserves unknown wounds instead of falsely destroying the target", () => {
+  const state = {
+    ...activeState(),
+    units: activeState().units.map((unit) =>
+      unit.id === "target" ? { ...unit, wounds: null } : unit
+    )
+  };
+  const values = [0.1, 0.1, 0.1, 0.1];
+  let index = 0;
+  const next = resolveUnitAttack(state, {
+    attackerId: "attacker",
+    targetId: "target",
+    weapon,
+    random: () => values[index++]
+  });
+  const target = next.units.find((unit) => unit.id === "target");
+  assert.equal(target.wounds, null);
+  assert.equal(target.status, "deployed");
+  assert.equal(next.history.at(-1).payload.stateDelta.target.woundsBefore, null);
+  assert.equal(next.history.at(-1).payload.stateDelta.target.woundsAfter, null);
+});
+
 test("combat transition rejects attacks outside combat phases", () => {
   assert.throws(
     () => resolveUnitAttack(
