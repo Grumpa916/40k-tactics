@@ -6,6 +6,7 @@ import {
   resolveShootingAttack,
   finishShootingPhase
 } from "../application/shooting-workflow.js";
+import { getShootingTargetPriorities } from "../rules/tactical-shooting-targets.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -27,6 +28,32 @@ function unitButton(unit) {
   return `<button class="shoot-unit shoot-unit--${unit.side ?? "unknown"}" type="button" data-shoot-unit="${escapeHtml(unit.unitId)}">
     <strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(ownerLabel(unit))}</span><small>Tap to choose Shoot or Action</small>
   </button>`;
+}
+
+
+function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspectivePlayerId) {
+  if (!attackerId || !weaponId || !targetId || !perspectivePlayerId) return "";
+  const weapon = weapons.find((item) => item.id === weaponId);
+  if (!weapon) return "";
+  const result = getShootingTargetPriorities(state, { playerId: perspectivePlayerId, attackerId, weapon });
+  const recommendation = result.priorities.find((item) => item.targetUnitId === targetId);
+  if (!recommendation) return "";
+  const expected = Number.isFinite(recommendation.expectedDamage) ? recommendation.expectedDamage.toFixed(1) : "—";
+  const destruction = Number.isFinite(recommendation.destructionProbability) ? Math.round(recommendation.destructionProbability * 100) + "%" : "—";
+  const survival = Number.isFinite(recommendation.survivalProbability) ? Math.round(recommendation.survivalProbability * 100) + "%" : "—";
+  const impact = recommendation.impactClassification === "unknown" ? "Unknown" : recommendation.impactClassification.replaceAll("-", " ");
+  return `
+    <aside class="shoot-advisory" data-shoot-advisory>
+      <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>\${escapeHtml(recommendation.rangeStatus)} range</span></div>
+      <div class="shoot-advisory__grid">
+        <div><strong>\${expected}</strong><span>expected damage</span></div>
+        <div><strong>\${destruction}</strong><span>destruction chance</span></div>
+        <div><strong>\${survival}</strong><span>target survival</span></div>
+        <div><strong>\${escapeHtml(impact)}</strong><span>outcome profile</span></div>
+      </div>
+      <p>\${escapeHtml(recommendation.reason)}</p>
+    </aside>
+  `;
 }
 
 function historyRow(item, state, gameData) {
@@ -117,6 +144,7 @@ export function createShootingScreen(container, {
               <small>Expected damage is calculated automatically and retained in the attack result.</small>
             </div>
             <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
+            ${selectedAttackerId && selectedWeaponId && selectedTargetId ? shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId) : ""}
           </div>
         </section>
 
