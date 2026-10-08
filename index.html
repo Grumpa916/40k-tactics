@@ -51,6 +51,10 @@
     .fight-footer { margin-top: 18px; display: flex; justify-content: flex-end; }
     .fight-complete { min-height: 40px; padding: 0 16px; border: 0; border-radius: 8px; background: #e8ebef; color: #0b0d10; font-weight: 700; cursor: pointer; }
     .fight-complete:disabled { cursor: not-allowed; opacity: .3; }
+    @media (max-width: 800px) {
+      .fight-main-grid { grid-template-columns: 1fr; }
+      .fight-candidates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
     @media (max-width: 640px) {
       .fight-header { flex-direction: column; }
       .fight-status { align-self: flex-start; }
