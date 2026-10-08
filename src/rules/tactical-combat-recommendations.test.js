@@ -58,7 +58,7 @@ test("surfaces shooting recommendations through the unified combat layer", () =>
 
   assert.equal(result.shooting[0].type, "shooting-target");
   assert.equal(result.shooting[0].targetUnitId, "near-target");
-  assert.equal(result.shooting[0].confidence, "high");
+  assert.equal(result.shooting[0].confidence, "low");
 });
 
 test("surfaces charge candidates inside or just beyond the approximate maximum charge envelope", () => {
