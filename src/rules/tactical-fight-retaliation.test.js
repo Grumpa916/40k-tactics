@@ -115,7 +115,7 @@ test("does not treat expected damage as a guaranteed kill", () => {
         ownerId: "p1",
         status: "deployed",
         wounds: 8,
-        characteristics: { weaponSkill: 3 }
+        characteristics: { weaponSkill: 3, toughness: 4, save: 4 }
       },
       {
         id: "enemy",
