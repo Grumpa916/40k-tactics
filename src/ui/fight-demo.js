@@ -3,6 +3,7 @@ import { createUnit } from "../state/unit.js";
 import { registerCoreCommandHandlers } from "../engine/register-core-commands.js";
 import { clearCommandHandlers } from "../engine/command-engine.js";
 import { createFightScreen } from "./fight-screen.js";
+import { createGameSession } from "../application/game-session.js";
 
 const state = createGameState({
   phase: "fight",
@@ -70,7 +71,9 @@ const state = createGameState({
 clearCommandHandlers();
 registerCoreCommandHandlers();
 
+const session = createGameSession(state);
+
 createFightScreen(document.getElementById("fight-app"), {
-  state,
+  session,
   perspectivePlayerId: "p1"
 });
