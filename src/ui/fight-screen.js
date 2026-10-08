@@ -1,3 +1,5 @@
+import { getFightOpportunityRecommendations } from "../rules/tactical-fight-opportunities.js";
+
 import {
   getFightViewModel,
   getFightAttackOptions,
@@ -90,6 +92,53 @@ function attackRow(attack, state, gameData) {
   `;
 }
 
+function fightAdvisory(attackerId, weaponId, targetId, state, weapons, perspectivePlayerId) {
+  if (!attackerId || !weaponId || !targetId) return "";
+
+  const weapon = weapons.find((item) => item.id === weaponId);
+  if (!weapon) return "";
+
+  const recommendations = getFightOpportunityRecommendations(state, {
+    playerId: perspectivePlayerId,
+    options: [{
+      unitId: attackerId,
+      targetUnitId: targetId,
+      weapon
+    }]
+  });
+  const recommendation = recommendations[0];
+  if (!recommendation) return "";
+
+  const expectedDamage = Number.isFinite(recommendation.expectedDamage)
+    ? recommendation.expectedDamage.toFixed(1)
+    : "—";
+  const retaliation = Number.isFinite(recommendation.retaliationExpectedDamage)
+    ? recommendation.retaliationExpectedDamage.toFixed(1)
+    : "—";
+  const survival = Number.isFinite(recommendation.retaliationSurvivalProbability)
+    ? Math.round(recommendation.retaliationSurvivalProbability * 100) + "%"
+    : "—";
+  const destruction = Number.isFinite(recommendation.retaliationDestructionProbability)
+    ? Math.round(recommendation.retaliationDestructionProbability * 100) + "%"
+    : "—";
+
+  return `
+    <aside class="fight-advisory" data-fight-advisory>
+      <div class="fight-section__heading">
+        <h2>Fight Advisor</h2>
+        <span class="fight-section__hint">${escapeHtml(recommendation.confidence)} confidence</span>
+      </div>
+      <div class="fight-advisory__grid">
+        <div><strong>${expectedDamage}</strong><span>expected damage</span></div>
+        <div><strong>${retaliation}</strong><span>expected retaliation</span></div>
+        <div><strong>${survival}</strong><span>target survival</span></div>
+        <div><strong>${destruction}</strong><span>target destruction</span></div>
+      </div>
+      <p>${escapeHtml(recommendation.reason)}</p>
+    </aside>
+  `;
+}
+
 function activationRow(activation, index) {
   const owner = escapeHtml(ownerLabel(activation.unit));
   const name = escapeHtml(activation.unit?.name ?? activation.unitId);
@@ -167,6 +216,7 @@ export function createFightScreen(
             <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
             <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
+            ${fightAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId)}
             <div class="damage-control">
               <span class="damage-control__label">Actual damage</span>
               <div class="damage-control__buttons">
