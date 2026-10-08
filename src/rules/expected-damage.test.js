@@ -123,7 +123,7 @@ test("applies a unit's data-defined wound degradation to hit probability", () =>
       wounds: 4,
       characteristics: {
         weaponSkill: 3,
-        woundBrackets: [{ maxWoundsRemaining: 5, hitModifier: -1 }]
+        woundBrackets: [{ maxWoundsRemaining: 5, hitRollModifier: -1 }]
       }
     },
     target: { characteristics: { toughness: 4, save: 4 } },
