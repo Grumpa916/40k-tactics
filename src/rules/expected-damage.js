@@ -55,7 +55,7 @@ function saveFailureProbability(profile) {
     ? profile.invulnerableSave
     : armourTarget;
 
-  const failure = target > 6 ? 1 : successProbability(target);
+  const failure = target > 6 ? 1 : (target - 1) / 6;
   const reroll = profile.saveReroll;
 
   if (profile.saveRerollCount !== null) return failure;
