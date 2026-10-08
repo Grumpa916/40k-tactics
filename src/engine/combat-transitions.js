@@ -65,10 +65,10 @@ export function resolveUnitAttack(state, {
     target: target.profile ?? target,
     weapon
   });
-  const result = resolveAttack({ ...profile, random });
   if (actualDamage !== null && (!Number.isInteger(actualDamage) || actualDamage < 0)) {
     throw new TypeError("Actual damage must be a non-negative integer.");
   }
+  const result = resolveAttack({ ...profile, random });
   const expectedDamage = result.damage.totalDamage;
   const recordedDamage = actualDamage ?? expectedDamage;
   const previousWounds = target.wounds;
