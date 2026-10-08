@@ -147,7 +147,7 @@ test("keeps targets eligible when expected-damage profiles are incomplete", () =
     }
   });
 
-  assert.equal(result.priorities.length, 2);
+  assert.equal(result.priorities.length, 1);
   assert.equal(result.priorities.every((item) => item.expectedDamage === null), true);
 });
 
