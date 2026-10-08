@@ -84,6 +84,7 @@ test("Fight attacks are allowed after a current-turn activation", () => {
   assert.equal(next.units.find((unit) => unit.id === "target").wounds, 1);
   assert.equal(next.history.at(-1).type, "combat.attack_resolved");
   assert.equal(next.history.at(-1).payload.phase, "fight");
+  assert.equal(next.history.at(-1).payload.turn, 1);
 });
 
 test("combat transition marks a target destroyed when wounds reach zero", () => {
@@ -126,6 +127,7 @@ test("combat transition records a replayable combat event payload", () => {
   assert.equal(event.payload.weaponId, "laser");
   assert.equal(event.payload.phase, "shooting");
   assert.equal(event.payload.round, 1);
+  assert.equal(event.payload.turn, 1);
   assert.equal(event.payload.profile.damage, 2);
   assert.equal(event.payload.result.damage.totalDamage, 4);
   assert.deepEqual(event.payload.stateDelta.target, {
