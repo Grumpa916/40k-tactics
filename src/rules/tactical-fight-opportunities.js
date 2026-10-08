@@ -44,14 +44,9 @@ export function getFightOpportunityRecommendations(
           ? option.expectedDamage
           : expectedDamageForOption(attacker, target, option?.weapon);
 
-      const postAttackWounds = Number.isFinite(expectedDamage) && Number.isFinite(target.wounds)
-        ? Math.max(0, target.wounds - expectedDamage)
-        : target.wounds;
-
-      const postAttackTarget = postAttackWounds === target.wounds
-        ? target
-        : { ...target, wounds: postAttackWounds, status: postAttackWounds <= 0 ? "destroyed" : target.status };
-
+      // Expected damage is an average, not a guaranteed result. Do not
+      // convert it into a deterministic kill. Retaliation therefore remains
+      // available whenever the enemy is an authoritative engaged candidate.
       const automaticRetaliation =
         Number.isFinite(option?.retaliationExpectedDamage)
           ? null
@@ -64,9 +59,7 @@ export function getFightOpportunityRecommendations(
       const retaliationExpectedDamage =
         Number.isFinite(option?.retaliationExpectedDamage)
           ? option.retaliationExpectedDamage
-          : postAttackTarget.status === "destroyed"
-            ? 0
-            : automaticRetaliation?.expectedDamage ?? 0;
+          : automaticRetaliation?.expectedDamage ?? 0;
 
       const retaliationConfidence =
         option?.retaliationConfidence ??
@@ -76,7 +69,6 @@ export function getFightOpportunityRecommendations(
       const evaluation = evaluateFightOpportunity({
         expectedDamage,
         retaliationExpectedDamage,
-        remainingWounds: option?.remainingWounds ?? attacker.wounds ?? 0,
         remainingWounds: option?.remainingWounds ?? attacker.wounds ?? 0,
         maxWounds: option?.maxWounds ?? attacker.maxWounds ?? null,
         targetWounds: option?.targetWounds ?? target.wounds ?? null,
