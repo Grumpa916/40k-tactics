@@ -77,7 +77,7 @@ test("surfaces charge candidates inside or just beyond the approximate maximum c
         id: "outside-target",
         ownerId: "p2",
         status: "deployed",
-        position: { x: 16, y: 0 }
+        position: { x: 18, y: 0 }
       }
     ]
   };
