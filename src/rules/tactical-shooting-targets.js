@@ -112,6 +112,14 @@ export function getShootingTargetPriorities(state, {
 
     const reasons = [];
     const rangeStatus = range == null ? "unknown" : proximity.distance <= range ? "within" : "borderline";
+    const opportunity = evaluateShootingOpportunity({
+      expectedDamage,
+      destructionProbability,
+      survivalProbability,
+      targetWounds: target.wounds,
+      impactClassification,
+      rangeStatus
+    });
     if (proximity.band === "close" || proximity.band === "near") {
       reasons.push("Enemy is approximately " + proximity.distance + " inches away.");
     }
@@ -146,6 +154,11 @@ export function getShootingTargetPriorities(state, {
       survivalProbability,
       mostLikelyRemainingWounds,
       impactClassification,
+      targetImpact: opportunity.targetImpact,
+      normalizedImpact: opportunity.normalizedImpact,
+      rangeConfidence: opportunity.rangeConfidence,
+      confidence: opportunity.confidence,
+      recommendationReason: opportunity.recommendationReason,
       reason: reasons.join(" ")
     });
   }
