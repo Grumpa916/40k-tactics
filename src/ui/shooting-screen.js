@@ -139,7 +139,7 @@ export function createShootingScreen(container, {
       const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId: unitId, gameData });
       selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
       selectedTargetId = null;
-      actualDamage = "";
+      actualDamage = "0";
       clearPending();
       render();
     });
