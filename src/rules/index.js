@@ -24,7 +24,8 @@ export {
   getObjectiveStateAtTurnStart
 } from "./scoring-evidence-state.js";
 
-export { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
+export { getShootingTargetPriorities, classifyShootingImpact } from "./tactical-shooting-targets.js";
+export { evaluateShootingOpportunity } from "./tactical-shooting-opportunity.js";
 export { getExpectedDamage } from "./expected-damage.js";
 export { getFireConcentrationAdvisory } from "./tactical-fire-concentration.js";
 export {

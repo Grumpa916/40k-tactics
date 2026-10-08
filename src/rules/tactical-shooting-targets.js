@@ -2,6 +2,7 @@ import { getCombatHistorySummary } from "./combat-history-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getPostFightTargetStates } from "./post-fight-target-states.js";
+import { evaluateShootingOpportunity } from "./tactical-shooting-opportunity.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
