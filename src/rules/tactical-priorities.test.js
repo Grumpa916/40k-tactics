@@ -166,3 +166,47 @@ test("ranks scoring recommendations deterministically while preserving existing 
   assert.equal(result.recommendations[0].type, "scoring");
   assert.equal(result.recommendations[0].confidence, "high");
 });
+
+
+test("exposes unified shooting recommendations alongside scoring recommendations", () => {
+  const state = {
+    phase: "shooting",
+    battle: { status: "active", round: 1 },
+    turn: 1,
+    units: [
+      {
+        id: "shooter",
+        ownerId: "p1",
+        status: "deployed",
+        position: { x: 0, y: 0 },
+        characteristics: { ballisticSkill: 3 }
+      },
+      {
+        id: "target",
+        ownerId: "p2",
+        status: "deployed",
+        wounds: 5,
+        position: { x: 6, y: 0 },
+        characteristics: { toughness: 4, save: 4 }
+      }
+    ],
+    history: []
+  };
+
+  const result = getTacticalPriorities(state, {
+    playerId: "p1",
+    shootingContext: {
+      attackerId: "shooter",
+      weapon: {
+        id: "rifle",
+        type: "ranged",
+        characteristics: { range: 24 }
+      }
+    }
+  });
+
+  assert.ok(result.combatRecommendations.shooting.length > 0);
+  assert.ok(result.recommendations.some((item) =>
+    item.type === "shooting-target" && item.targetUnitId === "target"
+  ));
+});
