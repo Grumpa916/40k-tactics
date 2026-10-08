@@ -16,7 +16,9 @@ export function getShootingState(state) {
       unitId: event.payload.unitId,
       playerId: event.payload.playerId ?? null,
       round: event.payload.round ?? null,
-      turn: event.payload.turn
+      turn: event.payload.turn,
+      actionType: event.payload.actionType ?? "shoot",
+      actionId: event.payload.actionId ?? null
     }));
 
   const attacks = history

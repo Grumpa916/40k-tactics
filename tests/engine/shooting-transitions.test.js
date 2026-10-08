@@ -24,10 +24,12 @@ test("Shooting candidates contain only deployed units owned by the active player
 });
 
 test("Shooting activation records the unit and removes it from candidates", () => {
-  const next = recordShootingActivation(state(), { unitId: "p1-a" });
+  const next = recordShootingActivation(state(), { unitId: "p1-a", actionType: "shoot" });
   assert.deepEqual(getShootingCandidates(next).available, ["p1-b"]);
   assert.equal(next.history.at(-1).type, "shooting.unit_activated");
   assert.equal(next.history.at(-1).payload.playerId, "p1");
+  assert.equal(next.history.at(-1).payload.actionType, "shoot");
+  assert.equal(next.history.at(-1).payload.actionId, null);
 });
 
 test("Shooting cannot activate the opponent's unit during your turn", () => {
@@ -53,5 +55,34 @@ test("Shooting completion advances to Charge after all candidates are recorded",
   assert.deepEqual(
     current.history.slice(-2).map((event) => event.type),
     ["shooting.phase_completed", "turn.phase_changed"]
+  );
+});
+
+
+test("Shooting mission actions consume the activation without a combat event", () => {
+  const next = recordShootingActivation(state(), {
+    unitId: "p1-a",
+    actionType: "mission_action",
+    actionId: "cleanse"
+  });
+  assert.deepEqual(getShootingCandidates(next).available, ["p1-b"]);
+  assert.deepEqual(next.history.at(-1).payload, {
+    unitId: "p1-a",
+    playerId: "p1",
+    round: 1,
+    turn: 2,
+    actionType: "mission_action",
+    actionId: "cleanse"
+  });
+  assert.equal(next.history.some((event) => event.type === "combat.attack_resolved"), false);
+});
+
+test("Non-shoot Shooting activations require an action id", () => {
+  assert.throws(
+    () => recordShootingActivation(state(), {
+      unitId: "p1-a",
+      actionType: "mission_action"
+    }),
+    /action id is required/
   );
 });

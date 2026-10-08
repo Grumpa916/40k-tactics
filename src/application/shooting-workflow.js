@@ -25,6 +25,17 @@ function describeUnit(state, unitId, perspectivePlayerId) {
   };
 }
 
+function wasActivatedToShootThisTurn(state, unitId) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  return history.some((event) =>
+    event?.type === "shooting.unit_activated" &&
+    event?.payload?.unitId === unitId &&
+    event?.payload?.round === state?.battle?.round &&
+    event?.payload?.turn === state?.turn &&
+    (event?.payload?.actionType ?? "shoot") === "shoot"
+  );
+}
+
 export function getShootingViewModel(state, { perspectivePlayerId = null } = {}) {
   const shooting = getShootingState(state);
   return {
@@ -44,10 +55,14 @@ export function getShootingViewModel(state, { perspectivePlayerId = null } = {})
   };
 }
 
-export function recordShootingActivation(state, { unitId } = {}, context = {}) {
+export function recordShootingActivation(state, {
+  unitId,
+  actionType = "shoot",
+  actionId = null
+} = {}, context = {}) {
   return executeCommand(
     state,
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId }),
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId }),
     context
   );
 }
@@ -60,12 +75,16 @@ export function completeShootingPhase(state, context = {}) {
   );
 }
 
-export function activateShootingUnit(session, { unitId } = {}, context = {}) {
+export function activateShootingUnit(session, {
+  unitId,
+  actionType = "shoot",
+  actionId = null
+} = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
   }
   return session.dispatch(
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId }),
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId }),
     context
   );
 }
@@ -99,6 +118,7 @@ export function finishShootingPhase(session, context = {}) {
 }
 
 export function getShootingWeaponOptions(state, { attackerId, gameData = null } = {}) {
+  if (!wasActivatedToShootThisTurn(state, attackerId)) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
   const weaponIds = Array.isArray(attacker.profile?.weaponIds)
@@ -117,6 +137,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
 }
 
 export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {
+  if (!wasActivatedToShootThisTurn(state, attackerId)) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
   return state.units

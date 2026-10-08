@@ -4,8 +4,20 @@ import { appendHistoryEntry } from "../state/history.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { changePhase } from "./state-transitions.js";
 
-export function recordShootingActivation(state, { unitId } = {}) {
+const SHOOTING_ACTION_TYPES = new Set(["shoot", "mission_action", "special_action"]);
+
+export function recordShootingActivation(state, {
+  unitId,
+  actionType = "shoot",
+  actionId = null
+} = {}) {
   if (!unitId) throw new TypeError("Shooting activation unit id is required.");
+  if (!SHOOTING_ACTION_TYPES.has(actionType)) {
+    throw new TypeError("Shooting activation action type is invalid.");
+  }
+  if (actionType !== "shoot" && !actionId) {
+    throw new TypeError("A Shooting action id is required for non-shoot activations.");
+  }
   if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
   if (state.phase !== "shooting") throw new Error("Shooting activations may only be recorded in the Shooting phase.");
 
@@ -16,7 +28,7 @@ export function recordShootingActivation(state, { unitId } = {}) {
 
   const activePlayerId = state.activePlayer ?? state.battle.activePlayerId ?? null;
   if (activePlayerId && unit.ownerId !== activePlayerId) {
-    throw new Error("Only the active player's units can be selected to shoot.");
+    throw new Error("Only the active player's units can be selected for a Shooting activation.");
   }
 
   const candidates = getShootingCandidates(state);
@@ -28,7 +40,9 @@ export function recordShootingActivation(state, { unitId } = {}) {
     unitId,
     playerId: unit.ownerId,
     round: state.battle.round,
-    turn: state.turn
+    turn: state.turn,
+    actionType,
+    actionId
   }));
 }
 

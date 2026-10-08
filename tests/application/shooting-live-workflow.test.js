@@ -57,11 +57,12 @@ test("live Shooting workflow records activation and ranged attack", () => {
   registerCoreCommandHandlers();
 
   const session = createGameSession(liveState());
-  activateShootingUnit(session, { unitId: "shooter" });
+  activateShootingUnit(session, { unitId: "shooter", actionType: "shoot" });
 
   const model = getShootingViewModel(session.getState(), { perspectivePlayerId: "p1" });
   assert.deepEqual(model.candidates, []);
   assert.equal(model.activations[0].unit.name, "Shooter");
+  assert.equal(model.activations[0].actionType, "shoot");
   assert.equal(model.canComplete, true);
 
   assert.deepEqual(
@@ -97,6 +98,45 @@ test("live Shooting workflow records activation and ranged attack", () => {
     session.getState().history.slice(-2).map((event) => event.type),
     ["shooting.phase_completed", "turn.phase_changed"]
   );
+
+  clearCommandHandlers();
+});
+
+
+test("live Shooting workflow records a mission action as the unit's phase choice", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+
+  const session = createGameSession(liveState());
+  activateShootingUnit(session, {
+    unitId: "shooter",
+    actionType: "mission_action",
+    actionId: "cleanse"
+  });
+
+  const model = getShootingViewModel(session.getState(), { perspectivePlayerId: "p1" });
+  assert.equal(model.activations[0].actionType, "mission_action");
+  assert.equal(model.activations[0].actionId, "cleanse");
+  assert.equal(model.canComplete, true);
+  assert.deepEqual(
+    getShootingWeaponOptions(session.getState(), {
+      attackerId: "shooter",
+      gameData: { weapons: [rangedWeapon] }
+    }),
+    []
+  );
+
+  assert.throws(
+    () => resolveShootingAttack(session, {
+      attackerId: "shooter",
+      targetId: "target",
+      weapon: rangedWeapon
+    }),
+    /Shooting attack requires the unit to be activated/
+  );
+
+  finishShootingPhase(session);
+  assert.equal(session.getState().phase, "charge");
 
   clearCommandHandlers();
 });
