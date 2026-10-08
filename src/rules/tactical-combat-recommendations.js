@@ -104,14 +104,7 @@ export function getTacticalCombatRecommendations(
         playerId,
         attackerId: shootingContext.attackerId,
         weapon: shootingContext.weapon ?? null
-      }).priorities.map((item) => ({
-        ...item,
-        confidence: item.targetBand === "close"
-          ? "high"
-          : item.targetBand === "near"
-            ? "moderate"
-            : "low"
-      }))
+      }).priorities
     : [];
 
   const charge = chargeCandidates(state, { playerId });
