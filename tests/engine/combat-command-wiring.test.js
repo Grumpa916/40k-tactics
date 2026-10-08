@@ -37,6 +37,6 @@ test("combat command executes through the command engine and records history", (
   const next = executeCommand(state, command, { random: () => values[index++] });
 
   assert.equal(next.units.find((unit) => unit.id === "target").wounds, 1);
-  assert.equal(next.history.length, 1);
-  assert.equal(next.history[0].type, "combat.attack_resolved");
+  assert.equal(next.history.length, 2);
+  assert.equal(next.history.at(-1).type, "combat.attack_resolved");
 });
