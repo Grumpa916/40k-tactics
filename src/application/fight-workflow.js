@@ -79,3 +79,25 @@ export function completeFightPhase(state, context = {}) {
     context
   );
 }
+
+export function activateFightUnit(session, { unitId } = {}, context = {}) {
+  if (!session || typeof session.dispatch !== "function") {
+    throw new TypeError("A game session is required.");
+  }
+
+  return session.dispatch(
+    createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, { unitId }),
+    context
+  );
+}
+
+export function finishFightPhase(session, context = {}) {
+  if (!session || typeof session.dispatch !== "function") {
+    throw new TypeError("A game session is required.");
+  }
+
+  return session.dispatch(
+    createCommand(COMMAND_TYPES.COMPLETE_FIGHT_PHASE),
+    context
+  );
+}
