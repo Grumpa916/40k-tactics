@@ -75,7 +75,7 @@ test("uses weapon range as an advisory signal without hiding targets", () => {
   assert.match(far.reason, /beyond the weapon's approximate range/);
 });
 
-test("boosts an enemy currently engaged with the shooting unit", () => {
+test("does not recommend an enemy currently engaged with the shooting unit", () => {
   const state = baseState();
   state.history = [
     {
@@ -96,8 +96,14 @@ test("boosts an enemy currently engaged with the shooting unit", () => {
     attackerId: "shooter"
   });
 
-  assert.equal(result.priorities[0].targetUnitId, "close-target");
-  assert.match(result.priorities[0].reason, /engaged/);
+  assert.equal(
+    result.priorities.some((item) => item.targetUnitId === "close-target"),
+    false
+  );
+  assert.equal(
+    result.priorities.some((item) => item.targetUnitId === "far-target"),
+    true
+  );
 });
 
 test("does not recommend destroyed targets", () => {
