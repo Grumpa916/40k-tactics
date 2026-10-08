@@ -16,3 +16,5 @@ export { resolveAttack } from "./attack-resolution.js";
 export { buildAttackProfile } from "./combat-profile.js";
 export { getFightCandidates } from "./fight-candidates.js";
 export { getFightState } from "./fight-state.js";
+
+export { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
