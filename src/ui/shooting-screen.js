@@ -35,7 +35,7 @@ function historyRow(item, state, gameData) {
   const weapon = gameData?.weapons?.find((entry) => entry?.id === item.weaponId);
   const result = item.targetStatusAfter === "destroyed"
     ? "Destroyed"
-    : item.targetWoundsAfter == null ? `${item.totalDamage ?? 0} damage` : `${item.totalDamage ?? 0} damage · ${item.targetWoundsAfter} wounds`;
+    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${item.expectedDamage ?? item.totalDamage ?? 0} expected` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${item.expectedDamage ?? item.totalDamage ?? 0} expected · ${item.targetWoundsAfter} wounds`;
   return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(target?.name ?? item.targetId)}</strong><span>${escapeHtml(weapon?.name ?? item.weaponId ?? "Weapon")} · ${escapeHtml(result)}</span></li>`;
 }
 
@@ -52,6 +52,7 @@ export function createShootingScreen(container, {
   let selectedAttackerId = null;
   let selectedWeaponId = null;
   let selectedTargetId = null;
+  let actualDamage = "";
 
   function clearPending() {
     pendingUnitId = null;
@@ -103,10 +104,11 @@ export function createShootingScreen(container, {
       <div class="grid">
         <section><div class="heading"><h2>Ranged attack</h2><span>Only units that chose Shoot</span></div>
           <div class="controls">
-            <label>Shooter<select data-shooter><option value="">Select shooter</option>${model.activations.filter((unit) => unit.actionType === "shoot").map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.unit.name)} · ${escapeHtml(ownerLabel(unit.unit))}</option>`).join("")}</select></label>
+            <div class="shoot-selected-shooter"><strong>${selectedAttackerId ? escapeHtml(model.activations.find((unit) => unit.unitId === selectedAttackerId)?.unit.name ?? selectedAttackerId) : "No shooter selected"}</strong><span>Selected shooter</span></div>
             <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
-            <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Resolve Attack</button>
+            <label>Actual damage<input data-shoot-damage type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(actualDamage)}" placeholder="0" ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}></label>
+            <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "" ? "" : "disabled"}>Record Attack</button>
           </div>
         </section>
 
@@ -131,8 +133,15 @@ export function createShootingScreen(container, {
 
     container.querySelector("[data-choice-shoot]")?.addEventListener("click", () => {
       if (!pendingUnitId) return;
-      activateShootingUnit(session, { unitId: pendingUnitId, actionType: "shoot" });
+      const unitId = pendingUnitId;
+      activateShootingUnit(session, { unitId, actionType: "shoot" });
+      selectedAttackerId = unitId;
+      const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId: unitId, gameData });
+      selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
+      selectedTargetId = null;
+      actualDamage = "";
       clearPending();
+      render();
     });
 
     container.querySelector("[data-choice-action]")?.addEventListener("change", (event) => {
@@ -152,20 +161,22 @@ export function createShootingScreen(container, {
       render();
     });
 
-    container.querySelector("[data-shooter]")?.addEventListener("change", (event) => {
-      selectedAttackerId = event.target.value || null;
-      selectedWeaponId = null;
-      selectedTargetId = null;
-      render();
-    });
+
     container.querySelector("[data-weapon]")?.addEventListener("change", (event) => { selectedWeaponId = event.target.value || null; render(); });
     container.querySelector("[data-target]")?.addEventListener("change", (event) => { selectedTargetId = event.target.value || null; render(); });
+    container.querySelector("[data-shoot-damage]")?.addEventListener("input", (event) => {
+      actualDamage = event.target.value;
+      const button = container.querySelector("[data-attack]");
+      if (button) button.disabled = !(selectedAttackerId && selectedWeaponId && selectedTargetId && actualDamage !== "");
+    });
     container.querySelector("[data-attack]")?.addEventListener("click", () => {
       const weapon = weapons.find((item) => item.id === selectedWeaponId);
       if (!weapon) return;
-      resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon });
-      selectedWeaponId = null;
+      const damage = Number(actualDamage);
+      if (!Number.isInteger(damage) || damage < 0) return;
+      resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
       selectedTargetId = null;
+      actualDamage = "";
       render();
     });
     container.querySelector("[data-complete]")?.addEventListener("click", () => finishShootingPhase(session));
