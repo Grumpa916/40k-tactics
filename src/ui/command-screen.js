@@ -242,10 +242,13 @@ export function createCommandScreen(container, {
         ? rows.map((item) => '<article class="command-scoring"><strong>' + escapeHtml(item.definitionName ?? item.definitionId) +
           '</strong><span class="command-scoring__category">' + item.categoryLabel + '</span><span class="' +
           (item.result.eligible ? 'is-available' : 'is-unavailable') + '">' +
-          (item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span><ul>' +
-          (item.result.conditions ?? []).map((condition) => '<li>' + escapeHtml(condition.evidence) + ': ' +
-            (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>').join("") +
-          '</ul></article>').join("")
+          (item.result.manualReviewRequired ? 'Manual review required' :
+            item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span>' +
+          (item.result.manualReviewRequired
+            ? '<p>Card scoring conditions are not configured. Check the printed mission rules; no eligibility is inferred.</p>'
+            : '<ul>' + (item.result.conditions ?? []).map((condition) => '<li>' + escapeHtml(condition.evidence) + ': ' +
+              (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>').join("") + '</ul>') +
+          '</article>').join("")
         : '<p>No active missions are configured for this checkpoint.</p>';
     } catch (error) {
       checkpointReview = '<p role="alert">Scoring checkpoint review unavailable: ' +
