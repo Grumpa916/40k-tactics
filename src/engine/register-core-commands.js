@@ -11,7 +11,7 @@ import {
   completeBattle
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
-import { resolveNormalMove } from "./movement-transitions.js";
+import { resolveNormalMove, recordFallBack } from "./movement-transitions.js";
 import { recordChargeOutcome } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";

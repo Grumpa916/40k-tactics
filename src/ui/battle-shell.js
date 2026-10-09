@@ -1,16 +1,18 @@
 import { createChargeScreen } from "./charge-screen.js";
 import { createFightScreen } from "./fight-screen.js";
+import { createMovementScreen } from "./movement-screen.js";
 import { createShootingScreen } from "./shooting-screen.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "planned" },
-  { id: "movement", label: "Movement", status: "planned" },
+  { id: "movement", label: "Movement", status: "live" },
   { id: "shooting", label: "Shooting", status: "live" },
   { id: "charge", label: "Charge", status: "live" },
   { id: "fight", label: "Fight", status: "live" }
 ]);
 
 const SCREEN_FACTORIES = Object.freeze({
+  movement: createMovementScreen,
   shooting: createShootingScreen,
   charge: createChargeScreen,
   fight: createFightScreen
