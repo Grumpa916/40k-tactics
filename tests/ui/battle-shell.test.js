@@ -26,6 +26,30 @@ function container() {
   return {
     children: [],
     html: "",
+    listeners: new Map(),
+    addEventListener(type, listener) {
+      if (!this.listeners.has(type)) this.listeners.set(type, new Set());
+      this.listeners.get(type).add(listener);
+    },
+    removeEventListener(type, listener) {
+      this.listeners.get(type)?.delete(listener);
+    },
+    contains() { return true; },
+    clickPhase(phase) {
+      const button = {
+        getAttribute(name) {
+          return name === "data-battle-phase-button" ? phase : null;
+        }
+      };
+      const event = {
+        target: {
+          closest(selector) {
+            return selector === "[data-battle-phase-button]" ? button : null;
+          }
+        }
+      };
+      for (const listener of this.listeners.get("click") ?? []) listener(event);
+    },
     replaceChildren(...children) {
       this.children = children;
       this.html = "";
@@ -85,7 +109,8 @@ test("shared battle shell mounts the current implemented phase", () => {
   assert.equal(mounted[0].phase, "shooting");
   assert.equal(mounted[0].options.session, session);
   assert.equal(mounted[0].options.perspectivePlayerId, "p1");
-  assert.match(root.html, /data-battle-phase="shooting"/);
+  assert.match(root.html, /data-battle-phase-button="shooting"/);
+  assert.match(root.html, /data-battle-phase-button="command"/);
   assert.doesNotMatch(root.html, /battle-shell__header/);
 
   shell.destroy();
@@ -217,5 +242,36 @@ test("shared battle shell forwards configured mission definitions to phase scree
     }
   });
   assert.deepEqual(received, [definition]);
+  shell.destroy();
+});
+
+
+test("phase navigation buttons switch the viewed screen without changing recorded game phase", () => {
+  const session = sessionFor({ phase: "shooting", turn: 1, battle: { round: 1 } });
+  const mounted = [];
+  const root = container();
+  const shell = createBattleShell(root, {
+    session,
+    screenFactories: {
+      command: () => {
+        mounted.push("command");
+        return { destroy() { mounted.push("destroy-command"); } };
+      },
+      shooting: () => {
+        mounted.push("shooting");
+        return { destroy() { mounted.push("destroy-shooting"); } };
+      }
+    }
+  });
+
+  root.clickPhase("command");
+  assert.equal(session.getState().phase, "shooting");
+  assert.match(root.html, /Viewing Command/);
+  assert.deepEqual(mounted, ["shooting", "destroy-shooting", "command"]);
+
+  root.clickPhase("shooting");
+  assert.match(root.html, /Viewing Shooting/);
+  assert.deepEqual(mounted, ["shooting", "destroy-shooting", "command", "destroy-command", "shooting"]);
+
   shell.destroy();
 });
