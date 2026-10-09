@@ -126,11 +126,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         const advanceRoll = Number(container.querySelector("[data-advance-roll]")?.value);
         const models = modelsFor(unit);
         const moves = models.map((model) => {
-          const x = container.querySelector("[data-move-x]").closest(".move-coordinate-row").querySelector("[data-move-x]");
-          const y = container.querySelector("[data-move-y]").closest(".move-coordinate-row").querySelector("[data-move-y]");
-          const row = x?.closest(".move-coordinate-row");
-          const modelX = row?.querySelector("[data-move-x]");
-          const modelY = row?.querySelector("[data-move-y]");
+          const modelX = Array.from(container.querySelectorAll("[data-move-x]")).find((input) => input.dataset.moveX === model.id);
+          const modelY = Array.from(container.querySelectorAll("[data-move-y]")).find((input) => input.dataset.moveY === model.id);
           if (!modelX || !modelY || modelX.value.trim() === "" || modelY.value.trim() === "") throw new Error("Enter X and Y coordinates for every model.");
           return { modelId: model.id, position: { x: Number(modelX.value), y: Number(modelY.value) } };
         });
