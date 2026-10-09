@@ -57,7 +57,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const fellBack = alreadyFellBack(unit.id);
       const action = actionFor(unit.id);
       return '<button type="button" class="move-unit' + (unit.id === selectedUnitId ? ' is-selected' : '') +
-        '" data-move-unit="' + escapeHtml(unit.id) + '"' + (moved || fellBack ? ' disabled' : '') + '><strong>' +
+        '" data-move-unit="' + escapeHtml(unit.id) + '"' + (action ? ' disabled' : '') + '><strong>' +
         escapeHtml(unit.name) + '</strong><span>' + escapeHtml(ownerLabel(unit, state)) + '</span><small>' +
         (action ? ({ "unit.normal_move_resolved": "Normal Move recorded", "unit.fell_back": "Fall Back recorded", "unit.advanced": "Advance recorded", "unit.stationary_recorded": "Remained stationary" }[action.type] ?? "Movement recorded") : "Select movement") +
         '</small></button>';
