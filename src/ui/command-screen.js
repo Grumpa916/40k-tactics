@@ -7,7 +7,7 @@ function escapeHtml(value) {
 }
 
 function playerName(state, playerId) {
-  return state.players.find((player) => player.id === playerId)?.name ??
+  return (Array.isArray(state.players) ? state.players : []).find((player) => player.id === playerId)?.name ??
     (playerId === state.activePlayer ? "Active player" : playerId ?? "Unknown");
 }
 
