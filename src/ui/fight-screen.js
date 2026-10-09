@@ -79,7 +79,10 @@ function attackRow(attack, state, gameData) {
   const status = attack.targetStatusAfter === "destroyed"
     ? "Destroyed"
     : attack.targetWoundsAfter == null ? "" : `${attack.targetWoundsAfter} wounds remaining`;
-  const result = `${attack.actualDamage ?? attack.totalDamage ?? 0} actual damage · ${attack.expectedDamage ?? attack.totalDamage ?? 0} expected${status ? ` · ${status}` : ""}`;
+  const expectedDamage = Number.isFinite(attack.expectedDamage)
+    ? attack.expectedDamage.toFixed(1)
+    : attack.expectedDamage ?? attack.totalDamage ?? 0;
+  const result = `${attack.actualDamage ?? attack.totalDamage ?? 0} actual damage · ${expectedDamage} expected${status ? ` · ${status}` : ""}`;
   return `
     <li class="fight-history__item">
       <span class="fight-history__number">⚔</span>
