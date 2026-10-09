@@ -49,19 +49,23 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const alreadyFellBack = (unitId) => state.history.some((event) =>
       event.type === "unit.fell_back" && event.payload?.unitId === unitId &&
       event.payload?.turn === state.turn);
+    const actionFor = (unitId) => state.history.find((event) =>
+      ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
+      event.payload?.unitId === unitId && event.payload?.turn === state.turn);
     const unitCards = eligible.length ? eligible.map((unit) => {
       const moved = alreadyMoved(unit.id);
       const fellBack = alreadyFellBack(unit.id);
+      const action = actionFor(unit.id);
       return '<button type="button" class="move-unit' + (unit.id === selectedUnitId ? ' is-selected' : '') +
-        '" data-move-unit="' + escapeHtml(unit.id) + '"' + (moved || fellBack ? ' disabled' : '') + '><strong>' +
+        '" data-move-unit="' + escapeHtml(unit.id) + '"' + (action ? ' disabled' : '') + '><strong>' +
         escapeHtml(unit.name) + '</strong><span>' + escapeHtml(ownerLabel(unit, state)) + '</span><small>' +
-        (moved ? 'Normal Move recorded' : fellBack ? 'Fall Back recorded' : 'Select movement') +
+        (action ? ({ "unit.normal_move_resolved": "Normal Move recorded", "unit.fell_back": "Fall Back recorded", "unit.advanced": "Advance recorded", "unit.stationary_recorded": "Remained stationary" }[action.type] ?? "Movement recorded") : "Select movement") +
         '</small></button>';
     }).join('') : '<p>No deployed units are available to move.</p>';
     let editor = '<p>Select a deployed unit to record its movement.</p>';
     if (selected) {
       const models = modelsFor(selected);
-      const moved = alreadyMoved(selected.id) || alreadyFellBack(selected.id);
+      const moved = Boolean(actionFor(selected.id));
       const rows = models.map((model) => {
         const movement = movementFor(selected, model);
         const pos = model.position ?? {};
@@ -77,14 +81,17 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         (models.length ? '<p>Enter each model’s destination coordinates. The app checks each displacement against its Movement characteristic; tabletop distances and terrain remain authoritative.</p>' +
           '<div class="move-coordinate-list">' + rows + '</div>' :
           '<p>This unit has no recorded battlefield position. Add positions before recording a Normal Move.</p>') +
+        '<label>Advance roll (1–6) <input type="number" min="1" max="6" step="1" data-advance-roll value="1" required></label>' +
         '<div class="move-actions"><button type="button" data-move-save ' + (moved || !valid ? 'disabled' : '') +
-          '>Record Normal Move</button><button type="button" data-move-fallback ' +
-          (moved ? 'disabled' : '') + '>Record Fall Back</button></div></div>';
+          '>Record Normal Move</button><button type="button" data-move-advance ' + (moved || !valid ? 'disabled' : '') +
+          '>Record Advance</button><button type="button" data-move-fallback ' +
+          (moved ? 'disabled' : '') + '>Record Fall Back</button><button type="button" data-move-stationary ' +
+          (moved ? 'disabled' : '') + '>Remain Stationary</button></div></div>';
     }
     container.innerHTML = '<main class="movement-screen"><header><div><div class="move-kicker">LIVE BATTLE</div><h1>Movement Phase</h1><p>Round ' +
       escapeHtml(state.battle?.round ?? '—') + ' · Turn ' + escapeHtml(state.turn ?? '—') +
       '</p></div><strong>' + eligible.length + ' deployed units</strong></header>' +
-      '<p class="move-note">Map coordinates are approximate. Record movement after checking tabletop distances, coherency, terrain, and applicable rules. Each unit may record one Normal Move or Fall Back per turn.</p>' +
+      '<p class="move-note">Map coordinates are approximate. Record movement after checking tabletop distances, coherency, terrain, and applicable rules. Each unit records one movement choice per turn: Normal Move, Advance, Fall Back, or Remain Stationary.</p>' +
       (errorMessage ? '<p class="move-error" role="alert">' + escapeHtml(errorMessage) + '</p>' : '') +
       '<section><div class="move-heading"><h2>Eligible units</h2><span>Active player only</span></div><div class="move-units">' +
       unitCards + '</div></section><section>' + editor + '</section></main>';
@@ -110,6 +117,25 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
           return { modelId: model.id, position: { x: Number(x.value), y: Number(y.value) } };
         });
         session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
+        errorMessage = "";
+        render();
+      } else if (target.hasAttribute("data-move-advance")) {
+        const state = session.getState();
+        const unit = state.units.find((item) => item.id === selectedUnitId);
+        if (!unit) throw new Error("Select a unit before recording an Advance.");
+        const advanceRoll = Number(container.querySelector("[data-advance-roll]")?.value);
+        const models = modelsFor(unit);
+        const moves = models.map((model) => {
+          const modelX = Array.from(container.querySelectorAll("[data-move-x]")).find((input) => input.dataset.moveX === model.id);
+          const modelY = Array.from(container.querySelectorAll("[data-move-y]")).find((input) => input.dataset.moveY === model.id);
+          if (!modelX || !modelY || modelX.value.trim() === "" || modelY.value.trim() === "") throw new Error("Enter X and Y coordinates for every model.");
+          return { modelId: model.id, position: { x: Number(modelX.value), y: Number(modelY.value) } };
+        });
+        session.dispatch({ type: COMMAND_TYPES.RESOLVE_ADVANCE, payload: { unitId: unit.id, moves, advanceRoll } });
+        errorMessage = "";
+        render();
+      } else if (target.hasAttribute("data-move-stationary")) {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_STATIONARY, payload: { unitId: selectedUnitId } });
         errorMessage = "";
         render();
       } else if (target.hasAttribute("data-move-fallback")) {

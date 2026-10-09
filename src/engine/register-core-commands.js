@@ -11,7 +11,7 @@ import {
   completeBattle
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
-import { resolveNormalMove, recordFallBack } from "./movement-transitions.js";
+import { resolveNormalMove, resolveAdvance, recordFallBack, recordStationary } from "./movement-transitions.js";
 import { recordChargeOutcome } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
@@ -32,6 +32,8 @@ export function registerCoreCommandHandlers() {
       resolveNormalMove(state, command.payload)],
     [COMMAND_TYPES.RECORD_FALL_BACK, (state, command) =>
       recordFallBack(state, command.payload)],
+    [COMMAND_TYPES.RESOLVE_ADVANCE, (state, command) => resolveAdvance(state, command.payload)],
+    [COMMAND_TYPES.RECORD_STATIONARY, (state, command) => recordStationary(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) =>
       recordChargeOutcome(state, command.payload)],
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) =>
