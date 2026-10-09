@@ -168,7 +168,7 @@ test("shared battle shell mounts the implemented Command phase", () => {
   const root = container();
   const shell = createBattleShell(root, { session });
 
-  assert.match(root.html, /data-battle-phase="command"/);
+  assert.match(root.html, /data-battle-phase-button="command"/);
   assert.match(root._screen.innerHTML, /Command Phase/);
   assert.match(root._screen.innerHTML, /Objective control/);
 
