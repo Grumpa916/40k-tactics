@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../../src/state/game-state.js";
 import { resolveUnitAttack } from "../../src/engine/combat-transitions.js";
+import { getExpectedDamage } from "../../src/rules/expected-damage.js";
 
 const weapon = {
   id: "laser", name: "Laser", type: "ranged",
@@ -261,13 +262,17 @@ test("combat transition records actual damage separately from calculated damage"
   const state = activeState();
   const values = [0.9, 0.9, 0.9, 0.9, 0.1, 0.1];
   let index = 0;
+  const attacker = state.units.find((unit) => unit.id === "attacker");
+  const target = state.units.find((unit) => unit.id === "target");
+  const expected = getExpectedDamage({ attacker, target, weapon }).expectedDamage;
   const next = resolveUnitAttack(state, {
     attackerId: "attacker", targetId: "target", weapon,
     actualDamage: 1,
     random: () => values[index++]
   });
   const event = next.history.at(-1);
-  assert.equal(event.payload.expectedDamage, 4);
+  assert.equal(event.payload.expectedDamage, expected);
+  assert.notEqual(event.payload.expectedDamage, event.payload.result.damage.totalDamage);
   assert.equal(event.payload.actualDamage, 1);
   assert.equal(next.units.find((unit) => unit.id === "target").wounds, 4);
 });

@@ -80,7 +80,7 @@ function damagePreventionMultiplier(prevention) {
  */
 export function getExpectedDamage({ attacker, target, weapon, attackerRemainingWounds = attacker?.wounds } = {}) {
   const profile = buildAttackProfile({ attacker, target, weapon });
-  const saveModifier = target?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
+  const saveModifier = target?.characteristics?.saveModifier ?? target?.profile?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
   const woundBracket = getWoundBracketModifiers(attacker, { remainingWounds: attackerRemainingWounds });
   const attacks = expectedDice(profile.attacks);
 

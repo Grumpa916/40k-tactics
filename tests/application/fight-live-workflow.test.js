@@ -134,7 +134,8 @@ test("Fight activation supports split attacks against multiple targets with actu
     "second-target"
   ]);
   assert.deepEqual(model.attacks.map((attack) => attack.actualDamage), [1, 2]);
-  assert.deepEqual(model.attacks.map((attack) => attack.expectedDamage), [1, 1]);
+  assert.ok(Math.abs(model.attacks[0].expectedDamage - (5 / 54)) < 1e-12);
+  assert.ok(Math.abs(model.attacks[1].expectedDamage - (5 / 27)) < 1e-12);
 
   const firstTarget = session.getState().units.find((unit) => unit.id === "opponent-first");
   const secondTarget = session.getState().units.find((unit) => unit.id === "second-target");
