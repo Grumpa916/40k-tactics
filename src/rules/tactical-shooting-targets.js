@@ -90,7 +90,7 @@ export function getShootingTargetPriorities(state, {
     let survivalProbability = null;
     let mostLikelyRemainingWounds = null;
     let impactClassification = "unknown";
-    if (weapon?.characteristics && attacker.characteristics && target.characteristics) {
+    if (weapon?.characteristics && (attacker.characteristics ?? attacker.profile?.characteristics) && (target.characteristics ?? target.profile?.characteristics)) {
       try {
         const distribution = getDamageOutcomeDistribution({ attacker, target, weapon });
         const postTarget = getPostFightTargetStates({ target, attacker, weapon, distribution });

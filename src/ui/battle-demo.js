@@ -14,7 +14,7 @@ const gameData = {
       id: "rifle",
       name: "Bolt Rifle",
       type: "ranged",
-      characteristics: { attacks: 2, strength: 4, ap: 1, damage: 1 }
+      characteristics: { range: 24, attacks: 2, strength: 4, ap: 1, damage: 1 }
     },
     {
       id: "blade",
