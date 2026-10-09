@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../../src/state/game-state.js";
 import { resolveUnitAttack } from "../../src/engine/combat-transitions.js";
-import { getExpectedDamage } from "../../src/rules/expected-damage.js";
+import { getDamageOutcomeDistribution } from "../../src/rules/damage-outcome-distribution.js";
 
 const weapon = {
   id: "laser", name: "Laser", type: "ranged",
@@ -258,13 +258,13 @@ test("Shooting attacks reject melee weapons", () => {
 });
 
 
-test("combat transition records actual damage separately from calculated damage", () => {
+test("combat transition records actual damage separately and matches advisor expected damage", () => {
   const state = activeState();
   const values = [0.9, 0.9, 0.9, 0.9, 0.1, 0.1];
   let index = 0;
   const attacker = state.units.find((unit) => unit.id === "attacker");
   const target = state.units.find((unit) => unit.id === "target");
-  const expected = getExpectedDamage({ attacker, target, weapon }).expectedDamage;
+  const expected = getDamageOutcomeDistribution({ attacker, target, weapon }).expectedDamage;
   const next = resolveUnitAttack(state, {
     attackerId: "attacker", targetId: "target", weapon,
     actualDamage: 1,
