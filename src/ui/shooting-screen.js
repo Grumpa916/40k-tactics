@@ -65,9 +65,12 @@ function historyRow(item, state, gameData) {
   const attacker = state.units.find((unit) => unit?.id === item.attackerId);
   const target = state.units.find((unit) => unit?.id === item.targetId);
   const weapon = gameData?.weapons?.find((entry) => entry?.id === item.weaponId);
+  const expectedDamage = Number.isFinite(item.expectedDamage)
+    ? item.expectedDamage.toFixed(1)
+    : item.expectedDamage ?? item.totalDamage ?? 0;
   const result = item.targetStatusAfter === "destroyed"
     ? "Destroyed"
-    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${item.expectedDamage ?? item.totalDamage ?? 0} expected` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${item.expectedDamage ?? item.totalDamage ?? 0} expected · ${item.targetWoundsAfter} wounds`;
+    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected · ${item.targetWoundsAfter} wounds`;
   return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(target?.name ?? item.targetId)}</strong><span>${escapeHtml(weapon?.name ?? item.weaponId ?? "Weapon")} · ${escapeHtml(result)}</span></li>`;
 }
 
