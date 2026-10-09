@@ -36,7 +36,7 @@ test("Charge workflow groups approximate targets and preserves the uncertainty b
   );
 });
 
-test("Charge workflow records success with multiple targets and advances to Fight", () => {
+test("Charge workflow records success with multiple targets, measured distances, and advances to Fight", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
   const session = createGameSession(chargeState());
@@ -44,28 +44,36 @@ test("Charge workflow records success with multiple targets and advances to Figh
   recordChargeOutcomeForSession(session, {
     unitId: "charger",
     succeeded: true,
-    targetIds: ["near", "borderline"]
+    targetIds: ["near", "borderline"],
+    measuredDistances: { near: 8.5, borderline: 12.25 }
   });
 
   const model = getChargeViewModel(session.getState(), { perspectivePlayerId: "p1" });
   assert.equal(model.candidates.length, 0);
   assert.equal(model.outcomes[0].outcome, "successful");
   assert.deepEqual(model.outcomes[0].targets.map((unit) => unit.unitId), ["near", "borderline"]);
+  assert.deepEqual(model.outcomes[0].measuredDistances, { near: 8.5, borderline: 12.25 });
 
   finishChargePhase(session);
   assert.equal(session.getState().phase, "fight");
   clearCommandHandlers();
 });
 
-test("Charge workflow records a failed attempt without target entry", () => {
+test("Charge workflow records a failed attempt with its declared target and measured distance", () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
   const session = createGameSession(chargeState());
 
-  recordChargeOutcomeForSession(session, { unitId: "charger", succeeded: false });
+  recordChargeOutcomeForSession(session, {
+    unitId: "charger",
+    succeeded: false,
+    targetIds: ["near"],
+    measuredDistances: { near: 11.75 }
+  });
 
   const outcome = getChargeViewModel(session.getState(), { perspectivePlayerId: "p1" }).outcomes[0];
   assert.equal(outcome.outcome, "failed");
-  assert.deepEqual(outcome.targets, []);
+  assert.deepEqual(outcome.targets.map((unit) => unit.unitId), ["near"]);
+  assert.deepEqual(outcome.measuredDistances, { near: 11.75 });
   clearCommandHandlers();
 });
