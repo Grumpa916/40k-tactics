@@ -17,11 +17,20 @@ function targetRow(item, selected, measuredDistance) {
   const warning = item.rangeStatus === 'borderline'
     ? '<span class="charge-target__warning">Exact tabletop measurement required</span>'
     : '';
-  const measurement = selected
-    ? '<label class="charge-target__measurement">Measured charge distance (inches)' +
-      '<input type="number" min="0" step="0.1" inputmode="decimal" ' +
-      'data-charge-distance="' + escapeHtml(item.targetUnitId) + '" ' +
-      'value="' + escapeHtml(measuredDistance ?? '') + '" placeholder="e.g. 9.5"></label>'
+  const presetButtons = selected
+    ? '<div class="charge-target__measurement"><span>Measured distance (round up to whole inches)</span>' +
+      '<div class="charge-distance-presets">' +
+      Array.from({ length: 18 }, (_, index) => {
+        const distance = index + 1;
+        return '<button type="button" class="charge-distance-preset ' +
+          (measuredDistance === distance ? 'is-selected' : '') +
+          '" data-charge-distance="' + escapeHtml(item.targetUnitId) + '" data-charge-distance-value="' +
+          distance + '">' + distance + '"</button>';
+      }).join('') +
+      '</div>' +
+      '<span class="charge-target__measurement-value">' +
+      (typeof measuredDistance === 'number' ? 'Selected: ' + measuredDistance + '"' : 'Select the measured distance') +
+      '</span></div>'
     : '';
   return [
     '<label class="charge-target charge-target--', escapeHtml(item.rangeStatus), '">',
@@ -32,10 +41,9 @@ function targetRow(item, selected, measuredDistance) {
     escapeHtml(item.rangeStatus === 'borderline'
       ? 'Borderline · low confidence'
       : 'Within approximate range · ' + item.confidence + ' confidence'),
-    '</span>', warning, measurement, '</span></label>'
+    '</span>', warning, presetButtons, '</span></label>'
   ].join('');
 }
-
 function outcomeRow(outcome) {
   const targets = outcome.targets.length
     ? outcome.targets.map((target) => {
@@ -117,7 +125,7 @@ export function createChargeScreen(
         ? model.candidates.length + ' charger' + (model.candidates.length === 1 ? '' : 's') + ' available'
         : 'No recommended charges',
       '</div></header>',
-      '<div class="charge-note">Map distances are approximate. Before rolling, measure each declared charger-to-target distance on the tabletop and enter it here. Exact tabletop measurement is authoritative.</div>',
+      '<div class="charge-note">Map distances are approximate. Before rolling, measure each declared charger-to-target distance on the tabletop, round it up to a whole inch, and tap that value. Exact tabletop measurement is authoritative.</div>',
       '<section class="charge-section"><div class="charge-section__heading"><h2>Available chargers</h2><span>',
       model.candidates.length, ' available</span></div><div class="charge-chargers">', chargers, '</div></section>',
       candidate
@@ -159,11 +167,22 @@ export function createChargeScreen(
       });
     });
 
-    container.querySelectorAll('[data-charge-distance]').forEach((input) => {
-      input.addEventListener('input', () => {
-        const targetId = input.getAttribute('data-charge-distance');
-        if (input.value === '') measuredDistances.delete(targetId);
-        else measuredDistances.set(targetId, Number(input.value));
+    container.querySelectorAll('[data-charge-distance-value]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetId = button.getAttribute('data-charge-distance');
+        measuredDistances.set(targetId, Number(button.getAttribute('data-charge-distance-value')));
+        const targetButtons = container.querySelectorAll(
+          '[data-charge-distance="' + targetId + '"][data-charge-distance-value]'
+        );
+        targetButtons.forEach((targetButton) => {
+          targetButton.classList.toggle(
+            'is-selected',
+            targetButton === button
+          );
+        });
+        const valueLabel = button.closest('.charge-target__measurement')
+          ?.querySelector('.charge-target__measurement-value');
+        if (valueLabel) valueLabel.textContent = 'Selected: ' + measuredDistances.get(targetId) + '"';
 
         const complete = selectedTargetIds.size > 0 &&
           [...selectedTargetIds].every((id) => {
