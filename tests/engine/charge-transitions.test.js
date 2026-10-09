@@ -18,12 +18,13 @@ function chargeState(overrides = {}) {
   });
 }
 
-test("records successful charge targets without changing positions", () => {
+test("records successful charge targets and measured distance without changing positions", () => {
   const state = chargeState();
   const next = recordChargeOutcome(state, {
     unitId: "charger",
     succeeded: true,
-    targetIds: ["enemy"]
+    targetIds: ["enemy"],
+    measuredDistances: { enemy: 9.5 }
   });
 
   assert.equal(next.history.at(-1).type, "charge.outcome_recorded");
@@ -32,49 +33,71 @@ test("records successful charge targets without changing positions", () => {
     playerId: "p1",
     outcome: "successful",
     targetIds: ["enemy"],
+    measuredDistances: { enemy: 9.5 },
     round: 1,
     turn: 1
   });
   assert.deepEqual(next.units, state.units);
 });
 
-test("records a failed attempt without targets", () => {
+test("records a failed attempt with its declared target and measured distance", () => {
   const next = recordChargeOutcome(chargeState(), {
     unitId: "charger",
-    succeeded: false
+    succeeded: false,
+    targetIds: ["enemy"],
+    measuredDistances: { enemy: 13 }
   });
   assert.equal(next.history.at(-1).payload.outcome, "failed");
-  assert.deepEqual(next.history.at(-1).payload.targetIds, []);
+  assert.deepEqual(next.history.at(-1).payload.targetIds, ["enemy"]);
+  assert.deepEqual(next.history.at(-1).payload.measuredDistances, { enemy: 13 });
 });
 
-test("requires valid enemy targets only for successful outcomes", () => {
+test("requires measured distance for every declared target", () => {
+  assert.throws(() => recordChargeOutcome(chargeState(), {
+    unitId: "charger", succeeded: true, targetIds: ["enemy"]
+  }), /measured Charge distance is required/);
+
+  assert.throws(() => recordChargeOutcome(chargeState(), {
+    unitId: "charger", succeeded: true, targetIds: ["enemy"], measuredDistances: { enemy: -1 }
+  }), /non-negative number/);
+
+  assert.throws(() => recordChargeOutcome(chargeState(), {
+    unitId: "charger", succeeded: true, targetIds: ["enemy"], measuredDistances: { other: 9 }
+  }), /match declared targets/);
+});
+
+test("requires declared targets for every Charge attempt", () => {
   assert.throws(() => recordChargeOutcome(chargeState(), {
     unitId: "charger", succeeded: true
-  }), /at least one target/);
+  }), /at least one declared target/);
   assert.throws(() => recordChargeOutcome(chargeState(), {
-    unitId: "charger", succeeded: false, targetIds: ["enemy"]
-  }), /cannot record targets/);
+    unitId: "charger", succeeded: false
+  }), /at least one declared target/);
+});
+
+test("requires valid enemy targets only", () => {
   assert.throws(() => recordChargeOutcome(chargeState(), {
-    unitId: "charger", succeeded: true, targetIds: ["charger"]
+    unitId: "charger", succeeded: true, targetIds: ["charger"], measuredDistances: { charger: 2 }
   }), /deployed enemy units/);
   assert.throws(() => recordChargeOutcome(chargeState(), {
-    unitId: "charger", succeeded: true, targetIds: ["enemy", "enemy"]
+    unitId: "charger", succeeded: true, targetIds: ["enemy", "enemy"], measuredDistances: { enemy: 9 }
   }), /unique valid/);
 });
 
 test("requires active player and Charge phase and prevents repeat attempts", () => {
+  const measured = { targetIds: ["enemy"], measuredDistances: { enemy: 10 } };
   assert.throws(() => recordChargeOutcome(chargeState({ phase: "fight" }), {
-    unitId: "charger", succeeded: false
+    unitId: "charger", succeeded: false, ...measured
   }), /Charge phase/);
   assert.throws(() => recordChargeOutcome(chargeState({ activePlayer: "p2" }), {
-    unitId: "charger", succeeded: false
+    unitId: "charger", succeeded: false, ...measured
   }), /active player's/);
 
   const first = recordChargeOutcome(chargeState(), {
-    unitId: "charger", succeeded: false
+    unitId: "charger", succeeded: false, ...measured
   });
   assert.throws(() => recordChargeOutcome(first, {
-    unitId: "charger", succeeded: false
+    unitId: "charger", succeeded: false, ...measured
   }), /one charge per turn/);
 });
 
@@ -87,12 +110,14 @@ test("Charge cannot be declared after Fall Back in the same turn", () => {
     }]
   };
   assert.throws(
-    () => recordChargeOutcome(fallenBack, { unitId: "charger", succeeded: false }),
+    () => recordChargeOutcome(fallenBack, {
+      unitId: "charger", succeeded: false, targetIds: ["enemy"], measuredDistances: { enemy: 8 }
+    }),
     /Fell Back cannot declare a charge/
   );
 });
 
-test("records an opponent successful Charge against my unit", () => {
+test("records an opponent successful Charge against my unit with measured distance", () => {
   const state = chargeState({
     turn: 2,
     activePlayer: "p2",
@@ -106,7 +131,8 @@ test("records an opponent successful Charge against my unit", () => {
   const next = recordChargeOutcome(state, {
     unitId: "opponent-charger",
     succeeded: true,
-    targetIds: ["my-unit"]
+    targetIds: ["my-unit"],
+    measuredDistances: { "my-unit": 7.25 }
   });
 
   assert.deepEqual(next.history.at(-1).payload, {
@@ -114,6 +140,7 @@ test("records an opponent successful Charge against my unit", () => {
     playerId: "p2",
     outcome: "successful",
     targetIds: ["my-unit"],
+    measuredDistances: { "my-unit": 7.25 },
     round: 1,
     turn: 2
   });
