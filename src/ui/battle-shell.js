@@ -1,3 +1,4 @@
+import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { createChargeScreen } from "./charge-screen.js";
 import { createCommandScreen } from "./command-screen.js";
 import { createFightScreen } from "./fight-screen.js";
@@ -102,8 +103,17 @@ export function createBattleShell(container, {
         : actualPhase === "end_turn" ? "end-of-turn"
         : opponentTurnJustEnded ? "end-of-opponent-turn" : null;
       if (timing) {
-        const definitionsDue = missionDefinitions.filter((definition) => definition.timing === timing);
         const reminderPlayerId = timing === "end-of-opponent-turn" ? endingPlayerId : currentActivePlayerId;
+        const scoringPlayerId = timing === "end-of-opponent-turn" ? perspectivePlayerId : reminderPlayerId;
+        const definitionsDue = missionDefinitions.filter((definition) =>
+          definition.timing === timing && definition.category !== "secondary");
+        const activeSecondaryDue = scoringPlayerId
+          ? getSecondaryMissionHistory(state, scoringPlayerId)
+            .filter((instance) => instance.status === SECONDARY_MISSION_STATUS.ACTIVE &&
+              instance.definition?.timing === timing)
+            .map((instance) => instance.definition?.name ?? instance.definitionId)
+          : [];
+        const missionNames = [...definitionsDue.map((definition) => definition.name), ...activeSecondaryDue];
         const isPerspectiveTurn = perspectivePlayerId != null && reminderPlayerId != null
           ? reminderPlayerId === perspectivePlayerId
           : null;
@@ -117,7 +127,7 @@ export function createBattleShell(container, {
             ? `End of ${ownerLabel} Command phase`
             : `End of ${ownerLabel} turn`,
           activePlayerId: reminderPlayerId,
-          missions: definitionsDue.map((definition) => definition.name)
+          missions: missionNames
         };
       }
     }
