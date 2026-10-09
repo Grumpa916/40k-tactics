@@ -21,13 +21,30 @@
 <body>
   <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>
   <script>
+    const root = document.getElementById("battle-app");
+    function showStartupError(message) {
+      root.innerHTML = "";
+      const main = document.createElement("main");
+      main.className = "battle-shell";
+      const heading = document.createElement("h1");
+      heading.textContent = "Battle module startup diagnostic";
+      const detail = document.createElement("pre");
+      detail.style.whiteSpace = "pre-wrap";
+      detail.style.overflowWrap = "anywhere";
+      detail.textContent = message;
+      main.append(heading, detail);
+      root.append(main);
+    }
+    window.addEventListener("error", (event) => {
+      if (event.message || event.filename) showStartupError("JavaScript error: " + (event.message || "module load failed") + (event.filename ? "\\nFile: " + event.filename : "") + (event.lineno ? "\\nLine: " + event.lineno : ""));
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      showStartupError("Unhandled module rejection: " + (event.reason?.stack || event.reason?.message || String(event.reason)));
+    });
     window.setTimeout(() => {
-      const root = document.getElementById("battle-app");
-      if (root && root.textContent.includes("Loading integrated battle")) {
-        root.innerHTML = "<main class=\"battle-shell\"><h1>Battle module did not start</h1><p>The preview loaded this HTML, but the JavaScript entry module did not render. This points to module delivery/import failure, not a battle-screen layout issue.</p></main>";
-      }
-    }, 2500);
+      if (root.textContent.includes("Loading integrated battle")) showStartupError("No JavaScript render or error event was received within 4 seconds. The preview may be blocking module scripts or the module request may not be reaching the browser.");
+    }, 4000);
   </script>
-  <script type="module" src="https://cdn.jsdelivr.net/gh/Grumpa916/40k-tactics@main/src/ui/battle-demo.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Grumpa916/40k-tactics@main/src/ui/battle-demo.js" onerror="document.getElementById('battle-app').innerHTML='<main class=&quot;battle-shell&quot;><h1>Entry module request failed</h1><p>The browser could not load the JavaScript entry file from the CDN.</p></main>'"></script>
 </body>
 </html>
