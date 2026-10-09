@@ -380,3 +380,35 @@ test("checkpoint review uses the supplied opponent-turn context", () => {
   assert.match(root.innerHTML, /Opponent-end secondary/);
   screen.destroy();
 });
+
+
+test("opponent-turn reminder names active secondary cards for the perspective player", () => {
+  let initialState = {
+    phase: "end_turn", turn: 2, activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [], objectives: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  initialState = drawSecondaryMission(initialState, {
+    playerId: "p1",
+    definition: createMissionDefinition({
+      id: "active-opponent-window",
+      name: "Active opponent-window card",
+      category: "secondary",
+      timing: SCORING_TIMINGS.END_OF_OPPONENT_TURN,
+      conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 2 } }]
+    })
+  });
+  const session = sessionFor(initialState);
+  const root = container();
+  const shell = createBattleShell(root, {
+    session, perspectivePlayerId: "p1", screenFactories: {}
+  });
+  session.setState({
+    ...initialState,
+    phase: "start_turn", turn: 3, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  assert.match(root.html, /Active opponent-window card/);
+  shell.destroy();
+});
