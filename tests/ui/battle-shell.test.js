@@ -568,3 +568,67 @@ test("manual secondary mission entry is unavailable outside Command phase", () =
   assert.equal(state.scoring.secondaryMissions, undefined);
   screen.destroy();
 });
+
+
+test("manual card-name entry records the chosen checkpoint and requires manual scoring review", () => {
+  let state = {
+    phase: "command", turn: 2, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [], units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const listeners = new Map();
+  const root = {
+    innerHTML: "",
+    addEventListener(type, listener) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(listener);
+    },
+    removeEventListener(type, listener) { listeners.get(type)?.delete(listener); },
+    contains() { return true; },
+    querySelector(selector) {
+      if (selector === "[data-secondary-player]") return { value: "p1" };
+      if (selector === "[data-secondary-definition]") return { value: "" };
+      if (selector === "[data-secondary-name]") return { value: "Card entered from the table" };
+      if (selector === "[data-secondary-timing]") return { value: SCORING_TIMINGS.END_OF_TURN };
+      return null;
+    },
+    replaceChildren() { this.innerHTML = ""; }
+  };
+  const session = {
+    getState: () => state,
+    subscribe(listener) {
+      (this.listeners ??= new Set()).add(listener);
+      return () => this.listeners.delete(listener);
+    },
+    dispatch(command) {
+      state = drawSecondaryMission(state, command.payload);
+      for (const listener of this.listeners ?? []) listener(state);
+      return state;
+    }
+  };
+  const screen = createCommandScreen(root, {
+    session,
+    perspectivePlayerId: "p1",
+    scoringCheckpoint: SCORING_TIMINGS.END_OF_TURN,
+    scoringCheckpointActivePlayerId: "p1"
+  });
+  const button = {
+    hasAttribute: (name) => name === "data-secondary-mission-add",
+    closest(selector) {
+      return selector.includes("[data-secondary-mission-add]") ? this : null;
+    }
+  };
+  for (const listener of listeners.get("click") ?? []) listener({ target: button });
+
+  const history = getSecondaryMissionHistory(state, "p1");
+  assert.equal(history.length, 1);
+  assert.equal(history[0].definition.name, "Card entered from the table");
+  assert.equal(history[0].definition.timing, SCORING_TIMINGS.END_OF_TURN);
+  assert.equal(history[0].definition.manualEntry, true);
+  assert.equal(history[0].status, "active");
+  assert.match(root.innerHTML, /Manual review required/);
+  assert.match(root.innerHTML, /no eligibility is inferred/);
+  assert.equal(state.victoryPoints, undefined);
+  screen.destroy();
+});
