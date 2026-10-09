@@ -5,6 +5,9 @@ export function recordVictoryPointsAward(state, {
   playerId,
   amount,
   reason,
+  missionDefinitionId = null,
+  category = null,
+  opportunityKey = null,
   turn = state?.turn ?? 0,
   round = state?.battle?.round ?? 0
 } = {}) {
@@ -14,6 +17,22 @@ export function recordVictoryPointsAward(state, {
   if (!Number.isInteger(turn) || turn < 0) throw new TypeError("Turn must be a non-negative integer.");
   if (!Number.isInteger(round) || round < 0) throw new TypeError("Round must be a non-negative integer.");
 
+  if (missionDefinitionId !== null && (typeof missionDefinitionId !== "string" || !missionDefinitionId.trim())) {
+    throw new TypeError("Mission definition id must be a non-empty string when supplied.");
+  }
+  if (category !== null && !["primary", "secondary"].includes(category)) {
+    throw new TypeError("Mission category must be primary or secondary.");
+  }
+  if (opportunityKey !== null && (typeof opportunityKey !== "string" || !opportunityKey.trim())) {
+    throw new TypeError("Opportunity key must be a non-empty string when supplied.");
+  }
+  const priorAwards = getVictoryPointHistory(state, playerId);
+  if (missionDefinitionId && opportunityKey && priorAwards.some((entry) =>
+    entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
+  )) {
+    throw new Error("This mission scoring opportunity has already been recorded.");
+  }
+
   const scores = state?.victoryPoints ?? {};
   const scoreBefore = Number.isInteger(scores[playerId]) ? scores[playerId] : 0;
   const scoreAfter = scoreBefore + amount;
@@ -22,7 +41,7 @@ export function recordVictoryPointsAward(state, {
     victoryPoints: { ...scores, [playerId]: scoreAfter }
   };
   return appendHistoryEntry(updated, createEvent("victory_points.awarded", {
-    playerId, amount, reason: reason.trim(), turn, round, scoreBefore, scoreAfter
+    playerId, amount, reason: reason.trim(), missionDefinitionId, category, opportunityKey, turn, round, scoreBefore, scoreAfter
   }));
 }
 
