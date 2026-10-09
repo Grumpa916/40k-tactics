@@ -87,6 +87,7 @@ export function createCommandScreen(container, {
         }});
         selectedSecondaryPlayerId = playerId;
         secondaryMissionMessage = "Mission added to the selected player's active secondary missions.";
+        render();
       } catch (error) {
         secondaryMissionMessage = error?.message ?? String(error);
         render();
