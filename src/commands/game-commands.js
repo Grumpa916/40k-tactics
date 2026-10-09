@@ -8,6 +8,8 @@ export const COMMAND_TYPES = Object.freeze({
   ADVANCE_BATTLE_ROUND: "battle_round.advance",
   COMPLETE_BATTLE: "battle.complete",
   RESOLVE_NORMAL_MOVE: "unit.normal_move",
+  RESOLVE_ADVANCE: "unit.advance",
+  RECORD_STATIONARY: "unit.record_stationary",
   RECORD_FALL_BACK: "unit.record_fall_back",
   RECORD_CHARGE_OUTCOME: "charge.record_outcome",
   RECORD_SHOOTING_ACTIVATION: "shooting.record_activation",
