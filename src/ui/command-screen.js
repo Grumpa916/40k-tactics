@@ -4,6 +4,7 @@ import { getCommandPointHistory } from "../engine/command-points-ledger.js";
 import { getVictoryPointHistory, getVictoryPointScore } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
+import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -46,6 +47,9 @@ export function createCommandScreen(container, {
     throw new TypeError("A game session is required.");
   }
 
+  let selectedSecondaryPlayerId = null;
+  let secondaryMissionMessage = "";
+
   function recordCp(amount, reason, note) {
     const state = session.getState();
     const playerId = perspectivePlayerId ?? state.activePlayer;
@@ -56,10 +60,65 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute("data-cp-gain")) recordCp(1, "gain", "Manually recorded gain");
     if (target.hasAttribute("data-cp-spend")) recordCp(-1, "spend", "Manually recorded spend");
+    if (target.hasAttribute("data-secondary-mission-add")) {
+      const state = session.getState();
+      if (state.phase !== "command") {
+        secondaryMissionMessage = "Secondary missions can be entered during the Command phase only.";
+        render();
+        return;
+      }
+      const playerId = container.querySelector("[data-secondary-player]")?.value ||
+        perspectivePlayerId || state.activePlayer;
+      const definitionId = container.querySelector("[data-secondary-definition]")?.value;
+      let definition = missionDefinitions.find((item) =>
+        item.id === definitionId && item.category === "secondary");
+      if (!definition) {
+        const manualName = String(container.querySelector("[data-secondary-name]")?.value ?? "").trim();
+        const manualTiming = container.querySelector("[data-secondary-timing]")?.value;
+        const allowedTimings = [
+          SCORING_TIMINGS.COMMAND_PHASE,
+          SCORING_TIMINGS.END_OF_TURN,
+          SCORING_TIMINGS.END_OF_OPPONENT_TURN,
+          SCORING_TIMINGS.END_OF_BATTLE
+        ];
+        if (!manualName || !allowedTimings.includes(manualTiming)) {
+          secondaryMissionMessage = "Choose a catalog mission or enter a card name and its scoring checkpoint.";
+          render();
+          return;
+        }
+        const slug = manualName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "secondary";
+        definition = {
+          id: "manual-" + slug + "-" + (state.battle?.round ?? 0) + "-" +
+            (state.turn ?? 0) + "-" + (getSecondaryMissionHistory(state).length + 1),
+          name: manualName,
+          category: "secondary",
+          timing: manualTiming,
+          conditions: [],
+          manualEntry: true
+        };
+      }
+      if (!playerId) {
+        secondaryMissionMessage = "Select a player before adding a secondary mission.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.DRAW_SECONDARY_MISSION, payload: {
+          definition, playerId, round: state.battle?.round ?? 0, turn: state.turn ?? 0
+        }});
+        selectedSecondaryPlayerId = playerId;
+        secondaryMissionMessage = "Mission added to the selected player's active secondary missions.";
+        render();
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
+        render();
+      }
+      return;
+    }
     if (target.hasAttribute("data-mission-award")) {
       const definitionId = target.getAttribute("data-mission-award");
       const definition = missionDefinitions.find((item) => item.id === definitionId);
@@ -85,6 +144,15 @@ export function createCommandScreen(container, {
     }
   }
 
+  function handleChange(event) {
+    const target = event.target;
+    if (target?.matches?.("[data-secondary-player]")) {
+      selectedSecondaryPlayerId = target.value;
+      secondaryMissionMessage = "";
+      render();
+    }
+  }
+
   function handleSubmit(event) {
     const form = event.target?.closest?.("[data-vp-form]");
     if (!form || !container.contains(form)) return;
@@ -104,6 +172,9 @@ export function createCommandScreen(container, {
     const state = session.getState();
     const playerId = perspectivePlayerId ?? state.activePlayer;
     const players = Array.isArray(state.players) ? state.players : [];
+    if (!selectedSecondaryPlayerId || !players.some((player) => player.id === selectedSecondaryPlayerId)) {
+      selectedSecondaryPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
+    }
     const objectives = Array.isArray(state.objectives) ? state.objectives : [];
     const objectiveCards = objectives.length ? objectives.map((objective) =>
       '<article class="command-objective"><strong>' + escapeHtml(objective.name ?? objective.label ?? objective.id) +
@@ -171,10 +242,13 @@ export function createCommandScreen(container, {
         ? rows.map((item) => '<article class="command-scoring"><strong>' + escapeHtml(item.definitionName ?? item.definitionId) +
           '</strong><span class="command-scoring__category">' + item.categoryLabel + '</span><span class="' +
           (item.result.eligible ? 'is-available' : 'is-unavailable') + '">' +
-          (item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span><ul>' +
-          (item.result.conditions ?? []).map((condition) => '<li>' + escapeHtml(condition.evidence) + ': ' +
-            (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>').join("") +
-          '</ul></article>').join("")
+          (item.result.manualReviewRequired ? 'Manual review required' :
+            item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span>' +
+          (item.result.manualReviewRequired
+            ? '<p>Card scoring conditions are not configured. Check the printed mission rules; no eligibility is inferred.</p>'
+            : '<ul>' + (item.result.conditions ?? []).map((condition) => '<li>' + escapeHtml(condition.evidence) + ': ' +
+              (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>').join("") + '</ul>') +
+          '</article>').join("")
         : '<p>No active missions are configured for this checkpoint.</p>';
     } catch (error) {
       checkpointReview = '<p role="alert">Scoring checkpoint review unavailable: ' +
@@ -184,6 +258,52 @@ export function createCommandScreen(container, {
       escapeHtml(checkpointLabels[checkpoint] ?? checkpoint) + ' scoring review</h2>' +
       '<p>Review eligibility evidence and confirm points manually. This review does not award VP or change card status.</p>' +
       checkpointReview + '</section>';
+
+    const secondaryHistory = getSecondaryMissionHistory(state);
+    const secondaryDefinitions = missionDefinitions.filter((definition) => definition?.category === "secondary");
+    const activeSecondaryForSelectedPlayer = secondaryHistory.filter((item) =>
+      item.playerId === selectedSecondaryPlayerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+    const activeSecondaryIds = new Set(activeSecondaryForSelectedPlayer.map((item) => item.definitionId));
+    const selectableSecondaryDefinitions = secondaryDefinitions.filter((definition) => !activeSecondaryIds.has(definition.id));
+    const secondaryPlayerOptions = players.map((player) =>
+      '<option value="' + escapeHtml(player.id) + '"' +
+      (player.id === selectedSecondaryPlayerId ? ' selected' : '') + '>' +
+      escapeHtml(player.name ?? player.id) + '</option>'
+    ).join("");
+    const secondaryDefinitionOptions = '<option value="">Enter a mission manually</option>' +
+      selectableSecondaryDefinitions.map((definition) =>
+        '<option value="' + escapeHtml(definition.id) + '">' + escapeHtml(definition.name ?? definition.id) + '</option>'
+      ).join("");
+    const secondaryHistoryMarkup = secondaryHistory.length
+      ? secondaryHistory.slice().reverse().map((item) => '<li><strong>' +
+        escapeHtml(item.definition?.name ?? item.definitionId) + '</strong> — ' +
+        escapeHtml(playerName(state, item.playerId)) + ' · ' + escapeHtml(item.status) +
+        ' <small>(entered Round ' + escapeHtml(item.drawnRound) + ', turn ' + escapeHtml(item.drawnTurn) + ')</small></li>'
+      ).join("")
+      : '<li>No secondary missions have been entered yet.</li>';
+    const manualTimingOptions = '<option value="">Choose checkpoint...</option>' + [
+      [SCORING_TIMINGS.COMMAND_PHASE, "End of Command phase"],
+      [SCORING_TIMINGS.END_OF_TURN, "End of turn"],
+      [SCORING_TIMINGS.END_OF_OPPONENT_TURN, "End of opponent's turn"],
+      [SCORING_TIMINGS.END_OF_BATTLE, "End of battle"]
+    ].map(([value, label]) => '<option value="' + value + '">' + label + '</option>').join("");
+    const secondaryEntryMarkup = state.phase !== "command"
+      ? '<p>Manual secondary-mission entry is available during the Command phase. Current game phase: ' +
+        escapeHtml(state.phase ?? "unknown") + '.</p>'
+      : !players.length
+        ? '<p>Add players before entering secondary missions.</p>'
+        : '<form data-secondary-mission-form><div class="command-vp-form">' +
+          '<label>Player<select data-secondary-player>' + secondaryPlayerOptions + '</select></label>' +
+          '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
+          '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
+          '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
+          '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
+          '<p>Select a supplied definition or enter the card name and its scoring checkpoint from the printed rules. Manual entries without configured scoring conditions remain advisory-only and require your own rules check; no VP is awarded here.</p>';
+    const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
+      '<p>Enter missions manually during the Command phase. No automatic draw or selection occurs.</p>' +
+      secondaryEntryMarkup +
+      (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
+      '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
 
     const cpHistory = getCommandPointHistory(state, playerId).slice(-5).reverse();
     const cpHistoryMarkup = cpHistory.length ? cpHistory.map((entry) =>
@@ -224,16 +344,19 @@ export function createCommandScreen(container, {
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +
       '<section><h2>Objective control</h2><div class="command-objectives">' + objectiveCards + '</div></section>' +
-      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
+      secondaryMissionManager +
+      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>'; 
   }
 
   container.addEventListener?.("click", handleClick);
+  container.addEventListener?.("change", handleChange);
   container.addEventListener?.("submit", handleSubmit);
   const unsubscribe = session.subscribe(render);
   render();
   return { render, destroy() {
     unsubscribe();
     container.removeEventListener?.("click", handleClick);
+    container.removeEventListener?.("change", handleChange);
     container.removeEventListener?.("submit", handleSubmit);
     container.replaceChildren();
   }};

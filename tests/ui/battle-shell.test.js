@@ -446,3 +446,189 @@ test("scoring checkpoint review supports end-of-turn and end-of-battle active se
     screen.destroy();
   }
 });
+
+
+test("manual secondary mission entry records the selected card for the selected player during Command phase", () => {
+  let state = {
+    phase: "command", turn: 2, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [], units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const secondary = createMissionDefinition({
+    id: "manual-secondary",
+    name: "Manually selected secondary",
+    category: "secondary",
+    timing: SCORING_TIMINGS.END_OF_TURN,
+    conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 2 } }]
+  });
+  const listeners = new Map();
+  const root = {
+    innerHTML: "",
+    addEventListener(type, listener) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(listener);
+    },
+    removeEventListener(type, listener) { listeners.get(type)?.delete(listener); },
+    contains() { return true; },
+    querySelector(selector) {
+      if (selector === "[data-secondary-player]") return { value: "p2" };
+      if (selector === "[data-secondary-definition]") return { value: "manual-secondary" };
+      return null;
+    },
+    replaceChildren() { this.innerHTML = ""; }
+  };
+  const session = {
+    getState: () => state,
+    subscribe(listener) {
+      (this.listeners ??= new Set()).add(listener);
+      return () => this.listeners.delete(listener);
+    },
+    dispatch(command) {
+      assert.equal(command.type, "secondary_mission.draw");
+      state = drawSecondaryMission(state, command.payload);
+      for (const listener of this.listeners ?? []) listener(state);
+      return state;
+    }
+  };
+  const screen = createCommandScreen(root, {
+    session,
+    perspectivePlayerId: "p1",
+    missionDefinitions: [secondary]
+  });
+
+  assert.match(root.innerHTML, /Manual secondary-mission entry/);
+  assert.match(root.innerHTML, /No automatic draw or selection occurs/);
+  const button = {
+    hasAttribute: (name) => name === "data-secondary-mission-add",
+    closest(selector) {
+      return selector.includes("[data-secondary-mission-add]") ? this : null;
+    }
+  };
+  for (const listener of listeners.get("click") ?? []) listener({ target: button });
+
+  const history = getSecondaryMissionHistory(state, "p2");
+  assert.equal(history.length, 1);
+  assert.equal(history[0].definitionId, "manual-secondary");
+  assert.equal(history[0].status, "active");
+  assert.equal(getSecondaryMissionHistory(state, "p1").length, 0);
+  assert.equal(state.victoryPoints, undefined);
+  assert.match(root.innerHTML, /Mission added to the selected player/);
+  assert.match(root.innerHTML, /active secondary missions/);
+  screen.destroy();
+});
+
+test("manual secondary mission entry is unavailable outside Command phase", () => {
+  let state = {
+    phase: "shooting", turn: 2, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [], units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const secondary = createMissionDefinition({
+    id: "manual-secondary",
+    name: "Manually selected secondary",
+    category: "secondary",
+    timing: SCORING_TIMINGS.END_OF_TURN,
+    conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 2 } }]
+  });
+  const listeners = new Map();
+  const root = {
+    innerHTML: "",
+    addEventListener(type, listener) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(listener);
+    },
+    removeEventListener(type, listener) { listeners.get(type)?.delete(listener); },
+    contains() { return true; },
+    querySelector(selector) {
+      if (selector === "[data-secondary-player]") return { value: "p1" };
+      if (selector === "[data-secondary-definition]") return { value: "manual-secondary" };
+      return null;
+    },
+    replaceChildren() { this.innerHTML = ""; }
+  };
+  const session = { getState: () => state, subscribe() { return () => {}; }, dispatch() {
+    throw new Error("Mission must not be entered outside Command phase.");
+  }};
+  const screen = createCommandScreen(root, {
+    session,
+    perspectivePlayerId: "p1",
+    missionDefinitions: [secondary]
+  });
+  assert.match(root.innerHTML, /available during the Command phase/);
+  const button = {
+    hasAttribute: (name) => name === "data-secondary-mission-add",
+    closest(selector) {
+      return selector.includes("[data-secondary-mission-add]") ? this : null;
+    }
+  };
+  for (const listener of listeners.get("click") ?? []) listener({ target: button });
+  assert.match(root.innerHTML, /can be entered during the Command phase only/);
+  assert.equal(state.scoring.secondaryMissions, undefined);
+  screen.destroy();
+});
+
+
+test("manual card-name entry records the chosen checkpoint and requires manual scoring review", () => {
+  let state = {
+    phase: "command", turn: 2, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [], units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const listeners = new Map();
+  const root = {
+    innerHTML: "",
+    addEventListener(type, listener) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(listener);
+    },
+    removeEventListener(type, listener) { listeners.get(type)?.delete(listener); },
+    contains() { return true; },
+    querySelector(selector) {
+      if (selector === "[data-secondary-player]") return { value: "p1" };
+      if (selector === "[data-secondary-definition]") return { value: "" };
+      if (selector === "[data-secondary-name]") return { value: "Card entered from the table" };
+      if (selector === "[data-secondary-timing]") return { value: SCORING_TIMINGS.END_OF_TURN };
+      return null;
+    },
+    replaceChildren() { this.innerHTML = ""; }
+  };
+  const session = {
+    getState: () => state,
+    subscribe(listener) {
+      (this.listeners ??= new Set()).add(listener);
+      return () => this.listeners.delete(listener);
+    },
+    dispatch(command) {
+      state = drawSecondaryMission(state, command.payload);
+      for (const listener of this.listeners ?? []) listener(state);
+      return state;
+    }
+  };
+  const screen = createCommandScreen(root, {
+    session,
+    perspectivePlayerId: "p1",
+    scoringCheckpoint: SCORING_TIMINGS.END_OF_TURN,
+    scoringCheckpointActivePlayerId: "p1"
+  });
+  const button = {
+    hasAttribute: (name) => name === "data-secondary-mission-add",
+    closest(selector) {
+      return selector.includes("[data-secondary-mission-add]") ? this : null;
+    }
+  };
+  for (const listener of listeners.get("click") ?? []) listener({ target: button });
+
+  const history = getSecondaryMissionHistory(state, "p1");
+  assert.equal(history.length, 1);
+  assert.equal(history[0].definition.name, "Card entered from the table");
+  assert.equal(history[0].definition.timing, SCORING_TIMINGS.END_OF_TURN);
+  assert.equal(history[0].definition.manualEntry, true);
+  assert.equal(history[0].status, "active");
+  assert.match(root.innerHTML, /Manual review required/);
+  assert.match(root.innerHTML, /no eligibility is inferred/);
+  assert.equal(state.victoryPoints, undefined);
+  screen.destroy();
+});
