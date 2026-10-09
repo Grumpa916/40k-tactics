@@ -53,10 +53,33 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute("data-cp-gain")) recordCp(1, "gain", "Manually recorded gain");
     if (target.hasAttribute("data-cp-spend")) recordCp(-1, "spend", "Manually recorded spend");
+    if (target.hasAttribute("data-mission-award")) {
+      const definitionId = target.getAttribute("data-mission-award");
+      const definition = missionDefinitions.find((item) => item.id === definitionId);
+      const state = session.getState();
+      const scoringPlayerId = perspectivePlayerId ?? state.activePlayer;
+      const round = state.battle?.round ?? 0;
+      const turn = state.turn ?? 0;
+      const opportunityKey = [round, turn, scoringPlayerId].join(":");
+      const alreadyRecorded = getVictoryPointHistory(state, scoringPlayerId).some((entry) =>
+        entry.missionDefinitionId === definitionId && entry.opportunityKey === opportunityKey
+      );
+      if (!definition || !definition.victoryPoints || !scoringPlayerId || alreadyRecorded) return;
+      session.dispatch({ type: COMMAND_TYPES.RECORD_VICTORY_POINTS, payload: {
+        playerId: scoringPlayerId,
+        amount: definition.victoryPoints,
+        reason: definition.name,
+        missionDefinitionId: definition.id,
+        category: definition.category,
+        opportunityKey,
+        turn,
+        round
+      }});
+    }
   }
 
   function handleSubmit(event) {
@@ -91,16 +114,32 @@ export function createCommandScreen(container, {
           definitions: missionDefinitions,
           timing: SCORING_TIMINGS.COMMAND_PHASE
         });
-        scoring = advisory.due.length ? advisory.due.map((item) =>
-          '<article class="command-scoring"><strong>' + escapeHtml(
-            missionDefinitions.find((definition) => definition.id === item.definitionId)?.name ?? item.definitionId
-          ) + '</strong><span class="' + (item.opportunity?.eligible ? 'is-available' : 'is-unavailable') + '">' +
-          (item.opportunity?.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') +
-          '</span><ul>' + (item.opportunity?.conditions ?? []).map((condition) =>
-            '<li>' + escapeHtml(condition.evidence) + ': ' +
-            (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>'
-          ).join("") + '</ul><small>Review the mission rules and confirm scoring at the table. This advisory does not award points.</small></article>'
-        ).join("") : '<p>No configured mission definitions are due to be evaluated in the Command phase.</p>';
+        scoring = advisory.due.length ? advisory.due.map((item) => {
+          const definition = missionDefinitions.find((candidate) => candidate.id === item.definitionId);
+          const round = state.battle?.round ?? 0;
+          const turn = state.turn ?? 0;
+          const opportunityKey = [round, turn, playerId].join(":");
+          const alreadyRecorded = getVictoryPointHistory(state, playerId).some((entry) =>
+            entry.missionDefinitionId === item.definitionId && entry.opportunityKey === opportunityKey
+          );
+          const confirmButton = item.opportunity?.eligible && definition?.victoryPoints && playerId
+            ? (alreadyRecorded
+              ? '<p><strong>Scoring recorded for this turn.</strong></p>'
+              : '<button type="button" data-mission-award="' + escapeHtml(item.definitionId) + '">Confirm +' +
+                escapeHtml(definition.victoryPoints) + ' VP</button>')
+            : '';
+          return '<article class="command-scoring"><strong>' + escapeHtml(definition?.name ?? item.definitionId) +
+            '</strong>' + (definition?.category ? '<span class="command-scoring__category">' +
+              escapeHtml(definition.category === "primary" ? "Primary mission" : "Secondary mission") + '</span>' : '') +
+            '<span class="' + (item.opportunity?.eligible ? 'is-available' : 'is-unavailable') + '">' +
+            (item.opportunity?.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') +
+            '</span>' + (definition?.victoryPoints ? '<p>Configured award: ' + escapeHtml(definition.victoryPoints) + ' VP</p>' : '') +
+            '<ul>' + (item.opportunity?.conditions ?? []).map((condition) =>
+              '<li>' + escapeHtml(condition.evidence) + ': ' +
+              (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>'
+            ).join("") + '</ul>' + confirmButton +
+            '<small>Confirm only after checking the mission rules and table state.</small></article>';
+        }).join("") : '<p>No configured mission definitions are due to be evaluated in the Command phase.</p>';
       } catch (error) {
         scoring = '<p role="alert">Scoring advisory unavailable: ' + escapeHtml(error?.message ?? error) + '</p>';
       }
