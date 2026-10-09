@@ -214,3 +214,21 @@ test("Command Point changes execute through the core command engine", () => {
   assert.equal(next.history.at(-1).payload.balanceAfter, 1);
   clearCommandHandlers();
 });
+
+test("confirmed victory-point awards execute through the core command engine", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const initial = createGameState({
+    turn: 2,
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { id: "b1", status: "active", round: 1 }
+  });
+  const next = executeCommand(initial, createCommand(COMMAND_TYPES.RECORD_VICTORY_POINTS, {
+    playerId: "p2", amount: 5, reason: "Confirmed primary score"
+  }));
+  assert.equal(next.victoryPoints.p2, 5);
+  assert.equal(next.history.at(-1).type, "victory_points.awarded");
+  assert.equal(next.history.at(-1).payload.scoreAfter, 5);
+  clearCommandHandlers();
+});
