@@ -49,6 +49,8 @@ export function createMissionDefinition({
   id,
   name,
   timing = SCORING_TIMINGS.END_OF_TURN,
+  category = null,
+  victoryPoints = null,
   conditions = []
 } = {}) {
   if (!id || typeof id !== "string") {
@@ -58,6 +60,12 @@ export function createMissionDefinition({
     throw new TypeError("A mission definition name is required.");
   }
   validateTiming(timing);
+  if (category !== null && !["primary", "secondary"].includes(category)) {
+    throw new Error("Mission category must be primary or secondary.");
+  }
+  if (victoryPoints !== null && (!Number.isInteger(victoryPoints) || victoryPoints <= 0)) {
+    throw new TypeError("Configured victory points must be a positive integer.");
+  }
   if (!Array.isArray(conditions) || conditions.length === 0) {
     throw new TypeError("A mission definition requires at least one scoring condition.");
   }
@@ -70,6 +78,8 @@ export function createMissionDefinition({
     id,
     name,
     timing,
+    category,
+    victoryPoints,
     conditions: Object.freeze(normalizedConditions)
   });
 }

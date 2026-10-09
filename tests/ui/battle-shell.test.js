@@ -212,6 +212,8 @@ test("Command scoring review evaluates supplied definitions but never awards VP 
     id: "demo-hold-home",
     name: "Demo check: control Home Objective",
     timing: SCORING_TIMINGS.COMMAND_PHASE,
+    category: "primary",
+    victoryPoints: 5,
     conditions: [{
       evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
       args: { objectiveId: "home", playerId: "p1", expected: "controlled" }
@@ -220,7 +222,10 @@ test("Command scoring review evaluates supplied definitions but never awards VP 
   const screen = createCommandScreen(root, { session, missionDefinitions: [definition] });
   assert.match(root.innerHTML, /Demo check: control Home Objective/);
   assert.match(root.innerHTML, /Evidence supports eligibility/);
-  assert.match(root.innerHTML, /This advisory does not award points/);
+  assert.match(root.innerHTML, /Primary mission/);
+  assert.match(root.innerHTML, /Configured award: 5 VP/);
+  assert.match(root.innerHTML, /Confirm \+5 VP/);
+  assert.match(root.innerHTML, /Confirm only after checking the mission rules/);
   assert.match(root.innerHTML, /No victory points recorded yet/);
   assert.equal(state.victoryPoints, undefined);
   screen.destroy();
