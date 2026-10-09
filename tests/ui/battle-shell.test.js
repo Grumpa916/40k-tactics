@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createBattleShell } from "../../src/ui/battle-shell.js";
 import { createCommandScreen } from "../../src/ui/command-screen.js";
+import { createMissionDefinition, SCORING_TIMINGS } from "../../src/rules/mission-definition.js";
+import { SCORING_EVIDENCE } from "../../src/rules/scoring-eligibility.js";
 
 function sessionFor(initialState) {
   let state = initialState;
@@ -166,4 +168,54 @@ test("Command screen shows objective control and makes no unsupported scoring cl
   assert.match(root.innerHTML, /Controlled by you/);
   assert.match(root.innerHTML, /No mission scoring definitions were supplied/);
   screen.destroy();
+});
+
+
+test("Command scoring review evaluates supplied definitions but never awards VP automatically", () => {
+  const root = { innerHTML: "", replaceChildren() { this.innerHTML = ""; } };
+  const state = {
+    phase: "command", turn: 1, activePlayer: "p1",
+    battle: { round: 1 },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [{ id: "home", name: "Home Objective", control: {
+      controllerId: "p1", controlState: "controlled", contestingPlayerIds: []
+    }}],
+    units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const session = { getState: () => state, subscribe() { return () => {}; } };
+  const definition = createMissionDefinition({
+    id: "demo-hold-home",
+    name: "Demo check: control Home Objective",
+    timing: SCORING_TIMINGS.COMMAND_PHASE,
+    conditions: [{
+      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+      args: { objectiveId: "home", playerId: "p1", expected: "controlled" }
+    }]
+  });
+  const screen = createCommandScreen(root, { session, missionDefinitions: [definition] });
+  assert.match(root.innerHTML, /Demo check: control Home Objective/);
+  assert.match(root.innerHTML, /Evidence supports eligibility/);
+  assert.match(root.innerHTML, /This advisory does not award points/);
+  assert.match(root.innerHTML, /No victory points recorded yet/);
+  assert.equal(state.victoryPoints, undefined);
+  screen.destroy();
+});
+
+test("shared battle shell forwards configured mission definitions to phase screens", () => {
+  const session = sessionFor({ phase: "command", turn: 1, battle: { round: 1 } });
+  const definition = { id: "configured-definition" };
+  let received;
+  const root = container();
+  const shell = createBattleShell(root, {
+    session,
+    missionDefinitions: [definition],
+    screenFactories: {
+      command: (_target, options) => {
+        received = options.missionDefinitions;
+        return { destroy() {} };
+      }
+    }
+  });
+  assert.deepEqual(received, [definition]);
+  shell.destroy();
 });
