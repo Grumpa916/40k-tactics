@@ -145,7 +145,7 @@ export function createBattleShell(container, {
     const button = event.target?.closest?.("[data-dismiss-scoring-reminder]");
     if (!button || !container.contains(button)) return;
     scoringReminder = null;
-    button.closest(".battle-scoring-reminder")?.remove();
+    button.closest(".battle-scoring-reminder__backdrop")?.remove();
   }
 
   function handleReviewScoring(event) {
