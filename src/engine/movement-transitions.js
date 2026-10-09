@@ -56,7 +56,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may move.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can move.");
   if (state.history.some((event) =>
-    event.type === "unit.normal_move_resolved" &&
+    ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
     event.payload?.unitId === unitId &&
     event.payload?.turn === state.turn
   )) {
@@ -133,7 +133,7 @@ export function recordFallBack(state, { unitId } = {}) {
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may Fall Back.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can Fall Back.");
   if (state.history.some((event) =>
-    event.type === "unit.fell_back" &&
+    ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
     event.payload?.unitId === unitId &&
     event.payload?.turn === state.turn
   )) {
