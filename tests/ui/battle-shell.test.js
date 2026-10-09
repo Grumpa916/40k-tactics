@@ -4,6 +4,7 @@ import { createBattleShell } from "../../src/ui/battle-shell.js";
 import { createCommandScreen } from "../../src/ui/command-screen.js";
 import { createMissionDefinition, SCORING_TIMINGS } from "../../src/rules/mission-definition.js";
 import { SCORING_EVIDENCE } from "../../src/rules/scoring-eligibility.js";
+import { drawSecondaryMission, getSecondaryMissionHistory } from "../../src/rules/secondary-mission-lifecycle.js";
 
 function sessionFor(initialState) {
   let state = initialState;
@@ -314,4 +315,68 @@ test("finishing the perspective player turn does not trigger an opponent-turn re
   session.setState({ phase: "start_turn", turn: 2, activePlayer: "p2", battle: { round: 1, activePlayerId: "p2" } });
   assert.doesNotMatch(root.html, /Opponent-window mission/);
   shell.destroy();
+});
+
+
+test("scoring checkpoint review includes active secondary cards without changing score or lifecycle", () => {
+  let state = {
+    phase: "command", turn: 1, activePlayer: "p1",
+    battle: { round: 1 }, players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [{ id: "home", name: "Home Objective", control: {
+      controllerId: "p1", controlState: "controlled", contestingPlayerIds: []
+    }}],
+    units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const secondary = createMissionDefinition({
+    id: "active-secondary-home",
+    name: "Active secondary: Hold Home",
+    category: "secondary",
+    timing: SCORING_TIMINGS.COMMAND_PHASE,
+    victoryPoints: 4,
+    conditions: [{
+      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+      args: { objectiveId: "home", playerId: "p1", expected: "controlled" }
+    }]
+  });
+  state = drawSecondaryMission(state, { definition: secondary, playerId: "p1" });
+  const session = { getState: () => state, subscribe() { return () => {}; } };
+  const root = { innerHTML: "", replaceChildren() { this.innerHTML = ""; } };
+  const screen = createCommandScreen(root, {
+    session, perspectivePlayerId: "p1", scoringCheckpoint: SCORING_TIMINGS.COMMAND_PHASE
+  });
+
+  assert.match(root.innerHTML, /Active secondary: Hold Home/);
+  assert.match(root.innerHTML, /Active secondary card/);
+  assert.match(root.innerHTML, /Evidence supports eligibility/);
+  assert.match(root.innerHTML, /does not award VP or change card status/);
+  assert.equal(state.victoryPoints, undefined);
+  assert.equal(getSecondaryMissionHistory(state, "p1")[0].status, "active");
+  screen.destroy();
+});
+
+test("checkpoint review uses the supplied opponent-turn context", () => {
+  let state = {
+    phase: "command", turn: 3, activePlayer: "p1",
+    battle: { round: 2, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    objectives: [], units: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  const secondary = createMissionDefinition({
+    id: "opponent-end-card",
+    name: "Opponent-end secondary",
+    category: "secondary",
+    timing: "end-of-opponent-turn",
+    conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 3 } }]
+  });
+  state = drawSecondaryMission(state, { definition: secondary, playerId: "p1" });
+  const session = { getState: () => state, subscribe() { return () => {}; } };
+  const root = { innerHTML: "", replaceChildren() { this.innerHTML = ""; } };
+  const screen = createCommandScreen(root, {
+    session, perspectivePlayerId: "p1',
+    scoringCheckpoint: "end-of-opponent-turn",
+    scoringCheckpointActivePlayerId: "p2"
+  });
+  assert.match(root.innerHTML, /End of opponent&#039;s turn scoring review/);
+  assert.match(root.innerHTML, /Opponent-end secondary/);
+  screen.destroy();
 });
