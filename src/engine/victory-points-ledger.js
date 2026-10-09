@@ -60,3 +60,70 @@ export function getVictoryPointHistory(state, playerId = null) {
     .filter((event) => playerId == null || event.payload?.playerId === playerId)
     .map((event) => ({ ...event.payload }));
 }
+
+/**
+ * Undo only the most recent history event, and only when it is a VP award
+ * whose resulting score is still current. The award remains in history and
+ * an explicit reversal event is appended for auditability.
+ */
+export function undoLatestVictoryPointsAward(state, {
+  playerId,
+  reason = "Correct an incorrectly entered VP award",
+  turn = state?.turn ?? 0,
+  round = state?.battle?.round ?? 0
+} = {}) {
+  if (typeof playerId !== "string" || !playerId.trim()) throw new TypeError("A playerId is required.");
+  if (typeof reason !== "string" || !reason.trim()) throw new TypeError("An undo reason is required.");
+  if (!Number.isInteger(turn) || turn < 0) throw new TypeError("Turn must be a non-negative integer.");
+  if (!Number.isInteger(round) || round < 0) throw new TypeError("Round must be a non-negative integer.");
+
+  const history = Array.isArray(state?.history) ? state.history : [];
+  const latest = history.at(-1);
+  if (latest?.type !== "victory_points.awarded" || latest.payload?.playerId !== playerId) {
+    throw new Error("Only the latest history event can be undone, and it must be a VP award for this player.");
+  }
+
+  const award = latest.payload;
+  if (!Number.isInteger(award.amount) || award.amount <= 0 ||
+      !Number.isInteger(award.scoreBefore) || !Number.isInteger(award.scoreAfter) ||
+      award.scoreAfter !== award.scoreBefore + award.amount) {
+    throw new Error("The latest VP award is not a valid reversible transaction.");
+  }
+  const currentScore = getVictoryPointScore(state, playerId);
+  if (currentScore !== award.scoreAfter) {
+    throw new Error("The player's current VP total no longer matches the latest award; refusing unsafe undo.");
+  }
+
+  const updated = {
+    ...state,
+    victoryPoints: { ...(state.victoryPoints ?? {}), [playerId]: award.scoreBefore }
+  };
+  return appendHistoryEntry(updated, createEvent("victory_points.award_undone", {
+    playerId,
+    amount: award.amount,
+    reason: reason.trim(),
+    originalReason: award.reason,
+    originalAwardEventId: latest.id ?? null,
+    missionDefinitionId: award.missionDefinitionId ?? null,
+    category: award.category ?? null,
+    opportunityKey: award.opportunityKey ?? null,
+    turn,
+    round,
+    scoreBefore: currentScore,
+    scoreAfter: award.scoreBefore
+  }));
+}
+
+/** Return the latest award only when it is currently safe to undo. */
+export function getLatestUndoableVictoryPointsAward(state, playerId = null) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  const latest = history.at(-1);
+  if (latest?.type !== "victory_points.awarded") return null;
+  const award = latest.payload;
+  if (playerId != null && award?.playerId !== playerId) return null;
+  if (!award || !Number.isInteger(award.amount) || award.amount <= 0 ||
+      !Number.isInteger(award.scoreBefore) || !Number.isInteger(award.scoreAfter) ||
+      award.scoreAfter !== award.scoreBefore + award.amount ||
+      getVictoryPointScore(state, award.playerId) !== award.scoreAfter) return null;
+  return { ...award };
+}
