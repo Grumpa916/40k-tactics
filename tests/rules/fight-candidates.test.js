@@ -247,7 +247,8 @@ test("opponent Charge on their turn makes my unit Fight-eligible on my next turn
   const afterCharge = recordChargeOutcome(opponentChargeState, {
     unitId: "opponent-charger",
     succeeded: true,
-    targetIds: ["my-unit"]
+    targetIds: ["my-unit"],
+    measuredDistances: { "my-unit": 8.5 }
   });
 
   assert.deepEqual(afterCharge.history.at(-1).payload, {
@@ -255,6 +256,7 @@ test("opponent Charge on their turn makes my unit Fight-eligible on my next turn
     playerId: "p2",
     outcome: "successful",
     targetIds: ["my-unit"],
+    measuredDistances: { "my-unit": 8.5 },
     round: 1,
     turn: 2
   });
