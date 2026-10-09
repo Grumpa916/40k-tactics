@@ -24,18 +24,20 @@ function phaseLabel(phase) {
   return PHASES.find((item) => item.id === phase)?.label ?? phase;
 }
 
-function renderShell(container, state) {
-  const activePhase = state?.phase ?? null;
+function renderShell(container, state, viewedPhase) {
   const phaseItems = PHASES.map((phase) => {
-    const active = phase.id === activePhase ? " is-active" : "";
+    const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
-    return `<li class="battle-phase${active}" data-battle-phase="${phase.id}">
-      <strong>${phase.label}</strong><span>${status}</span>
+    return `<li class="battle-phase${active}">
+      <button type="button" class="battle-phase__button" data-battle-phase-button="${phase.id}" aria-pressed="${phase.id === viewedPhase}">
+        <strong>${phase.label}</strong><span>${status}</span>
+      </button>
     </li>`;
   }).join("");
 
   container.innerHTML = `<main class="battle-shell">
-    <ol class="battle-shell__phases" aria-label="Battle phases">${phaseItems}</ol>
+    <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
+    <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
 }
@@ -57,6 +59,8 @@ export function createBattleShell(container, {
 
   let mountedPhase = null;
   let mountedScreen = null;
+  let viewedPhase = session.getState()?.phase ?? "command";
+  let observedGamePhase = session.getState()?.phase ?? null;
 
   function destroyMountedScreen() {
     if (mountedScreen?.destroy) mountedScreen.destroy();
@@ -66,14 +70,18 @@ export function createBattleShell(container, {
 
   function render() {
     const state = session.getState();
-    const phase = state?.phase ?? null;
+    const actualPhase = state?.phase ?? null;
+    if (actualPhase !== observedGamePhase) {
+      observedGamePhase = actualPhase;
+      viewedPhase = actualPhase;
+    }
 
-    if (phase !== mountedPhase) {
+    if (viewedPhase !== mountedPhase) {
       destroyMountedScreen();
-      renderShell(container, state);
+      renderShell(container, state, viewedPhase);
 
       const screenContainer = container.querySelector("[data-battle-screen]");
-      const factory = screenFactories[phase];
+      const factory = screenFactories[viewedPhase];
 
       if (factory && screenContainer) {
         mountedScreen = factory(screenContainer, {
@@ -83,19 +91,29 @@ export function createBattleShell(container, {
           missionActions,
           missionDefinitions
         });
-        mountedPhase = phase;
-      } else {
+        mountedPhase = viewedPhase;
+      } else if (screenContainer) {
         screenContainer.innerHTML = `<div class="battle-shell__placeholder">
-          <h2>${phaseLabel(phase)} Phase</h2>
+          <h2>${phaseLabel(viewedPhase)} Phase</h2>
           <p>This phase is reserved in the shared battle flow and will be added later.</p>
         </div>`;
-        mountedPhase = phase;
+        mountedPhase = viewedPhase;
       }
     }
 
     return state;
   }
 
+  function handlePhaseNavigation(event) {
+    const button = event.target?.closest?.("[data-battle-phase-button]");
+    if (!button || !container.contains(button)) return;
+    const nextPhase = button.getAttribute("data-battle-phase-button");
+    if (!PHASES.some((phase) => phase.id === nextPhase)) return;
+    viewedPhase = nextPhase;
+    render();
+  }
+
+  container.addEventListener?.("click", handlePhaseNavigation);
   const unsubscribe = session.subscribe(render);
   render();
 
@@ -104,6 +122,7 @@ export function createBattleShell(container, {
     render,
     destroy: () => {
       unsubscribe();
+      container.removeEventListener?.("click", handlePhaseNavigation);
       destroyMountedScreen();
       container.replaceChildren();
     }
