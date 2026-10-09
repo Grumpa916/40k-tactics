@@ -1,6 +1,8 @@
 export const SECONDARY_MISSION_STATUS = Object.freeze({
   ACTIVE: "active",
-  DISCARDED: "discarded"
+  SCORED: "scored",
+  DISCARDED: "discarded",
+  RETURNED_TO_DECK: "returned-to-deck"
 });
 
 function normalizeMissionDefinition(definition) {
@@ -28,6 +30,28 @@ function withMissionList(state, secondaryMissions) {
   };
 }
 
+function requireTurnPosition(round, turn) {
+  if (!Number.isInteger(round) || round < 0 || !Number.isInteger(turn) || turn < 0) {
+    throw new TypeError("Round and turn must be non-negative integers.");
+  }
+}
+
+function requireOwnedActiveMission(state, instanceId, playerId, action) {
+  if (!instanceId) throw new TypeError("A secondary mission instance id is required.");
+  if (!playerId) throw new TypeError("The " + action + " player is required.");
+  const existing = missionList(state);
+  const index = existing.findIndex((entry) => entry.instanceId === instanceId);
+  if (index < 0) throw new Error("Secondary mission instance not found.");
+  const entry = existing[index];
+  if (entry.playerId !== playerId) {
+    throw new Error("Only the owning player can " + action + " this secondary mission.");
+  }
+  if (entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) {
+    throw new Error("Only an active secondary mission can be " + action + ".");
+  }
+  return { existing, index, entry };
+}
+
 /** Add a newly drawn secondary mission without changing the player's VP score. */
 export function drawSecondaryMission(state, {
   definition,
@@ -36,8 +60,7 @@ export function drawSecondaryMission(state, {
   turn = state?.turn ?? 0
 } = {}) {
   if (!playerId) throw new TypeError("The player drawing the secondary mission is required.");
-  if (!Number.isInteger(round) || round < 0) throw new TypeError("Round must be a non-negative integer.");
-  if (!Number.isInteger(turn) || turn < 0) throw new TypeError("Turn must be a non-negative integer.");
+  requireTurnPosition(round, turn);
   const normalized = normalizeMissionDefinition(definition);
   const existing = missionList(state);
   if (existing.some((entry) => entry.playerId === playerId &&
@@ -53,16 +76,19 @@ export function drawSecondaryMission(state, {
     drawnRound: round,
     drawnTurn: turn,
     scoringHistory: [],
+    scoredRound: null,
+    scoredTurn: null,
     discardedRound: null,
-    discardedTurn: null
+    discardedTurn: null,
+    returnedToDeckRound: null,
+    returnedToDeckTurn: null
   });
   return withMissionList(state, [...existing, entry]);
 }
 
 /**
- * Record a scoring event without ending the mission: many secondary missions
- * can score more than once or remain active after scoring. VP confirmation is
- * handled separately by the scoring flow.
+ * Mark a secondary card scored as a terminal lifecycle transition.
+ * This records history only; the separate scoring flow confirms any VP award.
  */
 export function recordSecondaryMissionScored(state, {
   instanceId,
@@ -71,48 +97,55 @@ export function recordSecondaryMissionScored(state, {
   turn = state?.turn ?? 0,
   notes = null
 } = {}) {
-  if (!instanceId) throw new TypeError("A secondary mission instance id is required.");
-  if (!playerId) throw new TypeError("The scoring player is required.");
-  if (!Number.isInteger(round) || round < 0 || !Number.isInteger(turn) || turn < 0) {
-    throw new TypeError("Round and turn must be non-negative integers.");
-  }
-  const existing = missionList(state);
-  const index = existing.findIndex((entry) => entry.instanceId === instanceId);
-  if (index < 0) throw new Error("Secondary mission instance not found.");
-  const entry = existing[index];
-  if (entry.playerId !== playerId) throw new Error("Only the owning player can record scoring for this secondary mission.");
-  if (entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) throw new Error("Only an active secondary mission can be scored.");
+  requireTurnPosition(round, turn);
+  const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "score");
   const scoringEvent = Object.freeze({ round, turn, notes });
   const updated = Object.freeze({
     ...entry,
+    status: SECONDARY_MISSION_STATUS.SCORED,
+    scoredRound: round,
+    scoredTurn: turn,
     scoringHistory: [...(entry.scoringHistory ?? []), scoringEvent]
   });
   return withMissionList(state, existing.map((item, i) => i === index ? updated : item));
 }
 
-/** Discard an active secondary; score recording is a separate, non-terminal event. */
+/** Discard an active secondary card without awarding VP or CP. */
 export function discardSecondaryMission(state, {
   instanceId,
   playerId,
   round = state?.battle?.round ?? 0,
   turn = state?.turn ?? 0
 } = {}) {
-  if (!instanceId) throw new TypeError("A secondary mission instance id is required.");
-  if (!playerId) throw new TypeError("The discarding player is required.");
-  if (!Number.isInteger(round) || round < 0 || !Number.isInteger(turn) || turn < 0) {
-    throw new TypeError("Round and turn must be non-negative integers.");
-  }
-  const existing = missionList(state);
-  const index = existing.findIndex((entry) => entry.instanceId === instanceId);
-  if (index < 0) throw new Error("Secondary mission instance not found.");
-  const entry = existing[index];
-  if (entry.playerId !== playerId) throw new Error("Only the owning player can discard this secondary mission.");
-  if (entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) throw new Error("Only an active secondary mission can be discarded.");
+  requireTurnPosition(round, turn);
+  const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "discard");
   const updated = Object.freeze({
     ...entry,
     status: SECONDARY_MISSION_STATUS.DISCARDED,
     discardedRound: round,
     discardedTurn: turn
+  });
+  return withMissionList(state, existing.map((item, i) => i === index ? updated : item));
+}
+
+/**
+ * Return an active card to the deck. The historical instance remains terminal
+ * in state; if drawn again, it should be represented by a new instance.
+ * Rule-specific permission to return a card is enforced by the calling flow.
+ */
+export function returnSecondaryMissionToDeck(state, {
+  instanceId,
+  playerId,
+  round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  requireTurnPosition(round, turn);
+  const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "return");
+  const updated = Object.freeze({
+    ...entry,
+    status: SECONDARY_MISSION_STATUS.RETURNED_TO_DECK,
+    returnedToDeckRound: round,
+    returnedToDeckTurn: turn
   });
   return withMissionList(state, existing.map((item, i) => i === index ? updated : item));
 }
