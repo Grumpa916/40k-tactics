@@ -23,3 +23,4 @@ export {
   undoLatestVictoryPointsAward,
   getLatestUndoableVictoryPointsAward
 } from "./victory-points-ledger.js";
+export { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "./scoring-check-coordinator.js";
