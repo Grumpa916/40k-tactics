@@ -81,7 +81,8 @@ test("shared battle shell mounts the current implemented phase", () => {
   assert.equal(mounted[0].phase, "shooting");
   assert.equal(mounted[0].options.session, session);
   assert.equal(mounted[0].options.perspectivePlayerId, "p1");
-  assert.match(root.html, /Shooting Phase/);
+  assert.match(root.html, /data-battle-phase="shooting"/);
+  assert.doesNotMatch(root.html, /battle-shell__header/);
 
   shell.destroy();
 });
@@ -138,7 +139,7 @@ test("shared battle shell reserves Command and Movement without inventing naviga
   const root = container();
   const shell = createBattleShell(root, { session, screenFactories: {} });
 
-  assert.match(root.html, /Command Phase/);
+  assert.match(root.html, /data-battle-phase="command"/);
   assert.match(root._screen.innerHTML, /reserved in the shared battle flow/);
 
   shell.destroy();

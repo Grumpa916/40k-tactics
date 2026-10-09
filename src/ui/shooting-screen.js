@@ -47,16 +47,16 @@ function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspe
   const rangeConfidence = recommendation.rangeConfidence ? recommendation.rangeConfidence : "low";
   return `
     <aside class="shoot-advisory" data-shoot-advisory>
-      <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>\${escapeHtml(recommendation.rangeStatus)} range</span></div>
+      <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>${escapeHtml(recommendation.rangeStatus)} range</span></div>
       <div class="shoot-advisory__grid">
-        <div><strong>\${expected}</strong><span>expected damage</span></div>
-        <div><strong>\${destruction}</strong><span>destruction chance</span></div>
-        <div><strong>\${survival}</strong><span>target survival</span></div>
-        <div><strong>\${targetImpact}</strong><span>target impact</span></div>
-        <div><strong>\${escapeHtml(impact)}</strong><span>outcome profile</span></div>
+        <div><strong>${expected}</strong><span>expected damage</span></div>
+        <div><strong>${destruction}</strong><span>destruction chance</span></div>
+        <div><strong>${survival}</strong><span>target survival</span></div>
+        <div><strong>${targetImpact}</strong><span>target impact</span></div>
+        <div><strong>${escapeHtml(impact)}</strong><span>outcome profile</span></div>
       </div>
-      <p>\${escapeHtml(recommendation.recommendationReason || recommendation.reason)}</p>
-      <small>Advisor confidence: \${escapeHtml(confidence)} · Range confidence: \${escapeHtml(rangeConfidence)}</small>
+      <p>${escapeHtml(recommendation.recommendationReason || recommendation.reason)}</p>
+      <small>Advisor confidence: ${escapeHtml(confidence)} · Range confidence: ${escapeHtml(rangeConfidence)}</small>
     </aside>
   `;
 }

@@ -31,13 +31,6 @@ function renderShell(container, state) {
   }).join("");
 
   container.innerHTML = `<main class="battle-shell">
-    <header class="battle-shell__header">
-      <div>
-        <div class="battle-shell__kicker">LIVE BATTLE</div>
-        <h1>${phaseLabel(activePhase)} Phase</h1>
-        <p>Round ${state?.battle?.round ?? state?.round ?? "—"} · Turn ${state?.turn ?? "—"}</p>
-      </div>
-    </header>
     <ol class="battle-shell__phases" aria-label="Battle phases">${phaseItems}</ol>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
@@ -92,9 +85,6 @@ export function createBattleShell(container, {
         </div>`;
         mountedPhase = phase;
       }
-    } else {
-      const phaseHeading = container.querySelector(".battle-shell__header h1");
-      if (phaseHeading) phaseHeading.textContent = `${phaseLabel(phase)} Phase`;
     }
 
     return state;
