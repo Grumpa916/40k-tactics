@@ -139,7 +139,7 @@ test("shared battle shell reserves Command and Movement without inventing naviga
   const root = container();
   const shell = createBattleShell(root, { session, screenFactories: {} });
 
-  assert.match(root.html, /Command Phase/);
+  assert.match(root.html, /data-battle-phase="command"/);
   assert.match(root._screen.innerHTML, /reserved in the shared battle flow/);
 
   shell.destroy();
