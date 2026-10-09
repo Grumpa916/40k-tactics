@@ -148,3 +148,53 @@ export function recordFallBack(state, { unitId } = {}) {
     turn: state.turn
   }));
 }
+
+
+export function resolveAdvance(state, { unitId, moves, advanceRoll } = {}) {
+  if (!Number.isInteger(advanceRoll) || advanceRoll < 1 || advanceRoll > 6) throw new TypeError("Enter the actual Advance roll (1–6).");
+  if (!unitId) throw new TypeError("Unit id is required.");
+  if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
+  if (state.phase !== "movement") throw new Error("Advance may only be recorded in the Movement phase.");
+  const unit = state.units.find((item) => item.id === unitId);
+  if (!unit) throw new Error("Unit not found: " + unitId);
+  if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may Advance.");
+  if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can Advance.");
+  const used = state.history.some((event) => ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) && event.payload?.unitId === unitId && event.payload?.turn === state.turn);
+  if (used) throw new Error("A unit can record only one movement action per turn.");
+  const models = getModels(unit);
+  if (!Array.isArray(moves) || moves.length !== models.length) throw new Error("An Advance must include a destination for every model.");
+  const destinations = new Map();
+  for (const move of moves) {
+    if (!move?.modelId || destinations.has(move.modelId) || !positionIsValid(move.position)) throw new Error("Each model must have exactly one valid destination.");
+    destinations.set(move.modelId, move.position);
+  }
+  const records = [];
+  const movedModels = models.map((model) => {
+    const destination = destinations.get(model.id);
+    if (!destination) throw new Error("An Advance must include a destination for every model.");
+    const movement = movementCharacteristic(unit, model);
+    const distance = distanceBetween(model.position, destination);
+    if (distance > movement + advanceRoll + 1e-9) throw new Error("A model cannot Advance farther than its Movement characteristic plus the recorded Advance roll.");
+    records.push({ modelId: model.id, from: { ...model.position }, to: { ...destination }, distance, movement, advanceRoll });
+    return { ...model, position: { ...destination } };
+  });
+  const nextUnit = Array.isArray(unit.models) && unit.models.length > 0 ? { ...unit, models: movedModels } : { ...unit, position: movedModels[0].position };
+  return appendHistoryEntry({ ...state, units: state.units.map((item) => item.id === unitId ? nextUnit : item) }, createEvent("unit.advanced", {
+    unitId, playerId: state.activePlayer, phase: state.phase, round: state.battle.round, turn: state.turn, advanceRoll, moves: records
+  }));
+}
+
+export function recordStationary(state, { unitId } = {}) {
+  if (!unitId) throw new TypeError("Unit id is required.");
+  if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
+  if (state.phase !== "movement") throw new Error("Stationary status may only be recorded in the Movement phase.");
+  const unit = state.units.find((item) => item.id === unitId);
+  if (!unit) throw new Error("Unit not found: " + unitId);
+  if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may be recorded stationary.");
+  if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed.");
+  const used = state.history.some((event) => ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) && event.payload?.unitId === unitId && event.payload?.turn === state.turn);
+  if (used) throw new Error("A unit can record only one movement action per turn.");
+  return appendHistoryEntry(state, createEvent("unit.stationary_recorded", {
+    unitId, playerId: state.activePlayer, phase: state.phase, round: state.battle.round, turn: state.turn
+  }));
+}
