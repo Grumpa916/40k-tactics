@@ -372,7 +372,7 @@ test("checkpoint review uses the supplied opponent-turn context", () => {
   const session = { getState: () => state, subscribe() { return () => {}; } };
   const root = { innerHTML: "", replaceChildren() { this.innerHTML = ""; } };
   const screen = createCommandScreen(root, {
-    session, perspectivePlayerId: "p1',
+    session, perspectivePlayerId: "p1",
     scoringCheckpoint: "end-of-opponent-turn",
     scoringCheckpointActivePlayerId: "p2"
   });
