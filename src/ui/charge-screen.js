@@ -20,8 +20,8 @@ function targetRow(item, selected, measuredDistance) {
   const presetButtons = selected
     ? '<div class="charge-target__measurement"><span>Measured distance (round up to whole inches)</span>' +
       '<div class="charge-distance-presets">' +
-      Array.from({ length: 18 }, (_, index) => {
-        const distance = index + 1;
+      Array.from({ length: 11 }, (_, index) => {
+        const distance = index + 2;
         return '<button type="button" class="charge-distance-preset ' +
           (measuredDistance === distance ? 'is-selected' : '') +
           '" data-charge-distance="' + escapeHtml(item.targetUnitId) + '" data-charge-distance-value="' +
