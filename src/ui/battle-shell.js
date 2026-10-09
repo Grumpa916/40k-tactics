@@ -16,10 +16,6 @@ const SCREEN_FACTORIES = Object.freeze({
   fight: createFightScreen
 });
 
-function phaseLabel(phase) {
-  return PHASES.find((item) => item.id === phase)?.label ?? phase;
-}
-
 function renderShell(container, state) {
   const activePhase = state?.phase ?? null;
   const phaseItems = PHASES.map((phase) => {
@@ -31,13 +27,6 @@ function renderShell(container, state) {
   }).join("");
 
   container.innerHTML = `<main class="battle-shell">
-    <header class="battle-shell__header">
-      <div>
-        <div class="battle-shell__kicker">LIVE BATTLE</div>
-        <h1>${phaseLabel(activePhase)} Phase</h1>
-        <p>Round ${state?.battle?.round ?? state?.round ?? "—"} · Turn ${state?.turn ?? "—"}</p>
-      </div>
-    </header>
     <ol class="battle-shell__phases" aria-label="Battle phases">${phaseItems}</ol>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
