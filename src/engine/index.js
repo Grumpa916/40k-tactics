@@ -16,4 +16,11 @@ export { getFightState } from "../rules/fight-state.js";
 export { getShootingState } from "../rules/shooting-state.js";
 export { registerCoreCommandHandlers } from "./register-core-commands.js";
 export { COMMAND_TYPES, commandTypeList } from "../commands/game-commands.js";
+export {
+  recordVictoryPointsAward,
+  getVictoryPointScore,
+  getVictoryPointHistory,
+  undoLatestVictoryPointsAward,
+  getLatestUndoableVictoryPointsAward
+} from "./victory-points-ledger.js";
 export { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "./scoring-check-coordinator.js";
