@@ -20,6 +20,14 @@
 </head>
 <body>
   <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>
-  <script type="module" src="https://cdn.jsdelivr.net/gh/Grumpa916/40k-tactics@fix/battle-preview-module-loading/src/ui/battle-demo.js"></script>
+  <script>
+    window.setTimeout(() => {
+      const root = document.getElementById("battle-app");
+      if (root && root.textContent.includes("Loading integrated battle")) {
+        root.innerHTML = "<main class=\"battle-shell\"><h1>Battle module did not start</h1><p>The preview loaded this HTML, but the JavaScript entry module did not render. This points to module delivery/import failure, not a battle-screen layout issue.</p></main>";
+      }
+    }, 2500);
+  </script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Grumpa916/40k-tactics@main/src/ui/battle-demo.js"></script>
 </body>
 </html>
