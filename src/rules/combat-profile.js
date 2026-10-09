@@ -1,10 +1,10 @@
 export function buildAttackProfile({ attacker, target, weapon } = {}) {
-  if (!attacker || !attacker.characteristics) throw new TypeError("An attacker unit profile is required.");
-  if (!target || !target.characteristics) throw new TypeError("A target unit profile is required.");
+  if (!attacker || !(attacker.characteristics ?? attacker.profile?.characteristics)) throw new TypeError("An attacker unit profile is required.");
+  if (!target || !(target.characteristics ?? target.profile?.characteristics)) throw new TypeError("A target unit profile is required.");
   if (!weapon || !weapon.characteristics) throw new TypeError("A weapon profile is required.");
 
-  const attackerCharacteristics = attacker.characteristics;
-  const targetCharacteristics = target.characteristics;
+  const attackerCharacteristics = attacker.characteristics ?? attacker.profile.characteristics;
+  const targetCharacteristics = target.characteristics ?? target.profile.characteristics;
   const weaponCharacteristics = weapon.characteristics;
 
   const hitTargetKey = weapon.type === "melee" ? "weaponSkill" : "ballisticSkill";
