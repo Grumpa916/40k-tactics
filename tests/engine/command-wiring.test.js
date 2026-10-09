@@ -196,3 +196,21 @@ test("core command registration rejects duplicate registration", () => {
   assert.throws(() => registerCoreCommandHandlers(), /already registered/);
   clearCommandHandlers();
 });
+
+test("Command Point changes execute through the core command engine", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const initial = createGameState({
+    turn: 1,
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1 },
+    commandPoints: { p1: 0 }
+  });
+  const next = executeCommand(initial, createCommand(COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, {
+    playerId: "p1", amount: 1, reason: "gain", note: "Command phase"
+  }));
+  assert.equal(next.commandPoints.p1, 1);
+  assert.equal(next.history.at(-1).type, "command_points.changed");
+  assert.equal(next.history.at(-1).payload.balanceAfter, 1);
+  clearCommandHandlers();
+});

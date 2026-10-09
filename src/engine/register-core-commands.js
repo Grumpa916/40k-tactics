@@ -15,6 +15,7 @@ import { resolveNormalMove, recordFallBack } from "./movement-transitions.js";
 import { recordChargeOutcome } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
+import { recordCommandPointChange } from "./command-points-ledger.js";
 
 export function registerCoreCommandHandlers() {
   const handlers = [
@@ -40,7 +41,9 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.COMPLETE_FIGHT_PHASE, (state) => completeFightPhase(state)],
     [COMMAND_TYPES.RESOLVE_ATTACK, (state, command, context) =>
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
-    ]
+    ],
+    [COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, (state, command) =>
+      recordCommandPointChange(state, command.payload)]
   ];
 
   for (const [type, handler] of handlers) {

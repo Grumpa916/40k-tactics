@@ -14,7 +14,8 @@ export const COMMAND_TYPES = Object.freeze({
   COMPLETE_SHOOTING_PHASE: "shooting.complete_phase",
   RECORD_FIGHT_ACTIVATION: "fight.record_activation",
   COMPLETE_FIGHT_PHASE: "fight.complete_phase",
-  RESOLVE_ATTACK: "combat.resolve_attack"
+  RESOLVE_ATTACK: "combat.resolve_attack",
+  RECORD_COMMAND_POINT_CHANGE: "command_points.record_change"
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));
