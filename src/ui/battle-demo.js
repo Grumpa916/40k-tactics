@@ -14,13 +14,13 @@ const gameData = {
       id: "rifle",
       name: "Bolt Rifle",
       type: "ranged",
-      characteristics: { range: 24, attacks: 2, strength: 4, ap: 1, damage: 1 }
+      characteristics: { range: 24, attacks: 2, strength: 4, ap: -1, damage: 1 }
     },
     {
       id: "blade",
       name: "Power Blade",
       type: "melee",
-      characteristics: { attacks: 2, strength: 5, ap: 2, damage: 2 }
+      characteristics: { attacks: 2, strength: 5, ap: -2, damage: 2 }
     }
   ]
 };
