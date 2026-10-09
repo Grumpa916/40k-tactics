@@ -16,6 +16,7 @@ import { recordChargeOutcome } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
+import { recordVictoryPointsAward } from "./victory-points-ledger.js";
 
 export function registerCoreCommandHandlers() {
   const handlers = [
@@ -43,7 +44,9 @@ export function registerCoreCommandHandlers() {
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ],
     [COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, (state, command) =>
-      recordCommandPointChange(state, command.payload)]
+      recordCommandPointChange(state, command.payload)],
+    [COMMAND_TYPES.RECORD_VICTORY_POINTS, (state, command) =>
+      recordVictoryPointsAward(state, command.payload)]
   ];
 
   for (const [type, handler] of handlers) {
