@@ -74,10 +74,35 @@ export function createCommandScreen(container, {
       const playerId = container.querySelector("[data-secondary-player]")?.value ||
         perspectivePlayerId || state.activePlayer;
       const definitionId = container.querySelector("[data-secondary-definition]")?.value;
-      const definition = missionDefinitions.find((item) =>
+      let definition = missionDefinitions.find((item) =>
         item.id === definitionId && item.category === "secondary");
-      if (!playerId || !definition) {
-        secondaryMissionMessage = "Select a player and a secondary mission before adding it.";
+      if (!definition) {
+        const manualName = String(container.querySelector("[data-secondary-name]")?.value ?? "").trim();
+        const manualTiming = container.querySelector("[data-secondary-timing]")?.value;
+        const allowedTimings = [
+          SCORING_TIMINGS.COMMAND_PHASE,
+          SCORING_TIMINGS.END_OF_TURN,
+          SCORING_TIMINGS.END_OF_OPPONENT_TURN,
+          SCORING_TIMINGS.END_OF_BATTLE
+        ];
+        if (!manualName || !allowedTimings.includes(manualTiming)) {
+          secondaryMissionMessage = "Choose a catalog mission or enter a card name and its scoring checkpoint.";
+          render();
+          return;
+        }
+        const slug = manualName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "secondary";
+        definition = {
+          id: "manual-" + slug + "-" + (state.battle?.round ?? 0) + "-" +
+            (state.turn ?? 0) + "-" + (getSecondaryMissionHistory(state).length + 1),
+          name: manualName,
+          category: "secondary",
+          timing: manualTiming,
+          conditions: [],
+          manualEntry: true
+        };
+      }
+      if (!playerId) {
+        secondaryMissionMessage = "Select a player before adding a secondary mission.";
         render();
         return;
       }
@@ -242,9 +267,10 @@ export function createCommandScreen(container, {
       (player.id === selectedSecondaryPlayerId ? ' selected' : '') + '>' +
       escapeHtml(player.name ?? player.id) + '</option>'
     ).join("");
-    const secondaryDefinitionOptions = selectableSecondaryDefinitions.map((definition) =>
-      '<option value="' + escapeHtml(definition.id) + '">' + escapeHtml(definition.name ?? definition.id) + '</option>'
-    ).join("");
+    const secondaryDefinitionOptions = '<option value="">Enter a mission manually</option>' +
+      selectableSecondaryDefinitions.map((definition) =>
+        '<option value="' + escapeHtml(definition.id) + '">' + escapeHtml(definition.name ?? definition.id) + '</option>'
+      ).join("");
     const secondaryHistoryMarkup = secondaryHistory.length
       ? secondaryHistory.slice().reverse().map((item) => '<li><strong>' +
         escapeHtml(item.definition?.name ?? item.definitionId) + '</strong> — ' +
@@ -252,19 +278,24 @@ export function createCommandScreen(container, {
         ' <small>(entered Round ' + escapeHtml(item.drawnRound) + ', turn ' + escapeHtml(item.drawnTurn) + ')</small></li>'
       ).join("")
       : '<li>No secondary missions have been entered yet.</li>';
+    const manualTimingOptions = [
+      [SCORING_TIMINGS.COMMAND_PHASE, "End of Command phase"],
+      [SCORING_TIMINGS.END_OF_TURN, "End of turn"],
+      [SCORING_TIMINGS.END_OF_OPPONENT_TURN, "End of opponent's turn"],
+      [SCORING_TIMINGS.END_OF_BATTLE, "End of battle"]
+    ].map(([value, label]) => '<option value="' + value + '">' + label + '</option>').join("");
     const secondaryEntryMarkup = state.phase !== "command"
       ? '<p>Manual secondary-mission entry is available during the Command phase. Current game phase: ' +
         escapeHtml(state.phase ?? "unknown") + '.</p>'
       : !players.length
         ? '<p>Add players before entering secondary missions.</p>'
-        : !secondaryDefinitions.length
-          ? '<p>No secondary mission definitions are available to select. The mission catalog must be supplied; this screen will not invent or automatically draw cards.</p>'
-          : '<form data-secondary-mission-form><div class="command-vp-form">' +
-            '<label>Player<select data-secondary-player>' + secondaryPlayerOptions + '</select></label>' +
-            '<label>Secondary mission<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
-            '<button type="button" data-secondary-mission-add' + (selectableSecondaryDefinitions.length ? '' : ' disabled') +
-            '>Add selected mission</button></div></form>' +
-            '<p>Choose the card you selected at the table. This records the mission only; it does not award VP.</p>';
+        : '<form data-secondary-mission-form><div class="command-vp-form">' +
+          '<label>Player<select data-secondary-player>' + secondaryPlayerOptions + '</select></label>' +
+          '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
+          '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
+          '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
+          '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
+          '<p>Select a supplied definition or enter the card name and its scoring checkpoint from the printed rules. Manual entries without configured scoring conditions remain advisory-only and require your own rules check; no VP is awarded here.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
       '<p>Enter missions manually during the Command phase. No automatic draw or selection occurs.</p>' +
       secondaryEntryMarkup +
