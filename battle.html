@@ -18,6 +18,58 @@
     .battle-phase.is-active { border-color: #aaa; }
     .battle-shell__placeholder, .battle-startup-error { padding: 24px; border: 1px solid #777; border-radius: 10px; }
     .battle-startup-error { white-space: pre-wrap; overflow-wrap: anywhere; border-color: #b66; }
+
+    * { box-sizing: border-box; }
+    .shoot-screen { max-width: 1180px; margin: 0 auto; padding: 8px 0 24px; }
+    .shoot-screen header, .shoot-screen .heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .shoot-screen header { background:#1a1a1a; border:1px solid #444; border-radius:12px; padding:18px 20px; margin-bottom:14px; }
+    .shoot-screen h1 { margin:4px 0; font-size:28px; }
+    .shoot-screen header p { margin:0; opacity:.7; }
+    .shoot-screen .kicker { font-size:11px; font-weight:800; letter-spacing:.12em; opacity:.65; }
+    .shoot-screen .note { background:#1a1a1a; border:1px solid #444; border-radius:10px; padding:12px 14px; opacity:.85; font-size:14px; }
+    .shoot-screen section { background:#191919; border:1px solid #444; border-radius:12px; padding:16px; margin-top:14px; min-width:0; }
+    .shoot-screen .heading { margin-bottom:12px; }
+    .shoot-screen .heading h2 { margin:0; font-size:16px; }
+    .shoot-screen .heading span { font-size:12px; opacity:.7; }
+    .shoot-screen .candidates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .shoot-screen .shoot-unit { min-height:76px; text-align:left; padding:12px; border:1px solid #555; border-radius:9px; background:#222; color:inherit; cursor:pointer; }
+    .shoot-screen .shoot-unit strong, .shoot-screen .shoot-unit span, .shoot-screen .shoot-unit small { display:block; }
+    .shoot-screen .shoot-unit span, .shoot-screen .shoot-unit small { margin-top:4px; opacity:.7; font-size:12px; }
+    .shoot-screen .grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr); gap:14px; align-items:start; }
+    .shoot-screen .controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:end; }
+    .shoot-screen .controls label { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:650; min-width:0; }
+    .shoot-screen .controls select, .shoot-screen .controls button { width:100%; margin:0; min-height:40px; padding:8px 10px; border:1px solid #555; border-radius:8px; background:#292929; color:inherit; }
+    .shoot-screen .controls button { cursor:pointer; font-weight:700; }
+    .shoot-screen .controls button:disabled { opacity:.4; cursor:not-allowed; }
+    .shoot-screen .shoot-selected-shooter { grid-column:1 / -1; display:flex; flex-direction:column; gap:4px; padding:10px 12px; border:1px solid #444; border-radius:8px; background:#222; }
+    .shoot-screen .shoot-selected-shooter span, .shoot-screen .damage-control__label { font-size:12px; opacity:.75; }
+    .shoot-screen .damage-control { display:grid; gap:6px; }
+    .shoot-screen .damage-control__buttons { display:grid; grid-template-columns:44px minmax(44px,1fr) 44px; min-height:40px; }
+    .shoot-screen .damage-control__buttons button { min-height:40px; padding:0; font-size:20px; }
+    .shoot-screen .damage-control__buttons strong { display:grid; place-items:center; border-top:1px solid #555; border-bottom:1px solid #555; background:#222; }
+    .shoot-screen .damage-control small { display:none; }
+    .shoot-screen .shoot-advisory { grid-column:1 / -1; padding:14px; border:1px solid #555; border-radius:10px; background:#202020; }
+    .shoot-screen .shoot-advisory__heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .shoot-screen .shoot-advisory__heading h3 { margin:0; font-size:18px; }
+    .shoot-screen .shoot-advisory__heading span { font-size:13px; opacity:.8; }
+    .shoot-screen .shoot-advisory__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; }
+    .shoot-screen .shoot-advisory__grid > div { display:flex; flex-direction:column; gap:5px; padding:10px; border:1px solid #444; border-radius:8px; }
+    .shoot-screen .shoot-advisory__grid strong { font-size:18px; }
+    .shoot-screen .shoot-advisory__grid span { font-size:12px; opacity:.75; }
+    .shoot-screen .shoot-advisory p { margin:12px 0 8px; }
+    .shoot-screen .shoot-advisory small { opacity:.75; }
+    .shoot-screen .history { margin:0; padding-left:24px; }
+    .shoot-screen .history li { padding:7px 0; }
+    .shoot-screen .history li span { display:block; margin-top:4px; opacity:.75; }
+    .shoot-screen .choice { margin-top:12px; padding:12px; border:1px solid #444; border-radius:9px; background:#222; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .shoot-screen .choice>div:first-child span { display:block; margin-top:4px; opacity:.75; font-size:12px; }
+    .shoot-screen .choice-buttons { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .shoot-screen .choice-buttons button, .shoot-screen .choice-buttons select { min-height:40px; padding:0 10px; border:1px solid #555; border-radius:8px; background:#292929; color:inherit; }
+    .shoot-screen .choice-buttons label { font-size:12px; }
+    .shoot-screen footer { display:flex; justify-content:flex-end; padding:16px 0; }
+    .shoot-screen .complete { min-height:40px; padding:0 16px; border:0; border-radius:8px; background:#e8ebef; color:#0b0d10; font-weight:800; }
+    @media(max-width:800px) { .shoot-screen .grid { grid-template-columns:1fr; } .shoot-screen .candidates { grid-template-columns:repeat(2,minmax(0,1fr)); } .shoot-screen .choice { align-items:flex-start; flex-direction:column; } }
+    @media(max-width:520px) { .shoot-screen .candidates, .shoot-screen .controls { grid-template-columns:1fr; } .shoot-screen header { align-items:flex-start; flex-direction:column; } .shoot-screen .shoot-selected-shooter, .shoot-screen .shoot-advisory { grid-column:auto; } }
   </style>
 </head>
 <body>
