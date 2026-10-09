@@ -39,7 +39,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null) {
     <h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>
     <p>${scoringReminder.label}. Check any Primary or Secondary mission due now.</p>
     <ul>${scoringReminder.missions.map((mission) => `<li>${mission}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
-    <button type="button" data-dismiss-scoring-reminder>Review scoring</button>
+    <button type="button" data-review-scoring>Review scoring</button>
     <button type="button" data-dismiss-scoring-reminder>Remind me later</button>
   </section>` : "";
   container.innerHTML = `<main class="battle-shell">
@@ -134,6 +134,14 @@ export function createBattleShell(container, {
     button.closest(".battle-scoring-reminder")?.remove();
   }
 
+  function handleReviewScoring(event) {
+    const button = event.target?.closest?.("[data-review-scoring]");
+    if (!button || !container.contains(button)) return;
+    scoringReminder = null;
+    viewedPhase = "command";
+    render();
+  }
+
   function handlePhaseNavigation(event) {
     const button = event.target?.closest?.("[data-battle-phase-button]");
     if (!button || !container.contains(button)) return;
@@ -145,6 +153,7 @@ export function createBattleShell(container, {
 
   container.addEventListener?.("click", handlePhaseNavigation);
   container.addEventListener?.("click", handleDismissScoringReminder);
+  container.addEventListener?.("click", handleReviewScoring);
   const unsubscribe = session.subscribe(render);
   render();
 
@@ -155,6 +164,7 @@ export function createBattleShell(container, {
       unsubscribe();
       container.removeEventListener?.("click", handlePhaseNavigation);
       container.removeEventListener?.("click", handleDismissScoringReminder);
+      container.removeEventListener?.("click", handleReviewScoring);
       destroyMountedScreen();
       container.replaceChildren();
     }
