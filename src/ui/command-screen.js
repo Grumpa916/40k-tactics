@@ -1,4 +1,6 @@
 import { getScoringOpportunityAdvisories } from "../rules/tactical-scoring-opportunities.js";
+import { COMMAND_TYPES } from "../commands/game-commands.js";
+import { getCommandPointHistory } from "../engine/command-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 
 function escapeHtml(value) {
@@ -71,12 +73,22 @@ export function createCommandScreen(container, {
       }
     }
 
+    const cpHistory = getCommandPointHistory(state, playerId).slice(-5).reverse();
+    const historyMarkup = cpHistory.length ? cpHistory.map((entry) =>
+      '<li><strong>' + escapeHtml(entry.amount > 0 ? '+' + entry.amount : entry.amount) +
+      ' CP</strong> · ' + escapeHtml(entry.reason) + (entry.note ? ' — ' + escapeHtml(entry.note) : '') +
+      ' <small>(balance ' + escapeHtml(entry.balanceAfter) + ')</small></li>'
+    ).join("") : '<li>No Command Point changes recorded yet.</li>';
+
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
+      '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
+      '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
+      '<ol class="command-ledger-history">' + historyMarkup + '</ol></section>' +
       '<section><h2>Objective control</h2><div class="command-objectives">' + objectiveCards + '</div></section>' +
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section></main>';
   }
