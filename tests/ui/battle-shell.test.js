@@ -32,7 +32,8 @@ function container() {
       this.html = value;
       const screen = {
         innerHTML: "",
-        querySelector: () => null
+        querySelector: () => null,
+        replaceChildren() { this.innerHTML = ""; }
       };
       screens.set("screen", screen);
       this._screen = screen;
