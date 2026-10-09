@@ -41,7 +41,10 @@ export function recordVictoryPointsAward(state, {
     victoryPoints: { ...scores, [playerId]: scoreAfter }
   };
   return appendHistoryEntry(updated, createEvent("victory_points.awarded", {
-    playerId, amount, reason: reason.trim(), missionDefinitionId, category, opportunityKey, turn, round, scoreBefore, scoreAfter
+    playerId, amount, reason: reason.trim(), turn, round, scoreBefore, scoreAfter,
+    ...(missionDefinitionId ? { missionDefinitionId } : {}),
+    ...(category ? { category } : {}),
+    ...(opportunityKey ? { opportunityKey } : {})
   }));
 }
 
