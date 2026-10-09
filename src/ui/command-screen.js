@@ -281,7 +281,7 @@ export function createCommandScreen(container, {
         ' <small>(entered Round ' + escapeHtml(item.drawnRound) + ', turn ' + escapeHtml(item.drawnTurn) + ')</small></li>'
       ).join("")
       : '<li>No secondary missions have been entered yet.</li>';
-    const manualTimingOptions = [
+    const manualTimingOptions = '<option value="">Choose checkpoint...</option>' + [
       [SCORING_TIMINGS.COMMAND_PHASE, "End of Command phase"],
       [SCORING_TIMINGS.END_OF_TURN, "End of turn"],
       [SCORING_TIMINGS.END_OF_OPPONENT_TURN, "End of opponent's turn"],
