@@ -16,6 +16,10 @@ const SCREEN_FACTORIES = Object.freeze({
   fight: createFightScreen
 });
 
+function phaseLabel(phase) {
+  return PHASES.find((item) => item.id === phase)?.label ?? phase;
+}
+
 function renderShell(container, state) {
   const activePhase = state?.phase ?? null;
   const phaseItems = PHASES.map((phase) => {
@@ -81,9 +85,6 @@ export function createBattleShell(container, {
         </div>`;
         mountedPhase = phase;
       }
-    } else {
-      const phaseHeading = container.querySelector(".battle-shell__header h1");
-      if (phaseHeading) phaseHeading.textContent = `${phaseLabel(phase)} Phase`;
     }
 
     return state;
