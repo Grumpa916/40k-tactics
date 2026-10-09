@@ -148,14 +148,14 @@ export function createCommandScreen(container, {
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section></main>';
   }
 
-  container.addEventListener("click", handleClick);
-  container.addEventListener("submit", handleSubmit);
+  container.addEventListener?.("click", handleClick);
+  container.addEventListener?.("submit", handleSubmit);
   const unsubscribe = session.subscribe(render);
   render();
   return { render, destroy() {
     unsubscribe();
-    container.removeEventListener("click", handleClick);
-    container.removeEventListener("submit", handleSubmit);
+    container.removeEventListener?.("click", handleClick);
+    container.removeEventListener?.("submit", handleSubmit);
     container.replaceChildren();
   }};
 }
