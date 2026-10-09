@@ -1,6 +1,5 @@
 export const SECONDARY_MISSION_STATUS = Object.freeze({
   ACTIVE: "active",
-  SCORED: "scored",
   DISCARDED: "discarded"
 });
 
@@ -53,35 +52,68 @@ export function drawSecondaryMission(state, {
     status: SECONDARY_MISSION_STATUS.ACTIVE,
     drawnRound: round,
     drawnTurn: turn,
-    resolvedRound: null,
-    resolvedTurn: null
+    scoringHistory: [],
+    discardedRound: null,
+    discardedTurn: null
   });
   return withMissionList(state, [...existing, entry]);
 }
 
-/** Mark an active secondary as scored or discarded; scoring itself is recorded separately. */
-export function resolveSecondaryMission(state, {
+/**
+ * Record a scoring event without ending the mission: many secondary missions
+ * can score more than once or remain active after scoring. VP confirmation is
+ * handled separately by the scoring flow.
+ */
+export function recordSecondaryMissionScored(state, {
   instanceId,
   playerId,
-  status,
   round = state?.battle?.round ?? 0,
-  turn = state?.turn ?? 0
+  turn = state?.turn ?? 0,
+  notes = null
 } = {}) {
   if (!instanceId) throw new TypeError("A secondary mission instance id is required.");
-  if (!playerId) throw new TypeError("The resolving player is required.");
-  if (![SECONDARY_MISSION_STATUS.SCORED, SECONDARY_MISSION_STATUS.DISCARDED].includes(status)) {
-    throw new Error("A secondary mission can only be resolved as scored or discarded.");
+  if (!playerId) throw new TypeError("The scoring player is required.");
+  if (!Number.isInteger(round) || round < 0 || !Number.isInteger(turn) || turn < 0) {
+    throw new TypeError("Round and turn must be non-negative integers.");
   }
   const existing = missionList(state);
   const index = existing.findIndex((entry) => entry.instanceId === instanceId);
   if (index < 0) throw new Error("Secondary mission instance not found.");
   const entry = existing[index];
-  if (entry.playerId !== playerId) throw new Error("Only the owning player can resolve this secondary mission.");
-  if (entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) throw new Error("Only an active secondary mission can be resolved.");
+  if (entry.playerId !== playerId) throw new Error("Only the owning player can record scoring for this secondary mission.");
+  if (entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) throw new Error("Only an active secondary mission can be scored.");
+  const scoringEvent = Object.freeze({ round, turn, notes });
+  const updated = Object.freeze({
+    ...entry,
+    scoringHistory: [...(entry.scoringHistory ?? []), scoringEvent]
+  });
+  return withMissionList(state, existing.map((item, i) => i === index ? updated : item));
+}
+
+/** Discard an active secondary; score recording is a separate, non-terminal event. */
+export function discardSecondaryMission(state, {
+  instanceId,
+  playerId,
+  round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  if (!instanceId) throw new TypeError("A secondary mission instance id is required.");
+  if (!playerId) throw new TypeError("The discarding player is required.");
   if (!Number.isInteger(round) || round < 0 || !Number.isInteger(turn) || turn < 0) {
     throw new TypeError("Round and turn must be non-negative integers.");
   }
-  const updated = Object.freeze({ ...entry, status, resolvedRound: round, resolvedTurn: turn });
+  const existing = missionList(state);
+  const index = existing.findIndex((entry) => entry.instanceId === instanceId);
+  if (index < 0) throw new Error("Secondary mission instance not found.");
+  const entry = existing[index];
+  if (entry.playerId !== playerId) throw new Error("Only the owning player can discard this secondary mission.");
+  if (entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) throw new Error("Only an active secondary mission can be discarded.");
+  const updated = Object.freeze({
+    ...entry,
+    status: SECONDARY_MISSION_STATUS.DISCARDED,
+    discardedRound: round,
+    discardedTurn: turn
+  });
   return withMissionList(state, existing.map((item, i) => i === index ? updated : item));
 }
 
@@ -95,5 +127,5 @@ export function getActiveSecondaryMissionDefinitions(state, playerId) {
 export function getSecondaryMissionHistory(state, playerId = null) {
   return missionList(state)
     .filter((entry) => playerId == null || entry.playerId === playerId)
-    .map((entry) => ({ ...entry }));
+    .map((entry) => ({ ...entry, scoringHistory: [...(entry.scoringHistory ?? [])] }));
 }
