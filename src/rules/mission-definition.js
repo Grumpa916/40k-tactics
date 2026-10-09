@@ -10,6 +10,7 @@ import {
 export const SCORING_TIMINGS = Object.freeze({
   COMMAND_PHASE: "command-phase",
   END_OF_TURN: "end-of-turn",
+  END_OF_OPPONENT_TURN: "end-of-opponent-turn",
   END_OF_BATTLE: "end-of-battle",
   EVENT: "event"
 });
