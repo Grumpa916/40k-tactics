@@ -35,13 +35,17 @@ function renderShell(container, state, viewedPhase, scoringReminder = null) {
     </li>`;
   }).join("");
 
-  const reminderMarkup = scoringReminder ? `<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">
-    <h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>
-    <p>${scoringReminder.label}. Check any Primary or Secondary mission due now.</p>
-    <ul>${scoringReminder.missions.map((mission) => `<li>${mission}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
-    <button type="button" data-review-scoring>Review scoring</button>
-    <button type="button" data-dismiss-scoring-reminder>Remind me later</button>
-  </section>` : "";
+  const reminderMarkup = scoringReminder ? `<div class="battle-scoring-reminder__backdrop">
+    <section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">
+      <h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>
+      <p>${scoringReminder.label}. Check any Primary or Secondary mission due now.</p>
+      <ul>${scoringReminder.missions.map((mission) => `<li>${mission}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
+      <div class="battle-scoring-reminder__actions">
+        <button type="button" data-review-scoring>Review scoring</button>
+        <button type="button" data-dismiss-scoring-reminder>Remind me later</button>
+      </div>
+    </section>
+  </div>` : "";
   container.innerHTML = `<main class="battle-shell">
     ${reminderMarkup}
     <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
@@ -90,10 +94,20 @@ export function createBattleShell(container, {
         : actualPhase === "end_turn" ? "end-of-turn" : null;
       if (timing) {
         const definitionsDue = missionDefinitions.filter((definition) => definition.timing === timing);
+        const activePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
+        const isPerspectiveTurn = perspectivePlayerId != null && activePlayerId != null
+          ? activePlayerId === perspectivePlayerId
+          : null;
+        const ownerLabel = isPerspectiveTurn === true
+          ? "your"
+          : isPerspectiveTurn === false ? "your opponent's" : "the active player's";
         scoringReminder = {
           id: ++reminderSequence,
           timing,
-          label: timing === "command-phase" ? "End of your Command phase" : "End of turn",
+          label: timing === "command-phase"
+            ? `End of ${ownerLabel} Command phase`
+            : `End of ${ownerLabel} turn`,
+          activePlayerId,
           missions: definitionsDue.map((definition) => definition.name)
         };
       }
@@ -131,7 +145,7 @@ export function createBattleShell(container, {
     const button = event.target?.closest?.("[data-dismiss-scoring-reminder]");
     if (!button || !container.contains(button)) return;
     scoringReminder = null;
-    button.closest(".battle-scoring-reminder")?.remove();
+    button.closest(".battle-scoring-reminder__backdrop")?.remove();
   }
 
   function handleReviewScoring(event) {
