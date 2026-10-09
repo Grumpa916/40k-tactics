@@ -412,3 +412,37 @@ test("opponent-turn reminder names active secondary cards for the perspective pl
   assert.match(root.html, /Active opponent-window card/);
   shell.destroy();
 });
+
+test("scoring checkpoint review supports end-of-turn and end-of-battle active secondary cards without state changes", () => {
+  for (const checkpoint of [SCORING_TIMINGS.END_OF_TURN, SCORING_TIMINGS.END_OF_BATTLE]) {
+    let state = {
+      phase: "command", turn: 3, activePlayer: "p1",
+      battle: { round: 2, activePlayerId: "p1" },
+      players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+      objectives: [], units: [], history: [], scoring: { turnSnapshots: [] }
+    };
+    const secondary = createMissionDefinition({
+      id: `secondary-${checkpoint}`,
+      name: `Active secondary for ${checkpoint}`,
+      category: "secondary",
+      timing: checkpoint,
+      conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 3 } }]
+    });
+    state = drawSecondaryMission(state, { definition: secondary, playerId: "p1" });
+    const beforeStatus = getSecondaryMissionHistory(state, "p1")[0].status;
+    const session = { getState: () => state, subscribe() { return () => {}; } };
+    const root = { innerHTML: "", replaceChildren() { this.innerHTML = ""; } };
+    const screen = createCommandScreen(root, {
+      session, perspectivePlayerId: "p1", scoringCheckpoint: checkpoint,
+      scoringCheckpointActivePlayerId: "p1"
+    });
+
+    assert.match(root.innerHTML, new RegExp(checkpoint === SCORING_TIMINGS.END_OF_TURN
+      ? "End of turn scoring review" : "End of battle scoring review"));
+    assert.match(root.innerHTML, new RegExp(`Active secondary for ${checkpoint}`));
+    assert.match(root.innerHTML, /does not award VP or change card status/);
+    assert.equal(state.victoryPoints, undefined);
+    assert.equal(getSecondaryMissionHistory(state, "p1")[0].status, beforeStatus);
+    screen.destroy();
+  }
+});
