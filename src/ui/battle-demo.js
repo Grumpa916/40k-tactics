@@ -50,7 +50,7 @@ const state = createGameState({
       position: { x: 0, y: 0 },
       profile: {
         weaponIds: ["rifle", "blade"],
-        characteristics: { ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
+        characteristics: { movement: 6, ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
       }
     }),
     createUnit({
@@ -74,7 +74,7 @@ const state = createGameState({
       position: { x: 6, y: 0 },
       profile: {
         weaponIds: ["blade"],
-        characteristics: { ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 4 }
+        characteristics: { movement: 6, ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 4 }
       }
     })
   ]
