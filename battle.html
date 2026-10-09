@@ -16,11 +16,18 @@
     .battle-phase strong, .battle-phase span { display: block; }
     .battle-phase span { font-size: 12px; opacity: .65; margin-top: 2px; }
     .battle-phase.is-active { border-color: #aaa; }
-    .battle-shell__placeholder { padding: 24px; border: 1px dashed #555; border-radius: 10px; }
+    .battle-shell__placeholder, .battle-startup-error { padding: 24px; border: 1px solid #777; border-radius: 10px; }
+    .battle-startup-error { white-space: pre-wrap; overflow-wrap: anywhere; border-color: #b66; }
   </style>
 </head>
 <body>
-  <div id="battle-app"></div>
-  <script type="module" src="./src/ui/battle-demo.js"></script>
+  <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>
+  <script type="module">
+    import("./src/ui/battle-demo.js").catch((error) => {
+      const root = document.getElementById("battle-app");
+      root.innerHTML = "<main class=\"battle-shell\"><h1>Battle preview failed to start</h1><section class=\"battle-startup-error\"><strong>Startup error</strong><pre></pre></section><p>Reload after the fix is published.</p></main>";
+      root.querySelector("pre").textContent = error?.stack || error?.message || String(error);
+    });
+  </script>
 </body>
 </html>
