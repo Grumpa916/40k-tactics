@@ -3,6 +3,8 @@ import { createUnit } from "../state/unit.js";
 import { createGameSession } from "../application/game-session.js";
 import { registerCoreCommandHandlers } from "../engine/register-core-commands.js";
 import { clearCommandHandlers } from "../engine/command-engine.js";
+import { SCORING_TIMINGS, createMissionDefinition } from "../rules/mission-definition.js";
+import { SCORING_EVIDENCE } from "../rules/scoring-eligibility.js";
 import { createBattleShell } from "./battle-shell.js";
 
 clearCommandHandlers();
@@ -25,6 +27,19 @@ const gameData = {
   ]
 };
 
+// This is a clearly labeled demo condition, not an official mission rule or points award.
+const demoMissionDefinitions = [
+  createMissionDefinition({
+    id: "demo-home-objective",
+    name: "Demo check: control Home Objective",
+    timing: SCORING_TIMINGS.COMMAND_PHASE,
+    conditions: [{
+      evidence: SCORING_EVIDENCE.OBJECTIVE_CONTROL,
+      args: { objectiveId: "home-objective", playerId: "p1", expected: "controlled" }
+    }]
+  })
+];
+
 const state = createGameState({
   phase: "shooting",
   turn: 2,
@@ -40,6 +55,11 @@ const state = createGameState({
     firstPlayerId: "p1",
     activePlayerId: "p1"
   },
+  objectives: [{
+    id: "home-objective",
+    name: "Home Objective",
+    control: { controlState: "uncontrolled", controllerId: null, contestingPlayerIds: [] }
+  }],
   units: [
     createUnit({
       id: "intercessors",
@@ -86,5 +106,6 @@ createBattleShell(document.getElementById("battle-app"), {
   session,
   perspectivePlayerId: "p1",
   gameData,
-  missionActions: [{ id: "cleanse", name: "Cleanse" }]
+  missionActions: [{ id: "cleanse", name: "Cleanse" }],
+  missionDefinitions: demoMissionDefinitions
 });
