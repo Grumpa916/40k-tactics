@@ -24,7 +24,7 @@ function phaseLabel(phase) {
   return PHASES.find((item) => item.id === phase)?.label ?? phase;
 }
 
-function renderShell(container, state, viewedPhase) {
+function renderShell(container, state, viewedPhase, scoringReminder = null) {
   const phaseItems = PHASES.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
@@ -35,7 +35,15 @@ function renderShell(container, state, viewedPhase) {
     </li>`;
   }).join("");
 
+  const reminderMarkup = scoringReminder ? `<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">
+    <h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>
+    <p>${scoringReminder.label}. Check any Primary or Secondary mission due now.</p>
+    <ul>${scoringReminder.missions.map((mission) => `<li>${mission}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
+    <button type="button" data-review-scoring>Review scoring</button>
+    <button type="button" data-dismiss-scoring-reminder>Remind me later</button>
+  </section>` : "";
   container.innerHTML = `<main class="battle-shell">
+    ${reminderMarkup}
     <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
     <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
     <section class="battle-shell__content" data-battle-screen></section>
@@ -61,6 +69,8 @@ export function createBattleShell(container, {
   let mountedScreen = null;
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
+  let scoringReminder = null;
+  let reminderSequence = 0;
 
   function destroyMountedScreen() {
     if (mountedScreen?.destroy) mountedScreen.destroy();
@@ -72,13 +82,26 @@ export function createBattleShell(container, {
     const state = session.getState();
     const actualPhase = state?.phase ?? null;
     if (actualPhase !== observedGamePhase) {
+      const previousPhase = observedGamePhase;
       observedGamePhase = actualPhase;
       viewedPhase = actualPhase;
+      const timing = previousPhase === "command" && actualPhase === "movement"
+        ? "command-phase"
+        : actualPhase === "end_turn" ? "end-of-turn" : null;
+      if (timing) {
+        const definitionsDue = missionDefinitions.filter((definition) => definition.timing === timing);
+        scoringReminder = {
+          id: ++reminderSequence,
+          timing,
+          label: timing === "command-phase" ? "End of your Command phase" : "End of turn",
+          missions: definitionsDue.map((definition) => definition.name)
+        };
+      }
     }
 
     if (viewedPhase !== mountedPhase) {
       destroyMountedScreen();
-      renderShell(container, state, viewedPhase);
+      renderShell(container, state, viewedPhase, scoringReminder);
 
       const screenContainer = container.querySelector("[data-battle-screen]");
       const factory = screenFactories[viewedPhase];
@@ -104,6 +127,21 @@ export function createBattleShell(container, {
     return state;
   }
 
+  function handleDismissScoringReminder(event) {
+    const button = event.target?.closest?.("[data-dismiss-scoring-reminder]");
+    if (!button || !container.contains(button)) return;
+    scoringReminder = null;
+    button.closest(".battle-scoring-reminder")?.remove();
+  }
+
+  function handleReviewScoring(event) {
+    const button = event.target?.closest?.("[data-review-scoring]");
+    if (!button || !container.contains(button)) return;
+    scoringReminder = null;
+    viewedPhase = "command";
+    render();
+  }
+
   function handlePhaseNavigation(event) {
     const button = event.target?.closest?.("[data-battle-phase-button]");
     if (!button || !container.contains(button)) return;
@@ -114,6 +152,8 @@ export function createBattleShell(container, {
   }
 
   container.addEventListener?.("click", handlePhaseNavigation);
+  container.addEventListener?.("click", handleDismissScoringReminder);
+  container.addEventListener?.("click", handleReviewScoring);
   const unsubscribe = session.subscribe(render);
   render();
 
@@ -123,6 +163,8 @@ export function createBattleShell(container, {
     destroy: () => {
       unsubscribe();
       container.removeEventListener?.("click", handlePhaseNavigation);
+      container.removeEventListener?.("click", handleDismissScoringReminder);
+      container.removeEventListener?.("click", handleReviewScoring);
       destroyMountedScreen();
       container.replaceChildren();
     }
