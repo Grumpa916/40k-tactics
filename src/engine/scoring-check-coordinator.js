@@ -1,0 +1,76 @@
+import { evaluateMissionDefinition, SCORING_TIMINGS } from "../rules/mission-definition.js";
+import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+
+export const SCORING_CHECKPOINTS = Object.freeze({
+  COMMAND_PHASE: SCORING_TIMINGS.COMMAND_PHASE,
+  END_OF_TURN: SCORING_TIMINGS.END_OF_TURN,
+  END_OF_OPPONENT_TURN: SCORING_TIMINGS.END_OF_OPPONENT_TURN,
+  END_OF_BATTLE: SCORING_TIMINGS.END_OF_BATTLE
+});
+
+function validateCheckpoint(checkpoint) {
+  if (!Object.values(SCORING_CHECKPOINTS).includes(checkpoint)) {
+    throw new Error("Unsupported scoring checkpoint: " + checkpoint);
+  }
+}
+
+/**
+ * Evaluate missions at one explicit scoring checkpoint for one player.
+ * Primary definitions are supplied by the primary-mission adapter; secondary
+ * definitions are read only from that player’s ACTIVE lifecycle instances.
+ * This function only reports eligibility. It never awards VP or changes state.
+ */
+export function evaluateScoringCheckpoint(state, {
+  checkpoint,
+  scoringPlayerId,
+  activePlayerId = null,
+  primaryDefinitions = []
+} = {}) {
+  validateCheckpoint(checkpoint);
+  if (typeof scoringPlayerId !== "string" || !scoringPlayerId.trim()) {
+    throw new TypeError("A scoring player id is required.");
+  }
+  if (activePlayerId != null && (typeof activePlayerId !== "string" || !activePlayerId.trim())) {
+    throw new TypeError("The active player id must be a non-empty string when provided.");
+  }
+  if (checkpoint === SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN &&
+      (!activePlayerId || activePlayerId === scoringPlayerId)) {
+    throw new Error("End-of-opponent-turn scoring requires the opponent to be the active player.");
+  }
+  if (!Array.isArray(primaryDefinitions)) {
+    throw new TypeError("Primary mission definitions must be an array.");
+  }
+
+  const primary = primaryDefinitions
+    .filter((definition) => definition && definition.category !== "secondary" && definition.timing === checkpoint)
+    .map((definition) => ({
+      category: "primary",
+      definitionId: definition.id,
+      definitionName: definition.name,
+      result: evaluateMissionDefinition(state, definition)
+    }));
+
+  const history = getSecondaryMissionHistory(state, scoringPlayerId);
+  const secondary = history
+    .filter((instance) => instance.status === SECONDARY_MISSION_STATUS.ACTIVE &&
+      instance.definition?.timing === checkpoint)
+    .map((instance) => ({
+      category: "secondary",
+      instanceId: instance.instanceId,
+      definitionId: instance.definitionId,
+      definitionName: instance.definition?.name ?? instance.definitionId,
+      result: evaluateMissionDefinition(state, instance.definition)
+    }));
+
+  return Object.freeze({
+    checkpoint,
+    scoringPlayerId,
+    activePlayerId,
+    primary: Object.freeze(primary),
+    secondary: Object.freeze(secondary),
+    eligibleCount: primary.filter((item) => item.result.eligible).length +
+      secondary.filter((item) => item.result.eligible).length,
+    requiresPlayerConfirmation: true,
+    awardsVictoryPoints: false
+  });
+}
