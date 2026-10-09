@@ -1,10 +1,11 @@
 import { createChargeScreen } from "./charge-screen.js";
+import { createCommandScreen } from "./command-screen.js";
 import { createFightScreen } from "./fight-screen.js";
 import { createMovementScreen } from "./movement-screen.js";
 import { createShootingScreen } from "./shooting-screen.js";
 
 const PHASES = Object.freeze([
-  { id: "command", label: "Command", status: "planned" },
+  { id: "command", label: "Command", status: "live" },
   { id: "movement", label: "Movement", status: "live" },
   { id: "shooting", label: "Shooting", status: "live" },
   { id: "charge", label: "Charge", status: "live" },
@@ -12,6 +13,7 @@ const PHASES = Object.freeze([
 ]);
 
 const SCREEN_FACTORIES = Object.freeze({
+  command: createCommandScreen,
   movement: createMovementScreen,
   shooting: createShootingScreen,
   charge: createChargeScreen,
@@ -43,6 +45,7 @@ export function createBattleShell(container, {
   perspectivePlayerId = null,
   gameData = null,
   missionActions = [],
+  missionDefinitions = [],
   screenFactories = SCREEN_FACTORIES
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
@@ -77,7 +80,8 @@ export function createBattleShell(container, {
           session,
           perspectivePlayerId,
           gameData,
-          missionActions
+          missionActions,
+          missionDefinitions
         });
         mountedPhase = phase;
       } else {
