@@ -164,7 +164,14 @@ export function createChargeScreen(
         const targetId = input.getAttribute('data-charge-distance');
         if (input.value === '') measuredDistances.delete(targetId);
         else measuredDistances.set(targetId, Number(input.value));
-        render();
+
+        const complete = selectedTargetIds.size > 0 &&
+          [...selectedTargetIds].every((id) => {
+            const value = measuredDistances.get(id);
+            return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+          });
+        container.querySelector('[data-charge-success]')?.toggleAttribute('disabled', !complete);
+        container.querySelector('[data-charge-failed]')?.toggleAttribute('disabled', !complete);
       });
     });
 
