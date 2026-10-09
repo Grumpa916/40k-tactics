@@ -2,10 +2,34 @@ import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 
+function validateMeasuredDistances(targetIds, measuredDistances) {
+  if (!measuredDistances || typeof measuredDistances !== "object" || Array.isArray(measuredDistances)) {
+    throw new TypeError("Measured Charge distances must be provided per target.");
+  }
+
+  const targetIdSet = new Set(targetIds);
+  const distanceIds = Object.keys(measuredDistances);
+  if (distanceIds.some((targetId) => !targetIdSet.has(targetId))) {
+    throw new Error("Measured Charge distances must match declared targets.");
+  }
+  if (distanceIds.length !== targetIds.length) {
+    throw new Error("A measured Charge distance is required for every declared target.");
+  }
+
+  return Object.fromEntries(targetIds.map((targetId) => {
+    const distance = measuredDistances[targetId];
+    if (typeof distance !== "number" || !Number.isFinite(distance) || distance < 0) {
+      throw new TypeError("Measured Charge distance must be a non-negative number.");
+    }
+    return [targetId, distance];
+  }));
+}
+
 export function recordChargeOutcome(state, {
   unitId,
   succeeded,
-  targetIds = []
+  targetIds = [],
+  measuredDistances = {}
 } = {}) {
   if (!unitId) throw new TypeError("Charging unit id is required.");
   if (typeof succeeded !== "boolean") {
@@ -44,12 +68,11 @@ export function recordChargeOutcome(state, {
   if (uniqueTargets.size !== targetIds.length || targetIds.some((id) => !id)) {
     throw new Error("Charge targets must be unique valid unit ids.");
   }
-  if (succeeded && targetIds.length === 0) {
-    throw new Error("A successful charge must record at least one target.");
+  if (targetIds.length === 0) {
+    throw new Error("A Charge attempt must record at least one declared target.");
   }
-  if (!succeeded && targetIds.length > 0) {
-    throw new Error("A failed charge cannot record targets.");
-  }
+
+  const normalizedMeasuredDistances = validateMeasuredDistances(targetIds, measuredDistances);
 
   for (const targetId of targetIds) {
     const target = state.units.find((unit) => unit.id === targetId);
@@ -63,6 +86,7 @@ export function recordChargeOutcome(state, {
     playerId: state.activePlayer,
     outcome: succeeded ? "successful" : "failed",
     targetIds: [...targetIds],
+    measuredDistances: normalizedMeasuredDistances,
     round: state.battle.round,
     turn: state.turn
   });
