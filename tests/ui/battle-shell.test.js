@@ -81,7 +81,8 @@ test("shared battle shell mounts the current implemented phase", () => {
   assert.equal(mounted[0].phase, "shooting");
   assert.equal(mounted[0].options.session, session);
   assert.equal(mounted[0].options.perspectivePlayerId, "p1");
-  assert.match(root.html, /Shooting Phase/);
+  assert.match(root.html, /data-battle-phase="shooting"/);
+  assert.doesNotMatch(root.html, /battle-shell__header/);
 
   shell.destroy();
 });
