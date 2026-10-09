@@ -280,3 +280,38 @@ test("phase navigation buttons switch the viewed screen without changing recorde
 
   shell.destroy();
 });
+
+
+test("scoring reminder appears when the opponent finishes their turn", () => {
+  const session = sessionFor({
+    phase: "end_turn", turn: 2, activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" }
+  });
+  const root = container();
+  const shell = createBattleShell(root, {
+    session, perspectivePlayerId: "p1",
+    missionDefinitions: [{ id: "opponent-window", name: "Opponent-window mission", timing: "end-of-opponent-turn" }],
+    screenFactories: {}
+  });
+  assert.doesNotMatch(root.html, /Opponent-window mission/);
+  session.setState({ phase: "start_turn", turn: 3, activePlayer: "p1", battle: { round: 1, activePlayerId: "p1" } });
+  assert.match(root.html, /End of your opponent&#039;s turn|End of your opponent's turn/);
+  assert.match(root.html, /Opponent-window mission/);
+  shell.destroy();
+});
+
+test("finishing the perspective player turn does not trigger an opponent-turn reminder", () => {
+  const session = sessionFor({
+    phase: "end_turn", turn: 1, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  const root = container();
+  const shell = createBattleShell(root, {
+    session, perspectivePlayerId: "p1",
+    missionDefinitions: [{ id: "opponent-window", name: "Opponent-window mission", timing: "end-of-opponent-turn" }],
+    screenFactories: {}
+  });
+  session.setState({ phase: "start_turn", turn: 2, activePlayer: "p2", battle: { round: 1, activePlayerId: "p2" } });
+  assert.doesNotMatch(root.html, /Opponent-window mission/);
+  shell.destroy();
+});

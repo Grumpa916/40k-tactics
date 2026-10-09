@@ -73,6 +73,7 @@ export function createBattleShell(container, {
   let mountedScreen = null;
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
+  let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
   let scoringReminder = null;
   let reminderSequence = 0;
 
@@ -87,19 +88,25 @@ export function createBattleShell(container, {
     const actualPhase = state?.phase ?? null;
     if (actualPhase !== observedGamePhase) {
       const previousPhase = observedGamePhase;
+      const endingPlayerId = observedActivePlayerId;
       observedGamePhase = actualPhase;
       viewedPhase = actualPhase;
+      const currentActivePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
+      const opponentTurnJustEnded = previousPhase === "end_turn" &&
+        (actualPhase === "start_turn" || actualPhase === "end_battle_round") &&
+        perspectivePlayerId != null && endingPlayerId != null && endingPlayerId !== perspectivePlayerId;
       const timing = previousPhase === "command" && actualPhase === "movement"
         ? "command-phase"
-        : actualPhase === "end_turn" ? "end-of-turn" : null;
+        : actualPhase === "end_turn" ? "end-of-turn"
+        : opponentTurnJustEnded ? "end-of-opponent-turn" : null;
       if (timing) {
         const definitionsDue = missionDefinitions.filter((definition) => definition.timing === timing);
-        const activePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
-        const isPerspectiveTurn = perspectivePlayerId != null && activePlayerId != null
-          ? activePlayerId === perspectivePlayerId
+        const reminderPlayerId = timing === "end-of-opponent-turn" ? endingPlayerId : currentActivePlayerId;
+        const isPerspectiveTurn = perspectivePlayerId != null && reminderPlayerId != null
+          ? reminderPlayerId === perspectivePlayerId
           : null;
-        const ownerLabel = isPerspectiveTurn === true
-          ? "your"
+        const ownerLabel = timing === "end-of-opponent-turn" ? "your opponent's"
+          : isPerspectiveTurn === true ? "your"
           : isPerspectiveTurn === false ? "your opponent's" : "the active player's";
         scoringReminder = {
           id: ++reminderSequence,
@@ -107,11 +114,12 @@ export function createBattleShell(container, {
           label: timing === "command-phase"
             ? `End of ${ownerLabel} Command phase`
             : `End of ${ownerLabel} turn`,
-          activePlayerId,
+          activePlayerId: reminderPlayerId,
           missions: definitionsDue.map((definition) => definition.name)
         };
       }
     }
+    observedActivePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
 
     if (viewedPhase !== mountedPhase) {
       destroyMountedScreen();
