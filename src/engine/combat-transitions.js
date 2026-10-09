@@ -4,6 +4,7 @@ import { appendHistoryEntry } from "../state/history.js";
 import { isMeleeWeapon } from "../rules/weapon-rules.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
+import { getExpectedDamage } from "../rules/expected-damage.js";
 import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
 
 function wasActivatedToShootThisTurn(state, unitId) {
@@ -87,8 +88,8 @@ export function resolveUnitAttack(state, {
     throw new TypeError("Actual damage must be a non-negative integer.");
   }
   const result = resolveAttack({ ...profile, random });
-  const expectedDamage = result.damage.totalDamage;
-  const recordedDamage = actualDamage ?? expectedDamage;
+  const expectedDamage = getExpectedDamage({ attacker, target, weapon }).expectedDamage;
+  const recordedDamage = actualDamage ?? result.damage.totalDamage;
   const previousWounds = target.wounds;
   const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
   const nextWounds = tracksWounds
