@@ -14,6 +14,20 @@ function validateCheckpoint(checkpoint) {
   }
 }
 
+function evaluateSecondaryInstance(state, instance) {
+  const definition = instance.definition;
+  if (!Array.isArray(definition?.conditions) || definition.conditions.length === 0) {
+    return {
+      definitionId: instance.definitionId,
+      timing: definition?.timing,
+      eligible: false,
+      manualReviewRequired: true,
+      conditions: []
+    };
+  }
+  return evaluateMissionDefinition(state, definition);
+}
+
 /**
  * Evaluate missions at one explicit scoring checkpoint for one player.
  * Primary definitions are supplied by the primary-mission adapter; secondary
@@ -59,7 +73,7 @@ export function evaluateScoringCheckpoint(state, {
       instanceId: instance.instanceId,
       definitionId: instance.definitionId,
       definitionName: instance.definition?.name ?? instance.definitionId,
-      result: evaluateMissionDefinition(state, instance.definition)
+      result: evaluateSecondaryInstance(state, instance)
     }));
 
   return Object.freeze({
