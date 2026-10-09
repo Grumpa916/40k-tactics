@@ -55,6 +55,18 @@
     .command-screen .command-ledger-actions button { border:1px solid #666; border-radius:8px; padding:10px 14px; background:#303030; color:#fff; font:inherit; font-weight:650; cursor:pointer; }
     .command-screen .command-ledger-actions button:focus-visible { outline:2px solid #ddd; outline-offset:2px; }
     .command-screen .command-ledger-history { margin:12px 0 0; padding-left:22px; display:grid; gap:7px; font-size:14px; }
+
+    .command-screen .command-scoreboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin:12px 0; }
+    .command-screen .command-score-card { display:grid; gap:6px; padding:14px; border:1px solid #555; border-radius:9px; background:#222; }
+    .command-screen .command-score-card span { font-size:13px; opacity:.75; }
+    .command-screen .command-score-card strong { font-size:25px; }
+    .command-screen .command-vp-form { display:grid; grid-template-columns:minmax(120px,.7fr) minmax(100px,.5fr) minmax(180px,1.5fr) auto; gap:10px; align-items:end; margin:14px 0; }
+    .command-screen .command-vp-form label { display:grid; gap:5px; font-size:12px; font-weight:650; min-width:0; }
+    .command-screen .command-vp-form input, .command-screen .command-vp-form select { width:100%; min-width:0; min-height:42px; padding:9px; border:1px solid #555; border-radius:8px; background:#222; color:inherit; font:inherit; }
+    .command-screen .command-vp-form button { min-height:42px; padding:9px 13px; border:1px solid #777; border-radius:8px; background:#e8ebef; color:#111; font-weight:800; cursor:pointer; }
+    .command-screen h3 { margin:18px 0 8px; font-size:15px; }
+    @media(max-width:760px) { .command-screen .command-vp-form { grid-template-columns:1fr 1fr; } .command-screen .command-vp-form label:nth-child(3), .command-screen .command-vp-form button { grid-column:1/-1; } }
+
     .command-screen .command-objectives { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
     .command-screen .command-objective, .command-screen .command-scoring { display:grid; gap:8px; padding:12px; border:1px solid #444; border-radius:9px; background:#202020; }
     .command-screen .command-objective span, .command-screen .command-scoring span { opacity:.8; font-size:14px; }
