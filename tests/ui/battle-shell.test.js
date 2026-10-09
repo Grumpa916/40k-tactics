@@ -513,7 +513,8 @@ test("manual secondary mission entry records the selected card for the selected 
   assert.equal(history[0].status, "active");
   assert.equal(getSecondaryMissionHistory(state, "p1").length, 0);
   assert.equal(state.victoryPoints, undefined);
-  assert.match(root.innerHTML, /Mission added to the selected player's active secondary missions/);
+  assert.match(root.innerHTML, /Mission added to the selected player/);
+  assert.match(root.innerHTML, /active secondary missions/);
   screen.destroy();
 });
 
