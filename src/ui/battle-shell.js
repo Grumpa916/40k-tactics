@@ -75,6 +75,7 @@ export function createBattleShell(container, {
   let observedGamePhase = session.getState()?.phase ?? null;
   let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
   let scoringReminder = null;
+  let scoringReviewCheckpoint = null;
   let reminderSequence = 0;
 
   function destroyMountedScreen() {
@@ -134,7 +135,8 @@ export function createBattleShell(container, {
           perspectivePlayerId,
           gameData,
           missionActions,
-          missionDefinitions
+          missionDefinitions,
+          scoringCheckpoint: scoringReviewCheckpoint
         });
         mountedPhase = viewedPhase;
       } else if (screenContainer) {
@@ -159,6 +161,7 @@ export function createBattleShell(container, {
   function handleReviewScoring(event) {
     const button = event.target?.closest?.("[data-review-scoring]");
     if (!button || !container.contains(button)) return;
+    scoringReviewCheckpoint = scoringReminder?.timing ?? null;
     scoringReminder = null;
     viewedPhase = "command";
     render();
