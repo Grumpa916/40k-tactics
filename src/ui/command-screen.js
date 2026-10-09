@@ -3,6 +3,7 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { getCommandPointHistory } from "../engine/command-points-ledger.js";
 import { getVictoryPointHistory, getVictoryPointScore } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
+import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -34,7 +35,9 @@ function commandPointsFor(state, playerId) {
 export function createCommandScreen(container, {
   session,
   perspectivePlayerId = null,
-  missionDefinitions = []
+  missionDefinitions = [],
+  scoringCheckpoint = null,
+  scoringCheckpointActivePlayerId = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -145,6 +148,43 @@ export function createCommandScreen(container, {
       }
     }
 
+    let checkpointReview = "";
+    const checkpoint = scoringCheckpoint ?? SCORING_CHECKPOINTS.COMMAND_PHASE;
+    const checkpointLabels = {
+      [SCORING_CHECKPOINTS.COMMAND_PHASE]: "End of Command phase",
+      [SCORING_CHECKPOINTS.END_OF_TURN]: "End of turn",
+      [SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN]: "End of opponent's turn",
+      [SCORING_CHECKPOINTS.END_OF_BATTLE]: "End of battle"
+    };
+    try {
+      const review = evaluateScoringCheckpoint(state, {
+        checkpoint,
+        scoringPlayerId: playerId,
+        activePlayerId: scoringCheckpointActivePlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? null,
+        primaryDefinitions: missionDefinitions.filter((definition) => definition?.category !== "secondary")
+      });
+      const rows = [
+        ...review.primary.map((item) => ({ ...item, categoryLabel: "Primary mission" })),
+        ...review.secondary.map((item) => ({ ...item, categoryLabel: "Active secondary card" }))
+      ];
+      checkpointReview = rows.length
+        ? rows.map((item) => '<article class="command-scoring"><strong>' + escapeHtml(item.definitionName ?? item.definitionId) +
+          '</strong><span class="command-scoring__category">' + item.categoryLabel + '</span><span class="' +
+          (item.result.eligible ? 'is-available' : 'is-unavailable') + '">' +
+          (item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span><ul>' +
+          (item.result.conditions ?? []).map((condition) => '<li>' + escapeHtml(condition.evidence) + ': ' +
+            (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>').join("") +
+          '</ul></article>').join("")
+        : '<p>No active missions are configured for this checkpoint.</p>';
+    } catch (error) {
+      checkpointReview = '<p role="alert">Scoring checkpoint review unavailable: ' +
+        escapeHtml(error?.message ?? error) + '</p>';
+    }
+    checkpointReview = '<section class="command-checkpoint-review"><h2>' +
+      escapeHtml(checkpointLabels[checkpoint] ?? checkpoint) + ' scoring review</h2>' +
+      '<p>Review eligibility evidence and confirm points manually. This review does not award VP or change card status.</p>' +
+      checkpointReview + '</section>';
+
     const cpHistory = getCommandPointHistory(state, playerId).slice(-5).reverse();
     const cpHistoryMarkup = cpHistory.length ? cpHistory.map((entry) =>
       '<li><strong>' + escapeHtml(entry.amount > 0 ? '+' + entry.amount : entry.amount) +
@@ -184,7 +224,7 @@ export function createCommandScreen(container, {
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +
       '<section><h2>Objective control</h2><div class="command-objectives">' + objectiveCards + '</div></section>' +
-      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section></main>';
+      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
   }
 
   container.addEventListener?.("click", handleClick);
