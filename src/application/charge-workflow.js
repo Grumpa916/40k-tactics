@@ -79,24 +79,38 @@ export function getChargeViewModel(
   };
 }
 
-export function recordChargeOutcome(state, { unitId, succeeded, targetIds = [] } = {}, context = {}) {
+export function recordChargeOutcome(
+  state,
+  { unitId, succeeded, targetIds = [], measuredDistances = {} } = {},
+  context = {}
+) {
   return executeCommand(
     state,
-    createCommand(COMMAND_TYPES.RECORD_CHARGE_OUTCOME, { unitId, succeeded, targetIds }),
+    createCommand(COMMAND_TYPES.RECORD_CHARGE_OUTCOME, {
+      unitId,
+      succeeded,
+      targetIds,
+      measuredDistances
+    }),
     context
   );
 }
 
 export function recordChargeOutcomeForSession(
   session,
-  { unitId, succeeded, targetIds = [] } = {},
+  { unitId, succeeded, targetIds = [], measuredDistances = {} } = {},
   context = {}
 ) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
   }
   return session.dispatch(
-    createCommand(COMMAND_TYPES.RECORD_CHARGE_OUTCOME, { unitId, succeeded, targetIds }),
+    createCommand(COMMAND_TYPES.RECORD_CHARGE_OUTCOME, {
+      unitId,
+      succeeded,
+      targetIds,
+      measuredDistances
+    }),
     context
   );
 }
