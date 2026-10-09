@@ -121,11 +121,13 @@ test("charge outcome command records success and post-roll targets", () => {
   const next = executeCommand(state, createCommand(COMMAND_TYPES.RECORD_CHARGE_OUTCOME, {
     unitId: "u1",
     succeeded: true,
-    targetIds: ["u2"]
+    targetIds: ["u2"],
+    measuredDistances: { u2: 10 }
   }));
 
   assert.equal(next.history.at(-1).type, "charge.outcome_recorded");
   assert.deepEqual(next.history.at(-1).payload.targetIds, ["u2"]);
+  assert.deepEqual(next.history.at(-1).payload.measuredDistances, { u2: 10 });
   clearCommandHandlers();
 });
 
