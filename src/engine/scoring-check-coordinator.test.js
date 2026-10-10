@@ -145,6 +145,8 @@ test("secondary scoring references only the tiers for the battle-wide Fixed or T
 
 test("draft secondary windows are shown for manual review and never marked verified or auto-awarded", () => {
   let state = createGameState({
+    phase: "command",
+    activePlayer: "p1",
     players: [{ id: "p1" }, { id: "p2" }],
     battle: { round: 1, activePlayerId: "p1" }
   });
