@@ -1,6 +1,8 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getPreGameAbilityRules, getPreGameProcedureSteps } from "../rules/pre-game-procedure.js";
+import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function escapeHtml(value) {
@@ -207,6 +209,24 @@ export function createBattleSetupScreen(container, {
       selectedPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const mode = state.scoring?.secondaryMissionMode ?? "";
+    const readiness = evaluatePreGameReadiness(state);
+    const procedureSteps = getPreGameProcedureSteps();
+    const abilityRules = getPreGameAbilityRules();
+    const preGameMarkup = `<section class="pre-game-checklist"><h2>Pre-game checklist</h2>
+      <p>These prompts are fixed by the ruleset, not configured separately for each battle. Follow the selected mission's instructions for exact timing and exceptions.</p>
+      <h3>State readiness</h3><ul>${readiness.checks.map((check) =>
+        `<li><strong>${check.status === "complete" ? "Ready: " : "Check: "}${escapeHtml(check.label)}</strong> — ${escapeHtml(check.detail)}</li>`).join("")}</ul>
+      <h3>Standard procedure reminders</h3><ol>${procedureSteps.map((step) =>
+        `<li><strong>${escapeHtml(step.title)}</strong> — ${escapeHtml(step.detail)}</li>`).join("")}</ol>
+      <h3>Conditional ability prompts</h3>${abilityRules.map((rule) =>
+        `<article data-pre-game-ability="${escapeHtml(rule.id)}"><h4>${escapeHtml(rule.name)}</h4>
+        <p><strong>Timing:</strong> ${escapeHtml(rule.timing === "deployment" ? "During deployment" : "Resolve pre-battle abilities")}</p>
+        <p><strong>Applies when:</strong> ${escapeHtml(rule.appliesWhen)}</p>
+        ${rule.procedure ? `<p>${escapeHtml(rule.procedure)}</p>` : ""}
+        ${rule.choices ? `<ul>${rule.choices.map((choice) => `<li>${escapeHtml(choice)}</li>`).join("")}</ul>` : ""}
+        ${rule.scoutMove ? `<p><strong>Scout move:</strong> ${escapeHtml(rule.scoutMove.maximumDistance)} ${escapeHtml(rule.scoutMove.afterMoving)}</p>` : ""}
+        <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}
+      </section>`;
     const history = getSecondaryMissionHistory(state);
     const fixedHistory = history.filter((item) =>
       item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
@@ -249,6 +269,7 @@ export function createBattleSetupScreen(container, {
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle.</p></header>' +
+      preGameMarkup +
       '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
       '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
       (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
