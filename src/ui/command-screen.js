@@ -223,11 +223,11 @@ export function createCommandScreen(container, {
       event.preventDefault();
       const state = session.getState();
       const formData = new FormData(secondaryForm);
-      const playerId = String(formData.get("secondary-vp-player") ?? "");
       const instanceId = String(formData.get("secondary-vp-card") ?? "");
       const amount = Number(formData.get("secondary-vp-amount"));
-      const entry = getSecondaryMissionHistory(state, playerId).find((item) =>
+      const entry = getSecondaryMissionHistory(state).find((item) =>
         item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+      const playerId = entry?.playerId;
       if (!playerId || !entry || !Number.isInteger(amount) || amount <= 0) {
         secondaryMissionMessage = "Select an active secondary card and enter a positive whole-number VP amount.";
         render();
@@ -388,11 +388,6 @@ export function createCommandScreen(container, {
       (!secondaryMissionMode || definition.availableModes?.includes(secondaryMissionMode) !== false) &&
       !(secondaryMissionMode === "fixed" && definition.fixedAvailable === false));
     const activeSecondaryForVp = secondaryHistory.filter((item) => item.status === SECONDARY_MISSION_STATUS.ACTIVE);
-    const secondaryVpPlayerOptions = players.map((player) =>
-      '<option value="' + escapeHtml(player.id) + '"' +
-      (player.id === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) ? ' selected' : '') + '>' +
-      escapeHtml(player.name ?? player.id) + '</option>'
-    ).join("");
     const secondaryVpCardOptions = activeSecondaryForVp.map((item) =>
       '<option value="' + escapeHtml(item.instanceId) + '">' +
       escapeHtml(playerName(state, item.playerId) + " — " + (item.definition?.name ?? item.definitionId)) + '</option>'
@@ -401,7 +396,6 @@ export function createCommandScreen(container, {
       ? '<section class="command-secondary-award"><h3>Confirm secondary mission VP</h3>' +
         '<p>Use only after checking the physical card and confirming the actual score. Mission caps are applied by the ledger.</p>' +
         '<form data-secondary-vp-form class="command-vp-form">' +
-        '<label>Player<select name="secondary-vp-player" required>' + secondaryVpPlayerOptions + '</select></label>' +
         '<label>Active secondary card<select name="secondary-vp-card" required>' + secondaryVpCardOptions + '</select></label>' +
         '<label>VP actually scored<input name="secondary-vp-amount" type="number" min="1" step="1" value="3" required></label>' +
         '<button type="submit">Confirm secondary VP</button></form></section>'
