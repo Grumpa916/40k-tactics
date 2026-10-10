@@ -77,6 +77,12 @@ export function createCommandScreen(container, {
     if (target.hasAttribute("data-cp-spend")) recordCp(-1, "spend", "Manually recorded spend");
     if (target.hasAttribute("data-secondary-mission-add")) {
       const state = session.getState();
+      const missionMode = state.scoring?.secondaryMissionMode;
+      if (!missionMode) {
+        secondaryMissionMessage = "Choose Fixed or Tactical mode before entering secondary cards.";
+        render();
+        return;
+      }
       if (state.phase !== "command") {
         secondaryMissionMessage = "Secondary missions can be entered during the Command phase only.";
         render();
@@ -91,6 +97,11 @@ export function createCommandScreen(container, {
         item.id === definitionId && item.category === "secondary");
       const manualName = String(container.querySelector("[data-secondary-name]")?.value ?? "").trim();
       const manualTiming = container.querySelector("[data-secondary-timing]")?.value;
+      if (selectedCatalogDefinition && !selectedCatalogDefinition.availableModes?.includes(missionMode)) {
+        secondaryMissionMessage = "That card is not available in the selected " + missionMode + " mode.";
+        render();
+        return;
+      }
       const allowedTimings = [
         SCORING_TIMINGS.COMMAND_PHASE,
         SCORING_TIMINGS.END_OF_TURN,
@@ -119,6 +130,17 @@ export function createCommandScreen(container, {
           secondaryMissionMessage = "Choose a catalog mission or enter a card name and its scoring checkpoint.";
           render();
           return;
+        }
+        if (missionMode === "fixed") {
+          const normalizedName = manualName.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+          const fixedNames = secondaryMissionCatalog
+            .filter((item) => item.category === "secondary" && item.fixedAvailable)
+            .map((item) => item.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
+          if (!fixedNames.includes(normalizedName)) {
+            secondaryMissionMessage = "Only cards marked as Fixed-available in the catalog can be entered in Fixed mode.";
+            render();
+            return;
+          }
         }
         const slug = manualName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "secondary";
         definition = {
@@ -181,10 +203,63 @@ export function createCommandScreen(container, {
       selectedSecondaryPlayerId = target.value;
       secondaryMissionMessage = "";
       render();
+      return;
+    }
+    if (target?.matches?.("[data-secondary-mode]")) {
+      if (!target.value) return;
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { mode: target.value } });
+        secondaryMissionMessage = "Battle-wide secondary mode set to " + target.value + ".";
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
+      }
+      render();
     }
   }
 
   function handleSubmit(event) {
+    const secondaryForm = event.target?.closest?.("[data-secondary-vp-form]");
+    if (secondaryForm && container.contains(secondaryForm)) {
+      event.preventDefault();
+      const state = session.getState();
+      const formData = new FormData(secondaryForm);
+      const playerId = String(formData.get("secondary-vp-player") ?? "");
+      const instanceId = String(formData.get("secondary-vp-card") ?? "");
+      const amount = Number(formData.get("secondary-vp-amount"));
+      const entry = getSecondaryMissionHistory(state, playerId).find((item) =>
+        item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+      if (!playerId || !entry || !Number.isInteger(amount) || amount <= 0) {
+        secondaryMissionMessage = "Select an active secondary card and enter a positive whole-number VP amount.";
+        render();
+        return;
+      }
+      const round = state.battle?.round ?? 0;
+      const turn = state.turn ?? 0;
+      const missionMode = entry.definition?.missionMode ?? state.scoring?.secondaryMissionMode;
+      if (!missionMode) {
+        secondaryMissionMessage = "Set the battle-wide Fixed or Tactical mode before recording secondary scoring.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_VICTORY_POINTS, payload: {
+          playerId,
+          amount,
+          reason: entry.definition?.name ?? entry.definitionId,
+          missionDefinitionId: entry.definitionId,
+          category: "secondary",
+          missionMode,
+          opportunityKey: [instanceId, round, turn].join(":"),
+          turn,
+          round
+        }});
+        secondaryMissionMessage = "Secondary VP recorded for " + (entry.definition?.name ?? entry.definitionId) + ". Check the ledger for any cap applied.";
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     const form = event.target?.closest?.("[data-vp-form]");
     if (!form || !container.contains(form)) return;
     event.preventDefault();
@@ -304,10 +379,33 @@ export function createCommandScreen(container, {
       ...secondaryMissionCatalog.filter((definition) => definition?.category === "secondary" &&
         !missionDefinitions.some((configured) => configured?.id === definition.id))
     ];
+    const secondaryMissionMode = state.scoring?.secondaryMissionMode ?? "";
     const activeSecondaryForSelectedPlayer = secondaryHistory.filter((item) =>
       item.playerId === selectedSecondaryPlayerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
     const activeSecondaryIds = new Set(activeSecondaryForSelectedPlayer.map((item) => item.definitionId));
-    const selectableSecondaryDefinitions = secondaryDefinitions.filter((definition) => !activeSecondaryIds.has(definition.id));
+    const selectableSecondaryDefinitions = secondaryDefinitions.filter((definition) =>
+      !activeSecondaryIds.has(definition.id) &&
+      (!secondaryMissionMode || definition.availableModes?.includes(secondaryMissionMode) !== false) &&
+      !(secondaryMissionMode === "fixed" && definition.fixedAvailable === false));
+    const activeSecondaryForVp = secondaryHistory.filter((item) => item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+    const secondaryVpPlayerOptions = players.map((player) =>
+      '<option value="' + escapeHtml(player.id) + '"' +
+      (player.id === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) ? ' selected' : '') + '>' +
+      escapeHtml(player.name ?? player.id) + '</option>'
+    ).join("");
+    const secondaryVpCardOptions = activeSecondaryForVp.map((item) =>
+      '<option value="' + escapeHtml(item.instanceId) + '">' +
+      escapeHtml(playerName(state, item.playerId) + " — " + (item.definition?.name ?? item.definitionId)) + '</option>'
+    ).join("");
+    const secondaryVpForm = players.length && activeSecondaryForVp.length
+      ? '<section class="command-secondary-award"><h3>Confirm secondary mission VP</h3>' +
+        '<p>Use only after checking the physical card and confirming the actual score. Mission caps are applied by the ledger.</p>' +
+        '<form data-secondary-vp-form class="command-vp-form">' +
+        '<label>Player<select name="secondary-vp-player" required>' + secondaryVpPlayerOptions + '</select></label>' +
+        '<label>Active secondary card<select name="secondary-vp-card" required>' + secondaryVpCardOptions + '</select></label>' +
+        '<label>VP actually scored<input name="secondary-vp-amount" type="number" min="1" step="1" value="3" required></label>' +
+        '<button type="submit">Confirm secondary VP</button></form></section>'
+      : "";
     const secondaryPlayerOptions = players.map((player) =>
       '<option value="' + escapeHtml(player.id) + '"' +
       (player.id === selectedSecondaryPlayerId ? ' selected' : '') + '>' +
@@ -336,6 +434,11 @@ export function createCommandScreen(container, {
       : !players.length
         ? '<p>Add players before entering secondary missions.</p>'
         : '<form data-secondary-mission-form><div class="command-vp-form">' +
+          '<label>Battle-wide secondary mode<select data-secondary-mode ' + (secondaryHistory.length ? 'disabled' : '') + ' required>' +
+          '<option value="">Choose mode before entering cards...</option>' +
+          '<option value="fixed"' + (secondaryMissionMode === "fixed" ? ' selected' : '') + '>Fixed</option>' +
+          '<option value="tactical"' + (secondaryMissionMode === "tactical" ? ' selected' : '') + '>Tactical</option>' +
+          '</select></label>' +
           '<label>Player<select data-secondary-player>' + secondaryPlayerOptions + '</select></label>' +
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
@@ -343,7 +446,7 @@ export function createCommandScreen(container, {
           '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
           '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
-      '<p>Enter missions manually during the Command phase. No automatic draw or selection occurs.</p>' +
+      '<p>Choose Fixed or Tactical once for the battle before entering cards. The mode is locked after the first card is recorded; card availability is checked against the catalog.</p>' +
       secondaryEntryMarkup +
       (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
       '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
@@ -394,6 +497,7 @@ export function createCommandScreen(container, {
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +
       '<section><h2>Objective control</h2><div class="command-objectives">' + objectiveCards + '</div></section>' +
       secondaryMissionManager +
+      secondaryVpForm +
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>'; 
   }
 
