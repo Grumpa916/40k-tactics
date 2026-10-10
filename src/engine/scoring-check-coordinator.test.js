@@ -171,3 +171,34 @@ test("draft secondary windows are shown for manual review and never marked verif
     "community-transcription-pending-official-card-check");
   assert.equal(result.awardsVictoryPoints, false);
 });
+
+
+test("minimum-round metadata hides Defend Stronghold before round two", () => {
+  let state = createGameState({
+    phase: "command",
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  state = setSecondaryMissionMode(state, { mode: "tactical" });
+  const card = SECONDARY_MISSION_CATALOG.find((item) => item.name === "Defend Stronghold");
+  state = drawSecondaryMission(state, { definition: card, playerId: "p1", round: 1, turn: 1 });
+
+  const roundOne = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p2"
+  });
+  assert.equal(roundOne.secondary.length, 0);
+
+  state = { ...state, battle: { ...state.battle, round: 2 } };
+  const roundTwo = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p2"
+  });
+  assert.equal(roundTwo.secondary.length, 1);
+  assert.equal(roundTwo.secondary[0].result.scoringWindow.minRound, 2);
+  assert.equal(roundTwo.secondary[0].result.rulesVerified, false);
+  assert.equal(roundTwo.awardsVictoryPoints, false);
+});
