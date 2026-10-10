@@ -11,8 +11,8 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   missionPack: "Chapter Approved 2026–27",
   catalogScope: "partial-rules-reference",
   rulesVerified: false,
-  candidateDatasetVersion: "2026.08.25-primary-timing-audit",
-  candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/main/datasets/wh40k-11e-missions.json",
+  candidateDatasetVersion: "2026.10.02-triangulation-action",
+  candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
