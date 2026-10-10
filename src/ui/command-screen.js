@@ -157,6 +157,7 @@ export function createCommandScreen(container, {
         reason: definition.name,
         missionDefinitionId: definition.id,
         category: definition.category,
+        ...(definition.missionMode ? { missionMode: definition.missionMode } : {}),
         opportunityKey,
         turn,
         round
@@ -366,10 +367,10 @@ export function createCommandScreen(container, {
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
       '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>' +
-      '<p>Only record points after confirming the award at the table. Eligibility advice never changes the score.</p>' +
+      '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. This form is for manual VP adjustments; eligibility advice never changes the score.</p>' +
       (players.length ? '<form class="command-vp-form" data-vp-form><label>Player<select name="vp-player" required>' + playerOptions +
       '</select></label><label>VP awarded<input name="vp-amount" type="number" min="1" step="1" value="5" required></label>' +
-      '<label>Reason / mission scoring<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Confirmed primary objective" required></label>' +
+      '<label>Manual adjustment reason<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Correct an entry error" required></label>' +
       '<button type="submit">Confirm VP award</button></form>' : '<p>Configure both players before recording awards.</p>') +
       '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
       '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
