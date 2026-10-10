@@ -75,6 +75,8 @@ export function createCommandScreen(container, {
       const playerId = container.querySelector("[data-secondary-player]")?.value ||
         perspectivePlayerId || state.activePlayer;
       const definitionId = container.querySelector("[data-secondary-definition]")?.value;
+      const configuredDefinition = missionDefinitions.find((item) =>
+        item.id === definitionId && item.category === "secondary");
       const selectedCatalogDefinition = secondaryMissionCatalog.find((item) =>
         item.id === definitionId && item.category === "secondary");
       const manualName = String(container.querySelector("[data-secondary-name]")?.value ?? "").trim();
@@ -86,7 +88,9 @@ export function createCommandScreen(container, {
         SCORING_TIMINGS.END_OF_BATTLE
       ];
       let definition;
-      if (selectedCatalogDefinition) {
+      if (configuredDefinition) {
+        definition = configuredDefinition;
+      } else if (selectedCatalogDefinition) {
         if (!allowedTimings.includes(manualTiming)) {
           secondaryMissionMessage = "Choose the checkpoint printed on the physical card. Catalog scoring rules are not configured yet.";
           render();
@@ -274,7 +278,11 @@ export function createCommandScreen(container, {
       checkpointReview + '</section>';
 
     const secondaryHistory = getSecondaryMissionHistory(state);
-    const secondaryDefinitions = secondaryMissionCatalog.filter((definition) => definition?.category === "secondary");
+    const secondaryDefinitions = [
+      ...missionDefinitions.filter((definition) => definition?.category === "secondary"),
+      ...secondaryMissionCatalog.filter((definition) => definition?.category === "secondary" &&
+        !missionDefinitions.some((configured) => configured?.id === definition.id))
+    ];
     const activeSecondaryForSelectedPlayer = secondaryHistory.filter((item) =>
       item.playerId === selectedSecondaryPlayerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
     const activeSecondaryIds = new Set(activeSecondaryForSelectedPlayer.map((item) => item.definitionId));
