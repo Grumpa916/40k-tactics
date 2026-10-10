@@ -142,16 +142,34 @@ export function createCommandScreen(container, {
             return;
           }
         }
-        const slug = manualName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "secondary";
-        definition = {
-          id: "manual-" + slug + "-" + (state.battle?.round ?? 0) + "-" +
-            (state.turn ?? 0) + "-" + (getSecondaryMissionHistory(state).length + 1),
-          name: manualName,
-          category: "secondary",
-          timing: manualTiming,
-          conditions: [],
-          manualEntry: true
-        };
+        const normalizedName = manualName.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        const matchingCatalogDefinition = secondaryMissionCatalog.find((item) =>
+          item.category === "secondary" &&
+          item.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === normalizedName);
+        if (matchingCatalogDefinition) {
+          if (!matchingCatalogDefinition.availableModes?.includes(missionMode)) {
+            secondaryMissionMessage = "That card is not available in the selected " + missionMode + " mode.";
+            render();
+            return;
+          }
+          definition = {
+            ...matchingCatalogDefinition,
+            timing: matchingCatalogDefinition.scoringWindows?.[0]?.timing ?? manualTiming,
+            conditions: [],
+            manualEntry: true
+          };
+        } else {
+          const slug = manualName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "secondary";
+          definition = {
+            id: "manual-" + slug + "-" + (state.battle?.round ?? 0) + "-" +
+              (state.turn ?? 0) + "-" + (getSecondaryMissionHistory(state).length + 1),
+            name: manualName,
+            category: "secondary",
+            timing: manualTiming,
+            conditions: [],
+            manualEntry: true
+          };
+        }
       }
       if (!playerId) {
         secondaryMissionMessage = "Select a player before adding a secondary mission.";
