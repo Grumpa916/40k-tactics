@@ -57,7 +57,7 @@ test("Command screen exposes and executes safe undo for the latest VP award", ()
   assert.equal(state.victoryPoints.p1, 0);
   assert.equal(state.history.at(-1).type, "victory_points.award_undone");
   assert.doesNotMatch(container.innerHTML, /Undo latest VP entry/);
-  assert.match(container.innerHTML, /Undid \+3 VP for Player One/);
+  assert.match(container.innerHTML, /Undid latest VP entry \(\+3 VP\) for Player One/);
   screen.destroy();
   clearCommandHandlers();
 });
