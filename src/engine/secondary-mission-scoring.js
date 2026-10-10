@@ -25,7 +25,7 @@ export function recordSecondaryMissionScore(state, {
     item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
   if (!entry) throw new Error("An active secondary mission for that player is required.");
 
-  const missionMode = entry.definition?.missionMode ?? state?.scoring?.secondaryMissionMode;
+  const missionMode = state?.scoring?.secondaryMissionMode ?? entry.definition?.missionMode;
   if (!Object.values(SECONDARY_MISSION_MODES).includes(missionMode)) {
     throw new Error("Set the battle-wide Fixed or Tactical mode before recording secondary scoring.");
   }
