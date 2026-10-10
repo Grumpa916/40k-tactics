@@ -122,7 +122,7 @@ export function drawSecondaryMission(state, {
   }
   if (selectedMode === SECONDARY_MISSION_MODES.FIXED) {
     const fixedCardCount = existing.filter((item) =>
-      item.playerId === playerId && item.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED
+      item.playerId === playerId && (state?.scoring?.secondaryMissionMode ?? item.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED
     ).length;
     if (fixedCardCount >= 2) {
       throw new Error("Each player can select only two Fixed secondary cards for the battle.");
