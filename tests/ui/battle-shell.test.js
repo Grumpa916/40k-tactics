@@ -453,7 +453,7 @@ test("manual secondary mission entry records the selected card for the selected 
     phase: "command", turn: 2, activePlayer: "p1",
     battle: { round: 1, activePlayerId: "p1" },
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
-    objectives: [], units: [], history: [], scoring: { turnSnapshots: [], secondaryMissionMode: "tactical" }
+    objectives: [], units: [], history: [], scoring: { turnSnapshots: [], secondaryMissionMode: "fixed" }
   };
   const secondary = createMissionDefinition({
     id: "manual-secondary",

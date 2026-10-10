@@ -187,3 +187,47 @@ test("validates mode values and records a mode selection in history", () => {
   assert.equal(state.history.at(-1).type, "secondary_mission.mode_set");
   assert.deepEqual(state.history.at(-1).payload, { mode: "tactical" });
 });
+
+
+test("Tactical mode permits exactly two new cards per active player's Command phase", () => {
+  let state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  state = setSecondaryMissionMode(state, { mode: "tactical" });
+  const makeDefinition = (id) => ({
+    ...definition, id, availableModes: ["tactical"], fixedAvailable: false
+  });
+  state = drawSecondaryMission(state, { definition: makeDefinition("tactical-a"), playerId: "p1", round: 1, turn: 1 });
+  state = drawSecondaryMission(state, { definition: makeDefinition("tactical-b"), playerId: "p1", round: 1, turn: 1 });
+  assert.throws(() => drawSecondaryMission(state, {
+    definition: makeDefinition("tactical-c"), playerId: "p1", round: 1, turn: 1
+  }), /Two Tactical secondary cards have already been recorded/);
+  assert.throws(() => drawSecondaryMission(state, {
+    definition: makeDefinition("tactical-c"), playerId: "p2", round: 1, turn: 1
+  }), /Only the active player/);
+});
+
+test("Fixed secondary cards remain active after scoring and cannot be discarded or returned", () => {
+  let state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  state = setSecondaryMissionMode(state, { mode: "fixed" });
+  state = drawSecondaryMission(state, {
+    definition: { ...definition, availableModes: ["fixed"], fixedAvailable: true },
+    playerId: "p1", round: 1, turn: 1
+  });
+  const entry = onlyEntry(state);
+  state = recordSecondaryMissionScored(state, {
+    instanceId: entry.instanceId, playerId: "p1", round: 1, turn: 1, notes: "Confirmed 3 VP"
+  });
+  assert.equal(onlyEntry(state).status, "active");
+  assert.equal(onlyEntry(state).scoringHistory.length, 1);
+  assert.throws(() => discardSecondaryMission(state, {
+    instanceId: entry.instanceId, playerId: "p1", round: 1, turn: 1
+  }), /Fixed secondary cards cannot be discarded/);
+  assert.throws(() => returnSecondaryMissionToDeck(state, {
+    instanceId: entry.instanceId, playerId: "p1", round: 1, turn: 1
+  }), /Fixed secondary cards cannot be returned/);
+});
