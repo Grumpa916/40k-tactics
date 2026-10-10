@@ -447,6 +447,25 @@ export function createCommandScreen(container, {
     const secondaryMissionMode = state.scoring?.secondaryMissionMode ?? "";
     const activeSecondaryForSelectedPlayer = secondaryHistory.filter((item) =>
       item.playerId === selectedSecondaryPlayerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+    const currentActivePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+    const currentRound = state.battle?.round ?? 0;
+    const currentTurn = state.turn ?? 0;
+    const tacticalDrawCount = secondaryHistory.filter((item) =>
+      item.playerId === currentActivePlayerId && item.drawnRound === currentRound &&
+      item.drawnTurn === currentTurn && item.isRedrawReplacement !== true).length;
+    const tacticalRedrawPending = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[currentActivePlayerId];
+    const fixedCardsSelected = secondaryHistory.filter((item) =>
+      item.playerId === selectedSecondaryPlayerId && item.definition?.missionMode === "fixed").length;
+    const secondaryModeStatusMarkup = secondaryMissionMode === "tactical" && state.phase === "command"
+      ? '<p class="command-secondary-mode-status">' +
+        (tacticalRedrawPending && tacticalRedrawPending.round === currentRound && tacticalRedrawPending.turn === currentTurn
+          ? 'Two normal Tactical draws may be recorded independently; the New Orders replacement is still pending.'
+          : 'Tactical cards recorded for this Command phase: ' + Math.min(tacticalDrawCount, 2) + ' of 2.') +
+        '</p>'
+      : secondaryMissionMode === "fixed"
+        ? '<p class="command-secondary-mode-status">Fixed cards selected for ' +
+          escapeHtml(playerName(state, selectedSecondaryPlayerId)) + ': ' + Math.min(fixedCardsSelected, 2) + ' of 2.</p>'
+        : "";
     const activeSecondaryIds = new Set(activeSecondaryForSelectedPlayer.map((item) => item.definitionId));
     const seenSecondaryIds = new Set(secondaryHistory
       .filter((item) => item.playerId === selectedSecondaryPlayerId)
@@ -535,7 +554,8 @@ export function createCommandScreen(container, {
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
-          '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
+          '<button type="button" data-secondary-mission-add>Record selected mission</button>' +
+          secondaryModeStatusMarkup + '</div></form>' +
           '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
       '<p>No automatic draw or selection occurs. Choose Fixed or Tactical once for the battle before entering cards. The mode is locked after the first card is recorded; card availability is checked against the catalog.</p>' +
