@@ -6,6 +6,7 @@ import { clearCommandHandlers } from "../engine/command-engine.js";
 import { SCORING_TIMINGS, createMissionDefinition } from "../rules/mission-definition.js";
 import { SCORING_EVIDENCE } from "../rules/scoring-eligibility.js";
 import { createBattleShell } from "./battle-shell.js";
+import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
 
 clearCommandHandlers();
 registerCoreCommandHandlers();
@@ -107,5 +108,6 @@ createBattleShell(document.getElementById("battle-app"), {
   perspectivePlayerId: "p1",
   gameData,
   missionActions: [{ id: "cleanse", name: "Cleanse" }],
-  missionDefinitions: demoMissionDefinitions
+  missionDefinitions: demoMissionDefinitions,
+  secondaryMissionCatalog: SECONDARY_MISSION_CATALOG
 });

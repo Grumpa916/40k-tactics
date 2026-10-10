@@ -37,6 +37,7 @@ export function createCommandScreen(container, {
   session,
   perspectivePlayerId = null,
   missionDefinitions = [],
+  secondaryMissionCatalog = [],
   scoringCheckpoint = null,
   scoringCheckpointActivePlayerId = null
 } = {}) {
@@ -74,17 +75,34 @@ export function createCommandScreen(container, {
       const playerId = container.querySelector("[data-secondary-player]")?.value ||
         perspectivePlayerId || state.activePlayer;
       const definitionId = container.querySelector("[data-secondary-definition]")?.value;
-      let definition = missionDefinitions.find((item) =>
+      const configuredDefinition = missionDefinitions.find((item) =>
         item.id === definitionId && item.category === "secondary");
-      if (!definition) {
-        const manualName = String(container.querySelector("[data-secondary-name]")?.value ?? "").trim();
-        const manualTiming = container.querySelector("[data-secondary-timing]")?.value;
-        const allowedTimings = [
-          SCORING_TIMINGS.COMMAND_PHASE,
-          SCORING_TIMINGS.END_OF_TURN,
-          SCORING_TIMINGS.END_OF_OPPONENT_TURN,
-          SCORING_TIMINGS.END_OF_BATTLE
-        ];
+      const selectedCatalogDefinition = secondaryMissionCatalog.find((item) =>
+        item.id === definitionId && item.category === "secondary");
+      const manualName = String(container.querySelector("[data-secondary-name]")?.value ?? "").trim();
+      const manualTiming = container.querySelector("[data-secondary-timing]")?.value;
+      const allowedTimings = [
+        SCORING_TIMINGS.COMMAND_PHASE,
+        SCORING_TIMINGS.END_OF_TURN,
+        SCORING_TIMINGS.END_OF_OPPONENT_TURN,
+        SCORING_TIMINGS.END_OF_BATTLE
+      ];
+      let definition;
+      if (configuredDefinition) {
+        definition = configuredDefinition;
+      } else if (selectedCatalogDefinition) {
+        if (!allowedTimings.includes(manualTiming)) {
+          secondaryMissionMessage = "Choose the checkpoint printed on the physical card. Catalog scoring rules are not configured yet.";
+          render();
+          return;
+        }
+        definition = {
+          ...selectedCatalogDefinition,
+          timing: manualTiming,
+          conditions: [],
+          manualEntry: true
+        };
+      } else {
         if (!manualName || !allowedTimings.includes(manualTiming)) {
           secondaryMissionMessage = "Choose a catalog mission or enter a card name and its scoring checkpoint.";
           render();
@@ -260,7 +278,11 @@ export function createCommandScreen(container, {
       checkpointReview + '</section>';
 
     const secondaryHistory = getSecondaryMissionHistory(state);
-    const secondaryDefinitions = missionDefinitions.filter((definition) => definition?.category === "secondary");
+    const secondaryDefinitions = [
+      ...missionDefinitions.filter((definition) => definition?.category === "secondary"),
+      ...secondaryMissionCatalog.filter((definition) => definition?.category === "secondary" &&
+        !missionDefinitions.some((configured) => configured?.id === definition.id))
+    ];
     const activeSecondaryForSelectedPlayer = secondaryHistory.filter((item) =>
       item.playerId === selectedSecondaryPlayerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
     const activeSecondaryIds = new Set(activeSecondaryForSelectedPlayer.map((item) => item.definitionId));
@@ -298,7 +320,7 @@ export function createCommandScreen(container, {
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
-          '<p>Select a supplied definition or enter the card name and its scoring checkpoint from the printed rules. Manual entries without configured scoring conditions remain advisory-only and require your own rules check; no VP is awarded here.</p>';
+          '<p>The catalog supplies card names and Fixed/Tactical availability only. Choose the checkpoint from your physical card. Scoring conditions, role-specific card text and VP tiers are not configured yet; every catalog entry remains manual-review-only and no VP is inferred.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
       '<p>Enter missions manually during the Command phase. No automatic draw or selection occurs.</p>' +
       secondaryEntryMarkup +
