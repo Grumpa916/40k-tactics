@@ -2,6 +2,7 @@ import { getSecondaryMissionHistory, SECONDARY_MISSION_MODES, SECONDARY_MISSION_
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { createChargeScreen } from "./charge-screen.js";
 import { createCommandScreen } from "./command-screen.js";
+import { createBattleSetupScreen } from "./battle-setup-screen.js";
 import { createFightScreen } from "./fight-screen.js";
 import { createMovementScreen } from "./movement-screen.js";
 import { createShootingScreen } from "./shooting-screen.js";
@@ -15,6 +16,7 @@ const PHASES = Object.freeze([
 ]);
 
 const SCREEN_FACTORIES = Object.freeze({
+  setup: createBattleSetupScreen,
   command: createCommandScreen,
   movement: createMovementScreen,
   shooting: createShootingScreen,
