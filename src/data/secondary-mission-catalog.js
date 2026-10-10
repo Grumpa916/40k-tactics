@@ -1,34 +1,94 @@
 /**
- * 11th-edition Chapter Approved 2026–27 secondary mission name catalog.
+ * 11th-edition Chapter Approved 2026–27 secondary mission catalog.
  *
- * Scope: card names and Fixed/Tactical availability only. The catalog deliberately
- * does not claim to encode card-side-specific scoring rules, VP tiers, or timing.
- * Those remain manual-review inputs until both Attacker and Defender card faces
- * have been individually checked against the mission pack.
- *
- * Candidate-name cross-check: IRONBUILT-LLC/ironbuilt-data,
- * datasets/wh40k-11e-missions.json, version 2026.08.25-primary-timing-audit.
- * That community dataset is not treated as an authoritative scoring source.
+ * The full catalog is not yet a verified rules transcription. Only cards with
+ * per-card rulesVerified=true have scoring-window metadata transcribed from the
+ * official GW sample card images linked below. Other cards remain names-only.
+ * Scoring is always a manual, player-confirmed action; this metadata never awards VP.
  */
 export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   edition: "11th",
   missionPack: "Chapter Approved 2026–27",
-  catalogScope: "names-only",
+  catalogScope: "partial-rules-reference",
   rulesVerified: false,
   candidateDatasetVersion: "2026.08.25-primary-timing-audit",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/main/datasets/wh40k-11e-missions.json",
-  rulesReferenceUrl: "https://www.warhammer-community.com/en-gb/articles/p3i6aa3h/the-chapter-approved-deck-what-is-it-and-how-does-it-work/"
+  officialSampleCardImages: Object.freeze([
+    "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
+    "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
+  ])
 });
+
+const unverified = Object.freeze({ rulesVerified: false, scoringWindows: Object.freeze([]) });
 
 const cardNames = [
   ["a-grievous-blow", "A Grievous Blow", true],
   ["a-tempting-target", "A Tempting Target", false],
-  ["assassination", "Assassination", true],
+  ["assassination", "Assassination", true, {
+    rulesVerified: true,
+    scoringWindows: [
+      {
+        id: "fixed-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of either player's turn",
+        modes: ["fixed"],
+        tiers: [
+          { vp: 3, summary: "Each enemy CHARACTER model destroyed this turn." },
+          { vp: 1, summary: "Additional VP for each destroyed CHARACTER model with 4+ Wounds; cumulative." }
+        ],
+        source: "official-gw-sample-card"
+      },
+      {
+        id: "fixed-opponent-turn",
+        timing: "end-of-opponent-turn",
+        timingLabel: "End of opponent's turn",
+        modes: ["fixed"],
+        tiers: [
+          { vp: 3, summary: "Each enemy CHARACTER model destroyed during that turn." },
+          { vp: 1, summary: "Additional VP for each destroyed CHARACTER model with 4+ Wounds; cumulative." }
+        ],
+        source: "official-gw-sample-card"
+      },
+      {
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of either player's turn",
+        modes: ["tactical"],
+        tiers: [
+          { vp: 5, summary: "One or more enemy CHARACTER models destroyed this turn, or all enemy CHARACTER models have been destroyed during the battle." }
+        ],
+        source: "official-gw-sample-card"
+      },
+      {
+        id: "tactical-opponent-turn",
+        timing: "end-of-opponent-turn",
+        timingLabel: "End of opponent's turn",
+        modes: ["tactical"],
+        tiers: [
+          { vp: 5, summary: "One or more enemy CHARACTER models destroyed this turn, or all enemy CHARACTER models have been destroyed during the battle." }
+        ],
+        source: "official-gw-sample-card"
+      }
+    ]
+  }],
   ["beacon", "Beacon", false],
   ["behind-enemy-lines", "Behind Enemy Lines", false],
   ["bring-it-down", "Bring it Down", true],
   ["burden-of-trust", "Burden of Trust", false],
-  ["centre-ground", "Centre Ground", false],
+  ["centre-ground", "Centre Ground", false, {
+    rulesVerified: true,
+    scoringWindows: [{
+      id: "tactical-turn",
+      timing: "end-of-turn",
+      timingLabel: "End of your turn",
+      modes: ["tactical"],
+      tiers: [
+        { vp: 3, summary: "At least one eligible friendly unit within 3 inches of the battlefield centre, with no enemy units within 3 inches of centre." },
+        { vp: 5, summary: "At least one eligible friendly unit within 3 inches of the battlefield centre, with no enemy units within 6 inches of centre." }
+      ],
+      source: "official-gw-sample-card"
+    }]
+  }],
   ["cleanse", "Cleanse", false],
   ["defend-stronghold", "Defend Stronghold", false],
   ["display-of-might", "Display of Might", false],
@@ -41,14 +101,21 @@ const cardNames = [
   ["secure-no-mans-land", "Secure No Man's Land", false]
 ];
 
-export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable]) =>
+export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules = unverified]) =>
   Object.freeze({
     id: "secondary-" + slug,
     name,
     category: "secondary",
     fixedAvailable,
     availableModes: Object.freeze(fixedAvailable ? ["fixed", "tactical"] : ["tactical"]),
-    rulesConfigured: false,
+    rulesVerified: rules.rulesVerified,
+    scoringWindows: Object.freeze(rules.scoringWindows.map((window) =>
+      Object.freeze({
+        ...window,
+        modes: Object.freeze([...window.modes]),
+        tiers: Object.freeze(window.tiers.map((tier) => Object.freeze({ ...tier })))
+      })
+    )),
     conditions: Object.freeze([])
   })
 ));
