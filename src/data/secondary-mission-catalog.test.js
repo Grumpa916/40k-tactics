@@ -28,8 +28,11 @@ test("catalog distinguishes official sample-card verification from draft cross-c
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.rulesVerified, false);
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.catalogScope, "partial-rules-reference");
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.crossCheckStatus,
-    "unofficial-transcription-pending-official-card-check");
-  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.crossCheckSources.length, 2);
+    "unofficial-cross-check-review-logged-official-card-check-pending");
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.crossCheckSources.length, 4);
+  assert.ok(SECONDARY_MISSION_CATALOG_SOURCE.crossCheckSources.includes(
+    "https://gdmissions.app/11th/secondary-missions"
+  ));
 
   const verified = SECONDARY_MISSION_CATALOG.filter((card) => card.rulesVerified);
   assert.deepEqual(verified.map((card) => card.name).sort(), ["Assassination", "Centre Ground"]);
@@ -55,7 +58,13 @@ test("draft windows preserve distinct modes, timing, tier relationships, and rev
   ]);
   const tactical = grievous.scoringWindows.find((window) => window.modes[0] === "tactical");
   assert.equal(tactical.tiers[0].vp, 5);
-  assert.equal(tactical.tiers[0].maxVP, 5);
+  assert.equal(Object.hasOwn(tactical.tiers[0], "maxVP"), false);
+  const bringItDown = SECONDARY_MISSION_CATALOG.find((card) => card.name === "Bring it Down");
+  assert.equal(bringItDown.rulesVerified, false);
+  const bringItDownTactical = bringItDown.scoringWindows.find((window) => window.modes[0] === "tactical");
+  assert.equal(bringItDownTactical.tiers[0].vp, 5);
+  assert.equal(Object.hasOwn(bringItDownTactical.tiers[0], "maxVP"), false);
+  assert.match(bringItDownTactical.tiers[0].summary, /One or more/);
   assert.match(tactical.tiers[0].summary, /One or more/);
 
   const defend = SECONDARY_MISSION_CATALOG.find((card) => card.name === "Defend Stronghold");
