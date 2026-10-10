@@ -57,7 +57,7 @@ test("Movement screen shows only active-player deployed units and Movement limit
   const screen = createMovementScreen(root, { session, perspectivePlayerId: "p1" });
   assert.match(root.innerHTML, /Movement Phase/);
   assert.match(root.innerHTML, /Intercessors/);
-  assert.doesNotMatch(root.innerHTML, />Enemy</);
+  assert.match(root.innerHTML, /data-map-unit-id="enemy"/);\n  assert.doesNotMatch(root.innerHTML, /data-move-unit="enemy"/);
   assert.match(root.innerHTML, /Move up to 6/);
   screen.destroy();
 });
