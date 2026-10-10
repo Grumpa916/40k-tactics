@@ -1,4 +1,5 @@
 import { executeCommand } from "../engine/command-engine.js";
+import { GAME_STATE_VERSION } from "../state/version.js";
 
 export function createGameSession(initialState, { commandExecutor = executeCommand } = {}) {
   if (!initialState || typeof initialState !== "object") {
@@ -19,6 +20,28 @@ export function createGameSession(initialState, { commandExecutor = executeComma
 
   return Object.freeze({
     getState() {
+      return state;
+    },
+
+    replaceState(restoredState) {
+      if (!restoredState || typeof restoredState !== "object" || Array.isArray(restoredState)) {
+        throw new TypeError("A restored game-state object is required.");
+      }
+      if (restoredState.version !== GAME_STATE_VERSION) {
+        throw new Error("Cannot restore game-state version " + restoredState.version +
+          "; this app supports version " + GAME_STATE_VERSION + ".");
+      }
+      let snapshot;
+      try {
+        snapshot = JSON.parse(JSON.stringify(restoredState));
+      } catch {
+        throw new TypeError("The restored game state must be JSON-serializable.");
+      }
+      if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+        throw new TypeError("The restored game state must be a JSON object.");
+      }
+      state = snapshot;
+      notify();
       return state;
     },
 

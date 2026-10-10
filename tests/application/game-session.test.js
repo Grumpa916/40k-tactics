@@ -59,3 +59,29 @@ test("session preserves opponent activation in the live game state", () => {
 
   clearCommandHandlers();
 });
+
+test("session restores a version-compatible snapshot and notifies subscribers", () => {
+  const session = createGameSession(fightState());
+  const observed = [];
+  session.subscribe((state) => observed.push(state.phase));
+  const snapshot = fightState();
+  snapshot.phase = "shooting";
+  snapshot.history = [{ type: "restored.event" }];
+
+  const restored = session.replaceState(snapshot);
+  snapshot.history[0].type = "mutated after restore";
+
+  assert.equal(restored.phase, "shooting");
+  assert.equal(session.getState().history[0].type, "restored.event");
+  assert.deepEqual(observed, ["shooting"]);
+});
+
+test("session rejects incompatible or non-serializable restored snapshots without changing state", () => {
+  const session = createGameSession(fightState());
+  const original = session.getState();
+  assert.throws(() => session.replaceState({ version: 999 }), /supports version/);
+  const circular = { version: original.version };
+  circular.self = circular;
+  assert.throws(() => session.replaceState(circular), /JSON-serializable/);
+  assert.equal(session.getState(), original);
+});
