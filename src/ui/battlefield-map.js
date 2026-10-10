@@ -83,7 +83,7 @@ export function renderBattlefieldMap(state, {
     const marker = escapeHtml((unit.name ?? unit.id).slice(0, 22));
     const modelCount = Array.isArray(unit.models) ? unit.models.length : 0;
     unitNodes.push('<div class="battlefield-map__unit ' + sideClass +
-      '" data-map-unit-id="' + escapeHtml(unit.id) + '" style="left:' + percent.left +
+      '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (mode === "planning" ? ' role="button" tabindex="0" aria-label="Select planned position for ' + escapeHtml(unit.name ?? unit.id) + '"' : '') + ' style="left:' + percent.left +
       '%;top:' + percent.top + '%" title="' + escapeHtml(unit.name ?? unit.id) +
       (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + '</div>');
   }
@@ -106,7 +106,7 @@ export function renderBattlefieldMap(state, {
     '" data-battlefield-map data-map-mode="' + mode + '">' +
     '<div class="battlefield-map__meta"><span>' + modeDescription(mode) +
     '</span><span>60″ × 44″ reference grid</span></div>' +
-    '<div class="battlefield-map__board" role="img" aria-label="' +
+    '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' +
     modeDescription(mode) + ', 60 by 44 inch reference board">' +
     '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' +
     objectiveNodes + unitNodes + emptyMessage +

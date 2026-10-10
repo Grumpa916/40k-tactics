@@ -20,6 +20,7 @@ import { adjustVictoryPoints, recordVictoryPointsAward, undoLatestVictoryPointsA
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
 import { useSecondaryMissionRedraw } from "./secondary-mission-redraw.js";
 import { discardTacticalSecondariesForCommandPoint } from "./tactical-secondary-discard.js";
+import { setDeploymentPlanPosition, clearDeploymentPlanPosition, clearDeploymentPlan } from "./battlefield-map-transitions.js";
 import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 
 export function registerCoreCommandHandlers() {
@@ -27,6 +28,9 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.START_BATTLE, (state, command) => startBattle(state, command.payload)],
     [COMMAND_TYPES.ENTER_DEPLOYMENT, (state) => enterDeployment(state)],
     [COMMAND_TYPES.DEPLOY_UNIT, (state, command) => deployUnit(state, command.payload)],
+    [COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION, (state, command) => setDeploymentPlanPosition(state, command.payload)],
+    [COMMAND_TYPES.CLEAR_DEPLOYMENT_PLAN_POSITION, (state, command) => clearDeploymentPlanPosition(state, command.payload)],
+    [COMMAND_TYPES.CLEAR_DEPLOYMENT_PLAN, (state, command) => clearDeploymentPlan(state, command.payload)],
     [COMMAND_TYPES.START_FIRST_TURN, (state, command) => startFirstTurn(state, command.payload)],
     [COMMAND_TYPES.CHANGE_PHASE, (state, command) => changePhase(state, command.payload)],
     [COMMAND_TYPES.END_TURN, (state, command) => endTurn(state, command.payload)],
