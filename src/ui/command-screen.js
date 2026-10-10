@@ -1,7 +1,7 @@
 import { getScoringOpportunityAdvisories } from "../rules/tactical-scoring-opportunities.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { getCommandPointBalance, getCommandPointHistory } from "../engine/command-points-ledger.js";
-import { getVictoryPointHistory, getVictoryPointScore } from "../engine/victory-points-ledger.js";
+import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictoryPointScore } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
 import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
@@ -60,6 +60,7 @@ export function createCommandScreen(container, {
 
   let selectedSecondaryPlayerId = null;
   let secondaryMissionMessage = "";
+  let vpMessage = "";
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
@@ -71,8 +72,30 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-vp-undo]");
     if (!target || !container.contains(target)) return;
+    if (target.hasAttribute("data-vp-undo")) {
+      const state = session.getState();
+      const award = getLatestUndoableVictoryPointsAward(state);
+      if (!award) {
+        vpMessage = "No VP award is currently safe to undo.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.UNDO_LATEST_VICTORY_POINTS_AWARD, payload: {
+          playerId: award.playerId,
+          reason: "Corrected latest VP entry",
+          turn: state.turn ?? 0,
+          round: state.battle?.round ?? 0
+        }});
+        vpMessage = "Undid +" + award.amount + " VP for " + playerName(state, award.playerId) + ".";
+      } catch (error) {
+        vpMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     if (target.hasAttribute("data-cp-gain")) recordCp(1, "gain", "Manually recorded gain");
     if (target.hasAttribute("data-cp-spend")) recordCp(-1, "spend", "Manually recorded spend");
     if (target.hasAttribute("data-secondary-mission-add")) {
@@ -579,6 +602,11 @@ export function createCommandScreen(container, {
       '<article class="command-score-card"><span>' + escapeHtml(player.name ?? player.id) +
       '</span><strong>' + escapeHtml(getVictoryPointScore(state, player.id)) + ' VP</strong></article>'
     ).join("");
+    const undoableVpAward = getLatestUndoableVictoryPointsAward(state);
+    const undoVpMarkup = undoableVpAward
+      ? '<button type="button" data-vp-undo>Undo latest VP award (' + escapeHtml(undoableVpAward.amount) +
+        ' VP for ' + escapeHtml(playerName(state, undoableVpAward.playerId)) + ')</button>'
+      : '<p>Undo is available immediately after a VP award, before another game action is recorded.</p>';
     const vpHistory = getVictoryPointHistory(state).slice(-6).reverse();
     const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) => {
       const capNotice = entry.requestedAmount > entry.amount
@@ -604,7 +632,7 @@ export function createCommandScreen(container, {
       '</select></label><label>VP awarded<input name="vp-amount" type="number" min="1" step="1" value="5" required></label>' +
       '<label>Manual adjustment reason<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Correct an entry error" required></label>' +
       '<button type="submit">Confirm VP award</button></form>' : '<p>Configure both players before recording awards.</p>') +
-      '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
+      undoVpMarkup + (vpMessage ? '<p role="status">' + escapeHtml(vpMessage) + '</p>' : '') + '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
       '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +

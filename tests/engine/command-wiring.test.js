@@ -232,3 +232,26 @@ test("confirmed victory-point awards execute through the core command engine", (
   assert.equal(next.history.at(-1).payload.scoreAfter, 5);
   clearCommandHandlers();
 });
+
+
+test("latest VP award undo executes through the core command engine", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  let state = createGameState({
+    turn: 2,
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { id: "b1", status: "active", round: 1 }
+  });
+  state = executeCommand(state, createCommand(COMMAND_TYPES.RECORD_VICTORY_POINTS, {
+    playerId: "p1", amount: 4, reason: "Mistaken award"
+  }));
+  assert.equal(state.victoryPoints.p1, 4);
+  state = executeCommand(state, createCommand(COMMAND_TYPES.UNDO_LATEST_VICTORY_POINTS_AWARD, {
+    playerId: "p1", reason: "Corrected entry", turn: 2, round: 1
+  }));
+  assert.equal(state.victoryPoints.p1, 0);
+  assert.equal(state.history.at(-1).type, "victory_points.award_undone");
+  assert.equal(state.history.at(-1).payload.reason, "Corrected entry");
+  clearCommandHandlers();
+});
