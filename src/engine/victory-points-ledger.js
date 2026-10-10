@@ -107,7 +107,7 @@ export function recordVictoryPointsAward(state, {
   if (scoringTiming !== null && !Object.values(SCORING_TIMINGS).includes(scoringTiming)) {
     throw new TypeError("Unsupported scoring timing: " + scoringTiming);
   }
-  const priorAwards = getVictoryPointHistory(state, playerId);
+  const priorAwards = getEffectiveAwardEvents(state, playerId);
   if (missionDefinitionId && opportunityKey && priorAwards.some((entry) =>
     entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
   )) {

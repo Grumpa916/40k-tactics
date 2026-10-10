@@ -304,3 +304,32 @@ test("latest manual VP adjustment can be safely undone", () => {
   assert.equal(getVictoryPointScore(state, "p1"), 10);
   assert.equal(state.history.at(-1).type, "victory_points.adjustment_undone");
 });
+
+
+test("safe undo allows the same mission scoring opportunity to be re-entered correctly", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  const opportunity = {
+    playerId: "p1",
+    category: "secondary",
+    missionDefinitionId: "secondary-card-a",
+    missionMode: "tactical",
+    opportunityKey: "secondary-card-a:round-1:turn-1",
+    turn: 1,
+    round: 1
+  };
+  state = recordVictoryPointsAward(state, {
+    ...opportunity, amount: 5, reason: "Initial VP entry"
+  });
+  state = undoLatestVictoryPointsAward(state, {
+    playerId: "p1", reason: "Correct mistaken amount", turn: 1, round: 1
+  });
+
+  state = recordVictoryPointsAward(state, {
+    ...opportunity, amount: 3, reason: "Corrected VP entry"
+  });
+
+  assert.equal(getVictoryPointScore(state, "p1"), 3);
+  assert.equal(getVictoryPointHistory(state, "p1").length, 2);
+  assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, 3);
+  assert.equal(state.history.at(-1).type, "victory_points.awarded");
+});
