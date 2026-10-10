@@ -57,7 +57,7 @@ The legacy V1 reference also records these special cases. Treat all as pending v
 
 ## Independent-transcription reconciliation (reviewed 9 October 2026)
 
-GDM 2026 is the strongest additional practical cross-check found so far: it provides a page for each secondary, readable/selectable card text, card imagery, and a version history. Its version history says the readable full card-text sections were added in v4.2 (3 July 2026), and the latest secondary card artwork was refreshed in v4.9 (25 July 2026). Its v3.5 entry (15 June 2026) records a specific correction to **A Grievous Blow** and **Bring it Down**. These are still unofficial transcriptions, not the authority for setting `rulesVerified: true`.
+GDM 2026 is the strongest additional practical cross-check found so far: it provides a page for each secondary, readable/selectable card text, card imagery, and a version history. I inspected its current reproduced card images for all 18 secondaries and compared the visible scoring windows, tier relationships, timing labels, and special-rule notes against 11th.help. Its version history says the readable full card-text sections were added in v4.2 (3 July 2026), and the latest secondary card artwork was refreshed in v4.9 (25 July 2026). Its v3.5 entry (15 June 2026) records a specific correction to **A Grievous Blow** and **Bring it Down**. These are still unofficial transcriptions, not the authority for setting `rulesVerified: true`.
 
 - [GDM 2026 secondary index](https://gdmissions.app/11th/secondary-missions)
 - [GDM 2026 version history](https://gdmissions.app/version-history)
@@ -73,7 +73,7 @@ GDM 2026 is the strongest additional practical cross-check found so far: it prov
 | Bring it Down | **Conflict.** GDM v3.5 says Tactical is a flat 5 VP when one or more qualifying models are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line. | Draft reflects the flat 5 VP trigger and no tier-level `maxVP`; keep unverified pending official card text. |
 | Burden of Trust | Broad agreement on selecting a guarding unit per objective, duration through the start of the next turn, and 2 VP per guarded objective up to 5 VP. | Keep unverified. |
 | Centre Ground | Broad agreement on the 3-inch friendly-unit condition and 3 VP / exclusive 5 VP enemy-proximity tiers; an official sample image exists. | Existing official-sample status retained only for the text visible in that image. |
-| Cleanse | Broad agreement on 2 VP for one objective and exclusive 5 VP for two or more, end-of-your-turn timing, and the Plunder redraw interaction. | Keep unverified. |
+| Cleanse | Broad agreement on 2 VP for one objective and exclusive 5 VP for two or more, end-of-your-turn timing, the Plunder redraw interaction, and the Objective Action requirements (start in Shooting; exclude home objective; different objective per unit; complete at end of turn while controlling it). | Keep unverified. |
 | Defend Stronghold | Broad agreement on first-round redraw, availability from round two, and 3 VP home-objective control plus a cumulative 2 VP if no enemy units are in your deployment zone. | Keep unverified despite transcription agreement. |
 | Display of Might | Broad agreement on eligible units wholly within No Man's Land and the 2 VP own-turn / 5 VP opponent-turn checkpoints. | Keep unverified. |
 | Engage on All Fronts | Broad agreement on quarter-presence requirements and mutually exclusive 2/4 VP Fixed or 3/5 VP Tactical tiers. | Keep unverified. |
