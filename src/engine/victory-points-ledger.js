@@ -1,5 +1,6 @@
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 
 export const VICTORY_POINT_CAPS = Object.freeze({
   primaryPerTurn: 15,
@@ -28,7 +29,7 @@ function getEffectiveAwardEvents(state, playerId = null) {
 }
 
 function calculateCappedAward(state, {
-  playerId, amount, category, missionDefinitionId, missionMode, turn, round
+  playerId, amount, category, missionDefinitionId, missionMode, scoringTiming, turn, round
 }) {
   if (category == null) return { amount, appliedCaps: [] };
 
@@ -45,9 +46,14 @@ function calculateCappedAward(state, {
     ? VICTORY_POINT_CAPS.primaryPerGame
     : VICTORY_POINT_CAPS.secondaryPerGame;
 
-  let allowed = Math.min(amount, perTurnLimit - turnUsed, perGameLimit - gameUsed);
+  // The Event Companion v1.2 FAQ clarifies that end-of-battle VP is not
+  // subject to the 15 VP per battle-round limit. Game and Fixed-card caps
+  // still apply, so only the per-turn portion is bypassed.
+  const exemptFromTurnCap = scoringTiming === SCORING_TIMINGS.END_OF_BATTLE;
+  const turnRemaining = exemptFromTurnCap ? Number.POSITIVE_INFINITY : perTurnLimit - turnUsed;
+  let allowed = Math.min(amount, turnRemaining, perGameLimit - gameUsed);
   const appliedCaps = [];
-  if (amount > perTurnLimit - turnUsed) appliedCaps.push(category + "-turn");
+  if (!exemptFromTurnCap && amount > perTurnLimit - turnUsed) appliedCaps.push(category + "-turn");
   if (amount > perGameLimit - gameUsed) appliedCaps.push(category + "-game");
 
   if (category === "secondary" && missionMode === "fixed") {
@@ -79,6 +85,7 @@ export function recordVictoryPointsAward(state, {
   category = null,
   missionMode = null,
   opportunityKey = null,
+  scoringTiming = null,
   turn = state?.turn ?? 0,
   round = state?.battle?.round ?? 0
 } = {}) {
@@ -97,6 +104,9 @@ export function recordVictoryPointsAward(state, {
   if (opportunityKey !== null && (typeof opportunityKey !== "string" || !opportunityKey.trim())) {
     throw new TypeError("Opportunity key must be a non-empty string when supplied.");
   }
+  if (scoringTiming !== null && !Object.values(SCORING_TIMINGS).includes(scoringTiming)) {
+    throw new TypeError("Unsupported scoring timing: " + scoringTiming);
+  }
   const priorAwards = getVictoryPointHistory(state, playerId);
   if (missionDefinitionId && opportunityKey && priorAwards.some((entry) =>
     entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
@@ -105,7 +115,7 @@ export function recordVictoryPointsAward(state, {
   }
 
   const capped = calculateCappedAward(state, {
-    playerId, amount, category, missionDefinitionId, missionMode, turn, round
+    playerId, amount, category, missionDefinitionId, missionMode, scoringTiming, turn, round
   });
   const appliedAmount = capped.amount;
   const scores = state?.victoryPoints ?? {};
@@ -122,6 +132,7 @@ export function recordVictoryPointsAward(state, {
     ...(missionDefinitionId ? { missionDefinitionId } : {}),
     ...(category ? { category } : {}),
     ...(missionMode ? { missionMode } : {}),
+    ...(scoringTiming ? { scoringTiming } : {}),
     ...(opportunityKey ? { opportunityKey } : {})
   }));
 }
