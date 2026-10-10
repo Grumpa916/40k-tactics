@@ -13,7 +13,13 @@ export async function saveCurrentBattle(store, session, { id = null, name = null
   const battleName = String(name ?? state.battle?.name ?? "").trim() ||
     [state.players?.[0]?.name ?? "Player 1", "vs", state.players?.[1]?.name ?? "Player 2",
       state.battle?.round ? "— Round " + state.battle.round : ""].filter(Boolean).join(" ");
-  return store.save({ id, name: battleName, state });
+  let snapshot;
+  try {
+    snapshot = JSON.parse(JSON.stringify(state));
+  } catch {
+    throw new TypeError("The current game state must be JSON-serializable before saving.");
+  }
+  return store.save({ id, name: battleName, state: snapshot });
 }
 
 export async function restoreSavedBattle(store, session, id) {
