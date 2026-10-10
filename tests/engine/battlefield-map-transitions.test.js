@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createGameState } from "../state/game-state.js";
-import { createUnit, UNIT_STATUS } from "../state/unit.js";
+import { createGameState } from "../../src/state/game-state.js";
+import { createUnit, UNIT_STATUS } from "../../src/state/unit.js";
 import {
   setDeploymentPlanPosition,
   clearDeploymentPlanPosition,
