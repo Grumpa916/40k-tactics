@@ -110,3 +110,35 @@ test("live map uses actual deployment anchor until movement records newer model 
   assert.match(html, /left:20%;top:68\.18181818181817%/);
   assert.doesNotMatch(html, /left:50%;top:54\.54545454545454%/);
 });
+
+
+test("live map displays recorded objective control and current game status", () => {
+  const html = renderBattlefieldMap({
+    players: [{ id: "p1", name: "Astra" }, { id: "p2", name: "Tyranids" }],
+    activePlayer: "p1",
+    phase: "movement",
+    battle: { id: "b1", status: "active", round: 2, activePlayerId: "p1" },
+    units: [],
+    objectives: [
+      { id: "obj1", name: "Alpha", position: { x: 10, y: 12 }, control: {
+        id: "obj1", controllerId: "p1", contestingPlayerIds: [], controlState: "controlled"
+      }},
+      { id: "obj2", name: "Beta", position: { x: 40, y: 20 }, control: {
+        id: "obj2", controllerId: null, contestingPlayerIds: ["p1", "p2"], controlState: "contested"
+      }},
+      { id: "obj3", name: "Gamma" }
+    ]
+  }, { mode: "live", perspectivePlayerId: "p1" });
+
+  assert.match(html, /data-map-game-status>Round 2 · movement · Astra/);
+  assert.match(html, /data-objective-control="Controlled by Astra"/);
+  assert.match(html, /data-objective-control="Contested by Astra and Tyranids"/);
+  assert.match(html, /Alpha: Controlled by Astra/);
+  assert.match(html, /Beta: Contested by Astra and Tyranids/);
+  assert.doesNotMatch(html, /data-map-objective-id="obj3"/);
+});
+
+test("live game status is not invented when there is no active battle", () => {
+  const html = renderBattlefieldMap({ units: [] }, { mode: "live" });
+  assert.doesNotMatch(html, /data-map-game-status/);
+});
