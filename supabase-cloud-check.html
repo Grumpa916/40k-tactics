@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>40K Tactics V2 — Cloud Save Check</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0b0d10; color: #f2f3f5; }
+    body { max-width: 760px; margin: 0 auto; padding: 20px; }
+    section { margin: 16px 0; padding: 16px; border: 1px solid #343a43; border-radius: 12px; background: #14181d; }
+    button { min-height: 42px; padding: 8px 12px; margin: 4px 4px 4px 0; border: 1px solid #59616d; border-radius: 8px; background: #242a32; color: inherit; }
+    button:disabled { opacity: .45; }
+    input { min-height: 38px; padding: 6px 8px; max-width: 100%; }
+    label { display: grid; gap: 5px; margin: 8px 0; }
+    .muted { color: #aeb6c2; } #test-status { white-space: pre-wrap; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <h1>V2 cloud persistence check</h1>
+  <p class="muted">Temporary smoke-test page for the dedicated V2 Supabase project. This does not replace the main Fight demo.</p>
+  <div id="auth-panel"></div>
+  <section>
+    <h2>Cloud save test</h2>
+    <p>Sign in first. This creates a disposable test snapshot, reads it back, updates it, then deletes it when you choose the relevant buttons.</p>
+    <label>Test save name <input id="test-name" value="V2 cloud smoke test" maxlength="160"></label>
+    <button id="run-test" disabled>Run save / restore test</button>
+    <button id="delete-test" disabled>Delete test save</button>
+    <p id="test-status" role="status">Waiting for owner sign-in.</p>
+  </section>
+  <script type="module" src="./src/ui/supabase-cloud-smoke-test.js"></script>
+</body>
+</html>
