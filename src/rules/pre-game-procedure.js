@@ -7,6 +7,19 @@
  */
 export const PRE_GAME_RULESET_ID = "warhammer-40000-11th-edition";
 
+export const PRE_GAME_PROCEDURE_STEPS = Object.freeze([
+  Object.freeze({ id: "confirm-mission", title: "Confirm the mission", detail: "Follow the selected mission pack's setup sequence, battlefield layout, and special instructions." }),
+  Object.freeze({ id: "confirm-armies", title: "Confirm both armies", detail: "Check both rosters and note unit abilities that affect pre-game setup." }),
+  Object.freeze({ id: "terrain-objectives", title: "Set up terrain and objectives", detail: "Use the mission instructions; the app map does not infer or validate tabletop placement." }),
+  Object.freeze({ id: "pre-battle-abilities", title: "Review pre-battle abilities", detail: "Resolve relevant abilities at their rules-defined timing, including Scouts and Infiltrators when applicable." }),
+  Object.freeze({ id: "actual-deployment", title: "Record actual deployment", detail: "Record each non-destroyed unit's starting position or explicitly declare it in reserves." }),
+  Object.freeze({ id: "first-turn", title: "Confirm the first player", detail: "Record the first player at the timing required by the mission's setup sequence, then begin the first turn." })
+]);
+
+export function getPreGameProcedureSteps() {
+  return PRE_GAME_PROCEDURE_STEPS.map((step) => ({ ...step }));
+}
+
 export const PRE_GAME_ABILITY_RULES = Object.freeze([
   Object.freeze({
     id: "infiltrators",
