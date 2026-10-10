@@ -67,6 +67,34 @@ function modeDescription(mode) {
   return "Live battlefield positions";
 }
 
+function playerLabel(state, playerId) {
+  return (state.players ?? []).find((player) => player.id === playerId)?.name ?? playerId ?? "Unknown player";
+}
+
+function objectiveControlLabel(objective, state) {
+  const control = objective.control;
+  if (!control || !control.controlState) return "Control not recorded";
+  if (control.controlState === "uncontrolled") return "Uncontrolled";
+  if (control.controlState === "contested") {
+    const contesting = (control.contestingPlayerIds ?? []).map((id) => playerLabel(state, id));
+    return contesting.length ? "Contested by " + contesting.join(" and ") : "Contested";
+  }
+  if (control.controllerId) return "Controlled by " + playerLabel(state, control.controllerId);
+  return "Control not recorded";
+}
+
+function liveStatusLabel(state) {
+  if (!state.battle) return "";
+  if (state.battle.status === "deployment") return "Deployment in progress";
+  if (state.battle.status === "setup") return "Battle setup";
+  if (state.battle.status !== "active") return "Battle " + String(state.battle.status);
+  const round = Number.isInteger(state.battle.round) ? "Round " + state.battle.round : "Round not recorded";
+  const phase = state.phase ? String(state.phase).replaceAll("_", " ") : "Phase not recorded";
+  const activePlayerId = state.activePlayer ?? state.battle.activePlayerId;
+  const activePlayer = activePlayerId ? playerLabel(state, activePlayerId) : "Active player not recorded";
+  return round + " · " + phase + " · " + activePlayer;
+}
+
 export function renderBattlefieldMap(state, {
   mode = "live",
   perspectivePlayerId = state?.activePlayer ?? null
@@ -107,20 +135,34 @@ export function renderBattlefieldMap(state, {
   const objectiveNodes = objectives.filter((objective) =>
     objective && isValidBattlefieldPosition(objective.position)).map((objective) => {
     const percent = battlefieldPositionToPercent(objective.position);
+    const name = objective.name ?? objective.id ?? "Objective";
+    const controlLabel = objectiveControlLabel(objective, safeState);
     return '<div class="battlefield-map__objective" data-map-objective-id="' +
-      escapeHtml(objective.id ?? objective.name) + '" style="left:' + percent.left +
-      '%;top:' + percent.top + '%" title="' + escapeHtml(objective.name ?? objective.id ?? "Objective") +
-      '">' + escapeHtml(objective.name ?? objective.id ?? "Objective") + '</div>';
+      escapeHtml(objective.id ?? objective.name) + '" data-objective-control="' + escapeHtml(controlLabel) +
+      '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
+      escapeHtml(name + " · " + controlLabel) + '">' +
+      escapeHtml(String(name).slice(0, 12)) + '</div>';
   }).join("");
 
   const emptyMessage = positionedUnits
     ? ""
     : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
 
+  const liveStatus = mode === "live" ? liveStatusLabel(safeState) : "";
+  const objectiveStatusSummary = objectives.filter((objective) =>
+    objective && isValidBattlefieldPosition(objective.position)).length
+    ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position))
+      .map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " +
+        objectiveControlLabel(objective, safeState))).join(" · ")
+    : "";
   return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode +
     '" data-battlefield-map data-map-mode="' + mode + '">' +
     '<div class="battlefield-map__meta"><span>' + modeDescription(mode) +
-    '</span><span>60″ × 44″ reference grid</span></div>' +
+    '</span><span>60″ × 44″ reference grid</span>' +
+    (liveStatus ? '<span data-map-game-status>' + escapeHtml(liveStatus) + '</span>' : '') + '</div>' +
+    (objectiveStatusSummary && mode === "live"
+      ? '<p class="battlefield-map__meta" data-map-objective-status>' + objectiveStatusSummary + '</p>'
+      : '') +
     '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' +
     modeDescription(mode) + ', 60 by 44 inch reference board">' +
     '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' +
