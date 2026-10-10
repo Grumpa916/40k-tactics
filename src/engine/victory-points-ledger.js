@@ -1,12 +1,78 @@
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 
+export const VICTORY_POINT_CAPS = Object.freeze({
+  primaryPerTurn: 15,
+  primaryPerGame: 45,
+  secondaryPerTurn: 15,
+  secondaryPerGame: 45,
+  fixedSecondaryPerCard: 20
+});
+
+function getEffectiveAwardEvents(state, playerId = null) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  const reversedIds = new Set(history
+    .filter((event) => event?.type === "victory_points.award_undone")
+    .map((event) => event.payload?.originalAwardEventId)
+    .filter((id) => id != null));
+  return history
+    .filter((event) => event?.type === "victory_points.awarded")
+    .filter((event) => !event.id || !reversedIds.has(event.id))
+    .filter((event) => playerId == null || event.payload?.playerId === playerId)
+    .map((event) => ({ eventId: event.id ?? null, ...event.payload }));
+}
+
+function calculateCappedAward(state, {
+  playerId, amount, category, missionDefinitionId, missionMode, turn, round
+}) {
+  if (category == null) return { amount, appliedCaps: [] };
+
+  const prior = getEffectiveAwardEvents(state, playerId)
+    .filter((entry) => entry.category === category);
+  const turnUsed = prior
+    .filter((entry) => entry.turn === turn && entry.round === round)
+    .reduce((sum, entry) => sum + entry.amount, 0);
+  const gameUsed = prior.reduce((sum, entry) => sum + entry.amount, 0);
+  const perTurnLimit = category === "primary"
+    ? VICTORY_POINT_CAPS.primaryPerTurn
+    : VICTORY_POINT_CAPS.secondaryPerTurn;
+  const perGameLimit = category === "primary"
+    ? VICTORY_POINT_CAPS.primaryPerGame
+    : VICTORY_POINT_CAPS.secondaryPerGame;
+
+  let allowed = Math.min(amount, perTurnLimit - turnUsed, perGameLimit - gameUsed);
+  const appliedCaps = [];
+  if (amount > perTurnLimit - turnUsed) appliedCaps.push(category + "-turn");
+  if (amount > perGameLimit - gameUsed) appliedCaps.push(category + "-game");
+
+  if (category === "secondary" && missionMode === "fixed") {
+    const cardUsed = prior
+      .filter((entry) => entry.missionMode === "fixed" &&
+        entry.missionDefinitionId === missionDefinitionId)
+      .reduce((sum, entry) => sum + entry.amount, 0);
+    const cardRemaining = VICTORY_POINT_CAPS.fixedSecondaryPerCard - cardUsed;
+    if (amount > cardRemaining) appliedCaps.push("fixed-secondary-card");
+    allowed = Math.min(allowed, cardRemaining);
+  }
+
+  if (allowed <= 0) {
+    const capLabel = appliedCaps.includes("fixed-secondary-card")
+      ? "the 20 VP Fixed Secondary card limit"
+      : appliedCaps.includes(category + "-game")
+        ? "the 45 VP " + category + " game limit"
+        : "the 15 VP " + category + " turn limit";
+    throw new Error("No VP can be added: " + capLabel + " has been reached.");
+  }
+  return { amount: allowed, appliedCaps: [...new Set(appliedCaps)] };
+}
+
 export function recordVictoryPointsAward(state, {
   playerId,
   amount,
   reason,
   missionDefinitionId = null,
   category = null,
+  missionMode = null,
   opportunityKey = null,
   turn = state?.turn ?? 0,
   round = state?.battle?.round ?? 0
@@ -33,17 +99,24 @@ export function recordVictoryPointsAward(state, {
     throw new Error("This mission scoring opportunity has already been recorded.");
   }
 
+  const capped = calculateCappedAward(state, {
+    playerId, amount, category, missionDefinitionId, missionMode, turn, round
+  });
+  const appliedAmount = capped.amount;
   const scores = state?.victoryPoints ?? {};
   const scoreBefore = Number.isInteger(scores[playerId]) ? scores[playerId] : 0;
-  const scoreAfter = scoreBefore + amount;
+  const scoreAfter = scoreBefore + appliedAmount;
   const updated = {
     ...state,
     victoryPoints: { ...scores, [playerId]: scoreAfter }
   };
   return appendHistoryEntry(updated, createEvent("victory_points.awarded", {
-    playerId, amount, reason: reason.trim(), turn, round, scoreBefore, scoreAfter,
+    playerId, amount: appliedAmount, reason: reason.trim(), turn, round, scoreBefore, scoreAfter,
+    ...(appliedAmount !== amount ? { requestedAmount: amount } : {}),
+    ...(capped.appliedCaps.length ? { appliedCaps: capped.appliedCaps } : {}),
     ...(missionDefinitionId ? { missionDefinitionId } : {}),
     ...(category ? { category } : {}),
+    ...(missionMode ? { missionMode } : {}),
     ...(opportunityKey ? { opportunityKey } : {})
   }));
 }
