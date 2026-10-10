@@ -10,9 +10,9 @@ export const PRIMARY_MISSION_CATALOG_SOURCE = Object.freeze({
   edition: "11th",
   missionPack: "Chapter Approved 2026–27",
   source: "user-provided photographs of physical cards",
-  catalogScope: "primary-missions-only",
+  catalogScope: "partial-primary-mission-reference",
   rulesVerified: false,
-  note: "Verified transcription does not imply automated eligibility evaluation."
+  note: "This is a partial catalog of the cards supplied so far. Verified transcription does not imply automated eligibility evaluation; missing card fronts are not inferred."
 });
 
 const card = (id, name, scoringWindows, actions = []) => Object.freeze({
