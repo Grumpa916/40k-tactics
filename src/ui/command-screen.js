@@ -77,14 +77,14 @@ export function createCommandScreen(container, {
     if (target.hasAttribute("data-cp-spend")) recordCp(-1, "spend", "Manually recorded spend");
     if (target.hasAttribute("data-secondary-mission-add")) {
       const state = session.getState();
-      const missionMode = state.scoring?.secondaryMissionMode;
-      if (!missionMode) {
-        secondaryMissionMessage = "Choose Fixed or Tactical mode before entering secondary cards.";
+      if (state.phase !== "command") {
+        secondaryMissionMessage = "Secondary missions can be entered during the Command phase only.";
         render();
         return;
       }
-      if (state.phase !== "command") {
-        secondaryMissionMessage = "Secondary missions can be entered during the Command phase only.";
+      const missionMode = state.scoring?.secondaryMissionMode;
+      if (!missionMode) {
+        secondaryMissionMessage = "Choose Fixed or Tactical mode before entering secondary cards.";
         render();
         return;
       }
@@ -458,7 +458,7 @@ export function createCommandScreen(container, {
           '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
           '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
-      '<p>Choose Fixed or Tactical once for the battle before entering cards. The mode is locked after the first card is recorded; card availability is checked against the catalog.</p>' +
+      '<p>No automatic draw or selection occurs. Choose Fixed or Tactical once for the battle before entering cards. The mode is locked after the first card is recorded; card availability is checked against the catalog.</p>' +
       secondaryEntryMarkup +
       (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
       '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
