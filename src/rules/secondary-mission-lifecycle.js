@@ -1,3 +1,11 @@
+import { createEvent } from "../events/event.js";
+import { appendHistoryEntry } from "../state/history.js";
+
+export const SECONDARY_MISSION_MODES = Object.freeze({
+  FIXED: "fixed",
+  TACTICAL: "tactical"
+});
+
 export const SECONDARY_MISSION_STATUS = Object.freeze({
   ACTIVE: "active",
   SCORED: "scored",
@@ -28,6 +36,29 @@ function withMissionList(state, secondaryMissions) {
       secondaryMissions
     }
   };
+}
+
+/**
+ * Choose the battle-wide secondary mission mode before recording any cards.
+ * Mode is stored once in scoring state and copied onto every drawn definition.
+ */
+export function setSecondaryMissionMode(state, { mode } = {}) {
+  if (!Object.values(SECONDARY_MISSION_MODES).includes(mode)) {
+    throw new TypeError("Secondary mission mode must be Fixed or Tactical.");
+  }
+  const existing = missionList(state);
+  if (existing.length > 0) {
+    throw new Error("Secondary mission mode cannot change after a card has been entered.");
+  }
+  if (state?.scoring?.secondaryMissionMode === mode) return state;
+  const next = {
+    ...state,
+    scoring: {
+      ...(state.scoring ?? {}),
+      secondaryMissionMode: mode
+    }
+  };
+  return appendHistoryEntry(next, createEvent("secondary_mission.mode_set", { mode }));
 }
 
 function requireTurnPosition(round, turn) {
@@ -62,15 +93,23 @@ export function drawSecondaryMission(state, {
   if (!playerId) throw new TypeError("The player drawing the secondary mission is required.");
   requireTurnPosition(round, turn);
   const normalized = normalizeMissionDefinition(definition);
+  const selectedMode = state?.scoring?.secondaryMissionMode ?? null;
+  if (selectedMode && Array.isArray(normalized.availableModes) &&
+      !normalized.availableModes.includes(selectedMode)) {
+    throw new Error("This secondary card is not available in the selected " + selectedMode + " mode.");
+  }
+  const missionDefinition = selectedMode
+    ? Object.freeze({ ...normalized, missionMode: selectedMode })
+    : normalized;
   const existing = missionList(state);
   if (existing.some((entry) => entry.playerId === playerId &&
-      entry.definitionId === normalized.id && entry.status === SECONDARY_MISSION_STATUS.ACTIVE)) {
+      entry.definitionId === missionDefinition.id && entry.status === SECONDARY_MISSION_STATUS.ACTIVE)) {
     throw new Error("This secondary mission is already active for that player.");
   }
   const entry = Object.freeze({
     instanceId: playerId + ":" + normalized.id + ":" + round + ":" + turn + ":" + (existing.length + 1),
-    definitionId: normalized.id,
-    definition: normalized,
+    definitionId: missionDefinition.id,
+    definition: missionDefinition,
     playerId,
     status: SECONDARY_MISSION_STATUS.ACTIVE,
     drawnRound: round,
