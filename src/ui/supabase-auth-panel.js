@@ -49,6 +49,7 @@ export function createSupabaseAuthPanel(container, { client, onAuthChange = () =
   }
 
   function publishUser(nextUser) {
+    if (destroyed) return;
     user = nextUser ?? null;
     onAuthChange(user);
     render();
