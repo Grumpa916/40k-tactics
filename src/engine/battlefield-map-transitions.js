@@ -18,6 +18,16 @@ function requirePlanningState(state) {
   }
 }
 
+function requirePlanningUnit(state, unitId, playerId) {
+  if (!unitId) throw new TypeError("Unit id is required.");
+  const unit = state.units.find((item) => item.id === unitId);
+  if (!unit) throw new Error("Unit not found: " + unitId);
+  if (!playerId) throw new TypeError("Player id is required for deployment planning.");
+  if (unit.ownerId !== playerId) throw new Error("Only your own units can be placed in the deployment plan.");
+  if (unit.status === "destroyed") throw new Error("Destroyed units cannot be planned for deployment.");
+  return unit;
+}
+
 function requirePlayerUnit(state, unitId, playerId) {
   if (!unitId) throw new TypeError("Unit id is required.");
   const unit = state.units.find((item) => item.id === unitId);
@@ -30,7 +40,7 @@ function requirePlayerUnit(state, unitId, playerId) {
 
 export function setDeploymentPlanPosition(state, { unitId, playerId, position } = {}) {
   requirePlanningState(state);
-  requirePlayerUnit(state, unitId, playerId);
+  requirePlanningUnit(state, unitId, playerId);
   const nextPosition = validatePosition(position);
   const previousPosition = state.battlefieldMap?.deploymentPlan?.[unitId] ?? null;
   const nextState = {
@@ -47,7 +57,7 @@ export function setDeploymentPlanPosition(state, { unitId, playerId, position } 
 
 export function clearDeploymentPlanPosition(state, { unitId, playerId } = {}) {
   requirePlanningState(state);
-  requirePlayerUnit(state, unitId, playerId);
+  requirePlanningUnit(state, unitId, playerId);
   const currentPlan = state.battlefieldMap?.deploymentPlan ?? {};
   if (!Object.hasOwn(currentPlan, unitId)) return state;
   const deploymentPlan = { ...currentPlan };
