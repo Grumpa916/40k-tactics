@@ -24,14 +24,46 @@ test("catalog only exposes fixed availability where the card set marks a Fixed o
   ]);
 });
 
-test("catalog explicitly avoids claiming unverified scoring rules", () => {
+test("catalog distinguishes official sample-card verification from draft cross-checks", () => {
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.rulesVerified, false);
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.catalogScope, "partial-rules-reference");
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.crossCheckStatus,
+    "unofficial-transcription-pending-official-card-check");
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.crossCheckSources.length, 2);
+
   const verified = SECONDARY_MISSION_CATALOG.filter((card) => card.rulesVerified);
   assert.deepEqual(verified.map((card) => card.name).sort(), ["Assassination", "Centre Ground"]);
   assert.ok(verified.every((card) => card.scoringWindows.length > 0));
-  assert.ok(SECONDARY_MISSION_CATALOG.filter((card) => !card.rulesVerified)
-    .every((card) => card.scoringWindows.length === 0));
+
+  const unverified = SECONDARY_MISSION_CATALOG.filter((card) => !card.rulesVerified);
+  assert.equal(unverified.length, 16);
+  assert.ok(unverified.every((card) => card.scoringWindows.length > 0));
+  assert.ok(unverified.every((card) => card.referenceNotes.length >= 0));
+  assert.ok(unverified.every((card) => card.scoringWindows.every((window) =>
+    window.source === "community-transcription-pending-official-card-check")));
   assert.ok(SECONDARY_MISSION_CATALOG.every((card) => card.conditions.length === 0));
-  assert.ok(SECONDARY_MISSION_CATALOG_SOURCE.officialSampleCardImages.length === 2);
+});
+
+test("draft windows preserve distinct modes, timing, tier relationships, and review-only provenance", () => {
+  const grievous = SECONDARY_MISSION_CATALOG.find((card) => card.name === "A Grievous Blow");
+  assert.equal(grievous.rulesVerified, false);
+  assert.deepEqual(grievous.scoringWindows.map((window) => [window.timing, window.modes[0]]), [
+    ["end-of-turn", "fixed"],
+    ["end-of-opponent-turn", "fixed"],
+    ["end-of-turn", "tactical"],
+    ["end-of-opponent-turn", "tactical"]
+  ]);
+  const tactical = grievous.scoringWindows.find((window) => window.modes[0] === "tactical");
+  assert.equal(tactical.tiers[0].vp, 5);
+  assert.equal(tactical.tiers[0].maxVP, 5);
+  assert.match(tactical.tiers[0].summary, /One or more/);
+
+  const defend = SECONDARY_MISSION_CATALOG.find((card) => card.name === "Defend Stronghold");
+  assert.equal(defend.scoringWindows[0].minRound, 2);
+  assert.equal(defend.scoringWindows[0].tiers[1].relationship, "cumulative");
+
+  const beacon = SECONDARY_MISSION_CATALOG.find((card) => card.name === "Beacon");
+  assert.equal(beacon.scoringWindows[0].timing, "end-of-opponent-turn");
+  assert.equal(beacon.scoringWindows[0].tiers[0].relationship, "or");
+  assert.equal(beacon.scoringWindows[0].tiers[1].relationship, "or");
 });

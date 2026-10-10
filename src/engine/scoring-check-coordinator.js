@@ -18,8 +18,10 @@ function scoringWindowsForInstance(state, instance, checkpoint = null) {
   const definition = instance.definition;
   if (!Array.isArray(definition?.scoringWindows)) return [];
   const missionMode = state?.scoring?.secondaryMissionMode ?? definition.missionMode ?? null;
+  const currentRound = state?.battle?.round ?? state?.round ?? null;
   return definition.scoringWindows.filter((window) =>
     (checkpoint == null || window?.timing === checkpoint) &&
+    (window?.minRound == null || currentRound == null || currentRound >= window.minRound) &&
     (!missionMode || !Array.isArray(window?.modes) || window.modes.length === 0 ||
       window.modes.includes(missionMode)));
 }

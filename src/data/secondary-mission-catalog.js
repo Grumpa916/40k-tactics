@@ -1,10 +1,11 @@
 /**
  * 11th-edition Chapter Approved 2026–27 secondary mission catalog.
  *
- * The full catalog is not yet a verified rules transcription. Only cards with
- * per-card rulesVerified=true have scoring-window metadata transcribed from the
- * official GW sample card images linked below. Other cards remain names-only.
- * Scoring is always a manual, player-confirmed action; this metadata never awards VP.
+ * Only rulesVerified=true entries have scoring-window metadata transcribed from
+ * official Games Workshop sample card images. Other cards have draft windows
+ * cross-checked against unofficial searchable transcriptions; those entries are
+ * explicitly unverified and must remain manual-review-only.
+ * This metadata never awards VP.
  */
 export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   edition: "11th",
@@ -13,13 +14,323 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   rulesVerified: false,
   candidateDatasetVersion: "2026.10.02-triangulation-action",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
+  crossCheckSources: Object.freeze([
+    "https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/",
+    "https://www.11th.help/secondary_missions.html"
+  ]),
+  crossCheckStatus: "unofficial-transcription-pending-official-card-check",
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
   ])
 });
 
+const UNVERIFIED_WINDOW_SOURCE = "community-transcription-pending-official-card-check";
 const unverified = Object.freeze({ rulesVerified: false, scoringWindows: Object.freeze([]) });
+
+function windowDefinition({ id, timing, timingLabel, modes, tiers, minRound = null }) {
+  return {
+    id,
+    timing,
+    timingLabel,
+    modes,
+    tiers,
+    source: UNVERIFIED_WINDOW_SOURCE,
+    ...(minRound === null ? {} : { minRound })
+  };
+}
+
+function eitherTurnWindows(idPrefix, modes, tiers) {
+  return [
+    windowDefinition({
+      id: idPrefix + "-turn",
+      timing: "end-of-turn",
+      timingLabel: "End of either player's turn",
+      modes,
+      tiers
+    }),
+    windowDefinition({
+      id: idPrefix + "-opponent-turn",
+      timing: "end-of-opponent-turn",
+      timingLabel: "End of opponent's turn",
+      modes,
+      tiers
+    })
+  ];
+}
+
+/*
+ * Draft scoring windows below are review prompts based on searchable third-party
+ * card-text transcriptions, not official card-image verification. Keep each
+ * card's rulesVerified false until its complete printed text has been checked.
+ */
+const draftRules = Object.freeze({
+  "a-grievous-blow": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode: if no enemy units with Starting Strength 13+ are on the battlefield, the card may be discarded and replaced.",
+      "The legacy V1 summary conflicts with both searchable transcriptions on Tactical scoring. Draft text uses 5 VP for one or more qualifying units destroyed, pending direct card verification."
+    ],
+    scoringWindows: [
+      ...eitherTurnWindows("fixed", ["fixed"], [
+        { vp: 4, summary: "For each enemy unit with Starting Strength 13+ destroyed this turn." }
+      ]),
+      ...eitherTurnWindows("tactical", ["tactical"], [
+        { vp: 5, maxVP: 5, summary: "One or more enemy units with Starting Strength 13+ were destroyed this turn." }
+      ])
+    ]
+  },
+  "a-tempting-target": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode: the opponent selects one objective in No Man's Land, excluding home objectives, as the tempting target."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 5, summary: "You control your tempting target." }]
+      })
+    ]
+  },
+  beacon: {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode: select one friendly unit on the battlefield or embarked within a TRANSPORT on the battlefield as the beacon unit.",
+      "Event Companion v1.2 FAQ transcription says a destroyed beacon unit cannot be replaced."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-opponent-turn",
+        timing: "end-of-opponent-turn",
+        timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
+        modes: ["tactical"],
+        tiers: [
+          { vp: 3, relationship: "or", summary: "The beacon unit is on the battlefield and not within your deployment zone." },
+          { vp: 5, relationship: "or", summary: "The beacon unit is on the battlefield and not within your territory." }
+        ]
+      })
+    ]
+  },
+  "behind-enemy-lines": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode during the first battle round: may draw a replacement and shuffle this card back into the deck."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 3, maxVP: 5, summary: "For each friendly unit, excluding AIRCRAFT and Battle-shocked units, wholly within the opponent's deployment zone." }]
+      })
+    ]
+  },
+  "bring-it-down": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode: if no enemy models with 10+ Wounds are on the battlefield, the card may be discarded and replaced.",
+      "Tactical scoring wording differs between older legacy/community summaries; direct card verification is required before treating the draft as authoritative."
+    ],
+    scoringWindows: [
+      ...eitherTurnWindows("fixed", ["fixed"], [
+        { vp: 4, summary: "For each enemy model with 10+ Wounds destroyed this turn." }
+      ]),
+      ...eitherTurnWindows("tactical", ["tactical"], [
+        { vp: 5, maxVP: 5, summary: "One or more enemy models with 10+ Wounds were destroyed this turn." }
+      ])
+    ]
+  },
+  "burden-of-trust": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn / start of your turn: for each objective, you may select one friendly unit on the battlefield to guard it until the start of your next turn, while the unit remains in range and you control the objective."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-opponent-turn",
+        timing: "end-of-opponent-turn",
+        timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
+        modes: ["tactical"],
+        tiers: [{ vp: 2, maxVP: 5, summary: "For each objective guarded by your army." }]
+      })
+    ]
+  },
+  cleanse: {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode: if Plunder is active, may draw a replacement and shuffle this card back into the deck.",
+      "Cleansing is an objective action started in your Shooting phase; it completes at end of your turn if the unit controls the objective."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [
+          { vp: 2, relationship: "or", summary: "One objective was cleansed by your army this turn." },
+          { vp: 5, relationship: "or", summary: "Two or more objectives were cleansed by your army this turn." }
+        ]
+      })
+    ]
+  },
+  "defend-stronghold": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode during the first battle round: draw a replacement and shuffle this card back into the deck.",
+      "Available from the second battle round onwards."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-opponent-turn",
+        timing: "end-of-opponent-turn",
+        timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
+        modes: ["tactical"],
+        minRound: 2,
+        tiers: [
+          { vp: 3, summary: "You control your home objective." },
+          { vp: 2, relationship: "cumulative", summary: "No enemy units are within your deployment zone; cumulative with the 3 VP condition." }
+        ]
+      })
+    ]
+  },
+  "display-of-might": {
+    rulesVerified: false,
+    referenceNotes: [
+      "Eligible units exclude AIRCRAFT and Battle-shocked units."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 2, summary: "More eligible friendly units than enemy units are wholly within No Man's Land." }]
+      }),
+      windowDefinition({
+        id: "tactical-opponent-turn",
+        timing: "end-of-opponent-turn",
+        timingLabel: "End of opponent's turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 5, summary: "More eligible friendly units than enemy units are wholly within No Man's Land." }]
+      })
+    ]
+  },
+  "engage-on-all-fronts": {
+    rulesVerified: false,
+    referenceNotes: [
+      "Presence in a table quarter requires one or more friendly units wholly within it and not within 6 inches of the battlefield centre; excludes AIRCRAFT and Battle-shocked units.",
+      "The 3-quarter and 4-quarter scoring tiers are mutually exclusive."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "fixed-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["fixed"],
+        tiers: [
+          { vp: 2, relationship: "or", summary: "You have a presence in three table quarters." },
+          { vp: 4, relationship: "or", summary: "You have a presence in four table quarters." }
+        ]
+      }),
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [
+          { vp: 3, relationship: "or", summary: "You have a presence in three table quarters." },
+          { vp: 5, relationship: "or", summary: "You have a presence in four table quarters." }
+        ]
+      })
+    ]
+  },
+  "forward-position": {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode during the first battle round: may draw a replacement and shuffle this card back into the deck."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 5, summary: "You control your opponent's home objective and/or each expansion objective." }]
+      })
+    ]
+  },
+  "no-prisoners": {
+    rulesVerified: false,
+    referenceNotes: [],
+    scoringWindows: [
+      ...eitherTurnWindows("tactical", ["tactical"], [
+        { vp: 2, maxVP: 5, summary: "For each enemy unit destroyed this turn." }
+      ])
+    ]
+  },
+  outflank: {
+    rulesVerified: false,
+    referenceNotes: [
+      "Opposite battlefield edges are those parallel to each other.",
+      "Eligible units exclude AIRCRAFT and Battle-shocked units."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [
+          { vp: 3, relationship: "or", summary: "One or more eligible friendly units are within 6 inches of one or more battlefield edges and not within your territory." },
+          { vp: 5, relationship: "or", summary: "Two or more eligible friendly units are within 6 inches of opposite battlefield edges and one or more of those units is not within your territory." }
+        ]
+      })
+    ]
+  },
+  "overwhelming-force": {
+    rulesVerified: false,
+    referenceNotes: [],
+    scoringWindows: [
+      ...eitherTurnWindows("tactical", ["tactical"], [
+        { vp: 3, maxVP: 5, summary: "For each enemy unit that started the turn within range of one or more objectives and was destroyed." }
+      ])
+    ]
+  },
+  plunder: {
+    rulesVerified: false,
+    referenceNotes: [
+      "When drawn in Tactical mode: if Cleanse is active, may draw a replacement and shuffle this card back into the deck.",
+      "Plunder action is started in your Shooting phase and completes immediately. The Event Companion v1.2 FAQ transcription clarifies that 'not within your territory' refers to the terrain area."
+    ],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 5, summary: "A terrain area was plundered this turn." }]
+      })
+    ]
+  },
+  "secure-no-mans-land": {
+    rulesVerified: false,
+    referenceNotes: [],
+    scoringWindows: [
+      windowDefinition({
+        id: "tactical-turn",
+        timing: "end-of-turn",
+        timingLabel: "End of your turn",
+        modes: ["tactical"],
+        tiers: [{ vp: 5, summary: "You control two or more objectives within No Man's Land, excluding your home objective." }]
+      })
+    ]
+  }
+});
 
 const cardNames = [
   ["a-grievous-blow", "A Grievous Blow", true],
@@ -65,7 +376,7 @@ const cardNames = [
         timingLabel: "End of opponent's turn",
         modes: ["tactical"],
         tiers: [
-          { vp: 5, summary: "One or more enemy CHARACTER models destroyed this turn, or all enemy CHARACTER models have been destroyed during the battle." }
+          { vp: 5, summary: "One or more enemy CHARACTER models destroyed during that turn, or all enemy CHARACTER models have been destroyed during the battle." }
         ],
         source: "official-gw-sample-card"
       }
@@ -101,15 +412,21 @@ const cardNames = [
   ["secure-no-mans-land", "Secure No Man's Land", false]
 ];
 
-export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules = unverified]) =>
-  Object.freeze({
+export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules]) => {
+  const resolvedRules = rules ?? {
+    rulesVerified: false,
+    referenceNotes: draftRules[slug]?.referenceNotes ?? [],
+    scoringWindows: draftRules[slug]?.scoringWindows ?? unverified.scoringWindows
+  };
+  return Object.freeze({
     id: "secondary-" + slug,
     name,
     category: "secondary",
     fixedAvailable,
     availableModes: Object.freeze(fixedAvailable ? ["fixed", "tactical"] : ["tactical"]),
-    rulesVerified: rules.rulesVerified,
-    scoringWindows: Object.freeze(rules.scoringWindows.map((window) =>
+    rulesVerified: resolvedRules.rulesVerified,
+    referenceNotes: Object.freeze([...(resolvedRules.referenceNotes ?? [])]),
+    scoringWindows: Object.freeze(resolvedRules.scoringWindows.map((window) =>
       Object.freeze({
         ...window,
         modes: Object.freeze([...window.modes]),
@@ -117,5 +434,5 @@ export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, nam
       })
     )),
     conditions: Object.freeze([])
-  })
-));
+  });
+}));

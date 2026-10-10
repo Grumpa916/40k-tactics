@@ -5,6 +5,7 @@ import { createMissionDefinition, SCORING_TIMINGS } from "../rules/mission-defin
 import { SCORING_EVIDENCE } from "../rules/scoring-eligibility.js";
 import { drawSecondaryMission, recordSecondaryMissionScored, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "./scoring-check-coordinator.js";
+import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
 
 function definition(id, category, timing = SCORING_TIMINGS.END_OF_TURN) {
   return createMissionDefinition({
@@ -139,4 +140,65 @@ test("secondary scoring references only the tiers for the battle-wide Fixed or T
     assert.equal(result.secondary[0].result.scoringWindow.id, mode === "fixed" ? "fixed-turn" : "tactical-turn");
     assert.deepEqual(result.secondary[0].result.scoringWindows[0].modes, [mode]);
   }
+});
+
+
+test("draft secondary windows are shown for manual review and never marked verified or auto-awarded", () => {
+  let state = createGameState({
+    phase: "command",
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  state = setSecondaryMissionMode(state, { mode: "tactical" });
+  const draftCard = SECONDARY_MISSION_CATALOG.find((card) => card.name === "A Grievous Blow");
+  state = drawSecondaryMission(state, {
+    definition: draftCard,
+    playerId: "p1",
+    round: 1,
+    turn: 1
+  });
+
+  const result = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p1"
+  });
+  assert.equal(result.secondary.length, 1);
+  assert.equal(result.secondary[0].result.manualReviewRequired, true);
+  assert.equal(result.secondary[0].result.rulesVerified, false);
+  assert.equal(result.secondary[0].result.scoringWindow.source,
+    "community-transcription-pending-official-card-check");
+  assert.equal(result.awardsVictoryPoints, false);
+});
+
+
+test("minimum-round metadata hides Defend Stronghold before round two", () => {
+  let state = createGameState({
+    phase: "command",
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  state = setSecondaryMissionMode(state, { mode: "tactical" });
+  const card = SECONDARY_MISSION_CATALOG.find((item) => item.name === "Defend Stronghold");
+  state = drawSecondaryMission(state, { definition: card, playerId: "p1", round: 1, turn: 1 });
+
+  const roundOne = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p2"
+  });
+  assert.equal(roundOne.secondary.length, 0);
+
+  state = { ...state, battle: { ...state.battle, round: 2 } };
+  const roundTwo = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p2"
+  });
+  assert.equal(roundTwo.secondary.length, 1);
+  assert.equal(roundTwo.secondary[0].result.scoringWindow.minRound, 2);
+  assert.equal(roundTwo.secondary[0].result.rulesVerified, false);
+  assert.equal(roundTwo.awardsVictoryPoints, false);
 });
