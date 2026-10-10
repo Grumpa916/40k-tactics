@@ -33,11 +33,13 @@ function averagePosition(positions) {
 }
 
 function unitPosition(unit) {
-  if (isValidBattlefieldPosition(unit.position)) return unit.position;
-  if (Array.isArray(unit.models) && unit.models.length) {
-    return averagePosition(unit.models.map((model) => model?.position));
+  // Once model positions are available, they represent the unit's current
+  // live location. A deployment-level unit.position may be stale after moves.
+  if (Array.isArray(unit.models) && unit.models.length &&
+      unit.models.every((model) => isValidBattlefieldPosition(model?.position))) {
+    return averagePosition(unit.models.map((model) => model.position));
   }
-  return null;
+  return isValidBattlefieldPosition(unit.position) ? unit.position : null;
 }
 
 function positionsForMode(state, mode) {
