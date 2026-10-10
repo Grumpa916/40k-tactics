@@ -29,6 +29,7 @@ export function createBattleSetupScreen(container, {
   }
 
   let selectedPlayerId = null;
+  let selectedPlanUnitId = null;
   let message = "";
 
   function handleChange(event) {
@@ -52,6 +53,62 @@ export function createBattleSetupScreen(container, {
   }
 
   function handleClick(event) {
+    const mapUnit = event.target?.closest?.("[data-map-unit-id]");
+    if (mapUnit && mapUnit.closest?.('[data-map-mode="planning"]')) {
+      selectedPlanUnitId = mapUnit.getAttribute?.("data-map-unit-id") ?? mapUnit.dataset?.mapUnitId ?? null;
+      message = selectedPlanUnitId ? "Selected planned unit. Tap an empty point on the map to reposition it." : "";
+      render();
+      return;
+    }
+    const mapBoard = event.target?.closest?.("[data-battlefield-map-board]");
+    if (mapBoard && mapBoard.closest?.('[data-map-mode="planning"]')) {
+      const state = session.getState();
+      const playerId = perspectivePlayerId ?? state.activePlayer ?? state.players?.[0]?.id ?? null;
+      if (!selectedPlanUnitId) {
+        message = "Select one of your units before placing it on the planning map.";
+        render();
+        return;
+      }
+      const rect = mapBoard.getBoundingClientRect?.();
+      if (!rect || !rect.width || !rect.height || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) {
+        message = "Map position could not be measured. Use the coordinate fallback when available.";
+        render();
+        return;
+      }
+      const x = Math.round(Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60)) * 10) / 10;
+      const y = Math.round(Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44)) * 10) / 10;
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION, payload: {
+          unitId: selectedPlanUnitId, playerId, position: { x, y }
+        }});
+        message = "Planned position recorded. Select another unit or move this marker.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
+    const clearPlan = event.target?.closest?.("[data-clear-deployment-plan]");
+    if (clearPlan) {
+      const state = session.getState();
+      const playerId = perspectivePlayerId ?? state.activePlayer ?? state.players?.[0]?.id ?? null;
+      try {
+        session.dispatch({ type: COMMAND_TYPES.CLEAR_DEPLOYMENT_PLAN, payload: { playerId } });
+        selectedPlanUnitId = null;
+        message = "Your deployment plan was cleared.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
+    const selectPlan = event.target?.closest?.("[data-planning-unit-select]");
+    if (selectPlan) {
+      selectedPlanUnitId = selectPlan.value || null;
+      message = selectedPlanUnitId ? "Unit selected. Tap the map to set its planned position." : "";
+      render();
+      return;
+    }
     const target = event.target?.closest?.("[data-setup-fixed-add]");
     if (!target || !container.contains(target)) return;
     const state = session.getState();
@@ -193,8 +250,13 @@ export function createBattleSetupScreen(container, {
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle.</p></header>' +
       '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
-      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer }) +
-      '<p>Planned positions are stored separately from actual deployment and live movement. No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>' +
+      '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
+      (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
+        .map((unit) => '<option value="' + escapeHtml(unit.id) + '"' + (unit.id === selectedPlanUnitId ? ' selected' : '') + '>' + escapeHtml(unit.name ?? unit.id) + '</option>').join("") +
+      '</select></label><p>Select a unit, then tap the map to record or reposition its intended starting point. Planned positions remain separate from actual deployment and live movement.</p>' +
+      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
+      '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
+      '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>' +
       '<section><h2>Secondary mission mode</h2><label>Mode<select data-setup-secondary-mode ' +
       (history.length ? 'disabled' : '') + ' required>' +
       '<option value="">Choose Fixed or Tactical...</option>' +
