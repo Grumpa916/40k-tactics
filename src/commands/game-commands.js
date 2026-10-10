@@ -21,7 +21,8 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_VICTORY_POINTS: "victory_points.record_award",
   DRAW_SECONDARY_MISSION: "secondary_mission.draw",
   SET_SECONDARY_MISSION_MODE: "secondary_mission.set_mode",
-  RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score"
+  RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score",
+  USE_SECONDARY_MISSION_REDRAW: "secondary_mission.use_redraw"
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));
