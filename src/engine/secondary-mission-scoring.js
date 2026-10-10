@@ -31,7 +31,7 @@ export function recordSecondaryMissionScore(state, {
     throw new Error("Set the battle-wide Fixed or Tactical mode before recording secondary scoring.");
   }
 
-  const opportunityKey = [instanceId, round, turn].join(":");
+  const opportunityKey = [instanceId, round, turn, ...(scoringTiming ? [scoringTiming] : [])].join(":");
   const awarded = recordVictoryPointsAward(state, {
     playerId,
     amount,
