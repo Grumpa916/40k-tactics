@@ -165,7 +165,7 @@ const draftRules = Object.freeze({
     rulesVerified: false,
     referenceNotes: [
       "When drawn in Tactical mode: if Plunder is active, may draw a replacement and shuffle this card back into the deck.",
-      "Cleansing is an objective action started in your Shooting phase; it completes at end of your turn if the unit controls the objective."
+      "Cleanse action: starts in your Shooting phase; one friendly unit within range of one objective (excluding your home objective) starts each action, and each unit must start at a different objective. It completes at end of your turn if the unit is still controlling that objective."
     ],
     scoringWindows: [
       windowDefinition({
