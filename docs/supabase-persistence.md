@@ -8,16 +8,17 @@ V2 uses a separate `public.v2_battle_records` table. It does not read or write V
 
 1. Create or select the Supabase project intended for V2.
 2. Review and apply `supabase/migrations/202610100001_create_v2_battle_records.sql` in that project's SQL migration workflow.
-3. Configure the browser app with the project's URL and publishable/anon key through a non-secret public configuration mechanism. Do not embed a service-role key.
-4. Configure one owner account in Supabase Auth. The app does not need separate logins for the two tabletop players; the single owner account is only for cloud storage access.
-5. Use `createSupabaseBattleStore(client)` for save/list/load/delete operations. RLS is the security boundary; adapter filters are defense in depth.
+3. Configure the browser runtime with the project's URL and publishable/anon key. The client factory reads `window.__40K_TACTICS_SUPABASE_CONFIG__ = { url: "https://YOUR_PROJECT.supabase.co", publishableKey: "YOUR_PUBLISHABLE_OR_ANON_KEY" }`. These values are public browser configuration; never put a service-role key here.
+4. Enable Email/Password sign-in in Supabase Auth and provision one owner account in the Supabase dashboard. The app intentionally does not offer sign-up or separate accounts for the two tabletop players.
+5. Call `createSupabaseClientFromPublicConfig()` from `src/persistence/supabase-client.js`, then pass its result as `supabaseClient` to `createBattleShell(...)`. The factory loads `@supabase/supabase-js` v2 from `https://esm.sh` by default; callers can inject a pinned SDK `createClient` function instead.
+6. The integrated shell displays the owner sign-in panel. Once signed in, it creates the cloud save/list/load/delete panel using `createSupabaseBattleStore(client)`. RLS is the security boundary; adapter filters are defense in depth.
 
 ## Snapshot contract
 
 - `state_version` must match `game_state.version`.
 - The adapter currently loads only `GAME_STATE_VERSION` and fails clearly on unsupported versions; migration must be explicit rather than silently reshaping battle state.
 - Snapshot JSON includes current players, units, phase/turn, objective and scoring state, timers, map state, and event history when those fields exist in the state object.
-- This is the persistence adapter/schema foundation only. The current `index.html` still launches the Fight demo; wire save/load controls into the integrated battle shell after the setup entry point is established.
+- The auth panel and cloud-save controls are available in `createBattleShell` when a configured Supabase client is supplied. The current `index.html` still launches the Fight demo and does not create the integrated shell; do not switch the entry point until setup, army/mission selection, and the full battle workflow are ready.
 
 ## Safety and deployment notes
 

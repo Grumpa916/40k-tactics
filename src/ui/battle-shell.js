@@ -7,6 +7,8 @@ import { createDeploymentScreen } from "./deployment-screen.js";
 import { createFightScreen } from "./fight-screen.js";
 import { createMovementScreen } from "./movement-screen.js";
 import { createBattlePersistencePanel } from "./battle-persistence-panel.js";
+import { createSupabaseAuthPanel } from "./supabase-auth-panel.js";
+import { createSupabaseBattleStore } from "../persistence/supabase-battle-store.js";
 import { createShootingScreen } from "./shooting-screen.js";
 
 const PHASES = Object.freeze([
@@ -37,7 +39,7 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-function renderShell(container, state, viewedPhase, scoringReminder = null, showPersistence = false) {
+function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false) {
   const visiblePhases = state.battle?.status === "deployment"
     ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
     : PHASES;
@@ -83,7 +85,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   container.innerHTML = `<main class="battle-shell">
     ${reminderMarkup}
     <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
-    ${showPersistence ? '<div data-battle-persistence-panel></div>' : ""}
+    ${showCloud ? '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div>' : ""}
     <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
@@ -97,7 +99,8 @@ export function createBattleShell(container, {
   missionDefinitions = [],
   secondaryMissionCatalog = [],
   screenFactories = SCREEN_FACTORIES,
-  battleStore = null
+  battleStore = null,
+  supabaseClient = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -109,6 +112,9 @@ export function createBattleShell(container, {
   let mountedPhase = null;
   let mountedScreen = null;
   let mountedPersistencePanel = null;
+  let mountedAuthPanel = null;
+  const cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
+  const showCloud = Boolean(supabaseClient || cloudStore);
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
   let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
@@ -187,11 +193,25 @@ export function createBattleShell(container, {
       destroyMountedScreen();
       mountedPersistencePanel?.destroy();
       mountedPersistencePanel = null;
-      renderShell(container, state, viewedPhase, scoringReminder, Boolean(battleStore));
+      mountedAuthPanel?.destroy();
+      mountedAuthPanel = null;
+      renderShell(container, state, viewedPhase, scoringReminder, showCloud);
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
-      if (battleStore && persistenceContainer) {
-        mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: battleStore });
+      const mountPersistenceForUser = (user) => {
+        mountedPersistencePanel?.destroy();
+        mountedPersistencePanel = null;
+        if (user && cloudStore && persistenceContainer) {
+          mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
+        }
+      };
+      if (supabaseClient) {
+        const authContainer = container.querySelector("[data-supabase-auth-panel]");
+        if (authContainer) mountedAuthPanel = createSupabaseAuthPanel(authContainer, {
+          client: supabaseClient, onAuthChange: mountPersistenceForUser
+        });
+      } else if (cloudStore && persistenceContainer) {
+        mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
       }
 
       const screenContainer = container.querySelector("[data-battle-screen]");
@@ -292,6 +312,8 @@ export function createBattleShell(container, {
       destroyMountedScreen();
       mountedPersistencePanel?.destroy();
       mountedPersistencePanel = null;
+      mountedAuthPanel?.destroy();
+      mountedAuthPanel = null;
       container.replaceChildren();
     }
   };
