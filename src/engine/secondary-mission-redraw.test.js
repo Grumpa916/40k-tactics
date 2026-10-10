@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../state/game-state.js";
+import { BATTLE_STATUS } from "../state/battle.js";
+import { changePhase } from "./state-transitions.js";
 import {
   drawSecondaryMission,
   getSecondaryMissionHistory,
@@ -44,6 +46,9 @@ test("New Orders spends 1 CP, discards one active card, and tracks a pending rep
   assert.deepEqual(state.scoring.secondaryMissionRedrawPendingByPlayer.p1, { round: 1, turn: 1 });
   assert.equal(state.scoring.secondaryMissionRedrawUsedByPlayer.p1, true);
   assert.equal(state.history.at(-1).type, "secondary_mission.redraw_used");
+  const activeBattle = { ...state, battle: { ...state.battle, status: BATTLE_STATUS.ACTIVE } };
+  assert.throws(() => changePhase(activeBattle, { phase: "movement" }),
+    /Record the New Orders replacement card before leaving the Command phase/);
 
   state = drawSecondaryMission(state, {
     playerId: "p1", round: 1, turn: 1,
