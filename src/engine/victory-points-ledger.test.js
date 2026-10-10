@@ -8,7 +8,8 @@ import {
   getVictoryPointScore,
   getVictoryPointHistory,
   undoLatestVictoryPointsAward,
-  getLatestUndoableVictoryPointsAward
+  getLatestUndoableVictoryPointsAward,
+  hasEffectiveVictoryPointOpportunity
 } from "./victory-points-ledger.js";
 
 test("records a confirmed VP award and updates only that player's score", () => {
@@ -332,4 +333,30 @@ test("safe undo allows the same mission scoring opportunity to be re-entered cor
   assert.equal(getVictoryPointHistory(state, "p1").length, 2);
   assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, 3);
   assert.equal(state.history.at(-1).type, "victory_points.awarded");
+});
+
+
+test("effective opportunity lookup ignores safely reversed mission awards", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  const opportunity = {
+    playerId: "p1",
+    category: "primary",
+    missionDefinitionId: "primary-current",
+    opportunityKey: "1:1:p1",
+    turn: 1,
+    round: 1
+  };
+  state = recordVictoryPointsAward(state, {
+    ...opportunity, amount: 5, reason: "Initial primary entry"
+  });
+  assert.equal(hasEffectiveVictoryPointOpportunity(
+    state, "p1", "primary-current", "1:1:p1"
+  ), true);
+
+  state = undoLatestVictoryPointsAward(state, {
+    playerId: "p1", reason: "Correct mistaken amount", turn: 1, round: 1
+  });
+  assert.equal(hasEffectiveVictoryPointOpportunity(
+    state, "p1", "primary-current", "1:1:p1"
+  ), false);
 });

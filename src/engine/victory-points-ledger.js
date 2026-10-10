@@ -163,6 +163,16 @@ export function adjustVictoryPoints(state, {
   }));
 }
 
+/** Return whether an opportunity still has an effective, non-reversed VP award. */
+export function hasEffectiveVictoryPointOpportunity(state, playerId, missionDefinitionId, opportunityKey) {
+  if (typeof playerId !== "string" || !playerId.trim()) return false;
+  if (typeof missionDefinitionId !== "string" || !missionDefinitionId.trim()) return false;
+  if (typeof opportunityKey !== "string" || !opportunityKey.trim()) return false;
+  return getEffectiveAwardEvents(state, playerId).some((entry) =>
+    entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
+  );
+}
+
 export function getVictoryPointScore(state, playerId) {
   if (typeof playerId !== "string" || !playerId.trim()) throw new TypeError("A playerId is required.");
   const score = state?.victoryPoints?.[playerId];
