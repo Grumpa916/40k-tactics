@@ -1,6 +1,7 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -191,6 +192,9 @@ export function createBattleSetupScreen(container, {
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle.</p></header>' +
+      '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
+      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer }) +
+      '<p>Planned positions are stored separately from actual deployment and live movement. No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>' +
       '<section><h2>Secondary mission mode</h2><label>Mode<select data-setup-secondary-mode ' +
       (history.length ? 'disabled' : '') + ' required>' +
       '<option value="">Choose Fixed or Tactical...</option>' +

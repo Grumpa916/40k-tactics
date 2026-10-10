@@ -1,0 +1,64 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  battlefieldPositionToPercent,
+  isValidBattlefieldPosition,
+  renderBattlefieldMap
+} from "../../src/ui/battlefield-map.js";
+
+test("battlefield coordinates map to a 60 by 44 board with the player's edge at the bottom", () => {
+  assert.deepEqual(battlefieldPositionToPercent({ x: 0, y: 0 }), { left: 0, top: 100 });
+  assert.deepEqual(battlefieldPositionToPercent({ x: 60, y: 44 }), { left: 100, top: 0 });
+  assert.deepEqual(battlefieldPositionToPercent({ x: 30, y: 22 }), { left: 50, top: 50 });
+});
+
+test("invalid and out-of-board positions are not rendered", () => {
+  assert.equal(isValidBattlefieldPosition({ x: -1, y: 3 }), false);
+  assert.equal(isValidBattlefieldPosition({ x: 4, y: 45 }), false);
+  assert.equal(battlefieldPositionToPercent({ x: NaN, y: 2 }), null);
+});
+
+test("live map shows both armies from deployed unit positions only", () => {
+  const html = renderBattlefieldMap({
+    activePlayer: "p1",
+    units: [
+      { id: "a", ownerId: "p1", name: "Friendly", status: "deployed", position: { x: 5, y: 6 } },
+      { id: "b", ownerId: "p2", name: "Enemy", status: "deployed", position: { x: 45, y: 30 } },
+      { id: "c", ownerId: "p2", name: "Reserve", status: "reserves", position: { x: 20, y: 20 } }
+    ]
+  }, { mode: "live", perspectivePlayerId: "p1" });
+  assert.match(html, /data-map-unit-id="a"/);
+  assert.match(html, /data-map-unit-id="b"/);
+  assert.doesNotMatch(html, /data-map-unit-id="c"/);
+  assert.match(html, /class="battlefield-map__unit friendly"/);
+  assert.match(html, /class="battlefield-map__unit opponent"/);
+});
+
+test("planning and actual deployment modes never substitute live positions", () => {
+  const state = {
+    units: [{ id: "u1", ownerId: "p1", name: "Unit", status: "deployed", position: { x: 9, y: 8 } }],
+    battlefieldMap: {
+      deploymentPlan: { u1: { x: 12, y: 13 } },
+      actualDeployment: { u1: { position: { x: 21, y: 22 } } }
+    }
+  };
+  const plan = renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: "p1" });
+  const deployment = renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: "p1" });
+  assert.match(plan, /left:20%;top:70.45454545454545%/);
+  assert.match(deployment, /left:35%;top:50%/);
+  assert.doesNotMatch(plan, /left:15%;top:81.81818181818181%/);
+});
+
+test("missing positions remain visibly unrecorded and objectives require explicit coordinates", () => {
+  const html = renderBattlefieldMap({
+    units: [{ id: "u1", ownerId: "p1", name: "Unit", status: "deployed", position: null }],
+    objectives: [{ id: "o1", name: "Objective" }]
+  }, { mode: "live", perspectivePlayerId: "p1" });
+  assert.match(html, /No positions recorded/);
+  assert.doesNotMatch(html, /data-map-objective-id="o1"/);
+  assert.match(html, /not inferred by this reference grid/);
+});
+
+test("unknown map mode is rejected", () => {
+  assert.throws(() => renderBattlefieldMap({}, { mode: "terrain" }), /Unknown battlefield map mode/);
+});
