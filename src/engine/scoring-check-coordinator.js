@@ -30,19 +30,23 @@ function evaluateSecondaryInstance(state, instance, checkpoint) {
   const definition = instance.definition;
   const scoringWindows = scoringWindowsForInstance(state, instance, checkpoint);
   const scoringWindow = scoringWindows[0] ?? null;
+  const reviewMetadata = {
+    scoringWindow,
+    scoringWindows,
+    rulesVerified: definition?.rulesVerified === true,
+    referenceNotes: Array.isArray(definition?.referenceNotes) ? definition.referenceNotes : []
+  };
   if (!Array.isArray(definition?.conditions) || definition.conditions.length === 0) {
     return {
       definitionId: instance.definitionId,
       timing: scoringWindow?.timing ?? definition?.timing,
-      scoringWindow,
-      scoringWindows,
-      rulesVerified: definition?.rulesVerified === true,
+      ...reviewMetadata,
       eligible: false,
       manualReviewRequired: true,
       conditions: []
     };
   }
-  return { ...evaluateMissionDefinition(state, definition), scoringWindow, scoringWindows };
+  return { ...evaluateMissionDefinition(state, definition), ...reviewMetadata };
 }
 
 /**
