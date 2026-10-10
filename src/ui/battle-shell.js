@@ -3,6 +3,7 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { createChargeScreen } from "./charge-screen.js";
 import { createCommandScreen } from "./command-screen.js";
 import { createBattleSetupScreen } from "./battle-setup-screen.js";
+import { createDeploymentScreen } from "./deployment-screen.js";
 import { createFightScreen } from "./fight-screen.js";
 import { createMovementScreen } from "./movement-screen.js";
 import { createShootingScreen } from "./shooting-screen.js";
@@ -17,6 +18,7 @@ const PHASES = Object.freeze([
 
 const SCREEN_FACTORIES = Object.freeze({
   setup: createBattleSetupScreen,
+  deployment: createDeploymentScreen,
   command: createCommandScreen,
   movement: createMovementScreen,
   shooting: createShootingScreen,
@@ -25,6 +27,7 @@ const SCREEN_FACTORIES = Object.freeze({
 });
 
 function phaseLabel(phase) {
+  if (phase === "deployment") return "Deployment";
   return PHASES.find((item) => item.id === phase)?.label ?? phase;
 }
 
@@ -34,7 +37,10 @@ function escapeHtml(value) {
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null) {
-  const phaseItems = PHASES.map((phase) => {
+  const visiblePhases = state.battle?.status === "deployment"
+    ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
+    : PHASES;
+  const phaseItems = visiblePhases.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
     return `<li class="battle-phase${active}">
@@ -245,7 +251,8 @@ export function createBattleShell(container, {
     const button = event.target?.closest?.("[data-battle-phase-button]");
     if (!button || !container.contains(button)) return;
     const nextPhase = button.getAttribute("data-battle-phase-button");
-    if (!PHASES.some((phase) => phase.id === nextPhase)) return;
+    if (!PHASES.some((phase) => phase.id === nextPhase) &&
+        !(nextPhase === "deployment" && session.getState()?.battle?.status === "deployment")) return;
     if (nextPhase !== "command") {
       scoringReviewCheckpoint = null;
       scoringReviewActivePlayerId = null;

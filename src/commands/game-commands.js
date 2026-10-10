@@ -5,6 +5,8 @@ export const COMMAND_TYPES = Object.freeze({
   SET_DEPLOYMENT_PLAN_POSITION: "battlefield_map.set_deployment_plan_position",
   CLEAR_DEPLOYMENT_PLAN_POSITION: "battlefield_map.clear_deployment_plan_position",
   CLEAR_DEPLOYMENT_PLAN: "battlefield_map.clear_deployment_plan",
+  SET_ACTUAL_DEPLOYMENT_POSITION: "battlefield_map.set_actual_deployment_position",
+  DECLARE_UNIT_RESERVE: "battlefield_map.declare_unit_reserve",
   START_FIRST_TURN: "turn.start_first",
   CHANGE_PHASE: "turn.change_phase",
   END_TURN: "turn.end",
