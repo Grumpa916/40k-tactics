@@ -255,3 +255,21 @@ test("latest VP award undo executes through the core command engine", () => {
   assert.equal(state.history.at(-1).payload.reason, "Corrected entry");
   clearCommandHandlers();
 });
+
+
+test("manual VP adjustment command executes through the core command engine", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  let state = createGameState({
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    battle: { id: "b1", status: "active", round: 1 },
+    victoryPoints: { p1: 7 }
+  });
+  state = executeCommand(state, createCommand(COMMAND_TYPES.ADJUST_VICTORY_POINTS, {
+    playerId: "p1", amount: -2, reason: "Correct over-entry"
+  }));
+  assert.equal(state.victoryPoints.p1, 5);
+  assert.equal(state.history.at(-1).type, "victory_points.adjusted");
+  clearCommandHandlers();
+});

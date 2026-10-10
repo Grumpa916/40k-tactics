@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createGameState } from "../state/game-state.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import {
+  adjustVictoryPoints,
   recordVictoryPointsAward,
   getVictoryPointScore,
   getVictoryPointHistory,
@@ -269,4 +270,37 @@ test("rejects an unsupported scoring timing", () => {
   assert.throws(() => recordVictoryPointsAward(createGameState(), {
     playerId: "p1", amount: 1, reason: "Primary", scoringTiming: "after-battle"
   }), /Unsupported scoring timing/);
+});
+
+
+test("manual VP adjustments can add or subtract points without consuming mission caps", () => {
+  let state = createGameState({ turn: 1, battle: { round: 1 }, victoryPoints: { p1: 12 } });
+  state = adjustVictoryPoints(state, {
+    playerId: "p1", amount: -4, reason: "Correct over-entry", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 8);
+  assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, -4);
+  assert.equal(state.history.at(-1).type, "victory_points.adjusted");
+
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Primary scoring",
+    category: "primary", missionDefinitionId: "primary-1", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 23);
+});
+
+test("manual VP adjustments cannot reduce the score below zero", () => {
+  assert.throws(() => adjustVictoryPoints(createGameState({ victoryPoints: { p1: 2 } }), {
+    playerId: "p1", amount: -3, reason: "Correction"
+  }), /cannot reduce a player's score below 0/);
+});
+
+test("latest manual VP adjustment can be safely undone", () => {
+  let state = adjustVictoryPoints(createGameState({ victoryPoints: { p1: 10 } }), {
+    playerId: "p1", amount: -3, reason: "Correction"
+  });
+  assert.equal(getLatestUndoableVictoryPointsAward(state, "p1").amount, -3);
+  state = undoLatestVictoryPointsAward(state, { playerId: "p1", reason: "Undo correction" });
+  assert.equal(getVictoryPointScore(state, "p1"), 10);
+  assert.equal(state.history.at(-1).type, "victory_points.adjustment_undone");
 });

@@ -16,7 +16,7 @@ import { recordChargeOutcome } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
-import { recordVictoryPointsAward, undoLatestVictoryPointsAward } from "./victory-points-ledger.js";
+import { adjustVictoryPoints, recordVictoryPointsAward, undoLatestVictoryPointsAward } from "./victory-points-ledger.js";
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
 import { useSecondaryMissionRedraw } from "./secondary-mission-redraw.js";
 import { discardTacticalSecondariesForCommandPoint } from "./tactical-secondary-discard.js";
@@ -53,6 +53,8 @@ export function registerCoreCommandHandlers() {
       recordCommandPointChange(state, command.payload)],
     [COMMAND_TYPES.RECORD_VICTORY_POINTS, (state, command) =>
       recordVictoryPointsAward(state, command.payload)],
+    [COMMAND_TYPES.ADJUST_VICTORY_POINTS, (state, command) =>
+      adjustVictoryPoints(state, command.payload)],
     [COMMAND_TYPES.UNDO_LATEST_VICTORY_POINTS_AWARD, (state, command) =>
       undoLatestVictoryPointsAward(state, command.payload)],
     [COMMAND_TYPES.DRAW_SECONDARY_MISSION, (state, command) =>

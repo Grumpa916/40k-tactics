@@ -13,11 +13,11 @@ export const VICTORY_POINT_CAPS = Object.freeze({
 function getEffectiveAwardEvents(state, playerId = null) {
   const history = Array.isArray(state?.history) ? state.history : [];
   const reversedIds = new Set(history
-    .filter((event) => event?.type === "victory_points.award_undone")
+    .filter((event) => ["victory_points.award_undone", "victory_points.adjustment_undone"].includes(event?.type))
     .map((event) => event.payload?.originalAwardEventId)
     .filter((id) => id != null));
   const reversedIndices = new Set(history
-    .filter((event) => event?.type === "victory_points.award_undone")
+    .filter((event) => ["victory_points.award_undone", "victory_points.adjustment_undone"].includes(event?.type))
     .map((event) => event.payload?.originalAwardEventIndex)
     .filter((index) => Number.isInteger(index)));
   return history
@@ -137,6 +137,32 @@ export function recordVictoryPointsAward(state, {
   }));
 }
 
+export function adjustVictoryPoints(state, {
+  playerId,
+  amount,
+  reason,
+  turn = state?.turn ?? 0,
+  round = state?.battle?.round ?? 0
+} = {}) {
+  if (typeof playerId !== "string" || !playerId.trim()) throw new TypeError("A playerId is required.");
+  if (!Number.isInteger(amount) || amount === 0) {
+    throw new TypeError("A manual VP adjustment must be a non-zero whole number.");
+  }
+  if (typeof reason !== "string" || !reason.trim()) throw new TypeError("An adjustment reason is required.");
+  if (!Number.isInteger(turn) || turn < 0) throw new TypeError("Turn must be a non-negative integer.");
+  if (!Number.isInteger(round) || round < 0) throw new TypeError("Round must be a non-negative integer.");
+
+  const scores = state?.victoryPoints ?? {};
+  const scoreBefore = Number.isInteger(scores[playerId]) && scores[playerId] >= 0 ? scores[playerId] : 0;
+  const scoreAfter = scoreBefore + amount;
+  if (scoreAfter < 0) throw new Error("A manual VP adjustment cannot reduce a player's score below 0.");
+
+  const updated = { ...state, victoryPoints: { ...scores, [playerId]: scoreAfter } };
+  return appendHistoryEntry(updated, createEvent("victory_points.adjusted", {
+    playerId, amount, reason: reason.trim(), turn, round, scoreBefore, scoreAfter
+  }));
+}
+
 export function getVictoryPointScore(state, playerId) {
   if (typeof playerId !== "string" || !playerId.trim()) throw new TypeError("A playerId is required.");
   const score = state?.victoryPoints?.[playerId];
@@ -145,7 +171,7 @@ export function getVictoryPointScore(state, playerId) {
 
 export function getVictoryPointHistory(state, playerId = null) {
   return (Array.isArray(state?.history) ? state.history : [])
-    .filter((event) => event?.type === "victory_points.awarded")
+    .filter((event) => ["victory_points.awarded", "victory_points.adjusted"].includes(event?.type))
     .filter((event) => playerId == null || event.payload?.playerId === playerId)
     .map((event) => ({ ...event.payload }));
 }
@@ -168,15 +194,15 @@ export function undoLatestVictoryPointsAward(state, {
 
   const history = Array.isArray(state?.history) ? state.history : [];
   const latest = history.at(-1);
-  if (latest?.type !== "victory_points.awarded" || latest.payload?.playerId !== playerId) {
-    throw new Error("Only the latest history event can be undone, and it must be a VP award for this player.");
+  if (!["victory_points.awarded", "victory_points.adjusted"].includes(latest?.type) || latest.payload?.playerId !== playerId) {
+    throw new Error("Only the latest history event can be undone, and it must be a VP entry for this player.");
   }
 
   const award = latest.payload;
-  if (!Number.isInteger(award.amount) || award.amount <= 0 ||
+  if (!Number.isInteger(award.amount) || award.amount === 0 ||
       !Number.isInteger(award.scoreBefore) || !Number.isInteger(award.scoreAfter) ||
       award.scoreAfter !== award.scoreBefore + award.amount) {
-    throw new Error("The latest VP award is not a valid reversible transaction.");
+    throw new Error("The latest VP entry is not a valid reversible transaction.");
   }
   const currentScore = getVictoryPointScore(state, playerId);
   if (currentScore !== award.scoreAfter) {
@@ -187,7 +213,8 @@ export function undoLatestVictoryPointsAward(state, {
     ...state,
     victoryPoints: { ...(state.victoryPoints ?? {}), [playerId]: award.scoreBefore }
   };
-  return appendHistoryEntry(updated, createEvent("victory_points.award_undone", {
+  return appendHistoryEntry(updated, createEvent(latest.type === "victory_points.adjusted"
+    ? "victory_points.adjustment_undone" : "victory_points.award_undone", {
     playerId,
     amount: award.amount,
     reason: reason.trim(),
@@ -208,10 +235,10 @@ export function undoLatestVictoryPointsAward(state, {
 export function getLatestUndoableVictoryPointsAward(state, playerId = null) {
   const history = Array.isArray(state?.history) ? state.history : [];
   const latest = history.at(-1);
-  if (latest?.type !== "victory_points.awarded") return null;
+  if (!["victory_points.awarded", "victory_points.adjusted"].includes(latest?.type)) return null;
   const award = latest.payload;
   if (playerId != null && award?.playerId !== playerId) return null;
-  if (!award || !Number.isInteger(award.amount) || award.amount <= 0 ||
+  if (!award || !Number.isInteger(award.amount) || award.amount === 0 ||
       !Number.isInteger(award.scoreBefore) || !Number.isInteger(award.scoreAfter) ||
       award.scoreAfter !== award.scoreBefore + award.amount ||
       getVictoryPointScore(state, award.playerId) !== award.scoreAfter) return null;

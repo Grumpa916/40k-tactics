@@ -89,7 +89,8 @@ export function createCommandScreen(container, {
           turn: state.turn ?? 0,
           round: state.battle?.round ?? 0
         }});
-        vpMessage = "Undid +" + award.amount + " VP for " + playerName(state, award.playerId) + ".";
+        vpMessage = "Undid latest VP entry (" + (award.amount > 0 ? "+" : "−") + Math.abs(award.amount) +
+          " VP) for " + playerName(state, award.playerId) + ".";
       } catch (error) {
         vpMessage = error?.message ?? String(error);
       }
@@ -354,12 +355,22 @@ export function createCommandScreen(container, {
     const state = session.getState();
     const formData = new FormData(form);
     const playerId = String(formData.get("vp-player") ?? "");
-    const amount = Number(formData.get("vp-amount"));
+    const enteredAmount = Number(formData.get("vp-amount"));
+    const direction = String(formData.get("vp-direction") ?? "add");
+    const amount = direction === "deduct" ? -enteredAmount : enteredAmount;
     const reason = String(formData.get("vp-reason") ?? "").trim();
-    if (!playerId || !Number.isInteger(amount) || amount <= 0 || !reason) return;
-    session.dispatch({ type: COMMAND_TYPES.RECORD_VICTORY_POINTS, payload: {
-      playerId, amount, reason, turn: state.turn ?? 0, round: state.battle?.round ?? 0
-    }});
+    if (!playerId || !Number.isInteger(enteredAmount) || enteredAmount <= 0 ||
+        !["add", "deduct"].includes(direction) || !reason) return;
+    try {
+      session.dispatch({ type: COMMAND_TYPES.ADJUST_VICTORY_POINTS, payload: {
+        playerId, amount, reason, turn: state.turn ?? 0, round: state.battle?.round ?? 0
+      }});
+      vpMessage = "Adjusted VP by " + (amount > 0 ? "+" : "−") + Math.abs(amount) +
+        " for " + playerName(state, playerId) + ".";
+    } catch (error) {
+      vpMessage = error?.message ?? String(error);
+    }
+    render();
   }
 
   function render() {
@@ -604,17 +615,27 @@ export function createCommandScreen(container, {
     ).join("");
     const undoableVpAward = getLatestUndoableVictoryPointsAward(state);
     const undoVpMarkup = undoableVpAward
-      ? '<button type="button" data-vp-undo>Undo latest VP award (' + escapeHtml(undoableVpAward.amount) +
+      ? '<button type="button" data-vp-undo>Undo latest VP entry (' +
+        (undoableVpAward.amount > 0 ? "+" : "−") + escapeHtml(Math.abs(undoableVpAward.amount)) +
         ' VP for ' + escapeHtml(playerName(state, undoableVpAward.playerId)) + ')</button>'
       : '<p>Undo is available immediately after a VP award, before another game action is recorded.</p>';
-    const vpHistory = getVictoryPointHistory(state).slice(-6).reverse();
-    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) => {
-      const capNotice = entry.requestedAmount > entry.amount
+    const vpHistory = (Array.isArray(state.history) ? state.history : [])
+      .filter((event) => ["victory_points.awarded", "victory_points.adjusted",
+        "victory_points.award_undone", "victory_points.adjustment_undone"].includes(event?.type))
+      .slice(-8).reverse();
+    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((event) => {
+      const entry = event.payload ?? {};
+      const isUndo = event.type === "victory_points.award_undone" ||
+        event.type === "victory_points.adjustment_undone";
+      const label = isUndo
+        ? "Undo (" + (entry.amount > 0 ? "+" : "−") + Math.abs(entry.amount) + " VP)"
+        : (entry.amount > 0 ? "+" : "−") + Math.abs(entry.amount) + " VP";
+      const capNotice = !isUndo && entry.requestedAmount > entry.amount
         ? '<small>Cap applied: requested ' + escapeHtml(entry.requestedAmount) + ' VP; awarded ' +
           escapeHtml(entry.amount) + ' VP (' + (entry.appliedCaps ?? []).map(vpCapDescription)
             .map(escapeHtml).join(", ") + ').</small>'
         : '';
-      return '<li><strong>+' + escapeHtml(entry.amount) + ' VP</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
+      return '<li><strong>' + escapeHtml(label) + '</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
         ' — ' + escapeHtml(entry.reason) + ' <small>(Round ' + escapeHtml(entry.round) +
         ', turn ' + escapeHtml(entry.turn) + '; total ' + escapeHtml(entry.scoreAfter) + ')</small> ' +
         capNotice + '</li>';
@@ -627,11 +648,12 @@ export function createCommandScreen(container, {
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
       '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>' +
-      '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. This form is for manual VP adjustments; eligibility advice never changes the score.</p>' +
+      '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. Manual adjustments can add or subtract VP without consuming mission caps; deductions cannot reduce a score below zero.</p>' +
       (players.length ? '<form class="command-vp-form" data-vp-form><label>Player<select name="vp-player" required>' + playerOptions +
-      '</select></label><label>VP awarded<input name="vp-amount" type="number" min="1" step="1" value="5" required></label>' +
+      '</select></label><label>Adjustment<select name="vp-direction" required><option value="add" selected>Add VP</option><option value="deduct">Subtract VP</option></select></label>' +
+      '<label>VP amount<input name="vp-amount" type="number" min="1" step="1" value="5" required></label>' +
       '<label>Manual adjustment reason<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Correct an entry error" required></label>' +
-      '<button type="submit">Confirm VP award</button></form>' : '<p>Configure both players before recording awards.</p>') +
+      '<button type="submit">Confirm VP adjustment</button></form>' : '<p>Configure both players before recording adjustments.</p>') +
       undoVpMarkup + (vpMessage ? '<p role="status">' + escapeHtml(vpMessage) + '</p>' : '') + '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
       '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +

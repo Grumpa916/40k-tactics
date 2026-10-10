@@ -47,7 +47,7 @@ test("Command screen exposes and executes safe undo for the latest VP award", ()
     secondaryMissionCatalog: []
   });
 
-  assert.match(container.innerHTML, /Undo latest VP award/);
+  assert.match(container.innerHTML, /Undo latest VP entry/);
   const undoButton = {
     closest(selector) { return selector.includes("[data-vp-undo]") ? this : null; },
     hasAttribute(name) { return name === "data-vp-undo"; }
@@ -56,8 +56,36 @@ test("Command screen exposes and executes safe undo for the latest VP award", ()
 
   assert.equal(state.victoryPoints.p1, 0);
   assert.equal(state.history.at(-1).type, "victory_points.award_undone");
-  assert.doesNotMatch(container.innerHTML, /Undo latest VP award/);
-  assert.match(container.innerHTML, /Undid \+3 VP for Player One/);
+  assert.doesNotMatch(container.innerHTML, /Undo latest VP entry/);
+  assert.match(container.innerHTML, /Undid latest VP entry \(\+3 VP\) for Player One/);
+  screen.destroy();
+  clearCommandHandlers();
+});
+
+
+test("Command screen exposes add and subtract choices for manual VP adjustments", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p1",
+    players: [{ id: "p1", name: "Player One" }, { id: "p2", name: "Player Two" }],
+    battle: { id: "b1", status: "active", round: 1 }
+  });
+  const container = {
+    innerHTML: "",
+    addEventListener() {},
+    removeEventListener() {},
+    contains() { return true; },
+    replaceChildren() { this.innerHTML = ""; },
+    querySelector() { return null; }
+  };
+  const session = { getState: () => state, subscribe() { return () => {}; }, dispatch() {} };
+  const screen = createCommandScreen(container, {
+    session, perspectivePlayerId: "p1", missionDefinitions: [], secondaryMissionCatalog: []
+  });
+  assert.match(container.innerHTML, /value="add" selected>Add VP/);
+  assert.match(container.innerHTML, /value="deduct">Subtract VP/);
+  assert.match(container.innerHTML, /deductions cannot reduce a score below zero/);
   screen.destroy();
   clearCommandHandlers();
 });

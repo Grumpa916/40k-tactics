@@ -19,6 +19,7 @@ export const COMMAND_TYPES = Object.freeze({
   RESOLVE_ATTACK: "combat.resolve_attack",
   RECORD_COMMAND_POINT_CHANGE: "command_points.record_change",
   RECORD_VICTORY_POINTS: "victory_points.record_award",
+  ADJUST_VICTORY_POINTS: "victory_points.adjust",
   UNDO_LATEST_VICTORY_POINTS_AWARD: "victory_points.undo_latest_award",
   DRAW_SECONDARY_MISSION: "secondary_mission.draw",
   SET_SECONDARY_MISSION_MODE: "secondary_mission.set_mode",
