@@ -58,3 +58,46 @@ test("rejects unsupported checkpoints and malformed primary input", () => {
   assert.throws(() => evaluateScoringCheckpoint(createGameState(), { checkpoint: "after-movement", scoringPlayerId: "p1" }), /Unsupported scoring checkpoint/);
   assert.throws(() => evaluateScoringCheckpoint(createGameState(), { checkpoint: SCORING_CHECKPOINTS.END_OF_TURN, scoringPlayerId: "p1", primaryDefinitions: {} }), /must be an array/);
 });
+
+
+test("active secondary cards can expose separate own-turn and opponent-turn scoring windows", () => {
+  const definitionWithWindows = {
+    id: "assassination-sample",
+    name: "Assassination",
+    category: "secondary",
+    timing: SCORING_TIMINGS.END_OF_TURN,
+    conditions: [],
+    rulesVerified: true,
+    scoringWindows: [
+      { id: "own-turn", timing: SCORING_TIMINGS.END_OF_TURN, modes: ["fixed"], tiers: [{ vp: 3, summary: "sample tier" }] },
+      { id: "opponent-turn", timing: SCORING_TIMINGS.END_OF_OPPONENT_TURN, modes: ["fixed"], tiers: [{ vp: 3, summary: "sample tier" }] }
+    ]
+  };
+  const state = drawSecondaryMission(createGameState({ players: [{ id: "p1" }, { id: "p2" }] }), {
+    definition: definitionWithWindows,
+    playerId: "p1",
+    round: 1,
+    turn: 1
+  });
+
+  const ownTurn = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p1"
+  });
+  assert.equal(ownTurn.secondary.length, 1);
+  assert.equal(ownTurn.secondary[0].result.manualReviewRequired, true);
+  assert.equal(ownTurn.secondary[0].result.rulesVerified, true);
+  assert.equal(ownTurn.secondary[0].result.scoringWindow.id, "own-turn");
+  assert.equal(ownTurn.awardsVictoryPoints, false);
+
+  const opponentTurn = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN,
+    scoringPlayerId: "p1",
+    activePlayerId: "p2"
+  });
+  assert.equal(opponentTurn.secondary.length, 1);
+  assert.equal(opponentTurn.secondary[0].result.scoringWindow.id, "opponent-turn");
+  assert.equal(opponentTurn.secondary[0].result.scoringWindows[0].timing, SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN);
+  assert.equal(opponentTurn.awardsVictoryPoints, false);
+});
