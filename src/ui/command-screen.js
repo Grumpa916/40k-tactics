@@ -308,7 +308,7 @@ export function createCommandScreen(container, {
       }
       const round = state.battle?.round ?? 0;
       const turn = state.turn ?? 0;
-      const missionMode = entry.definition?.missionMode ?? state.scoring?.secondaryMissionMode;
+      const missionMode = state.scoring?.secondaryMissionMode ?? entry.definition?.missionMode;
       if (!missionMode) {
         secondaryMissionMessage = "Set the battle-wide Fixed or Tactical mode before recording secondary scoring.";
         render();
