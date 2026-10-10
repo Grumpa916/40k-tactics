@@ -110,9 +110,13 @@ export function drawSecondaryMission(state, {
       throw new Error("Only the active player can draw Tactical secondary cards during their Command phase.");
     }
     const drawnThisCommandPhase = existing.filter((item) =>
-      item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn
+      item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn &&
+      item.isRedrawReplacement !== true
     ).length;
-    if (drawnThisCommandPhase >= 2) {
+    const pendingRedraw = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId];
+    const isRedrawReplacement = Boolean(pendingRedraw &&
+      pendingRedraw.round === round && pendingRedraw.turn === turn);
+    if (drawnThisCommandPhase >= 2 && !isRedrawReplacement) {
       throw new Error("Two Tactical secondary cards have already been recorded for this Command phase.");
     }
   }
@@ -133,6 +137,10 @@ export function drawSecondaryMission(state, {
     definitionId: missionDefinition.id,
     definition: missionDefinition,
     playerId,
+    ...(selectedMode === SECONDARY_MISSION_MODES.TACTICAL &&
+      state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId]?.round === round &&
+      state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId]?.turn === turn
+      ? { isRedrawReplacement: true } : {}),
     status: SECONDARY_MISSION_STATUS.ACTIVE,
     drawnRound: round,
     drawnTurn: turn,
@@ -144,7 +152,16 @@ export function drawSecondaryMission(state, {
     returnedToDeckRound: null,
     returnedToDeckTurn: null
   });
-  return withMissionList(state, [...existing, entry]);
+  const next = withMissionList(state, [...existing, entry]);
+  if (entry.isRedrawReplacement) {
+    const pending = { ...(next.scoring?.secondaryMissionRedrawPendingByPlayer ?? {}) };
+    delete pending[playerId];
+    return {
+      ...next,
+      scoring: { ...next.scoring, secondaryMissionRedrawPendingByPlayer: pending }
+    };
+  }
+  return next;
 }
 
 /**
