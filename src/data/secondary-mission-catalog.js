@@ -24,6 +24,9 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
+  ]),
+  officialSupportingReferences: Object.freeze([
+    "https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf"
   ])
 });
 
@@ -101,7 +104,7 @@ const draftRules = Object.freeze({
     rulesVerified: false,
     referenceNotes: [
       "When drawn in Tactical mode: select one friendly unit on the battlefield or embarked within a TRANSPORT on the battlefield as the beacon unit.",
-      "Event Companion v1.2 FAQ transcription says a destroyed beacon unit cannot be replaced."
+      "Official Warhammer Event Companion v1.2 FAQ: if the selected Beacon unit is destroyed before the mission is achieved, you cannot select a replacement Beacon unit. This FAQ does not verify the full card text or scoring windows."
     ],
     scoringWindows: [
       windowDefinition({
@@ -307,7 +310,7 @@ const draftRules = Object.freeze({
     rulesVerified: false,
     referenceNotes: [
       "When drawn in Tactical mode: if Cleanse is active, may draw a replacement and shuffle this card back into the deck.",
-      "Plunder action is started in your Shooting phase and completes immediately. The Event Companion v1.2 FAQ transcription clarifies that 'not within your territory' refers to the terrain area."
+      "Plunder action is started in your Shooting phase and completes immediately. Official Warhammer Event Companion v1.2 FAQ clarifies that 'not within your territory' refers to the terrain area, not the unit. This FAQ does not verify the full card text or scoring window."
     ],
     scoringWindows: [
       windowDefinition({
