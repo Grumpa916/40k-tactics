@@ -76,3 +76,15 @@ test("draft windows preserve distinct modes, timing, tier relationships, and rev
   assert.equal(beacon.scoringWindows[0].tiers[0].relationship, "or");
   assert.equal(beacon.scoringWindows[0].tiers[1].relationship, "or");
 });
+
+test("official Event Companion FAQ references clarify special interactions without verifying whole cards", () => {
+  const officialFaq = "https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf";
+  assert.ok(SECONDARY_MISSION_CATALOG_SOURCE.officialSupportingReferences.includes(officialFaq));
+
+  const beacon = SECONDARY_MISSION_CATALOG.find((card) => card.name === "Beacon");
+  const plunder = SECONDARY_MISSION_CATALOG.find((card) => card.name === "Plunder");
+  assert.equal(beacon.rulesVerified, false);
+  assert.equal(plunder.rulesVerified, false);
+  assert.ok(beacon.referenceNotes.some((note) => note.includes("cannot select a replacement Beacon unit")));
+  assert.ok(plunder.referenceNotes.some((note) => note.includes("refers to the terrain area, not the unit")));
+});
