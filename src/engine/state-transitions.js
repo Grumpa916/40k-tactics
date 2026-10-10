@@ -148,6 +148,14 @@ export function changePhase(state, { phase } = {}) {
   if (phaseIndex < 0 || phase !== nextPhase) {
     throw new Error("Turn steps must resolve in order.");
   }
+  if (state.phase === "command") {
+    const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
+    const pendingRedraw = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[activePlayerId];
+    if (pendingRedraw && pendingRedraw.round === (state.battle?.round ?? 0) &&
+        pendingRedraw.turn === (state.turn ?? 0)) {
+      throw new Error("Record the New Orders replacement card before leaving the Command phase.");
+    }
+  }
 
   const isShootingCompletion = state.phase === "shooting" && phase === "charge";
   if (isShootingCompletion) {
