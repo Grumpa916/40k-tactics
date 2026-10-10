@@ -44,6 +44,7 @@ export function createSupabaseAuthPanel(container, { client, onAuthChange = () =
               required ${busy ? "disabled" : ""}>
             <button type="submit" ${busy ? "disabled" : ""}>Sign in</button>
           </form>
+          <p><a href="./account.html">Forgot password?</a></p>
           ${message ? `<p role="status">${escapeHtml(message)}</p>` : ""}
         </section>`;
   }
