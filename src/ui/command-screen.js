@@ -90,6 +90,34 @@ export function createCommandScreen(container, {
       }
       const playerId = container.querySelector("[data-secondary-player]")?.value ||
         perspectivePlayerId || state.activePlayer;
+      const round = state.battle?.round ?? 0;
+      const turn = state.turn ?? 0;
+      const currentActivePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+      const priorSecondaryHistory = getSecondaryMissionHistory(state);
+      if (missionMode === "tactical") {
+        if (playerId !== currentActivePlayerId) {
+          secondaryMissionMessage = "Tactical cards can only be drawn for the active player during that player's Command phase.";
+          render();
+          return;
+        }
+        const drawnThisCommandPhase = priorSecondaryHistory.filter((item) =>
+          item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn
+        ).length;
+        if (drawnThisCommandPhase >= 2) {
+          secondaryMissionMessage = "Two Tactical cards have already been recorded for this Command phase.";
+          render();
+          return;
+        }
+      } else if (missionMode === "fixed") {
+        const fixedCards = priorSecondaryHistory.filter((item) =>
+          item.playerId === playerId && item.definition?.missionMode === "fixed"
+        ).length;
+        if (fixedCards >= 2) {
+          secondaryMissionMessage = "Each player selects only two Fixed secondary cards for the battle.";
+          render();
+          return;
+        }
+      }
       const definitionId = container.querySelector("[data-secondary-definition]")?.value;
       const configuredDefinition = missionDefinitions.find((item) =>
         item.id === definitionId && item.category === "secondary");
@@ -178,7 +206,7 @@ export function createCommandScreen(container, {
       }
       try {
         session.dispatch({ type: COMMAND_TYPES.DRAW_SECONDARY_MISSION, payload: {
-          definition, playerId, round: state.battle?.round ?? 0, turn: state.turn ?? 0
+          definition, playerId, round, turn
         }});
         selectedSecondaryPlayerId = playerId;
         secondaryMissionMessage = "Mission added to the selected player's active secondary missions.";
@@ -260,16 +288,8 @@ export function createCommandScreen(container, {
         return;
       }
       try {
-        session.dispatch({ type: COMMAND_TYPES.RECORD_VICTORY_POINTS, payload: {
-          playerId,
-          amount,
-          reason: entry.definition?.name ?? entry.definitionId,
-          missionDefinitionId: entry.definitionId,
-          category: "secondary",
-          missionMode,
-          opportunityKey: [instanceId, round, turn].join(":"),
-          turn,
-          round
+        session.dispatch({ type: COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, payload: {
+          playerId, instanceId, amount, turn, round
         }});
         secondaryMissionMessage = "Secondary VP recorded for " + (entry.definition?.name ?? entry.definitionId) + ". Check the ledger for any cap applied.";
       } catch (error) {
@@ -405,7 +425,11 @@ export function createCommandScreen(container, {
       !activeSecondaryIds.has(definition.id) &&
       (!secondaryMissionMode || definition.availableModes?.includes(secondaryMissionMode) !== false) &&
       !(secondaryMissionMode === "fixed" && definition.fixedAvailable === false));
-    const activeSecondaryForVp = secondaryHistory.filter((item) => item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+    const activeSecondaryForVp = secondaryHistory.filter((item) =>
+      item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
+      !(item.definition?.missionMode === "fixed" &&
+        (item.scoringHistory ?? []).some((scored) =>
+          scored.round === (state.battle?.round ?? 0) && scored.turn === (state.turn ?? 0))));
     const secondaryVpCardOptions = activeSecondaryForVp.map((item) =>
       '<option value="' + escapeHtml(item.instanceId) + '">' +
       escapeHtml(playerName(state, item.playerId) + " — " + (item.definition?.name ?? item.definitionId)) + '</option>'
