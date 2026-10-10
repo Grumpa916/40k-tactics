@@ -308,7 +308,7 @@ export function createCommandScreen(container, {
       }
       const round = state.battle?.round ?? 0;
       const turn = state.turn ?? 0;
-      const missionMode = entry.definition?.missionMode ?? state.scoring?.secondaryMissionMode;
+      const missionMode = state.scoring?.secondaryMissionMode ?? entry.definition?.missionMode;
       if (!missionMode) {
         secondaryMissionMessage = "Set the battle-wide Fixed or Tactical mode before recording secondary scoring.";
         render();
@@ -455,7 +455,7 @@ export function createCommandScreen(container, {
       item.drawnTurn === currentTurn && item.isRedrawReplacement !== true).length;
     const tacticalRedrawPending = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[currentActivePlayerId];
     const fixedCardsSelected = secondaryHistory.filter((item) =>
-      item.playerId === selectedSecondaryPlayerId && item.definition?.missionMode === "fixed").length;
+      item.playerId === selectedSecondaryPlayerId && ((state.scoring?.secondaryMissionMode ?? item.definition?.missionMode) === "fixed")).length;
     const secondaryModeStatusMarkup = secondaryMissionMode === "tactical" && state.phase === "command"
       ? '<p class="command-secondary-mode-status">' +
         (tacticalRedrawPending && tacticalRedrawPending.round === currentRound && tacticalRedrawPending.turn === currentTurn
@@ -477,14 +477,14 @@ export function createCommandScreen(container, {
       !(secondaryMissionMode === "fixed" && definition.fixedAvailable === false));
     const activeSecondaryForVp = secondaryHistory.filter((item) =>
       item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
-      !(item.definition?.missionMode === "fixed" &&
+      !(((state.scoring?.secondaryMissionMode ?? item.definition?.missionMode) === "fixed") &&
         (item.scoringHistory ?? []).some((scored) =>
           scored.round === (state.battle?.round ?? 0) && scored.turn === (state.turn ?? 0))));
     const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
     const activeTacticalCards = secondaryHistory.filter((item) =>
       item.playerId === activePlayerId &&
       item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
-      item.definition?.missionMode === "tactical");
+      ((state.scoring?.secondaryMissionMode ?? item.definition?.missionMode) === "tactical"));
     const redrawUsed = Boolean(state.scoring?.secondaryMissionRedrawUsedByPlayer?.[activePlayerId]);
     const activePlayerCp = activePlayerId ? getCommandPointBalance(state, activePlayerId) : 0;
     const secondaryRedrawOptions = activeTacticalCards.map((item) =>

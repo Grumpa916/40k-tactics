@@ -34,9 +34,6 @@ export function useSecondaryMissionRedraw(state, {
   const entry = getSecondaryMissionHistory(state, playerId).find((item) =>
     item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
   if (!entry) throw new Error("Select one of your active Tactical secondary cards.");
-  if (entry.definition?.missionMode !== SECONDARY_MISSION_MODES.TACTICAL) {
-    throw new Error("New Orders can only discard an active Tactical secondary card.");
-  }
   if (getCommandPointBalance(state, playerId) < 1) {
     throw new Error("New Orders costs 1 CP; this player does not have enough Command Points.");
   }

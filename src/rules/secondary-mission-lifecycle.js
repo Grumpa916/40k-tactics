@@ -122,7 +122,7 @@ export function drawSecondaryMission(state, {
   }
   if (selectedMode === SECONDARY_MISSION_MODES.FIXED) {
     const fixedCardCount = existing.filter((item) =>
-      item.playerId === playerId && item.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED
+      item.playerId === playerId && (state?.scoring?.secondaryMissionMode ?? item.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED
     ).length;
     if (fixedCardCount >= 2) {
       throw new Error("Each player can select only two Fixed secondary cards for the battle.");
@@ -182,7 +182,7 @@ export function recordSecondaryMissionScored(state, {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "score");
   const scoringEvent = Object.freeze({ round, turn, notes });
-  const isFixed = entry.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED;
+  const isFixed = (state?.scoring?.secondaryMissionMode ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED;
   const updated = Object.freeze({
     ...entry,
     status: isFixed ? SECONDARY_MISSION_STATUS.ACTIVE : SECONDARY_MISSION_STATUS.SCORED,
@@ -202,7 +202,7 @@ export function discardSecondaryMission(state, {
 } = {}) {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "discard");
-  if (entry.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED) {
+  if ((state?.scoring?.secondaryMissionMode ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED) {
     throw new Error("Fixed secondary cards cannot be discarded.");
   }
   const updated = Object.freeze({
@@ -227,7 +227,7 @@ export function returnSecondaryMissionToDeck(state, {
 } = {}) {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "return");
-  if (entry.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED) {
+  if ((state?.scoring?.secondaryMissionMode ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED) {
     throw new Error("Fixed secondary cards cannot be returned to the deck.");
   }
   const updated = Object.freeze({
