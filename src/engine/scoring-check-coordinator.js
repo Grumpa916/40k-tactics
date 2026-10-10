@@ -14,11 +14,19 @@ function validateCheckpoint(checkpoint) {
   }
 }
 
+function scoringWindowsForInstance(state, instance, checkpoint = null) {
+  const definition = instance.definition;
+  if (!Array.isArray(definition?.scoringWindows)) return [];
+  const missionMode = definition.missionMode ?? state?.scoring?.secondaryMissionMode ?? null;
+  return definition.scoringWindows.filter((window) =>
+    (checkpoint == null || window?.timing === checkpoint) &&
+    (!missionMode || !Array.isArray(window?.modes) || window.modes.length === 0 ||
+      window.modes.includes(missionMode)));
+}
+
 function evaluateSecondaryInstance(state, instance, checkpoint) {
   const definition = instance.definition;
-  const scoringWindows = Array.isArray(definition?.scoringWindows)
-    ? definition.scoringWindows.filter((window) => window?.timing === checkpoint)
-    : [];
+  const scoringWindows = scoringWindowsForInstance(state, instance, checkpoint);
   const scoringWindow = scoringWindows[0] ?? null;
   if (!Array.isArray(definition?.conditions) || definition.conditions.length === 0) {
     return {
@@ -77,7 +85,7 @@ export function evaluateScoringCheckpoint(state, {
       if (instance.status !== SECONDARY_MISSION_STATUS.ACTIVE) return false;
       const definition = instance.definition;
       if (Array.isArray(definition?.scoringWindows) && definition.scoringWindows.length) {
-        return definition.scoringWindows.some((window) => window?.timing === checkpoint);
+        return scoringWindowsForInstance(state, instance, checkpoint).length > 0;
       }
       return definition?.timing === checkpoint;
     })

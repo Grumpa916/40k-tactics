@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createGameState } from "./game-state.js";
 import { createMissionDefinition, SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { SCORING_EVIDENCE } from "../rules/scoring-eligibility.js";
-import { drawSecondaryMission, recordSecondaryMissionScored } from "../rules/secondary-mission-lifecycle.js";
+import { drawSecondaryMission, recordSecondaryMissionScored, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "./scoring-check-coordinator.js";
 
 function definition(id, category, timing = SCORING_TIMINGS.END_OF_TURN) {
@@ -100,4 +100,43 @@ test("active secondary cards can expose separate own-turn and opponent-turn scor
   assert.equal(opponentTurn.secondary[0].result.scoringWindow.id, "opponent-turn");
   assert.equal(opponentTurn.secondary[0].result.scoringWindows[0].timing, SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN);
   assert.equal(opponentTurn.awardsVictoryPoints, false);
+});
+
+
+test("secondary scoring references only the tiers for the battle-wide Fixed or Tactical mode", () => {
+  const definitionWithBothModes = {
+    id: "assassination-mode-test",
+    name: "Assassination",
+    category: "secondary",
+    timing: SCORING_TIMINGS.END_OF_TURN,
+    availableModes: ["fixed", "tactical"],
+    conditions: [],
+    rulesVerified: true,
+    scoringWindows: [
+      { id: "fixed-turn", timing: SCORING_TIMINGS.END_OF_TURN, modes: ["fixed"], tiers: [{ vp: 3, summary: "Fixed tier" }] },
+      { id: "tactical-turn", timing: SCORING_TIMINGS.END_OF_TURN, modes: ["tactical"], tiers: [{ vp: 5, summary: "Tactical tier" }] },
+      { id: "tactical-opponent", timing: SCORING_TIMINGS.END_OF_OPPONENT_TURN, modes: ["tactical"], tiers: [{ vp: 5, summary: "Tactical opponent tier" }] }
+    ]
+  };
+
+  for (const mode of ["fixed", "tactical"]) {
+    let state = createGameState({
+      phase: "command", turn: 1, activePlayer: "p1",
+      battle: { round: 1, activePlayerId: "p1" },
+      players: [{ id: "p1" }, { id: "p2" }]
+    });
+    state = setSecondaryMissionMode(state, { mode });
+    state = drawSecondaryMission(state, {
+      definition: definitionWithBothModes, playerId: "p1", round: 1, turn: 1
+    });
+    const result = evaluateScoringCheckpoint(state, {
+      checkpoint: SCORING_CHECKPOINTS.END_OF_TURN,
+      scoringPlayerId: "p1",
+      activePlayerId: "p1"
+    });
+    assert.equal(result.secondary.length, 1);
+    assert.equal(result.secondary[0].result.scoringWindows.length, 1);
+    assert.equal(result.secondary[0].result.scoringWindow.id, mode === "fixed" ? "fixed-turn" : "tactical-turn");
+    assert.deepEqual(result.secondary[0].result.scoringWindows[0].modes, [mode]);
+  }
 });
