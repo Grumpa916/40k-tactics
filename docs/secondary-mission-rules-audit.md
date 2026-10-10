@@ -11,7 +11,7 @@ This document records the legacy V1 reference summaries for the 18 secondary car
    - [Official sample card image 1](https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg)
    - [Official sample card image 2](https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg)
 2. **Official general timing/cap rules:** [Warhammer Event Companion v1.2 (official Games Workshop PDF, August 2026)](https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf). It documents scoring checkpoints and caps, but does not reproduce the full text of the secondary cards. Its FAQ explicitly distinguishes the end of the battle from the end of the fifth battle round and says end-of-battle VP is not subject to the 15 VP per battle-round cap; the 45 VP game cap and 20 VP per Fixed card cap still apply.
-3. **Independent text transcriptions for cross-checking, not official sources:** [Wahapedia's Chapter Approved secondary mission text](https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/) and [11th.help's secondary mission reference](https://www.11th.help/secondary_missions.html). These expose card wording and timing in searchable text and are useful for comparing transcriptions, but must not by themselves promote a V2 card to `rulesVerified: true`.
+3. **Independent text transcriptions for cross-checking, not official sources:** [GDM 2026 secondary mission index](https://gdmissions.app/11th/secondary-missions), [GDM 2026 version history](https://gdmissions.app/version-history), [Wahapedia's Chapter Approved secondary mission text](https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/), and [11th.help's secondary mission reference](https://www.11th.help/secondary_missions.html). GDM provides readable/selectable card text and a version history; use these sources to reconcile claims, not to promote a V2 card to `rulesVerified: true`.
 4. **Legacy cross-check only:** `Grumpa916/onoforge40k` `index.html`, commit `c5a9dc058615b16e8f5edde03313b1a7ac0ca825`. This repository is preserved and must not be modified as part of V2 work.
 5. **Unofficial community cross-check only:** [IRONBUILT dataset pinned to commit `6f61cb3796f79348b81389ec0eb32d461b675d02`](https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json). Do not use it alone to verify a card.
 
@@ -21,12 +21,12 @@ The following summaries are transcribed from the legacy V1 data and are **pendin
 
 | Card | Fixed/Tactical in legacy reference | Legacy scoring summary | Verification notes |
 |---|---|---|---|
-| A Grievous Blow | Fixed and Tactical | Fixed: 4 VP per enemy unit with Starting Strength 13+ destroyed this turn. Tactical: 5 VP (max 5) per such unit destroyed this turn. | **Legacy discrepancy:** V1 says 5 VP per qualifying unit (max 5); both searchable card-text transcriptions and the pinned community dataset indicate Tactical is a flat 5 VP if one or more qualifying units were destroyed. Treat the V1 entry as suspect and verify against the physical/official card image before promotion. |
+| A Grievous Blow | Fixed and Tactical | Fixed: 4 VP per enemy unit with Starting Strength 13+ destroyed this turn. Tactical draft: 5 VP if one or more such units were destroyed this turn. | **Third-party discrepancy:** GDM's v3.5 changelog explicitly says Tactical is a flat 5 VP for one or more qualifying units and that the MAX 5 VP cap was removed from both sides; the current 11th.help transcription still displays a 5 VP cap marker on the Tactical line. Draft follows GDM but remains unverified until direct official-card checking. |
 | A Tempting Target | Tactical | 5 VP for controlling the opponent-selected tempting target objective. | Verify when control is checked and exact target restrictions. |
 | Assassination | Fixed and Tactical | Fixed: 3 VP per enemy CHARACTER model destroyed this turn, plus 1 VP for each of those models with 4+ Wounds (cumulative). Tactical: 5 VP if one or more enemy CHARACTER models were destroyed this turn, or all enemy CHARACTER models have been destroyed during the battle. | Scoring windows partially transcribed from official sample card; confirm complete card wording before treating any additional details as verified. |
 | Beacon | Tactical | 3 VP if, at end of opponent's turn or end of battle round five, the selected beacon unit is on the battlefield and outside your deployment zone; 5 VP if it is on the battlefield and outside your territory. | Verify whether the second tier shares the same timing and exact cumulative/alternative relationship. |
 | Behind Enemy Lines | Tactical | 3 VP per eligible friendly unit wholly within the opponent's deployment zone; max 5 VP. Excludes AIRCRAFT and Battle-shocked units. | Verify scoring checkpoint and whether any first-round redraw text is present. |
-| Bring it Down | Fixed and Tactical | Fixed: 4 VP per enemy model with 10+ Wounds destroyed this turn. Tactical: 5 VP (max 5) per such model destroyed this turn. | Verify Tactical per-model wording against the actual card; check when-drawn condition. |
+| Bring it Down | Fixed and Tactical | Fixed: 4 VP per enemy model with 10+ Wounds destroyed this turn. Tactical draft: 5 VP if one or more such models were destroyed this turn. | **Third-party discrepancy:** same GDM changelog correction and 11th.help cap marker conflict as A Grievous Blow. Draft follows GDM, not official-card verified. Check the when-drawn condition too. |
 | Burden of Trust | Tactical | 2 VP per objective guarded by your army; max 5 VP. | Verify guard-selection rules, duration, and scoring timing. |
 | Centre Ground | Tactical | 3 VP if an eligible friendly unit is within 3" of battlefield centre and no enemy unit is within 3" of centre; 5 VP if no enemy unit is within 6" of centre. Eligible friendly units exclude AIRCRAFT and Battle-shocked units. | Public official sample image is available; retain its current verified status only for the exact text actually visible there. |
 | Cleanse | Tactical | 2 VP if one objective was cleansed by your army this turn; 5 VP if two or more objectives were cleansed this turn. | Verify action requirements, timing, and interaction with Plunder. |
@@ -55,6 +55,37 @@ The legacy V1 reference also records these special cases. Treat all as pending v
 - **Engage on All Fronts:** legacy metadata marks the scoring tiers as exclusive.
 - **Forward Position:** first battle round may permit a redraw and shuffle-back.
 
+## Independent-transcription reconciliation (reviewed 9 October 2026)
+
+GDM 2026 is the strongest additional practical cross-check found so far: it provides a page for each secondary, readable/selectable card text, card imagery, and a version history. Its version history says the readable full card-text sections were added in v4.2 (3 July 2026), and the latest secondary card artwork was refreshed in v4.9 (25 July 2026). Its v3.5 entry (15 June 2026) records a specific correction to **A Grievous Blow** and **Bring it Down**. These are still unofficial transcriptions, not the authority for setting `rulesVerified: true`.
+
+- [GDM 2026 secondary index](https://gdmissions.app/11th/secondary-missions)
+- [GDM 2026 version history](https://gdmissions.app/version-history)
+- [11th.help secondary index](https://www.11th.help/secondary_missions.html)
+
+| Card | Third-party comparison result | Required V2 handling |
+|---|---|---|
+| A Grievous Blow | **Conflict.** GDM v3.5 says Tactical is a flat 5 VP when one or more qualifying units are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line. | Draft reflects the flat 5 VP trigger and no tier-level `maxVP`; keep unverified pending official card text. |
+| A Tempting Target | Broad agreement on opponent-selected No Man's Land target (excluding home objectives), 5 VP for controlling it, and end-of-your-turn timing. | Keep unverified. |
+| Assassination | Broad agreement on Fixed 3 VP per CHARACTER model plus a cumulative +1 VP for each destroyed CHARACTER with 4+ Wounds, and Tactical 5 VP for a qualifying destruction event or all enemy CHARACTER models destroyed in the battle. Official sample-card verification remains limited to the text actually visible in the official sample. | Existing official-sample status retained only for that visible text. |
+| Beacon | Broad agreement on selected beacon unit, opponent-turn/fifth-round timing, and 3 VP / exclusive 5 VP position tiers. | Keep unverified. |
+| Behind Enemy Lines | Broad agreement on first-round redraw, 3 VP per eligible unit wholly in the opponent's deployment zone, and 5 VP maximum. | Keep unverified. |
+| Bring it Down | **Conflict.** GDM v3.5 says Tactical is a flat 5 VP when one or more qualifying models are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line. | Draft reflects the flat 5 VP trigger and no tier-level `maxVP`; keep unverified pending official card text. |
+| Burden of Trust | Broad agreement on selecting a guarding unit per objective, duration through the start of the next turn, and 2 VP per guarded objective up to 5 VP. | Keep unverified. |
+| Centre Ground | Broad agreement on the 3-inch friendly-unit condition and 3 VP / exclusive 5 VP enemy-proximity tiers; an official sample image exists. | Existing official-sample status retained only for the text visible in that image. |
+| Cleanse | Broad agreement on 2 VP for one objective and exclusive 5 VP for two or more, end-of-your-turn timing, and the Plunder redraw interaction. | Keep unverified. |
+| Defend Stronghold | Broad agreement on first-round redraw, availability from round two, and 3 VP home-objective control plus a cumulative 2 VP if no enemy units are in your deployment zone. | Keep unverified despite transcription agreement. |
+| Display of Might | Broad agreement on eligible units wholly within No Man's Land and the 2 VP own-turn / 5 VP opponent-turn checkpoints. | Keep unverified. |
+| Engage on All Fronts | Broad agreement on quarter-presence requirements and mutually exclusive 2/4 VP Fixed or 3/5 VP Tactical tiers. | Keep unverified. |
+| Forward Position | Broad agreement on first-round redraw and 5 VP for controlling the opponent's home objective and/or expansion objective(s). | Keep unverified. |
+| No Prisoners | Broad agreement on 2 VP per enemy unit destroyed this turn, up to 5 VP, at end of either player's turn. | Keep unverified. |
+| Outflank | Broad agreement on edge-distance/territory conditions and mutually exclusive 3 VP / 5 VP tiers. | Keep unverified. |
+| Overwhelming Force | Broad agreement on 3 VP per destroyed enemy unit that started the turn within objective range, up to 5 VP. | Keep unverified. |
+| Plunder | Broad agreement on 5 VP for plundering a terrain area and the Cleanse redraw interaction. | Keep unverified. |
+| Secure No Man's Land | Broad agreement on 5 VP for controlling at least two eligible No Man's Land objectives. | Keep unverified. |
+
+**Interpretation:** the two unofficial transcriptions appear broadly aligned on the other cards' draft summaries, but agreement between secondary sources is not official verification. Only Assassination and Centre Ground retain their already-limited official-sample status. All other cards remain manual-review-only with `rulesVerified: false`. The global 15 VP per battle-round / 45 VP battle caps and the 20 VP Fixed-card cap are handled by the scoring system, not inferred from per-card draft text.
+
 ## Implementation guardrails
 
 - Keep all 18 V2 card names and Fixed/Tactical availability as currently catalogued unless verified card text establishes a correction.
@@ -62,4 +93,4 @@ The legacy V1 reference also records these special cases. Treat all as pending v
 - Any draft scoring-window metadata must use an explicit legacy/unverified provenance marker and must continue to require player review. It must never award VP automatically.
 - Preserve the existing global caps: 15 VP per turn and 45 VP per battle for secondaries; additionally, no more than 20 VP from any one Fixed secondary card.
 - Verify timing separately from scoring conditions. A condition's existence does not establish whether it is checked at end of your turn, end of opponent's turn, or end of battle.
-- Before implementation, resolve the A Grievous Blow Tactical discrepancy and any tier relationships (cumulative versus mutually exclusive) from the actual card.
+- The A Grievous Blow / Bring it Down cross-source disagreement is now recorded in the independent-transcription reconciliation section. Their draft tiers follow GDM's explicit correction but remain unverified until the actual official cards are checked.
