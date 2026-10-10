@@ -32,9 +32,22 @@ function averagePosition(positions) {
   };
 }
 
-function unitPosition(unit) {
-  // Once model positions are available, they represent the unit's current
-  // live location. A deployment-level unit.position may be stale after moves.
+function unitPosition(unit, state) {
+  const initialDeployment = state.battlefieldMap?.actualDeployment?.[unit.id];
+  const hasRecordedMovement = (state.history ?? []).some((event) =>
+    ["unit.normal_move_resolved", "unit.advanced"].includes(event?.type) &&
+    event.payload?.unitId === unit.id &&
+    Array.isArray(event.payload?.moves) &&
+    event.payload.moves.length > 0
+  );
+
+  // A unit-level deployment point is the only recorded live anchor until
+  // model-level movement has actually supplied newer coordinates.
+  if (initialDeployment && !hasRecordedMovement) {
+    const position = initialDeployment.position ?? initialDeployment;
+    if (isValidBattlefieldPosition(position)) return position;
+  }
+
   if (Array.isArray(unit.models) && unit.models.length &&
       unit.models.every((model) => isValidBattlefieldPosition(model?.position))) {
     return averagePosition(unit.models.map((model) => model.position));
@@ -72,7 +85,7 @@ export function renderBattlefieldMap(state, {
     let position = null;
     if (mode === "live") {
       if (unit.status !== "deployed") continue;
-      position = unitPosition(unit);
+      position = unitPosition(unit, safeState);
     } else {
       const record = plannedOrDeployed?.[unit.id];
       position = record?.position ?? record ?? null;
