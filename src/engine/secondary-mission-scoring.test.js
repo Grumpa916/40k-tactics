@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../state/game-state.js";
+import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { drawSecondaryMission, getSecondaryMissionHistory, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
-import { getVictoryPointScore, recordVictoryPointsAward } from "./victory-points-ledger.js";
+import { getVictoryPointScore, getVictoryPointHistory, recordVictoryPointsAward } from "./victory-points-ledger.js";
 
 function setup(mode = "tactical") {
   let state = createGameState({
@@ -82,4 +83,30 @@ test("failed secondary scoring does not change the card lifecycle", () => {
     instanceId: card.instanceId, playerId: "p1", amount: 3, round: 1, turn: 4
   }), /45 VP secondary game limit/);
   assert.equal(getSecondaryMissionHistory(state, "p1")[0].status, "active");
+});
+
+
+test("secondary scoring forwards end-of-battle timing and keeps that opportunity distinct", () => {
+  let state = setup("tactical");
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Earlier secondary",
+    missionDefinitionId: "earlier-secondary",
+    category: "secondary", missionMode: "tactical",
+    opportunityKey: "earlier-secondary:1:1", round: 1, turn: 1
+  });
+  const card = getSecondaryMissionHistory(state, "p1")[0];
+  state = recordSecondaryMissionScore(state, {
+    instanceId: card.instanceId,
+    playerId: "p1",
+    amount: 10,
+    scoringTiming: SCORING_TIMINGS.END_OF_BATTLE,
+    round: 1,
+    turn: 1
+  });
+
+  const award = getVictoryPointHistory(state, "p1").at(-1);
+  assert.equal(award.amount, 10);
+  assert.equal(award.scoringTiming, SCORING_TIMINGS.END_OF_BATTLE);
+  assert.match(award.opportunityKey, /end-of-battle$/);
+  assert.equal(getVictoryPointScore(state, "p1"), 20);
 });
