@@ -11,8 +11,9 @@ This document records the legacy V1 reference summaries for the 18 secondary car
    - [Official sample card image 1](https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg)
    - [Official sample card image 2](https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg)
 2. **Official general timing/cap rules:** [Warhammer Event Companion v1.0 (PDF)](https://assets.warhammer-community.com/eng_12-06_warhammer40000_event_companion-s3bfb5f9s1-ivswuij3fo.pdf). It documents the scoring checkpoints and caps, but does not reproduce the full text of the secondary cards.
-3. **Legacy cross-check only:** `Grumpa916/onoforge40k` `index.html`, commit `c5a9dc058615b16e8f5edde03313b1a7ac0ca825`. This repository is preserved and must not be modified as part of V2 work.
-4. **Unofficial community cross-check only:** [IRONBUILT dataset pinned to commit `6f61cb3796f79348b81389ec0eb32d461b675d02`](https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json). Do not use it alone to verify a card.
+3. **Independent text transcriptions for cross-checking, not official sources:** [Wahapedia's Chapter Approved secondary mission text](https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/) and [11th.help's secondary mission reference](https://www.11th.help/secondary_missions.html). These expose card wording and timing in searchable text and are useful for comparing transcriptions, but must not by themselves promote a V2 card to `rulesVerified: true`.
+4. **Legacy cross-check only:** `Grumpa916/onoforge40k` `index.html`, commit `c5a9dc058615b16e8f5edde03313b1a7ac0ca825`. This repository is preserved and must not be modified as part of V2 work.
+5. **Unofficial community cross-check only:** [IRONBUILT dataset pinned to commit `6f61cb3796f79348b81389ec0eb32d461b675d02`](https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json). Do not use it alone to verify a card.
 
 ## Legacy summary inventory
 
@@ -20,7 +21,7 @@ The following summaries are transcribed from the legacy V1 data and are **pendin
 
 | Card | Fixed/Tactical in legacy reference | Legacy scoring summary | Verification notes |
 |---|---|---|---|
-| A Grievous Blow | Fixed and Tactical | Fixed: 4 VP per enemy unit with Starting Strength 13+ destroyed this turn. Tactical: 5 VP (max 5) per such unit destroyed this turn. | **Known conflict:** pinned community dataset describes Tactical as 5 VP if one or more qualifying units were destroyed, not 5 VP per unit. Must inspect actual card. |
+| A Grievous Blow | Fixed and Tactical | Fixed: 4 VP per enemy unit with Starting Strength 13+ destroyed this turn. Tactical: 5 VP (max 5) per such unit destroyed this turn. | **Legacy discrepancy:** V1 says 5 VP per qualifying unit (max 5); both searchable card-text transcriptions and the pinned community dataset indicate Tactical is a flat 5 VP if one or more qualifying units were destroyed. Treat the V1 entry as suspect and verify against the physical/official card image before promotion. |
 | A Tempting Target | Tactical | 5 VP for controlling the opponent-selected tempting target objective. | Verify when control is checked and exact target restrictions. |
 | Assassination | Fixed and Tactical | Fixed: 3 VP per enemy CHARACTER model destroyed this turn, plus 1 VP for each of those models with 4+ Wounds (cumulative). Tactical: 5 VP if one or more enemy CHARACTER models were destroyed this turn, or all enemy CHARACTER models have been destroyed during the battle. | Scoring windows partially transcribed from official sample card; confirm complete card wording before treating any additional details as verified. |
 | Beacon | Tactical | 3 VP if, at end of opponent's turn or end of battle round five, the selected beacon unit is on the battlefield and outside your deployment zone; 5 VP if it is on the battlefield and outside your territory. | Verify whether the second tier shares the same timing and exact cumulative/alternative relationship. |
