@@ -37,9 +37,6 @@ export function discardTacticalSecondariesForCommandPoint(state, {
     const entry = active.find((item) =>
       item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
     if (!entry) throw new Error("Every selected card must be one of your active Tactical secondaries.");
-    if (entry.definition?.missionMode !== SECONDARY_MISSION_MODES.TACTICAL) {
-      throw new Error("Fixed secondary cards cannot be discarded for CP.");
-    }
   }
 
   let next = state;
