@@ -62,3 +62,22 @@ test("missing positions remain visibly unrecorded and objectives require explici
 test("unknown map mode is rejected", () => {
   assert.throws(() => renderBattlefieldMap({}, { mode: "terrain" }), /Unknown battlefield map mode/);
 });
+
+test("live map follows current model positions instead of stale deployment-level position", () => {
+  const html = renderBattlefieldMap({
+    units: [{
+      id: "u1",
+      ownerId: "p1",
+      name: "Moved Unit",
+      status: "deployed",
+      position: { x: 10, y: 10 },
+      models: [
+        { id: "m1", position: { x: 20, y: 10 } },
+        { id: "m2", position: { x: 40, y: 30 } }
+      ]
+    }]
+  }, { mode: "live", perspectivePlayerId: "p1" });
+
+  assert.match(html, /left:50%;top:54\.54545454545454%/);
+  assert.doesNotMatch(html, /left:16\.666666666666664%;top:77\.27272727272727%/);
+});
