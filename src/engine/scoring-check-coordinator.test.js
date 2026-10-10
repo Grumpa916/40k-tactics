@@ -257,3 +257,37 @@ test("every unverified secondary card stays manual-review-only at every declared
     }
   }
 });
+
+
+test("primary scoring windows expose matching card criteria for manual review without awarding VP", async () => {
+  const { PRIMARY_MISSION_CATALOG } = await import("../data/primary-mission-catalog.js");
+  const state = createGameState({
+    phase: "command",
+    turn: 3,
+    activePlayer: "p1",
+    battle: { round: 2, activePlayerId: "p1" },
+    players: [{ id: "p1" }, { id: "p2" }]
+  });
+  const mission = PRIMARY_MISSION_CATALOG.find((item) => item.id === "immovable-object");
+  const commandResult = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.COMMAND_PHASE,
+    scoringPlayerId: "p1",
+    activePlayerId: "p1",
+    primaryDefinitions: [mission]
+  });
+  assert.equal(commandResult.primary.length, 1);
+  assert.equal(commandResult.primary[0].result.manualReviewRequired, true);
+  assert.equal(commandResult.primary[0].result.scoringWindow.id, "objectives-rounds-two-to-four");
+  assert.equal(commandResult.primary[0].result.criteria[0].vp, 5);
+  assert.equal(commandResult.awardsVictoryPoints, false);
+  assert.equal(state.victoryPoints, undefined);
+
+  state.battle.round = 5;
+  const fifthRoundCommand = evaluateScoringCheckpoint(state, {
+    checkpoint: SCORING_CHECKPOINTS.COMMAND_PHASE,
+    scoringPlayerId: "p1",
+    activePlayerId: "p1",
+    primaryDefinitions: [mission]
+  });
+  assert.equal(fifthRoundCommand.primary.length, 0);
+});

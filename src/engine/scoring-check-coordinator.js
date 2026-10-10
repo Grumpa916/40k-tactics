@@ -85,14 +85,40 @@ export function evaluateScoringCheckpoint(state, {
     throw new TypeError("Primary mission definitions must be an array.");
   }
 
+  const currentRound = state?.battle?.round ?? state?.round ?? null;
   const primary = primaryDefinitions
-    .filter((definition) => definition && definition.category !== "secondary" && definition.timing === checkpoint)
-    .map((definition) => ({
-      category: "primary",
-      definitionId: definition.id,
-      definitionName: definition.name,
-      result: evaluateMissionDefinition(state, definition)
-    }));
+    .filter((definition) => definition && definition.category !== "secondary")
+    .flatMap((definition) => {
+      if (Array.isArray(definition.scoringWindows) && definition.scoringWindows.length > 0) {
+        const windows = definition.scoringWindows.filter((window) =>
+          window?.timing === checkpoint &&
+          (window.minRound == null || currentRound == null || currentRound >= window.minRound) &&
+          (window.maxRound == null || currentRound == null || currentRound <= window.maxRound));
+        return windows.map((scoringWindow) => ({
+          category: "primary",
+          definitionId: definition.id,
+          definitionName: definition.name,
+          result: {
+            definitionId: definition.id,
+            timing: scoringWindow.timing,
+            scoringWindow,
+            scoringWindows: [scoringWindow],
+            rulesVerified: definition.rulesVerified === true,
+            eligible: false,
+            manualReviewRequired: true,
+            criteria: Array.isArray(scoringWindow.tiers) ? scoringWindow.tiers : [],
+            conditions: []
+          }
+        }));
+      }
+      if (definition.timing !== checkpoint) return [];
+      return [{
+        category: "primary",
+        definitionId: definition.id,
+        definitionName: definition.name,
+        result: evaluateMissionDefinition(state, definition)
+      }];
+    });
 
   const history = getSecondaryMissionHistory(state, scoringPlayerId);
   const secondary = history
