@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createGameState } from "../state/game-state.js";
 import { drawSecondaryMission, getSecondaryMissionHistory, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
-import { getVictoryPointScore } from "./victory-points-ledger.js";
+import { getVictoryPointScore, recordVictoryPointsAward } from "./victory-points-ledger.js";
 
 function setup(mode = "tactical") {
   let state = createGameState({
@@ -69,9 +69,17 @@ test("scoring a Fixed secondary keeps it active and enforces its 20 VP card cap 
 test("failed secondary scoring does not change the card lifecycle", () => {
   let state = setup("tactical");
   const card = getSecondaryMissionHistory(state, "p1")[0];
-  state = { ...state, victoryPoints: { p1: 45 } };
+  for (const [index, turn] of [1, 2, 3].entries()) {
+    state = recordVictoryPointsAward(state, {
+      playerId: "p1", amount: 15, reason: "Earlier secondary " + index,
+      missionDefinitionId: "earlier-secondary-" + index,
+      category: "secondary", missionMode: "tactical",
+      opportunityKey: "earlier:" + index, round: 1, turn
+    });
+  }
+  state = { ...state, turn: 4 };
   assert.throws(() => recordSecondaryMissionScore(state, {
-    instanceId: card.instanceId, playerId: "p1", amount: 3, round: 1, turn: 1
+    instanceId: card.instanceId, playerId: "p1", amount: 3, round: 1, turn: 4
   }), /45 VP secondary game limit/);
   assert.equal(getSecondaryMissionHistory(state, "p1")[0].status, "active");
 });
