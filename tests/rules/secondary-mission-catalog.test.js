@@ -56,6 +56,8 @@ test("third-party cross-checking never promotes the full catalog to official ver
   const verified = SECONDARY_MISSION_CATALOG.filter((entry) => entry.rulesVerified);
   assert.deepEqual(verified.map((entry) => entry.name).sort(), ["Assassination", "Centre Ground"]);
   assert.ok(SECONDARY_MISSION_CATALOG.every((entry) =>
-    entry.rulesVerified === true || entry.name === "Assassination" || entry.name === "Centre Ground"
+    entry.name === "Assassination" || entry.name === "Centre Ground"
+      ? entry.rulesVerified === true
+      : entry.rulesVerified === false
   ));
 });
