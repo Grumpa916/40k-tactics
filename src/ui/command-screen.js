@@ -545,7 +545,8 @@ export function createCommandScreen(container, {
       : !players.length
         ? '<p>Add players before entering secondary missions.</p>'
         : '<form data-secondary-mission-form><div class="command-vp-form">' +
-          '<label>Battle-wide secondary mode<select data-secondary-mode ' + (secondaryHistory.length ? 'disabled' : '') + ' required>' +
+          '<label>Battle-wide secondary mode<select data-secondary-mode ' +
+          ((secondaryHistory.length || (state.battle && secondaryMissionMode)) ? 'disabled' : '') + ' required>' +
           '<option value="">Choose mode before entering cards...</option>' +
           '<option value="fixed"' + (secondaryMissionMode === "fixed" ? ' selected' : '') + '>Fixed</option>' +
           '<option value="tactical"' + (secondaryMissionMode === "tactical" ? ' selected' : '') + '>Tactical</option>' +
