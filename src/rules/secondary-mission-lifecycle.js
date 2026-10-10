@@ -128,6 +128,10 @@ export function drawSecondaryMission(state, {
       throw new Error("Each player can select only two Fixed secondary cards for the battle.");
     }
   }
+  if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL && existing.some((item) =>
+      item.playerId === playerId && item.definitionId === missionDefinition.id)) {
+    throw new Error("This Tactical card has already been drawn and cannot be drawn again.");
+  }
   if (existing.some((item) => item.playerId === playerId &&
       item.definitionId === missionDefinition.id && item.status === SECONDARY_MISSION_STATUS.ACTIVE)) {
     throw new Error("This secondary mission is already active for that player.");
