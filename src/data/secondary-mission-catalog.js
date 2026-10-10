@@ -15,10 +15,12 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   candidateDatasetVersion: "2026.10.02-triangulation-action",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
   crossCheckSources: Object.freeze([
-    "https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/",
-    "https://www.11th.help/secondary_missions.html"
+    "https://gdmissions.app/11th/secondary-missions",
+    "https://gdmissions.app/version-history",
+    "https://www.11th.help/secondary_missions.html",
+    "https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/"
   ]),
-  crossCheckStatus: "unofficial-transcription-pending-official-card-check",
+  crossCheckStatus: "unofficial-cross-check-review-logged-official-card-check-pending",
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
@@ -69,14 +71,14 @@ const draftRules = Object.freeze({
     rulesVerified: false,
     referenceNotes: [
       "When drawn in Tactical mode: if no enemy units with Starting Strength 13+ are on the battlefield, the card may be discarded and replaced.",
-      "The legacy V1 summary conflicts with both searchable transcriptions on Tactical scoring. Draft text uses 5 VP for one or more qualifying units destroyed, pending direct card verification."
+      "GDM's v3.5 changelog says Tactical scores a flat 5 VP when one or more qualifying units are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line; confirm from the official card before verification."
     ],
     scoringWindows: [
       ...eitherTurnWindows("fixed", ["fixed"], [
         { vp: 4, summary: "For each enemy unit with Starting Strength 13+ destroyed this turn." }
       ]),
       ...eitherTurnWindows("tactical", ["tactical"], [
-        { vp: 5, maxVP: 5, summary: "One or more enemy units with Starting Strength 13+ were destroyed this turn." }
+        { vp: 5, summary: "One or more enemy units with Starting Strength 13+ were destroyed this turn." }
       ])
     ]
   },
@@ -133,14 +135,14 @@ const draftRules = Object.freeze({
     rulesVerified: false,
     referenceNotes: [
       "When drawn in Tactical mode: if no enemy models with 10+ Wounds are on the battlefield, the card may be discarded and replaced.",
-      "Tactical scoring wording differs between older legacy/community summaries; direct card verification is required before treating the draft as authoritative."
+      "GDM's v3.5 changelog says Tactical scores a flat 5 VP when one or more qualifying models are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line; confirm from the official card before verification."
     ],
     scoringWindows: [
       ...eitherTurnWindows("fixed", ["fixed"], [
         { vp: 4, summary: "For each enemy model with 10+ Wounds destroyed this turn." }
       ]),
       ...eitherTurnWindows("tactical", ["tactical"], [
-        { vp: 5, maxVP: 5, summary: "One or more enemy models with 10+ Wounds were destroyed this turn." }
+        { vp: 5, summary: "One or more enemy models with 10+ Wounds were destroyed this turn." }
       ])
     ]
   },
@@ -163,7 +165,7 @@ const draftRules = Object.freeze({
     rulesVerified: false,
     referenceNotes: [
       "When drawn in Tactical mode: if Plunder is active, may draw a replacement and shuffle this card back into the deck.",
-      "Cleansing is an objective action started in your Shooting phase; it completes at end of your turn if the unit controls the objective."
+      "Cleanse action: starts in your Shooting phase; one friendly unit within range of one objective (excluding your home objective) starts each action, and each unit must start at a different objective. It completes at end of your turn if the unit is still controlling that objective."
     ],
     scoringWindows: [
       windowDefinition({
