@@ -83,8 +83,8 @@ const cardNames = [
       timingLabel: "End of your turn",
       modes: ["tactical"],
       tiers: [
-        { vp: 3, summary: "At least one eligible friendly unit within 3 inches of the battlefield centre, with no enemy units within 3 inches of centre." },
-        { vp: 5, summary: "At least one eligible friendly unit within 3 inches of the battlefield centre, with no enemy units within 6 inches of centre." }
+        { vp: 3, summary: "At least one friendly unit (excluding AIRCRAFT and Battle-shocked units) within 3 inches of the battlefield centre, with no enemy units within 3 inches of centre." },
+        { vp: 5, summary: "At least one friendly unit (excluding AIRCRAFT and Battle-shocked units) within 3 inches of the battlefield centre, with no enemy units within 6 inches of centre." }
       ],
       source: "official-gw-sample-card"
     }]
