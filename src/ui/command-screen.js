@@ -619,15 +619,23 @@ export function createCommandScreen(container, {
         (undoableVpAward.amount > 0 ? "+" : "−") + escapeHtml(Math.abs(undoableVpAward.amount)) +
         ' VP for ' + escapeHtml(playerName(state, undoableVpAward.playerId)) + ')</button>'
       : '<p>Undo is available immediately after a VP award, before another game action is recorded.</p>';
-    const vpHistory = getVictoryPointHistory(state).slice(-6).reverse();
-    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) => {
-      const capNotice = entry.requestedAmount > entry.amount
+    const vpHistory = (Array.isArray(state.history) ? state.history : [])
+      .filter((event) => ["victory_points.awarded", "victory_points.adjusted",
+        "victory_points.award_undone", "victory_points.adjustment_undone"].includes(event?.type))
+      .slice(-8).reverse();
+    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((event) => {
+      const entry = event.payload ?? {};
+      const isUndo = event.type === "victory_points.award_undone" ||
+        event.type === "victory_points.adjustment_undone";
+      const label = isUndo
+        ? "Undo (" + (entry.amount > 0 ? "+" : "−") + Math.abs(entry.amount) + " VP)"
+        : (entry.amount > 0 ? "+" : "−") + Math.abs(entry.amount) + " VP";
+      const capNotice = !isUndo && entry.requestedAmount > entry.amount
         ? '<small>Cap applied: requested ' + escapeHtml(entry.requestedAmount) + ' VP; awarded ' +
           escapeHtml(entry.amount) + ' VP (' + (entry.appliedCaps ?? []).map(vpCapDescription)
             .map(escapeHtml).join(", ") + ').</small>'
         : '';
-      return '<li><strong>' + (entry.amount > 0 ? "+" : "−") + escapeHtml(Math.abs(entry.amount)) +
-        ' VP</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
+      return '<li><strong>' + escapeHtml(label) + '</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
         ' — ' + escapeHtml(entry.reason) + ' <small>(Round ' + escapeHtml(entry.round) +
         ', turn ' + escapeHtml(entry.turn) + '; total ' + escapeHtml(entry.scoreAfter) + ')</small> ' +
         capNotice + '</li>';
