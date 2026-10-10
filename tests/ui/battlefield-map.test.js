@@ -75,9 +75,38 @@ test("live map follows current model positions instead of stale deployment-level
         { id: "m1", position: { x: 20, y: 10 } },
         { id: "m2", position: { x: 40, y: 30 } }
       ]
+    }],
+    history: [{
+      type: "unit.normal_move_resolved",
+      payload: { unitId: "u1", moves: [
+        { modelId: "m1", from: { x: 10, y: 10 }, to: { x: 20, y: 10 } },
+        { modelId: "m2", from: { x: 10, y: 10 }, to: { x: 40, y: 30 } }
+      ] }
     }]
   }, { mode: "live", perspectivePlayerId: "p1" });
 
   assert.match(html, /left:50%;top:54\.54545454545454%/);
   assert.doesNotMatch(html, /left:16\.666666666666664%;top:77\.27272727272727%/);
+});
+
+
+test("live map uses actual deployment anchor until movement records newer model coordinates", () => {
+  const html = renderBattlefieldMap({
+    units: [{
+      id: "u1",
+      ownerId: "p1",
+      name: "Deployed Unit",
+      status: "deployed",
+      position: { x: 10, y: 10 },
+      models: [
+        { id: "m1", position: { x: 20, y: 10 } },
+        { id: "m2", position: { x: 40, y: 30 } }
+      ]
+    }],
+    battlefieldMap: { actualDeployment: { u1: { x: 12, y: 14 } } },
+    history: []
+  }, { mode: "live", perspectivePlayerId: "p1" });
+
+  assert.match(html, /left:20%;top:68\.18181818181817%/);
+  assert.doesNotMatch(html, /left:50%;top:54\.54545454545454%/);
 });
