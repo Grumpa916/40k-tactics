@@ -1,7 +1,7 @@
 import { getScoringOpportunityAdvisories } from "../rules/tactical-scoring-opportunities.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { getCommandPointBalance, getCommandPointHistory } from "../engine/command-points-ledger.js";
-import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictoryPointScore } from "../engine/victory-points-ledger.js";
+import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictoryPointScore, hasEffectiveVictoryPointOpportunity } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
 import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
@@ -253,9 +253,7 @@ export function createCommandScreen(container, {
       const round = state.battle?.round ?? 0;
       const turn = state.turn ?? 0;
       const opportunityKey = [round, turn, scoringPlayerId].join(":");
-      const alreadyRecorded = getVictoryPointHistory(state, scoringPlayerId).some((entry) =>
-        entry.missionDefinitionId === definitionId && entry.opportunityKey === opportunityKey
-      );
+      const alreadyRecorded = hasEffectiveVictoryPointOpportunity(state, scoringPlayerId, definitionId, opportunityKey);
       if (!definition || !definition.victoryPoints || !scoringPlayerId || alreadyRecorded) return;
       session.dispatch({ type: COMMAND_TYPES.RECORD_VICTORY_POINTS, payload: {
         playerId: scoringPlayerId,
@@ -398,9 +396,7 @@ export function createCommandScreen(container, {
           const round = state.battle?.round ?? 0;
           const turn = state.turn ?? 0;
           const opportunityKey = [round, turn, playerId].join(":");
-          const alreadyRecorded = getVictoryPointHistory(state, playerId).some((entry) =>
-            entry.missionDefinitionId === item.definitionId && entry.opportunityKey === opportunityKey
-          );
+          const alreadyRecorded = hasEffectiveVictoryPointOpportunity(state, playerId, item.definitionId, opportunityKey);
           const confirmButton = item.opportunity?.eligible && definition?.victoryPoints && playerId
             ? (alreadyRecorded
               ? '<p><strong>Scoring recorded for this turn.</strong></p>'
