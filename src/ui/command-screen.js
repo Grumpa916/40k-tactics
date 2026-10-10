@@ -33,6 +33,16 @@ function commandPointsFor(state, playerId) {
   return "Not tracked";
 }
 
+function vpCapDescription(cap) {
+  return ({
+    "primary-turn": "15 VP primary turn cap",
+    "primary-game": "45 VP primary game cap",
+    "secondary-turn": "15 VP secondary turn cap",
+    "secondary-game": "45 VP secondary game cap",
+    "fixed-secondary-card": "20 VP Fixed Secondary card cap"
+  })[cap] ?? "mission scoring cap";
+}
+
 export function createCommandScreen(container, {
   session,
   perspectivePlayerId = null,
@@ -354,11 +364,17 @@ export function createCommandScreen(container, {
       '</span><strong>' + escapeHtml(getVictoryPointScore(state, player.id)) + ' VP</strong></article>'
     ).join("");
     const vpHistory = getVictoryPointHistory(state).slice(-6).reverse();
-    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) =>
-      '<li><strong>+' + escapeHtml(entry.amount) + ' VP</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
-      ' — ' + escapeHtml(entry.reason) + ' <small>(Round ' + escapeHtml(entry.round) +
-      ', turn ' + escapeHtml(entry.turn) + '; total ' + escapeHtml(entry.scoreAfter) + ')</small></li>'
-    ).join("") : '<li>No victory points recorded yet.</li>';
+    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) => {
+      const capNotice = entry.requestedAmount > entry.amount
+        ? '<small>Cap applied: requested ' + escapeHtml(entry.requestedAmount) + ' VP; awarded ' +
+          escapeHtml(entry.amount) + ' VP (' + (entry.appliedCaps ?? []).map(vpCapDescription)
+            .map(escapeHtml).join(", ") + ').</small>'
+        : '';
+      return '<li><strong>+' + escapeHtml(entry.amount) + ' VP</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
+        ' — ' + escapeHtml(entry.reason) + ' <small>(Round ' + escapeHtml(entry.round) +
+        ', turn ' + escapeHtml(entry.turn) + '; total ' + escapeHtml(entry.scoreAfter) + ')</small> ' +
+        capNotice + '</li>';
+    }).join("") : '<li>No victory points recorded yet.</li>';
 
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
