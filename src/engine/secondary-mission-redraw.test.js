@@ -49,6 +49,9 @@ test("New Orders spends 1 CP, discards one active card, and tracks a pending rep
   const activeBattle = { ...state, battle: { ...state.battle, status: BATTLE_STATUS.ACTIVE } };
   assert.throws(() => changePhase(activeBattle, { phase: "movement" }),
     /Record the New Orders replacement card before leaving the Command phase/);
+  assert.throws(() => drawSecondaryMission(state, {
+    playerId: "p1", round: 1, turn: 1, definition: first.definition
+  }), /already been drawn/);
 
   state = drawSecondaryMission(state, {
     playerId: "p1", round: 1, turn: 1,
