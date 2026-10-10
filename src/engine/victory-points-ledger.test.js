@@ -307,6 +307,45 @@ test("latest manual VP adjustment can be safely undone", () => {
 });
 
 
+
+test("undoing a Fixed Secondary award restores that card's cap and opportunity", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "First Fixed Secondary scoring",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-card-cap-undo",
+    opportunityKey: "fixed-card-cap-undo:round-1:turn-1",
+    turn: 1, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Mistaken second Fixed Secondary entry",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-card-cap-undo",
+    opportunityKey: "fixed-card-cap-undo:round-1:turn-2",
+    turn: 2, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 20);
+  assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, 5);
+
+  state = undoLatestVictoryPointsAward(state, {
+    playerId: "p1", reason: "Correct the mistaken Fixed Secondary entry", turn: 2, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 15);
+  assert.equal(hasEffectiveVictoryPointOpportunity(
+    state, "p1", "fixed-card-cap-undo", "fixed-card-cap-undo:round-1:turn-2"
+  ), false);
+
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 3, reason: "Corrected Fixed Secondary entry",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-card-cap-undo",
+    opportunityKey: "fixed-card-cap-undo:round-1:turn-2",
+    turn: 2, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 18);
+  assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, 3);
+  assert.equal(state.history.at(-1).type, "victory_points.awarded");
+});
 test("safe undo allows the same mission scoring opportunity to be re-entered correctly", () => {
   let state = createGameState({ battle: { round: 1 }, turn: 1 });
   const opportunity = {
