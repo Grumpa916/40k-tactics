@@ -102,8 +102,30 @@ export function drawSecondaryMission(state, {
     ? Object.freeze({ ...normalized, missionMode: selectedMode })
     : normalized;
   const existing = missionList(state);
-  if (existing.some((entry) => entry.playerId === playerId &&
-      entry.definitionId === missionDefinition.id && entry.status === SECONDARY_MISSION_STATUS.ACTIVE)) {
+  if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL) {
+    if (state.phase !== "command") {
+      throw new Error("Tactical secondary cards can only be drawn during the Command phase.");
+    }
+    if (state.activePlayer && state.activePlayer !== playerId) {
+      throw new Error("Only the active player can draw Tactical secondary cards during their Command phase.");
+    }
+    const drawnThisCommandPhase = existing.filter((item) =>
+      item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn
+    ).length;
+    if (drawnThisCommandPhase >= 2) {
+      throw new Error("Two Tactical secondary cards have already been recorded for this Command phase.");
+    }
+  }
+  if (selectedMode === SECONDARY_MISSION_MODES.FIXED) {
+    const fixedCardCount = existing.filter((item) =>
+      item.playerId === playerId && item.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED
+    ).length;
+    if (fixedCardCount >= 2) {
+      throw new Error("Each player can select only two Fixed secondary cards for the battle.");
+    }
+  }
+  if (existing.some((item) => item.playerId === playerId &&
+      item.definitionId === missionDefinition.id && item.status === SECONDARY_MISSION_STATUS.ACTIVE)) {
     throw new Error("This secondary mission is already active for that player.");
   }
   const entry = Object.freeze({
@@ -139,9 +161,10 @@ export function recordSecondaryMissionScored(state, {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "score");
   const scoringEvent = Object.freeze({ round, turn, notes });
+  const isFixed = entry.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED;
   const updated = Object.freeze({
     ...entry,
-    status: SECONDARY_MISSION_STATUS.SCORED,
+    status: isFixed ? SECONDARY_MISSION_STATUS.ACTIVE : SECONDARY_MISSION_STATUS.SCORED,
     scoredRound: round,
     scoredTurn: turn,
     scoringHistory: [...(entry.scoringHistory ?? []), scoringEvent]
@@ -158,6 +181,9 @@ export function discardSecondaryMission(state, {
 } = {}) {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "discard");
+  if (entry.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED) {
+    throw new Error("Fixed secondary cards cannot be discarded.");
+  }
   const updated = Object.freeze({
     ...entry,
     status: SECONDARY_MISSION_STATUS.DISCARDED,
@@ -180,6 +206,9 @@ export function returnSecondaryMissionToDeck(state, {
 } = {}) {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "return");
+  if (entry.definition?.missionMode === SECONDARY_MISSION_MODES.FIXED) {
+    throw new Error("Fixed secondary cards cannot be returned to the deck.");
+  }
   const updated = Object.freeze({
     ...entry,
     status: SECONDARY_MISSION_STATUS.RETURNED_TO_DECK,
