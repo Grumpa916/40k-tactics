@@ -330,7 +330,7 @@ export function createCommandScreen(container, {
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
-          '<p>The catalog supplies card names and Fixed/Tactical availability only. Choose the checkpoint from your physical card. Scoring conditions, role-specific card text and VP tiers are not configured yet; every catalog entry remains manual-review-only and no VP is inferred.</p>';
+          '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
       '<p>Enter missions manually during the Command phase. No automatic draw or selection occurs.</p>' +
       secondaryEntryMarkup +
