@@ -217,13 +217,12 @@ test("every unverified secondary card stays manual-review-only at every declared
       for (const mode of modes) {
         const round = Math.max(1, window.minRound ?? 1);
         const checkpoint = window.timing;
-        const activePlayerId = checkpoint === SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN ? "p2" : "p1";
         let state = createGameState({
           phase: "command",
           turn: 1,
-          activePlayer: activePlayerId,
+          activePlayer: "p1",
           players: [{ id: "p1" }, { id: "p2" }],
-          battle: { round, activePlayerId }
+          battle: { round, activePlayerId: "p1" }
         });
         state = setSecondaryMissionMode(state, { mode });
         state = drawSecondaryMission(state, {
@@ -232,6 +231,14 @@ test("every unverified secondary card stays manual-review-only at every declared
           round,
           turn: 1
         });
+        const activePlayerId = checkpoint === SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN ? "p2" : "p1";
+        if (activePlayerId !== state.activePlayer) {
+          state = {
+            ...state,
+            activePlayer: activePlayerId,
+            battle: { ...state.battle, activePlayerId }
+          };
+        }
 
         const review = evaluateScoringCheckpoint(state, {
           checkpoint,
