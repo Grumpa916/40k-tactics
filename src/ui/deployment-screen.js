@@ -20,6 +20,7 @@ export function createDeploymentScreen(container, {
 
   let selectedPlayerId = null;
   let selectedUnitId = null;
+  let firstPlayerId = null;
   let message = "";
 
   function playerFor(state) {
@@ -30,6 +31,9 @@ export function createDeploymentScreen(container, {
     const state = session.getState();
     const players = Array.isArray(state.players) ? state.players : [];
     const playerId = playerFor(state);
+    if (!firstPlayerId || !players.some((player) => player.id === firstPlayerId)) {
+      firstPlayerId = state.battle?.firstPlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
+    }
     const eligible = (state.units ?? []).filter((unit) =>
       unit?.ownerId === playerId && unit.status !== "destroyed");
     if (!eligible.some((unit) => unit.id === selectedUnitId)) {
@@ -42,6 +46,13 @@ export function createDeploymentScreen(container, {
     const deployedCount = eligible.filter((unit) => unit.status === "deployed" && actual[unit.id]).length;
     const reserveCount = eligible.filter((unit) => reserves[unit.id]).length;
     const unaccounted = eligible.length - deployedCount - reserveCount;
+    const accountingByPlayer = players.map((player) => {
+      const units = (state.units ?? []).filter((unit) => unit?.ownerId === player.id && unit.status !== "destroyed");
+      const deployed = units.filter((unit) => unit.status === "deployed" && actual[unit.id]).length;
+      const inReserves = units.filter((unit) => reserves[unit.id]).length;
+      return { player, deployed, inReserves, unaccounted: units.length - deployed - inReserves };
+    });
+    const totalUnaccounted = accountingByPlayer.reduce((sum, item) => sum + item.unaccounted, 0);
     const playerOptions = players.map((player) => '<option value="' + escapeHtml(player.id) + '"' +
       (player.id === playerId ? " selected" : "") + ">" + escapeHtml(player.name ?? player.id) + "</option>").join("");
     const unitOptions = eligible.map((unit) => {
@@ -53,6 +64,13 @@ export function createDeploymentScreen(container, {
     const selected = eligible.find((unit) => unit.id === selectedUnitId);
     const selectedStatus = selected ? actual[selected.id] ? "Currently deployed" :
       reserves[selected.id] ? "Declared in reserves" : "Not yet accounted for" : "No unit selected";
+    const firstPlayerOptions = players.map((player) => '<option value="' + escapeHtml(player.id) + '"' +
+      (player.id === firstPlayerId ? " selected" : "") + ">" + escapeHtml(player.name ?? player.id) + "</option>").join("");
+    const accountingMarkup = accountingByPlayer.map((item) =>
+      '<li><strong>' + escapeHtml(item.player.name ?? item.player.id) + ':</strong> ' +
+      item.deployed + ' deployed · ' + item.inReserves + ' in reserves · ' +
+      item.unaccounted + ' unaccounted</li>'
+    ).join("");
 
     container.innerHTML = '<main class="deployment-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Actual Deployment</h1><p>Record where both armies actually deploy. Planned positions are a guide only and are not copied automatically.</p></header>' +
@@ -66,8 +84,14 @@ export function createDeploymentScreen(container, {
       '<div class="deployment-actions"><button type="button" data-declare-reserve ' + (!selected ? "disabled" : "") + '>Declare selected unit in reserves</button></div></section>' +
       '<section class="deployment-completion"><h2>Deployment checklist</h2><p>' + deployedCount + ' deployed · ' + reserveCount +
       ' declared in reserves · ' + unaccounted + ' not yet accounted for</p>' +
-      (unaccounted ? '<p role="status">Before starting the first turn, account for each non-destroyed unit by recording its actual position or explicitly declaring it in reserves.</p>' :
+      (unaccounted ? '<p role="status">Account for each non-destroyed unit by recording its actual position or explicitly declaring it in reserves.</p>' :
         '<p role="status">All non-destroyed units for this player are accounted for.</p>') +
+      '<h3>Both armies</h3><ul>' + accountingMarkup + '</ul>' +
+      '<label>First player<select data-first-player>' + firstPlayerOptions + '</select></label>' +
+      '<button type="button" data-start-first-turn ' + (totalUnaccounted ? "disabled" : "") +
+      '>Finish deployment and start first turn</button>' +
+      (totalUnaccounted ? '<p>Both armies must account for every non-destroyed unit before the first turn can start.</p>' :
+        '<p>All units are accounted for. Confirm the first player to begin the battle.</p>') +
       '</section>' + (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</main>';
   }
 
@@ -81,6 +105,10 @@ export function createDeploymentScreen(container, {
     } else if (target?.matches?.("[data-deployment-unit]")) {
       selectedUnitId = target.value || null;
       message = selectedUnitId ? "Unit selected. Tap the map to record its actual position." : "";
+      render();
+    } else if (target?.matches?.("[data-first-player]")) {
+      firstPlayerId = target.value || null;
+      message = "";
       render();
     }
   }
@@ -134,6 +162,35 @@ export function createDeploymentScreen(container, {
           unitId: selectedUnitId, playerId: playerFor(state)
         }});
         message = "Unit explicitly declared in reserves.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
+
+    const startButton = event.target?.closest?.("[data-start-first-turn]");
+    if (startButton) {
+      const state = session.getState();
+      const unaccountedUnits = (state.units ?? []).filter((unit) =>
+        unit.status !== "destroyed" &&
+        !state.battlefieldMap?.actualDeployment?.[unit.id] &&
+        !state.battlefieldMap?.declaredReserves?.[unit.id]
+      );
+      if (unaccountedUnits.length) {
+        message = "Deployment incomplete. Record positions or explicitly declare reserves for all non-destroyed units.";
+        render();
+        return;
+      }
+      if (!firstPlayerId) {
+        message = "Select the first player before starting the turn.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.START_FIRST_TURN, payload: { activePlayerId: firstPlayerId } });
+        session.dispatch({ type: COMMAND_TYPES.CHANGE_PHASE, payload: { phase: "command" } });
+        message = "Deployment complete. Round 1, Command phase started.";
       } catch (error) {
         message = error?.message ?? String(error);
       }
