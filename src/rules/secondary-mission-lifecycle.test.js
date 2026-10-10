@@ -8,6 +8,8 @@ import {
   returnSecondaryMissionToDeck,
   getActiveSecondaryMissionDefinitions,
   getSecondaryMissionHistory,
+  setSecondaryMissionMode,
+  SECONDARY_MISSION_MODES,
   SECONDARY_MISSION_STATUS
 } from "./secondary-mission-lifecycle.js";
 
@@ -145,4 +147,43 @@ test("only the owning player may score, discard, or return an active secondary",
   assert.throws(() => returnSecondaryMissionToDeck(state, {
     instanceId: entry.instanceId, playerId: "p2"
   }), /owning player/);
+});
+
+
+test("stores one battle-wide secondary mode and attaches it to drawn cards", () => {
+  const fixedDefinition = {
+    ...definition,
+    id: "fixed-card",
+    availableModes: ["fixed", "tactical"],
+    fixedAvailable: true
+  };
+  let state = setSecondaryMissionMode(createGameState(), { mode: SECONDARY_MISSION_MODES.FIXED });
+  assert.equal(state.scoring.secondaryMissionMode, "fixed");
+  state = drawSecondaryMission(state, { definition: fixedDefinition, playerId: "p1", round: 1, turn: 1 });
+  assert.equal(onlyEntry(state).definition.missionMode, "fixed");
+  assert.throws(() => setSecondaryMissionMode(state, { mode: "tactical" }), /cannot change after a card has been entered/);
+});
+
+test("rejects a Fixed-unavailable card when Fixed mode is selected", () => {
+  const definitionNotFixed = {
+    ...definition,
+    id: "tactical-only",
+    availableModes: ["tactical"],
+    fixedAvailable: false
+  };
+  const state = setSecondaryMissionMode(createGameState(), { mode: "fixed" });
+  assert.throws(() => drawSecondaryMission(state, {
+    definition: definitionNotFixed,
+    playerId: "p1",
+    round: 1,
+    turn: 1
+  }), /not available in the selected fixed mode/);
+});
+
+test("validates mode values and records a mode selection in history", () => {
+  const initial = createGameState();
+  assert.throws(() => setSecondaryMissionMode(initial, { mode: "random" }), /must be Fixed or Tactical/);
+  const state = setSecondaryMissionMode(initial, { mode: "tactical" });
+  assert.equal(state.history.at(-1).type, "secondary_mission.mode_set");
+  assert.deepEqual(state.history.at(-1).payload, { mode: "tactical" });
 });
