@@ -17,7 +17,7 @@ function validateCheckpoint(checkpoint) {
 function scoringWindowsForInstance(state, instance, checkpoint = null) {
   const definition = instance.definition;
   if (!Array.isArray(definition?.scoringWindows)) return [];
-  const missionMode = definition.missionMode ?? state?.scoring?.secondaryMissionMode ?? null;
+  const missionMode = state?.scoring?.secondaryMissionMode ?? definition.missionMode ?? null;
   return definition.scoringWindows.filter((window) =>
     (checkpoint == null || window?.timing === checkpoint) &&
     (!missionMode || !Array.isArray(window?.modes) || window.modes.length === 0 ||
