@@ -126,3 +126,28 @@ test("rejects unsupported evidence and timing", () => {
     conditions: [{ evidence: SCORING_EVIDENCE.TURN_SNAPSHOT, args: { turn: 1 } }]
   }));
 });
+
+
+test("carries Fixed or Tactical mode metadata for secondary mission caps", () => {
+  const definition = createMissionDefinition({
+    id: "fixed-assassination",
+    name: "Assassination",
+    category: "secondary",
+    missionMode: "fixed",
+    conditions: [{
+      evidence: SCORING_EVIDENCE.TURN_SNAPSHOT,
+      args: { turn: 1 }
+    }]
+  });
+  assert.equal(definition.missionMode, "fixed");
+  assert.throws(() => createMissionDefinition({
+    id: "invalid-primary-mode",
+    name: "Invalid",
+    category: "primary",
+    missionMode: "fixed",
+    conditions: [{
+      evidence: SCORING_EVIDENCE.TURN_SNAPSHOT,
+      args: { turn: 1 }
+    }]
+  }), /only be supplied for secondary missions/);
+});
