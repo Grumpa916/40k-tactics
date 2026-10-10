@@ -15,6 +15,7 @@ export function recordSecondaryMissionScore(state, {
   instanceId,
   playerId,
   amount,
+  scoringTiming = null,
   round = state?.battle?.round ?? 0,
   turn = state?.turn ?? 0
 } = {}) {
@@ -39,6 +40,7 @@ export function recordSecondaryMissionScore(state, {
     category: "secondary",
     missionMode,
     opportunityKey,
+    scoringTiming,
     round,
     turn
   });
