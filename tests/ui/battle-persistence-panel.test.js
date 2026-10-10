@@ -75,6 +75,7 @@ test("saving uses the selected record id to update and refreshes the list", asyn
   };
   const panel = createBattlePersistencePanel(container, { session, store });
   await settle();
+  container.emit("change", { target: targetFor("[data-battle-saved-select]", { value: "existing" }) });
 
   container.emit("submit", {
     target: {
