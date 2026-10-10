@@ -110,8 +110,14 @@ export function createBattleShell(container, {
           definition.timing === timing && definition.category !== "secondary");
         const activeSecondaryDue = scoringPlayerId
           ? getSecondaryMissionHistory(state, scoringPlayerId)
-            .filter((instance) => instance.status === SECONDARY_MISSION_STATUS.ACTIVE &&
-              instance.definition?.timing === timing)
+            .filter((instance) => {
+              if (instance.status !== SECONDARY_MISSION_STATUS.ACTIVE) return false;
+              const definition = instance.definition;
+              if (Array.isArray(definition?.scoringWindows) && definition.scoringWindows.length) {
+                return definition.scoringWindows.some((window) => window?.timing === timing);
+              }
+              return definition?.timing === timing;
+            })
             .map((instance) => instance.definition?.name ?? instance.definitionId)
           : [];
         const missionNames = [...definitionsDue.map((definition) => definition.name), ...activeSecondaryDue];

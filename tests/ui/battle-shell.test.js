@@ -632,3 +632,40 @@ test("manual card-name entry records the chosen checkpoint and requires manual s
   assert.equal(state.victoryPoints, undefined);
   screen.destroy();
 });
+
+
+test("opponent-turn reminder recognizes a secondary card with multiple scoring windows", () => {
+  let initialState = {
+    phase: "end_turn", turn: 2, activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [], objectives: [], history: [], scoring: { turnSnapshots: [] }
+  };
+  initialState = drawSecondaryMission(initialState, {
+    playerId: "p1",
+    definition: {
+      id: "multi-window-card",
+      name: "Multi-window sample card",
+      category: "secondary",
+      timing: SCORING_TIMINGS.END_OF_TURN,
+      conditions: [],
+      rulesVerified: true,
+      scoringWindows: [
+        { id: "own-turn", timing: SCORING_TIMINGS.END_OF_TURN },
+        { id: "opponent-turn", timing: SCORING_TIMINGS.END_OF_OPPONENT_TURN }
+      ]
+    }
+  });
+  const session = sessionFor(initialState);
+  const root = container();
+  const shell = createBattleShell(root, {
+    session, perspectivePlayerId: "p1", screenFactories: {}
+  });
+  session.setState({
+    ...initialState,
+    phase: "start_turn", turn: 3, activePlayer: "p1",
+    battle: { round: 1, activePlayerId: "p1" }
+  });
+  assert.match(root.html, /Multi-window sample card/);
+  shell.destroy();
+});

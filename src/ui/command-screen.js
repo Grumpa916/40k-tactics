@@ -91,14 +91,16 @@ export function createCommandScreen(container, {
       if (configuredDefinition) {
         definition = configuredDefinition;
       } else if (selectedCatalogDefinition) {
-        if (!allowedTimings.includes(manualTiming)) {
-          secondaryMissionMessage = "Choose the checkpoint printed on the physical card. Catalog scoring rules are not configured yet.";
+        if ((!Array.isArray(selectedCatalogDefinition.scoringWindows) ||
+             selectedCatalogDefinition.scoringWindows.length === 0) &&
+            !allowedTimings.includes(manualTiming)) {
+          secondaryMissionMessage = "This card has no verified scoring-window data yet. Choose its checkpoint from the physical card.";
           render();
           return;
         }
         definition = {
           ...selectedCatalogDefinition,
-          timing: manualTiming,
+          timing: selectedCatalogDefinition.scoringWindows?.[0]?.timing ?? manualTiming,
           conditions: [],
           manualEntry: true
         };
@@ -263,7 +265,15 @@ export function createCommandScreen(container, {
           (item.result.manualReviewRequired ? 'Manual review required' :
             item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span>' +
           (item.result.manualReviewRequired
-            ? '<p>Card scoring conditions are not configured. Check the printed mission rules; no eligibility is inferred.</p>'
+            ? '<p>' + (item.result.rulesVerified
+              ? 'Scoring window reference was transcribed from an official sample card. Check the physical card and battlefield state; the app does not infer eligibility.'
+              : 'Card scoring conditions are not configured from a verified rules source. Check the printed mission rules; no eligibility is inferred.') + '</p>' +
+              ((item.result.scoringWindows ?? []).length
+                ? '<ul class="command-scoring__tiers">' + item.result.scoringWindows.flatMap((window) =>
+                    (window.tiers ?? []).map((tier) => '<li><strong>' + escapeHtml(tier.vp) + ' VP (' +
+                      escapeHtml(window.modes?.join("/") ?? "mode") + '):</strong> ' + escapeHtml(tier.summary) +
+                      '</li>')).join("") + '</ul>'
+                : '')
             : '<ul>' + (item.result.conditions ?? []).map((condition) => '<li>' + escapeHtml(condition.evidence) + ': ' +
               (condition.eligible ? 'satisfied' : 'not satisfied') + '</li>').join("") + '</ul>') +
           '</article>').join("")
@@ -320,7 +330,7 @@ export function createCommandScreen(container, {
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
-          '<p>The catalog supplies card names and Fixed/Tactical availability only. Choose the checkpoint from your physical card. Scoring conditions, role-specific card text and VP tiers are not configured yet; every catalog entry remains manual-review-only and no VP is inferred.</p>';
+          '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
       '<p>Enter missions manually during the Command phase. No automatic draw or selection occurs.</p>' +
       secondaryEntryMarkup +
