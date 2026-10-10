@@ -64,3 +64,18 @@ test("selecting a unit and tapping the planning map records a bounded coordinate
   }]);
   screen.destroy();
 });
+
+test("setup screen displays fixed ruleset checklist, readiness, and conditional ability prompts", () => {
+  const { root, session } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  assert.match(root.innerHTML, /Pre-game checklist/);
+  assert.match(root.innerHTML, /fixed by the ruleset/);
+  assert.match(root.innerHTML, /Confirm the mission/);
+  assert.match(root.innerHTML, /Confirm both armies/);
+  assert.match(root.innerHTML, /Record actual deployment/);
+  assert.match(root.innerHTML, /Infiltrators/);
+  assert.match(root.innerHTML, /Scouts/);
+  assert.match(root.innerHTML, /Mission selected/);
+  assert.match(root.innerHTML, /the map does not validate legality/);
+  screen.destroy();
+});
