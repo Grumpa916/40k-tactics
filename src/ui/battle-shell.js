@@ -6,6 +6,7 @@ import { createBattleSetupScreen } from "./battle-setup-screen.js";
 import { createDeploymentScreen } from "./deployment-screen.js";
 import { createFightScreen } from "./fight-screen.js";
 import { createMovementScreen } from "./movement-screen.js";
+import { createBattlePersistencePanel } from "./battle-persistence-panel.js";
 import { createShootingScreen } from "./shooting-screen.js";
 
 const PHASES = Object.freeze([
@@ -36,7 +37,7 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-function renderShell(container, state, viewedPhase, scoringReminder = null) {
+function renderShell(container, state, viewedPhase, scoringReminder = null, showPersistence = false) {
   const visiblePhases = state.battle?.status === "deployment"
     ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
     : PHASES;
@@ -82,6 +83,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null) {
   container.innerHTML = `<main class="battle-shell">
     ${reminderMarkup}
     <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
+    ${showPersistence ? '<div data-battle-persistence-panel></div>' : ""}
     <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
@@ -94,7 +96,8 @@ export function createBattleShell(container, {
   missionActions = [],
   missionDefinitions = [],
   secondaryMissionCatalog = [],
-  screenFactories = SCREEN_FACTORIES
+  screenFactories = SCREEN_FACTORIES,
+  battleStore = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -105,6 +108,7 @@ export function createBattleShell(container, {
 
   let mountedPhase = null;
   let mountedScreen = null;
+  let mountedPersistencePanel = null;
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
   let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
@@ -181,7 +185,14 @@ export function createBattleShell(container, {
 
     if (viewedPhase !== mountedPhase) {
       destroyMountedScreen();
-      renderShell(container, state, viewedPhase, scoringReminder);
+      mountedPersistencePanel?.destroy();
+      mountedPersistencePanel = null;
+      renderShell(container, state, viewedPhase, scoringReminder, Boolean(battleStore));
+
+      const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
+      if (battleStore && persistenceContainer) {
+        mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: battleStore });
+      }
 
       const screenContainer = container.querySelector("[data-battle-screen]");
       const factory = screenFactories[viewedPhase];
@@ -279,6 +290,8 @@ export function createBattleShell(container, {
       container.removeEventListener?.("click", handleReviewScoring);
       container.removeEventListener?.("submit", handleSubmit);
       destroyMountedScreen();
+      mountedPersistencePanel?.destroy();
+      mountedPersistencePanel = null;
       container.replaceChildren();
     }
   };
