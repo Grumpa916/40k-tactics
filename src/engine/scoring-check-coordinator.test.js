@@ -169,6 +169,8 @@ test("draft secondary windows are shown for manual review and never marked verif
   assert.equal(result.secondary[0].result.rulesVerified, false);
   assert.equal(result.secondary[0].result.scoringWindow.source,
     "community-transcription-pending-official-card-check");
+  assert.ok(result.secondary[0].result.referenceNotes.length > 0);
+  assert.match(result.secondary[0].result.referenceNotes[0], /When drawn/);
   assert.equal(result.awardsVictoryPoints, false);
 });
 
