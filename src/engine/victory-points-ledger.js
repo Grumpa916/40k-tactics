@@ -15,11 +15,16 @@ function getEffectiveAwardEvents(state, playerId = null) {
     .filter((event) => event?.type === "victory_points.award_undone")
     .map((event) => event.payload?.originalAwardEventId)
     .filter((id) => id != null));
+  const reversedIndices = new Set(history
+    .filter((event) => event?.type === "victory_points.award_undone")
+    .map((event) => event.payload?.originalAwardEventIndex)
+    .filter((index) => Number.isInteger(index)));
   return history
-    .filter((event) => event?.type === "victory_points.awarded")
-    .filter((event) => !event.id || !reversedIds.has(event.id))
-    .filter((event) => playerId == null || event.payload?.playerId === playerId)
-    .map((event) => ({ eventId: event.id ?? null, ...event.payload }));
+    .map((event, index) => ({ event, index }))
+    .filter(({ event, index }) => event?.type === "victory_points.awarded" &&
+      !reversedIndices.has(index) && (!event.id || !reversedIds.has(event.id)))
+    .filter(({ event }) => playerId == null || event.payload?.playerId === playerId)
+    .map(({ event }) => ({ eventId: event.id ?? null, ...event.payload }));
 }
 
 function calculateCappedAward(state, {
@@ -177,6 +182,7 @@ export function undoLatestVictoryPointsAward(state, {
     reason: reason.trim(),
     originalReason: award.reason,
     originalAwardEventId: latest.id ?? null,
+    originalAwardEventIndex: history.length - 1,
     missionDefinitionId: award.missionDefinitionId ?? null,
     category: award.category ?? null,
     opportunityKey: award.opportunityKey ?? null,
