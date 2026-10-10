@@ -7,6 +7,8 @@ const recoveryError = params.get("error_description") || params.get("error");
 let client;
 let recoveryMode = false;
 let busy = false;
+let currentMessage = "";
+let currentSuccess = false;
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -14,6 +16,8 @@ function escapeHtml(value) {
 }
 
 function render({ message = "", success = false } = {}) {
+  currentMessage = message;
+  currentSuccess = success;
   if (!root) return;
   root.innerHTML = recoveryMode
     ? `<h1>Set a new password</h1>
@@ -60,6 +64,7 @@ root?.addEventListener("submit", async (event) => {
       render({ message: error?.message || "Could not send the reset email. Check the configuration and try again." });
     } finally {
       busy = false;
+      render({ message: currentMessage, success: currentSuccess });
     }
     return;
   }
@@ -87,6 +92,7 @@ root?.addEventListener("submit", async (event) => {
       render({ message: error?.message || "Could not update the password. The recovery link may have expired; request a new one." });
     } finally {
       busy = false;
+      render({ message: currentMessage, success: currentSuccess });
     }
   }
 });
