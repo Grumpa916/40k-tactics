@@ -18,6 +18,7 @@ import { recordFightActivation, completeFightPhase } from "./fight-transitions.j
 import { recordCommandPointChange } from "./command-points-ledger.js";
 import { recordVictoryPointsAward } from "./victory-points-ledger.js";
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
+import { useSecondaryMissionRedraw } from "./secondary-mission-redraw.js";
 import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 
 export function registerCoreCommandHandlers() {
@@ -56,7 +57,9 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, (state, command) =>
       setSecondaryMissionMode(state, command.payload)],
     [COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, (state, command) =>
-      recordSecondaryMissionScore(state, command.payload)]
+      recordSecondaryMissionScore(state, command.payload)],
+    [COMMAND_TYPES.USE_SECONDARY_MISSION_REDRAW, (state, command) =>
+      useSecondaryMissionRedraw(state, command.payload)]
   ];
 
   for (const [type, handler] of handlers) {

@@ -1,6 +1,6 @@
 import { getScoringOpportunityAdvisories } from "../rules/tactical-scoring-opportunities.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
-import { getCommandPointHistory } from "../engine/command-points-ledger.js";
+import { getCommandPointBalance, getCommandPointHistory } from "../engine/command-points-ledger.js";
 import { getVictoryPointHistory, getVictoryPointScore } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
@@ -101,10 +101,14 @@ export function createCommandScreen(container, {
           return;
         }
         const drawnThisCommandPhase = priorSecondaryHistory.filter((item) =>
-          item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn
+          item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn &&
+          item.isRedrawReplacement !== true
         ).length;
-        if (drawnThisCommandPhase >= 2) {
-          secondaryMissionMessage = "Two Tactical cards have already been recorded for this Command phase.";
+        const pendingRedraw = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId];
+        const replacementPending = Boolean(pendingRedraw &&
+          pendingRedraw.round === round && pendingRedraw.turn === turn);
+        if (drawnThisCommandPhase >= 2 && !replacementPending) {
+          secondaryMissionMessage = "Two Tactical cards have already been recorded for this Command phase. Use New Orders for the one-time replacement draw.";
           render();
           return;
         }
@@ -264,6 +268,29 @@ export function createCommandScreen(container, {
   }
 
   function handleSubmit(event) {
+    const redrawForm = event.target?.closest?.("[data-secondary-redraw-form]");
+    if (redrawForm && container.contains(redrawForm)) {
+      event.preventDefault();
+      const state = session.getState();
+      const playerId = state.activePlayer ?? state.battle?.activePlayerId;
+      const formData = new FormData(redrawForm);
+      const instanceId = String(formData.get("secondary-redraw-card") ?? "");
+      if (!playerId || !instanceId) {
+        secondaryMissionMessage = "Select one of your active Tactical cards for New Orders.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.USE_SECONDARY_MISSION_REDRAW, payload: {
+          playerId, instanceId, round: state.battle?.round ?? 0, turn: state.turn ?? 0
+        }});
+        secondaryMissionMessage = "New Orders used: 1 CP spent and the selected card discarded. Record the replacement card below.";
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     const secondaryForm = event.target?.closest?.("[data-secondary-vp-form]");
     if (secondaryForm && container.contains(secondaryForm)) {
       event.preventDefault();
@@ -420,9 +447,32 @@ export function createCommandScreen(container, {
     const secondaryMissionMode = state.scoring?.secondaryMissionMode ?? "";
     const activeSecondaryForSelectedPlayer = secondaryHistory.filter((item) =>
       item.playerId === selectedSecondaryPlayerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+    const currentActivePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+    const currentRound = state.battle?.round ?? 0;
+    const currentTurn = state.turn ?? 0;
+    const tacticalDrawCount = secondaryHistory.filter((item) =>
+      item.playerId === currentActivePlayerId && item.drawnRound === currentRound &&
+      item.drawnTurn === currentTurn && item.isRedrawReplacement !== true).length;
+    const tacticalRedrawPending = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[currentActivePlayerId];
+    const fixedCardsSelected = secondaryHistory.filter((item) =>
+      item.playerId === selectedSecondaryPlayerId && item.definition?.missionMode === "fixed").length;
+    const secondaryModeStatusMarkup = secondaryMissionMode === "tactical" && state.phase === "command"
+      ? '<p class="command-secondary-mode-status">' +
+        (tacticalRedrawPending && tacticalRedrawPending.round === currentRound && tacticalRedrawPending.turn === currentTurn
+          ? 'Two normal Tactical draws may be recorded independently; the New Orders replacement is still pending.'
+          : 'Tactical cards recorded for this Command phase: ' + Math.min(tacticalDrawCount, 2) + ' of 2.') +
+        '</p>'
+      : secondaryMissionMode === "fixed"
+        ? '<p class="command-secondary-mode-status">Fixed cards selected for ' +
+          escapeHtml(playerName(state, selectedSecondaryPlayerId)) + ': ' + Math.min(fixedCardsSelected, 2) + ' of 2.</p>'
+        : "";
     const activeSecondaryIds = new Set(activeSecondaryForSelectedPlayer.map((item) => item.definitionId));
+    const seenSecondaryIds = new Set(secondaryHistory
+      .filter((item) => item.playerId === selectedSecondaryPlayerId)
+      .map((item) => item.definitionId));
     const selectableSecondaryDefinitions = secondaryDefinitions.filter((definition) =>
       !activeSecondaryIds.has(definition.id) &&
+      !(secondaryMissionMode === "tactical" && seenSecondaryIds.has(definition.id)) &&
       (!secondaryMissionMode || definition.availableModes?.includes(secondaryMissionMode) !== false) &&
       !(secondaryMissionMode === "fixed" && definition.fixedAvailable === false));
     const activeSecondaryForVp = secondaryHistory.filter((item) =>
@@ -430,6 +480,31 @@ export function createCommandScreen(container, {
       !(item.definition?.missionMode === "fixed" &&
         (item.scoringHistory ?? []).some((scored) =>
           scored.round === (state.battle?.round ?? 0) && scored.turn === (state.turn ?? 0))));
+    const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+    const activeTacticalCards = secondaryHistory.filter((item) =>
+      item.playerId === activePlayerId &&
+      item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
+      item.definition?.missionMode === "tactical");
+    const redrawUsed = Boolean(state.scoring?.secondaryMissionRedrawUsedByPlayer?.[activePlayerId]);
+    const activePlayerCp = activePlayerId ? getCommandPointBalance(state, activePlayerId) : 0;
+    const secondaryRedrawOptions = activeTacticalCards.map((item) =>
+      '<option value="' + escapeHtml(item.instanceId) + '">' +
+      escapeHtml(item.definition?.name ?? item.definitionId) + '</option>'
+    ).join("");
+    const secondaryRedrawMarkup = state.phase === "command" &&
+      state.scoring?.secondaryMissionMode === "tactical" && activePlayerId
+      ? '<section class="command-secondary-redraw"><h3>New Orders (once per battle)</h3>' +
+        (redrawUsed
+          ? '<p>New Orders has already been used by this player in this battle.</p>'
+          : activePlayerCp < 1
+            ? '<p>New Orders costs 1 CP; the active player does not have enough Command Points.</p>'
+            : activeTacticalCards.length
+              ? '<p>At the end of your Command phase, spend 1 CP to discard one active Tactical card and record one replacement drawn from the physical deck.</p>' +
+                '<form data-secondary-redraw-form class="command-vp-form">' +
+                '<label>Card to discard<select name="secondary-redraw-card" required>' + secondaryRedrawOptions + '</select></label>' +
+                '<button type="submit">Use New Orders (−1 CP)</button></form>'
+              : '<p>No active Tactical cards are available to replace.</p>') + '</section>'
+      : "";
     const secondaryVpCardOptions = activeSecondaryForVp.map((item) =>
       '<option value="' + escapeHtml(item.instanceId) + '">' +
       escapeHtml(playerName(state, item.playerId) + " — " + (item.definition?.name ?? item.definitionId)) + '</option>'
@@ -479,7 +554,8 @@ export function createCommandScreen(container, {
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
-          '<button type="button" data-secondary-mission-add>Record selected mission</button></div></form>' +
+          '<button type="button" data-secondary-mission-add>Record selected mission</button>' +
+          secondaryModeStatusMarkup + '</div></form>' +
           '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
       '<p>No automatic draw or selection occurs. Choose Fixed or Tactical once for the battle before entering cards. The mode is locked after the first card is recorded; card availability is checked against the catalog.</p>' +
@@ -533,6 +609,7 @@ export function createCommandScreen(container, {
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +
       '<section><h2>Objective control</h2><div class="command-objectives">' + objectiveCards + '</div></section>' +
       secondaryMissionManager +
+      secondaryRedrawMarkup +
       secondaryVpForm +
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>'; 
   }
