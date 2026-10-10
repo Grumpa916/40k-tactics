@@ -1,4 +1,5 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
+import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -92,6 +93,9 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       escapeHtml(state.battle?.round ?? '—') + ' · Turn ' + escapeHtml(state.turn ?? '—') +
       '</p></div><strong>' + eligible.length + ' deployed units</strong></header>' +
       '<p class="move-note">Map coordinates are approximate. Record movement after checking tabletop distances, coherency, terrain, and applicable rules. Each unit records one movement choice per turn: Normal Move, Advance, Fall Back, or Remain Stationary.</p>' +
+      '<section class="battlefield-map-section"><div class="move-heading"><h2>Live Battlefield</h2><span>Recorded positions · both armies</span></div>' +
+      renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: playerId }) +
+      '<p>Move markers are a visual reference. Use the movement controls below to record rule-aware model destinations.</p></section>' +
       (errorMessage ? '<p class="move-error" role="alert">' + escapeHtml(errorMessage) + '</p>' : '') +
       '<section><div class="move-heading"><h2>Eligible units</h2><span>Active player only</span></div><div class="move-units">' +
       unitCards + '</div></section><section>' + editor + '</section></main>';
