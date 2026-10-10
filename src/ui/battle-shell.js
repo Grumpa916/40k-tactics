@@ -122,6 +122,11 @@ export function createBattleShell(container, {
       const endingPlayerId = observedActivePlayerId;
       observedGamePhase = actualPhase;
       viewedPhase = actualPhase;
+      // A checkpoint review belongs to one specific transition. Do not carry it
+      // into a later game phase or present it as current after the state advances.
+      scoringReviewCheckpoint = null;
+      scoringReviewActivePlayerId = null;
+      scoringReviewPlayerId = null;
       const currentActivePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
       const opponentTurnJustEnded = previousPhase === "end_turn" &&
         (actualPhase === "start_turn" || actualPhase === "end_battle_round") &&
@@ -241,6 +246,11 @@ export function createBattleShell(container, {
     if (!button || !container.contains(button)) return;
     const nextPhase = button.getAttribute("data-battle-phase-button");
     if (!PHASES.some((phase) => phase.id === nextPhase)) return;
+    if (nextPhase !== "command") {
+      scoringReviewCheckpoint = null;
+      scoringReviewActivePlayerId = null;
+      scoringReviewPlayerId = null;
+    }
     viewedPhase = nextPhase;
     render();
   }

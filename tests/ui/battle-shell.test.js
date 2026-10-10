@@ -718,6 +718,50 @@ test("opponent-turn reminder recognizes a secondary card with multiple scoring w
 });
 
 
+
+test("leaving the Command screen clears stale scoring-review context", () => {
+  const session = sessionFor({
+    phase: "fight", turn: 2, activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }]
+  });
+  const mounted = [];
+  const root = container();
+  const shell = createBattleShell(root, {
+    session,
+    perspectivePlayerId: "p1",
+    screenFactories: {
+      command: (_target, options) => {
+        mounted.push({ phase: "command", options });
+        return { destroy() {} };
+      },
+      movement: (_target, options) => {
+        mounted.push({ phase: "movement", options });
+        return { destroy() {} };
+      }
+    }
+  });
+
+  session.setState({
+    ...session.getState(),
+    phase: "end_turn",
+    activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" }
+  });
+  root.clickReviewScoring();
+  assert.equal(mounted[0].options.scoringCheckpoint, "end-of-turn");
+  assert.equal(mounted[0].options.scoringCheckpointPlayerId, "p2");
+
+  root.clickPhase("movement");
+  root.clickPhase("command");
+
+  assert.equal(mounted.at(-1).phase, "command");
+  assert.equal(mounted.at(-1).options.scoringCheckpoint, null);
+  assert.equal(mounted.at(-1).options.scoringCheckpointActivePlayerId, null);
+  assert.equal(mounted.at(-1).options.scoringCheckpointPlayerId, null);
+  shell.destroy();
+});
+
 test("battle shell mounts pre-battle mission setup before the battle starts", () => {
   const session = sessionFor({
     phase: "setup", turn: 0, activePlayer: null, battle: null,
