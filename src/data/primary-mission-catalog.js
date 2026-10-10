@@ -19,7 +19,7 @@ const card = (id, name, scoringWindows, actions = []) => Object.freeze({
   id,
   name,
   category: "primary",
-  rulesVerified: true,
+  rulesVerified: scoringWindows.length > 0,
   referenceOnly: true,
   scoringWindows: Object.freeze(scoringWindows.map((window) => Object.freeze({
     ...window,
@@ -104,7 +104,7 @@ export const PRIMARY_MISSION_CATALOG = Object.freeze([
     command("objectives-and-central", "Second battle round onwards — Command phase (or end of turn in round five)", [{ vp: 4, summary: "Control one or more objectives, excluding your home objective." }, { vp: 4, summary: "Cumulative bonus if one or more of those objectives is central." }]),
     endBattle("opponent-home", [{ vp: 10, summary: "Control your opponent's home objective." }])
   ], [{ name: "Maintain Control", starts: "Shooting phase", unit: "One friendly unit within range of one central objective", useLimit: "Once per turn", completes: "End of your turn if the unit controls that objective", effect: "Place one of your operation markers within range of that objective." }]),
-  card("sab﻿otage", "Sabotage", [
+  card("sabotage", "Sabotage", [
     endTurn("sabotage-and-territory", "Any battle round — end of your turn", [{ vp: 3, summary: "For each friendly unit that committed sabotage this turn." }, { vp: 2, summary: "Cumulative: for each of those units within range of one or more objectives in your opponent's territory." }]),
     command("objectives", "Second battle round onwards — Command phase (or end of turn in round five)", [{ vp: 4, summary: "Control one or more objectives, excluding your home objective." }])
   ], [{ name: "Sabotage", starts: "Shooting phase", unit: "One unit within range of an objective, excluding your home objective", useLimit: "Unlimited; each unit starting this action this phase must be at a different objective", completes: "End of your turn if the unit controls that objective", effect: "Your unit commits sabotage." }]),
@@ -117,20 +117,7 @@ export const PRIMARY_MISSION_CATALOG = Object.freeze([
   card("locate-and-deny", "Locate and Deny", [], [{ name: "Sensor Sweep", starts: "Shooting phase", unit: "One friendly unit within range of one central objective", useLimit: "Once per turn", completes: "End of your turn if the unit controls that objective", effect: "Remove one operation marker from the battlefield.", restriction: "Cannot start if only one operation marker remains on the battlefield." }]),
   card("triangulation", "Triangulation", [], [{ name: "Triangulate", starts: "Shooting phase from battle round two onwards", unit: "One friendly unit within range of one objective excluding your home objective", useLimit: "Once per turn", completes: "End of your turn if the unit controls that objective", effect: "The objective is triangulated; place one of your operation markers within range of it." }]),
   card("smoke-and-mirrors", "Smoke and Mirrors", [], [{ name: "Decoy", starts: "Shooting phase", unit: "One friendly unit within range of an objective excluding your home objective that is not decoyed", useLimit: "Unlimited; each unit starting this action this phase must use a different objective", completes: "End of your turn if the unit controls that objective", effect: "The objective is decoyed; place one of your operation markers within range of it." }]),
-  ...[
-    ["triangulation-placeholder", "Triangulation (scoring transcription pending)"],
-    ["saboteur-placeholder", "Sabotage (duplicate-name safeguard)"],
-    ["battlefield-dominance", "Battlefield Dominance"],
-    ["determined-acquisition", "Determined Acquisition"],
-    ["inescapable-dominion", "Inescapable Dominion"],
-    ["purge-and-secure", "Purge and Secure"],
-    ["death-trap", "Death Trap"],
-    ["reconnaissance-sweep", "Reconnaissance Sweep"],
-    ["secure-asset", "Secure Asset"],
-    ["smoke-and-mirrors-placeholder", "Smoke and Mirrors (duplicate-name safeguard)"],
-    ["locate-and-deny-placeholder", "Locate and Deny (duplicate-name safeguard)"],
-    ["additional-primary-pending", "Additional Primary Mission — transcription pending"]
-  ].map(([id, name]) => card(id, name, []))
+
 ]);
 
 export function getPrimaryMissionDefinition(id) {
