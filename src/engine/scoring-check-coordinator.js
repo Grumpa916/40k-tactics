@@ -14,18 +14,25 @@ function validateCheckpoint(checkpoint) {
   }
 }
 
-function evaluateSecondaryInstance(state, instance) {
+function evaluateSecondaryInstance(state, instance, checkpoint) {
   const definition = instance.definition;
+  const scoringWindows = Array.isArray(definition?.scoringWindows)
+    ? definition.scoringWindows.filter((window) => window?.timing === checkpoint)
+    : [];
+  const scoringWindow = scoringWindows[0] ?? null;
   if (!Array.isArray(definition?.conditions) || definition.conditions.length === 0) {
     return {
       definitionId: instance.definitionId,
-      timing: definition?.timing,
+      timing: scoringWindow?.timing ?? definition?.timing,
+      scoringWindow,
+      scoringWindows,
+      rulesVerified: definition?.rulesVerified === true,
       eligible: false,
       manualReviewRequired: true,
       conditions: []
     };
   }
-  return evaluateMissionDefinition(state, definition);
+  return { ...evaluateMissionDefinition(state, definition), scoringWindow, scoringWindows };
 }
 
 /**
@@ -66,14 +73,20 @@ export function evaluateScoringCheckpoint(state, {
 
   const history = getSecondaryMissionHistory(state, scoringPlayerId);
   const secondary = history
-    .filter((instance) => instance.status === SECONDARY_MISSION_STATUS.ACTIVE &&
-      instance.definition?.timing === checkpoint)
+    .filter((instance) => {
+      if (instance.status !== SECONDARY_MISSION_STATUS.ACTIVE) return false;
+      const definition = instance.definition;
+      if (Array.isArray(definition?.scoringWindows) && definition.scoringWindows.length) {
+        return definition.scoringWindows.some((window) => window?.timing === checkpoint);
+      }
+      return definition?.timing === checkpoint;
+    })
     .map((instance) => ({
       category: "secondary",
       instanceId: instance.instanceId,
       definitionId: instance.definitionId,
       definitionName: instance.definition?.name ?? instance.definitionId,
-      result: evaluateSecondaryInstance(state, instance)
+      result: evaluateSecondaryInstance(state, instance, checkpoint)
     }));
 
   return Object.freeze({
