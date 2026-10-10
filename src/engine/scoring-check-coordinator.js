@@ -52,7 +52,7 @@ function evaluateSecondaryInstance(state, instance, checkpoint) {
 /**
  * Evaluate missions at one explicit scoring checkpoint for one player.
  * Primary definitions are supplied by the primary-mission adapter; secondary
- * definitions are read only from that player’s ACTIVE lifecycle instances.
+ * definitions are read only from that player's ACTIVE lifecycle instances.
  * This function only reports eligibility. It never awards VP or changes state.
  */
 export function evaluateScoringCheckpoint(state, {
@@ -67,6 +67,15 @@ export function evaluateScoringCheckpoint(state, {
   }
   if (activePlayerId != null && (typeof activePlayerId !== "string" || !activePlayerId.trim())) {
     throw new TypeError("The active player id must be a non-empty string when provided.");
+  }
+
+  // A player's own Command phase and end-of-turn checkpoint must not be
+  // evaluated while the opponent is active. Opponent-turn scoring is the
+  // explicit exception and requires the other player to be active.
+  if ((checkpoint === SCORING_CHECKPOINTS.COMMAND_PHASE ||
+       checkpoint === SCORING_CHECKPOINTS.END_OF_TURN) &&
+      activePlayerId != null && activePlayerId !== scoringPlayerId) {
+    throw new Error("This scoring checkpoint requires the scoring player to be the active player.");
   }
   if (checkpoint === SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN &&
       (!activePlayerId || activePlayerId === scoringPlayerId)) {
