@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameState } from "../state/game-state.js";
+import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import {
   recordVictoryPointsAward,
   getVictoryPointScore,
@@ -210,4 +211,62 @@ test("undoing a mission award releases its cap capacity", () => {
     category: "primary", missionDefinitionId: "primary-b", turn: 1, round: 1
   });
   assert.equal(getVictoryPointScore(state, "p1"), 15);
+});
+
+
+test("end-of-battle VP bypasses the 15 VP per-turn cap but retains the 45 VP game cap", () => {
+  let state = createGameState({ battle: { round: 5 }, turn: 10 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Primary during turn",
+    category: "primary", missionDefinitionId: "primary-a", turn: 10, round: 5
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Primary at end of battle",
+    category: "primary", missionDefinitionId: "primary-b",
+    scoringTiming: SCORING_TIMINGS.END_OF_BATTLE, turn: 10, round: 5
+  });
+
+  const finalAward = getVictoryPointHistory(state, "p1").at(-1);
+  assert.equal(finalAward.amount, 10);
+  assert.equal(finalAward.scoringTiming, SCORING_TIMINGS.END_OF_BATTLE);
+  assert.equal(finalAward.appliedCaps, undefined);
+  assert.equal(getVictoryPointScore(state, "p1"), 20);
+
+  state = createGameState({ battle: { round: 3 }, turn: 3 });
+  for (const [turn, round, id] of [[1, 1, "a"], [2, 2, "b"], [3, 3, "c"]]) {
+    state = recordVictoryPointsAward(state, {
+      playerId: "p1", amount: 15, reason: "Primary " + id,
+      category: "primary", missionDefinitionId: "primary-" + id, turn, round
+    });
+  }
+  assert.throws(() => recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 1, reason: "End-of-battle primary",
+    category: "primary", missionDefinitionId: "primary-final",
+    scoringTiming: SCORING_TIMINGS.END_OF_BATTLE, turn: 4, round: 3
+  }), /45 VP primary game limit/);
+});
+
+test("end-of-battle timing does not bypass the 20 VP Fixed Secondary card cap", () => {
+  let state = createGameState({ battle: { round: 5 }, turn: 10 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Fixed card first award",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-card", turn: 1, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Fixed card at end of battle",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-card",
+    scoringTiming: SCORING_TIMINGS.END_OF_BATTLE, turn: 10, round: 5
+  });
+  const cardAwards = getVictoryPointHistory(state, "p1")
+    .filter((entry) => entry.missionDefinitionId === "fixed-card");
+  assert.deepEqual(cardAwards.map((entry) => entry.amount), [15, 5]);
+  assert.deepEqual(cardAwards[1].appliedCaps, ["fixed-secondary-card"]);
+});
+
+test("rejects an unsupported scoring timing", () => {
+  assert.throws(() => recordVictoryPointsAward(createGameState(), {
+    playerId: "p1", amount: 1, reason: "Primary", scoringTiming: "after-battle"
+  }), /Unsupported scoring timing/);
 });
