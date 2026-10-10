@@ -669,3 +669,19 @@ test("opponent-turn reminder recognizes a secondary card with multiple scoring w
   assert.match(root.html, /Multi-window sample card/);
   shell.destroy();
 });
+
+
+test("battle shell mounts pre-battle mission setup before the battle starts", () => {
+  const session = sessionFor({
+    phase: "setup", turn: 0, activePlayer: null, battle: null,
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [], objectives: [], history: [], scoring: { turnSnapshots: [], secondaryMissionMode: null }
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1" });
+  assert.match(root._screen.innerHTML, /Mission setup/);
+  assert.match(root._screen.innerHTML, /Choose the secondary mission mode before starting the battle/);
+  assert.match(root._screen.innerHTML, /Tactical/);
+  assert.match(root._screen.innerHTML, /Fixed/);
+  shell.destroy();
+});
