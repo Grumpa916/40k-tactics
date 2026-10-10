@@ -61,6 +61,7 @@ export function createBattleShell(container, {
   gameData = null,
   missionActions = [],
   missionDefinitions = [],
+  secondaryMissionCatalog = [],
   screenFactories = SCREEN_FACTORIES
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
@@ -147,6 +148,7 @@ export function createBattleShell(container, {
           gameData,
           missionActions,
           missionDefinitions,
+          secondaryMissionCatalog,
           scoringCheckpoint: scoringReviewCheckpoint,
           scoringCheckpointActivePlayerId: scoringReviewActivePlayerId
         });
