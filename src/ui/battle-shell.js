@@ -1,4 +1,5 @@
-import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { createChargeScreen } from "./charge-screen.js";
 import { createCommandScreen } from "./command-screen.js";
 import { createFightScreen } from "./fight-screen.js";
@@ -25,6 +26,11 @@ function phaseLabel(phase) {
   return PHASES.find((item) => item.id === phase)?.label ?? phase;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
 function renderShell(container, state, viewedPhase, scoringReminder = null) {
   const phaseItems = PHASES.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
@@ -36,11 +42,29 @@ function renderShell(container, state, viewedPhase, scoringReminder = null) {
     </li>`;
   }).join("");
 
+  const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+  const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
+    state.scoring?.secondaryMissionMode === SECONDARY_MISSION_MODES.TACTICAL && reminderPlayerId
+    ? getSecondaryMissionHistory(state, reminderPlayerId).filter((item) =>
+        item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
+        item.definition?.missionMode === SECONDARY_MISSION_MODES.TACTICAL)
+    : [];
+  const tacticalDiscardForm = tacticalDiscardCards.length
+    ? '<section class="battle-tactical-discard"><h3>Discard Tactical cards for +1 CP</h3>' +
+      '<p>At the end of your own turn, discard one or more active Tactical cards to gain 1 CP total.</p>' +
+      '<form data-tactical-discard-form>' +
+      tacticalDiscardCards.map((item) =>
+        '<label><input type="checkbox" name="discard-instance" value="' + escapeHtml(item.instanceId) + '">' +
+        escapeHtml(item.definition?.name ?? item.definitionId) + '</label>'
+      ).join("") +
+      '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
+    : "";
   const reminderMarkup = scoringReminder ? `<div class="battle-scoring-reminder__backdrop">
     <section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">
       <h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>
-      <p>${scoringReminder.label}. Check any Primary or Secondary mission due now.</p>
-      <ul>${scoringReminder.missions.map((mission) => `<li>${mission}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
+      <p>${escapeHtml(scoringReminder.label)}. Check any Primary or Secondary mission due now.</p>
+      <ul>${scoringReminder.missions.map((mission) => `<li>${escapeHtml(mission)}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
+      ${tacticalDiscardForm}
       <div class="battle-scoring-reminder__actions">
         <button type="button" data-review-scoring>Review scoring</button>
         <button type="button" data-dismiss-scoring-reminder>Remind me later</button>
@@ -171,6 +195,24 @@ export function createBattleShell(container, {
     return state;
   }
 
+  function handleSubmit(event) {
+    const form = event.target?.closest?.("[data-tactical-discard-form]");
+    if (!form || !container.contains(form)) return;
+    event.preventDefault();
+    const state = session.getState();
+    const playerId = state.activePlayer ?? state.battle?.activePlayerId;
+    const formData = new FormData(form);
+    const instanceIds = formData.getAll("discard-instance").map(String);
+    try {
+      session.dispatch({ type: COMMAND_TYPES.DISCARD_TACTICAL_SECONDARIES_FOR_CP, payload: {
+        playerId, instanceIds, round: state.battle?.round ?? 0, turn: state.turn ?? 0
+      }});
+      form.outerHTML = '<p role="status">Discard recorded. +1 CP added to the ledger.</p>';
+    } catch (error) {
+      form.insertAdjacentHTML("beforebegin", '<p role="alert">' + escapeHtml(error?.message ?? error) + '</p>');
+    }
+  }
+
   function handleDismissScoringReminder(event) {
     const button = event.target?.closest?.("[data-dismiss-scoring-reminder]");
     if (!button || !container.contains(button)) return;
@@ -200,6 +242,7 @@ export function createBattleShell(container, {
   container.addEventListener?.("click", handlePhaseNavigation);
   container.addEventListener?.("click", handleDismissScoringReminder);
   container.addEventListener?.("click", handleReviewScoring);
+  container.addEventListener?.("submit", handleSubmit);
   const unsubscribe = session.subscribe(render);
   render();
 
@@ -211,6 +254,7 @@ export function createBattleShell(container, {
       container.removeEventListener?.("click", handlePhaseNavigation);
       container.removeEventListener?.("click", handleDismissScoringReminder);
       container.removeEventListener?.("click", handleReviewScoring);
+      container.removeEventListener?.("submit", handleSubmit);
       destroyMountedScreen();
       container.replaceChildren();
     }
