@@ -10,7 +10,7 @@ This document records the legacy V1 reference summaries for the 18 secondary car
    - [The Chapter Approved deck — What is it and how does it work?](https://www.warhammer-community.com/en-gb/articles/p3i6aa3h/the-chapter-approved-deck-what-is-it-and-how-does-it-work/)
    - [Official sample card image 1](https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg)
    - [Official sample card image 2](https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg)
-2. **Official general timing/cap rules:** [Warhammer Event Companion v1.2 (official Games Workshop PDF, August 2026)](https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf). It documents scoring checkpoints and caps, but does not reproduce the full text of the secondary cards. Its FAQ explicitly distinguishes the end of the battle from the end of the fifth battle round and says end-of-battle VP is not subject to the 15 VP per battle-round cap; the 45 VP game cap and 20 VP per Fixed card cap still apply.
+2. **Official general timing/cap rules and specific FAQ answers:** [Warhammer Event Companion v1.2 (official Games Workshop PDF, August 2026)](https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf). It documents scoring checkpoints and caps, but does not reproduce the full text of the secondary cards. Its FAQ explicitly distinguishes the end of the battle from the end of the fifth battle round and says end-of-battle VP is not subject to the 15 VP per battle-round cap; the 45 VP game cap and 20 VP per Fixed card cap still apply. It also directly clarifies the Beacon replacement restriction and that Plunder's territory restriction refers to the terrain area.
 3. **Independent text transcriptions for cross-checking, not official sources:** [GDM 2026 secondary mission index](https://gdmissions.app/11th/secondary-missions), [GDM 2026 version history](https://gdmissions.app/version-history), [Wahapedia's Chapter Approved secondary mission text](https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/), and [11th.help's secondary mission reference](https://www.11th.help/secondary_missions.html). GDM provides readable/selectable card text and a version history; use these sources to reconcile claims, not to promote a V2 card to `rulesVerified: true`.
 4. **Legacy cross-check only:** `Grumpa916/onoforge40k` `index.html`, commit `c5a9dc058615b16e8f5edde03313b1a7ac0ca825`. This repository is preserved and must not be modified as part of V2 work.
 5. **Unofficial community cross-check only:** [IRONBUILT dataset pinned to commit `6f61cb3796f79348b81389ec0eb32d461b675d02`](https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json). Do not use it alone to verify a card.
@@ -54,6 +54,19 @@ The legacy V1 reference also records these special cases. Treat all as pending v
 - **Defend Stronghold:** legacy metadata says it is available from battle round two and its tiers are cumulative to 5 VP.
 - **Engage on All Fronts:** legacy metadata marks the scoring tiers as exclusive.
 - **Forward Position:** first battle round may permit a redraw and shuffle-back.
+
+## Official FAQ evidence found (reviewed 10 October 2026)
+
+The current 11th-edition [Warhammer Event Companion v1.2 (August 2026)](https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf) is available through the official Games Workshop asset URL and is indexed in the 11th-edition rules reference. Its FAQ gives direct official answers to two card-specific interactions:
+
+- **Beacon:** if the selected Beacon unit is destroyed before the mission is achieved, the player cannot select a replacement Beacon unit.
+- **Plunder:** “not within your territory” refers to the terrain area, not the unit.
+- **Scoring caps:** VP scored at the end of the battle is not subject to the 15 VP per battle-round limit. The battle-wide 45 VP secondary cap and 20 VP Fixed-card cap still apply.
+
+These FAQ answers are official evidence for the listed interactions and cap rules, but **they do not reproduce or verify the complete scoring text of Beacon or Plunder**. Both cards remain `rulesVerified: false`, and the catalog’s draft windows remain manual-review-only. The companion’s mission-deck FAQ does not provide a full official transcription of all 18 secondary cards; the Games Workshop article’s publicly available sample images still show only Assassination and Centre Ground.
+
+- [Official Warhammer Event Companion v1.2 PDF](https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf)
+- [11th-edition reference index for the companion and FAQ](https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/)
 
 ## Independent-transcription reconciliation (reviewed 9 October 2026)
 
