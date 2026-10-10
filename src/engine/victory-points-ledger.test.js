@@ -307,6 +307,41 @@ test("latest manual VP adjustment can be safely undone", () => {
 });
 
 
+
+test("undoing a Fixed Secondary award restores that card's cap and opportunity", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  const opportunity = {
+    playerId: "p1",
+    amount: 20,
+    reason: "Initial Fixed Secondary entry",
+    category: "secondary",
+    missionMode: "fixed",
+    missionDefinitionId: "fixed-card-cap-undo",
+    opportunityKey: "fixed-card-cap-undo:round-1:turn-1",
+    turn: 1,
+    round: 1
+  };
+  state = recordVictoryPointsAward(state, opportunity);
+  assert.equal(getVictoryPointScore(state, "p1"), 20);
+
+  state = undoLatestVictoryPointsAward(state, {
+    playerId: "p1", reason: "Correct the mistaken Fixed Secondary entry", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 0);
+  assert.equal(hasEffectiveVictoryPointOpportunity(
+    state, "p1", "fixed-card-cap-undo", "fixed-card-cap-undo:round-1:turn-1"
+  ), false);
+
+  state = recordVictoryPointsAward(state, {
+    ...opportunity,
+    amount: 15,
+    reason: "Corrected Fixed Secondary entry"
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 15);
+  assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, 15);
+  assert.equal(state.history.at(-1).type, "victory_points.awarded");
+});
+
 test("safe undo allows the same mission scoring opportunity to be re-entered correctly", () => {
   let state = createGameState({ battle: { round: 1 }, turn: 1 });
   const opportunity = {
