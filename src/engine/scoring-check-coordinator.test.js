@@ -204,3 +204,49 @@ test("minimum-round metadata hides Defend Stronghold before round two", () => {
   assert.equal(roundTwo.secondary[0].result.rulesVerified, false);
   assert.equal(roundTwo.awardsVictoryPoints, false);
 });
+
+
+test("every unverified secondary card stays manual-review-only at every declared scoring window", () => {
+  const unverifiedCards = SECONDARY_MISSION_CATALOG.filter((card) => !card.rulesVerified);
+  assert.equal(unverifiedCards.length, 16);
+
+  for (const card of unverifiedCards) {
+    assert.ok(card.scoringWindows.length > 0, card.name + " should retain its draft scoring windows");
+    for (const window of card.scoringWindows) {
+      const modes = window.modes?.length ? window.modes : card.availableModes;
+      for (const mode of modes) {
+        const round = Math.max(1, window.minRound ?? 1);
+        const checkpoint = window.timing;
+        const activePlayerId = checkpoint === SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN ? "p2" : "p1";
+        let state = createGameState({
+          phase: "command",
+          turn: 1,
+          activePlayer: activePlayerId,
+          players: [{ id: "p1" }, { id: "p2" }],
+          battle: { round, activePlayerId }
+        });
+        state = setSecondaryMissionMode(state, { mode });
+        state = drawSecondaryMission(state, {
+          definition: card,
+          playerId: "p1",
+          round,
+          turn: 1
+        });
+
+        const review = evaluateScoringCheckpoint(state, {
+          checkpoint,
+          scoringPlayerId: "p1",
+          activePlayerId
+        });
+        const candidate = review.secondary.find((item) => item.definitionId === card.id);
+        assert.ok(candidate, card.name + " should appear at " + checkpoint + " in " + mode + " mode");
+        assert.equal(candidate.result.eligible, false, card.name + " must not infer eligibility");
+        assert.equal(candidate.result.manualReviewRequired, true, card.name + " must require table-side review");
+        assert.equal(candidate.result.rulesVerified, false, card.name + " must remain unverified");
+        assert.equal(candidate.result.scoringWindow.source,
+          "community-transcription-pending-official-card-check");
+        assert.equal(review.awardsVictoryPoints, false);
+      }
+    }
+  }
+});
