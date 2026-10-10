@@ -49,7 +49,8 @@ export function createCommandScreen(container, {
   missionDefinitions = [],
   secondaryMissionCatalog = [],
   scoringCheckpoint = null,
-  scoringCheckpointActivePlayerId = null
+  scoringCheckpointActivePlayerId = null,
+  scoringCheckpointPlayerId = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -431,7 +432,7 @@ export function createCommandScreen(container, {
     try {
       const review = evaluateScoringCheckpoint(state, {
         checkpoint,
-        scoringPlayerId: playerId,
+        scoringPlayerId: scoringCheckpointPlayerId ?? playerId,
         activePlayerId: scoringCheckpointActivePlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? null,
         primaryDefinitions: missionDefinitions.filter((definition) => definition?.category !== "secondary")
       });

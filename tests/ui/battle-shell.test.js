@@ -51,6 +51,17 @@ function container() {
       };
       for (const listener of this.listeners.get("click") ?? []) listener(event);
     },
+    clickReviewScoring() {
+      const button = { getAttribute() { return null; } };
+      const event = {
+        target: {
+          closest(selector) {
+            return selector === "[data-review-scoring]" ? button : null;
+          }
+        }
+      };
+      for (const listener of this.listeners.get("click") ?? []) listener(event);
+    },
     replaceChildren(...children) {
       this.children = children;
       this.html = "";
@@ -298,6 +309,42 @@ test("scoring reminder appears when the opponent finishes their turn", () => {
   session.setState({ phase: "start_turn", turn: 3, activePlayer: "p1", battle: { round: 1, activePlayerId: "p1" } });
   assert.match(root.html, /End of your opponent&#039;s turn|End of your opponent's turn/);
   assert.match(root.html, /Opponent-window mission/);
+  shell.destroy();
+});
+
+
+test("end-of-turn scoring review follows the player whose turn ended", () => {
+  const session = sessionFor({
+    phase: "fight", turn: 2, activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }]
+  });
+  const mounted = [];
+  const root = container();
+  const shell = createBattleShell(root, {
+    session,
+    perspectivePlayerId: "p1",
+    screenFactories: {
+      command: (_target, options) => {
+        mounted.push(options);
+        return { destroy() {} };
+      }
+    }
+  });
+
+  session.setState({
+    ...session.getState(),
+    phase: "end_turn",
+    activePlayer: "p2",
+    battle: { round: 1, activePlayerId: "p2" }
+  });
+  assert.match(root.html, /End of your opponent&#039;s turn|End of your opponent's turn/);
+  root.clickReviewScoring();
+
+  assert.equal(mounted.length, 1);
+  assert.equal(mounted[0].scoringCheckpoint, "end-of-turn");
+  assert.equal(mounted[0].scoringCheckpointActivePlayerId, "p2");
+  assert.equal(mounted[0].scoringCheckpointPlayerId, "p2");
   shell.destroy();
 });
 
