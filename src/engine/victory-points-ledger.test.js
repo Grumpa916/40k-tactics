@@ -93,3 +93,121 @@ test("refuses undo when the latest VP award belongs to the other player", () => 
   assert.equal(getLatestUndoableVictoryPointsAward(state, "p1"), null);
   assert.throws(() => undoLatestVictoryPointsAward(state, { playerId: "p1" }), /latest history event/);
 });
+
+
+test("caps primary scoring at 15 VP per turn and 45 VP per game", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Primary A",
+    category: "primary", missionDefinitionId: "primary-a", turn: 1, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Primary B",
+    category: "primary", missionDefinitionId: "primary-b", turn: 1, round: 1
+  });
+  const cappedTurnAward = getVictoryPointHistory(state, "p1").at(-1);
+  assert.equal(cappedTurnAward.amount, 5);
+  assert.equal(cappedTurnAward.requestedAmount, 10);
+  assert.deepEqual(cappedTurnAward.appliedCaps, ["primary-turn"]);
+  assert.equal(getVictoryPointScore(state, "p1"), 15);
+
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Primary C",
+    category: "primary", missionDefinitionId: "primary-c", turn: 2, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Primary D",
+    category: "primary", missionDefinitionId: "primary-d", turn: 3, round: 2
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 45);
+  assert.throws(() => recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 1, reason: "Primary E",
+    category: "primary", missionDefinitionId: "primary-e", turn: 4, round: 2
+  }), /45 VP primary game limit/);
+});
+
+test("enforces secondary per-turn and game caps independently of primary scoring", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Primary",
+    category: "primary", missionDefinitionId: "primary", turn: 1, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Secondary A",
+    category: "secondary", missionDefinitionId: "secondary-a", turn: 1, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Secondary B",
+    category: "secondary", missionDefinitionId: "secondary-b", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointHistory(state, "p1").at(-1).amount, 5);
+  assert.equal(getVictoryPointScore(state, "p1"), 30);
+
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Secondary C",
+    category: "secondary", missionDefinitionId: "secondary-c", turn: 2, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Secondary D",
+    category: "secondary", missionDefinitionId: "secondary-d", turn: 3, round: 2
+  });
+  assert.equal(getVictoryPointHistory(state, "p1").filter((entry) => entry.category === "secondary")
+    .reduce((sum, entry) => sum + entry.amount, 0), 45);
+  assert.throws(() => recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 1, reason: "Secondary E",
+    category: "secondary", missionDefinitionId: "secondary-e", turn: 4, round: 2
+  }), /45 VP secondary game limit/);
+});
+
+test("caps a Fixed Secondary card at 20 VP across turns while allowing other cards", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Fixed card",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-assassination", turn: 1, round: 1
+  });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Fixed card again",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-assassination", turn: 2, round: 1
+  });
+  const cardAwards = getVictoryPointHistory(state, "p1")
+    .filter((entry) => entry.missionDefinitionId === "fixed-assassination");
+  assert.deepEqual(cardAwards.map((entry) => entry.amount), [15, 5]);
+  assert.deepEqual(cardAwards[1].appliedCaps, ["fixed-secondary-card"]);
+
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 10, reason: "Different Fixed card",
+    category: "secondary", missionMode: "fixed",
+    missionDefinitionId: "fixed-bring-it-down", turn: 2, round: 1
+  });
+  assert.equal(getVictoryPointHistory(state, "p1")
+    .filter((entry) => entry.missionDefinitionId === "fixed-bring-it-down")[0].amount, 10);
+});
+
+test("manual VP adjustments remain uncapped and do not consume mission limits", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 100, reason: "Manual correction", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 100);
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Primary mission",
+    category: "primary", missionDefinitionId: "primary", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 115);
+});
+
+test("undoing a mission award releases its cap capacity", () => {
+  let state = createGameState({ battle: { round: 1 }, turn: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Primary",
+    category: "primary", missionDefinitionId: "primary-a", turn: 1, round: 1
+  });
+  state = undoLatestVictoryPointsAward(state, { playerId: "p1", turn: 1, round: 1 });
+  state = recordVictoryPointsAward(state, {
+    playerId: "p1", amount: 15, reason: "Corrected primary",
+    category: "primary", missionDefinitionId: "primary-b", turn: 1, round: 1
+  });
+  assert.equal(getVictoryPointScore(state, "p1"), 15);
+});

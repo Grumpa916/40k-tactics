@@ -51,6 +51,7 @@ export function createMissionDefinition({
   name,
   timing = SCORING_TIMINGS.END_OF_TURN,
   category = null,
+  missionMode = null,
   victoryPoints = null,
   conditions = []
 } = {}) {
@@ -63,6 +64,12 @@ export function createMissionDefinition({
   validateTiming(timing);
   if (category !== null && !["primary", "secondary"].includes(category)) {
     throw new Error("Mission category must be primary or secondary.");
+  }
+  if (missionMode !== null && !["fixed", "tactical"].includes(missionMode)) {
+    throw new Error("Mission mode must be fixed or tactical when supplied.");
+  }
+  if (missionMode !== null && category !== "secondary") {
+    throw new Error("Mission mode can only be supplied for secondary missions.");
   }
   if (victoryPoints !== null && (!Number.isInteger(victoryPoints) || victoryPoints <= 0)) {
     throw new TypeError("Configured victory points must be a positive integer.");
@@ -80,6 +87,7 @@ export function createMissionDefinition({
     name,
     timing,
     category,
+    ...(missionMode ? { missionMode } : {}),
     victoryPoints,
     conditions: Object.freeze(normalizedConditions)
   });

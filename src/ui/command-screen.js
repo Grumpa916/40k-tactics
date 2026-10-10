@@ -33,6 +33,16 @@ function commandPointsFor(state, playerId) {
   return "Not tracked";
 }
 
+function vpCapDescription(cap) {
+  return ({
+    "primary-turn": "15 VP primary turn cap",
+    "primary-game": "45 VP primary game cap",
+    "secondary-turn": "15 VP secondary turn cap",
+    "secondary-game": "45 VP secondary game cap",
+    "fixed-secondary-card": "20 VP Fixed Secondary card cap"
+  })[cap] ?? "mission scoring cap";
+}
+
 export function createCommandScreen(container, {
   session,
   perspectivePlayerId = null,
@@ -157,6 +167,7 @@ export function createCommandScreen(container, {
         reason: definition.name,
         missionDefinitionId: definition.id,
         category: definition.category,
+        ...(definition.missionMode ? { missionMode: definition.missionMode } : {}),
         opportunityKey,
         turn,
         round
@@ -353,11 +364,17 @@ export function createCommandScreen(container, {
       '</span><strong>' + escapeHtml(getVictoryPointScore(state, player.id)) + ' VP</strong></article>'
     ).join("");
     const vpHistory = getVictoryPointHistory(state).slice(-6).reverse();
-    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) =>
-      '<li><strong>+' + escapeHtml(entry.amount) + ' VP</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
-      ' — ' + escapeHtml(entry.reason) + ' <small>(Round ' + escapeHtml(entry.round) +
-      ', turn ' + escapeHtml(entry.turn) + '; total ' + escapeHtml(entry.scoreAfter) + ')</small></li>'
-    ).join("") : '<li>No victory points recorded yet.</li>';
+    const vpHistoryMarkup = vpHistory.length ? vpHistory.map((entry) => {
+      const capNotice = entry.requestedAmount > entry.amount
+        ? '<small>Cap applied: requested ' + escapeHtml(entry.requestedAmount) + ' VP; awarded ' +
+          escapeHtml(entry.amount) + ' VP (' + (entry.appliedCaps ?? []).map(vpCapDescription)
+            .map(escapeHtml).join(", ") + ').</small>'
+        : '';
+      return '<li><strong>+' + escapeHtml(entry.amount) + ' VP</strong> · ' + escapeHtml(playerName(state, entry.playerId)) +
+        ' — ' + escapeHtml(entry.reason) + ' <small>(Round ' + escapeHtml(entry.round) +
+        ', turn ' + escapeHtml(entry.turn) + '; total ' + escapeHtml(entry.scoreAfter) + ')</small> ' +
+        capNotice + '</li>';
+    }).join("") : '<li>No victory points recorded yet.</li>';
 
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
@@ -366,10 +383,10 @@ export function createCommandScreen(container, {
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
       '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>' +
-      '<p>Only record points after confirming the award at the table. Eligibility advice never changes the score.</p>' +
+      '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. This form is for manual VP adjustments; eligibility advice never changes the score.</p>' +
       (players.length ? '<form class="command-vp-form" data-vp-form><label>Player<select name="vp-player" required>' + playerOptions +
       '</select></label><label>VP awarded<input name="vp-amount" type="number" min="1" step="1" value="5" required></label>' +
-      '<label>Reason / mission scoring<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Confirmed primary objective" required></label>' +
+      '<label>Manual adjustment reason<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Correct an entry error" required></label>' +
       '<button type="submit">Confirm VP award</button></form>' : '<p>Configure both players before recording awards.</p>') +
       '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
       '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
