@@ -17,7 +17,7 @@ import { recordShootingActivation, completeShootingPhase } from "./shooting-tran
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
 import { recordVictoryPointsAward } from "./victory-points-ledger.js";
-import { drawSecondaryMission } from "../rules/secondary-mission-lifecycle.js";
+import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondary-mission-lifecycle.js";
 
 export function registerCoreCommandHandlers() {
   const handlers = [
@@ -51,7 +51,9 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_VICTORY_POINTS, (state, command) =>
       recordVictoryPointsAward(state, command.payload)],
     [COMMAND_TYPES.DRAW_SECONDARY_MISSION, (state, command) =>
-      drawSecondaryMission(state, command.payload)]
+      drawSecondaryMission(state, command.payload)],
+    [COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, (state, command) =>
+      setSecondaryMissionMode(state, command.payload)]
   ];
 
   for (const [type, handler] of handlers) {
