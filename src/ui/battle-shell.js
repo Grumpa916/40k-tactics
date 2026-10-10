@@ -105,6 +105,7 @@ export function createBattleShell(container, {
   let scoringReminder = null;
   let scoringReviewCheckpoint = null;
   let scoringReviewActivePlayerId = null;
+  let scoringReviewPlayerId = null;
   let reminderSequence = 0;
 
   function destroyMountedScreen() {
@@ -160,6 +161,7 @@ export function createBattleShell(container, {
             ? `End of ${ownerLabel} Command phase`
             : `End of ${ownerLabel} turn`,
           activePlayerId: reminderPlayerId,
+          scoringPlayerId,
           missions: missionNames
         };
       }
@@ -182,7 +184,8 @@ export function createBattleShell(container, {
           missionDefinitions,
           secondaryMissionCatalog,
           scoringCheckpoint: scoringReviewCheckpoint,
-          scoringCheckpointActivePlayerId: scoringReviewActivePlayerId
+          scoringCheckpointActivePlayerId: scoringReviewActivePlayerId,
+          scoringCheckpointPlayerId: scoringReviewPlayerId
         });
         mountedPhase = viewedPhase;
       } else if (screenContainer) {
@@ -227,6 +230,7 @@ export function createBattleShell(container, {
     if (!button || !container.contains(button)) return;
     scoringReviewCheckpoint = scoringReminder?.timing ?? null;
     scoringReviewActivePlayerId = scoringReminder?.activePlayerId ?? null;
+    scoringReviewPlayerId = scoringReminder?.scoringPlayerId ?? scoringReminder?.activePlayerId ?? null;
     scoringReminder = null;
     viewedPhase = "command";
     render();
