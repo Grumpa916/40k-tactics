@@ -8,7 +8,7 @@ export function getEligibleBodyguards(roster, leaderId) {
   assertRosterUnits(roster);
   const leader = roster.units.find((unit) => unit.id === leaderId);
   if (!leader) throw new RangeError("Leader unit not found: " + leaderId);
-  if (leader.datasheet?.leader?.isLeader !== true) return [];
+  if (leader.datasheet?.leader?.isLeader !== true || leader.attachedToBodyguardId) return [];
 
   const allowedIds = leader.datasheet.leader.allowedBodyguardDatasheetIds;
   const status = leader.dataSource?.status;
@@ -17,10 +17,13 @@ export function getEligibleBodyguards(roster, leaderId) {
   return roster.units.filter((unit) => {
     if (unit.id === leader.id) return false;
     const bodyguardId = unit.datasheetId ?? unit.datasheet?.id;
+    const attachedLeaderIds = unit.attachedLeaderIds ?? [];
+    const maxAttachedLeaders = unit.datasheet?.bodyguard?.maxAttachedLeaders ?? 1;
     return Boolean(bodyguardId && allowedIds.includes(bodyguardId) &&
       unit.datasheet?.bodyguard?.canReceiveLeader !== false &&
-      !unit.attachedLeaderId &&
-      unit.attachedLeaderIds?.length !== 1);
+      !unit.attachedToBodyguardId &&
+      attachedLeaderIds.length < maxAttachedLeaders &&
+      !attachedLeaderIds.includes(leaderId));
   });
 }
 
