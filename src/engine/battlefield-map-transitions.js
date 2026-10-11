@@ -1,5 +1,6 @@
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { getBattlePrimaryMissions, getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
 
 const WIDTH_IN = 60;
 const HEIGHT_IN = 44;
@@ -129,6 +130,42 @@ const EVENT_COMPANION_FORCE_DISPOSITIONS = Object.freeze([
   "Take and Hold", "Disruption", "Purge the Foe", "Priority Assets", "Reconnaissance"
 ]);
 
+const EVENT_COMPANION_OBJECTIVE_NAMES = Object.freeze([
+  "Defender Home", "Attacker Home", "Central 1", "Expansion 1", "Expansion 2"
+]);
+
+function synchronizeCanonicalLayoutObjectives(state, missionSetup) {
+  if (!missionSetup?.myDisposition || !missionSetup?.opponentDisposition) return state.objectives ?? [];
+  const missions = getBattlePrimaryMissions(missionSetup.myDisposition, missionSetup.opponentDisposition);
+  if (!missions) return state.objectives ?? [];
+  const geometry = getEventCompanionMapLayout(missions.myMission, missions.opponentMission, missionSetup.layout);
+  if (!geometry?.verified) return state.objectives ?? [];
+
+  const objectives = [...(Array.isArray(state.objectives) ? state.objectives : [])];
+  for (const name of EVENT_COMPANION_OBJECTIVE_NAMES) {
+    const position = geometry.objectivePositions?.[name];
+    if (!position) continue;
+    const canonicalId = "event-companion:" + name;
+    const index = objectives.findIndex((item) => item &&
+      (item.layoutObjective === name || item.id === canonicalId));
+    if (index >= 0) {
+      // Explicit layoutObjective links are authoritative. Preserve the application
+      // ID and control record while updating only the verified position.
+      objectives[index] = { ...objectives[index], position: { ...position } };
+    } else {
+      objectives.push({
+        id: canonicalId,
+        name,
+        label: name,
+        layoutObjective: name,
+        position: { ...position },
+        control: null
+      });
+    }
+  }
+  return objectives;
+}
+
 export function setEventCompanionMissionSetup(state, {
   myDisposition, opponentDisposition, layout = "A"
 } = {}) {
@@ -147,8 +184,10 @@ export function setEventCompanionMissionSetup(state, {
   if (previous?.myDisposition === myDisposition &&
       previous?.opponentDisposition === opponentDisposition &&
       previous?.layout === layout) return state;
+  const objectives = synchronizeCanonicalLayoutObjectives(state, nextSetup);
   const nextState = {
     ...state,
+    objectives,
     battlefieldMap: {
       ...(state.battlefieldMap ?? {}),
       missionSetup: nextSetup
