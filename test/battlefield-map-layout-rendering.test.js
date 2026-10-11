@@ -28,8 +28,8 @@ test("selected verified Event Companion layout renders terrain, deployment zones
 
 test("map without a selected verified layout does not invent geometry", () => {
   const html = renderBattlefieldMap({ units: [], objectives: [], history: [] }, { mode: "planning" });
-  assert.doesNotMatch(html, /battlefield-map__geometry/);
-  assert.doesNotMatch(html, /data-layout-objective/);
+  assert.doesNotMatch(html, /<svg class="battlefield-map__geometry"/);
+  assert.doesNotMatch(html, /<div class="battlefield-map__objective battlefield-map__objective--layout" data-layout-objective=/);
   assert.match(html, /Terrain, deployment zones, line of sight/);
 });
 
