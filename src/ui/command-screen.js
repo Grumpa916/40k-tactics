@@ -738,7 +738,7 @@ export function createCommandScreen(container, {
       '<p>Map positions are approximate references. Objective control is recorded manually below and is not inferred from marker positions.</p></section>' +
       '<section><h2>Objective control</h2><p>Tap the result that matches the table. This records your assessment; the app does not determine control from map coordinates.</p>' +
       (objectiveMessage ? '<p role="status">' + escapeHtml(objectiveMessage) + '</p>' : '') +
-      '<div class="command-objectives">' + objectiveCards + '</div></section>'
+      '<div class="command-objectives">' + objectiveCards + '</div></section>' +
       secondaryMissionManager +
       secondaryRedrawMarkup +
       secondaryVpForm +
