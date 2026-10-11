@@ -9,6 +9,8 @@ import { createMovementScreen } from "./movement-screen.js";
 import { createBattlePersistencePanel } from "./battle-persistence-panel.js";
 import { createSupabaseAuthPanel } from "./supabase-auth-panel.js";
 import { createSupabaseBattleStore } from "../persistence/supabase-battle-store.js";
+import { createSupabaseArmyRosterStore } from "../persistence/supabase-army-roster-store.js";
+import { createArmyRosterPanel } from "./army-roster-panel.js";
 import { createShootingScreen } from "./shooting-screen.js";
 
 const PHASES = Object.freeze([
@@ -87,7 +89,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   container.innerHTML = `<main class="battle-shell">
     ${reminderMarkup}
     <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
-    ${showCloud && viewedPhase === "setup" ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2><p>Sign in to save a battle before play or load a previous battle to resume it.</p><div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' : ""}
+    ${showCloud && viewedPhase === "setup" ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2><p>Sign in to save a battle before play or load a previous battle to resume it.</p><div data-supabase-auth-panel></div><div data-battle-persistence-panel></div><div data-army-roster-panel></div></section>' : ""}
     <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
@@ -115,6 +117,7 @@ export function createBattleShell(container, {
   let mountedScreen = null;
   let mountedPersistencePanel = null;
   let mountedAuthPanel = null;
+  let mountedRosterPanel = null;
   const cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
   const showCloud = Boolean(supabaseClient || cloudStore);
   let viewedPhase = session.getState()?.phase ?? "command";
@@ -197,14 +200,25 @@ export function createBattleShell(container, {
       mountedPersistencePanel = null;
       mountedAuthPanel?.destroy();
       mountedAuthPanel = null;
+      mountedRosterPanel?.destroy();
+      mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud);
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
+      const rosterContainer = container.querySelector("[data-army-roster-panel]");
+      const rosterStore = supabaseClient ? createSupabaseArmyRosterStore(supabaseClient) : null;
       const mountPersistenceForUser = (user) => {
         mountedPersistencePanel?.destroy();
         mountedPersistencePanel = null;
+        mountedRosterPanel?.destroy();
+        mountedRosterPanel = null;
         if (user && cloudStore && persistenceContainer) {
           mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
+        }
+        if (user && rosterStore && rosterContainer) {
+          mountedRosterPanel = createArmyRosterPanel(rosterContainer, { store: rosterStore });
+        } else if (rosterContainer) {
+          rosterContainer.innerHTML = "<p>Sign in to create and reuse saved army rosters. Roster storage uses the same account as cloud battle saves.</p>";
         }
       };
       if (supabaseClient) {
@@ -214,6 +228,7 @@ export function createBattleShell(container, {
         });
       } else if (cloudStore && persistenceContainer) {
         mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
+        if (rosterContainer) rosterContainer.innerHTML = "<p>Army roster management requires the signed-in Supabase account.</p>";
       }
 
       const screenContainer = container.querySelector("[data-battle-screen]");
@@ -316,6 +331,8 @@ export function createBattleShell(container, {
       mountedPersistencePanel = null;
       mountedAuthPanel?.destroy();
       mountedAuthPanel = null;
+      mountedRosterPanel?.destroy();
+      mountedRosterPanel = null;
       container.replaceChildren();
     }
   };

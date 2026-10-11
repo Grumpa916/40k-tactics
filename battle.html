@@ -158,6 +158,21 @@
     .shoot-screen .complete { min-height:40px; padding:0 16px; border:0; border-radius:8px; background:#e8ebef; color:#0b0d10; font-weight:800; }
     @media(max-width:800px) { .shoot-screen .grid { grid-template-columns:1fr; } .shoot-screen .candidates { grid-template-columns:repeat(2,minmax(0,1fr)); } .shoot-screen .choice { align-items:flex-start; flex-direction:column; } }
     @media(max-width:520px) { .shoot-screen .candidates, .shoot-screen .controls { grid-template-columns:1fr; } .shoot-screen header { align-items:flex-start; flex-direction:column; } .shoot-screen .shoot-selected-shooter, .shoot-screen .shoot-advisory { grid-column:auto; } }
+
+    .army-roster-panel { margin:1rem 0; padding:1rem; border:1px solid #7b8794; border-radius:12px; background:#f8fafc; color:#17212b; }
+    .army-roster-panel h2 { margin-top:0; }
+    .army-roster-panel form, .army-roster-panel__saved, .army-roster-panel__editor { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; align-items:end; margin:.8rem 0; }
+    .army-roster-panel label { display:flex; flex-direction:column; gap:.35rem; font-weight:600; min-width:0; }
+    .army-roster-panel input, .army-roster-panel select { box-sizing:border-box; width:100%; min-height:48px; padding:.65rem; border:1px solid #64748b; border-radius:8px; background:white; color:#17212b; font-size:1rem; }
+    .army-roster-panel button { min-height:48px; padding:.65rem .85rem; border:1px solid #475569; border-radius:8px; background:#e2e8f0; color:#17212b; font-size:1rem; font-weight:650; cursor:pointer; }
+    .army-roster-panel button:disabled { opacity:.5; cursor:not-allowed; }
+    .army-roster-panel__saved { grid-template-columns:minmax(0,1fr); }
+    .army-roster-panel__actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .army-roster-panel__editor { display:block; border-top:1px solid #cbd5e1; padding-top:.5rem; }
+    .army-roster-panel__editor form { grid-template-columns:minmax(0,2fr) minmax(100px,1fr) auto; }
+    .army-roster-panel__editor ul { padding-left:0; list-style:none; }
+    .army-roster-panel__editor li { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.5rem 0; border-bottom:1px solid #cbd5e1; }
+    @media(max-width:760px) { .army-roster-panel form, .army-roster-panel__editor form { grid-template-columns:1fr; } .army-roster-panel__actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } }
   </style>
 </head>
 <body>
