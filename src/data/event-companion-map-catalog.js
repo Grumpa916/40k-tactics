@@ -1,5 +1,6 @@
 // Derived without geometry changes from the verified V1 Event Companion v1.2 extraction.
-// Reference-only provenance: Grumpa916/onoforge40k data/warhammer-event-companion-v1.2.json
+// Force Disposition matrix is copied from the V1 reference implementation's PRIMARY_MISSIONS.
+// Reference-only provenance: Grumpa916/onoforge40k, refactor/clean-reset-monolith.
 // Source geometry is a visual guide, not a rules/line-of-sight authority.
 export const EVENT_COMPANION_MAP_CATALOG = Object.freeze({
   "schemaVersion": "event-companion-map-catalog.v1",
@@ -14,6 +15,50 @@ export const EVENT_COMPANION_MAP_CATALOG = Object.freeze({
       "coordinateOrigin": "bottom-left"
     },
     "layoutKeyPage": 8
+  },
+  "forceDispositions": [
+    "Take and Hold",
+    "Disruption",
+    "Purge the Foe",
+    "Priority Assets",
+    "Reconnaissance"
+  ],
+  "forceDispositionMissionMatrix": {
+    "Take and Hold": {
+      "Take and Hold": "Battlefield Dominance",
+      "Disruption": "Determined Acquisition",
+      "Purge the Foe": "Immovable Object",
+      "Priority Assets": "Inescapable Dominion",
+      "Reconnaissance": "Purge and Secure"
+    },
+    "Disruption": {
+      "Take and Hold": "Death Trap",
+      "Disruption": "Outmanoeuvre",
+      "Purge the Foe": "Delaying Action",
+      "Priority Assets": "Locate and Deny",
+      "Reconnaissance": "Smoke and Mirrors"
+    },
+    "Purge the Foe": {
+      "Take and Hold": "Unstoppable Force",
+      "Disruption": "Punishment",
+      "Purge the Foe": "Meatgrinder",
+      "Priority Assets": "Destroyer's Wrath",
+      "Reconnaissance": "Consecrate"
+    },
+    "Priority Assets": {
+      "Take and Hold": "Secure Asset",
+      "Disruption": "Extract Relic",
+      "Purge the Foe": "Vital Link",
+      "Priority Assets": "Sabotage",
+      "Reconnaissance": "Vanguard Operation"
+    },
+    "Reconnaissance": {
+      "Take and Hold": "Reconnaissance Sweep",
+      "Disruption": "Surveil the Foe",
+      "Purge the Foe": "Triangulation",
+      "Priority Assets": "Search and Scour",
+      "Reconnaissance": "Gather Intel"
+    }
   },
   "layoutIndex": [
     {
