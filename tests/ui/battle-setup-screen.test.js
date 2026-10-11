@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { createBattleSetupScreen } from "../../src/ui/battle-setup-screen.js";
 import { createGameState } from "../../src/state/game-state.js";
 import { createUnit, UNIT_STATUS } from "../../src/state/unit.js";
+import { COMMAND_TYPES } from "../../src/commands/game-commands.js";
+import { setEventCompanionMissionSetup } from "../../src/engine/battlefield-map-transitions.js";
 
 function setup() {
-  const state = createGameState({
+  let state = createGameState({
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
     units: [
       createUnit({ id: "friendly", ownerId: "p1", name: "Friendly Unit", status: UNIT_STATUS.RESERVES }),
@@ -23,7 +25,13 @@ function setup() {
   };
   const session = {
     getState: () => state,
-    dispatch: (command) => commands.push(command),
+    dispatch: (command) => {
+      commands.push(command);
+      if (command.type === COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP) {
+        state = setEventCompanionMissionSetup(state, command.payload);
+      }
+      return state;
+    },
     subscribe() { return () => {}; }
   };
   return { root, session, commands, listeners };
@@ -77,5 +85,43 @@ test("setup screen displays fixed ruleset checklist, readiness, and conditional 
   assert.match(root.innerHTML, /Scouts/);
   assert.match(root.innerHTML, /Mission selected/);
   assert.match(root.innerHTML, /the map does not validate legality/);
+  screen.destroy();
+});
+
+
+test("Force Disposition touch buttons update mission setup and unlock layout choices", () => {
+  const { root, session, commands, listeners } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+
+  function tapDisposition(kind, value) {
+    const button = {
+      getAttribute(name) {
+        return name === "data-event-companion-disposition-choice" ? kind
+          : name === "data-disposition-value" ? value : null;
+      }
+    };
+    listeners.click({
+      target: {
+        closest(selector) {
+          return selector === "[data-event-companion-disposition-choice]" ? button : null;
+        }
+      }
+    });
+  }
+
+  assert.match(root.innerHTML, /data-event-companion-disposition-choice="my"/);
+  tapDisposition("my", "Take and Hold");
+  assert.equal(session.getState().battlefieldMap.missionSetup.myDisposition, "Take and Hold");
+  assert.match(root.innerHTML, /Disposition recorded/);
+
+  tapDisposition("opponent", "Disruption");
+  assert.equal(session.getState().battlefieldMap.missionSetup.opponentDisposition, "Disruption");
+  assert.match(root.innerHTML, /Your Primary Mission:/);
+  assert.match(root.innerHTML, /Opponent Primary Mission:/);
+  assert.match(root.innerHTML, /data-event-companion-layout="A"/);
+  assert.equal(commands.length, 2);
+  assert.equal(commands[0].type, COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP);
+  assert.equal(commands[1].payload.myDisposition, "Take and Hold");
+  assert.equal(commands[1].payload.opponentDisposition, "Disruption");
   screen.destroy();
 });
