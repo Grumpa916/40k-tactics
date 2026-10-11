@@ -728,7 +728,7 @@ export function createCommandScreen(container, {
       '<section><h2>Objective control</h2><p>Tap the result that matches the table. This records your assessment; the app does not determine control from map coordinates.</p>' +
       (objectiveMessage ? '<p role="status">' + escapeHtml(objectiveMessage) + '</p>' : '') +
       '<div class="command-objectives">' + objectiveCards + '</div></section>' +
-      '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>'
+      '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>' +
       '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. Manual adjustments can add or subtract VP without consuming mission caps; deductions cannot reduce a score below zero.</p>' +
       (players.length ? '<form class="command-vp-form" data-vp-form><label>Player<select name="vp-player" required>' + playerOptions +
       '</select></label><label>Adjustment<select name="vp-direction" required><option value="add" selected>Add VP</option><option value="deduct">Subtract VP</option></select></label>' +
