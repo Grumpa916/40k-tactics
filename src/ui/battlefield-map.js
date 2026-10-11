@@ -160,30 +160,41 @@ export function renderBattlefieldMap(state, {
   }
 
   const objectives = Array.isArray(safeState.objectives) ? safeState.objectives : [];
-  const objectiveNodes = objectives.filter((objective) =>
-    objective && isValidBattlefieldPosition(objective.position)).map((objective) => {
-    const percent = battlefieldPositionToPercent(objective.position);
-    const name = objective.name ?? objective.id ?? "Objective";
-    const controlLabel = objectiveControlLabel(objective, safeState);
-    return '<div class="battlefield-map__objective" data-map-objective-id="' +
-      escapeHtml(objective.id ?? objective.name) + '" data-objective-control="' + escapeHtml(controlLabel) +
-      '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
-      escapeHtml(name + " · " + controlLabel) + '">' +
-      escapeHtml(String(name).slice(0, 12)) + '</div>';
-  }).join("");
-
-
+  // When a verified layout is selected, its catalog owns objective positions.
+  // Control state is linked only by an explicit layoutObjective key or the stable
+  // event-companion:<label> ID; no positional/order-based matching is inferred.
   const layoutObjectiveNodes = layoutGeometry
     ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {
       const percent = battlefieldPositionToPercent(position);
       if (!percent) return "";
+      const objective = objectives.find((item) =>
+        item && (item.layoutObjective === name || item.id === "event-companion:" + name)
+      );
+      const objectiveId = objective?.id ?? ("event-companion:" + name);
+      const controlLabel = objective ? objectiveControlLabel(objective, safeState) : "Control not recorded";
       const label = name.replace("Defender Home", "D Home").replace("Attacker Home", "A Home");
       return '<div class="battlefield-map__objective battlefield-map__objective--layout" data-layout-objective="' +
-        escapeHtml(name) + '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
-        escapeHtml(name + " · Event Companion p. " + layoutGeometry.page) + '">' +
+        escapeHtml(name) + '" data-map-objective-id="' + escapeHtml(objectiveId) +
+        '" data-objective-control="' + escapeHtml(controlLabel) +
+        '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
+        escapeHtml(name + " · " + controlLabel + " · Event Companion p. " + layoutGeometry.page) + '">' +
         escapeHtml(label) + '</div>';
     }).join("")
     : "";
+
+  const objectiveNodes = layoutGeometry
+    ? ""
+    : objectives.filter((objective) =>
+      objective && isValidBattlefieldPosition(objective.position)).map((objective) => {
+      const percent = battlefieldPositionToPercent(objective.position);
+      const name = objective.name ?? objective.id ?? "Objective";
+      const controlLabel = objectiveControlLabel(objective, safeState);
+      return '<div class="battlefield-map__objective" data-map-objective-id="' +
+        escapeHtml(objective.id ?? objective.name) + '" data-objective-control="' + escapeHtml(controlLabel) +
+        '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
+        escapeHtml(name + " · " + controlLabel) + '">' +
+        escapeHtml(String(name).slice(0, 12)) + '</div>';
+    }).join("");
 
   const emptyMessage = positionedUnits
     ? ""
