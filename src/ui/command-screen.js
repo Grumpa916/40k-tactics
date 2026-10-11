@@ -5,6 +5,7 @@ import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictory
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
 import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -62,6 +63,7 @@ export function createCommandScreen(container, {
   let selectedSecondaryPlayerId = null;
   let secondaryMissionMessage = "";
   let vpMessage = "";
+  let objectiveMessage = "";
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
@@ -73,7 +75,7 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-vp-undo]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-vp-undo], [data-objective-control-set]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute("data-vp-undo")) {
       const state = session.getState();
@@ -94,6 +96,65 @@ export function createCommandScreen(container, {
           " VP) for " + playerName(state, award.playerId) + ".";
       } catch (error) {
         vpMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
+    if (target.hasAttribute("data-objective-control-set")) {
+      const state = session.getState();
+      const objectiveId = target.getAttribute("data-objective-id");
+      const selectedControl = target.getAttribute("data-objective-control-set");
+      const players = Array.isArray(state.players) ? state.players : [];
+      const playerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
+      const opponent = players.find((player) => player.id !== playerId);
+      const objective = (state.objectives ?? []).find((item) => item?.id === objectiveId);
+      if (!objective) {
+        objectiveMessage = "Objective not found. Refresh the Command screen and try again.";
+        render();
+        return;
+      }
+      let controllerId = null;
+      let contestingPlayerIds = [];
+      let controlState = selectedControl;
+      if (selectedControl === "controlled") {
+        if (!playerId) {
+          objectiveMessage = "Select a player before recording objective control.";
+          render();
+          return;
+        }
+        controllerId = playerId;
+      } else if (selectedControl === "opponent-controlled") {
+        if (!playerId || !opponent) {
+          objectiveMessage = "Two configured players are required to record opponent control.";
+          render();
+          return;
+        }
+        controllerId = opponent.id;
+        controlState = "controlled";
+      } else if (selectedControl === "contested") {
+        if (players.length < 2) {
+          objectiveMessage = "Two configured players are required to record a contested objective.";
+          render();
+          return;
+        }
+        contestingPlayerIds = players.map((player) => player.id);
+      } else if (selectedControl !== "uncontrolled") {
+        objectiveMessage = "Unknown objective-control selection.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, payload: {
+          objectiveId, controllerId, contestingPlayerIds, controlState
+        }});
+        objectiveMessage = objective.name + ": " + ({
+          controlled: "control recorded for you",
+          "opponent-controlled": "control recorded for opponent",
+          contested: "contested",
+          uncontrolled: "uncontrolled"
+        })[selectedControl] + ".";
+      } catch (error) {
+        objectiveMessage = error?.message ?? String(error);
       }
       render();
       return;
@@ -380,10 +441,27 @@ export function createCommandScreen(container, {
       selectedSecondaryPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const objectives = Array.isArray(state.objectives) ? state.objectives : [];
-    const objectiveCards = objectives.length ? objectives.map((objective) =>
-      '<article class="command-objective"><strong>' + escapeHtml(objective.name ?? objective.label ?? objective.id) +
-      '</strong><span>' + escapeHtml(objectiveStatus(objective, state, playerId)) + '</span></article>'
-    ).join("") : '<p>No objectives have been configured for this battle.</p>';
+    const objectiveCards = objectives.length ? objectives.map((objective) => {
+      const objectiveId = escapeHtml(objective.id);
+      const objectiveName = escapeHtml(objective.name ?? objective.label ?? objective.id);
+      const currentState = objective.control?.controlState ?? "unrecorded";
+      const me = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
+      const hasOpponent = players.some((player) => player.id !== me);
+      return '<article class="command-objective" data-command-objective="' + objectiveId + '">' +
+        '<strong>' + objectiveName + '</strong><span>' + escapeHtml(objectiveStatus(objective, state, playerId)) + '</span>' +
+        '<div class="command-objective__actions" aria-label="Record control for ' + objectiveName + '">' +
+        '<button type="button" data-objective-control-set="controlled" data-objective-id="' + objectiveId +
+          '" aria-pressed="' + String(currentState === "controlled" && objective.control?.controllerId === me) + '">You</button>' +
+        '<button type="button" data-objective-control-set="opponent-controlled" data-objective-id="' + objectiveId +
+          '" aria-pressed="' + String(currentState === "controlled" && objective.control?.controllerId !== me) + '"' +
+          (!hasOpponent ? ' disabled' : '') + '>Opponent</button>' +
+        '<button type="button" data-objective-control-set="contested" data-objective-id="' + objectiveId +
+          '" aria-pressed="' + String(currentState === "contested") + '"' +
+          (players.length < 2 ? ' disabled' : '') + '>Contested</button>' +
+        '<button type="button" data-objective-control-set="uncontrolled" data-objective-id="' + objectiveId +
+          '" aria-pressed="' + String(currentState === "uncontrolled") + '">Uncontrolled</button>' +
+        '</div></article>';
+    }).join("") : '<p>No objectives have been configured for this battle.</p>';
 
     let scoring = '<p>No mission scoring definitions were supplied. No score is being inferred or awarded.</p>';
     if (missionDefinitions.length) {
@@ -644,6 +722,12 @@ export function createCommandScreen(container, {
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
+      '<section><h2>Live battlefield map</h2>' +
+      renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: playerId }) +
+      '<p>Map positions are approximate references. Objective control is recorded manually below and is not inferred from marker positions.</p></section>' +
+      '<section><h2>Objective control</h2><p>Tap the result that matches the table. This records your assessment; the app does not determine control from map coordinates.</p>' +
+      (objectiveMessage ? '<p role="status">' + escapeHtml(objectiveMessage) + '</p>' : '') +
+      '<div class="command-objectives">' + objectiveCards + '</div></section>' +
       '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>' +
       '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. Manual adjustments can add or subtract VP without consuming mission caps; deductions cannot reduce a score below zero.</p>' +
       (players.length ? '<form class="command-vp-form" data-vp-form><label>Player<select name="vp-player" required>' + playerOptions +
@@ -655,7 +739,6 @@ export function createCommandScreen(container, {
       '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +
-      '<section><h2>Objective control</h2><div class="command-objectives">' + objectiveCards + '</div></section>' +
       secondaryMissionManager +
       secondaryRedrawMarkup +
       secondaryVpForm +
