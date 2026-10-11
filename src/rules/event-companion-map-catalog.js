@@ -32,8 +32,10 @@ export function getLayoutOptionsForForceDispositions(myDisposition, opponentDisp
 export function getEventCompanionMissionLayoutOptions(missionA, missionB) {
   const pair = normalizePrimaryMissionPair(missionA, missionB);
   if (!pair) return null;
-  const index = EVENT_COMPANION_MAP_CATALOG.layoutIndex.find((entry) =>
-    entry.missionA === pair[0] && entry.missionB === pair[1]);
+  const index = EVENT_COMPANION_MAP_CATALOG.layoutIndex.find((entry) => {
+    const indexedPair = normalizePrimaryMissionPair(entry.missionA, entry.missionB);
+    return indexedPair?.[0] === pair[0] && indexedPair?.[1] === pair[1];
+  });
   if (!index) return null;
   return Object.freeze(index.layouts.map((layout, i) => Object.freeze({
     layout,
@@ -50,8 +52,13 @@ export function getEventCompanionMapLayout(missionA, missionB, layout) {
   if (!options) return null;
   const selected = options.find((item) => item.layout === layout);
   if (!selected) return null;
-  const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((item) =>
-    item.missionKey === selected.missionKey && item.layout === layout);
+  const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((item) => {
+    const [geometryMissionA, geometryMissionB] = (item.missionKey ?? "").split(" ↔ ");
+    const geometryPair = normalizePrimaryMissionPair(geometryMissionA, geometryMissionB);
+    return geometryPair?.[0] === selected.missionA &&
+      geometryPair?.[1] === selected.missionB &&
+      item.layout === layout;
+  });
   if (!geometry?.verified) return null;
   return geometry;
 }
@@ -82,7 +89,9 @@ export function validateEventCompanionMapCatalog(catalog = EVENT_COMPANION_MAP_C
   }
   const geometryKeys = new Set();
   for (const geometry of catalog.layouts ?? []) {
-    const key = geometry.missionKey + "|" + geometry.layout;
+    const [missionA, missionB] = (geometry.missionKey ?? "").split(" ↔ ");
+    const normalizedPair = normalizePrimaryMissionPair(missionA, missionB);
+    const key = (normalizedPair ? normalizedPair.join(" ↔ ") : geometry.missionKey) + "|" + geometry.layout;
     if (geometryKeys.has(key)) errors.push("Duplicate geometry key: " + key);
     geometryKeys.add(key);
     if (geometry.verified !== true) errors.push("Unverified geometry included: " + key);
