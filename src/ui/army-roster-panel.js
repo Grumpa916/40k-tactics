@@ -14,7 +14,7 @@ function newId() {
 function now() { return new Date().toISOString(); }
 
 /** Small-screen-friendly CRUD UI for the reusable roster library. */
-export function createArmyRosterPanel(container, { store } = {}) {
+export function createArmyRosterPanel(container, { store, players = [], onApplyRoster = null, canApply = true } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container is required.");
   for (const method of ["save", "list", "load", "remove"]) {
     if (typeof store?.[method] !== "function") throw new TypeError("A roster store with save, list, load, and remove is required.");
@@ -47,6 +47,7 @@ export function createArmyRosterPanel(container, { store } = {}) {
       '<button type="button" data-roster-duplicate ' + (!current || busy ? "disabled" : "") + '>Duplicate</button>' +
       '<button type="button" data-roster-delete ' + (!current || busy ? "disabled" : "") + '>Delete roster</button></div></div>' +
       (current ? '<section class="army-roster-panel__editor"><h3>' + escapeHtml(current.name) + '</h3>' +
+        (players.length ? '<div class="army-roster-panel__assign"><label>Assign this roster to player<select data-roster-player>' + players.map((player) => '<option value="' + escapeHtml(player.id) + '">' + escapeHtml(player.name || player.id) + '</option>').join("") + '</select></label><button type="button" data-roster-apply ' + (busy || !canApply || !onApplyRoster ? "disabled" : "") + '>Assign roster to battle</button></div>' : "") +
         '<form data-roster-unit><label>Unit name<input name="unitName" maxlength="120" required placeholder="e.g. Exocrine" ' + (busy ? "disabled" : "") + '></label>' +
         '<label>Model count<input name="modelCount" type="number" min="1" step="1" value="1" required ' + (busy ? "disabled" : "") + '></label>' +
         '<button type="submit" ' + (busy ? "disabled" : "") + '>Add unit</button></form>' +
@@ -101,8 +102,16 @@ export function createArmyRosterPanel(container, { store } = {}) {
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit]");
+    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply]");
     if (!button || !container.contains(button)) return;
+    if (button.matches("[data-roster-apply]")) {
+      await action(async () => {
+        if (!current || !onApplyRoster) throw new Error("Open a roster before assigning it.");
+        const playerId = container.querySelector("[data-roster-player]")?.value;
+        await onApplyRoster(current, playerId);
+      }, "Roster assigned to this battle. Its units are now available for deployment planning.");
+      return;
+    }
     if (button.matches("[data-roster-load]")) {
       await action(async () => {
         selectedId = container.querySelector("[data-roster-select]")?.value || selectedId;

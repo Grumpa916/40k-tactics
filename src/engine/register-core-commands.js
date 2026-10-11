@@ -1,4 +1,5 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
+import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
 import { registerCommandHandler } from "./command-engine.js";
 import {
   startBattle,
@@ -34,6 +35,7 @@ import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondar
 export function registerCoreCommandHandlers() {
   const handlers = [
     [COMMAND_TYPES.START_BATTLE, (state, command) => startBattle(state, command.payload)],
+    [COMMAND_TYPES.APPLY_ARMY_ROSTER_TO_BATTLE, (state, command) => applyArmyRosterToBattle(state, command.payload)],
     [COMMAND_TYPES.ENTER_DEPLOYMENT, (state) => enterDeployment(state)],
     [COMMAND_TYPES.DEPLOY_UNIT, (state, command) => deployUnit(state, command.payload)],
     [COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION, (state, command) => setDeploymentPlanPosition(state, command.payload)],
