@@ -32,7 +32,7 @@ test("assigns a battle-specific roster snapshot and replaces only that player's 
   assert.equal(unit.metadata.modelCount, 1);
   assert.equal(unit.metadata.datasheetId, "exocrine");
   assert.equal(next.armyRosters.p1.sourceRosterId, "tyranids-list");
-  assert.equal(next.armyRosters.p1.snapshotId, "snapshot-1");
+  assert.equal(next.armyRosters.p1.id, "snapshot-1");
   assert.equal(initial.units.length, 2);
   assert.equal(next.history.at(-1).type, "battle.army_roster_assigned");
 });
