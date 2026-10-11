@@ -216,7 +216,15 @@ export function createBattleShell(container, {
           mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
         }
         if (user && rosterStore && rosterContainer) {
-          mountedRosterPanel = createArmyRosterPanel(rosterContainer, { store: rosterStore });
+          mountedRosterPanel = createArmyRosterPanel(rosterContainer, {
+            store: rosterStore,
+            players: session.getState()?.players ?? [],
+            canApply: session.getState()?.phase === "setup" && session.getState()?.battle?.status === "setup",
+            onApplyRoster: (roster, playerId) => session.dispatch({
+              type: COMMAND_TYPES.APPLY_ARMY_ROSTER_TO_BATTLE,
+              payload: { roster, playerId }
+            })
+          });
         } else if (rosterContainer) {
           rosterContainer.innerHTML = "<p>Sign in to create and reuse saved army rosters. Roster storage uses the same account as cloud battle saves.</p>";
         }
