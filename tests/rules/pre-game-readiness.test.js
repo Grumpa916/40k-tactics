@@ -46,3 +46,37 @@ test("pre-game checks do not mutate the game state", () => {
   evaluatePreGameReadiness(state);
   assert.equal(JSON.stringify(state), before);
 });
+
+
+test("verified Event Companion missions and layout satisfy mission readiness without a separate mission id", () => {
+  const state = readyState();
+  delete state.battle.missionId;
+  state.battlefieldMap = {
+    missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Disruption",
+      layout: "B"
+    }
+  };
+
+  const result = evaluatePreGameReadiness(state);
+  assert.equal(result.ready, true);
+  assert.equal(result.missing.some((check) => check.id === "mission"), false);
+  assert.match(result.checks.find((check) => check.id === "mission").detail, /verified Event Companion battlefield layout/);
+});
+
+test("unverified Event Companion setup does not satisfy mission readiness", () => {
+  const state = readyState();
+  delete state.battle.missionId;
+  state.battlefieldMap = {
+    missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Disruption",
+      layout: "Z"
+    }
+  };
+
+  const result = evaluatePreGameReadiness(state);
+  assert.equal(result.ready, false);
+  assert.equal(result.missing.some((check) => check.id === "mission"), true);
+});
