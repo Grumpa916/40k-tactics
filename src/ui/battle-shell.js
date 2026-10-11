@@ -30,6 +30,7 @@ const SCREEN_FACTORIES = Object.freeze({
 });
 
 function phaseLabel(phase) {
+  if (phase === "setup") return "Battle Setup & Saves";
   if (phase === "deployment") return "Deployment";
   return PHASES.find((item) => item.id === phase)?.label ?? phase;
 }
@@ -40,15 +41,16 @@ function escapeHtml(value) {
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false) {
-  const visiblePhases = state.battle?.status === "deployment"
+  const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
+  const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
     ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
-    : PHASES;
+    : PHASES)];
   const phaseItems = visiblePhases.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
     return `<li class="battle-phase${active}">
       <button type="button" class="battle-phase__button" data-battle-phase-button="${phase.id}" aria-pressed="${phase.id === viewedPhase}">
-        <strong>${phase.label}</strong><span>${status}</span>
+        <strong>${phase.label}</strong><span>${phase.id === "setup" ? "Pre-game & cloud saves" : status}</span>
       </button>
     </li>`;
   }).join("");
@@ -85,7 +87,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   container.innerHTML = `<main class="battle-shell">
     ${reminderMarkup}
     <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
-    ${showCloud ? '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div>' : ""}
+    ${showCloud && viewedPhase === "setup" ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2><p>Sign in to save a battle before play or load a previous battle to resume it.</p><div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' : ""}
     <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
     <section class="battle-shell__content" data-battle-screen></section>
   </main>`;
@@ -282,7 +284,7 @@ export function createBattleShell(container, {
     const button = event.target?.closest?.("[data-battle-phase-button]");
     if (!button || !container.contains(button)) return;
     const nextPhase = button.getAttribute("data-battle-phase-button");
-    if (!PHASES.some((phase) => phase.id === nextPhase) &&
+    if (nextPhase !== "setup" && !PHASES.some((phase) => phase.id === nextPhase) &&
         !(nextPhase === "deployment" && session.getState()?.battle?.status === "deployment")) return;
     if (nextPhase !== "command") {
       scoringReviewCheckpoint = null;
