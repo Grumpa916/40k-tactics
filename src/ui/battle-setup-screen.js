@@ -250,6 +250,25 @@ export function createBattleSetupScreen(container, {
       selectedPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const mode = state.scoring?.secondaryMissionMode ?? "";
+    const readiness = evaluatePreGameReadiness(state);
+    const procedureSteps = getPreGameProcedureSteps();
+    const abilityRules = getPreGameAbilityRules();
+    const preGameMarkup = `<section class="pre-game-checklist"><h2>Pre-game checklist</h2>
+      <p>These prompts are fixed by the ruleset, not configured separately for each battle. Follow the selected mission's instructions for exact timing and exceptions.</p>
+      <h3>State readiness</h3><ul>${readiness.checks.map((check) =>
+        `<li><strong>${check.status === "complete" ? "Ready: " : "Check: "}${escapeHtml(check.label)}</strong> — ${escapeHtml(check.detail)}</li>`).join("")}</ul>
+      <h3>Standard procedure reminders</h3><ol>${procedureSteps.map((step) =>
+        `<li><strong>${escapeHtml(step.title)}</strong> — ${escapeHtml(step.detail)}</li>`).join("")}</ol>
+      <h3>Conditional ability prompts</h3>${abilityRules.map((rule) =>
+        `<article data-pre-game-ability="${escapeHtml(rule.id)}"><h4>${escapeHtml(rule.name)}</h4>
+        <p><strong>Timing:</strong> ${escapeHtml(rule.timing === "deployment" ? "During deployment" : "Resolve pre-battle abilities")}</p>
+        <p><strong>Applies when:</strong> ${escapeHtml(rule.appliesWhen)}</p>
+        ${rule.procedure ? `<p>${escapeHtml(rule.procedure)}</p>` : ""}
+        ${rule.choices ? `<ul>${rule.choices.map((choice) => `<li>${escapeHtml(choice)}</li>`).join("")}</ul>` : ""}
+        ${rule.scoutMove ? `<p><strong>Scout move:</strong> ${escapeHtml(rule.scoutMove.maximumDistance)} ${escapeHtml(rule.scoutMove.afterMoving)}</p>` : ""}
+        <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}
+      </section>`;
+
     const missionSetup = state.battlefieldMap?.missionSetup ?? {};
     const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
       ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
