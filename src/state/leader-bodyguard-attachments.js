@@ -34,6 +34,12 @@ export function attachLeaderToBodyguard(roster, leaderId, bodyguardId, { updated
   const bodyguard = roster.units.find((unit) => unit.id === bodyguardId);
   if (!leader) throw new RangeError("Leader unit not found: " + leaderId);
   if (!bodyguard) throw new RangeError("Bodyguard unit not found: " + bodyguardId);
+
+  // Guard the public mutation API independently of the eligibility UI.
+  // Reassignment must be an explicit detach followed by a new attach.
+  if (leader.attachedToBodyguardId) {
+    throw new RangeError("Leader is already attached to a Bodyguard; detach it before reassignment.");
+  }
   if (!getEligibleBodyguards(roster, leaderId).some((unit) => unit.id === bodyguardId)) {
     throw new RangeError("This Leader-to-Bodyguard pairing is not verified as legal.");
   }
