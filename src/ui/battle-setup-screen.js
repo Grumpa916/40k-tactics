@@ -4,6 +4,8 @@ import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/s
 import { getPreGameAbilityRules, getPreGameProcedureSteps } from "../rules/pre-game-procedure.js";
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
+import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
+import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -36,6 +38,25 @@ export function createBattleSetupScreen(container, {
 
   function handleChange(event) {
     const target = event.target;
+    if (target?.matches?.("[data-event-companion-disposition]")) {
+      const state = session.getState();
+      const current = state.battlefieldMap?.missionSetup ?? {};
+      const kind = target.getAttribute("data-event-companion-disposition");
+      const myDisposition = kind === "my" ? (target.value || null) : (current.myDisposition ?? null);
+      const opponentDisposition = kind === "opponent" ? (target.value || null) : (current.opponentDisposition ?? null);
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, payload: {
+          myDisposition, opponentDisposition, layout: "A"
+        }});
+        message = myDisposition && opponentDisposition
+          ? "Primary Missions resolved. Choose battlefield layout A, B, or C."
+          : "Select the other army’s Force Disposition to resolve both Primary Missions.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     if (target?.matches?.("[data-setup-secondary-mode]")) {
       if (!target.value) return;
       try {
@@ -55,6 +76,26 @@ export function createBattleSetupScreen(container, {
   }
 
   function handleClick(event) {
+    const layoutButton = event.target?.closest?.("[data-event-companion-layout]");
+    if (layoutButton) {
+      const layout = layoutButton.getAttribute("data-event-companion-layout");
+      const setup = session.getState().battlefieldMap?.missionSetup;
+      if (!setup?.myDisposition || !setup?.opponentDisposition) {
+        message = "Choose both Force Dispositions before selecting a layout.";
+        render();
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, payload: {
+          myDisposition: setup.myDisposition, opponentDisposition: setup.opponentDisposition, layout
+        }});
+        message = "Layout " + layout + " selected. Geometry will be connected to the map in the next step.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     const mapUnit = event.target?.closest?.("[data-map-unit-id]");
     if (mapUnit && mapUnit.closest?.('[data-map-mode="planning"]')) {
       selectedPlanUnitId = mapUnit.getAttribute?.("data-map-unit-id") ?? mapUnit.dataset?.mapUnitId ?? null;
@@ -227,6 +268,32 @@ export function createBattleSetupScreen(container, {
         ${rule.scoutMove ? `<p><strong>Scout move:</strong> ${escapeHtml(rule.scoutMove.maximumDistance)} ${escapeHtml(rule.scoutMove.afterMoving)}</p>` : ""}
         <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}
       </section>`;
+
+    const missionSetup = state.battlefieldMap?.missionSetup ?? {};
+    const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
+      ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
+      : null;
+    const missionSetupMarkup = '<section class="event-companion-mission-setup"><h2>Primary Missions &amp; Battlefield</h2>' +
+      '<p>Choose each army’s Force Disposition. The app resolves both Primary Missions using the verified Event Companion matrix.</p>' +
+      '<div class="command-vp-form"><label>Your army Force Disposition<select data-event-companion-disposition="my" ' +
+      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
+      '<option value="">Choose disposition...</option>' + EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
+        '<option value="' + escapeHtml(item) + '"' + (item === missionSetup.myDisposition ? ' selected' : '') + '>' + escapeHtml(item) + '</option>').join("") +
+      '</select></label><label>Opponent Force Disposition<select data-event-companion-disposition="opponent" ' +
+      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
+      '<option value="">Choose disposition...</option>' + EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
+        '<option value="' + escapeHtml(item) + '"' + (item === missionSetup.opponentDisposition ? ' selected' : '') + '>' + escapeHtml(item) + '</option>').join("") +
+      '</select></label></div>' +
+      (layoutOptions ? '<div class="event-companion-missions"><p><strong>Your Primary Mission:</strong> ' + escapeHtml(layoutOptions.myMission) +
+        '</p><p><strong>Opponent Primary Mission:</strong> ' + escapeHtml(layoutOptions.opponentMission) + '</p>' +
+        '<h3>Choose battlefield layout</h3><div role="group" aria-label="Battlefield layout choices">' +
+        layoutOptions.layouts.map((item) => '<button type="button" data-event-companion-layout="' + item.layout + '" aria-pressed="' +
+          (item.layout === missionSetup.layout ? 'true' : 'false') + '"' +
+          (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
+          ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
+        '</div><p>Source pages refer to the official Event Companion. Terrain geometry will be drawn on the map in the next implementation step.</p></div>' :
+        '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
+      '</section>';
     const history = getSecondaryMissionHistory(state);
     const fixedHistory = history.filter((item) =>
       item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
@@ -270,6 +337,7 @@ export function createBattleSetupScreen(container, {
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle.</p></header>' +
       preGameMarkup +
+      missionSetupMarkup +
       '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
       '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
       (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")

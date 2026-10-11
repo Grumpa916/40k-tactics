@@ -123,3 +123,38 @@ export function declareUnitReserve(state, { unitId, playerId } = {}) {
     unitId, playerId, previousPosition: state.battlefieldMap?.actualDeployment?.[unitId] ?? null
   }));
 }
+
+
+const EVENT_COMPANION_FORCE_DISPOSITIONS = Object.freeze([
+  "Take and Hold", "Disruption", "Purge the Foe", "Priority Assets", "Reconnaissance"
+]);
+
+export function setEventCompanionMissionSetup(state, {
+  myDisposition, opponentDisposition, layout = "A"
+} = {}) {
+  if (state.battle && state.battle.status !== "setup") {
+    throw new Error("Mission setup is locked after deployment begins.");
+  }
+  if ((myDisposition != null && !EVENT_COMPANION_FORCE_DISPOSITIONS.includes(myDisposition)) ||
+      (opponentDisposition != null && !EVENT_COMPANION_FORCE_DISPOSITIONS.includes(opponentDisposition))) {
+    throw new TypeError("Choose a valid Force Disposition for each army.");
+  }
+  if (!["A", "B", "C"].includes(layout)) {
+    throw new TypeError("Choose layout A, B, or C.");
+  }
+  const previous = state.battlefieldMap?.missionSetup ?? null;
+  const nextSetup = { myDisposition, opponentDisposition, layout };
+  if (previous?.myDisposition === myDisposition &&
+      previous?.opponentDisposition === opponentDisposition &&
+      previous?.layout === layout) return state;
+  const nextState = {
+    ...state,
+    battlefieldMap: {
+      ...(state.battlefieldMap ?? {}),
+      missionSetup: nextSetup
+    }
+  };
+  return appendHistoryEntry(nextState, createEvent("battlefield_map.event_companion_mission_setup_set", {
+    previous, missionSetup: nextSetup
+  }));
+}
