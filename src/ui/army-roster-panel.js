@@ -41,7 +41,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       '<p>Create a named roster once, then reuse it for future battles. Unit data entered here is manual; datasheet import/review will be added separately.</p>' +
       '<form data-roster-create><label>New roster name<input name="rosterName" maxlength="120" required placeholder="e.g. Tyranids Tournament List" ' + (busy ? "disabled" : "") + '></label>' +
       '<label>Faction<select name="faction" ' + (busy ? "disabled" : "") + '><option value="">Choose a faction…</option>' + ['Adeptus Custodes','Adeptus Mechanicus','Aeldari','Agents of the Imperium','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari','Emperor’s Children','Genestealer Cults','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines','Space Wolves','T’au Empire','Thousand Sons','Tyranids','World Eaters','Other / custom'].map((faction) => '<option value="' + escapeHtml(faction) + '">' + escapeHtml(faction) + '</option>').join("") + '</select></label>' +
-      '<label>Points limit<input name="pointsLimit" type="number" min="0" step="1" placeholder="2000" ' + (busy ? "disabled" : "") + '></label>' +
+      '<label>Points limit<input name="pointsLimit" type="number" min="0" step="1" placeholder="e.g. 2000" ' + (busy ? "disabled" : "") + '></label>' +
       '<button type="submit" ' + (busy ? "disabled" : "") + '>Create roster</button></form>' +
       '<div class="army-roster-panel__saved"><label>Saved rosters<select data-roster-select ' + (busy ? "disabled" : "") + '><option value="">Choose a roster…</option>' + options + '</select></label>' +
       '<div class="army-roster-panel__actions"><button type="button" data-roster-load ' + (!selectedId || busy ? "disabled" : "") + '>Open roster</button>' +
@@ -57,6 +57,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         '<p>Catalog is a starter list, not a complete or verified datasheet database. Check current official faction documents before relying on a unit entry.</p>' +
         '<details><summary>Add a unit not in the catalog</summary><label>Manual unit name<input name="manualUnitName" maxlength="120" placeholder="Enter unit name" ' + (busy ? "disabled" : "") + '></label><button type="submit" ' + (busy ? "disabled" : "") + '>Add manual unit</button></details></form>' +
         '<h4>Roster units (' + current.units.length + ')</h4><ul>' + (units || '<li>No units added yet.</li>') + '</ul>' +
+        '<div class="army-roster-panel__points"><label>Roster points limit<input data-roster-points-limit type="number" min="0" step="1" placeholder="e.g. 2000" value="' + escapeHtml(current.pointsLimit ?? "") + '" ' + (busy ? "disabled" : "") + '></label><button type="button" data-save-points-limit ' + (busy ? "disabled" : "") + '>Save points limit</button></div>' +
         '<p>Faction: ' + escapeHtml(current.faction || "Not set") + ' · Points limit: ' + escapeHtml(current.pointsLimit ?? "Not set") + '</p></section>' : "") +
       (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</section>';
   }
@@ -113,7 +114,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit]");
+    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit]");
     if (!button || !container.contains(button)) return;
     if (button.matches("[data-add-catalog-unit]")) {
       // Capture the selected values before action() re-renders the panel in its busy state.
@@ -130,6 +131,20 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         }], updatedAt: now() };
         await store.save({ id: updated.id, roster: updated }); current = updated;
       }, "Catalog candidate added. Verify its current datasheet before use.");
+      return;
+    }
+    if (button.matches("[data-save-points-limit]")) {
+      const pointsText = container.querySelector("[data-roster-points-limit]")?.value ?? "";
+      await action(async () => {
+        if (!current) throw new Error("Open a roster before changing its points limit.");
+        const pointsLimit = pointsText.trim() === "" ? null : Number(pointsText);
+        if (pointsLimit !== null && (!Number.isFinite(pointsLimit) || pointsLimit < 0)) {
+          throw new Error("Enter a valid points limit, or leave it blank.");
+        }
+        const updated = { ...current, pointsLimit, updatedAt: now() };
+        await store.save({ id: updated.id, roster: updated });
+        current = updated;
+      }, "Roster points limit saved.");
       return;
     }
     if (button.matches("[data-roster-apply]")) {
