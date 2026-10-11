@@ -1,3 +1,5 @@
+import { getBattlePrimaryMissions, getEventCompanionMapLayout } from "./event-companion-map-catalog.js";
+
 /**
  * Conservative application-level pre-game checks.
  *
@@ -55,11 +57,24 @@ export function evaluatePreGameReadiness(state = {}) {
   });
 
   const missionId = state.battle?.missionId ?? state.missionId ?? null;
+  const missionSetup = state.battlefieldMap?.missionSetup;
+  const primaryMissions = missionSetup?.myDisposition && missionSetup?.opponentDisposition
+    ? getBattlePrimaryMissions(missionSetup.myDisposition, missionSetup.opponentDisposition)
+    : null;
+  const eventCompanionLayout = primaryMissions && ["A", "B", "C"].includes(missionSetup?.layout)
+    ? getEventCompanionMapLayout(primaryMissions.myMission, primaryMissions.opponentMission, missionSetup.layout)
+    : null;
+  const verifiedEventCompanionSetup = Boolean(eventCompanionLayout?.verified);
+  const missionSelected = Boolean(missionId) || verifiedEventCompanionSetup;
   checks.push({
     id: "mission",
     label: "Mission selected",
-    status: missionId ? "complete" : "incomplete",
-    detail: missionId ? "A mission identifier is recorded." : "Select a mission before deployment."
+    status: missionSelected ? "complete" : "incomplete",
+    detail: missionId
+      ? "A mission identifier is recorded."
+      : verifiedEventCompanionSetup
+        ? "Both Primary Missions and a verified Event Companion battlefield layout are selected."
+        : "Select a mission and valid battlefield layout before deployment."
   });
 
   const missing = checks.filter((check) => check.status !== "complete");
