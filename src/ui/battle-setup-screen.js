@@ -89,7 +89,7 @@ export function createBattleSetupScreen(container, {
         session.dispatch({ type: COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, payload: {
           myDisposition: setup.myDisposition, opponentDisposition: setup.opponentDisposition, layout
         }});
-        message = "Layout " + layout + " selected. Geometry will be connected to the map in the next step.";
+        message = "Layout " + layout + " selected. Verified terrain, deployment zones, and objectives are shown on the map.";
       } catch (error) {
         message = error?.message ?? String(error);
       }
@@ -291,7 +291,7 @@ export function createBattleSetupScreen(container, {
           (item.layout === missionSetup.layout ? 'true' : 'false') + '"' +
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
           ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
-        '</div><p>Source pages refer to the official Event Companion. Terrain geometry will be drawn on the map in the next implementation step.</p></div>' :
+        '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p></div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
     const history = getSecondaryMissionHistory(state);
