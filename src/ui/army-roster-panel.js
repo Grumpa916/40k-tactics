@@ -116,13 +116,16 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit]");
     if (!button || !container.contains(button)) return;
     if (button.matches("[data-add-catalog-unit]")) {
+      // Capture the selected values before action() re-renders the panel in its busy state.
+      // Rendering replaces the select element, which otherwise resets the chosen unit to the placeholder.
+      const catalogId = container.querySelector("[data-catalog-unit]")?.value;
+      const modelCount = Math.max(1, Number(container.querySelector('[name="modelCount"]')?.value) || 1);
       await action(async () => {
         if (!current) throw new Error("Open a roster first.");
-        const catalogId = container.querySelector("[data-catalog-unit]")?.value;
         const candidate = findArmyUnitCandidates({ faction: current.faction }).find((unit) => unit.id === catalogId);
         if (!candidate) throw new Error("Choose a unit from the catalog first.");
         const updated = { ...current, units: [...current.units, {
-          id: newId(), name: candidate.name, modelCount: Math.max(1, Number(container.querySelector('[name="modelCount"]')?.value) || 1),
+          id: newId(), name: candidate.name, modelCount,
           datasheetId: candidate.id, dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl, reviewedAt: null }
         }], updatedAt: now() };
         await store.save({ id: updated.id, roster: updated }); current = updated;
