@@ -8,6 +8,27 @@ export function normalizePrimaryMissionPair(missionA, missionB) {
   return [missionA.trim(), missionB.trim()].sort((a, b) => a.localeCompare(b));
 }
 
+export function getPrimaryMissionForForceDispositions(ownDisposition, opponentDisposition) {
+  if (!ownDisposition || !opponentDisposition) return null;
+  const matrix = EVENT_COMPANION_MAP_CATALOG.forceDispositionMissionMatrix;
+  return matrix[ownDisposition]?.[opponentDisposition] ?? null;
+}
+
+export function getBattlePrimaryMissions(myDisposition, opponentDisposition) {
+  const myMission = getPrimaryMissionForForceDispositions(myDisposition, opponentDisposition);
+  const opponentMission = getPrimaryMissionForForceDispositions(opponentDisposition, myDisposition);
+  if (!myMission || !opponentMission) return null;
+  return Object.freeze({ myMission, opponentMission });
+}
+
+export function getLayoutOptionsForForceDispositions(myDisposition, opponentDisposition) {
+  const missions = getBattlePrimaryMissions(myDisposition, opponentDisposition);
+  if (!missions) return null;
+  const layouts = getEventCompanionMissionLayoutOptions(missions.myMission, missions.opponentMission);
+  if (!layouts) return null;
+  return Object.freeze({ ...missions, layouts });
+}
+
 export function getEventCompanionMissionLayoutOptions(missionA, missionB) {
   const pair = normalizePrimaryMissionPair(missionA, missionB);
   if (!pair) return null;
