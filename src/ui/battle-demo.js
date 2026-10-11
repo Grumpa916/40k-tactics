@@ -7,6 +7,8 @@ import { SCORING_TIMINGS, createMissionDefinition } from "../rules/mission-defin
 import { SCORING_EVIDENCE } from "../rules/scoring-eligibility.js";
 import { createBattleShell } from "./battle-shell.js";
 import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
+import { installV2SupabasePublicConfig } from "../persistence/supabase-runtime-config.js";
+import { createSupabaseClientFromPublicConfig } from "../persistence/supabase-client.js";
 
 clearCommandHandlers();
 registerCoreCommandHandlers();
@@ -103,11 +105,28 @@ const state = createGameState({
 
 const session = createGameSession(state);
 
-createBattleShell(document.getElementById("battle-app"), {
-  session,
-  perspectivePlayerId: "p1",
-  gameData,
-  missionActions: [{ id: "cleanse", name: "Cleanse" }],
-  missionDefinitions: demoMissionDefinitions,
-  secondaryMissionCatalog: SECONDARY_MISSION_CATALOG
-});
+// The full battle shell already owns the auth-to-cloud-save lifecycle. This demo
+// now supplies the public Supabase client so those existing controls can mount.
+// The root index.html remains on the isolated Fight Phase demo until integration
+// is ready for the main application entry point.
+async function initializeBattleDemo() {
+  let supabaseClient = null;
+  try {
+    installV2SupabasePublicConfig(window);
+    supabaseClient = await createSupabaseClientFromPublicConfig();
+  } catch (error) {
+    console.error("Supabase cloud controls could not be initialized:", error);
+  }
+
+  createBattleShell(document.getElementById("battle-app"), {
+    session,
+    perspectivePlayerId: "p1",
+    gameData,
+    missionActions: [{ id: "cleanse", name: "Cleanse" }],
+    missionDefinitions: demoMissionDefinitions,
+    secondaryMissionCatalog: SECONDARY_MISSION_CATALOG,
+    supabaseClient
+  });
+}
+
+void initializeBattleDemo();
