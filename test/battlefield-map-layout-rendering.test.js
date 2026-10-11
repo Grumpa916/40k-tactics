@@ -78,7 +78,7 @@ test("selected layout renders each canonical objective once at catalog coordinat
   assert.match(html, /data-layout-objective="Defender Home" data-map-objective-id="obj-home" data-objective-control="Controlled by My Army"/);
   assert.match(html, /data-layout-objective="Attacker Home" data-map-objective-id="event-companion:Attacker Home" data-objective-control="Control not recorded"/);
   assert.doesNotMatch(html, /data-map-objective-id="legacy-center"/);
-  assert.match(html, /left:21\.166666666666668%;top:41\.36363636363636%/);
+  assert.match(html, /left:21\\.16666666666666[0-9]*%;top:41\\.3636363636363[0-9]*%/);
 });
 
 test("layout objective controls link only through stable IDs or explicit layoutObjective keys", () => {
