@@ -42,18 +42,15 @@ export function createBattleSetupScreen(container, {
       const state = session.getState();
       const current = state.battlefieldMap?.missionSetup ?? {};
       const kind = target.getAttribute("data-event-companion-disposition");
-      const myDisposition = kind === "my" ? target.value : current.myDisposition;
-      const opponentDisposition = kind === "opponent" ? target.value : current.opponentDisposition;
-      if (!myDisposition || !opponentDisposition) {
-        message = "Choose both Force Dispositions to resolve the Primary Missions.";
-        render();
-        return;
-      }
+      const myDisposition = kind === "my" ? (target.value || null) : (current.myDisposition ?? null);
+      const opponentDisposition = kind === "opponent" ? (target.value || null) : (current.opponentDisposition ?? null);
       try {
         session.dispatch({ type: COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, payload: {
           myDisposition, opponentDisposition, layout: "A"
         }});
-        message = "Primary Missions resolved. Choose battlefield layout A, B, or C.";
+        message = myDisposition && opponentDisposition
+          ? "Primary Missions resolved. Choose battlefield layout A, B, or C."
+          : "Select the other army’s Force Disposition to resolve both Primary Missions.";
       } catch (error) {
         message = error?.message ?? String(error);
       }
@@ -257,15 +254,11 @@ export function createBattleSetupScreen(container, {
     const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
       ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
       : null;
-    const dispositionOptions = '<option value="">Choose disposition...</option>' +
-      EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
-        '<option value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</option>').join("");
     const missionSetupMarkup = '<section class="event-companion-mission-setup"><h2>Primary Missions &amp; Battlefield</h2>' +
       '<p>Choose each army’s Force Disposition. The app resolves both Primary Missions using the verified Event Companion matrix.</p>' +
       '<div class="command-vp-form"><label>Your army Force Disposition<select data-event-companion-disposition="my" ' +
       (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
-      dispositionOptions.replace('value="">Choose disposition...', 'value=""' + (missionSetup.myDisposition ? '' : ' selected') + '>Choose disposition...') +
-      EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
+      '<option value="">Choose disposition...</option>' + EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
         '<option value="' + escapeHtml(item) + '"' + (item === missionSetup.myDisposition ? ' selected' : '') + '>' + escapeHtml(item) + '</option>').join("") +
       '</select></label><label>Opponent Force Disposition<select data-event-companion-disposition="opponent" ' +
       (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
@@ -282,24 +275,6 @@ export function createBattleSetupScreen(container, {
         '</div><p>Source pages refer to the official Event Companion. Terrain geometry will be drawn on the map in the next implementation step.</p></div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
-    const readiness = evaluatePreGameReadiness(state);
-    const procedureSteps = getPreGameProcedureSteps();
-    const abilityRules = getPreGameAbilityRules();
-    const preGameMarkup = `<section class="pre-game-checklist"><h2>Pre-game checklist</h2>
-      <p>These prompts are fixed by the ruleset, not configured separately for each battle. Follow the selected mission's instructions for exact timing and exceptions.</p>
-      <h3>State readiness</h3><ul>${readiness.checks.map((check) =>
-        `<li><strong>${check.status === "complete" ? "Ready: " : "Check: "}${escapeHtml(check.label)}</strong> — ${escapeHtml(check.detail)}</li>`).join("")}</ul>
-      <h3>Standard procedure reminders</h3><ol>${procedureSteps.map((step) =>
-        `<li><strong>${escapeHtml(step.title)}</strong> — ${escapeHtml(step.detail)}</li>`).join("")}</ol>
-      <h3>Conditional ability prompts</h3>${abilityRules.map((rule) =>
-        `<article data-pre-game-ability="${escapeHtml(rule.id)}"><h4>${escapeHtml(rule.name)}</h4>
-        <p><strong>Timing:</strong> ${escapeHtml(rule.timing === "deployment" ? "During deployment" : "Resolve pre-battle abilities")}</p>
-        <p><strong>Applies when:</strong> ${escapeHtml(rule.appliesWhen)}</p>
-        ${rule.procedure ? `<p>${escapeHtml(rule.procedure)}</p>` : ""}
-        ${rule.choices ? `<ul>${rule.choices.map((choice) => `<li>${escapeHtml(choice)}</li>`).join("")}</ul>` : ""}
-        ${rule.scoutMove ? `<p><strong>Scout move:</strong> ${escapeHtml(rule.scoutMove.maximumDistance)} ${escapeHtml(rule.scoutMove.afterMoving)}</p>` : ""}
-        <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}
-      </section>`;
     const history = getSecondaryMissionHistory(state);
     const fixedHistory = history.filter((item) =>
       item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
