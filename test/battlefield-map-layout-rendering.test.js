@@ -53,3 +53,50 @@ test("selected Event Companion layout geometry is shared across planning, deploy
     assert.match(html, /battlefield-map__terrain/);
   }
 });
+
+
+test("selected layout renders each canonical objective once at catalog coordinates and links control by explicit key", () => {
+  const state = {
+    players: [{ id: "me", name: "My Army" }, { id: "opponent", name: "Opponent" }],
+    units: [],
+    objectives: [
+      { id: "obj-home", name: "Home marker", layoutObjective: "Defender Home", position: { x: 2, y: 2 },
+        control: { id: "obj-home", controllerId: "me", contestingPlayerIds: [], controlState: "controlled" } },
+      { id: "legacy-center", name: "Legacy center", position: { x: 30, y: 22 } }
+    ],
+    history: [],
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Take and Hold",
+      layout: "A"
+    } }
+  };
+  const html = renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: "me" });
+  const markers = [...html.matchAll(/data-layout-objective="([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(markers.sort(), ["Attacker Home", "Central 1", "Defender Home", "Expansion 1", "Expansion 2"].sort());
+  assert.equal((html.match(/data-map-objective-id=/g) ?? []).length, 5);
+  assert.match(html, /data-layout-objective="Defender Home" data-map-objective-id="obj-home" data-objective-control="Controlled by My Army"/);
+  assert.match(html, /data-layout-objective="Attacker Home" data-map-objective-id="event-companion:Attacker Home" data-objective-control="Control not recorded"/);
+  assert.doesNotMatch(html, /data-map-objective-id="legacy-center"/);
+  assert.match(html, /left:21\.166666666666664%;top:41\.36363636363637%/);
+});
+
+test("layout objective controls link only through stable IDs or explicit layoutObjective keys", () => {
+  const state = {
+    players: [{ id: "p1", name: "Player 1" }],
+    units: [],
+    objectives: [{
+      id: "event-companion:Central 1",
+      name: "Central",
+      position: { x: 1, y: 1 },
+      control: { id: "event-companion:Central 1", controllerId: "p1", contestingPlayerIds: [], controlState: "controlled" }
+    }],
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Take and Hold",
+      layout: "A"
+    } }
+  };
+  const html = renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: "p1" });
+  assert.match(html, /data-layout-objective="Central 1" data-map-objective-id="event-companion:Central 1" data-objective-control="Controlled by Player 1"/);
+});
