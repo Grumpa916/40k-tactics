@@ -76,6 +76,27 @@ export function createBattleSetupScreen(container, {
   }
 
   function handleClick(event) {
+    const dispositionButton = event.target?.closest?.("[data-event-companion-disposition-choice]");
+    if (dispositionButton) {
+      const state = session.getState();
+      const current = state.battlefieldMap?.missionSetup ?? {};
+      const kind = dispositionButton.getAttribute("data-event-companion-disposition-choice");
+      const value = dispositionButton.getAttribute("data-disposition-value");
+      const myDisposition = kind === "my" ? value : (current.myDisposition ?? null);
+      const opponentDisposition = kind === "opponent" ? value : (current.opponentDisposition ?? null);
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, payload: {
+          myDisposition, opponentDisposition, layout: "A"
+        }});
+        message = myDisposition && opponentDisposition
+          ? "Primary Missions resolved. Choose battlefield layout A, B, or C."
+          : "Disposition recorded. Select the other army’s Force Disposition.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     const layoutButton = event.target?.closest?.("[data-event-companion-layout]");
     if (layoutButton) {
       const layout = layoutButton.getAttribute("data-event-companion-layout");
@@ -275,15 +296,18 @@ export function createBattleSetupScreen(container, {
       : null;
     const missionSetupMarkup = '<section class="event-companion-mission-setup"><h2>Primary Missions &amp; Battlefield</h2>' +
       '<p>Choose each army’s Force Disposition. The app resolves both Primary Missions using the verified Event Companion matrix.</p>' +
-      '<div class="command-vp-form"><label>Your army Force Disposition<select data-event-companion-disposition="my" ' +
-      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
-      '<option value="">Choose disposition...</option>' + EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
-        '<option value="' + escapeHtml(item) + '"' + (item === missionSetup.myDisposition ? ' selected' : '') + '>' + escapeHtml(item) + '</option>').join("") +
-      '</select></label><label>Opponent Force Disposition<select data-event-companion-disposition="opponent" ' +
-      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
-      '<option value="">Choose disposition...</option>' + EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
-        '<option value="' + escapeHtml(item) + '"' + (item === missionSetup.opponentDisposition ? ' selected' : '') + '>' + escapeHtml(item) + '</option>').join("") +
-      '</select></label></div>' +
+      '<div class="event-companion-disposition-groups">' +
+      '<fieldset class="event-companion-disposition-group"><legend>Your army Force Disposition</legend><div class="event-companion-disposition-options">' +
+      EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
+        '<button type="button" data-event-companion-disposition-choice="my" data-disposition-value="' + escapeHtml(item) +
+        '" aria-pressed="' + String(item === missionSetup.myDisposition) + '"' +
+        (state.battle && state.battle.status !== "setup" ? ' disabled' : '') + '>' + escapeHtml(item) + '</button>').join("") +
+      '</div></fieldset><fieldset class="event-companion-disposition-group"><legend>Opponent Force Disposition</legend><div class="event-companion-disposition-options">' +
+      EVENT_COMPANION_MAP_CATALOG.forceDispositions.map((item) =>
+        '<button type="button" data-event-companion-disposition-choice="opponent" data-disposition-value="' + escapeHtml(item) +
+        '" aria-pressed="' + String(item === missionSetup.opponentDisposition) + '"' +
+        (state.battle && state.battle.status !== "setup" ? ' disabled' : '') + '>' + escapeHtml(item) + '</button>').join("") +
+      '</div></fieldset></div>' +
       (layoutOptions ? '<div class="event-companion-missions"><p><strong>Your Primary Mission:</strong> ' + escapeHtml(layoutOptions.myMission) +
         '</p><p><strong>Opponent Primary Mission:</strong> ' + escapeHtml(layoutOptions.opponentMission) + '</p>' +
         '<h3>Choose battlefield layout</h3><div role="group" aria-label="Battlefield layout choices">' +
