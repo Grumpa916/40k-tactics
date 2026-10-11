@@ -1,4 +1,5 @@
 import { createArmyRoster, duplicateArmyRoster } from "../state/army-roster-library.js";
+import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -23,6 +24,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   let selectedId = "";
   let current = null;
   let message = "";
+  let unitSearch = "";
   let busy = false;
   let destroyed = false;
 
@@ -48,9 +50,12 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       '<button type="button" data-roster-delete ' + (!current || busy ? "disabled" : "") + '>Delete roster</button></div></div>' +
       (current ? '<section class="army-roster-panel__editor"><h3>' + escapeHtml(current.name) + '</h3>' +
         (players.length ? '<div class="army-roster-panel__assign"><label>Assign this roster to player<select data-roster-player>' + players.map((player) => '<option value="' + escapeHtml(player.id) + '">' + escapeHtml(player.name || player.id) + '</option>').join("") + '</select></label><button type="button" data-roster-apply ' + (busy || !canApply || !onApplyRoster ? "disabled" : "") + '>Assign roster to battle</button></div>' : "") +
-        '<form data-roster-unit><label>Unit name<input name="unitName" maxlength="120" required placeholder="e.g. Exocrine" ' + (busy ? "disabled" : "") + '></label>' +
+        '<form data-roster-unit><label>Find unit in faction catalog<input name="unitSearch" data-unit-search maxlength="100" placeholder="Search units…" ' + (busy ? "disabled" : "") + '></label>' +
+        '<label>Choose unit<select name="catalogUnitId" data-catalog-unit ' + (busy ? "disabled" : "") + '><option value="">Choose a unit…</option>' + findArmyUnitCandidates({ faction: current.faction, query: unitSearch }).map((unit) => '<option value="' + escapeHtml(unit.id) + '">' + escapeHtml(unit.name) + ' · name only, verify</option>').join("") + '</select></label>' +
         '<label>Model count<input name="modelCount" type="number" min="1" step="1" value="1" required ' + (busy ? "disabled" : "") + '></label>' +
-        '<button type="submit" ' + (busy ? "disabled" : "") + '>Add unit</button></form>' +
+        '<button type="button" data-add-catalog-unit ' + (busy ? "disabled" : "") + '>Add selected unit</button>' +
+        '<p>Catalog is a starter list, not a complete or verified datasheet database. Check current official faction documents before relying on a unit entry.</p>' +
+        '<details><summary>Add a unit not in the catalog</summary><label>Manual unit name<input name="manualUnitName" maxlength="120" placeholder="Enter unit name" ' + (busy ? "disabled" : "") + '></label><button type="submit" ' + (busy ? "disabled" : "") + '>Add manual unit</button></details></form>' +
         '<h4>Roster units (' + current.units.length + ')</h4><ul>' + (units || '<li>No units added yet.</li>') + '</ul>' +
         '<p>Faction: ' + escapeHtml(current.faction || "Not set") + ' · Points limit: ' + escapeHtml(current.pointsLimit ?? "Not set") + '</p></section>' : "") +
       (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</section>';
@@ -76,6 +81,12 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if (!form || !container.contains(form)) return;
     event.preventDefault();
     const values = formValues(form);
+    if (form.matches("[data-roster-unit]") && !String(values.manualUnitName ?? "").trim()) {
+      event.stopPropagation();
+      message = "Choose a catalog unit above, or enter a manual unit name.";
+      render();
+      return;
+    }
     if (form.matches("[data-roster-create]")) {
       await action(async () => {
         const timestamp = now();
@@ -94,7 +105,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       if (!current) throw new Error("Open a roster before adding units.");
       const updatedAt = now();
       const updated = { ...current, units: [...current.units, {
-        id: newId(), name: String(values.unitName).trim(), modelCount: Math.max(1, Number(values.modelCount) || 1),
+        id: newId(), name: String(values.manualUnitName).trim(), modelCount: Math.max(1, Number(values.modelCount) || 1),
         datasheetId: null, dataSource: { status: "manual-entry" }
       }], updatedAt };
       await store.save({ id: updated.id, roster: updated });
@@ -102,8 +113,22 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply]");
+    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit]");
     if (!button || !container.contains(button)) return;
+    if (button.matches("[data-add-catalog-unit]")) {
+      await action(async () => {
+        if (!current) throw new Error("Open a roster first.");
+        const catalogId = container.querySelector("[data-catalog-unit]")?.value;
+        const candidate = findArmyUnitCandidates({ faction: current.faction }).find((unit) => unit.id === catalogId);
+        if (!candidate) throw new Error("Choose a unit from the catalog first.");
+        const updated = { ...current, units: [...current.units, {
+          id: newId(), name: candidate.name, modelCount: Math.max(1, Number(container.querySelector('[name="modelCount"]')?.value) || 1),
+          datasheetId: candidate.id, dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl, reviewedAt: null }
+        }], updatedAt: now() };
+        await store.save({ id: updated.id, roster: updated }); current = updated;
+      }, "Catalog candidate added. Verify its current datasheet before use.");
+      return;
+    }
     if (button.matches("[data-roster-apply]")) {
       await action(async () => {
         if (!current || !onApplyRoster) throw new Error("Open a roster before assigning it.");
@@ -163,6 +188,18 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       }, "Unit removed and roster saved.");
     }
   }
+  function handleInput(event) {
+    if (event.target?.matches?.("[data-unit-search]")) {
+      unitSearch = event.target.value;
+      const select = container.querySelector("[data-catalog-unit]");
+      if (select) {
+        const selected = select.value;
+        select.innerHTML = '<option value="">Choose a unit…</option>' + findArmyUnitCandidates({ faction: current?.faction, query: unitSearch })
+          .map((unit) => '<option value="' + escapeHtml(unit.id) + '">' + escapeHtml(unit.name) + ' · name only, verify</option>').join("");
+        if ([...select.options].some((option) => option.value === selected)) select.value = selected;
+      }
+    }
+  }
   function handleChange(event) {
     if (event.target?.matches?.("[data-roster-select]")) {
       selectedId = event.target.value || "";
@@ -170,6 +207,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }
   }
   container.addEventListener("submit", handleSubmit);
+  container.addEventListener("input", handleInput);
   container.addEventListener("click", handleClick);
   container.addEventListener("change", handleChange);
   void refresh();
@@ -178,6 +216,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     destroy() {
       destroyed = true;
       container.removeEventListener("submit", handleSubmit);
+      container.removeEventListener("input", handleInput);
       container.removeEventListener("click", handleClick);
       container.removeEventListener("change", handleChange);
       container.replaceChildren();
