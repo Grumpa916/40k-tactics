@@ -44,8 +44,8 @@ const demoMissionDefinitions = [
 ];
 
 const state = createGameState({
-  phase: "shooting",
-  turn: 2,
+  phase: "setup",
+  turn: 0,
   activePlayer: "p1",
   players: [
     { id: "p1", name: "You" },
@@ -53,8 +53,8 @@ const state = createGameState({
   ],
   battle: {
     id: "integrated-demo",
-    status: "active",
-    round: 1,
+    status: "setup",
+    round: 0,
     firstPlayerId: "p1",
     activePlayerId: "p1"
   },

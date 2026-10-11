@@ -6,8 +6,9 @@ import { createUnit, UNIT_STATUS } from "../../src/state/unit.js";
 import { COMMAND_TYPES } from "../../src/commands/game-commands.js";
 import { setEventCompanionMissionSetup } from "../../src/engine/battlefield-map-transitions.js";
 
-function setup() {
+function setup({ battle = null } = {}) {
   let state = createGameState({
+    battle,
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
     units: [
       createUnit({ id: "friendly", ownerId: "p1", name: "Friendly Unit", status: UNIT_STATUS.RESERVES }),
@@ -124,4 +125,20 @@ test("Force Disposition touch buttons update mission setup and unlock layout cho
   assert.equal(commands[1].payload.myDisposition, "Take and Hold");
   assert.equal(commands[1].payload.opponentDisposition, "Disruption");
   screen.destroy();
+});
+
+
+test("Force Disposition buttons remain enabled during setup and locked during active battle", () => {
+  const setupState = setup();
+  const setupScreen = createBattleSetupScreen(setupState.root, { session: setupState.session, perspectivePlayerId: "p1" });
+  const setupButtons = setupState.root.innerHTML.match(/<button type="button" data-event-companion-disposition-choice=/g) ?? [];
+  assert.equal(setupButtons.length, 10);
+  assert.doesNotMatch(setupState.root.innerHTML, /data-event-companion-disposition-choice="my"[^>]*disabled/);
+  setupScreen.destroy();
+
+  const activeState = setup({ battle: { id: "active-battle", status: "active", round: 1 } });
+  const activeScreen = createBattleSetupScreen(activeState.root, { session: activeState.session, perspectivePlayerId: "p1" });
+  assert.match(activeState.root.innerHTML, /data-event-companion-disposition-choice="my"[^>]*disabled/);
+  assert.match(activeState.root.innerHTML, /data-event-companion-disposition-choice="opponent"[^>]*disabled/);
+  activeScreen.destroy();
 });
