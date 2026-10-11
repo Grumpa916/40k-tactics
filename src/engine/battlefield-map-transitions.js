@@ -135,9 +135,9 @@ export function setEventCompanionMissionSetup(state, {
   if (state.battle && state.battle.status !== "setup") {
     throw new Error("Mission setup is locked after deployment begins.");
   }
-  if (!EVENT_COMPANION_FORCE_DISPOSITIONS.includes(myDisposition) ||
-      !EVENT_COMPANION_FORCE_DISPOSITIONS.includes(opponentDisposition)) {
-    throw new TypeError("Choose a valid Force Disposition for both armies.");
+  if ((myDisposition != null && !EVENT_COMPANION_FORCE_DISPOSITIONS.includes(myDisposition)) ||
+      (opponentDisposition != null && !EVENT_COMPANION_FORCE_DISPOSITIONS.includes(opponentDisposition))) {
+    throw new TypeError("Choose a valid Force Disposition for each army.");
   }
   if (!["A", "B", "C"].includes(layout)) {
     throw new TypeError("Choose layout A, B, or C.");
