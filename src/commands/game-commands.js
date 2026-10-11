@@ -1,5 +1,6 @@
 export const COMMAND_TYPES = Object.freeze({
   START_BATTLE: "battle.start",
+  APPLY_ARMY_ROSTER_TO_BATTLE: "battle.apply_army_roster",
   ENTER_DEPLOYMENT: "battle.enter_deployment",
   DEPLOY_UNIT: "unit.deploy",
   SET_DEPLOYMENT_PLAN_POSITION: "battlefield_map.set_deployment_plan_position",
