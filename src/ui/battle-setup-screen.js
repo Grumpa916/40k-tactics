@@ -40,6 +40,24 @@ export function createBattleSetupScreen(container, {
 
   function handleChange(event) {
     const target = event.target;
+    if (target?.matches?.("[data-pre-game-role]")) {
+      const state = session.getState();
+      const current = state.preGameSetup ?? {};
+      const kind = target.getAttribute("data-pre-game-role");
+      const nextValue = target.value || null;
+      const attackerPlayerId = kind === "attackerPlayerId" ? nextValue : (current.attackerPlayerId ?? null);
+      const firstPlayerId = kind === "firstPlayerId" ? nextValue : (current.firstPlayerId ?? null);
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: {
+          attackerPlayerId, firstPlayerId
+        }});
+        message = "Battle roles saved. Defender is automatically the other army.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     if (target?.matches?.("[data-event-companion-disposition]")) {
       const state = session.getState();
       const current = state.battlefieldMap?.missionSetup ?? {};
@@ -276,8 +294,25 @@ export function createBattleSetupScreen(container, {
     const readiness = evaluatePreGameReadiness(state);
     const procedureSteps = getPreGameProcedureSteps();
     const abilityRules = getPreGameAbilityRules();
-    const preGameMarkup = `<section class="pre-game-checklist"><h2>Pre-game checklist</h2>
-      <p>These prompts are fixed by the ruleset, not configured separately for each battle. Follow the selected mission's instructions for exact timing and exceptions.</p>
+    const preGameSetup = state.preGameSetup ?? {};
+    const rolePlayerOptions = '<option value="">Choose a player...</option>' + players.map((player) =>
+      '<option value="' + escapeHtml(player.id) + '">' + escapeHtml(player.name ?? player.id) + '</option>'
+    ).join("");
+    const attacker = players.find((player) => player.id === preGameSetup.attackerPlayerId);
+    const defender = players.find((player) => player.id === preGameSetup.defenderPlayerId);
+    const preGameRolesMarkup = '<section class="pre-game-roles"><h2>Battle roles</h2>' +
+      '<p>Record who is the attacker and who takes the first turn. The defender is automatically assigned as the other army.</p>' +
+      '<label>Attacker<select data-pre-game-role="attackerPlayerId" ' +
+      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
+      rolePlayerOptions.replace('value="' + escapeHtml(preGameSetup.attackerPlayerId ?? "") + '"', 'value="' + escapeHtml(preGameSetup.attackerPlayerId ?? "") + '" selected') +
+      '</select></label>' +
+      '<p><strong>Defender:</strong> ' + escapeHtml(defender?.name ?? (attacker ? "Automatically assigned to the other army" : "Selected automatically after choosing attacker")) + '</p>' +
+      '<label>Who goes first?<select data-pre-game-role="firstPlayerId" ' +
+      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
+      rolePlayerOptions.replace('value="' + escapeHtml(preGameSetup.firstPlayerId ?? "") + '"', 'value="' + escapeHtml(preGameSetup.firstPlayerId ?? "") + '" selected') +
+      '</select></label></section>';
+    const preGameMarkup = preGameRolesMarkup + `<section class="pre-game-checklist"><h2>Pre-game checklist</h2>
+      <p>These prompts are fixed by the ruleset, not configured separately for each battle. Primary Missions and secondary mission mode are selected in the next step, Mission &amp; Map.</p>
       <h3>State readiness</h3><ul>${readiness.checks.map((check) =>
         `<li><strong>${check.status === "complete" ? "Ready: " : "Check: "}${escapeHtml(check.label)}</strong> — ${escapeHtml(check.detail)}</li>`).join("")}</ul>
       <details><summary>Standard procedure reminders</summary><ol>${procedureSteps.map((step) =>
