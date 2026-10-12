@@ -23,8 +23,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead the datasheet-listed eligible Bodyguard units." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Alpha Warrior", description: "Weapons equipped by models in this model's unit have Sustained Hits 1." }),
       Object.freeze({ name: "Aggressive Leader-beast", description: "In your opponent's Shooting phase, when an enemy unit has shot, if a model in this unit was destroyed by those attacks, this unit can make a surge move of up to D6 inches." })
     ]),
@@ -54,8 +54,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Ravener claws and talons", range: "Melee", attacks: 3, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Twin-linked" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Death from Below", description: "At the end of your opponent's turn, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves." })
     ]),
     defaultModelCount: 5,
@@ -85,8 +85,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Tyrant Guard, according to the reviewed datasheet listing." }),
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, when a friendly Tyranids unit within 12 inches is targeted with a Stratagem, reduce that usage's CP cost by 1." }),
       Object.freeze({ name: "Onslaught", description: "While a friendly Tyranids unit is within 6 inches of this model, ranged weapons equipped by models in that unit have Assault and Lethal Hits." })
     ]),
@@ -104,8 +104,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Neurogaunts, Tyrant Guard, or Zoanthropes, according to the reviewed datasheet listing." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Node Lash", description: "While leading a unit, add 1 to its models' Hit rolls; against a Battle-shocked target, add 1 to the Wound roll as well." }),
       Object.freeze({ name: "Psychic Terror", description: "When this model is on the battlefield as Shadow in the Warp is unleashed, subtract 1 from the resulting enemy Battle-shock tests." }),
       Object.freeze({ name: "Neuroloids", description: "In your Command phase, select up to two friendly Tyranids units within 18 inches to be considered within Synapse Range until your next Command phase." })
@@ -125,7 +125,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows Hive Tyrant, Neurotyrant, and The Swarmlord to lead this unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Guardian Organism", description: "While a CHARACTER model is leading this unit, that CHARACTER model has Feel No Pain 5+." })
     ]),
     defaultModelCount: 3,
@@ -142,8 +142,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Genestealers, according to the reviewed datasheet listing." }),
       Object.freeze({ name: "Scouts 8 inches", description: "This unit has the Scouts 8 inches ability." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Vicious Insight", description: "While leading a unit, weapons equipped by models in that unit have Devastating Wounds." }),
       Object.freeze({ name: "Hypnotic Gaze", description: "At the start of the Fight phase, select one enemy unit within Engagement Range; subtract 1 from its models' Hit rolls for the phase." })
     ]),
@@ -161,7 +161,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Carnifexes, according to the reviewed datasheet listing." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Alpha Leader", description: "While leading a unit, each time a model in that unit makes an attack, you can re-roll the Hit roll." }),
       Object.freeze({ name: "Unstoppable Monster", description: "At the start of each player's Command phase, this model regains up to D3 lost wounds." })
     ]),
@@ -187,7 +187,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Blistering Assault", description: "In the opponent's Shooting phase, if an enemy unit's attacks cause a model in this unit to lose a wound, this unit can make a surge move of up to D6+2 inches." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows Old One Eye to lead this unit." })
     ]),
@@ -206,8 +206,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Tyrant Guard, according to the reviewed datasheet listing." }),
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Hive Commander", description: "At the start of your Command phase, if this model is on the battlefield, you gain 1CP." }),
       Object.freeze({ name: "Malign Presence", description: "Once per turn, when the opponent targets a unit within 12 inches of this model with a Stratagem, increase that use's CP cost by 1." }),
       Object.freeze({ name: "Domination of the Hive Mind", description: "While a friendly Tyranids unit is within 9 inches of this model, that unit is within your army's Synapse Range." })
@@ -241,8 +241,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 2, skill: "5+", strength: 3, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Spirit Leech", description: "While an enemy unit is within 6 inches, if this unit contains a Neurothrope, each time that enemy unit fails a Battle-shock test it suffers D3 mortal wounds and one model in this unit regains up to D3 lost wounds." }),
       Object.freeze({ name: "Warp Field", description: "While a friendly Tyranids unit is within 6 inches of this unit, models in that unit have a 6+ invulnerable save." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Neurotyrant to lead this unit." })
@@ -265,7 +265,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Strangleweb", equipment: "Wargear option", range: '18"', attacks: "D6", skill: "—", strength: 2, ap: 0, damage: 1, abilities: "Assault, Devastating Wounds, Torrent" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Skulking Horrors", description: "In the opponent's Movement phase, if an enemy unit ends a move within 8 inches and this unit is not in Engagement Range, this unit can make a Normal move of up to D6 inches." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Tyranid Prime with Lash Whip to lead this unit." })
     ]),
@@ -287,9 +287,9 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, reduce the CP cost of a Stratagem targeting a friendly Tyranids unit within 12 inches by 1CP." }),
       Object.freeze({ name: "Paroxysm", description: "At the start of the Fight phase, select one visible enemy unit within 12 inches and roll a D6; on 2+, subtract 1 from the Attacks characteristic of its weapons for the phase; on a 1, this Psyker suffers D3 mortal wounds." })
     ]),
@@ -307,9 +307,9 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
       Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
-      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
-      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
       Object.freeze({ name: "Pheromone Trail", description: "Once per battle round, this model can be targeted with Rapid Ingress for 0CP." })
     ]),
@@ -327,9 +327,9 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
       Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
-      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
-      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
       Object.freeze({ name: "Fear of the Unseen", description: "While an enemy unit is within 6 inches of this model, worsen the Leadership characteristic of models in that unit by 1. In the Battle-shock step of your opponent's Command phase, if such an enemy unit is below its Starting Strength, it must take a Battle-shock test." }),
 
@@ -350,8 +350,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Spawn Termagants", description: "In your Command phase, select one friendly Termagants unit within 6 inches and return up to D3+3 destroyed models to it; a unit cannot be selected more than once per phase." }),
       Object.freeze({ name: "Brood Progenitor", description: "While a friendly Termagants unit is within 6 inches of this model, ranged weapons equipped by models in that unit have Lethal Hits." })
     ]),
@@ -372,7 +372,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Resilient Organism", description: "Once per battle, when an attack is allocated to this model, change that attack's Damage characteristic to 0." })
     ]),
     defaultModelCount: 1,
@@ -399,8 +399,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Tyranid Warrior claws and talons", equipment: "Default", range: "Melee", attacks: 5, skill: "3+", strength: 5, ap: -1, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Adaptable Predators", description: "This unit is eligible to shoot and declare a charge in a turn in which it Fell Back." })
     ]),
     defaultModelCount: 3,
@@ -417,7 +417,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 4, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Disruption Bombardment", description: "After this unit shoots, select an enemy Infantry unit hit; until the end of the opponent's next turn, subtract 2 from its Move and from its Advance and Charge rolls." })
     ]),
     defaultModelCount: 5, defaultPoints: 50,
@@ -433,7 +433,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Seed Spore Mines", description: "Once per turn in your Shooting phase, this unit can forgo ranged attacks to add one Spore Mines unit with one model per model in this unit, set up wholly within 48 inches and more than 8 inches from enemy units." })
     ]),
     defaultModelCount: 1, defaultPoints: 60,
@@ -449,7 +449,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 3, skill: "4+", strength: 5, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Defensive Stance", description: "When targeted with Fire Overwatch, unmodified Hit rolls of 5+ score hits, or 4+ instead while within range of an objective marker you control." })
     ]),
     defaultModelCount: 3, defaultPoints: 80,
@@ -464,10 +464,10 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
-      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
-      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
       Object.freeze({ name: "Neural Disruption", description: "In your Command phase, select one enemy unit within 12 inches; it must take a Battle-shock test." }),
       Object.freeze({ name: "Psychological Saboteur", description: "While a Battle-shocked enemy unit is within 12 inches, subtract 1 from its Hit rolls and add 1 to Wound rolls for friendly Tyranids attacks targeting it." })
@@ -485,7 +485,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Burning Spray", description: "After this unit shoots, select an enemy unit hit; until the end of the phase, that unit cannot have the Benefit of Cover." })
     ]),
     defaultModelCount: 1, defaultPoints: 40,
@@ -508,8 +508,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
       Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
-      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Pouncing Leap", description: "This unit can be targeted with Heroic Intervention regardless of other uses this phase; that use costs 1 fewer CP and does not prevent uses on other units." })
     ]),
     defaultModelCount: 3, defaultPoints: 55,
@@ -524,8 +524,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Spinemaws", equipment: "Wargear option", range: '6"', attacks: 4, skill: "5+", strength: 3, ap: 0, damage: 1, abilities: "Pistol" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Chitinous Horrors", description: "While an enemy unit is within Engagement Range of this unit, halve the Objective Control characteristic of models in that enemy unit." })
     ]),
     defaultModelCount: 1, defaultPoints: 30,
@@ -540,11 +540,11 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Clawed limbs", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 5, ap: -1, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
-      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Parasitic Infection", description: "Each time an Infantry model is destroyed by an attack made with this model's barbed ovipositor, after this model has finished making its attacks, you can add one new Ripper Swarms unit to your army consisting of D3 models and set it up within 3 inches of this model. If you do, that Ripper Swarms unit can be set up within Engagement Range of the destroyed model's unit, but not within Engagement Range of any other enemy units." }),
       Object.freeze({ name: "It Itches!", description: "At the start of the Fight phase, select one enemy unit within Engagement Range; it must take a Battle-shock test." })
     ]),
@@ -561,7 +561,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Symbiotic Targeting", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. Until the end of the phase, each time a friendly Tyranids model makes an attack that targets that unit, re-roll a Hit roll of 1." })
     ]),
     defaultModelCount: 1, defaultPoints: 135,
@@ -578,7 +578,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Grisly Spectacle", description: "Each time this model is selected to fight, after resolving its attacks, if one or more enemy units were destroyed by those attacks, each enemy unit within 6 inches of this model must take a Battle-shock test." })
     ]),
     defaultModelCount: 1, defaultPoints: 125,
@@ -595,8 +595,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Encephalic Diffusion", description: "While an enemy unit is within 6 inches of this model, each time a model in that unit makes an attack, subtract 1 from the Hit roll, and, if that enemy unit is Below Half-strength, subtract 1 from the Wound roll as well." })
     ]),
     defaultModelCount: 1, defaultPoints: 180,
@@ -613,7 +613,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Feel No Pain 5+", description: "Each time this model would lose a wound, roll one D6: on a 5+, that wound is not lost." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Bio-stimulus", description: "After this model shoots, select an enemy unit hit; until the end of the turn, friendly Tyranids melee attacks targeting it improve AP by 1. The same enemy unit can only be affected once per turn." }),
       Object.freeze({ name: "Feeding Frenzy", description: "Melee attacks targeting a unit below Starting Strength gain +1 to Hit; if the target is also Below Half-strength, they gain +1 to Wound." })
     ]),
@@ -630,8 +630,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Scything talons", equipment: "Default", range: "Melee", attacks: 12, skill: "2+", strength: 7, ap: -2, damage: 2 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Swallow Whole", description: "Attacks with the gaping maw targeting Infantry, Mounted, or Beasts score Critical Wounds on successful unmodified Wound rolls; destroying such a model with the maw restores up to D3+2 lost wounds." }),
       Object.freeze({ name: "Subterranean Hunter", description: "At the end of the Fight phase, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves." }),
       Object.freeze({ name: "Serpentine Fiend", description: "This model can move through terrain features, but cannot end a move within a wall, a floor, etc. This model can be set up or end a move on any floor level of Ruins, but if that level is not the ground floor, it can only do so if its base does not overhang the floor at that level." })
@@ -645,8 +645,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Beast", "Fly", "Great Devourer", "Mucolid Spores"]),
     weapons: Object.freeze([]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Bio-minefield", description: "Enemy units cannot start or end an Advance move within 6 inches of this unit." }),
       Object.freeze({ name: "Floating Death", description: "Each time this unit or an enemy unit ends a move, for each model in this unit within 3 inches of one or more enemy units, select one of those enemy units. That model in this unit is destroyed, then roll one D6: on a 2–5, the selected enemy unit suffers D3 mortal wounds; on a 6, it suffers D6 mortal wounds." })
     ]),
@@ -662,8 +662,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Mawloc scything talons", equipment: "Default", range: "Melee", attacks: 16, skill: "3+", strength: 8, ap: -2, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Terror From The Deep", description: "When this model is set up using Deep Strike, roll a D6 for each enemy unit within 12 inches: on 2–4 it suffers D3 mortal wounds; on 5+ it suffers 3 mortal wounds and must take a Battle-shock test." })
     ]),
     defaultModelCount: 1, defaultPoints: 130,
@@ -680,8 +680,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
       Object.freeze({ name: "Harpoon Barbs", description: "Once per turn, when an enemy unit within Engagement Range of this model is selected to Fall Back, roll one D6: on a 2+, that unit suffers D6 mortal wounds." })
     ]),
@@ -701,8 +701,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
       Object.freeze({ name: "Unnatural Resilience", description: "This model has Feel No Pain 4+ against mortal wounds." })
     ]),
@@ -719,7 +719,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Grasping Tendrils", description: "Each time an enemy unit (excluding TITANIC units) within Engagement Range of one or more units from your army with this ability is selected to Fall Back, you can roll one D6: on a 3+, that enemy unit must Remain Stationary instead." }),
       Object.freeze({ name: "Hypertoxic Miasma", description: "At the end of your Movement phase, roll a D6 for each enemy unit within 6 inches: on 2–3 it suffers 1 mortal wound, on 4–5 D3, and on 6 D6." })
     ]),
@@ -733,7 +733,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Infantry", "Battleline", "Great Devourer", "Endless Multitude", "Hormagaunts"]),
     weapons: Object.freeze([Object.freeze({ name: "Hormagaunt talons", equipment: "Default", range: "Melee", attacks: 3, skill: "4+", strength: 3, ap: -1, damage: 1 })]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Bounding Leap", description: "This unit is eligible to declare a charge in a turn in which it Advanced." })
     ]),
     defaultModelCount: 10, defaultPoints: 70,
@@ -746,7 +746,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     weapons: Object.freeze([Object.freeze({ name: "Genestealer claws and talons", equipment: "Default", range: "Melee", attacks: 4, skill: "2+", strength: 4, ap: -2, damage: 1 })]),
     abilities: Object.freeze([
       Object.freeze({ name: "Scouts 8", description: "This unit has Scouts 8 inches." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Vanguard Predator", description: "Each time a model in this unit makes an attack, re-roll a Hit roll of 1; if the target is within range of an objective marker, re-roll a Wound roll of 1 as well." })
     ]),
     defaultModelCount: 5, defaultPoints: 75,
@@ -761,8 +761,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Blinding venom", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 3, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Winged Swarm", description: "After this unit shoots, if it is not within Engagement Range, it can make a Normal move of up to 6 inches; if it does, it cannot declare a charge this turn." })
     ]),
     defaultModelCount: 10, defaultPoints: 75,
@@ -774,8 +774,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Infantry", "Great Devourer", "Synapse", "Tyranid Warriors with Melee Bio-weapons"]),
     weapons: Object.freeze([Object.freeze({ name: "Tyranid Warrior claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 5, ap: -2, damage: 1, abilities: "Twin-linked" })]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Adaptive Instincts", description: "Once per turn in the Fight phase, when this unit is selected to fight or when an enemy unit targets it, choose: its melee attacks have +1 Strength, or this unit has +1 Toughness." })
     ]),
     defaultModelCount: 3, defaultPoints: 75,
@@ -787,8 +787,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Infantry", "Fly", "Great Devourer", "Venomthropes"]),
     weapons: Object.freeze([Object.freeze({ name: "Toxic lashes", equipment: "Default", range: "Melee", attacks: 5, skill: "3+", strength: 3, ap: 0, damage: 1, abilities: "Anti-Infantry 2+" })]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Foul Spores", description: "Friendly Tyranids units within 6 inches of this unit have Stealth." })
     ]),
     defaultModelCount: 3, defaultPoints: 55,
@@ -803,8 +803,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Trygon scything talons", equipment: "Default", range: "Melee", attacks: 12, skill: "3+", strength: 9, ap: -2, damage: 3 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Subterranean Tunnels", description: "When set up using Deep Strike in your Movement phase, this model can be set up more than 6 inches horizontally from enemy units, but cannot declare a charge that turn." })
     ]),
     defaultModelCount: 1, defaultPoints: 135,
@@ -816,10 +816,10 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Winged Tyranid Prime"]),
     weapons: Object.freeze([Object.freeze({ name: "Prime talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 6, ap: -1, damage: 2 })]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
       Object.freeze({ name: "Leader", description: "This model can lead eligible Tyranid units listed in the attachment compatibility data." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Alpha Warrior", description: "While this model is leading a unit, weapons equipped by models in that unit have Sustained Hits 1." }),
       Object.freeze({ name: "Death Blow", description: "If destroyed by a melee attack before it has fought this phase, on a D6 roll of 4+ it can fight after the attacking unit finishes its attacks before being removed." })
     ]),
@@ -838,7 +838,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Spore Mine Cysts", description: "At the end of your opponent's Fight phase, you can do one of the following: select one visible enemy unit (excluding Lone Operative units) within 24 inches of this unit and roll six D6 for that unit, causing 1 mortal wound for each 3+; or add a new Spore Mines unit containing D3 models to your army and set it up anywhere within 6 inches of this model and more than 8 inches horizontally away from all enemy units. You cannot select the Spore Mines option for more than one model per turn." })
     ]),
     defaultModelCount: 1, defaultPoints: 185,
@@ -857,7 +857,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Airborne Predator", description: "Each time this model makes a ranged attack targeting a unit that can Fly, add 1 to the Hit roll." })
     ]),
     defaultModelCount: 1, defaultPoints: 170,
@@ -873,8 +873,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Aerial Seeding", description: "This model must start the battle in Reserves, but neither it nor any units embarked within it are counted towards any limits placed on the maximum number of Reserves units you can start the battle with. It can be set up in the Reinforcements step of your first, second or third Movement phase, regardless of mission rules. Any embarked units must immediately disembark more than 8 inches from all enemy models. After this model has been set up on the battlefield, no units can embark within it." }),
       Object.freeze({ name: "Transport", description: "Transport capacity: 20 Tyranids Infantry models, or 1 Tyranids Monster model with Wounds 12 or less; Infantry models with more than 1 Wound take up 3 spaces." })
     ]),
@@ -893,7 +893,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 2D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Apex-beast", description: "Each time this model makes an attack targeting a Battle-shocked unit, add 1 to the Hit roll." }),
       Object.freeze({ name: "Stalking Forward", description: "Each time this model makes a Normal, Advance or Fall Back move, it can move over models (excluding Titanic models) and terrain features that are 4 inches or less in height as if they were not there." }),
       Object.freeze({ name: "Damaged: 1-10 Wounds Remaining", description: "While this model has 1-10 wounds remaining, subtract 6 from this model’s Objective Control characteristic and each time this model makes an attack, subtract 1 from the Hit roll." }),
@@ -913,7 +913,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 2D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Hover", description: "This model has the Hover core ability." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Frenzied Metabolism", description: "When selected to shoot, this model can add 1 to Wound rolls for its attacks this phase; afterward, on a D6 roll of 2+, it suffers D3 mortal wounds." }),
       Object.freeze({ name: "Transport", description: "Transport capacity: 20 Gargoyles models and 1 Winged Tyranid Prime model." })
     ]),
@@ -935,9 +935,9 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Ravener heavy claws and talons", equipment: "Default", range: "Melee", attacks: 3, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Anti-Monster 5+, Anti-Vehicle 5+, Twin-linked" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability for the Ravener Prime; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Leader", description: "The Ravener Prime leads the Hyperadapted Raveners unit." }),
       Object.freeze({ name: "Alpha Invader", description: "Weapons equipped by models in this unit have Sustained Hits 1." }),
       Object.freeze({ name: "Hypersensory Array", description: "Once per battle round, you can target this unit with the Rapid Ingress or Heroic Intervention Stratagem, regardless of any other uses of that Stratagem this phase. If you do, that use costs 1 fewer CP and does not prevent uses of that Stratagem on other units this phase." })
@@ -996,9 +996,9 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     weapons: Object.freeze([Object.freeze({ name: "Grasping tail", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 5, ap: 0, damage: 2 })]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead datasheet-listed eligible Bodyguard units." }),
-      Object.freeze({ name: "Stealth", description: "Ranged attacks that target this unit have -1 to Hit." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Enhanced Toxic Miasma", description: "While this model is leading a unit, the range of that unit's Foul Spores Aura ability is increased to 9 inches." }),
       Object.freeze({ name: "Prey Adaptation", description: "Each time this model's unit is selected to fight, choose one melee weapon ability for its melee weapons until the end of the phase: Sustained Hits 1, Lance, or Lethal Hits." })
     ]),
@@ -1015,7 +1015,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Overgrown Barbs", description: "In your Shooting phase, after this model has shot, select one enemy unit (excluding TITANIC units) that was hit by one or more of those attacks. Until the start of your next turn, while this model is on the battlefield, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll." }),
       Object.freeze({ name: "Damaged: 1-6 Wounds Remaining", description: "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
     ]),
@@ -1029,7 +1029,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     weapons: Object.freeze([Object.freeze({ name: "Massive scything sickle-talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 9, ap: -2, damage: 3, abilities: "Twin-linked" })]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Digestion Spine", description: "Each time this model fights, after it has resolved its attacks, if one or more enemy models (excluding VEHICLE models) were destroyed as the result of those attacks, this model regains up to D3 wounds." }),
       Object.freeze({ name: "Damaged: 1-5 Wounds Remaining", description: "While this model has 1-5 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
     ]),
@@ -1046,7 +1046,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Irresistible Force", description: "This model is eligible to declare a charge in a turn in which it Fell Back." }),
       Object.freeze({ name: "Damaged: 1-6 Wounds Remaining", description: "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
     ]),
@@ -1062,8 +1062,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Claws and teeth", equipment: "Default", range: "Melee", attacks: 6, skill: "5+", strength: 2, ap: 0, damage: 1, abilities: "Sustained Hits 1" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deep Strike", description: "Core ability; consult the current Core Rules for its effect." }),
-      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Chitinous Horrors", description: "While an enemy unit is within Engagement Range of one or more units with this ability, halve the Objective Control characteristic of models in that enemy unit." })
     ]),
     defaultModelCount: 3, defaultPoints: 60, legends: true,
