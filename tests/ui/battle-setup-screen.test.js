@@ -319,6 +319,6 @@ test("planning map markers can be selected and dragged with pointer events", () 
     type: COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION,
     payload: { unitId: "friendly", playerId: "p1", position: { x: 30, y: 22 } }
   }]);
-  assert.match(root.innerHTML, /data-map-unit-id="friendly"[^>]*is-unplaced/);
+  assert.match(root.innerHTML, /battlefield-map__unit friendly is-selected is-unplaced/);
   screen.destroy();
 });
