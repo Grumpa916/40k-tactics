@@ -423,7 +423,7 @@ test("Infiltrators and all Deadly Demise variants have actionable descriptions",
   for (const [unitName, abilityName, amount] of [
     ["Norn Assimilator", "Deadly Demise D6", "D6 mortal wounds"],
     ["Hierophant", "Deadly Demise 2D6", "2D6 mortal wounds"],
-    ["Carnifexes", "Deadly Demise 1", "1 mortal wounds"]
+    ["Carnifexes", "Deadly Demise 1", "1 mortal wound"]
   ]) {
     const ability = candidate(unitName).datasheet.abilities.find((item) => item.name === abilityName);
     assert.ok(ability, unitName);
