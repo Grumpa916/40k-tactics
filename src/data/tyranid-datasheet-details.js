@@ -651,8 +651,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Terror From The Deep", description: "When this model is set up using Deep Strike, roll a D6 for each enemy unit within 12 inches: on 2–4 it suffers D3 mortal wounds; on 5+ it suffers 3 mortal wounds and must take a Battle-shock test." })
     ]),
-    defaultModelCount: 1, defaultPoints: 135,
-    pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
+    defaultModelCount: 1, defaultPoints: 140,
+    pointsOptions: Object.freeze([{ models: 1, points: 140 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Mawloc datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/mawloc", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:norn-assimilator": Object.freeze({
@@ -751,7 +751,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Winged Swarm", description: "After this unit shoots, if it is not within Engagement Range, it can make a Normal move of up to 6 inches; if it does, it cannot declare a charge this turn." })
     ]),
     defaultModelCount: 10, defaultPoints: 80,
-    pointsOptions: Object.freeze([{ models: 10, points: 80 }]),
+    pointsOptions: Object.freeze([{ models: 10, points: 80 }, { models: 20, points: 155 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Gargoyles"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:tyranid-warriors-with-melee-bio-weapons": Object.freeze({
@@ -923,8 +923,11 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Leader", description: "The Ravener Prime leads the Hyperadapted Raveners unit." }),
       Object.freeze({ name: "Alpha Invader", description: "Weapons equipped by models in this unit have Sustained Hits 1." })
     ]),
-    defaultPoints: 165,
-    pointsOptions: Object.freeze([{ points: 165, condition: "Base unit cost; confirm current model-count options before final roster entry" }]),
+    defaultModelCount: 5, defaultPoints: 165,
+    pointsOptions: Object.freeze([
+      Object.freeze({ models: 5, points: 165, condition: "1st or 2nd Hyperadapted Raveners unit in the army" }),
+      Object.freeze({ models: 5, points: 175, condition: "3rd+ Hyperadapted Raveners unit in the army (+10 points)" })
+    ]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hyperadapted-Raveners"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
   ,
