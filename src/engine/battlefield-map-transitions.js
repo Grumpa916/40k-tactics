@@ -141,7 +141,15 @@ function synchronizeCanonicalLayoutObjectives(state, missionSetup) {
   const geometry = getEventCompanionMapLayout(missions.myMission, missions.opponentMission, missionSetup.layout);
   if (!geometry?.verified) return state.objectives ?? [];
 
-  const objectives = [...(Array.isArray(state.objectives) ? state.objectives : [])];
+  const desiredNames = new Set(Object.keys(geometry.objectivePositions ?? {}));
+  // Remove stale canonical objectives when switching between five- and six-marker layouts.
+  // Unlinked legacy/manual objectives are preserved rather than guessed by position or name.
+  const objectives = (Array.isArray(state.objectives) ? state.objectives : []).filter((item) => {
+    const linkedName = EVENT_COMPANION_OBJECTIVE_NAMES.find((name) =>
+      item?.layoutObjective === name || item?.id === "event-companion:" + name
+    );
+    return !linkedName || desiredNames.has(linkedName);
+  });
   for (const name of EVENT_COMPANION_OBJECTIVE_NAMES) {
     const position = geometry.objectivePositions?.[name];
     if (!position) continue;
