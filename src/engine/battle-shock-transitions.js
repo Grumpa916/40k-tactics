@@ -29,7 +29,7 @@ export function recordBattleShockTest(state, {
   const wasAlreadyBattleShocked = isUnitBattleShocked(unit);
   if (unit.status !== UNIT_STATUS.DEPLOYED &&
       !(unit.status === UNIT_STATUS.RESERVES && wasAlreadyBattleShocked)) {
-    throw new Error("Battle-shock tests require a deployed unit, unless a unit in reserves is already Battle-shocked.");
+    throw new Error("Battle-shock tests require a unit on the battlefield, unless a unit in reserves is already Battle-shocked.");
   }
   const activePlayerId = state.activePlayer ?? state.battle.activePlayerId ?? null;
   if (!activePlayerId || unit.ownerId !== activePlayerId) {
