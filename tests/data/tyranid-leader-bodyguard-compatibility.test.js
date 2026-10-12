@@ -54,7 +54,10 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
   ));
   assert.equal(unit("Gargoyles").datasheet, undefined);
   assert.deepEqual(idsFor("Hyperadapted Raveners"), ["Raveners"]);
-  assert.equal(unit("Tervigon").datasheet, undefined);
+  assert.equal(unit("Tervigon").verificationStatus, "source-reviewed");
+  assert.equal(unit("Tervigon").datasheet.characteristics.Wounds, 16);
+  assert.equal(unit("Tervigon").datasheet.leader, undefined);
+  assert.equal(unit("Tervigon").datasheet.bodyguard, undefined);
 });
 
 test("unreviewed Tyranid candidates cannot be used as Bodyguards", () => {
