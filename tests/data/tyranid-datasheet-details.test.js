@@ -32,3 +32,32 @@ test("units without a reviewed profile remain name-only and do not receive inven
   assert.equal(unit.defaultPoints, undefined);
   assert.equal(unit.datasheet, undefined);
 });
+
+
+test("Hive Tyrant profile includes reviewed baseline points and default weapon options", () => {
+  const unit = candidate("Hive Tyrant");
+  assert.equal(unit.verificationStatus, "source-reviewed");
+  assert.equal(unit.defaultPoints, 195);
+  assert.equal(unit.datasheet.characteristics.Toughness, 10);
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.equipment === "Wargear option" && weapon.name === "Heavy venom cannon"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Will of the Hive Mind"));
+});
+
+test("Neurotyrant profile includes verified attachment targets and sourced details", () => {
+  const unit = candidate("Neurotyrant");
+  assert.equal(unit.defaultPoints, 130);
+  assert.equal(unit.datasheet.characteristics.Wounds, 9);
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Psychic scream"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash"));
+  assert.deepEqual([...unit.datasheet.leader.allowedBodyguardDatasheetIds].sort(), [
+    "tyranids:neurogaunts", "tyranids:tyrant-guard", "tyranids:zoanthropes"
+  ]);
+});
+
+test("Tyrant Guard profile lists model-count point options", () => {
+  const unit = candidate("Tyrant Guard");
+  assert.equal(unit.defaultModelCount, 3);
+  assert.equal(unit.defaultPoints, 80);
+  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [80, 160]);
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.equipment === "Wargear option"));
+});

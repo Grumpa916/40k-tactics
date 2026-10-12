@@ -6,9 +6,9 @@ import { getEligibleBodyguards } from "../../src/state/leader-bodyguard-attachme
 const candidates = () => findArmyUnitCandidates({ faction: "Tyranids" });
 const unit = (name) => candidates().find((candidate) => candidate.name === name);
 
-test("Tyranid compatibility metadata records reviewed source provenance separately from full datasheet verification", () => {
+test("Tyranid compatibility metadata records source provenance separately from official GW verification", () => {
   const hiveTyrant = unit("Hive Tyrant");
-  assert.equal(hiveTyrant.verificationStatus, "name-only-unverified");
+  assert.equal(hiveTyrant.verificationStatus, "source-reviewed");
   assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.status, "source-reviewed");
   assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.officialRulesCrossCheck, "pending");
   assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.reviewedAt, "2026-10-12");
