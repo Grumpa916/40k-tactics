@@ -872,7 +872,14 @@ export function createBattleShell(container, {
   function handleSetupWorkspaceNavigation(event) {
     const tabButton = event.target?.closest?.("[data-setup-workspace-tab]");
     if (tabButton && container.contains(tabButton)) {
-      setSetupWorkspaceTab(tabButton.getAttribute("data-setup-workspace-tab"));
+      const requestedTab = tabButton.getAttribute("data-setup-workspace-tab");
+      if (requestedTab === "deployment") {
+        setSetupWorkspaceTab("battlefield");
+        const continueButton = container.querySelector?.("[data-setup-workspace-continue]");
+        if (continueButton) handleSetupWorkspaceNavigation({ target: continueButton });
+      } else {
+        setSetupWorkspaceTab(requestedTab);
+      }
       return;
     }
     const continueButton = event.target?.closest?.("[data-setup-workspace-continue]");
