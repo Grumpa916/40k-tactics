@@ -83,7 +83,7 @@ export function createBattleSetupScreen(container, {
         const playerId = container.querySelector("[data-setup-secondary-player]")?.value || selectedPlayerId;
         if (!playerId) throw new Error("Select the player whose secondary mode you are setting.");
         session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { mode: target.value, playerId } });
-        message = "Secondary mode set to " + target.value + " for " + (state.players?.find((player) => player.id === playerId)?.name ?? playerId) + ".";
+        message = "Secondary mode set to " + target.value + " for " + (session.getState().players?.find((player) => player.id === playerId)?.name ?? playerId) + ".";
       } catch (error) {
         message = error?.message ?? String(error);
       }
