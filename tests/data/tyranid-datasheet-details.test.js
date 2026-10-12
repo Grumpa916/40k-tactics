@@ -12,8 +12,9 @@ test("Tyranid Prime with Lash Whip has source-reviewed details and fixed points 
   assert.equal(unit.datasheet.characteristics.Toughness, 5);
   assert.equal(unit.datasheet.weapons.length, 3);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Alpha Warrior"));
-  assert.ok(unit.sourceUrl.includes("40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip"));
-  assert.equal(unit.officialRulesCrossCheck, "pending");
+  assert.ok(unit.sourceUrl.includes("warhammer-community.com"));
+  assert.ok(unit.additionalSources?.includes("https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip"));
+  assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
 test("Raveners expose the five-model baseline and army-count cost adjustment", () => {
@@ -23,7 +24,7 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
   assert.equal(unit.defaultPoints, 125);
   assert.deepEqual(unit.pointsOptions.map((option) => option.points), [125, 135]);
   assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
 });
 
 
@@ -430,8 +431,8 @@ test("The Red Terror matches the current official 11th-edition faction pack", ()
   ]);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Serpentine Fiend"));
   assert.ok(!unit.datasheet.keywords.includes("Mobile"));
-  assert.equal(unit.datasheet.dataSource.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
-  assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
+  assert.equal(unit.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
+  assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
 test("Tyranid Prime with Lash Whip matches current official datasheet", () => {
@@ -446,7 +447,7 @@ test("Tyranid Prime with Lash Whip matches current official datasheet", () => {
   });
   assert.equal(unit.datasheet.weapons.length, 3);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Aggressive Leader-beast"));
-  assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
+  assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
 test("Raveners match current official datasheet and keywords", () => {
@@ -464,7 +465,7 @@ test("Raveners match current official datasheet and keywords", () => {
   ]);
   assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
-  assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
+  assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
 test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
