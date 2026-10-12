@@ -202,7 +202,7 @@ function setupTabLabel(tab) {
 }
 
 function setupContinueLabel(tab) {
-  return ({ saves: "Continue to Game Size", "army-builder": "Continue to Pre-game",
+  return ({ saves: "Continue to Select Armies", "army-builder": "Back to Select Armies", "army-selection": "Continue to Pre-game",
     "pre-game": "Continue to Mission &amp; Secondaries", "mission-map": "Continue to Create the Battlefield",
     battlefield: "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
 }
@@ -400,14 +400,14 @@ export function createBattleShell(container, {
   let missionOpenStates = {};
 
   function setupTabLabel(tab) {
-    return ({ saves: "Account & Saves", "army-builder": "Step 1 · Select Armies & Game Size",
+    return ({ saves: "Account & Saves", "army-builder": "Army Builder · Reusable Lists", "army-selection": "Step 1 · Select Armies",
       "pre-game": "Step 2 · Pre-game", "mission-map": "Step 3 · Mission & Secondaries",
       battlefield: "Step 4 · Create the Battlefield", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
   }
 
   function setupContinueLabel(tab) {
-    return ({ saves: "Continue to Select Armies", "army-builder": "Continue to Pre-game",
-      "pre-game": "Continue to Mission & Secondaries", "mission-map": "Continue to Create the Battlefield",
+    return ({ saves: "Continue to Select Armies", "army-builder": "Back to Select Armies", "army-selection": "Continue to Pre-game",
+      "pre-game": "Continue to Mission and Secondaries", "mission-map": "Continue to Create the Battlefield",
       battlefield: "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
   }
 
@@ -918,6 +918,10 @@ export function createBattleShell(container, {
         const message = container.querySelector?.("[data-setup-navigation-message]");
         if (message) message.textContent = setupNavigationMessage;
       }
+      return;
+    }
+    if (setupWorkspaceTab === "army-builder") {
+      setSetupWorkspaceTab("army-selection");
       return;
     }
     const order = ["saves", "army-selection", "pre-game", "mission-map", "battlefield"];
