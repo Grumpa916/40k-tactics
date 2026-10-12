@@ -328,7 +328,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
-      Object.freeze({ name: "Fear of the Unseen", description: "While an enemy unit is within 6 inches, worsen its Leadership by 1; if it is below Starting Strength during your opponent's Command phase Battle-shock step, it must take a Battle-shock test." }),
+      Object.freeze({ name: "Fear of the Unseen", description: "While an enemy unit is within 6 inches of this model, worsen the Leadership characteristic of models in that unit by 1. In the Battle-shock step of your opponent's Command phase, if such an enemy unit is below its Starting Strength, it must take a Battle-shock test." }),
 
     ]),
     defaultModelCount: 1,
@@ -350,7 +350,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Spawn Termagants", description: "In your Command phase, select one friendly Termagants unit within 6 inches and return up to D3+3 destroyed models to it; a unit cannot be selected more than once per phase." }),
-      Object.freeze({ name: "Brood Progenitor", description: "While a friendly Termagants unit is within 6 inches, ranged weapons equipped by models in that unit have Lethal Hits." })
+      Object.freeze({ name: "Brood Progenitor", description: "While a friendly Termagants unit is within 6 inches of this model, ranged weapons equipped by models in that unit have Lethal Hits." })
     ]),
     defaultModelCount: 1,
     defaultPoints: 150,
@@ -559,7 +559,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Symbiotic Targeting", description: "After this model shoots, select an enemy unit hit; until the end of the phase, friendly Tyranids attacks targeting that unit can re-roll a Hit roll of 1." })
+      Object.freeze({ name: "Symbiotic Targeting", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. Until the end of the phase, each time a friendly Tyranids model makes an attack that targets that unit, re-roll a Hit roll of 1." })
     ]),
     defaultModelCount: 1, defaultPoints: 135,
     pointsOptions: Object.freeze([{ models: 1, points: 135, condition: "1st–2nd Exocrine in army" }, { models: 1, points: 145, condition: "3rd+ Exocrine in army (+10 points)" }]),
@@ -576,7 +576,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Grisly Spectacle", description: "After this model fights, if it destroyed one or more enemy units, each enemy unit within 6 inches must take a Battle-shock test." })
+      Object.freeze({ name: "Grisly Spectacle", description: "Each time this model is selected to fight, after resolving its attacks, if one or more enemy units were destroyed by those attacks, each enemy unit within 6 inches of this model must take a Battle-shock test." })
     ]),
     defaultModelCount: 1, defaultPoints: 125,
     pointsOptions: Object.freeze([{ models: 1, points: 125 }, { models: 1, points: 135, condition: "3rd+ Haruspex in army (+10 points)" }]),
@@ -644,7 +644,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Bio-minefield", description: "Enemy units cannot start or end an Advance move within 6 inches of this unit." }),
-      Object.freeze({ name: "Floating Death", description: "When this unit or an enemy unit ends a move, each model in this unit within 3 inches of an enemy unit is destroyed; on a D6 roll of 2–5 that enemy unit suffers D3 mortal wounds, and on a 6 it suffers D6 mortal wounds." })
+      Object.freeze({ name: "Floating Death", description: "Each time this unit or an enemy unit ends a move, for each model in this unit within 3 inches of one or more enemy units, select one of those enemy units. That model in this unit is destroyed, then roll one D6: on a 2–5, the selected enemy unit suffers D3 mortal wounds; on a 6, it suffers D6 mortal wounds." })
     ]),
     defaultModelCount: 1, defaultPoints: 30,
     pointsOptions: Object.freeze([{ models: 1, points: 30 }, { models: 2, points: 60 }]),
@@ -679,7 +679,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
-      Object.freeze({ name: "Harpoon Barbs", description: "Once per turn, when an enemy unit within Engagement Range is selected to Fall Back, on a D6 roll of 2+ it suffers D6 mortal wounds." })
+      Object.freeze({ name: "Harpoon Barbs", description: "Once per turn, when an enemy unit within Engagement Range of this model is selected to Fall Back, roll one D6: on a 2+, that unit suffers D6 mortal wounds." })
     ]),
     defaultModelCount: 1, defaultPoints: 250,
     pointsOptions: Object.freeze([{ models: 1, points: 250 }, { models: 1, points: 270, condition: "2nd+ Norn Assimilator in army (+20 points)" }]),
@@ -835,7 +835,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Spore Mine Cysts", description: "At the end of your opponent's Fight phase, either roll six D6 against a visible enemy unit within 24 inches, causing 1 mortal wound for each 3+, or add a Spore Mines unit with D3 models within 6 inches and more than 8 inches from enemies; the latter option is limited to once per turn." })
+      Object.freeze({ name: "Spore Mine Cysts", description: "At the end of your opponent's Fight phase, you can do one of the following: select one visible enemy unit (excluding Lone Operative units) within 24 inches of this unit and roll six D6 for that unit, causing 1 mortal wound for each 3+; or add a new Spore Mines unit containing D3 models to your army and set it up anywhere within 6 inches of this model and more than 8 inches horizontally away from all enemy units. You cannot select the Spore Mines option for more than one model per turn." })
     ]),
     defaultModelCount: 1, defaultPoints: 185,
     pointsOptions: Object.freeze([{ models: 1, points: 185 }]),
