@@ -26,6 +26,7 @@ export const COMMAND_TYPES = Object.freeze({
   COMPLETE_FIGHT_PHASE: "fight.complete_phase",
   RESOLVE_ATTACK: "combat.resolve_attack",
   RECORD_COMMAND_POINT_CHANGE: "command_points.record_change",
+  RECORD_BATTLE_SHOCK_TEST: "battle_shock.record_test",
   RECORD_VICTORY_POINTS: "victory_points.record_award",
   ADJUST_VICTORY_POINTS: "victory_points.adjust",
   UNDO_LATEST_VICTORY_POINTS_AWARD: "victory_points.undo_latest_award",
