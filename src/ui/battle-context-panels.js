@@ -118,6 +118,7 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
     getBattleShockEligibility(unit).requiresTest === true && !hasBattleShockTestThisTurn(state, unit));
   const needsReview = units.filter((unit) =>
     getBattleShockEligibility(unit).requiresTest === null && !hasBattleShockTestThisTurn(state, unit));
+  const reviewCount = needsReview.length;
   const sorted = units.slice().sort((a, b) => {
     const rank = (unit) => {
       if (unit.status === UNIT_STATUS.DESTROYED) return 4;
