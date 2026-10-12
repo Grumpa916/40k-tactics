@@ -408,7 +408,6 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
       assert.ok(unit.datasheet.abilities.some((entry) => entry.name === ability), `${name} missing ${ability}`);
     }
   }
-  }
 });
 
 test("Every Tyranid catalog candidate has a profile record", async () => {
