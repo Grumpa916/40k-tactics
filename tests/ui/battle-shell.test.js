@@ -119,7 +119,7 @@ function container() {
 
 test("Invasion Fleet Command shell prompts for Hyper-adaptations and records the selected choice", () => {
   const session = sessionFor({
-    phase: "start_turn",
+    phase: "command",
     turn: 1,
     activePlayer: "p2",
     battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
