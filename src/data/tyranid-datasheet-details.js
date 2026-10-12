@@ -973,45 +973,64 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Malanthrope", "Tyranids", "Legends"]),
     weapons: Object.freeze([Object.freeze({ name: "Grasping tail", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 5, ap: 0, damage: 2 })]),
     abilities: Object.freeze([
+      Object.freeze({ name: "Leader", description: "Can lead datasheet-listed eligible Bodyguard units." }),
+      Object.freeze({ name: "Stealth", description: "Ranged attacks that target this unit have -1 to Hit." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Enhanced Toxic Miasma", description: "While this model is leading a unit, the range of that unit's Foul Spores Aura ability is increased to 9 inches." }),
       Object.freeze({ name: "Prey Adaptation", description: "Each time this model's unit is selected to fight, choose one melee weapon ability for its melee weapons until the end of the phase: Sustained Hits 1, Lance, or Lethal Hits." })
     ]),
     defaultModelCount: 1, defaultPoints: 75, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 75 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/malanthrope", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.4 (Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_06-05_wh40k_faction_pack_tyranids-umv1mexlbs-bf4benobjd.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/malanthrope"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:barbed-hierodule": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 12, Save: "2+", Wounds: 18, Leadership: "8+", "Objective Control": 5 }),
-    keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Barbed Hierodule", "Tyranids", "Legends"]),
+    keywords: Object.freeze(["Monster", "Great Devourer", "Barbed Hierodule", "Tyranids", "Legends"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Bio-cannon", equipment: "Default", range: '48"', attacks: "D6+3", skill: "3+", strength: 9, ap: -2, damage: 2, abilities: "Blast" }),
       Object.freeze({ name: "Hierodule scything talons", equipment: "Default", range: "Melee", attacks: 8, skill: "3+", strength: 14, ap: -2, damage: "D3+3" })
     ]),
-    abilities: Object.freeze([Object.freeze({ name: "Overgrown Barbs", description: "After this model shoots, select one enemy non-Titanic unit hit. Until the start of your next turn, while this model is on the battlefield, that unit is suppressed and subtracts 1 from Hit rolls for its attacks." })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Overgrown Barbs", description: "In your Shooting phase, after this model has shot, select one enemy unit (excluding TITANIC units) that was hit by one or more of those attacks. Until the start of your next turn, while this model is on the battlefield, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll." }),
+      Object.freeze({ name: "Damaged: 1-6 Wounds Remaining", description: "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
+    ]),
     defaultModelCount: 1, defaultPoints: 340, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 340 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/barbed-hierodule", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.4 (Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_06-05_wh40k_faction_pack_tyranids-umv1mexlbs-bf4benobjd.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/barbed-hierodule"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:dimachaeron": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 10, Save: "3+", Wounds: 16, Leadership: "7+", "Objective Control": 5, "Invulnerable save": "5+" }),
-    keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Dimachaeron", "Tyranids", "Legends"]),
+    keywords: Object.freeze(["Monster", "Great Devourer", "Dimachaeron", "Tyranids", "Legends"]),
     weapons: Object.freeze([Object.freeze({ name: "Massive scything sickle-talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 9, ap: -2, damage: 3, abilities: "Twin-linked" })]),
-    abilities: Object.freeze([Object.freeze({ name: "Digestion Spine", description: "Each time this model fights, after resolving its attacks, if one or more non-Vehicle enemy models were destroyed, this model regains up to D3 lost wounds." })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Digestion Spine", description: "Each time this model fights, after it has resolved its attacks, if one or more enemy models (excluding VEHICLE models) were destroyed as the result of those attacks, this model regains up to D3 wounds." }),
+      Object.freeze({ name: "Damaged: 1-5 Wounds Remaining", description: "While this model has 1-5 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
+    ]),
     defaultModelCount: 1, defaultPoints: 200, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 200 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/dimachaeron", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.4 (Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_06-05_wh40k_faction_pack_tyranids-umv1mexlbs-bf4benobjd.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/dimachaeron"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:scythed-hierodule": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 12, Save: "2+", Wounds: 18, Leadership: "8+", "Objective Control": 5 }),
-    keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Scythed Hierodule", "Tyranids", "Legends"]),
+    keywords: Object.freeze(["Monster", "Great Devourer", "Scythed Hierodule", "Tyranids", "Legends"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Bio-acid spray", equipment: "Default", range: '18"', attacks: "3D6", skill: "—", strength: 6, ap: -2, damage: 1, abilities: "Torrent" }),
       Object.freeze({ name: "Hierodule scything talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 14, ap: -2, damage: "D3+3" })
     ]),
-    abilities: Object.freeze([Object.freeze({ name: "Irresistible Force", description: "This model is eligible to declare a charge in a turn in which it Fell Back." })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Irresistible Force", description: "This model is eligible to declare a charge in a turn in which it Fell Back." }),
+      Object.freeze({ name: "Damaged: 1-6 Wounds Remaining", description: "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
+    ]),
     defaultModelCount: 1, defaultPoints: 330, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 330 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/scythed-hierodule", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.4 (Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_06-05_wh40k_faction_pack_tyranids-umv1mexlbs-bf4benobjd.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/scythed-hierodule"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:sky-slasher-swarms": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 2, Save: "6+", Wounds: 4, Leadership: "8+", "Objective Control": 0 }),
@@ -1020,10 +1039,14 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Spinemaws", equipment: "Default", range: '6"', attacks: 4, skill: "5+", strength: 3, ap: 0, damage: 1, abilities: "Pistol" }),
       Object.freeze({ name: "Claws and teeth", equipment: "Default", range: "Melee", attacks: 6, skill: "5+", strength: 2, ap: 0, damage: 1, abilities: "Sustained Hits 1" })
     ]),
-    abilities: Object.freeze([Object.freeze({ name: "Chitinous Horrors", description: "While an enemy unit is within Engagement Range of one or more units with this ability, halve the Objective Control characteristic of models in that enemy unit." })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Chitinous Horrors", description: "While an enemy unit is within Engagement Range of one or more units with this ability, halve the Objective Control characteristic of models in that enemy unit." })
+    ]),
     defaultModelCount: 3, defaultPoints: 60, legends: true,
     pointsOptions: Object.freeze([{ models: 3, points: 60 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/sky-slasher-swarms", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.4 (Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_06-05_wh40k_faction_pack_tyranids-umv1mexlbs-bf4benobjd.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/sky-slasher-swarms"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   })
 });
 

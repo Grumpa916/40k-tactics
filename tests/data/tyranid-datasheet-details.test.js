@@ -393,6 +393,20 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
     assert.ok(unit.datasheet.keywords.includes("Legends"), name);
     assert.ok(unit.sourceName.includes("Legends"), name);
     assert.equal(unit.officialRulesCrossCheck, "pending", name);
+    assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
+  }
+  const requiredAbilities = {
+    "Malanthrope": ["Leader", "Stealth", "Shadow in the Warp", "Synapse", "Enhanced Toxic Miasma", "Prey Adaptation"],
+    "Barbed Hierodule": ["Deadly Demise D6", "Synapse", "Overgrown Barbs", "Damaged: 1-6 Wounds Remaining"],
+    "Dimachaeron": ["Deadly Demise D6", "Synapse", "Digestion Spine", "Damaged: 1-5 Wounds Remaining"],
+    "Scythed Hierodule": ["Deadly Demise D6", "Synapse", "Irresistible Force", "Damaged: 1-6 Wounds Remaining"],
+    "Sky-slasher Swarms": ["Deep Strike", "Synapse", "Chitinous Horrors"]
+  };
+  for (const [name, abilities] of Object.entries(requiredAbilities)) {
+    const unit = candidate(name);
+    for (const ability of abilities) {
+      assert.ok(unit.datasheet.abilities.some((entry) => entry.name === ability), `${name} missing ${ability}`);
+    }
   }
 });
 
