@@ -114,3 +114,50 @@ test("Termagants expose 10- and 20-model point options and their Leader pairing"
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Strangleweb"));
   assert.deepEqual(unit.datasheet.bodyguard.compatibilityReview.status, "source-reviewed");
 });
+
+
+test("Winged Hive Tyrant profile exposes its sourced default equipment, wargear options, and points", () => {
+  const unit = candidate("Winged Hive Tyrant");
+  assert.equal(unit.verificationStatus, "source-reviewed");
+  assert.equal(unit.defaultPoints, 185);
+  assert.equal(unit.datasheet.characteristics.Move, '12"');
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Tyrant talons" && weapon.equipment === "Default"));
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Heavy venom cannon" && weapon.equipment === "Wargear option"));
+  assert.equal(unit.officialRulesCrossCheck, "pending");
+});
+
+test("Lictor and Deathleaper profiles contain source-reviewed melee data and abilities", () => {
+  const lictor = candidate("Lictor");
+  assert.equal(lictor.defaultPoints, 60);
+  assert.equal(lictor.datasheet.characteristics.Toughness, 6);
+  assert.ok(lictor.datasheet.abilities.some((ability) => ability.name === "Lone Operative"));
+
+  const deathleaper = candidate("Deathleaper");
+  assert.equal(deathleaper.defaultPoints, 80);
+  assert.equal(deathleaper.datasheet.characteristics.Wounds, 7);
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen"));
+});
+
+test("Tervigon and Tyrannofex profiles expose source-reviewed monster characteristics and options", () => {
+  const tervigon = candidate("Tervigon");
+  assert.equal(tervigon.defaultPoints, 160);
+  assert.equal(tervigon.datasheet.characteristics.Wounds, 16);
+  assert.ok(tervigon.datasheet.abilities.some((ability) => ability.name === "Spawn Termagants"));
+
+  const tyrannofex = candidate("Tyrannofex");
+  assert.equal(tyrannofex.defaultPoints, 180);
+  assert.equal(tyrannofex.datasheet.characteristics.Toughness, 12);
+  assert.ok(tyrannofex.pointsOptions.some((option) => option.condition?.includes("Acid Spray")));
+  assert.ok(tyrannofex.datasheet.weapons.some((weapon) => weapon.name === "Rupture cannon"));
+});
+
+test("Tyranid Warriors with Ranged Bio-weapons expose sourced profiles and unit-size costs", () => {
+  const unit = candidate("Tyranid Warriors with Ranged Bio-weapons");
+  assert.equal(unit.verificationStatus, "source-reviewed");
+  assert.equal(unit.defaultModelCount, 3);
+  assert.equal(unit.defaultPoints, 60);
+  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [60, 120]);
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Venom cannon"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Adaptable Predators"));
+  assert.equal(unit.officialRulesCrossCheck, "pending");
+});
