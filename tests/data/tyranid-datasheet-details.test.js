@@ -415,7 +415,7 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
   }
 });
 
-test("The Red Terror matches the current official 11th-edition faction pack", () => {
+test("The Red Terror matches the current 11th-edition listing while retaining unresolved source status", () => {
   const unit = candidate("The Red Terror");
   assert.deepEqual(unit.datasheet.characteristics, {
     Move: '10"',
@@ -426,12 +426,12 @@ test("The Red Terror matches the current official 11th-edition faction pack", ()
     "Objective Control": 3
   });
   assert.deepEqual(unit.datasheet.keywords, [
-    "Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "The Red Terror", "Vanguard Invader"
+    "Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "Mobile", "The Red Terror", "Vanguard Invader"
   ]);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Serpentine Fiend"));
-  assert.ok(!unit.datasheet.keywords.includes("Mobile"));
-  assert.equal(unit.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
-  assert.equal(unit.officialRulesCrossCheck, "verified");
+  assert.ok(unit.datasheet.keywords.includes("Mobile"));
+  assert.equal(unit.sourceName, "Current 11th-edition The Red Terror datasheet listing");
+  assert.equal(unit.officialRulesCrossCheck, "pending");
 });
 
 test("Imperial Armour profiles match current official Frame keywords and damaged rules", () => {
@@ -502,10 +502,10 @@ test("Harpy includes both twin cannons and Tyrannocyte preserves all Aerial Seed
   assert.match(aerialSeeding.description, /no units can embark within it/);
 });
 
-test("Psychophage and Deathleaper omit outdated abilities; Toxicrene wording matches current listing", () => {
+test("Psychophage retains Feel No Pain; Deathleaper and Toxicrene use current listed abilities", () => {
   const psychophage = candidate("Psychophage");
-  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], undefined);
-  assert.ok(!psychophage.datasheet.abilities.some((ability) => ability.name === "Feel No Pain 5+"));
+  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], "5+");
+  assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Feel No Pain 5+"));
   assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Bio-stimulus"));
   assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Feeding Frenzy"));
 
