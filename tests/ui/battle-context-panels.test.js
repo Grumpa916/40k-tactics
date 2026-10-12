@@ -137,3 +137,44 @@ test("Army roster overlay includes status and avoids inferring untracked model c
   assert.match(html, /Destroyed Unit/);
   assert.match(html, /Model count not fully tracked/);
 });
+
+test("Army roster overlay opens a unit reference with recorded characteristics, weapons and abilities", () => {
+  const referenceState = {
+    players: [{ id: "p1", name: "You" }],
+    units: [{
+      id: "unit-1",
+      ownerId: "p1",
+      name: "Intercessor Squad",
+      status: "deployed",
+      points: 90,
+      wounds: 8,
+      startingStrength: 10,
+      currentStrength: 8,
+      profile: {
+        characteristics: { movement: 6, ballisticSkill: 3, toughness: 4, save: 3 },
+        weaponIds: ["bolt-rifle"],
+        abilities: [{ name: "Oathbound", description: "Recorded ability description." }]
+      }
+    }]
+  };
+  const html = renderArmyRosterOverlay(referenceState, "p1", {
+    weapons: [{
+      id: "bolt-rifle",
+      name: "Bolt Rifle",
+      type: "ranged",
+      characteristics: { range: 24, attacks: 2, strength: 4, ap: -1, damage: 1 }
+    }]
+  });
+  assert.match(html, /Intercessor Squad/);
+  assert.match(html, /90 pts/);
+  assert.match(html, /Characteristics/);
+  assert.match(html, /Movement/);
+  assert.match(html, /Ballistic Skill/);
+  assert.match(html, /Weapons/);
+  assert.match(html, /Bolt Rifle/);
+  assert.match(html, /Range/);
+  assert.match(html, /Abilities/);
+  assert.match(html, /Oathbound/);
+  assert.match(html, /Recorded ability description/);
+});
+
