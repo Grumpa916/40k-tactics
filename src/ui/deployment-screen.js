@@ -77,7 +77,7 @@ export function createDeploymentScreen(container, {
       '<h1>Actual Deployment</h1><p>Record where both armies actually deploy. Planned positions are a guide only and are not copied automatically.</p></header>' +
       '<p class="battlefield-map__notice">The map is approximate context, not a measurement tool. Follow the mission pack and tabletop rules for legal deployment, terrain, and reserve restrictions.</p>' +
       '<section class="battlefield-map-section"><h2>Deployment Map</h2>' +
-      renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: playerId, selectedUnitId }) +
+      renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId }) +
       '<p>Drag any unit marker to its actual starting location. Tap a marker to select it, then tap an empty point as a fallback. Dashed markers are awaiting placement; planned positions are not copied automatically.</p>' +
       '<section class="deployment-reserve-tray" aria-label="Units declared in reserves"><h3>Reserves</h3>' +
       ((state.units ?? []).filter((unit) => unit && unit.status !== "destroyed" && reserves[unit.id]).map((unit) =>
@@ -102,45 +102,31 @@ export function createDeploymentScreen(container, {
       '</section>' + (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</main>';
   }
 
-  function handleDeploymentPointerDown(event) {
-    const marker = event.target?.closest?.("[data-map-unit-id]");
-    if (!marker || !marker.closest?.('[data-map-mode="deployment"]')) return;
-    deploymentPointerDrag = {
-      unitId: marker.getAttribute("data-map-unit-id"),
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY
-    };
-    selectedUnitId = deploymentPointerDrag.unitId;
-    const unit = (session.getState().units ?? []).find((item) => item.id === selectedUnitId);
-    if (unit?.ownerId) selectedPlayerId = unit.ownerId;
+  function mapCoordinates(board, x, y) {
+    const r=board?.getBoundingClientRect?.();if(!r||!r.width||!r.height)return null;
+    return {x:Math.round(Math.max(0,Math.min(60,(x-r.left)/r.width*60))*10)/10,y:Math.round(Math.max(0,Math.min(44,(1-(y-r.top)/r.height)*44))*10)/10};
   }
-
-  function handleDeploymentPointerUp(event) {
-    const drag = deploymentPointerDrag;
-    deploymentPointerDrag = null;
-    if (!drag || drag.pointerId !== event.pointerId ||
-        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 8) return;
-    const board = event.target?.closest?.('[data-battlefield-map-board]') ??
-      container.querySelector?.('[data-map-mode="deployment"] [data-battlefield-map-board]');
-    if (!board || !board.closest?.('[data-map-mode="deployment"]')) return;
-    const rect = board.getBoundingClientRect?.();
-    if (!rect || !rect.width || !rect.height) return;
-    const position = {
-      x: Math.round(Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60)) * 10) / 10,
-      y: Math.round(Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44)) * 10) / 10
-    };
-    const unit = (session.getState().units ?? []).find((item) => item.id === drag.unitId);
-    if (!unit?.ownerId) return;
-    try {
-      session.dispatch({ type: COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION, payload: {
-        unitId: drag.unitId, playerId: unit.ownerId, position
-      }});
-      selectedPlayerId = unit.ownerId;
-      selectedUnitId = drag.unitId;
-      message = "Actual deployment position recorded.";
-    } catch (error) { message = error?.message ?? String(error); }
-    render();
+  function handleDeploymentPointerDown(e) {
+    const m=e.target?.closest?.("[data-map-unit-id]");if(!m||!m.closest?.('[data-map-mode="deployment"]'))return;
+    const b=m.closest("[data-battlefield-map-board]");if(!b)return;selectedUnitId=m.getAttribute("data-map-unit-id");
+    const u=(session.getState().units??[]).find(x=>x.id===selectedUnitId);if(!u?.ownerId||u.status==="destroyed")return;selectedPlayerId=u.ownerId;
+    deploymentPointerDrag={unitId:selectedUnitId,playerId:u.ownerId,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,board:b,marker:m,left:m.style.left,top:m.style.top,moved:false};
+    m.classList?.add?.("is-dragging");try{m.setPointerCapture?.(e.pointerId);}catch{}
+  }
+  function handleDeploymentPointerMove(e) {
+    const d=deploymentPointerDrag;if(!d||d.pointerId!==e.pointerId)return;
+    if(Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>=8)d.moved=true;if(!d.moved)return;
+    const p=mapCoordinates(d.board,e.clientX,e.clientY);if(!p)return;e.preventDefault?.();d.marker.style.left=p.x/60*100+"%";d.marker.style.top=(44-p.y)/44*100+"%";
+  }
+  function handleDeploymentPointerUp(e) {
+    const d=deploymentPointerDrag;if(!d||d.pointerId!==e.pointerId)return;deploymentPointerDrag=null;d.marker.classList?.remove?.("is-dragging");
+    if(!d.moved){render();return;}const p=mapCoordinates(d.board,e.clientX,e.clientY);if(!p){render();return;}
+    try{session.dispatch({type:COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId:d.unitId,playerId:d.playerId,position:p}});
+      selectedPlayerId=d.playerId;selectedUnitId=d.unitId;message="Actual deployment position saved";}
+    catch(err){message=err?.message??String(err);}render();
+  }
+  function handleDeploymentPointerCancel(e) {
+    const d=deploymentPointerDrag;if(!d||d.pointerId!==e.pointerId)return;deploymentPointerDrag=null;d.marker.classList?.remove?.("is-dragging");d.marker.style.left=d.left;d.marker.style.top=d.top;render();
   }
 
   function handleChange(event) {
@@ -251,7 +237,9 @@ export function createDeploymentScreen(container, {
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("click", handleClick);
   container.addEventListener?.("pointerdown", handleDeploymentPointerDown);
+  container.addEventListener?.("pointermove", handleDeploymentPointerMove);
   container.addEventListener?.("pointerup", handleDeploymentPointerUp);
+  container.addEventListener?.("pointercancel", handleDeploymentPointerCancel);
   const unsubscribe = session.subscribe(render);
   render();
   return {
@@ -261,7 +249,9 @@ export function createDeploymentScreen(container, {
       container.removeEventListener?.("change", handleChange);
       container.removeEventListener?.("click", handleClick);
       container.removeEventListener?.("pointerdown", handleDeploymentPointerDown);
+      container.removeEventListener?.("pointermove", handleDeploymentPointerMove);
       container.removeEventListener?.("pointerup", handleDeploymentPointerUp);
+      container.removeEventListener?.("pointercancel", handleDeploymentPointerCancel);
       container.replaceChildren();
     }
   };

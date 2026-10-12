@@ -102,30 +102,26 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       unitCards + '</div></section><section>' + editor + '</section></main>';
   }
 
-  function handleLivePointerDown(event) {
-    const marker = event.target?.closest?.('[data-map-unit-id]');
-    if (!marker || !marker.closest?.('[data-map-mode="live"]')) return;
-    const state = session.getState();
-    const unitId = marker.getAttribute("data-map-unit-id");
-    const unit = state.units.find((item) => item.id === unitId);
-    if (!unit || unit.ownerId !== (perspectivePlayerId ?? state.activePlayer) || unit.status !== "deployed") return;
-    const board = marker.closest("[data-battlefield-map-board]");
-    if (!board) return;
-    livePointerDrag = {
-      unitId, pointerId: event.pointerId,
-      startX: event.clientX, startY: event.clientY,
-      board, marker,
-      markerX: parseFloat(marker.style.left) / 100 * 60,
-      markerY: 44 - parseFloat(marker.style.top) / 100 * 44
-    };
-    selectedUnitId = unitId;
+  function handleLivePointerDown(e) {
+    const m=e.target?.closest?.('[data-map-unit-id]');if(!m||!m.closest?.('[data-map-mode="live"]'))return;
+    const s=session.getState(),id=m.getAttribute("data-map-unit-id"),u=s.units.find(x=>x.id===id);
+    if(!u||u.ownerId!==(perspectivePlayerId??s.activePlayer)||u.status!=="deployed")return;
+    const b=m.closest("[data-battlefield-map-board]");if(!b)return;
+    livePointerDrag={unitId:id,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,board:b,marker:m,
+      markerX:parseFloat(m.style.left)/100*60,markerY:44-parseFloat(m.style.top)/100*44,left:m.style.left,top:m.style.top,moved:false};
+    selectedUnitId=id;m.classList?.add?.("is-dragging");try{m.setPointerCapture?.(e.pointerId);}catch{}
+  }
+  function handleLivePointerMove(e) {
+    const d=livePointerDrag;if(!d||d.pointerId!==e.pointerId)return;
+    if(Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>=8)d.moved=true;if(!d.moved)return;
+    const r=d.board.getBoundingClientRect?.();if(!r||!r.width||!r.height)return;
+    const x=Math.max(0,Math.min(60,(e.clientX-r.left)/r.width*60)),y=Math.max(0,Math.min(44,(1-(e.clientY-r.top)/r.height)*44));
+    e.preventDefault?.();d.marker.style.left=x/60*100+"%";d.marker.style.top=(44-y)/44*100+"%";
   }
 
   function handleLivePointerUp(event) {
-    const drag = livePointerDrag;
-    livePointerDrag = null;
-    if (!drag || drag.pointerId !== event.pointerId ||
-        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 8) return;
+    const drag=livePointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;livePointerDrag=null;drag.marker.classList?.remove?.("is-dragging");
+    if(!drag.moved){render();return;}
     const rect = drag.board.getBoundingClientRect?.();
     if (!rect || !rect.width || !rect.height) return;
     const x = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
@@ -150,6 +146,10 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       errorMessage = error?.message ?? String(error);
     }
     render();
+  }
+
+  function handleLivePointerCancel(e) {
+    const d=livePointerDrag;if(!d||d.pointerId!==e.pointerId)return;livePointerDrag=null;d.marker.classList?.remove?.("is-dragging");d.marker.style.left=d.left;d.marker.style.top=d.top;render();
   }
 
   function handleClick(event) {
@@ -219,8 +219,10 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
   container.addEventListener("click", handleClick);
   container.addEventListener("pointerdown", handleLivePointerDown);
+  container.addEventListener("pointermove", handleLivePointerMove);
   container.addEventListener("pointerup", handleLivePointerUp);
+  container.addEventListener("pointercancel", handleLivePointerCancel);
   const unsubscribe = session.subscribe(render);
   render();
-  return { render, destroy() { unsubscribe(); container.removeEventListener("click", handleClick); container.removeEventListener("pointerdown", handleLivePointerDown); container.removeEventListener("pointerup", handleLivePointerUp); container.replaceChildren(); } };
+  return { render, destroy() { unsubscribe(); container.removeEventListener("click", handleClick); container.removeEventListener("pointerdown", handleLivePointerDown); container.removeEventListener("pointermove", handleLivePointerMove); container.removeEventListener("pointerup", handleLivePointerUp); container.removeEventListener("pointercancel", handleLivePointerCancel); container.replaceChildren(); } };
 }

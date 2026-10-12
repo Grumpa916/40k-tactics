@@ -81,40 +81,30 @@ export function createBattleSetupScreen(container, {
 
   }
 
-  function handlePlanningPointerDown(event) {
-    const marker = event.target?.closest?.("[data-map-unit-id]");
-    if (!marker || !marker.closest?.('[data-map-mode="planning"]')) return;
-    planningPointerDrag = {
-      unitId: marker.getAttribute("data-map-unit-id"),
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY
-    };
-    selectedPlanUnitId = planningPointerDrag.unitId;
+  function mapCoordinates(board, x, y) {
+    const r=board?.getBoundingClientRect?.();if(!r||!r.width||!r.height)return null;
+    return {x:Math.round(Math.max(0,Math.min(60,(x-r.left)/r.width*60))*10)/10,y:Math.round(Math.max(0,Math.min(44,(1-(y-r.top)/r.height)*44))*10)/10};
   }
-
-  function handlePlanningPointerUp(event) {
-    const drag = planningPointerDrag;
-    planningPointerDrag = null;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
-    if (distance < 8) return;
-    const board = event.target?.closest?.('[data-battlefield-map-board]') ??
-      container.querySelector?.('[data-map-mode="planning"] [data-battlefield-map-board]');
-    if (!board || !board.closest?.('[data-map-mode="planning"]')) return;
-    const rect = board.getBoundingClientRect?.();
-    if (!rect || !rect.width || !rect.height) return;
-    const x = Math.round(Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60)) * 10) / 10;
-    const y = Math.round(Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44)) * 10) / 10;
-    const state = session.getState();
-    const playerId = (state.units ?? []).find((unit) => unit.id === drag.unitId)?.ownerId;
-    try {
-      session.dispatch({ type: COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION, payload: {
-        unitId: drag.unitId, playerId, position: { x, y }
-      }});
-      message = "Planned position moved.";
-    } catch (error) { message = error?.message ?? String(error); }
-    render();
+  function handlePlanningPointerDown(e) {
+    const m=e.target?.closest?.("[data-map-unit-id]");if(!m||!m.closest?.('[data-map-mode="planning"]'))return;
+    const b=m.closest("[data-battlefield-map-board]");if(!b)return;selectedPlanUnitId=m.getAttribute("data-map-unit-id");
+    planningPointerDrag={unitId:selectedPlanUnitId,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,board:b,marker:m,left:m.style.left,top:m.style.top,moved:false};
+    m.classList?.add?.("is-dragging");try{m.setPointerCapture?.(e.pointerId);}catch{}
+  }
+  function handlePlanningPointerMove(e) {
+    const d=planningPointerDrag;if(!d||d.pointerId!==e.pointerId)return;
+    if(Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>=8)d.moved=true;if(!d.moved)return;
+    const p=mapCoordinates(d.board,e.clientX,e.clientY);if(!p)return;e.preventDefault?.();d.marker.style.left=p.x/60*100+"%";d.marker.style.top=(44-p.y)/44*100+"%";
+  }
+  function handlePlanningPointerUp(e) {
+    const d=planningPointerDrag;if(!d||d.pointerId!==e.pointerId)return;planningPointerDrag=null;d.marker.classList?.remove?.("is-dragging");
+    if(!d.moved){render();return;}const p=mapCoordinates(d.board,e.clientX,e.clientY),u=(session.getState().units??[]).find(x=>x.id===d.unitId);
+    if(!p||!u?.ownerId){render();return;}
+    try{session.dispatch({type:COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION,payload:{unitId:d.unitId,playerId:u.ownerId,position:p}});message="Planned position saved";}
+    catch(err){message=err?.message??String(err);}render();
+  }
+  function handlePlanningPointerCancel(e) {
+    const d=planningPointerDrag;if(!d||d.pointerId!==e.pointerId)return;planningPointerDrag=null;d.marker.classList?.remove?.("is-dragging");d.marker.style.left=d.left;d.marker.style.top=d.top;render();
   }
 
   function handleClick(event) {
@@ -449,7 +439,7 @@ export function createBattleSetupScreen(container, {
       (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
         .map((unit) => '<option value="' + escapeHtml(unit.id) + '"' + (unit.id === selectedPlanUnitId ? ' selected' : '') + '>' + escapeHtml(unit.name ?? unit.id) + '</option>').join("") +
       '</select></label><p>Select a unit, then tap the map to record or reposition its intended starting point. Planned positions remain separate from actual deployment and live movement.</p>' +
-      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
+      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
       '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>';
     const missionMapMarkup =
@@ -469,7 +459,9 @@ export function createBattleSetupScreen(container, {
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("click", handleClick);
   container.addEventListener?.("pointerdown", handlePlanningPointerDown);
+  container.addEventListener?.("pointermove", handlePlanningPointerMove);
   container.addEventListener?.("pointerup", handlePlanningPointerUp);
+  container.addEventListener?.("pointercancel", handlePlanningPointerCancel);
   const unsubscribe = session.subscribe(render);
   render();
   return {
@@ -483,7 +475,9 @@ export function createBattleSetupScreen(container, {
       container.removeEventListener?.("change", handleChange);
       container.removeEventListener?.("click", handleClick);
       container.removeEventListener?.("pointerdown", handlePlanningPointerDown);
+      container.removeEventListener?.("pointermove", handlePlanningPointerMove);
       container.removeEventListener?.("pointerup", handlePlanningPointerUp);
+      container.removeEventListener?.("pointercancel", handlePlanningPointerCancel);
       container.replaceChildren();
     }
   };

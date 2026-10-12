@@ -164,3 +164,20 @@ test("planning and deployment maps stage unplaced units as selectable markers", 
   assert.match(deployment, /data-map-unit-id="enemy"/);
   assert.doesNotMatch(deployment, /data-map-unit-id="reserve"/);
 });
+
+test("deployment map shows both armies while excluding declared reserves and destroyed units", () => {
+  const html=renderBattlefieldMap({
+    players:[{id:"p1",name:"You"},{id:"p2",name:"Opponent"}],
+    units:[
+      {id:"friendly",ownerId:"p1",name:"Friendly",status:"deployed",position:{x:9,y:8}},
+      {id:"opponent",ownerId:"p2",name:"Opponent",status:"deployed",position:{x:46,y:30}},
+      {id:"reserve",ownerId:"p1",name:"Reserve",status:"reserves"},
+      {id:"destroyed",ownerId:"p2",name:"Destroyed",status:"destroyed"}
+    ],
+    battlefieldMap:{actualDeployment:{},declaredReserves:{reserve:true}}
+  },{mode:"deployment",perspectivePlayerId:"p1"});
+  assert.match(html,/data-map-unit-id="friendly"/);
+  assert.match(html,/data-map-unit-id="opponent"/);
+  assert.doesNotMatch(html,/data-map-unit-id="reserve"/);
+  assert.doesNotMatch(html,/data-map-unit-id="destroyed"/);
+});
