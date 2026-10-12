@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ARMY_UNIT_CATALOG, findArmyUnitCandidates } from "../../src/data/army-unit-catalog.js";
+import { ARMY_UNIT_CATALOG, findArmyUnitCandidates, getArmyUnitCandidateLabel } from "../../src/data/army-unit-catalog.js";
 
 test("catalog candidates are faction-filtered and search is case-insensitive", () => {
   const tyranids = findArmyUnitCandidates({ faction: "Tyranids" });
@@ -22,4 +22,15 @@ test("catalog entries declare source status and a source URL", () => {
   assert.ok(reviewed.every((unit) => unit.datasheet && unit.reviewedAt));
   const pointsReviewed = ARMY_UNIT_CATALOG.filter((unit) => unit.verificationStatus === "points-reviewed");
   assert.ok(pointsReviewed.every((unit) => unit.defaultPoints != null && unit.reviewedAt));
+});
+
+test("catalog picker labels distinguish details from official cross-check status", () => {
+  const exocrine = findArmyUnitCandidates({ faction: "Tyranids" }).find((unit) => unit.name === "Exocrine");
+  assert.match(getArmyUnitCandidateLabel(exocrine), /^Exocrine · details; official cross-check pending$/);
+
+  const nameOnly = findArmyUnitCandidates({ faction: "Space Marines" }).find((unit) => unit.name === "Captain");
+  assert.equal(getArmyUnitCandidateLabel(nameOnly), "Captain · name only; verify");
+
+  const verified = { name: "Example", datasheet: {}, officialRulesCrossCheck: "verified" };
+  assert.equal(getArmyUnitCandidateLabel(verified), "Example · details; official cross-check complete");
 });
