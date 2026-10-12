@@ -491,10 +491,18 @@ test("The Red Terror matches the current 11th-edition listing while retaining un
   assert.equal(unit.officialRulesCrossCheck, "pending");
 });
 
-test("Imperial Armour profiles match current official Frame keywords and damaged rules", () => {
+test("Imperial Armour profiles expose Frame keywords with source-appropriate verification status", () => {
   for (const name of ["Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Harridan", "Hierophant"]) {
     const unit = candidate(name);
     assert.ok(unit.datasheet.keywords.includes("Frame"), name);
+  }
+  for (const name of ["Barbed Hierodule", "Dimachaeron", "Scythed Hierodule"]) {
+    const unit = candidate(name);
+    assert.equal(unit.officialRulesCrossCheck, "pending", name);
+    assert.ok(unit.sourceUrl.includes("wh-rules.ru"), name);
+  }
+  for (const name of ["Harridan", "Hierophant"]) {
+    const unit = candidate(name);
     assert.equal(unit.officialRulesCrossCheck, "verified", name);
     assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
   }
