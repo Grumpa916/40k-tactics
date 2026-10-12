@@ -443,6 +443,13 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
   }
 });
 
+test("Every Tyranid profile records official MFM v1.5 points provenance", () => {
+  for (const unit of findArmyUnitCandidates({ faction: "Tyranids" })) {
+    assert.equal(unit.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", unit.name);
+    assert.ok(unit.pointsSourceUrl?.includes("warhammer-community.com"), unit.name);
+  }
+});
+
 test("Every Tyranid catalog candidate has a profile record", async () => {
   const { getTyranidDatasheetDetails } = await import("../../src/data/tyranid-datasheet-details.js");
   const names = findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name);
