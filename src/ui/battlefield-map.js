@@ -140,7 +140,7 @@ export function renderBattlefieldMap(state, {
   const visibleUnits = units.filter((unit) => {
     if (!unit || !unit.id || unit.status === "destroyed") return false;
     if (mode === "planning") return unit.ownerId === perspectivePlayerId;
-    if (mode === "deployment") return !declaredReserves[unit.id] && unit.status !== "reserves";
+    if (mode === "deployment") return !declaredReserves[unit.id];
     return unit.status === "deployed";
   });
   const stagedPosition = (index, total, friendly) => {
