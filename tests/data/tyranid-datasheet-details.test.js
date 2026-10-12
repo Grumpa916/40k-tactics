@@ -415,6 +415,23 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
   }
 });
 
+test("Infiltrators and all Deadly Demise variants have actionable descriptions", () => {
+  const infiltrators = candidate("Lictor").datasheet.abilities.find((ability) => ability.name === "Infiltrators");
+  assert.match(infiltrators.description, /during deployment/);
+  assert.match(infiltrators.description, /more than 8 inches horizontally/);
+
+  for (const [unitName, abilityName, amount] of [
+    ["Norn Assimilator", "Deadly Demise D6", "D6 mortal wounds"],
+    ["Hierophant", "Deadly Demise 2D6", "2D6 mortal wounds"],
+    ["Carnifexes", "Deadly Demise 1", "1 mortal wounds"]
+  ]) {
+    const ability = candidate(unitName).datasheet.abilities.find((item) => item.name === abilityName);
+    assert.ok(ability, unitName);
+    assert.match(ability.description, /after any embarked units make emergency disembark moves/, unitName);
+    assert.ok(ability.description.includes(amount), unitName);
+  }
+});
+
 test("Shared Tyranid core ability summaries match current 11th-edition core rules", () => {
   const shadow = candidate("Hive Tyrant").datasheet.abilities.find((ability) => ability.name === "Shadow in the Warp");
   assert.match(shadow.description, /Once per battle/);
