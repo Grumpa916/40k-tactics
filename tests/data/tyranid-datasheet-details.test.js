@@ -449,6 +449,25 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
+test("Harpy includes both twin cannons and Tyrannocyte preserves all Aerial Seeding restrictions", () => {
+  const harpy = candidate("Harpy");
+  const heavyVenomCannon = harpy.datasheet.weapons.find((weapon) => weapon.name === "Twin heavy venom cannon");
+  assert.ok(heavyVenomCannon);
+  assert.equal(heavyVenomCannon.range, '36"');
+  assert.equal(heavyVenomCannon.attacks, "D3");
+  assert.equal(heavyVenomCannon.skill, "3+");
+  assert.equal(heavyVenomCannon.strength, 9);
+  assert.equal(heavyVenomCannon.ap, -2);
+  assert.equal(heavyVenomCannon.damage, 3);
+  assert.equal(heavyVenomCannon.abilities, "Blast, Twin-linked");
+
+  const tyrannocyte = candidate("Tyrannocyte");
+  const aerialSeeding = tyrannocyte.datasheet.abilities.find((ability) => ability.name === "Aerial Seeding");
+  assert.ok(aerialSeeding);
+  assert.match(aerialSeeding.description, /do not count towards limits on the maximum number of Reserves units/);
+  assert.match(aerialSeeding.description, /no units can embark within it/);
+});
+
 test("Psychophage and Deathleaper omit outdated abilities; Toxicrene wording matches current listing", () => {
   const psychophage = candidate("Psychophage");
   assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], undefined);
