@@ -542,7 +542,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Parasitic Infection", description: "When an Infantry model is destroyed by this model's barbed ovipositor, add a Ripper Swarms unit with D3 models within 3 inches; it can be set up within Engagement Range of the destroyed model's unit, but not other enemy units." }),
+      Object.freeze({ name: "Parasitic Infection", description: "Each time an Infantry model is destroyed by an attack made with this model's barbed ovipositor, after this model has finished making its attacks, you can add one new Ripper Swarms unit to your army consisting of D3 models and set it up within 3 inches of this model. If you do, that Ripper Swarms unit can be set up within Engagement Range of the destroyed model's unit, but not within Engagement Range of any other enemy units." }),
       Object.freeze({ name: "It Itches!", description: "At the start of the Fight phase, select one enemy unit within Engagement Range; it must take a Battle-shock test." })
     ]),
     defaultModelCount: 1, defaultPoints: 65,
@@ -935,7 +935,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability for the Ravener Prime; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Leader", description: "The Ravener Prime leads the Hyperadapted Raveners unit." }),
-      Object.freeze({ name: "Alpha Invader", description: "Weapons equipped by models in this unit have Sustained Hits 1." })
+      Object.freeze({ name: "Alpha Invader", description: "Weapons equipped by models in this unit have Sustained Hits 1." }),
+      Object.freeze({ name: "Hypersensory Array", description: "Once per battle round, you can target this unit with the Rapid Ingress or Heroic Intervention Stratagem, regardless of any other uses of that Stratagem this phase. If you do, that use costs 1 fewer CP and does not prevent uses of that Stratagem on other units this phase." })
     ]),
     defaultModelCount: 5, defaultPoints: 165,
     pointsOptions: Object.freeze([
