@@ -10,6 +10,7 @@ export const COMMAND_TYPES = Object.freeze({
   DECLARE_UNIT_RESERVE: "battlefield_map.declare_unit_reserve",
   SET_EVENT_COMPANION_MISSION_SETUP: "battlefield_map.set_event_companion_mission_setup",
   SET_PRE_GAME_ROLES: "battle.set_pre_game_roles",
+  SET_BATTLE_SIZE: "battle.set_size",
   RECORD_OBJECTIVE_CONTROL: "objective.record_control",
   START_FIRST_TURN: "turn.start_first",
   CHANGE_PHASE: "turn.change_phase",
