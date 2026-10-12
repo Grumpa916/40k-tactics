@@ -193,6 +193,16 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
     '<span>Clock</span><time data-turn-clock-header-time>' + clockTime + '</time></button>';
 }
 
+function setupTabLabel(tab) {
+  return ({ "army-builder": "Step 1 of 4 · Army Builder", saves: "Step 2 of 4 · Saves",
+    "pre-game": "Step 3 of 4 · Pre-game", "mission-map": "Step 4 of 4 · Mission & Map" })[tab] ?? "Setup";
+}
+
+function setupContinueLabel(tab) {
+  return ({ "army-builder": "Continue to Saves", saves: "Continue to Pre-game",
+    "pre-game": "Continue to Mission &amp; Map", "mission-map": "Back to Army Builder" })[tab] ?? "Continue";
+}
+
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
   gameData = null,
   perspectivePlayerId = null,
