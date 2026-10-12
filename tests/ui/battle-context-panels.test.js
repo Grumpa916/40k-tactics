@@ -104,7 +104,7 @@ test("Reference panel has collapsible stratagems, army rules, detachments and te
 });
 
 test("Reference panel states honestly when rules and terrain catalogs are absent", () => {
-  const html = renderReferencePanel(state, {}, "p1");
+  const html = renderReferencePanel({ ...state, armyRosters: {} }, {}, "p1");
   assert.match(html, /No stratagem catalog is connected/);
   assert.match(html, /No opponent detachment has been recorded/);
   assert.match(html, /No terrain layout is recorded/);
