@@ -23,7 +23,8 @@ export function createBattleSetupScreen(container, {
   session,
   perspectivePlayerId = null,
   missionDefinitions = [],
-  secondaryMissionCatalog = []
+  secondaryMissionCatalog = [],
+  setupTab = "pre-game"
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -34,6 +35,7 @@ export function createBattleSetupScreen(container, {
 
   let selectedPlayerId = null;
   let selectedPlanUnitId = null;
+  let activeSetupTab = setupTab === "mission-map" ? "mission-map" : "pre-game";
   let message = "";
 
   function handleChange(event) {
@@ -278,16 +280,16 @@ export function createBattleSetupScreen(container, {
       <p>These prompts are fixed by the ruleset, not configured separately for each battle. Follow the selected mission's instructions for exact timing and exceptions.</p>
       <h3>State readiness</h3><ul>${readiness.checks.map((check) =>
         `<li><strong>${check.status === "complete" ? "Ready: " : "Check: "}${escapeHtml(check.label)}</strong> — ${escapeHtml(check.detail)}</li>`).join("")}</ul>
-      <h3>Standard procedure reminders</h3><ol>${procedureSteps.map((step) =>
-        `<li><strong>${escapeHtml(step.title)}</strong> — ${escapeHtml(step.detail)}</li>`).join("")}</ol>
-      <h3>Conditional ability prompts</h3>${abilityRules.map((rule) =>
+      <details><summary>Standard procedure reminders</summary><ol>${procedureSteps.map((step) =>
+        `<li><strong>${escapeHtml(step.title)}</strong> — ${escapeHtml(step.detail)}</li>`).join("")}</ol></details>
+      <details><summary>Conditional ability prompts</summary>${abilityRules.map((rule) =>
         `<article data-pre-game-ability="${escapeHtml(rule.id)}"><h4>${escapeHtml(rule.name)}</h4>
         <p><strong>Timing:</strong> ${escapeHtml(rule.timing === "deployment" ? "During deployment" : "Resolve pre-battle abilities")}</p>
         <p><strong>Applies when:</strong> ${escapeHtml(rule.appliesWhen)}</p>
         ${rule.procedure ? `<p>${escapeHtml(rule.procedure)}</p>` : ""}
         ${rule.choices ? `<ul>${rule.choices.map((choice) => `<li>${escapeHtml(choice)}</li>`).join("")}</ul>` : ""}
         ${rule.scoutMove ? `<p><strong>Scout move:</strong> ${escapeHtml(rule.scoutMove.maximumDistance)} ${escapeHtml(rule.scoutMove.afterMoving)}</p>` : ""}
-        <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}
+        <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}</details>
       </section>`;
 
     const missionSetup = state.battlefieldMap?.missionSetup ?? {};
@@ -358,10 +360,7 @@ export function createBattleSetupScreen(container, {
         ? '<p>Tactical cards are drawn manually from the physical deck at the start of each Command phase. Record two new cards for the active player; score or discard them only when the table rules permit.</p>'
         : '<p>Select Fixed or Tactical before the battle. The mode is global for both players.</p>';
 
-    container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
-      '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle.</p></header>' +
-      preGameMarkup +
-      missionSetupMarkup +
+    const missionMapMarkup = missionSetupMarkup +
       '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
       '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
       (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
@@ -390,8 +389,12 @@ export function createBattleSetupScreen(container, {
         : mode === "fixed" && state.battle
           ? '<section><p>Fixed cards must be selected before battle start. Existing Fixed cards remain active.</p><ol>' + fixedCardsMarkup + '</ol></section>'
           : '') +
-      (message ? '<p role="status">' + escapeHtml(message) + '</p>' : '') +
-      '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p></main>';
+      '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p>';
+
+    container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
+      '<h1>Setup workspace</h1><p>Complete pre-game checks, then confirm the mission and map.</p></header>' +
+      '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + '</section>' +
+      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + missionMapMarkup + '</section></main>';
   }
 
   container.addEventListener?.("change", handleChange);
@@ -400,6 +403,10 @@ export function createBattleSetupScreen(container, {
   render();
   return {
     render,
+    setTab(tab) {
+      if (tab === "pre-game" || tab === "mission-map") activeSetupTab = tab;
+      render();
+    },
     destroy() {
       unsubscribe();
       container.removeEventListener?.("change", handleChange);
