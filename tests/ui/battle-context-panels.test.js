@@ -53,6 +53,27 @@ test("Unit Status offers result entry only during Command phase", () => {
   assert.doesNotMatch(html, /data-battle-shock-result=/);
 });
 
+test("Unit Status records a test as completed for the current turn and suppresses duplicate controls", () => {
+  const unit = {
+    id: "due", ownerId: "p1", name: "Due Unit", status: "deployed",
+    startingStrength: 10, currentStrength: 5, battleShocked: true
+  };
+  const current = {
+    ...state,
+    units: [unit],
+    history: [{
+      type: "battle_shock.test_recorded",
+      payload: { unitId: "due", result: "failed", battleShockedAfter: true, round: 1, turn: 2 }
+    }]
+  };
+  const html = renderUnitStatusPanel(current);
+  assert.match(html, /Battle-shocked/);
+  assert.match(html, /Test recorded this Command phase/);
+  assert.doesNotMatch(html, /data-battle-shock-result=/);
+  assert.doesNotMatch(html, /need Battle-shock attention/);
+});
+
+
 test("Event Log summarizes combat, damage, battle-shock, CP and scoring events", () => {
   const html = renderEventLogPanel(state, { limit: 10 });
   assert.match(html, /Attacker → Target/);
