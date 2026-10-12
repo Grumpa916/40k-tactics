@@ -392,7 +392,7 @@ export function createBattleSetupScreen(container, {
       '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p>';
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
-      '<h1>Setup workspace</h1><p>Complete pre-game checks, then confirm the mission and map.</p></header>' +
+      '<h1>Mission setup</h1><p>Complete pre-game checks, then confirm the mission and map.</p></header>' +
       '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + '</section>' +
       '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + missionMapMarkup + '</section>' +
       (message ? '<p role="status" class="battle-setup-screen__message">' + escapeHtml(message) + '</p>' : '') + '</main>';
