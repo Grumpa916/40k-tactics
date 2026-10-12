@@ -184,7 +184,7 @@ export function renderBattlefieldMap(state, {
       (isSelected ? ' is-selected' : '') + (unplaced ? ' is-unplaced' : '') +
       '" data-map-unit-id="' + escapeHtml(unit.id) + '"' +
       (unplaced ? ' data-map-unit-unplaced="true"' : '') +
-      (mode !== "live" ? ' role="button" tabindex="0" aria-label="Select and move ' + escapeHtml(unit.name ?? unit.id) + '"' : '') +
+      (mode !== "live" || friendly ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(unit.name ?? unit.id) + '"' : '') +
       ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(unit.name ?? unit.id) +
       (unplaced ? ' · not placed' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + '</div>');
   }
