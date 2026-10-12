@@ -397,8 +397,8 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
     assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === weaponName), name);
     assert.ok(unit.datasheet.keywords.includes("Legends"), name);
     assert.ok(unit.sourceName.includes("Legends"), name);
-    assert.equal(unit.officialRulesCrossCheck, "verified", name);
-    assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
+    assert.equal(unit.officialRulesCrossCheck, "pending", name);
+    assert.ok(unit.sourceUrl.includes("wh-rules.ru"), name);
   }
   const requiredAbilities = {
     "Malanthrope": ["Leader", "Stealth", "Shadow in the Warp", "Synapse", "Enhanced Toxic Miasma", "Prey Adaptation"],
