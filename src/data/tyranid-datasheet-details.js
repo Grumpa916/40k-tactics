@@ -329,7 +329,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
       Object.freeze({ name: "Fear of the Unseen", description: "While an enemy unit is within 6 inches, worsen its Leadership by 1; if it is below Starting Strength during your opponent's Command phase Battle-shock step, it must take a Battle-shock test." }),
-      Object.freeze({ name: "Hunter Organism", description: "This model cannot be your Warlord." })
+
     ]),
     defaultModelCount: 1,
     defaultPoints: 80,
@@ -601,7 +601,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Maleceptor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/maleceptor", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:psychophage": Object.freeze({
-    characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 3, "Feel No Pain": "5+" }),
+    characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 3 }),
     keywords: Object.freeze(["Great Devourer", "Harvester", "Monster", "Psychophage", "Smoke"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Psychoclastic torrent", equipment: "Default", range: '12"', attacks: "D6", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Ignores Cover, Torrent" }),
@@ -609,7 +609,6 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
-      Object.freeze({ name: "Feel No Pain 5+", description: "This model has Feel No Pain 5+." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Bio-stimulus", description: "After this model shoots, select an enemy unit hit; until the end of the turn, friendly Tyranids melee attacks targeting it improve AP by 1. The same enemy unit can only be affected once per turn." }),
       Object.freeze({ name: "Feeding Frenzy", description: "Melee attacks targeting a unit below Starting Strength gain +1 to Hit; if the target is also Below Half-strength, they gain +1 to Wound." })
@@ -717,7 +716,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Grasping Tendrils", description: "When an enemy non-Titanic unit within Engagement Range is selected to Fall Back, on a D6 roll of 3+ it must Remain Stationary instead." }),
+      Object.freeze({ name: "Grasping Tendrils", description: "Each time an enemy unit (excluding TITANIC units) within Engagement Range of one or more units from your army with this ability is selected to Fall Back, you can roll one D6: on a 3+, that enemy unit must Remain Stationary instead." }),
       Object.freeze({ name: "Hypertoxic Miasma", description: "At the end of your Movement phase, roll a D6 for each enemy unit within 6 inches: on 2–3 it suffers 1 mortal wound, on 4–5 D3, and on 6 D6." })
     ]),
     defaultModelCount: 1, defaultPoints: 120,
