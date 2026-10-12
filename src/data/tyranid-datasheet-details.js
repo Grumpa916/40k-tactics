@@ -129,6 +129,67 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultPoints: 80,
     pointsOptions: Object.freeze([{ models: 3, points: 80 }, { models: 6, points: 160 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyrant Guard datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyrant-guard", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:broodlord": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Broodlord", "Character", "Great Devourer", "Infantry", "Psyker", "Synapse", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Broodlord claws and talons", equipment: "Default", range: "Melee", attacks: 5, skill: "2+", strength: 6, ap: -2, damage: 2, abilities: "Devastating Wounds, Twin-linked" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Leader", description: "Can lead Genestealers, according to the reviewed datasheet listing." }),
+      Object.freeze({ name: "Scouts 8 inches", description: "This unit has the Scouts 8 inches ability." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Vicious Insight", description: "While leading a unit, weapons equipped by models in that unit have Devastating Wounds." }),
+      Object.freeze({ name: "Hypnotic Gaze", description: "At the start of the Fight phase, select one enemy unit within Engagement Range; subtract 1 from its models' Hit rolls for the phase." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 80,
+    pointsOptions: Object.freeze([{ models: 1, points: 80 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Broodlord datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/broodlord", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:old-one-eye": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "2+", Wounds: 9, Leadership: "8+", "Objective Control": 3, "Feel No Pain": "5+" }),
+    keywords: Object.freeze(["Character", "Epic Hero", "Great Devourer", "Monster", "Old One Eye"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Old One Eye's claws and talons (strike)", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 14, ap: -3, damage: "D6+1" }),
+      Object.freeze({ name: "Old One Eye's claws and talons (sweep)", equipment: "Default", range: "Melee", attacks: 12, skill: "3+", strength: 6, ap: -1, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Feel No Pain 5+", description: "This model has Feel No Pain 5+." }),
+      Object.freeze({ name: "Leader", description: "Can lead Carnifexes, according to the reviewed datasheet listing." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Alpha Leader", description: "While leading a unit, each time a model in that unit makes an attack, you can re-roll the Hit roll." }),
+      Object.freeze({ name: "Unstoppable Monster", description: "At the start of each player's Command phase, this model regains up to D3 lost wounds." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 140,
+    pointsOptions: Object.freeze([{ models: 1, points: 140 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Old One Eye datasheet", sourceUrl: "https://www.40k.app/879/factions/tyranids/units/old-one-eye", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:carnifexes": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "2+", Wounds: 8, Leadership: "8+", "Objective Control": 3 }),
+    keywords: Object.freeze(["Carnifexes", "Great Devourer", "Monster"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Carnifex scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "4+", strength: 9, ap: -2, damage: 3 }),
+      Object.freeze({ name: "Carnifex extra scything talons", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 9, ap: -2, damage: 3, abilities: "Extra Attacks" }),
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 6, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Bio-plasma", equipment: "Wargear option", range: '12"', attacks: "D3", skill: "4+", strength: 7, ap: -2, damage: 1, abilities: "Assault, Blast" }),
+      Object.freeze({ name: "Heavy venom cannon", equipment: "Wargear option", range: '36"', attacks: "D3", skill: "4+", strength: 9, ap: -2, damage: 3, abilities: "Blast" }),
+      Object.freeze({ name: "Deathspitters with slimer maggots", equipment: "Wargear option", range: '24"', attacks: 6, skill: "4+", strength: 7, ap: -2, damage: 1 }),
+      Object.freeze({ name: "Devourers with brainleech worms", equipment: "Wargear option", range: '18"', attacks: 12, skill: "4+", strength: 6, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Blistering Assault", description: "In the opponent's Shooting phase, if an enemy unit's attacks cause a model in this unit to lose a wound, this unit can make a surge move of up to D6+2 inches." }),
+      Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows Old One Eye to lead this unit." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 90,
+    pointsOptions: Object.freeze([{ models: 1, points: 90 }, { models: 2, points: 180 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Carnifexes datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/carnifexes", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
 });
 
