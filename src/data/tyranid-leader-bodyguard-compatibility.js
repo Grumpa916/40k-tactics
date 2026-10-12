@@ -72,7 +72,7 @@ const pages = {
   oldOneEye: "https://www.40k.app/879/factions/tyranids/units/old-one-eye",
   tyranidPrime: "https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip",
   wingedPrime: "https://www.40k.app/factions/tyranids/units/winged-tyranid-prime/updates",
-  hyperadaptedRaveners: "https://www.40k.app/factions/tyranids/units/raveners"
+  raveners: "https://www.40k.app/factions/tyranids/units/raveners"
 };
 
 const leaderRecords = {
@@ -83,7 +83,7 @@ const leaderRecords = {
   [ids.oldOneEye]: leader([ids.carnifexes], pages.oldOneEye),
   [ids.tyranidPrime]: leader([ids.hormagaunts, ids.termagants, ids.meleeWarriors, ids.rangedWarriors], pages.tyranidPrime),
   [ids.wingedPrime]: leader([ids.gargoyles, ids.meleeWarriors, ids.rangedWarriors], pages.wingedPrime),
-  [ids.hyperadaptedRaveners]: leader([ids.raveners], pages.hyperadaptedRaveners)
+  [ids.hyperadaptedRaveners]: leader([ids.raveners], pages.raveners)
 };
 
 const bodyguardRecords = {
@@ -97,7 +97,7 @@ const bodyguardRecords = {
   [ids.meleeWarriors]: bodyguard([pages.tyranidPrime, pages.wingedPrime]),
   [ids.rangedWarriors]: bodyguard([pages.tyranidPrime, pages.wingedPrime]),
   [ids.gargoyles]: bodyguard([pages.wingedPrime]),
-  [ids.raveners]: bodyguard([pages.hyperadaptedRaveners])
+  [ids.raveners]: bodyguard([pages.raveners])
 };
 
 export const TYRANID_ATTACHMENT_METADATA = Object.freeze(
