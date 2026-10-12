@@ -652,7 +652,7 @@ test("Raveners match current official datasheet and keywords", () => {
     "Burrower", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"
   ]);
   assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
   assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
