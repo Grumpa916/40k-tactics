@@ -38,6 +38,9 @@ export function createBattleSetupScreen(container, {
   let selectedPlanUnitId = null;
   let activeSetupTab = setupTab === "mission-map" ? "mission-map" : "pre-game";
   let message = "";
+  const configuredSecondaryCatalog = secondaryMissionCatalog.length
+    ? secondaryMissionCatalog
+    : SECONDARY_MISSION_CATALOG;
 
   function handleChange(event) {
     const target = event.target;
@@ -368,7 +371,7 @@ export function createBattleSetupScreen(container, {
       item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
     const definitions = [
       ...missionDefinitions.filter((item) => item?.category === "secondary"),
-      ...secondaryMissionCatalog.filter((item) => item?.category === "secondary" &&
+      ...configuredSecondaryCatalog.filter((item) => item?.category === "secondary" &&
         !missionDefinitions.some((configured) => configured?.id === item.id))
     ];
     const timingOptions = '<option value="">Choose checkpoint from card...</option>' +
