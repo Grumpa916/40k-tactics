@@ -77,7 +77,20 @@ export function removeUnitFromRoster(roster, unitId, { updatedAt = roster?.updat
   if (!roster.units.some((item) => item.id === unitId)) {
     throw new RangeError("Roster unit not found: " + unitId);
   }
-  return { ...cloneData(roster), units: roster.units.filter((item) => item.id !== unitId).map(cloneData), updatedAt };
+  // Remove attachment references from either side before dropping the unit. This
+  // keeps library callers and UI callers from leaving dangling Leader/Bodyguard IDs.
+  const units = cloneData(roster.units)
+    .filter((item) => item.id !== unitId)
+    .map((item) => {
+      const copy = { ...item };
+      if (copy.attachedToBodyguardId === unitId) delete copy.attachedToBodyguardId;
+      if (Array.isArray(copy.attachedLeaderIds)) {
+        copy.attachedLeaderIds = copy.attachedLeaderIds.filter((id) => id !== unitId);
+        if (copy.attachedLeaderIds.length === 0) delete copy.attachedLeaderIds;
+      }
+      return copy;
+    });
+  return { ...cloneData(roster), units, updatedAt };
 }
 
 export function renameArmyRoster(roster, name, { updatedAt = roster?.updatedAt ?? null } = {}) {
@@ -96,6 +109,29 @@ export function duplicateArmyRoster(roster, { id, name, createdAt = null, update
     createdAt,
     updatedAt
   };
+}
+
+/**
+ * Give every unit in a duplicated roster a new ID and update attachment references
+ * to point at the corresponding duplicated units. References to missing units are
+ * left untouched for diagnostics rather than silently guessed.
+ */
+export function remapRosterUnitIds(roster, { createId } = {}) {
+  assertRoster(roster);
+  if (typeof createId !== "function") throw new TypeError("A createId function is required.");
+  const idMap = new Map(roster.units.map((unit) => [unit.id, requireText(createId(unit), "New roster unit id")]));
+  if (new Set(idMap.values()).size !== idMap.size) throw new RangeError("New roster unit ids must be unique.");
+  const units = roster.units.map((unit) => {
+    const copy = { ...cloneData(unit), id: idMap.get(unit.id) };
+    if (unit.attachedToBodyguardId) {
+      copy.attachedToBodyguardId = idMap.get(unit.attachedToBodyguardId) ?? unit.attachedToBodyguardId;
+    }
+    if (Array.isArray(unit.attachedLeaderIds)) {
+      copy.attachedLeaderIds = unit.attachedLeaderIds.map((id) => idMap.get(id) ?? id);
+    }
+    return copy;
+  });
+  return { ...cloneData(roster), units };
 }
 
 export function deleteArmyRoster(rosters, rosterId) {
