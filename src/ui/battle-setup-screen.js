@@ -36,6 +36,7 @@ export function createBattleSetupScreen(container, {
 
   let selectedPlayerId = null;
   let selectedPlanUnitId = null;
+  let planningPointerDrag = null;
   let activeSetupTab = ["pre-game", "mission-map", "battlefield"].includes(setupTab) ? setupTab : "pre-game";
   let message = "";
   let battlefieldMapFullscreen = false;
@@ -78,6 +79,42 @@ export function createBattleSetupScreen(container, {
       return;
     }
 
+  }
+
+  function handlePlanningPointerDown(event) {
+    const marker = event.target?.closest?.("[data-map-unit-id]");
+    if (!marker || !marker.closest?.('[data-map-mode="planning"]')) return;
+    planningPointerDrag = {
+      unitId: marker.getAttribute("data-map-unit-id"),
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY
+    };
+    selectedPlanUnitId = planningPointerDrag.unitId;
+  }
+
+  function handlePlanningPointerUp(event) {
+    const drag = planningPointerDrag;
+    planningPointerDrag = null;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+    if (distance < 8) return;
+    const board = event.target?.closest?.('[data-battlefield-map-board]') ??
+      container.querySelector?.('[data-map-mode="planning"] [data-battlefield-map-board]');
+    if (!board || !board.closest?.('[data-map-mode="planning"]')) return;
+    const rect = board.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return;
+    const x = Math.round(Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60)) * 10) / 10;
+    const y = Math.round(Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44)) * 10) / 10;
+    const state = session.getState();
+    const playerId = (state.units ?? []).find((unit) => unit.id === drag.unitId)?.ownerId;
+    try {
+      session.dispatch({ type: COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION, payload: {
+        unitId: drag.unitId, playerId, position: { x, y }
+      }});
+      message = "Planned position moved.";
+    } catch (error) { message = error?.message ?? String(error); }
+    render();
   }
 
   function handleClick(event) {
@@ -348,7 +385,7 @@ export function createBattleSetupScreen(container, {
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
           ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
         '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p>' +
-        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
+        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId }) +
         '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
@@ -431,6 +468,8 @@ export function createBattleSetupScreen(container, {
 
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("click", handleClick);
+  container.addEventListener?.("pointerdown", handlePlanningPointerDown);
+  container.addEventListener?.("pointerup", handlePlanningPointerUp);
   const unsubscribe = session.subscribe(render);
   render();
   return {
@@ -443,6 +482,8 @@ export function createBattleSetupScreen(container, {
       unsubscribe();
       container.removeEventListener?.("change", handleChange);
       container.removeEventListener?.("click", handleClick);
+      container.removeEventListener?.("pointerdown", handlePlanningPointerDown);
+      container.removeEventListener?.("pointerup", handlePlanningPointerUp);
       container.replaceChildren();
     }
   };
