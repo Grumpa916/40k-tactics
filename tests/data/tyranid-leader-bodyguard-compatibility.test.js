@@ -9,9 +9,10 @@ const unit = (name) => candidates().find((candidate) => candidate.name === name)
 test("Tyranid compatibility metadata records reviewed source provenance separately from full datasheet verification", () => {
   const hiveTyrant = unit("Hive Tyrant");
   assert.equal(hiveTyrant.verificationStatus, "name-only-unverified");
-  assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.status, "cross-checked");
+  assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.status, "source-reviewed");
+  assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.officialRulesCrossCheck, "pending");
   assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.reviewedAt, "2026-10-12");
-  assert.ok(hiveTyrant.datasheet.leader.compatibilityReview.sources.some((source) => source.includes("mfm.warhammer-community.com")));
+  assert.ok(hiveTyrant.datasheet.leader.compatibilityReview.sources.some((source) => source.includes("40k.app")));
 });
 
 test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
@@ -46,10 +47,12 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
     "Hormagaunts", "Termagants", "Tyranid Warriors with Melee Bio-weapons",
     "Tyranid Warriors with Ranged Bio-weapons"
   ]);
-  assert.deepEqual(idsFor("Winged Tyranid Prime"), [
-    "Gargoyles", "Tyranid Warriors with Melee Bio-weapons",
-    "Tyranid Warriors with Ranged Bio-weapons"
-  ]);
+  assert.deepEqual(idsFor("Winged Tyranid Prime"), ["Tyranid Warriors with Ranged Bio-weapons"]);
+  const wingedPrime = unit("Winged Tyranid Prime");
+  assert.ok(wingedPrime.datasheet.leader.compatibilityReview.sources.includes(
+    "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons"
+  ));
+  assert.equal(unit("Gargoyles").datasheet, undefined);
   assert.deepEqual(idsFor("Hyperadapted Raveners"), ["Raveners"]);
   assert.equal(unit("Tervigon").datasheet, undefined);
 });

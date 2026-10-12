@@ -13,7 +13,7 @@ export function getEligibleBodyguards(roster, leaderId) {
   const leaderMetadata = leader.datasheet?.leader;
   const allowedIds = leaderMetadata?.allowedBodyguardDatasheetIds;
   const leaderReviewStatus = leaderMetadata?.compatibilityReview?.status;
-  if (!Array.isArray(allowedIds) || !["accepted", "cross-checked"].includes(leaderReviewStatus)) return [];
+  if (!Array.isArray(allowedIds) || !["accepted", "cross-checked", "source-reviewed"].includes(leaderReviewStatus)) return [];
 
   return roster.units.filter((unit) => {
     if (unit.id === leader.id) return false;
@@ -24,7 +24,7 @@ export function getEligibleBodyguards(roster, leaderId) {
     const maxAttachedLeaders = bodyguardMetadata?.maxAttachedLeaders ?? 1;
     return Boolean(bodyguardId && allowedIds.includes(bodyguardId) &&
       bodyguardMetadata?.canReceiveLeader === true &&
-      ["accepted", "cross-checked"].includes(bodyguardReviewStatus) &&
+      ["accepted", "cross-checked", "source-reviewed"].includes(bodyguardReviewStatus) &&
       !unit.attachedToBodyguardId &&
       attachedLeaderIds.length < maxAttachedLeaders &&
       !attachedLeaderIds.includes(leaderId));

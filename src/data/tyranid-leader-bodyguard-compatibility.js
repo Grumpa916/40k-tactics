@@ -1,19 +1,20 @@
 /**
- * Reviewed Tyranid Leader/Bodyguard compatibility only.
- * This does not mark the full datasheet (points, profiles, abilities) as verified.
- * Pairings were cross-checked against the official Munitorum Field Manual and
- * the linked 40k.app datasheet pages on 2026-10-12.
+ * Tyranid Leader/Bodyguard pairings transcribed from current 40k.app datasheet
+ * "Leads"/"Led by" entries on 2026-10-12. This is compatibility-only metadata:
+ * points, profiles, weapons, and abilities remain unverified. Official GW
+ * cross-check is explicitly pending where a public current datasheet source
+ * was not available for this review.
  */
 const REVIEWED_AT = "2026-10-12";
-const RULES_VERSION = "Warhammer 40,000 Munitorum Field Manual; official downloads page updated 2026-09-30";
-const OFFICIAL_MFM = "https://mfm.warhammer-community.com/en/tyranids";
+const RULES_VERSION = "Warhammer 40,000 11th edition; 40k.app datasheet listings checked 2026-10-12";
 
-function review(leaderPage) {
+function review(sourcePage) {
   return Object.freeze({
-    status: "cross-checked",
+    status: "source-reviewed",
+    officialRulesCrossCheck: "pending",
     reviewedAt: REVIEWED_AT,
     rulesVersion: RULES_VERSION,
-    sources: Object.freeze([OFFICIAL_MFM, leaderPage])
+    sources: Object.freeze([sourcePage])
   });
 }
 
@@ -33,10 +34,11 @@ function bodyguard(sourcePages) {
       canReceiveLeader: true,
       maxAttachedLeaders: 1,
       compatibilityReview: Object.freeze({
-        status: "cross-checked",
+        status: "source-reviewed",
+        officialRulesCrossCheck: "pending",
         reviewedAt: REVIEWED_AT,
         rulesVersion: RULES_VERSION,
-        sources: Object.freeze([OFFICIAL_MFM, ...sourcePages])
+        sources: Object.freeze(sourcePages)
       })
     })
   });
@@ -60,8 +62,7 @@ const ids = {
   hormagaunts: "tyranids:hormagaunts",
   termagants: "tyranids:termagants",
   meleeWarriors: "tyranids:tyranid-warriors-with-melee-bio-weapons",
-  rangedWarriors: "tyranids:tyranid-warriors-with-ranged-bio-weapons",
-  gargoyles: "tyranids:gargoyles"
+  rangedWarriors: "tyranids:tyranid-warriors-with-ranged-bio-weapons"
 };
 
 const pages = {
@@ -71,7 +72,7 @@ const pages = {
   swarmlord: "https://www.40k.app/879/factions/tyranids/units/the-swarmlord",
   oldOneEye: "https://www.40k.app/879/factions/tyranids/units/old-one-eye",
   tyranidPrime: "https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip",
-  wingedPrime: "https://www.40k.app/factions/tyranids/units/winged-tyranid-prime/updates",
+  rangedWarriors: "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons",
   raveners: "https://www.40k.app/factions/tyranids/units/raveners"
 };
 
@@ -82,7 +83,7 @@ const leaderRecords = {
   [ids.swarmlord]: leader([ids.tyrantGuard], pages.swarmlord),
   [ids.oldOneEye]: leader([ids.carnifexes], pages.oldOneEye),
   [ids.tyranidPrime]: leader([ids.hormagaunts, ids.termagants, ids.meleeWarriors, ids.rangedWarriors], pages.tyranidPrime),
-  [ids.wingedPrime]: leader([ids.gargoyles, ids.meleeWarriors, ids.rangedWarriors], pages.wingedPrime),
+  [ids.wingedPrime]: leader([ids.rangedWarriors], pages.rangedWarriors),
   [ids.hyperadaptedRaveners]: leader([ids.raveners], pages.raveners)
 };
 
@@ -94,9 +95,8 @@ const bodyguardRecords = {
   [ids.carnifexes]: bodyguard([pages.oldOneEye]),
   [ids.hormagaunts]: bodyguard([pages.tyranidPrime]),
   [ids.termagants]: bodyguard([pages.tyranidPrime]),
-  [ids.meleeWarriors]: bodyguard([pages.tyranidPrime, pages.wingedPrime]),
-  [ids.rangedWarriors]: bodyguard([pages.tyranidPrime, pages.wingedPrime]),
-  [ids.gargoyles]: bodyguard([pages.wingedPrime]),
+  [ids.meleeWarriors]: bodyguard([pages.tyranidPrime]),
+  [ids.rangedWarriors]: bodyguard([pages.tyranidPrime, pages.rangedWarriors]),
   [ids.raveners]: bodyguard([pages.raveners])
 };
 
