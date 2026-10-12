@@ -1,4 +1,4 @@
-import { createArmyRoster, duplicateArmyRoster } from "../state/army-roster-library.js";
+import { createArmyRoster, duplicateArmyRoster, remapRosterUnitIds, removeUnitFromRoster } from "../state/army-roster-library.js";
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { getEligibleBodyguards, attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 
@@ -104,7 +104,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         '<button type="button" data-add-catalog-unit ' + (busy ? "disabled" : "") + '>Add selected unit</button>' +
         '<p>Catalog is a starter list, not a complete or verified datasheet database. Check current official faction documents before relying on a unit entry.</p>' +
         '<details><summary>Add a unit not in the catalog</summary><label>Manual unit name<input name="manualUnitName" maxlength="120" placeholder="Enter unit name" ' + (busy ? "disabled" : "") + '></label><button type="submit" ' + (busy ? "disabled" : "") + '>Add manual unit</button></details></form>' +
-        '<p class="army-roster-panel__attachment-status">Leader / Bodyguard: attachment controls are available only when reviewed datasheet compatibility is present. The current starter catalog is name-only, so unverified pairings remain disabled.</p>' +
+        '<p class="army-roster-panel__attachment-status">Leader / Bodyguard: only source-reviewed pairings are selectable. Units without reviewed compatibility remain unavailable for attachment.</p>' +
         '<h4>Roster units (' + current.units.length + ')</h4><p>Total assigned unit points: ' + escapeHtml(current.units.reduce((sum, unit) => sum + (Number.isFinite(unit.points) ? unit.points : 0), 0)) + ' pts · unset unit costs excluded.</p><ul>' + (units || '<li>No units added yet.</li>') + '</ul>' +
         '<div class="army-roster-panel__points"><label>Roster points limit<input data-roster-points-limit type="number" min="0" step="1" placeholder="e.g. 2000" value="' + escapeHtml(current.pointsLimit ?? "") + '" ' + (busy ? "disabled" : "") + '></label><button type="button" data-save-points-limit ' + (busy ? "disabled" : "") + '>Save points limit</button></div>' +
         '<p>Faction: ' + escapeHtml(current.faction || "Not set") + ' · Points limit: ' + escapeHtml(current.pointsLimit ?? "Not set") + '</p></section>' : "") +
@@ -278,14 +278,10 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         const name = window.prompt("Name for the duplicate", current.name + " Copy");
         if (name == null) return;
         const timestamp = now();
-        const copy = duplicateArmyRoster(current, { id: newId(), name, createdAt: timestamp, updatedAt: timestamp });
-        const remappedIds = new Map(copy.units.map((unit) => [unit.id, newId()]));
-        copy.units = copy.units.map((unit) => {
-          const cloned = { ...unit, id: remappedIds.get(unit.id) };
-          if (unit.attachedToBodyguardId) cloned.attachedToBodyguardId = remappedIds.get(unit.attachedToBodyguardId) ?? unit.attachedToBodyguardId;
-          if (Array.isArray(unit.attachedLeaderIds)) cloned.attachedLeaderIds = unit.attachedLeaderIds.map((id) => remappedIds.get(id) ?? id);
-          return cloned;
-        });
+        const copy = remapRosterUnitIds(
+          duplicateArmyRoster(current, { id: newId(), name, createdAt: timestamp, updatedAt: timestamp }),
+          { createId: () => newId() }
+        );
         await store.save({ roster: copy }); selectedId = copy.id; current = copy;
       }, "Independent roster copy created.");
       return;
@@ -302,15 +298,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       await action(async () => {
         if (!current) throw new Error("Open a roster first.");
         const unitId = button.getAttribute("data-remove-unit");
-        // Detach every relationship touching the unit before removing it, so neither side
-        // retains a dangling attachment reference.
-        let cleaned = current;
-        for (const leader of [...cleaned.units]) {
-          if (leader.id === unitId || leader.attachedToBodyguardId === unitId) {
-            cleaned = detachLeaderFromBodyguard(cleaned, leader.id, { updatedAt: now() });
-          }
-        }
-        const updated = { ...cleaned, units: cleaned.units.filter((unit) => unit.id !== unitId), updatedAt: now() };
+        const updated = removeUnitFromRoster(current, unitId, { updatedAt: now() });
         await store.save({ id: updated.id, roster: updated }); current = updated;
       }, "Unit removed and roster saved.");
     }
