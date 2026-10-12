@@ -712,6 +712,197 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 1, points: 120 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Toxicrene datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/toxicrene", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:hormagaunts": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 3, Save: "5+", Wounds: 1, Leadership: "8+", "Objective Control": 2 }),
+    keywords: Object.freeze(["Infantry", "Battleline", "Great Devourer", "Endless Multitude", "Hormagaunts"]),
+    weapons: Object.freeze([Object.freeze({ name: "Hormagaunt talons", equipment: "Default", range: "Melee", attacks: 3, skill: "4+", strength: 3, ap: -1, damage: 1 })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Bounding Leap", description: "This unit is eligible to declare a charge in a turn in which it Advanced." })
+    ]),
+    defaultModelCount: 10, defaultPoints: 70,
+    pointsOptions: Object.freeze([{ models: 10, points: 70 }, { models: 20, points: 120 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/879/factions/tyranids/units/hormagaunts/updates", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Hormagaunts"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:genestealers": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 4, Save: "5+", Wounds: 2, Leadership: "7+", "Objective Control": 1, "Invulnerable save": "5+" }),
+    keywords: Object.freeze(["Infantry", "Great Devourer", "Vanguard Invader", "Genestealers"]),
+    weapons: Object.freeze([Object.freeze({ name: "Genestealer claws and talons", equipment: "Default", range: "Melee", attacks: 4, skill: "2+", strength: 4, ap: -2, damage: 1 })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Scouts 8", description: "This unit has Scouts 8 inches." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Vanguard Predator", description: "Each time a model in this unit makes an attack, re-roll a Hit roll of 1; if the target is within range of an objective marker, re-roll a Wound roll of 1 as well." })
+    ]),
+    defaultModelCount: 5, defaultPoints: 75,
+    pointsOptions: Object.freeze([{ models: 5, points: 75 }, { models: 10, points: 140 }, { models: 5, points: 85, condition: "3rd+ Genestealer unit in army (+10 points)" }, { models: 10, points: 150, condition: "3rd+ Genestealer unit in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Genestealers"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:gargoyles": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 3, Save: "6+", Wounds: 1, Leadership: "8+", "Objective Control": 2 }),
+    keywords: Object.freeze(["Infantry", "Battleline", "Fly", "Great Devourer", "Endless Multitude", "Vanguard Invader", "Gargoyles"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Fleshborer", equipment: "Default", range: '18"', attacks: 1, skill: "4+", strength: 5, ap: 0, damage: 1, abilities: "Assault" }),
+      Object.freeze({ name: "Blinding venom", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 3, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Winged Swarm", description: "After this unit shoots, if it is not within Engagement Range, it can make a Normal move of up to 6 inches; if it does, it cannot declare a charge this turn." })
+    ]),
+    defaultModelCount: 10, defaultPoints: 80,
+    pointsOptions: Object.freeze([{ models: 10, points: 80 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Gargoyles"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:tyranid-warriors-with-melee-bio-weapons": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "7+", "Objective Control": 2 }),
+    keywords: Object.freeze(["Infantry", "Great Devourer", "Synapse", "Tyranid Warriors with Melee Bio-weapons"]),
+    weapons: Object.freeze([Object.freeze({ name: "Tyranid Warrior claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 5, ap: -2, damage: 1, abilities: "Twin-linked" })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Adaptive Instincts", description: "Once per turn in the Fight phase, when this unit is selected to fight or when an enemy unit targets it, choose: its melee attacks have +1 Strength, or this unit has +1 Toughness." })
+    ]),
+    defaultModelCount: 3, defaultPoints: 75,
+    pointsOptions: Object.freeze([{ models: 3, points: 75 }, { models: 6, points: 150 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points/update listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/879/factions/tyranids/units/tyranid-warriors-with-melee-bio-weapons/updates", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Tyranid-Warriors-With-Melee-Bio-weapons"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:venomthropes": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Infantry", "Fly", "Great Devourer", "Venomthropes"]),
+    weapons: Object.freeze([Object.freeze({ name: "Toxic lashes", equipment: "Default", range: "Melee", attacks: 5, skill: "3+", strength: 3, ap: 0, damage: 1, abilities: "Anti-Infantry 2+" })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Foul Spores", description: "Friendly Tyranids units within 6 inches of this unit have Stealth." })
+    ]),
+    defaultModelCount: 3, defaultPoints: 55,
+    pointsOptions: Object.freeze([{ models: 3, points: 55 }, { models: 6, points: 110 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Venomthropes"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:trygon": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 10, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
+    keywords: Object.freeze(["Monster", "Great Devourer", "Vanguard Invader", "Burrower", "Trygon"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Bio-electric pulse", equipment: "Default", range: '12"', attacks: 6, skill: "3+", strength: 5, ap: 0, damage: 1, abilities: "Sustained Hits 2" }),
+      Object.freeze({ name: "Trygon scything talons", equipment: "Default", range: "Melee", attacks: 12, skill: "3+", strength: 9, ap: -2, damage: 3 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Subterranean Tunnels", description: "When set up using Deep Strike in your Movement phase, this model can be set up more than 6 inches horizontally from enemy units, but cannot declare a charge that turn." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 135,
+    pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Trygon"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:winged-tyranid-prime": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Winged Tyranid Prime"]),
+    weapons: Object.freeze([Object.freeze({ name: "Prime talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 6, ap: -1, damage: 2 })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Leader", description: "This model can lead eligible Tyranid units listed in the attachment compatibility data." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Alpha Warrior", description: "While this model is leading a unit, weapons equipped by models in that unit have Sustained Hits 1." }),
+      Object.freeze({ name: "Death Blow", description: "If destroyed by a melee attack before it has fought this phase, on a D6 roll of 4+ it can fight after the attacking unit finishes its attacks before being removed." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 65,
+    pointsOptions: Object.freeze([{ models: 1, points: 65 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Winged-Tyranid-Prime"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:harpy": Object.freeze({
+    characteristics: Object.freeze({ Move: "—", Toughness: 9, Save: "3+", Wounds: 12, Leadership: "8+", "Objective Control": "—" }),
+    keywords: Object.freeze(["Monster", "Fly", "Aircraft", "Great Devourer", "Vanguard Invader", "Harpy"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Stinger salvoes", equipment: "Default", range: '24"', attacks: 8, skill: "3+", strength: 5, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Twin stranglethorn cannon", equipment: "Default", range: '36"', attacks: "D6+1", skill: "2+", strength: 7, ap: -1, damage: 2, abilities: "Blast, Twin-linked" }),
+      Object.freeze({ name: "Scything wings", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 7, ap: -1, damage: 2 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Spore Mine Cysts", description: "At the end of your opponent's Fight phase, either roll six D6 against a visible enemy unit within 24 inches, causing 1 mortal wound for each 3+, or add a Spore Mines unit with D3 models within 6 inches and more than 8 inches from enemies; the latter option is limited to once per turn." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 185,
+    pointsOptions: Object.freeze([{ models: 1, points: 185 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Harpy"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:hive-crone": Object.freeze({
+    characteristics: Object.freeze({ Move: "—", Toughness: 9, Save: "3+", Wounds: 12, Leadership: "8+", "Objective Control": "—" }),
+    keywords: Object.freeze(["Monster", "Fly", "Aircraft", "Great Devourer", "Vanguard Invader", "Hive Crone"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Drool cannon", equipment: "Default", range: '12"', attacks: "2D6", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Torrent" }),
+      Object.freeze({ name: "Stinger salvoes", equipment: "Default", range: '24"', attacks: 8, skill: "3+", strength: 5, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Tentaclids", equipment: "Default", range: '36"', attacks: 4, skill: "3+", strength: 7, ap: 0, damage: 2, abilities: "Anti-Vehicle 4+, Devastating Wounds" }),
+      Object.freeze({ name: "Scything wings", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 7, ap: -1, damage: 2 }),
+      Object.freeze({ name: "Thorax spur", equipment: "Default", range: "Melee", attacks: 1, skill: "3+", strength: 10, ap: -3, damage: "D6", abilities: "Anti-Fly 2+, Extra Attacks" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Airborne Predator", description: "Each time this model makes a ranged attack targeting a unit that can Fly, add 1 to the Hit roll." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 170,
+    pointsOptions: Object.freeze([{ models: 1, points: 170 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Hive-Crone"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:tyrannocyte": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 2 }),
+    keywords: Object.freeze(["Monster", "Fly", "Frame", "Transport", "Dedicated Transport", "Great Devourer", "Vanguard Invader", "Tyrannocyte"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Tyrannocyte bio-weapons", equipment: "Default", range: '24"', attacks: 5, skill: "4+", strength: 5, ap: -1, damage: 2 }),
+      Object.freeze({ name: "Flensing whips", equipment: "Default", range: "Melee", attacks: 6, skill: "4+", strength: 7, ap: -1, damage: 2 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Aerial Seeding", description: "This model must start in Reserves and can arrive in the first, second, or third Movement phase regardless of mission rules; embarked units must immediately disembark more than 8 inches from enemy models." }),
+      Object.freeze({ name: "Transport", description: "Transport capacity: 20 Tyranids Infantry models, or 1 Tyranids Monster model with Wounds 12 or less; Infantry models with more than 1 Wound take up 3 spaces." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 80,
+    pointsOptions: Object.freeze([{ models: 1, points: 80, condition: "1st–3rd Tyrannocyte in army" }, { models: 1, points: 90, condition: "4th+ Tyrannocyte in army" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Tyrannocyte"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:hierophant": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 14, Save: "2+", Wounds: 30, Leadership: "8+", "Objective Control": 12, "Invulnerable save": "5+" }),
+    keywords: Object.freeze(["Monster", "Titanic", "Towering", "Frame", "Transport", "Great Devourer", "Hierophant"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Bio-plasma torrent", equipment: "Default", range: '12"', attacks: "3D6", skill: "—", strength: 7, ap: -2, damage: 1, abilities: "Assault, Torrent" }),
+      Object.freeze({ name: "Dire bio-cannon", equipment: "Default", range: '48"', attacks: "D6+6", skill: "3+", strength: 10, ap: -3, damage: 3, abilities: "Blast" }),
+      Object.freeze({ name: "Lashwhip pods", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 5, ap: -1, damage: 1, abilities: "Extra Attacks" }),
+      Object.freeze({ name: "Titanic scything talons", equipment: "Default", range: "Melee", attacks: 8, skill: "3+", strength: 20, ap: -2, damage: "D6+1" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 2D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Apex-beast", description: "Each time this model makes an attack targeting a Battle-shocked unit, add 1 to the Hit roll." }),
+      Object.freeze({ name: "Stalking Forward", description: "When making a Normal, Advance, or Fall Back move, this model can move over non-Titanic models and terrain features 4 inches or less in height as if they were not there." }),
+      Object.freeze({ name: "Transport", description: "Transport capacity: 20 Tyranids Infantry models; models with more than 1 Wound take up 3 spaces. It cannot transport models that can Fly." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 810,
+    pointsOptions: Object.freeze([{ models: 1, points: 810 }, { models: 1, points: 910, condition: "2nd+ Hierophant in army (+100 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Hierophant"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:harridan": Object.freeze({
+    characteristics: Object.freeze({ Move: '14"', Toughness: 10, Save: "3+", Wounds: 30, Leadership: "8+", "Objective Control": 0 }),
+    keywords: Object.freeze(["Monster", "Titanic", "Fly", "Transport", "Great Devourer", "Harridan"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Dire bio-cannon", equipment: "Default", range: '48"', attacks: "D6+6", skill: "3+", strength: 10, ap: -3, damage: 3, abilities: "Blast" }),
+      Object.freeze({ name: "Gargantuan scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 14, ap: -2, damage: "D6" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 2D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Frenzied Metabolism", description: "When selected to shoot, this model can add 1 to Wound rolls for its attacks this phase; afterward, on a D6 roll of 2+, it suffers D3 mortal wounds." }),
+      Object.freeze({ name: "Transport", description: "Transport capacity: 20 Gargoyles models and 1 Winged Tyranid Prime model." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 610,
+    pointsOptions: Object.freeze([{ models: 1, points: 610 }, { models: 1, points: 660, condition: "2nd+ Harridan in army (+50 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Harridan"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
