@@ -340,3 +340,19 @@ test("Harpy, Hive Crone, Tyrannocyte, Hierophant, and Harridan expose sourced pr
   assert.equal(harridan.defaultPoints, 610);
   assert.ok(harridan.datasheet.abilities.some((ability) => ability.name === "Frenzied Metabolism"));
 });
+
+
+test("Hyperadapted Raveners expose the Ravener Prime and Ravener profile", () => {
+  const unit = candidate("Hyperadapted Raveners");
+  assert.equal(unit.defaultPoints, 165);
+  assert.equal(unit.datasheet.modelProfiles.find((model) => model.name === "Ravener Prime").Wounds, 6);
+  assert.equal(unit.datasheet.modelProfiles.find((model) => model.name === "Raveners").Wounds, 3);
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Venom bolt"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Alpha Invader"));
+  assert.equal(unit.officialRulesCrossCheck, "pending");
+});
+
+test("Tyranid catalog contains no duplicate candidate names", () => {
+  const names = findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name);
+  assert.equal(new Set(names).size, names.length);
+});
