@@ -66,3 +66,10 @@ This document records agreed design requirements from the Warmind UI/UX comparis
 - Tab switching changes only the viewed workspace and must preserve roster edits and battle state.
 - Army roster detachment is saved explicitly. Only reviewed detachment options are offered as named choices; unsupported choices can be entered as printed text without inventing rules.
 - The Turn Clock starts when the first player turn begins, remains running across phase changes, and switches player at turn boundaries.
+
+
+## Tyranid detachments (11th edition)
+- Army Builder's Tyranid detachment selector lists all ten detachments currently published for the 11th edition faction pack: Ambush Predators, Assimilation Swarm, Crusher Stampede, Invasion Fleet, Subterranean Assault, Synaptic Nexus, Talons of the Norn Queen, Unending Swarm, Vanguard Onslaught, and Warrior Bioform Onslaught.
+- Each option displays its Force Disposition and Detachment Point (DP) cost. These are army-building reference labels, not an automated army legality validator.
+- Rules reference: Games Workshop's [June 2026 Xenos Faction Pack announcement](https://www.warhammer-community.com/en-gb/articles/fchkklcq/new40k-download-new-xenos-faction-packs-today/) and current [Munitorum Field Manual Tyranids page](https://mfm.warhammer-community.com/en/tyranids). 40k.app is a secondary discovery/reference source; it is not the authority for rules wording.
+- When a detachment's current rules or costs are not reviewed in the local rules data, show the official published name/disposition/DP for selection but do not invent enhancements, stratagems, or ability text.
