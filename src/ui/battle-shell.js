@@ -18,6 +18,7 @@ import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../
 import { renderPersistentMissionSummary } from "./mission-summary-panel.js";
 import { getBattleShockEligibility, isUnitBattleShocked } from "../rules/unit-status-summary.js";
 import { getTyranidDecisionReminders, TYRANID_DECISION_IDS } from "../rules/tyranid-decision-reminders.js";
+import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "live" },
@@ -200,7 +201,7 @@ function setupTabLabel(tab) {
 
 function setupContinueLabel(tab) {
   return ({ "army-builder": "Continue to Saves", saves: "Continue to Pre-game",
-    "pre-game": "Continue to Mission &amp; Map", "mission-map": "Back to Army Builder" })[tab] ?? "Continue";
+    "pre-game": "Continue to Mission &amp; Map", "mission-map": "Continue to Deployment" })[tab] ?? "Continue";
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
@@ -327,7 +328,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
             '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' +
             '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section></section>'
           : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section>') +
-        '<footer class="battle-shell__setup-bottom-nav"><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
+        '<footer class="battle-shell__setup-bottom-nav"><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
+        '<p role="status" data-setup-navigation-message>' + escapeHtml(setupNavigationMessage) + '</p></div>' +
         '<button type="button" data-setup-workspace-continue>' + setupContinueLabel(setupWorkspaceTab) + '</button></footer>'
       : "") +
     '<p class="battle-shell__view-note">Viewing ' + escapeHtml(phaseLabel(viewedPhase)) +
@@ -363,6 +365,7 @@ export function createBattleShell(container, {
   const cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
   const showCloud = Boolean(supabaseClient || cloudStore);
   let setupWorkspaceTab = "army-builder";
+  let setupNavigationMessage = "";
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
   let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
@@ -399,6 +402,7 @@ export function createBattleShell(container, {
   function setSetupWorkspaceTab(tab) {
     if (!["army-builder", "saves", "pre-game", "mission-map"].includes(tab)) return;
     setupWorkspaceTab = tab;
+    setupNavigationMessage = "";
     container.querySelectorAll?.("[data-setup-workspace-tab]").forEach((button) => {
       button.setAttribute("aria-pressed", String(button.getAttribute("data-setup-workspace-tab") === tab));
     });
@@ -865,9 +869,27 @@ export function createBattleShell(container, {
     }
     const continueButton = event.target?.closest?.("[data-setup-workspace-continue]");
     if (!continueButton || !container.contains(continueButton)) return;
+    if (setupWorkspaceTab === "mission-map") {
+      const readiness = evaluatePreGameReadiness(session.getState());
+      if (!readiness.ready) {
+        setupNavigationMessage = "Complete before deployment: " + readiness.missing.map((item) => item.label).join(", ") + ".";
+        const message = container.querySelector?.("[data-setup-navigation-message]");
+        if (message) message.textContent = setupNavigationMessage;
+        return;
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.ENTER_DEPLOYMENT, payload: {} });
+        setupNavigationMessage = "";
+      } catch (error) {
+        setupNavigationMessage = error?.message ?? String(error);
+        const message = container.querySelector?.("[data-setup-navigation-message]");
+        if (message) message.textContent = setupNavigationMessage;
+      }
+      return;
+    }
     const order = ["army-builder", "saves", "pre-game", "mission-map"];
     const index = order.indexOf(setupWorkspaceTab);
-    setSetupWorkspaceTab(order[index === order.length - 1 ? 0 : index + 1]);
+    setSetupWorkspaceTab(order[index + 1]);
   }
 
   function handlePhaseNavigation(event) {
