@@ -92,7 +92,8 @@ test("turns resolve in order and both player turns advance the battle round", ()
   assert.equal(state.turn, 3);
   assert.equal(state.battle.round, 2);
   assert.equal(state.activePlayer, "p1");
-  assert.equal(state.history.at(-1).type, "turn.started");
+  assert.equal(state.history.at(-2).type, "turn.started");
+  assert.equal(state.history.at(-1).type, "turn_clock.started");
 });
 
 test("Turn Clock follows player turns and is not reset by phase transitions", () => {
@@ -125,7 +126,7 @@ test("Turn Clock follows player turns and is not reset by phase transitions", ()
   state = advanceToEndOfTurn(state);
   state = endTurn(state, { nextActivePlayerId: "p1", nowMs: 62000 });
   assert.equal(state.timers.turnClock.elapsedMsByPlayer.p2, 32000);
-  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p1, 63500);
+  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p1, 32500);
   assert.equal(state.timers.turnClock.activePlayerId, "p2");
   assert.equal(state.timers.turnClock.running, false);
   assert.equal(state.timers.turnClock.startedAtMs, null);
