@@ -13,11 +13,13 @@ test("catalog candidates are faction-filtered and search is case-insensitive", (
 test("catalog entries declare source status and a source URL", () => {
   assert.ok(ARMY_UNIT_CATALOG.length > 0);
   assert.ok(ARMY_UNIT_CATALOG.every((unit) =>
-    ["name-only-unverified", "source-reviewed"].includes(unit.verificationStatus) &&
+    ["name-only-unverified", "source-reviewed", "points-reviewed"].includes(unit.verificationStatus) &&
     typeof unit.sourceUrl === "string" &&
     unit.sourceUrl.startsWith("https://")
   ));
   const reviewed = ARMY_UNIT_CATALOG.filter((unit) => unit.verificationStatus === "source-reviewed");
   assert.ok(reviewed.length > 0);
   assert.ok(reviewed.every((unit) => unit.datasheet && unit.reviewedAt));
+  const pointsReviewed = ARMY_UNIT_CATALOG.filter((unit) => unit.verificationStatus === "points-reviewed");
+  assert.ok(pointsReviewed.every((unit) => unit.defaultPoints != null && unit.reviewedAt));
 });
