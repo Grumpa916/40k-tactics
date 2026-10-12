@@ -228,3 +228,45 @@ test("Parasite of Mortrex and the three monster profiles expose sourced abilitie
   assert.equal(psychophage.defaultPoints, 110);
   assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], "5+");
 });
+
+
+test("The Red Terror and Mucolid Spores expose source-reviewed profiles", () => {
+  const redTerror = candidate("The Red Terror");
+  assert.equal(redTerror.defaultPoints, 130);
+  assert.equal(redTerror.datasheet.characteristics.Wounds, 9);
+  assert.ok(redTerror.datasheet.abilities.some((ability) => ability.name === "Swallow Whole"));
+
+  const mucolidSpores = candidate("Mucolid Spores");
+  assert.equal(mucolidSpores.defaultPoints, 30);
+  assert.deepEqual(mucolidSpores.pointsOptions.map((option) => option.points), [30, 60]);
+  assert.ok(mucolidSpores.datasheet.abilities.some((ability) => ability.name === "Floating Death"));
+});
+
+test("Mawloc, Norn Assimilator, Norn Emissary, and Toxicrene expose sourced profiles", () => {
+  const mawloc = candidate("Mawloc");
+  assert.equal(mawloc.defaultPoints, 135);
+  assert.equal(mawloc.datasheet.characteristics.Wounds, 14);
+  assert.ok(mawloc.datasheet.abilities.some((ability) => ability.name === "Terror From The Deep"));
+
+  const assimilator = candidate("Norn Assimilator");
+  assert.equal(assimilator.defaultPoints, 250);
+  assert.deepEqual(assimilator.pointsOptions.map((option) => option.points), [250, 270]);
+  assert.ok(assimilator.datasheet.abilities.some((ability) => ability.name === "Harpoon Barbs"));
+
+  const emissary = candidate("Norn Emissary");
+  assert.equal(emissary.defaultPoints, 250);
+  assert.equal(emissary.datasheet.characteristics["Invulnerable save"], "4+");
+  assert.ok(emissary.datasheet.abilities.some((ability) => ability.name === "Unnatural Resilience"));
+
+  const toxicrene = candidate("Toxicrene");
+  assert.equal(toxicrene.defaultPoints, 120);
+  assert.ok(toxicrene.datasheet.weapons.some((weapon) => weapon.name === "Massive toxic lashes (Ranged)"));
+  assert.ok(toxicrene.datasheet.abilities.some((ability) => ability.name === "Hypertoxic Miasma"));
+});
+
+test("The Tyranid roster picker includes the remaining current faction candidates", () => {
+  const names = new Set(findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name));
+  for (const name of ["The Red Terror", "Mucolid Spores", "Spore Mines", "Venomthropes", "Harpy", "Hive Crone", "Harridan", "Hierophant", "Tyrannocyte", "Sporocyst", "Trygon", "Screamer-Killer", "Mawloc", "Norn Assimilator", "Norn Emissary", "Toxicrene"]) {
+    assert.ok(names.has(name), `missing Tyranid candidate: ${name}`);
+  }
+});

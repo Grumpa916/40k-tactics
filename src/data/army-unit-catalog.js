@@ -10,7 +10,9 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
     "Exocrine", "Maleceptor", "Psychophage", "Screamer-Killer", "Carnifexes",
     "Termagants", "Hormagaunts", "Neurogaunts", "Genestealers", "Barbgaunts", "Biovores", "Hive Guard",
     "Zoanthropes", "Tyranid Warriors", "Gargoyles", "Lictor", "Deathleaper", "Neurolictor", "Pyrovores",
-    "Von Ryan’s Leapers", "Ripper Swarms", "Parasite of Mortrex", "Haruspex",
+    "Von Ryan’s Leapers", "Ripper Swarms", "Parasite of Mortrex", "Haruspex", "The Red Terror",
+    "Mucolid Spores", "Spore Mines", "Venomthropes", "Harpy", "Hive Crone", "Harridan", "Hierophant",
+    "Tyrannocyte", "Sporocyst", "Trygon", "Screamer-Killer", "Mawloc", "Norn Assimilator", "Norn Emissary", "Toxicrene",
     "Broodlord", "The Swarmlord", "Old One Eye", "Tyranid Prime with Lash Whip",
     "Winged Tyranid Prime", "Hyperadapted Raveners", "Raveners", "Tyrant Guard", "Tyranid Warriors with Melee Bio-weapons",
     "Tyranid Warriors with Ranged Bio-weapons"

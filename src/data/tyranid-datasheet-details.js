@@ -607,6 +607,111 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 1, points: 110 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Psychophage datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/psychophage", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:the-red-terror": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 8, Save: "3+", Wounds: 9, Leadership: "8+", "Objective Control": 3 }),
+    keywords: Object.freeze(["Burrower", "Character", "Epic Hero", "Great Devourer", "Mobile", "Monster", "The Red Terror", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Gaping maw", equipment: "Default", range: "Melee", attacks: 1, skill: "2+", strength: 5, ap: "—", damage: "D3+2", abilities: "Extra Attacks, Devastating Wounds, Precision" }),
+      Object.freeze({ name: "Scything talons", equipment: "Default", range: "Melee", attacks: 12, skill: "2+", strength: 7, ap: -2, damage: 2 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Swallow Whole", description: "Attacks with the gaping maw targeting Infantry, Mounted, or Beasts score Critical Wounds on successful unmodified Wound rolls; destroying such a model with the maw restores up to D3+2 lost wounds." }),
+      Object.freeze({ name: "Subterranean Hunter", description: "At the end of the Fight phase, if this unit is not within Engagement Range, remove it and place it into Strategic Reserves." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 130,
+    pointsOptions: Object.freeze([{ models: 1, points: 130 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app The Red Terror datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/the-red-terror", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:mucolid-spores": Object.freeze({
+    characteristics: Object.freeze({ Move: '4"', Toughness: 4, Save: "7+", Wounds: 3, Leadership: "8+", "Objective Control": 0 }),
+    keywords: Object.freeze(["Beast", "Fly", "Great Devourer", "Mucolid Spores"]),
+    weapons: Object.freeze([]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Bio-minefield", description: "Enemy units cannot start or end an Advance move within 6 inches of this unit." }),
+      Object.freeze({ name: "Floating Death", description: "When this unit or an enemy unit ends a move, each model in this unit within 3 inches of an enemy unit is destroyed; on a D6 roll of 2–5 that enemy unit suffers D3 mortal wounds, and on a 6 it suffers D6 mortal wounds." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 30,
+    pointsOptions: Object.freeze([{ models: 1, points: 30 }, { models: 2, points: 60 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Mucolid Spores datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/mucolid-spores", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:mawloc": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 10, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
+    keywords: Object.freeze(["Great Devourer", "Mawloc", "Monster", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Distensible jaw", equipment: "Default", range: "Melee", attacks: 1, skill: "3+", strength: 5, ap: 0, damage: 3, abilities: "Anti-Infantry 4+, Devastating Wounds, Extra Attacks" }),
+      Object.freeze({ name: "Mawloc scything talons", equipment: "Default", range: "Melee", attacks: 16, skill: "3+", strength: 8, ap: -2, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Terror From The Deep", description: "When this model is set up using Deep Strike, roll a D6 for each enemy unit within 12 inches: on 2–4 it suffers D3 mortal wounds; on 5+ it suffers 3 mortal wounds and must take a Battle-shock test." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 135,
+    pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Mawloc datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/mawloc", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:norn-assimilator": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 11, Save: "2+", Wounds: 16, Leadership: "7+", "Objective Control": 5 }),
+    keywords: Object.freeze(["Great Devourer", "Harvester", "Monster", "Norn Assimilator", "Synapse"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Toxinjector Harpoon (ranged)", equipment: "Default", range: '12"', attacks: 2, skill: "2+", strength: 12, ap: -3, damage: "D6+1", abilities: "Harpooned" }),
+      Object.freeze({ name: "Monstrous scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 9, ap: -2, damage: 3 }),
+      Object.freeze({ name: "Toxinjector Harpoon (melee)", equipment: "Default", range: "Melee", attacks: 4, skill: "2+", strength: 12, ap: -3, damage: "D6+1", abilities: "Extra Attacks" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
+      Object.freeze({ name: "Harpoon Barbs", description: "Once per turn, when an enemy unit within Engagement Range is selected to Fall Back, on a D6 roll of 2+ it suffers D6 mortal wounds." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 250,
+    pointsOptions: Object.freeze([{ models: 1, points: 250 }, { models: 1, points: 270, condition: "2nd+ Norn Assimilator in army (+20 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Norn Assimilator datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/norn-assimilator", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:norn-emissary": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 11, Save: "2+", Wounds: 16, Leadership: "7+", "Objective Control": 5, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Great Devourer", "Monster", "Norn Emissary", "Psyker", "Synapse"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Psychic Tendril (neuroparasite)", equipment: "Default", range: '18"', attacks: 2, skill: "2+", strength: 8, ap: -2, damage: "D3", abilities: "Precision, Psychic" }),
+      Object.freeze({ name: "Psychic Tendril (neuroblast)", equipment: "Default", range: '18"', attacks: "2D6", skill: "2+", strength: 6, ap: -2, damage: 1, abilities: "Blast, Psychic" }),
+      Object.freeze({ name: "Psychic Tendril (neurolance)", equipment: "Default", range: '18"', attacks: 2, skill: "2+", strength: 12, ap: -3, damage: "D6", abilities: "Melta 2, Psychic" }),
+      Object.freeze({ name: "Monstrous rending claws", equipment: "Default", range: "Melee", attacks: 4, skill: "2+", strength: 7, ap: -2, damage: 2, abilities: "Extra Attacks" }),
+      Object.freeze({ name: "Monstrous scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 9, ap: -2, damage: 3 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
+      Object.freeze({ name: "Unnatural Resilience", description: "This model has Feel No Pain 4+ against mortal wounds." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 250,
+    pointsOptions: Object.freeze([{ models: 1, points: 250 }, { models: 1, points: 270, condition: "2nd+ Norn Emissary in army (+20 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Norn Emissary datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/norn-emissary", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:toxicrene": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 11, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
+    keywords: Object.freeze(["Frame", "Great Devourer", "Monster", "Toxicrene"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Massive toxic lashes (Ranged)", equipment: "Default", range: '9"', attacks: "2D6", skill: "3+", strength: 6, ap: -1, damage: 2, abilities: "Anti-Infantry 2+" }),
+      Object.freeze({ name: "Massive toxic lashes (Melee)", equipment: "Default", range: "Melee", attacks: 12, skill: "3+", strength: 6, ap: -1, damage: 2, abilities: "Anti-Infantry 2+" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Grasping Tendrils", description: "When an enemy non-Titanic unit within Engagement Range is selected to Fall Back, on a D6 roll of 3+ it must Remain Stationary instead." }),
+      Object.freeze({ name: "Hypertoxic Miasma", description: "At the end of your Movement phase, roll a D6 for each enemy unit within 6 inches: on 2–3 it suffers 1 mortal wound, on 4–5 D3, and on 6 D6." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 120,
+    pointsOptions: Object.freeze([{ models: 1, points: 120 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Toxicrene datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/toxicrene", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
