@@ -219,7 +219,7 @@ test("Parasite of Mortrex and the three monster profiles expose sourced abilitie
 
   const psychophage = candidate("Psychophage");
   assert.equal(psychophage.defaultPoints, 110);
-  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], "5+");
+  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], undefined);
 });
 
 
@@ -447,6 +447,23 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   const damaged = hierophant.datasheet.abilities.find((ability) => ability.name === "Damaged: 1-10 Wounds Remaining");
   assert.ok(damaged);
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
+});
+
+test("Psychophage and Deathleaper omit outdated abilities; Toxicrene wording matches current listing", () => {
+  const psychophage = candidate("Psychophage");
+  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], undefined);
+  assert.ok(!psychophage.datasheet.abilities.some((ability) => ability.name === "Feel No Pain 5+"));
+  assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Bio-stimulus"));
+  assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Feeding Frenzy"));
+
+  const deathleaper = candidate("Deathleaper");
+  assert.ok(!deathleaper.datasheet.abilities.some((ability) => ability.name === "Hunter Organism"));
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen"));
+
+  const toxicrene = candidate("Toxicrene");
+  const tendrils = toxicrene.datasheet.abilities.find((ability) => ability.name === "Grasping Tendrils");
+  assert.ok(tendrils);
+  assert.match(tendrils.description, /you can roll one D6: on a 3\+/);
 });
 
 test("Hive Tyrant includes Onslaught and Old One Eye has no unsupported Feel No Pain profile", () => {
