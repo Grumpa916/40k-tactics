@@ -168,6 +168,7 @@ test("Fixed secondary selection validates the selected player's mode without an 
   });
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
   const button = {
+    getAttribute(name) { return name === "data-setup-fixed-add" ? "p1" : null; },
     closest(selector) { return selector === "[data-setup-fixed-add]" ? this : null; }
   };
   assert.doesNotThrow(() => listeners.click({ target: button }));
