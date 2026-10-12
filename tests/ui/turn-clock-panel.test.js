@@ -60,6 +60,6 @@ test("starting a clock is disabled until a player turn exists", () => {
     activePlayer: null,
     battle: { status: "deployment", round: 0, activePlayerId: null }
   }), { open: true });
-  assert.match(html, /Start clock</button>/);
+  assert.ok(html.includes("Start clock</button>"));
   assert.match(html, /disabled/);
 });
