@@ -1,6 +1,6 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
-import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { getPreGameAbilityRules, getPreGameProcedureSteps } from "../rules/pre-game-procedure.js";
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
@@ -80,8 +80,10 @@ export function createBattleSetupScreen(container, {
     if (target?.matches?.("[data-setup-secondary-mode]")) {
       if (!target.value) return;
       try {
-        session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { mode: target.value } });
-        message = "Battle-wide secondary mode set to " + target.value + ".";
+        const playerId = container.querySelector("[data-setup-secondary-player]")?.value || selectedPlayerId;
+        if (!playerId) throw new Error("Select the player whose secondary mode you are setting.");
+        session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { mode: target.value, playerId } });
+        message = "Secondary mode set to " + target.value + " for " + (state.players?.find((player) => player.id === playerId)?.name ?? playerId) + ".";
       } catch (error) {
         message = error?.message ?? String(error);
       }
@@ -201,8 +203,8 @@ export function createBattleSetupScreen(container, {
       render();
       return;
     }
-    if (state.scoring?.secondaryMissionMode !== "fixed") {
-      message = "Choose Fixed mode before selecting Fixed secondary cards.";
+    if (getSecondaryMissionMode(state, playerId) !== "fixed") {
+      message = "Choose Fixed mode for this player before selecting Fixed secondary cards.";
       render();
       return;
     }
@@ -290,7 +292,7 @@ export function createBattleSetupScreen(container, {
     if (!selectedPlayerId || !players.some((player) => player.id === selectedPlayerId)) {
       selectedPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
-    const mode = state.scoring?.secondaryMissionMode ?? "";
+    const mode = getSecondaryMissionMode(state, selectedPlayerId) ?? "";
     const readiness = evaluatePreGameReadiness(state);
     const procedureSteps = getPreGameProcedureSteps();
     const abilityRules = getPreGameAbilityRules();
@@ -390,10 +392,10 @@ export function createBattleSetupScreen(container, {
       : '<li>Configure players before selecting Fixed cards.</li>';
 
     const modeGuidance = mode === "fixed"
-      ? '<p>Fixed mode requires two Fixed-available cards per player. They remain active throughout the battle and can score multiple times; each card is capped at 20 VP.</p>'
+      ? '<p>Fixed mode requires two Fixed-available cards for this player. They remain active throughout the battle and can score multiple times; each card is capped at 20 VP.</p>'
       : mode === "tactical"
-        ? '<p>Tactical cards are drawn manually from the physical deck at the start of each Command phase. Record two new cards for the active player; score or discard them only when the table rules permit.</p>'
-        : '<p>Select Fixed or Tactical before the battle. The mode is global for both players.</p>';
+        ? '<p>Tactical cards are drawn manually from the physical deck at the start of each Command phase. This player records two new cards on their Command phase; score or discard them only when the table rules permit.</p>'
+        : '<p>Select Fixed or Tactical separately for each player.</p>';
 
     const missionMapMarkup = missionSetupMarkup +
       '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
@@ -404,15 +406,16 @@ export function createBattleSetupScreen(container, {
       renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
       '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>' +
-      '<section><h2>Secondary mission mode</h2><label>Mode<select data-setup-secondary-mode ' +
-      (history.length ? 'disabled' : '') + ' required>' +
+      '<section><h2>Secondary mission mode</h2>' +
+      '<label>Player<select data-setup-secondary-player>' + playerOptions + '</select></label>' +
+      '<label>Mode for selected player<select data-setup-secondary-mode ' +
+      (history.some((item) => item.playerId === selectedPlayerId) ? 'disabled' : '') + ' required>' +
       '<option value="">Choose Fixed or Tactical...</option>' +
       '<option value="fixed"' + (mode === "fixed" ? ' selected' : '') + '>Fixed</option>' +
       '<option value="tactical"' + (mode === "tactical" ? ' selected' : '') + '>Tactical</option>' +
       '</select></label>' + modeGuidance + '</section>' +
       (mode === "fixed" && !state.battle
         ? '<section><h2>Select Fixed secondary cards</h2>' +
-          '<label>Player<select data-setup-secondary-player>' + playerOptions + '</select></label>' +
           '<p>Selected for this player: ' + fixedCount + ' of 2.</p>' +
           (fixedCount < 2 && players.length
             ? '<div class="command-vp-form"><label>Fixed card<select data-setup-secondary-definition>' + fixedOptions + '</select></label>' +
