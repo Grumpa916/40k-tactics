@@ -969,6 +969,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Screamer-Killer talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 10, ap: -2, damage: 3 })
     ]),
     abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wound; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),Object.freeze({ name: "Death Scream", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test, subtracting 1 from that test." })]),
     defaultModelCount: 1, defaultPoints: 125,
     pointsOptions: Object.freeze([{ models: 1, points: 125 }, { models: 1, points: 135, condition: "2nd+ Screamer-Killer in army (+10 points)" }]),
