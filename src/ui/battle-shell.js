@@ -339,7 +339,7 @@ export function createBattleShell(container, {
     }
     const overlay = container.querySelector?.("[data-army-roster-overlay]");
     if (overlay && armyRosterPlayerId && !overlay.hidden) {
-      overlay.innerHTML = renderArmyRosterOverlay(state, armyRosterPlayerId);
+      overlay.innerHTML = renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {});
     }
   }
 
