@@ -36,7 +36,7 @@ export function createBattleSetupScreen(container, {
 
   let selectedPlayerId = null;
   let selectedPlanUnitId = null;
-  let activeSetupTab = setupTab === "mission-map" ? "mission-map" : "pre-game";
+  let activeSetupTab = ["pre-game", "mission-map", "battlefield"].includes(setupTab) ? setupTab : "pre-game";
   let message = "";
   let battlefieldMapFullscreen = false;
   const configuredSecondaryCatalog = secondaryMissionCatalog.length
