@@ -449,6 +449,26 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
+test("Tyranid ability descriptions preserve targeting and range restrictions", () => {
+  const harpy = candidate("Harpy");
+  const cysts = harpy.datasheet.abilities.find((ability) => ability.name === "Spore Mine Cysts");
+  assert.ok(cysts);
+  assert.match(cysts.description, /excluding Lone Operative units/);
+
+  const mucolid = candidate("Mucolid Spores");
+  const floatingDeath = mucolid.datasheet.abilities.find((ability) => ability.name === "Floating Death");
+  assert.ok(floatingDeath);
+  assert.match(floatingDeath.description, /select one of those enemy units/);
+
+  const tervigon = candidate("Tervigon");
+  const progenitor = tervigon.datasheet.abilities.find((ability) => ability.name === "Brood Progenitor");
+  assert.match(progenitor.description, /within 6 inches of this model/);
+
+  const norn = candidate("Norn Assimilator");
+  const barbs = norn.datasheet.abilities.find((ability) => ability.name === "Harpoon Barbs");
+  assert.match(barbs.description, /within Engagement Range of this model/);
+});
+
 test("Hyperadapted Raveners include Hypersensory Array and Parasite infection timing", () => {
   const hyperadapted = candidate("Hyperadapted Raveners");
   const hypersensory = hyperadapted.datasheet.abilities.find((ability) => ability.name === "Hypersensory Array");
