@@ -356,6 +356,25 @@
     .army-roster-panel__editor ul { padding-left:0; list-style:none; }
     .army-roster-panel__editor li { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.5rem 0; border-bottom:1px solid #cbd5e1; }
     @media(max-width:760px) { .army-roster-panel form, .army-roster-panel__editor form { grid-template-columns:1fr; } .army-roster-panel__actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    [hidden] { display:none !important; }
+    .battle-shell__setup-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0 0 12px; }
+    .battle-shell__setup-tabs button { min-width:0; min-height:54px; padding:10px 12px; border:1px solid #454e5c; border-radius:9px; background:#202631; color:inherit; font:inherit; font-weight:750; cursor:pointer; touch-action:manipulation; }
+    .battle-shell__setup-tabs button[aria-pressed="true"] { border-color:#b18bd8; background:#30263b; box-shadow:inset 0 0 0 1px #76559b; }
+    .battle-shell__setup-bottom-nav { position:sticky; bottom:64px; z-index:900; display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 12px; padding:10px; border:1px solid #424954; border-radius:10px; background:rgba(23,28,36,.97); backdrop-filter:blur(10px); }
+    .battle-shell__setup-bottom-nav span { font-size:13px; opacity:.78; }
+    .battle-shell__setup-bottom-nav button { min-height:48px; padding:10px 16px; border:1px solid #8d6bb1; border-radius:8px; background:#30263b; color:inherit; font:inherit; font-weight:800; cursor:pointer; touch-action:manipulation; }
+    .battle-setup-screen > header { margin-bottom:14px; }
+    .battle-setup-screen [data-setup-content] { min-width:0; }
+    .battle-setup-screen .pre-game-checklist { padding:14px; border:1px solid #424954; border-radius:10px; background:#171c24; }
+    .battle-setup-screen .pre-game-checklist > h2 { margin-top:0; }
+    .battle-setup-screen details { margin:8px 0; padding:10px; border:1px solid #3b4553; border-radius:8px; background:#202631; }
+    .battle-setup-screen details > summary { min-height:36px; cursor:pointer; font-weight:750; }
+    .battle-setup-screen .event-companion-mission-setup, .battle-setup-screen .battlefield-map-section { margin:12px 0; padding:14px; border:1px solid #424954; border-radius:10px; background:#171c24; }
+    @media (max-width: 760px) {
+      .battle-shell__setup-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .battle-shell__setup-tabs button { min-height:48px; }
+      .battle-shell__setup-bottom-nav { bottom:64px; }
+    }
   </style>
 </head>
 <body>
