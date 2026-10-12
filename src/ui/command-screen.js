@@ -669,7 +669,7 @@ export function createCommandScreen(container, {
           '<p>In Tactical mode, use this form during the active player’s Command phase to record the two cards drawn from the physical deck. Choose the printed card from the catalog or type its name. Check the actual card before scoring; no VP is awarded automatically.</p>' +
           '<p>The catalog contains names and Fixed/Tactical availability, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Enter secondary mission cards</h2>' +
-      '<p>Record Fixed cards here when selected, or record Tactical cards during each active player’s Command phase. Tactical cards belong to the active player only. Choose Fixed or Tactical once for the battle; the mode locks after the first card is recorded.</p>'
+      '<p>Record Fixed cards here when selected, or record Tactical cards during each active player’s Command phase. Tactical cards belong to the active player only. Choose Fixed or Tactical once for the battle; the mode locks after the first card is recorded.</p>' +
       secondaryEntryMarkup +
       (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
       '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
