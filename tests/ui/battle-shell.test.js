@@ -117,6 +117,24 @@ function container() {
   };
 }
 
+test("Battle setup hides live status and reference side panels", () => {
+  const session = sessionFor({
+    phase: "setup",
+    turn: 0,
+    activePlayer: "p1",
+    battle: { id: "b-setup", status: "setup", round: 0, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    armyRosters: {},
+    units: [],
+    history: []
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+  assert.match(root.html, /data-battle-side-panel="left" hidden/);
+  assert.match(root.html, /data-battle-side-panel="right" hidden/);
+  shell.destroy();
+});
+
 test("Invasion Fleet Command shell prompts for Hyper-adaptations and records the selected choice", () => {
   const session = sessionFor({
     phase: "command",
