@@ -432,7 +432,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitin-barbed limbs", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 5, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wound; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Seed Spore Mines", description: "Once per turn in your Shooting phase, this unit can forgo ranged attacks to add one Spore Mines unit with one model per model in this unit, set up wholly within 48 inches and more than 8 inches from enemy units." })
     ]),
@@ -484,7 +484,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitin-barbed limbs", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 5, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wound; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Burning Spray", description: "After this unit shoots, select an enemy unit hit; until the end of the phase, that unit cannot have the Benefit of Cover." })
     ]),
@@ -611,7 +611,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Talons and betentacled maw", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 6, ap: -2, damage: 2, abilities: "Anti-Psyker 4+, Devastating Wounds" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wound; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Feel No Pain 5+", description: "Each time this model would lose a wound, roll one D6: on a 5+, that wound is not lost." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Bio-stimulus", description: "After this model shoots, select an enemy unit hit; until the end of the turn, friendly Tyranids melee attacks targeting it improve AP by 1. The same enemy unit can only be affected once per turn." }),
