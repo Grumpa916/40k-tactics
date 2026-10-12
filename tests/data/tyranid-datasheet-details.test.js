@@ -27,7 +27,7 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
 });
 
 test("units without a reviewed profile remain name-only and do not receive invented details", () => {
-  const unit = candidate("Exocrine");
+  const unit = candidate("Gargoyles");
   assert.equal(unit.verificationStatus, "name-only-unverified");
   assert.equal(unit.defaultPoints, undefined);
   assert.equal(unit.datasheet, undefined);
