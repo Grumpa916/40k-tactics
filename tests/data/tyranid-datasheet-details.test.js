@@ -281,6 +281,7 @@ test("Gargoyles and melee Tyranid Warriors expose sourced profiles", () => {
   const gargoyles = candidate("Gargoyles");
   assert.equal(gargoyles.defaultModelCount, 10);
   assert.equal(gargoyles.defaultPoints, 80);
+  assert.deepEqual(gargoyles.pointsOptions.map((option) => option.points), [80, 155]);
   assert.ok(gargoyles.datasheet.weapons.some((weapon) => weapon.name === "Fleshborer"));
   assert.ok(gargoyles.datasheet.abilities.some((ability) => ability.name === "Winged Swarm"));
 
@@ -298,7 +299,8 @@ test("Venomthropes and Trygon expose sourced profiles", () => {
   assert.ok(venomthropes.datasheet.abilities.some((ability) => ability.name === "Foul Spores"));
 
   const trygon = candidate("Trygon");
-  assert.equal(trygon.defaultPoints, 135);
+  assert.equal(trygon.defaultPoints, 140);
+  assert.deepEqual(trygon.pointsOptions.map((option) => option.points), [140]);
   assert.equal(trygon.datasheet.characteristics.Wounds, 14);
   assert.ok(trygon.datasheet.abilities.some((ability) => ability.name === "Subterranean Tunnels"));
 });
@@ -335,9 +337,12 @@ test("Harpy, Hive Crone, Tyrannocyte, Hierophant, and Harridan expose sourced pr
 });
 
 
-test("Hyperadapted Raveners expose the Ravener Prime and Ravener profile", () => {
+test("Hyperadapted Raveners expose the Ravener Prime and Ravener profile and current unit-count costs", () => {
   const unit = candidate("Hyperadapted Raveners");
+  assert.equal(unit.defaultModelCount, 5);
   assert.equal(unit.defaultPoints, 165);
+  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [165, 175]);
+  assert.ok(unit.pointsOptions[1].condition.includes("3rd+"));
   assert.equal(unit.datasheet.modelProfiles.find((model) => model.name === "Ravener Prime").Wounds, 6);
   assert.equal(unit.datasheet.modelProfiles.find((model) => model.name === "Raveners").Wounds, 3);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Venom bolt"));
