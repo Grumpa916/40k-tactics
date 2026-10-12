@@ -790,6 +790,17 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
   assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
 });
 
+test("Neurotyrant abilities retain Psychic tags and exact Neuroloids range/timing", () => {
+  const unit = candidate("Neurotyrant");
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash (Psychic)"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Psychic Terror (Psychic)"));
+  const neuroloids = unit.datasheet.abilities.find((ability) => ability.name === "Neuroloids");
+  assert.ok(neuroloids);
+  assert.match(neuroloids.description, /within 18 inches of this model’s unit/);
+  assert.match(neuroloids.description, /Until the start of your next Command phase/);
+  assert.match(neuroloids.description, /within Synapse Range of your army/);
+});
+
 test("Screamer-Killer includes its Deadly Demise 1 core ability", () => {
   const unit = candidate("Screamer-Killer");
   const deadlyDemise = unit.datasheet.abilities.find((ability) => ability.name === "Deadly Demise 1");
