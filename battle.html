@@ -227,6 +227,15 @@
     .movement-screen .move-error { border:1px solid #b66; border-radius:8px; padding:10px; }
     @media (max-width:650px) { .movement-screen header { align-items:flex-start; flex-direction:column; } .movement-screen .move-coordinate-row { grid-template-columns:1fr 1fr; } .movement-screen .move-coordinate-row strong, .movement-screen .move-coordinate-row span { grid-column:1/-1; } }
 
+    .battle-setup-screen .secondary-player-panels { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; }
+    .battle-setup-screen .secondary-player-panel { min-width:0; margin:0; padding:14px; border:1px solid #424954; border-radius:10px; background:#171c24; }
+    .battle-setup-screen .secondary-player-panel h3 { margin:0 0 12px; }
+    .battle-setup-screen .secondary-player-panel label { display:block; margin:10px 0; }
+    .battle-setup-screen .secondary-player-panel select,
+    .battle-setup-screen .secondary-player-panel input { box-sizing:border-box; width:100%; min-height:44px; margin-top:5px; padding:8px; }
+    .battle-setup-screen .secondary-player-panel button { min-height:44px; }
+    .battle-setup-screen .secondary-player-panel ol { padding-left:22px; }
+    @media(max-width:650px) { .battle-setup-screen .secondary-player-panels { grid-template-columns:1fr; } }
     .battle-setup-screen .event-companion-disposition-groups { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:14px 0; }
     .battle-setup-screen .event-companion-disposition-group { min-width:0; margin:0; padding:12px; border:1px solid #555; border-radius:10px; }
     .battle-setup-screen .event-companion-disposition-group legend { padding:0 6px; font-weight:750; }
