@@ -5,6 +5,7 @@ import { getPreGameAbilityRules, getPreGameProcedureSteps } from "../rules/pre-g
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
+import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
 
 function escapeHtml(value) {
@@ -210,13 +211,20 @@ export function createBattleSetupScreen(container, {
     const definitionId = field("[data-setup-secondary-definition]")?.value;
     const manualName = String(field("[data-setup-secondary-name]")?.value ?? "").trim();
     const manualTiming = field("[data-setup-secondary-timing]")?.value;
+    // Always provide the shipped 2026–27 card catalog when the caller does
+    // not inject one. An explicitly supplied catalog extends/replaces the
+    // defaults by ID, so the selector cannot silently render empty.
+    const suppliedSecondaryCatalog = secondaryMissionCatalog.length
+      ? secondaryMissionCatalog
+      : SECONDARY_MISSION_CATALOG;
     const definitions = [
       ...missionDefinitions.filter((item) => item?.category === "secondary"),
-      ...secondaryMissionCatalog.filter((item) => item?.category === "secondary" &&
+      ...suppliedSecondaryCatalog.filter((item) => item?.category === "secondary" &&
         !missionDefinitions.some((configured) => configured?.id === item.id))
     ];
     const configured = definitions.find((item) => item.id === definitionId);
-    const catalog = secondaryMissionCatalog.find((item) => item.id === definitionId && item.category === "secondary");
+    const catalog = (secondaryMissionCatalog.length ? secondaryMissionCatalog : SECONDARY_MISSION_CATALOG)
+      .find((item) => item.id === definitionId && item.category === "secondary");
     const allowedTimings = MANUAL_TIMINGS.map(([timing]) => timing);
     let definition;
 
@@ -241,7 +249,7 @@ export function createBattleSetupScreen(container, {
       };
     } else if (manualName) {
       const normalizedName = manualName.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-      const matchingCatalog = secondaryMissionCatalog.find((item) =>
+      const matchingCatalog = (secondaryMissionCatalog.length ? secondaryMissionCatalog : SECONDARY_MISSION_CATALOG).find((item) =>
         item.category === "secondary" &&
         item.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === normalizedName);
       if (!matchingCatalog?.fixedAvailable) {
