@@ -793,6 +793,9 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
 test("Neurotyrant abilities retain Psychic tags and exact Neuroloids range/timing", () => {
   const unit = candidate("Neurotyrant");
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash (Psychic)"));
+  const nodeLash = unit.datasheet.abilities.find((ability) => ability.name === "Node Lash (Psychic)");
+  assert.match(nodeLash.description, /each time a model in that unit makes an attack/);
+  assert.match(nodeLash.description, /If the target is Battle-shocked/);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Psychic Terror (Psychic)"));
   const neuroloids = unit.datasheet.abilities.find((ability) => ability.name === "Neuroloids");
   assert.ok(neuroloids);
