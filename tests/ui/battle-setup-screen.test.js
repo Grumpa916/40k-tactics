@@ -40,6 +40,32 @@ function setup({ battle = null, scoring = {} } = {}) {
   return { root, session, commands, listeners };
 }
 
+test("planning map can expand to full screen and return without changing setup state", () => {
+  const { root, session, listeners } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
+  assert.doesNotMatch(root.innerHTML, /battlefield-map-section is-fullscreen/);
+  listeners.click({
+    target: {
+      closest(selector) {
+        return selector === "[data-toggle-battlefield-fullscreen]" ? {} : null;
+      }
+    }
+  });
+  assert.match(root.innerHTML, /battlefield-map-section is-fullscreen/);
+  assert.match(root.innerHTML, /Exit full screen/);
+  listeners.click({
+    target: {
+      closest(selector) {
+        return selector === "[data-toggle-battlefield-fullscreen]" ? {} : null;
+      }
+    }
+  });
+  assert.doesNotMatch(root.innerHTML, /battlefield-map-section is-fullscreen/);
+  assert.equal(session.getState().battlefieldMap.missionSetup.layout, "A");
+  screen.destroy();
+});
+
 test("setup planning map offers only the perspective player's units", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
