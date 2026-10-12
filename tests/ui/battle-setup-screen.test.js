@@ -44,6 +44,7 @@ test("planning map can expand to full screen and return without changing setup s
   const { root, session, listeners } = setup();
   const stateBeforeFullscreen = session.getState();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  screen.setTab("battlefield");
   assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
   assert.doesNotMatch(root.innerHTML, /battlefield-map-section is-fullscreen/);
   listeners.click({
@@ -70,7 +71,8 @@ test("planning map can expand to full screen and return without changing setup s
 test("setup planning map offers only the perspective player's units", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
-  assert.match(root.innerHTML, /Deployment Planning Map/);
+  screen.setTab("battlefield");
+  assert.match(root.innerHTML, /Create the Battlefield/);
   assert.match(root.innerHTML, /Friendly Unit/);
   assert.doesNotMatch(root.innerHTML, /<option value="enemy"/);
   assert.match(root.innerHTML, /data-battlefield-map/);
