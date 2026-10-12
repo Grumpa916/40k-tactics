@@ -163,6 +163,7 @@ test("Command screen makes Tactical secondary-card entry explicit", () => {
     session, perspectivePlayerId: "p1", missionDefinitions: [], secondaryMissionCatalog: []
   });
   assert.match(container.innerHTML, /Enter secondary mission cards/);
+  assert.ok(container.innerHTML.indexOf("Enter secondary mission cards") < container.innerHTML.indexOf("Live battlefield map"));
   assert.match(container.innerHTML, /record the two cards drawn from the physical deck/);
   assert.match(container.innerHTML, /Record secondary card/);
   screen.destroy();
