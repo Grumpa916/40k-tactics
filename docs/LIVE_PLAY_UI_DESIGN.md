@@ -34,6 +34,9 @@ This document records agreed design requirements from the Warmind UI/UX comparis
 ## Decisions and scoring
 
 - Use contextual reminder/decision sheets for required choices, relevant faction abilities, mission events, and scoring checkpoints.
+- Base faction reminders on the selected battle roster, detachment, available datasheet abilities and recorded battle history; do not infer faction abilities solely from unit names.
+- Invasion Fleet Hyper-adaptations are an opening Round 1 choice and must be recorded once for the battle.
+- Shadow in the Warp can be offered during either player's Command Phase only when a deployed unit on the perspective player's roster has that ability and it has not already been used. Recording its use must not roll or resolve enemy Battle-shock tests automatically.
 - Mission sections should be compact and independently collapsible by section and player.
 - Trigger scoring prompts at the mission's configured timing (Command Phase, own end-of-turn, opponent end-of-turn, or end of battle).
 - Show criteria and calculated/confirmed score; only award VP after player confirmation and ledger validation.
