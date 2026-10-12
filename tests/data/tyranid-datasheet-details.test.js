@@ -549,6 +549,25 @@ test("Tyranid ability descriptions preserve targeting and range restrictions", (
   assert.match(barbs.description, /within Engagement Range of this model/);
 });
 
+test("Eight Tyranid profiles include their current damaged-state hit penalty", () => {
+  for (const name of [
+    "Exocrine",
+    "Haruspex",
+    "Maleceptor",
+    "Norn Assimilator",
+    "Norn Emissary",
+    "Tervigon",
+    "Tyrannofex",
+    "Mawloc"
+  ]) {
+    const unit = candidate(name);
+    const damaged = unit.datasheet.abilities.find((ability) => ability.name === "Damaged: 1-5 Wounds Remaining");
+    assert.ok(damaged, name);
+    assert.match(damaged.description, /1-5 wounds remaining/);
+    assert.match(damaged.description, /subtract 1 from the Hit roll/);
+  }
+});
+
 test("Raveners use the current singular Burrower keyword and official ability casing", () => {
   const raveners = candidate("Raveners");
   assert.ok(raveners.datasheet.keywords.includes("Burrower"));
