@@ -485,7 +485,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 1, points: 45 }, { models: 2, points: 65 }, { models: 3, points: 95 }, { models: 1, points: 55, condition: "3rd+ Pyrovore unit in army (+10 points)" }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Pyrovores datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/pyrovores", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
-  "tyranids:von-ryans-leapers": Object.freeze({
+  "tyranids:von-ryan-s-leapers": Object.freeze({
     characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1, "Invulnerable save": "6+" }),
     keywords: Object.freeze(["Great Devourer", "Infantry", "Vanguard Invader", "Von Ryan's Leapers"]),
     weapons: Object.freeze([
