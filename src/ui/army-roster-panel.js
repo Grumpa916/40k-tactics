@@ -80,9 +80,13 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       '<button type="button" data-remove-unit="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '>Remove</button>' +
       (openUnitDetailId === unit.id ? '<section aria-label="Unit details"><h5>' + escapeHtml(unit.name) + ' — Unit Details</h5>' +
         '<h6>Characteristics</h6><p>' + escapeHtml(Object.entries(unit.datasheet?.characteristics ?? {}).map(([key, value]) => key + ": " + value).join(" · ") || "Not yet available in the verified catalog.") + '</p>' +
-        '<h6>Weapons</h6><ul>' + ((unit.datasheet?.weapons ?? []).map((weapon) => '<li>' + escapeHtml(weapon.name ?? "Weapon") + ': ' + escapeHtml(weapon.range ?? "") + ' · A ' + escapeHtml(weapon.attacks ?? "—") + ' · Skill ' + escapeHtml(weapon.skill ?? "—") + ' · S ' + escapeHtml(weapon.strength ?? "—") + ' · AP ' + escapeHtml(weapon.ap ?? "—") + ' · D ' + escapeHtml(weapon.damage ?? "—") + '</li>').join("") || '<li>Weapon profiles not yet available in the verified catalog.</li>') + '</ul>' +
+        '<h6>Weapons</h6><ul>' + ((unit.datasheet?.weapons ?? []).map((weapon) => '<li>' + escapeHtml(weapon.name ?? "Weapon") + ': ' + escapeHtml(weapon.range ?? "") + ' · A ' + escapeHtml(weapon.attacks ?? "—") + ' · Skill ' + escapeHtml(weapon.skill ?? "—") + ' · S ' + escapeHtml(weapon.strength ?? "—") + ' · AP ' + escapeHtml(weapon.ap ?? "—") + ' · D ' + escapeHtml(weapon.damage ?? "—") + (weapon.abilities ? ' · ' + escapeHtml(weapon.abilities) : '') + '</li>').join("") || '<li>Weapon profiles not yet available in the verified catalog.</li>') + '</ul>' +
         '<h6>Special abilities</h6><ul>' + ((unit.datasheet?.abilities ?? []).map((ability) => '<li><strong>' + escapeHtml(ability.name ?? "Ability") + '</strong> ' + escapeHtml(ability.description ?? "") + '</li>').join("") || '<li>Ability text not yet available in the verified catalog.</li>') + '</ul>' +
-        '<p>Data status: ' + escapeHtml(unit.dataSource?.status ?? "manual-entry") + '</p><button type="button" data-close-unit-detail="' + escapeHtml(unit.id) + '">Close details</button></section>' : '') +
+        '<h6>Keywords</h6><p>' + escapeHtml((unit.datasheet?.keywords ?? []).join(" · ") || "Keywords not yet available.") + '</p>' +
+        (unit.pointsOptions?.length ? '<h6>Published points options</h6><ul>' + unit.pointsOptions.map((option) => '<li>' + escapeHtml(option.models) + ' model(s): ' + escapeHtml(option.points) + ' pts' + (option.condition ? ' — ' + escapeHtml(option.condition) : '') + '</li>').join("") + '</ul>' : '') +
+        '<p>Data status: ' + escapeHtml(unit.dataSource?.status ?? "manual-entry") + (unit.dataSource?.officialRulesCrossCheck ? ' · Official GW cross-check: ' + escapeHtml(unit.dataSource.officialRulesCrossCheck) : '') + '</p>' +
+        (unit.dataSource?.sourceUrl ? '<p><a href="' + escapeHtml(unit.dataSource.sourceUrl) + '" target="_blank" rel="noopener noreferrer">Open datasheet source</a></p>' : '') +
+        '<button type="button" data-close-unit-detail="' + escapeHtml(unit.id) + '">Close details</button></section>' : '') +
       '</li>').join("");
     container.innerHTML = '<section class="army-roster-panel" aria-labelledby="army-roster-title">' +
       '<h2 id="army-roster-title">Army Builder &amp; Saved Rosters</h2>' +
@@ -174,9 +178,13 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         if (!current) throw new Error("Open a roster first.");
         const candidate = findArmyUnitCandidates({ faction: current.faction }).find((unit) => unit.id === catalogId);
         if (!candidate) throw new Error("Choose a unit from the catalog first.");
+        const resolvedModelCount = modelCount > 1 ? modelCount : (candidate.defaultModelCount ?? modelCount);
         const updated = { ...current, units: [...current.units, {
-          id: newId(), name: candidate.name, modelCount, points: null, notes: "", datasheet: candidate.datasheet ?? null,
-          datasheetId: candidate.id, dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl, reviewedAt: null }
+          id: newId(), name: candidate.name, modelCount: resolvedModelCount,
+          points: candidate.defaultPoints ?? null, pointsOptions: candidate.pointsOptions ?? [], notes: "",
+          datasheet: candidate.datasheet ?? null, datasheetId: candidate.id,
+          dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
+            reviewedAt: candidate.reviewedAt ?? null, officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" }
         }], updatedAt: now() };
         await store.save({ id: updated.id, roster: updated }); current = updated;
       }, "Catalog candidate added. Verify its current datasheet before use.");
@@ -319,6 +327,13 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if (event.target?.matches?.("[data-roster-select]")) {
       selectedId = event.target.value || "";
       current = null; message = ""; render();
+      return;
+    }
+    if (event.target?.matches?.("[data-catalog-unit]")) {
+      const candidate = findArmyUnitCandidates({ faction: current?.faction })
+        .find((unit) => unit.id === event.target.value);
+      const modelCountInput = container.querySelector('[name="modelCount"]');
+      if (candidate?.defaultModelCount && modelCountInput) modelCountInput.value = String(candidate.defaultModelCount);
     }
   }
   container.addEventListener("submit", handleSubmit);

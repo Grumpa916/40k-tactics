@@ -1,4 +1,5 @@
 import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
+import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 
 // Starter name-only catalog for the roster picker.
 // These entries are convenience candidates, not verified datasheets or a complete faction roster.
@@ -15,14 +16,24 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
   ].map((name) => {
     const id = "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const attachmentMetadata = getTyranidAttachmentMetadata(id);
+    const details = getTyranidDatasheetDetails(id);
+    const {
+      defaultModelCount, defaultPoints, pointsOptions, dataSource: reviewedSource,
+      ...datasheetProfile
+    } = details ?? {};
     return Object.freeze({
       id,
       name,
       faction: "Tyranids",
-      sourceName: "Candidate unit name; verify against current datasheet",
-      sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
-      verificationStatus: "name-only-unverified",
-      ...(attachmentMetadata ? { datasheet: attachmentMetadata } : {})
+      sourceName: reviewedSource?.sourceName ?? "Candidate unit name; verify against current datasheet",
+      sourceUrl: reviewedSource?.sourceUrl ?? "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
+      reviewedAt: reviewedSource?.reviewedAt ?? null,
+      officialRulesCrossCheck: reviewedSource?.officialRulesCrossCheck ?? "pending",
+      verificationStatus: reviewedSource?.status ?? "name-only-unverified",
+      ...(defaultModelCount != null ? { defaultModelCount } : {}),
+      ...(defaultPoints != null ? { defaultPoints } : {}),
+      ...(pointsOptions ? { pointsOptions } : {}),
+      ...(details || attachmentMetadata ? { datasheet: { ...datasheetProfile, ...(attachmentMetadata ?? {}) } } : {})
     });
   }),
   ...[
