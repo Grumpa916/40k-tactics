@@ -45,20 +45,6 @@ export function createBattleSetupScreen(container, {
 
   function handleChange(event) {
     const target = event.target;
-    if (target?.matches?.("[data-pre-game-role-choice]")) {
-      const state = session.getState();
-      const current = state.preGameSetup ?? {};
-      const kind = target.getAttribute("data-pre-game-role-choice");
-      const nextValue = target.getAttribute("data-player-id") || null;
-      const attackerPlayerId = kind === "attackerPlayerId" ? nextValue : (current.attackerPlayerId ?? null);
-      const firstPlayerId = kind === "firstPlayerId" ? nextValue : (current.firstPlayerId ?? null);
-      try {
-        session.dispatch({ type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId, firstPlayerId }});
-        message = "Battle roles saved. Defender is automatically the other army.";
-      } catch (error) { message = error?.message ?? String(error); }
-      render();
-      return;
-    }
     if (target?.matches?.("[data-event-companion-disposition]")) {
       const state = session.getState();
       const current = state.battlefieldMap?.missionSetup ?? {};
@@ -95,6 +81,21 @@ export function createBattleSetupScreen(container, {
   }
 
   function handleClick(event) {
+    const roleButton = event.target?.closest?.("[data-pre-game-role-choice]");
+    if (roleButton) {
+      const state = session.getState();
+      const current = state.preGameSetup ?? {};
+      const kind = roleButton.getAttribute("data-pre-game-role-choice");
+      const nextValue = roleButton.getAttribute("data-player-id") || null;
+      const attackerPlayerId = kind === "attackerPlayerId" ? nextValue : (current.attackerPlayerId ?? null);
+      const firstPlayerId = kind === "firstPlayerId" ? nextValue : (current.firstPlayerId ?? null);
+      try {
+        session.dispatch({ type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId, firstPlayerId }});
+        message = "Battle roles saved. Defender is automatically the other army.";
+      } catch (error) { message = error?.message ?? String(error); }
+      render();
+      return;
+    }
     const fullscreenButton = event.target?.closest?.("[data-toggle-battlefield-fullscreen]");
     if (fullscreenButton) {
       battlefieldMapFullscreen = !battlefieldMapFullscreen;
@@ -346,7 +347,9 @@ export function createBattleSetupScreen(container, {
           (item.layout === missionSetup.layout ? 'true' : 'false') + '"' +
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
           ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
-        '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p></div>' :
+        '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p>' +
+        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
+        '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
     const preGameMarkup = preGameRolesMarkup + missionSetupMarkup;
