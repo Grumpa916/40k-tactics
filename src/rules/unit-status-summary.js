@@ -28,6 +28,11 @@ export function getUnitStrengthAssessment(unit) {
     unit?.metadata?.currentModelCount
   ]);
 
+  if (unit?.belowHalfStrength === true || unit?.belowHalfStrength === false) {
+    return { known: true, belowHalfStrength: unit.belowHalfStrength, source: "explicit" };
+  }
+
+
   // A one-model unit uses remaining Wounds, not a one-model count, to assess
   // its strength. This must be checked before the generic model-count branch.
   const isSingleModel = startingStrength === 1 ||
@@ -51,10 +56,6 @@ export function getUnitStrengthAssessment(unit) {
       };
     }
     return { known: false, belowHalfStrength: null, source: "untracked-single-model-wounds" };
-  }
-
-  if (unit?.belowHalfStrength === true || unit?.belowHalfStrength === false) {
-    return { known: true, belowHalfStrength: unit.belowHalfStrength, source: "explicit" };
   }
 
   if (Number.isFinite(startingStrength) && startingStrength > 0 &&
