@@ -44,3 +44,33 @@ export function setPreGameRoles(state, {
     }
   }));
 }
+
+/**
+ * Records the agreed battle size separately from reusable roster metadata.
+ * The currently verified 11th-edition public muster table defines Incursion
+ * and Strike Force; other sizes are intentionally not inferred here.
+ */
+export const BATTLE_SIZE_RULES = Object.freeze({
+  incursion: Object.freeze({ id: "incursion", label: "Incursion", pointsLimit: 1000, detachmentPoints: 2, enhancementLimit: 2, unitLimit: 2 }),
+  strike_force: Object.freeze({ id: "strike_force", label: "Strike Force", pointsLimit: 2000, detachmentPoints: 3, enhancementLimit: 4, unitLimit: 3 })
+});
+
+export function setBattleSize(state, { battleSize = null } = {}) {
+  if (state.battle && state.battle.status !== "setup") {
+    throw new Error("Battle size is locked after deployment begins.");
+  }
+  if (battleSize != null && !Object.hasOwn(BATTLE_SIZE_RULES, battleSize)) {
+    throw new RangeError("Choose a supported battle size.");
+  }
+  const previous = state.battleSetup ?? {};
+  if ((previous.battleSize ?? null) === battleSize) return state;
+  const battleSetup = { ...previous, battleSize };
+  return appendHistoryEntry({
+    ...state,
+    battleSetup
+  }, createEvent("battle.size_set", {
+    battleSize,
+    rules: battleSize ? BATTLE_SIZE_RULES[battleSize] : null,
+    previousBattleSize: previous.battleSize ?? null
+  }));
+}
