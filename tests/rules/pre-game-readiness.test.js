@@ -5,6 +5,7 @@ import { evaluatePreGameReadiness } from "../../src/rules/pre-game-readiness.js"
 const readyState = () => ({
   players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
   battle: { id: "b1", status: "setup", missionId: "mission-1" },
+  preGameSetup: { attackerPlayerId: "p1", defenderPlayerId: "p2", firstPlayerId: "p1" },
   units: [
     { id: "u1", name: "Friendly unit", ownerId: "p1", status: "deployed" },
     { id: "u2", name: "Opponent unit", ownerId: "p2", status: "deployed" }
@@ -22,7 +23,7 @@ test("pre-game readiness identifies missing players, armies, and mission", () =>
   const result = evaluatePreGameReadiness({ players: [], units: [] });
   assert.equal(result.ready, false);
   assert.deepEqual(result.missing.map((check) => check.id), [
-    "players", "armies", "unit-ownership", "mission"
+    "players", "armies", "unit-ownership", "mission", "battle-roles"
   ]);
 });
 
@@ -79,4 +80,13 @@ test("unverified Event Companion setup does not satisfy mission readiness", () =
   const result = evaluatePreGameReadiness(state);
   assert.equal(result.ready, false);
   assert.equal(result.missing.some((check) => check.id === "mission"), true);
+});
+
+test("pre-game readiness requires valid attacker, derived defender, and first player", () => {
+  const state = readyState();
+  state.preGameSetup = { attackerPlayerId: "p1", defenderPlayerId: "p1", firstPlayerId: "p9" };
+  const result = evaluatePreGameReadiness(state);
+  assert.equal(result.ready, false);
+  assert.equal(result.missing.some((check) => check.id === "battle-roles"), true);
+  assert.match(result.checks.find((check) => check.id === "battle-roles").detail, /Choose the attacker and first player/);
 });
