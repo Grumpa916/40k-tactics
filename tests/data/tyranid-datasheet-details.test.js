@@ -415,6 +415,63 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
   }
 });
 
+test("Infiltrators and all Deadly Demise variants have actionable descriptions", () => {
+  const infiltrators = candidate("Lictor").datasheet.abilities.find((ability) => ability.name === "Infiltrators");
+  assert.match(infiltrators.description, /During deployment/);
+  assert.match(infiltrators.description, /more than 8 inches horizontally/);
+
+  for (const [unitName, abilityName, amount] of [
+    ["Norn Assimilator", "Deadly Demise D6", "D6 mortal wounds"],
+    ["Hierophant", "Deadly Demise 2D6", "2D6 mortal wounds"],
+    ["Carnifexes", "Deadly Demise 1", "1 mortal wound"]
+  ]) {
+    const ability = candidate(unitName).datasheet.abilities.find((item) => item.name === abilityName);
+    assert.ok(ability, unitName);
+    assert.match(ability.description, /after any embarked units make emergency disembark moves/, unitName);
+    assert.ok(ability.description.includes(amount), unitName);
+  }
+});
+
+test("No Tyranid profile relies on generic core-rule placeholders", () => {
+  for (const unit of findArmyUnitCandidates({ faction: "Tyranids" })) {
+    for (const ability of unit.datasheet.abilities ?? []) {
+      assert.doesNotMatch(
+        ability.description,
+        /consult (?:the )?current (?:Core Rules|rules)/i,
+        `${unit.name}: ${ability.name}`
+      );
+    }
+  }
+});
+
+test("Shared Tyranid core ability summaries match current 11th-edition core rules", () => {
+  const shadow = candidate("Hive Tyrant").datasheet.abilities.find((ability) => ability.name === "Shadow in the Warp");
+  assert.match(shadow.description, /Once per battle/);
+  assert.match(shadow.description, /either player's Command phase/);
+  assert.match(shadow.description, /subtract 1 from each such test/);
+
+  const synapse = candidate("Hive Tyrant").datasheet.abilities.find((ability) => ability.name === "Synapse");
+  assert.match(synapse.description, /6 inches/);
+  assert.match(synapse.description, /3D6 instead of 2D6/);
+  assert.match(synapse.description, /adds 1 to the Strength/);
+
+  const deepStrike = candidate("Raveners").datasheet.abilities.find((ability) => ability.name === "Deep Strike");
+  assert.match(deepStrike.description, /ingress move/);
+  assert.match(deepStrike.description, /more than 8 inches horizontally/);
+
+  const loneOperative = candidate("Lictor").datasheet.abilities.find((ability) => ability.name === "Lone Operative");
+  assert.match(loneOperative.description, /cannot see it unless they are within 12 inches/);
+  assert.match(loneOperative.description, /Indirect Fire weapons/);
+
+  const stealth = candidate("Lictor").datasheet.abilities.find((ability) => ability.name === "Stealth");
+  assert.match(stealth.description, /benefit of cover/);
+  assert.doesNotMatch(stealth.description, /subtract 1 from Hit rolls/);
+
+  const deadlyDemise = candidate("Haruspex").datasheet.abilities.find((ability) => ability.name === "Deadly Demise D3");
+  assert.match(deadlyDemise.description, /On a 6/);
+  assert.match(deadlyDemise.description, /D3 mortal wounds/);
+});
+
 test("The Red Terror matches the current 11th-edition listing while retaining unresolved source status", () => {
   const unit = candidate("The Red Terror");
   assert.deepEqual(unit.datasheet.characteristics, {
