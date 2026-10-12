@@ -549,11 +549,12 @@ test("Tyranid ability descriptions preserve targeting and range restrictions", (
   assert.match(barbs.description, /within Engagement Range of this model/);
 });
 
-test("Harpy and Hive Crone expose the Hover core ability", () => {
+test("Harpy and Hive Crone omit Hover as required by the current official faction pack", () => {
   for (const name of ["Harpy", "Hive Crone"]) {
-    const hover = candidate(name).datasheet.abilities.find((ability) => ability.name === "Hover");
-    assert.ok(hover, name);
-    assert.match(hover.description, /do not subtract 2 inches/);
+    const unit = candidate(name);
+    assert.ok(!unit.datasheet.abilities.some((ability) => ability.name === "Hover"), name);
+    assert.equal(unit.datasheet.characteristics.Move, "—", name);
+    assert.equal(unit.datasheet.characteristics["Objective Control"], "—", name);
   }
 });
 
