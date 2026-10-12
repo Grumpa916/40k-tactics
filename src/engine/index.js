@@ -13,6 +13,7 @@ export { recordShootingActivation, completeShootingPhase } from "./shooting-tran
 export { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 export { resolveUnitAttack } from "./combat-transitions.js";
 export { recordBattleShockTest } from "./battle-shock-transitions.js";
+export { startTurnClock, pauseTurnClock } from "./turn-clock-transitions.js";
 export { getFightState } from "../rules/fight-state.js";
 export { getShootingState } from "../rules/shooting-state.js";
 export { registerCoreCommandHandlers } from "./register-core-commands.js";
