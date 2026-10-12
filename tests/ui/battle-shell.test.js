@@ -983,13 +983,15 @@ test("setup navigation exposes staged setup workspaces and a bottom Continue act
   const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
 
   assert.match(root.html, /data-setup-workspace-tab="saves"[^>]*>Account &amp; Saves/);
-  assert.match(root.html, /data-setup-workspace-tab="army-builder"/);
+  assert.match(root.html, /data-setup-workspace-tab="army-builder"[^>]*>Army Builder/);
+  assert.match(root.html, /data-setup-workspace-tab="army-selection"[^>]*>Step 1 · Select Armies/);
   assert.ok(root.html.indexOf('data-setup-workspace-tab="saves"') < root.html.indexOf('data-setup-workspace-tab="army-builder"'));
+  assert.ok(root.html.indexOf('data-setup-workspace-tab="army-builder"') < root.html.indexOf('data-setup-workspace-tab="army-selection"'));
   assert.match(root.html, /data-setup-workspace-tab="pre-game"/);
   assert.match(root.html, /data-setup-workspace-tab="mission-map"/);
   assert.match(root.html, /data-setup-workspace-tab="battlefield"/);
   assert.match(root.html, /data-setup-workspace-tab="deployment"/);
-  assert.match(root.html, /Step 1 · Game Size &amp; Armies/);
+  assert.match(root.html, /Step 1 · Select Armies/);
   assert.match(root.html, /Step 3 · Mission &amp; Secondaries/);
   assert.match(root.html, /Step 4 · Create the Battlefield/);
   assert.match(root.html, /Step 5 · Deploy and Begin/);
