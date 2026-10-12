@@ -13,6 +13,8 @@ import { createSupabaseArmyRosterStore } from "../persistence/supabase-army-rost
 import { createArmyRosterPanel } from "./army-roster-panel.js";
 import { createShootingScreen } from "./shooting-screen.js";
 import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, renderArmyRosterOverlay } from "./battle-context-panels.js";
+import { renderTurnClockPanel } from "./turn-clock-panel.js";
+import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../state/turn-clock.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "live" },
@@ -43,10 +45,15 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-function renderStatusSummaryContent(state, viewedPhase) {
+function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) {
   const round = state.battle?.round ?? 0;
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const players = Array.isArray(state.players) ? state.players : [];
+  const clock = getTurnClockState(state);
+  const clockPlayerId = clock.activePlayerId ?? activePlayerId;
+  const clockTime = clockPlayerId
+    ? formatElapsedTime(getTurnClockElapsedMs(state, clockPlayerId))
+    : "--:--";
   const playerSummary = players.map((player) => {
     const vp = Number.isFinite(state.victoryPoints?.[player.id]) ? state.victoryPoints[player.id] : 0;
     const cpValue = state.commandPoints?.[player.id];
@@ -59,7 +66,10 @@ function renderStatusSummaryContent(state, viewedPhase) {
   }).join("");
   return '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
     '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
-    '<div class="battle-shell__player-summaries">' + playerSummary + '</div>';
+    '<div class="battle-shell__player-summaries">' + playerSummary + '</div>' +
+    '<button type="button" class="battle-shell__clock-button" data-toggle-turn-clock ' +
+    'aria-expanded="' + String(clockPanelOpen) + '" aria-controls="battle-turn-clock-panel">' +
+    '<span>Clock</span><time data-turn-clock-header-time>' + clockTime + '</time></button>';
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
@@ -67,7 +77,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   perspectivePlayerId = null,
   leftPanelCollapsed = true,
   rightPanelCollapsed = false,
-  armyRosterPlayerId = null
+  armyRosterPlayerId = null,
+  clockPanelOpen = false,
+  clockMessage = ""
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -85,9 +97,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   }).join("");
 
   const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
-    renderStatusSummaryContent(state, viewedPhase) + '</section>';
+    renderStatusSummaryContent(state, viewedPhase, clockPanelOpen) + '</section>';
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const players = Array.isArray(state.players) ? state.players : [];
+  const clockPanel = '<div data-turn-clock-panel-host>' +
+    renderTurnClockPanel(state, { open: clockPanelOpen, message: clockMessage }) + '</div>';
 
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
@@ -146,7 +160,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
 
   container.innerHTML = '<main class="battle-shell">' + reminderMarkup +
     '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
-    statusSummary +
+    statusSummary + clockPanel +
     (showCloud && viewedPhase === "setup"
       ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2>' +
         '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
@@ -194,6 +208,9 @@ export function createBattleShell(container, {
   let rightPanelCollapsed = false;
   let armyRosterPlayerId = null;
   let battleShockMessage = "";
+  let clockPanelOpen = false;
+  let clockMessage = "";
+  let clockTickInterval = null;
 
   function destroyMountedScreen() {
     if (mountedScreen?.destroy) mountedScreen.destroy();
@@ -214,7 +231,11 @@ export function createBattleShell(container, {
   function refreshPersistentPanels() {
     const state = session.getState();
     const summaryContainer = container.querySelector?.("[data-battle-status-summary]");
-    if (summaryContainer) summaryContainer.innerHTML = renderStatusSummaryContent(state, viewedPhase);
+    if (summaryContainer) summaryContainer.innerHTML = renderStatusSummaryContent(state, viewedPhase, clockPanelOpen);
+    const clockHost = container.querySelector?.("[data-turn-clock-panel-host]");
+    if (clockHost) clockHost.innerHTML = renderTurnClockPanel(state, { open: clockPanelOpen, message: clockMessage });
+    refreshClockDisplay();
+    ensureClockTicker();
     const statusContainer = container.querySelector?.("[data-battle-context-body]");
     if (statusContainer) {
       const openSections = readOpenStates(statusContainer, "details[data-context-key]", "data-context-key");
@@ -232,6 +253,32 @@ export function createBattleShell(container, {
     const overlay = container.querySelector?.("[data-army-roster-overlay]");
     if (overlay && armyRosterPlayerId && !overlay.hidden) {
       overlay.innerHTML = renderArmyRosterOverlay(state, armyRosterPlayerId);
+    }
+  }
+
+  function refreshClockDisplay() {
+    const state = session.getState();
+    container.querySelectorAll?.("[data-clock-player-elapsed]").forEach((element) => {
+      const playerId = element.getAttribute("data-clock-player-elapsed");
+      element.textContent = formatElapsedTime(getTurnClockElapsedMs(state, playerId));
+    });
+    const clock = getTurnClockState(state);
+    const playerId = clock.activePlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? null;
+    const headerTime = container.querySelector?.("[data-turn-clock-header-time]");
+    if (headerTime) headerTime.textContent = playerId
+      ? formatElapsedTime(getTurnClockElapsedMs(state, playerId))
+      : "--:--";
+  }
+
+  function ensureClockTicker() {
+    const running = getTurnClockState(session.getState()).running;
+    const shouldTick = running || clockPanelOpen;
+    if (shouldTick && clockTickInterval == null) {
+      clockTickInterval = setInterval(refreshClockDisplay, 1000);
+      clockTickInterval?.unref?.();
+    } else if (!shouldTick && clockTickInterval != null) {
+      clearInterval(clockTickInterval);
+      clockTickInterval = null;
     }
   }
 
@@ -303,7 +350,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
@@ -368,6 +415,39 @@ export function createBattleShell(container, {
 
     refreshPersistentPanels();
     return state;
+  }
+
+  function handleToggleTurnClock(event) {
+    const button = event.target?.closest?.("[data-toggle-turn-clock]");
+    if (!button || !container.contains(button)) return;
+    clockPanelOpen = !clockPanelOpen;
+    refreshPersistentPanels();
+    ensureClockTicker();
+  }
+
+  function handleCloseTurnClock(event) {
+    const button = event.target?.closest?.("[data-close-turn-clock]");
+    if (!button || !container.contains(button)) return;
+    clockPanelOpen = false;
+    refreshPersistentPanels();
+    ensureClockTicker();
+  }
+
+  function handleTurnClockAction(event) {
+    const button = event.target?.closest?.("[data-turn-clock-action]");
+    if (!button || !container.contains(button)) return;
+    const action = button.getAttribute("data-turn-clock-action");
+    try {
+      session.dispatch({
+        type: action === "pause" ? COMMAND_TYPES.PAUSE_TURN_CLOCK : COMMAND_TYPES.START_TURN_CLOCK,
+        payload: { nowMs: Date.now() }
+      });
+      clockMessage = "";
+    } catch (error) {
+      clockMessage = error?.message ?? String(error);
+    }
+    refreshPersistentPanels();
+    ensureClockTicker();
   }
 
   function handleToggleBattlePanel(event) {
@@ -482,6 +562,9 @@ export function createBattleShell(container, {
   }
 
   container.addEventListener?.("click", handlePhaseNavigation);
+  container.addEventListener?.("click", handleToggleTurnClock);
+  container.addEventListener?.("click", handleCloseTurnClock);
+  container.addEventListener?.("click", handleTurnClockAction);
   container.addEventListener?.("click", handleToggleBattlePanel);
   container.addEventListener?.("click", handleOpenArmyRoster);
   container.addEventListener?.("click", handleCloseArmyRoster);
@@ -497,7 +580,12 @@ export function createBattleShell(container, {
     render,
     destroy: () => {
       unsubscribe();
+      if (clockTickInterval != null) clearInterval(clockTickInterval);
+      clockTickInterval = null;
       container.removeEventListener?.("click", handlePhaseNavigation);
+      container.removeEventListener?.("click", handleToggleTurnClock);
+      container.removeEventListener?.("click", handleCloseTurnClock);
+      container.removeEventListener?.("click", handleTurnClockAction);
       container.removeEventListener?.("click", handleToggleBattlePanel);
       container.removeEventListener?.("click", handleOpenArmyRoster);
       container.removeEventListener?.("click", handleCloseArmyRoster);
