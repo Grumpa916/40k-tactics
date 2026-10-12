@@ -723,6 +723,9 @@ export function createCommandScreen(container, {
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
+      secondaryMissionManager +
+      secondaryRedrawMarkup +
+      secondaryVpForm +
       '<section><h2>Live battlefield map</h2>' +
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: playerId }) +
       '<p>Map positions are approximate references. Objective control is recorded manually below and is not inferred from marker positions.</p></section>' +
@@ -739,11 +742,7 @@ export function createCommandScreen(container, {
       undoVpMarkup + (vpMessage ? '<p role="status">' + escapeHtml(vpMessage) + '</p>' : '') + '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
       '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
-      '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +
-      secondaryMissionManager +
-      secondaryRedrawMarkup +
-      secondaryVpForm +
-      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>'; 
+      '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>'; 
   }
 
   container.addEventListener?.("click", handleClick);
