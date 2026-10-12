@@ -54,7 +54,8 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
   ));
   assert.equal(unit("Gargoyles").verificationStatus, "source-reviewed");
   assert.ok(unit("Gargoyles").datasheet.weapons.some((weapon) => weapon.name === "Fleshborer"));
-  assert.equal(unit("Spore Mines").datasheet, undefined);
+  assert.equal(unit("Spore Mines").verificationStatus, "points-reviewed");
+  assert.equal(Object.keys(unit("Spore Mines").datasheet).length, 0);
   assert.deepEqual(idsFor("Hyperadapted Raveners"), ["Raveners"]);
   assert.equal(unit("Tervigon").verificationStatus, "source-reviewed");
   assert.equal(unit("Tervigon").datasheet.characteristics.Wounds, 16);
