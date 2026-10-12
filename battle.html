@@ -352,6 +352,12 @@
     @media(max-width:520px) { .shoot-screen .candidates, .shoot-screen .controls { grid-template-columns:1fr; } .shoot-screen header { align-items:flex-start; flex-direction:column; } .shoot-screen .shoot-selected-shooter, .shoot-screen .shoot-advisory { grid-column:auto; } }
 
     .army-roster-panel { margin:1rem 0; padding:1rem; border:1px solid #7b8794; border-radius:12px; background:#f8fafc; color:#17212b; }
+    .pre-game-role-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:.5rem 0 1rem; }
+    .pre-game-role-choice { min-height:58px; padding:12px; border:2px solid #697386; border-radius:9px; background:#202631; color:#f7f8fb; font:inherit; font-weight:750; cursor:pointer; touch-action:manipulation; }
+    .pre-game-role-choice.is-selected { border-color:#c084fc; background:#382747; box-shadow:inset 0 0 0 1px #c084fc; }
+    .pre-game-role-choice:focus-visible { outline:3px solid #c084fc; outline-offset:2px; }
+    .pre-game-role-choice:disabled { opacity:.6; cursor:not-allowed; }
+    .command-screen [data-cp-player] { min-height:48px; width:100%; margin:.5rem 0; padding:.6rem; font:inherit; }
     .army-roster-panel h2 { margin-top:0; font-size:1.6rem; }
     .army-roster-panel h3 { margin:.75rem 0 .35rem; padding-bottom:.35rem; border-bottom:1px solid #cbd5e1; }
     .army-roster-panel__saved { grid-template-columns:minmax(0,1fr); }
