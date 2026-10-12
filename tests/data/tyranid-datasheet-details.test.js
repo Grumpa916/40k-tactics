@@ -667,7 +667,7 @@ test("Psychophage retains Feel No Pain; Deathleaper and Toxicrene use current li
 
 test("Hive Tyrant includes Onslaught and Old One Eye has no unsupported Feel No Pain profile", () => {
   const hiveTyrant = candidate("Hive Tyrant");
-  const onslaught = hiveTyrant.datasheet.abilities.find((ability) => ability.name === "Onslaught");
+  const onslaught = hiveTyrant.datasheet.abilities.find((ability) => ability.name.startsWith("Onslaught"));
   assert.ok(onslaught);
   assert.match(onslaught.description, /Assault and Lethal Hits/);
 
@@ -737,6 +737,15 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
     assert.equal(unit.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", name);
     assert.ok(unit.pointsSourceUrl.includes("warhammer-community.com"), name);
   }
+});
+
+test("Hive Tyrant Onslaught preserves Aura and Psychic ability tags", () => {
+  const hiveTyrant = candidate("Hive Tyrant");
+  const onslaught = hiveTyrant.datasheet.abilities.find((ability) => ability.name.startsWith("Onslaught"));
+  assert.ok(onslaught);
+  assert.equal(onslaught.name, "Onslaught (Aura, Psychic)");
+  assert.match(onslaught.description, /within 6 inches of this model/);
+  assert.match(onslaught.description, /Assault and Lethal Hits abilities/);
 });
 
 test("Will of the Hive Mind uses model-specific range and a shared once-per-round limit", () => {
