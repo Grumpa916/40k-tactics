@@ -244,8 +244,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Spirit Leech", description: "While an enemy unit is within 6 inches, if this unit contains a Neurothrope, each time that enemy unit fails a Battle-shock test it suffers D3 mortal wounds and one model in this unit regains up to D3 lost wounds." }),
-      Object.freeze({ name: "Warp Field", description: "While a friendly Tyranids unit is within 6 inches of this unit, models in that unit have a 6+ invulnerable save." }),
+      Object.freeze({ name: "Spirit Leech (Aura, Psychic)", description: "While an enemy unit is within 6 inches of this unit, if this unit contains a Neurothrope, each time that enemy unit fails a Battle-shock test, it suffers D3 mortal wounds and one model in this unit regains up to D3 lost wounds." }),
+      Object.freeze({ name: "Warp Field (Aura, Psychic)", description: "While a friendly Tyranids unit is within 6 inches of this unit, models in that unit have a 6+ invulnerable save." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Neurotyrant to lead this unit." })
     ]),
     defaultModelCount: 3,
@@ -603,7 +603,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Encephalic Diffusion", description: "While an enemy unit is within 6 inches of this model, each time a model in that unit makes an attack, subtract 1 from the Hit roll, and, if that enemy unit is Below Half-strength, subtract 1 from the Wound roll as well." })
+      Object.freeze({ name: "Encephalic Diffusion (Aura, Psychic)", description: "While an enemy unit is within 6 inches of this model, each time a model in that unit makes an attack, subtract 1 from the Hit roll, and, if that enemy unit is Below Half-strength, subtract 1 from the Wound roll as well." })
     ]),
     defaultModelCount: 1, defaultPoints: 180,
     pointsOptions: Object.freeze([{ models: 1, points: 180, condition: "1st–2nd Maleceptor in army" }, { models: 1, points: 190, condition: "3rd+ Maleceptor in army (+10 points)" }]),
