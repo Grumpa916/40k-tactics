@@ -195,13 +195,15 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
 }
 
 function setupTabLabel(tab) {
-  return ({ saves: "Step 1 of 4 · Account & Saves", "army-builder": "Step 2 of 4 · Army Builder",
-    "pre-game": "Step 3 of 4 · Pre-game", "mission-map": "Step 4 of 4 · Mission & Map" })[tab] ?? "Setup";
+  return ({ saves: "Setup · Account & Saves", "army-builder": "Step 1 of 5 · Game Size & Muster Armies",
+    "pre-game": "Step 2 of 5 · Pre-game", "mission-map": "Step 3 of 5 · Mission & Secondaries",
+    battlefield: "Step 4 of 5 · Create the Battlefield", deployment: "Step 5 of 5 · Deploy and Begin" })[tab] ?? "Setup";
 }
 
 function setupContinueLabel(tab) {
-  return ({ saves: "Continue to Army Builder", "army-builder": "Continue to Pre-game",
-    "pre-game": "Continue to Mission &amp; Map", "mission-map": "Continue to Deployment" })[tab] ?? "Continue";
+  return ({ saves: "Continue to Game Size", "army-builder": "Continue to Pre-game",
+    "pre-game": "Continue to Mission &amp; Secondaries", "mission-map": "Continue to Create the Battlefield",
+    battlefield: "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
@@ -320,9 +322,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
         '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
-        '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Army Builder</button>' +
-        '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + '">Pre-game</button>' +
-        '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + '">Mission &amp; Map</button></nav>' +
+        '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Step 1 · Game Size &amp; Armies</button>' +
+        '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + '">Step 2 · Pre-game</button>' +
+        '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + '">Step 3 · Mission &amp; Secondaries</button>' +
+        '<button type="button" data-setup-workspace-tab="battlefield" aria-pressed="' + String(setupWorkspaceTab === "battlefield") + '">Step 4 · Create the Battlefield</button>' +
+        '<button type="button" data-setup-workspace-tab="deployment" aria-pressed="' + String(setupWorkspaceTab === "deployment") + '">Step 5 · Deploy and Begin</button></nav>' +
         (showCloud
           ? '<section class="battle-shell__setup-tools" aria-label="Army Builder and cloud battle saves">' +
             '<section data-setup-workspace-panel="saves"' + (setupWorkspaceTab === "saves" ? '' : ' hidden') + '><h2>Account &amp; Cloud Saves</h2>' +
@@ -402,7 +406,7 @@ export function createBattleShell(container, {
   }
 
   function setSetupWorkspaceTab(tab) {
-    if (!["army-builder", "saves", "pre-game", "mission-map"].includes(tab)) return;
+    if (!["army-builder", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
     setupWorkspaceTab = tab;
     setupNavigationMessage = "";
     container.querySelectorAll?.("[data-setup-workspace-tab]").forEach((button) => {
@@ -419,7 +423,7 @@ export function createBattleShell(container, {
     if (status) status.textContent = "";
     const next = container.querySelector?.("[data-setup-workspace-continue]");
     if (next) next.textContent = setupContinueLabel(tab);
-    mountedScreen?.setTab?.(tab === "mission-map" ? "mission-map" : "pre-game");
+    mountedScreen?.setTab?.(tab === "battlefield" ? "battlefield" : tab === "mission-map" ? "mission-map" : "pre-game");
   }
 
   function destroyMountedScreen() {
@@ -873,7 +877,7 @@ export function createBattleShell(container, {
     }
     const continueButton = event.target?.closest?.("[data-setup-workspace-continue]");
     if (!continueButton || !container.contains(continueButton)) return;
-    if (setupWorkspaceTab === "mission-map") {
+    if (setupWorkspaceTab === "battlefield" || setupWorkspaceTab === "deployment") {
       const currentState = session.getState();
       const readiness = evaluatePreGameReadiness(currentState);
       const missing = readiness.missing.map((item) => item.label);
@@ -894,9 +898,9 @@ export function createBattleShell(container, {
       }
       return;
     }
-    const order = ["saves", "army-builder", "pre-game", "mission-map"];
+    const order = ["saves", "army-builder", "pre-game", "mission-map", "battlefield"];
     const index = order.indexOf(setupWorkspaceTab);
-    setSetupWorkspaceTab(order[index + 1]);
+    setSetupWorkspaceTab(order[index + 1] ?? "deployment");
   }
 
   function handlePhaseNavigation(event) {
