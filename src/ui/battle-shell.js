@@ -184,11 +184,47 @@ export function createBattleShell(container, {
   let scoringReviewActivePlayerId = null;
   let scoringReviewPlayerId = null;
   let reminderSequence = 0;
+  let leftPanelCollapsed = true;
+  let rightPanelCollapsed = false;
+  let armyRosterPlayerId = null;
+  let battleShockMessage = "";
 
   function destroyMountedScreen() {
     if (mountedScreen?.destroy) mountedScreen.destroy();
     mountedScreen = null;
     mountedPhase = null;
+  }
+
+  function readOpenStates(element, selector, attribute) {
+    const openStates = {};
+    if (typeof element?.querySelectorAll !== "function") return openStates;
+    element.querySelectorAll(selector).forEach((item) => {
+      const key = item.getAttribute(attribute);
+      if (key) openStates[key] = Boolean(item.open);
+    });
+    return openStates;
+  }
+
+  function refreshPersistentPanels() {
+    const state = session.getState();
+    const statusContainer = container.querySelector?.("[data-battle-context-body]");
+    if (statusContainer) {
+      const openSections = readOpenStates(statusContainer, "details[data-context-key]", "data-context-key");
+      statusContainer.innerHTML = (battleShockMessage
+        ? '<p role="status" class="battle-context__message">' + escapeHtml(battleShockMessage) + '</p>'
+        : "") +
+        renderUnitStatusPanel(state, { openSections }) +
+        renderEventLogPanel(state, { openSections });
+    }
+    const referenceContainer = container.querySelector?.("[data-battle-reference-body]");
+    if (referenceContainer) {
+      const openSections = readOpenStates(referenceContainer, "details[data-reference-key]", "data-reference-key");
+      referenceContainer.innerHTML = renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections });
+    }
+    const overlay = container.querySelector?.("[data-army-roster-overlay]");
+    if (overlay && armyRosterPlayerId && !overlay.hidden) {
+      overlay.innerHTML = renderArmyRosterOverlay(state, armyRosterPlayerId);
+    }
   }
 
   function render() {
@@ -258,7 +294,7 @@ export function createBattleShell(container, {
       mountedAuthPanel = null;
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
-      renderShell(container, state, viewedPhase, scoringReminder, showCloud);
+      renderShell(container, state, viewedPhase, scoringReminder, showCloud, {\n        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId\n      });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
       const rosterContainer = container.querySelector("[data-army-roster-panel]");
@@ -320,7 +356,68 @@ export function createBattleShell(container, {
       }
     }
 
+    refreshPersistentPanels();
     return state;
+  }
+
+  function handleToggleBattlePanel(event) {
+    const button = event.target?.closest?.("[data-toggle-battle-panel]");
+    if (!button || !container.contains(button)) return;
+    const side = button.getAttribute("data-toggle-battle-panel");
+    if (side === "left") leftPanelCollapsed = !leftPanelCollapsed;
+    else if (side === "right") rightPanelCollapsed = !rightPanelCollapsed;
+    else return;
+    const workspace = container.querySelector?.("[data-battle-workspace]");
+    workspace?.setAttribute?.("data-left-collapsed", String(leftPanelCollapsed));
+    workspace?.setAttribute?.("data-right-collapsed", String(rightPanelCollapsed));
+    const collapsed = side === "left" ? leftPanelCollapsed : rightPanelCollapsed;
+    button.setAttribute?.("aria-expanded", String(!collapsed));
+    const label = button.querySelector?.("[data-panel-toggle-label]");
+    if (label) {
+      label.textContent = side === "left"
+        ? (collapsed ? "› Show status" : "‹ Hide status")
+        : (collapsed ? "Show references ‹" : "Hide references ›");
+    }
+  }
+
+  function handleOpenArmyRoster(event) {
+    const button = event.target?.closest?.("[data-open-army-roster]");
+    if (!button || !container.contains(button)) return;
+    const playerId = button.getAttribute("data-open-army-roster");
+    if (!playerId) return;
+    armyRosterPlayerId = playerId;
+    const overlay = container.querySelector?.("[data-army-roster-overlay]");
+    if (!overlay) return;
+    overlay.innerHTML = renderArmyRosterOverlay(session.getState(), playerId);
+    overlay.hidden = false;
+  }
+
+  function handleCloseArmyRoster(event) {
+    const button = event.target?.closest?.("[data-close-army-roster]");
+    const overlay = container.querySelector?.("[data-army-roster-overlay]");
+    if (!overlay || overlay.hidden) return;
+    if (!button && event.target !== overlay) return;
+    armyRosterPlayerId = null;
+    overlay.innerHTML = "";
+    overlay.hidden = true;
+  }
+
+  function handleBattleShockResult(event) {
+    const button = event.target?.closest?.("[data-battle-shock-result]");
+    if (!button || !container.contains(button)) return;
+    const unitId = button.getAttribute("data-unit-id");
+    const result = button.getAttribute("data-battle-shock-result");
+    const eligibilityConfirmed = button.getAttribute("data-eligibility-confirmed") === "true";
+    try {
+      session.dispatch({ type: COMMAND_TYPES.RECORD_BATTLE_SHOCK_TEST, payload: {
+        unitId, result, eligibilityConfirmed
+      }});
+      battleShockMessage = "Battle-shock result recorded for " +
+        (session.getState().units?.find((unit) => unit.id === unitId)?.name ?? unitId) + ".";
+    } catch (error) {
+      battleShockMessage = error?.message ?? String(error);
+    }
+    render();
   }
 
   function handleSubmit(event) {
@@ -375,6 +472,10 @@ export function createBattleShell(container, {
   }
 
   container.addEventListener?.("click", handlePhaseNavigation);
+  container.addEventListener?.("click", handleToggleBattlePanel);
+  container.addEventListener?.("click", handleOpenArmyRoster);
+  container.addEventListener?.("click", handleCloseArmyRoster);
+  container.addEventListener?.("click", handleBattleShockResult);
   container.addEventListener?.("click", handleDismissScoringReminder);
   container.addEventListener?.("click", handleReviewScoring);
   container.addEventListener?.("submit", handleSubmit);
@@ -387,6 +488,10 @@ export function createBattleShell(container, {
     destroy: () => {
       unsubscribe();
       container.removeEventListener?.("click", handlePhaseNavigation);
+      container.removeEventListener?.("click", handleToggleBattlePanel);
+      container.removeEventListener?.("click", handleOpenArmyRoster);
+      container.removeEventListener?.("click", handleCloseArmyRoster);
+      container.removeEventListener?.("click", handleBattleShockResult);
       container.removeEventListener?.("click", handleDismissScoringReminder);
       container.removeEventListener?.("click", handleReviewScoring);
       container.removeEventListener?.("submit", handleSubmit);
