@@ -38,7 +38,7 @@ test("Hive Tyrant profile includes reviewed baseline points and default weapon o
 
 test("Neurotyrant profile includes verified attachment targets and sourced details", () => {
   const unit = candidate("Neurotyrant");
-  assert.equal(unit.defaultPoints, 130);
+  assert.equal(unit.defaultPoints, 120);
   assert.equal(unit.datasheet.characteristics.Wounds, 9);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Psychic scream"));
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash"));
@@ -66,7 +66,7 @@ test("Broodlord profile includes its Genestealer attachment and points", () => {
 
 test("Old One Eye and Carnifexes have sourced profiles and point options", () => {
   const oldOneEye = candidate("Old One Eye");
-  assert.equal(oldOneEye.defaultPoints, 140);
+  assert.equal(oldOneEye.defaultPoints, 130);
   assert.ok(oldOneEye.datasheet.abilities.some((ability) => ability.name === "Alpha Leader"));
   assert.deepEqual(oldOneEye.datasheet.leader.allowedBodyguardDatasheetIds, ["tyranids:carnifexes"]);
 
@@ -94,16 +94,16 @@ test("Neurogaunts and Zoanthropes expose sourced model-count point options", () 
 
   const zoanthropes = candidate("Zoanthropes");
   assert.equal(zoanthropes.defaultModelCount, 3);
-  assert.equal(zoanthropes.defaultPoints, 100);
-  assert.deepEqual(zoanthropes.pointsOptions.map((option) => option.points), [100, 200]);
+  assert.equal(zoanthropes.defaultPoints, 90);
+  assert.deepEqual(zoanthropes.pointsOptions.map((option) => option.points), [90, 190]);
   assert.ok(zoanthropes.datasheet.weapons.some((weapon) => weapon.name === "Warp Blast (focused witchfire)"));
 });
 
 test("Termagants expose 10- and 20-model point options and their Leader pairing", () => {
   const unit = candidate("Termagants");
   assert.equal(unit.defaultModelCount, 10);
-  assert.equal(unit.defaultPoints, 60);
-  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [60, 110]);
+  assert.equal(unit.defaultPoints, 55);
+  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [55, 110]);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Strangleweb"));
   assert.deepEqual(unit.datasheet.bodyguard.compatibilityReview.status, "source-reviewed");
 });
@@ -133,12 +133,12 @@ test("Lictor and Deathleaper profiles contain source-reviewed melee data and abi
 
 test("Tervigon and Tyrannofex profiles expose source-reviewed monster characteristics and options", () => {
   const tervigon = candidate("Tervigon");
-  assert.equal(tervigon.defaultPoints, 160);
+  assert.equal(tervigon.defaultPoints, 150);
   assert.equal(tervigon.datasheet.characteristics.Wounds, 16);
   assert.ok(tervigon.datasheet.abilities.some((ability) => ability.name === "Spawn Termagants"));
 
   const tyrannofex = candidate("Tyrannofex");
-  assert.equal(tyrannofex.defaultPoints, 180);
+  assert.equal(tyrannofex.defaultPoints, 170);
   assert.equal(tyrannofex.datasheet.characteristics.Toughness, 12);
   assert.ok(tyrannofex.pointsOptions.some((option) => option.condition?.includes("Acid Spray")));
   assert.ok(tyrannofex.datasheet.weapons.some((weapon) => weapon.name === "Rupture cannon"));
@@ -159,8 +159,8 @@ test("Tyranid Warriors with Ranged Bio-weapons expose sourced profiles and unit-
 test("Barbgaunts and Biovores expose sourced profiles and unit-size point options", () => {
   const barbgaunts = candidate("Barbgaunts");
   assert.equal(barbgaunts.defaultModelCount, 5);
-  assert.equal(barbgaunts.defaultPoints, 55);
-  assert.deepEqual(barbgaunts.pointsOptions.map((option) => option.points), [55, 110]);
+  assert.equal(barbgaunts.defaultPoints, 50);
+  assert.deepEqual(barbgaunts.pointsOptions.map((option) => option.points), [50, 100]);
   assert.ok(barbgaunts.datasheet.abilities.some((ability) => ability.name === "Disruption Bombardment"));
 
   const biovores = candidate("Biovores");
@@ -185,7 +185,7 @@ test("Hive Guard and Neurolictor expose sourced weapon profiles and abilities", 
 test("Pyrovores, Von Ryan's Leapers, and Ripper Swarms expose sourced model options", () => {
   const pyrovores = candidate("Pyrovores");
   assert.equal(pyrovores.defaultPoints, 45);
-  assert.deepEqual(pyrovores.pointsOptions.slice(0, 3).map((option) => option.points), [45, 65, 95]);
+  assert.deepEqual(pyrovores.pointsOptions.slice(0, 3).map((option) => option.points), [40, 70, 100]);
   assert.ok(pyrovores.datasheet.weapons.some((weapon) => weapon.name === "Flamespurt"));
 
   const leapers = candidate("Von Ryan’s Leapers");
@@ -201,11 +201,11 @@ test("Pyrovores, Von Ryan's Leapers, and Ripper Swarms expose sourced model opti
 
 test("Parasite of Mortrex and the three monster profiles expose sourced abilities and costs", () => {
   const parasite = candidate("Parasite of Mortrex");
-  assert.equal(parasite.defaultPoints, 70);
+  assert.equal(parasite.defaultPoints, 65);
   assert.ok(parasite.datasheet.abilities.some((ability) => ability.name === "Parasitic Infection"));
 
   const exocrine = candidate("Exocrine");
-  assert.equal(exocrine.defaultPoints, 140);
+  assert.equal(exocrine.defaultPoints, 135);
   assert.equal(exocrine.datasheet.characteristics.Wounds, 14);
   assert.ok(exocrine.datasheet.abilities.some((ability) => ability.name === "Symbiotic Targeting"));
 
@@ -214,7 +214,7 @@ test("Parasite of Mortrex and the three monster profiles expose sourced abilitie
   assert.ok(haruspex.datasheet.weapons.some((weapon) => weapon.name === "Shovelling claws"));
 
   const maleceptor = candidate("Maleceptor");
-  assert.equal(maleceptor.defaultPoints, 190);
+  assert.equal(maleceptor.defaultPoints, 180);
   assert.equal(maleceptor.datasheet.characteristics["Invulnerable save"], "4+");
 
   const psychophage = candidate("Psychophage");
@@ -225,7 +225,7 @@ test("Parasite of Mortrex and the three monster profiles expose sourced abilitie
 
 test("The Red Terror and Mucolid Spores expose source-reviewed profiles", () => {
   const redTerror = candidate("The Red Terror");
-  assert.equal(redTerror.defaultPoints, 130);
+  assert.equal(redTerror.defaultPoints, 120);
   assert.equal(redTerror.datasheet.characteristics.Wounds, 9);
   assert.ok(redTerror.datasheet.abilities.some((ability) => ability.name === "Swallow Whole"));
 
@@ -237,7 +237,7 @@ test("The Red Terror and Mucolid Spores expose source-reviewed profiles", () => 
 
 test("Mawloc, Norn Assimilator, Norn Emissary, and Toxicrene expose sourced profiles", () => {
   const mawloc = candidate("Mawloc");
-  assert.equal(mawloc.defaultPoints, 135);
+  assert.equal(mawloc.defaultPoints, 130);
   assert.equal(mawloc.datasheet.characteristics.Wounds, 14);
   assert.ok(mawloc.datasheet.abilities.some((ability) => ability.name === "Terror From The Deep"));
 
@@ -280,8 +280,8 @@ test("Hormagaunts and Genestealers expose sourced infantry profiles and unit-siz
 test("Gargoyles and melee Tyranid Warriors expose sourced profiles", () => {
   const gargoyles = candidate("Gargoyles");
   assert.equal(gargoyles.defaultModelCount, 10);
-  assert.equal(gargoyles.defaultPoints, 80);
-  assert.deepEqual(gargoyles.pointsOptions.map((option) => option.points), [80, 155]);
+  assert.equal(gargoyles.defaultPoints, 75);
+  assert.deepEqual(gargoyles.pointsOptions.map((option) => option.points), [75, 150]);
   assert.ok(gargoyles.datasheet.weapons.some((weapon) => weapon.name === "Fleshborer"));
   assert.ok(gargoyles.datasheet.abilities.some((ability) => ability.name === "Winged Swarm"));
 
@@ -299,8 +299,8 @@ test("Venomthropes and Trygon expose sourced profiles", () => {
   assert.ok(venomthropes.datasheet.abilities.some((ability) => ability.name === "Foul Spores"));
 
   const trygon = candidate("Trygon");
-  assert.equal(trygon.defaultPoints, 140);
-  assert.deepEqual(trygon.pointsOptions.map((option) => option.points), [140]);
+  assert.equal(trygon.defaultPoints, 135);
+  assert.deepEqual(trygon.pointsOptions.map((option) => option.points), [135]);
   assert.equal(trygon.datasheet.characteristics.Wounds, 14);
   assert.ok(trygon.datasheet.abilities.some((ability) => ability.name === "Subterranean Tunnels"));
 });
