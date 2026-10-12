@@ -60,7 +60,7 @@ This document records agreed design requirements from the Warmind UI/UX comparis
 
 ## Setup navigation update
 
-- Split setup into four focused workspaces: Army Builder, Saves, Pre-game, and Mission & Map.
+- Split setup into four focused workspaces in this order: Account & Saves, Army Builder, Pre-game, and Mission & Map.
 - Keep the top tab navigation and a bottom Continue action visible during setup so iPad users do not need to scroll back to the top.
 - Keep mission readiness visible in Pre-game; place detailed standard procedures and conditional ability guidance in collapsible sections.
 - Tab switching changes only the viewed workspace and must preserve roster edits and battle state.
@@ -73,3 +73,23 @@ This document records agreed design requirements from the Warmind UI/UX comparis
 - Each option displays its Force Disposition and Detachment Point (DP) cost. These are army-building reference labels, not an automated army legality validator.
 - Rules reference: Games Workshop's [June 2026 Xenos Faction Pack announcement](https://www.warhammer-community.com/en-gb/articles/fchkklcq/new40k-download-new-xenos-faction-packs-today/) and current [Munitorum Field Manual Tyranids page](https://mfm.warhammer-community.com/en/tyranids). 40k.app is a secondary discovery/reference source; it is not the authority for rules wording.
 - When a detachment's current rules or costs are not reviewed in the local rules data, show the official published name/disposition/DP for selection but do not invent enhancements, stratagems, or ability text.
+
+## Reviewed setup flow from V1
+
+V1's setup UI in `Grumpa916/onoforge40k/index.html` provides examples of the complete pre-battle sequence. V2 should keep the same information discoverable but align it to current 11th-edition data and the V2 state model:
+
+1. **Account & Saves:** sign in before opening saved army lists or cloud battles.
+2. **Army Builder:** edit, name, and save each roster, then assign it explicitly to Your army or Opponent army. Both players must have an assigned roster before setup can proceed.
+3. **Pre-game:** choose the Attacker, derive the Defender as the other army, and record Who Goes First. Run the fixed procedure reminders and verify both armies have units.
+4. **Mission & Map:** resolve the two Primary Missions from the selected Force Dispositions and choose the verified Event Companion layout. Select the battle-wide secondary mode here; Fixed cards are recorded here before deployment.
+5. **Deployment:** deploy or declare each non-destroyed unit in reserves. The First Player selection should be prefilled from Pre-game while still allowing correction at the deployment checkpoint.
+6. **Command phase:** make secondary card entry conspicuous. For Tactical mode, record the two physical cards drawn for the active player during each Command phase; this is card tracking, not automatic drawing or scoring.
+
+V1 explicitly separates Attacker, Defender, and Who Goes First; offers Fixed/Tactical secondary mode and player-specific card entry; and uses named objective identities. Keep those workflow affordances without copying outdated rules text.
+
+### Objective identities and layout changes
+
+- The verified Event Companion map catalog is authoritative for the available marker names and coordinates. Five-marker layouts have two home objectives, one central objective, and two expansion objectives.
+- Six-marker layouts must have **Central 1** and **Central 2**, as well as **Attacker Home**, **Defender Home**, and **Expansion 1/2**. Never substitute a generic home marker for a missing central identity.
+- When switching layouts, reconcile canonical layout-linked objective records to the selected geometry; remove stale canonical markers that do not exist on the new layout while preserving unrelated/manual records.
+- The map remains approximate context only. It does not infer objective control, line of sight, distances, or rules legality.
