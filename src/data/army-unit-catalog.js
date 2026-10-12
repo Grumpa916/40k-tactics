@@ -1,9 +1,8 @@
 import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
 import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 
-// Starter name-only catalog for the roster picker.
-// These entries are convenience candidates, not verified datasheets or a complete faction roster.
-// Add full characteristics/points only after source review.
+// Tyranid roster catalog. Full profiles are source-reviewed from linked datasheet references;
+// official GW cross-check remains explicit metadata and may still be pending.
 export const ARMY_UNIT_CATALOG = Object.freeze([
   ...[
     "Hive Tyrant",
@@ -57,7 +56,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
     "Raveners",
     "Tyrant Guard",
     "Tyranid Warriors with Melee Bio-weapons",
-    "Tyranid Warriors with Ranged Bio-weapons"
+    "Tyranid Warriors with Ranged Bio-weapons", "Malanthrope", "Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Sky-slasher Swarms"
   ].map((name) => {
     const id = "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const attachmentMetadata = getTyranidAttachmentMetadata(id);
