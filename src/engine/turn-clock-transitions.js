@@ -1,7 +1,7 @@
 import { BATTLE_STATUS } from "../state/battle.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
-import { getTurnClockState, updateTurnClockForPlayer } from "../state/turn-clock.js";
+import { getTurnClockState } from "../state/turn-clock.js";
 
 function activePlayerId(state) {
   return state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
@@ -45,13 +45,18 @@ export function pauseTurnClock(state, { nowMs = Date.now() } = {}) {
   if (!Number.isFinite(nowMs)) throw new TypeError("A valid clock timestamp is required.");
   const previous = getTurnClockState(state);
   if (!previous.running) return state;
-  const clocked = updateTurnClockForPlayer(state, previous.activePlayerId, nowMs);
+  const elapsedMsByPlayer = { ...previous.elapsedMsByPlayer };
+  if (previous.activePlayerId && Number.isFinite(previous.startedAtMs)) {
+    elapsedMsByPlayer[previous.activePlayerId] =
+      (Number.isFinite(elapsedMsByPlayer[previous.activePlayerId]) ? elapsedMsByPlayer[previous.activePlayerId] : 0) +
+      Math.max(0, nowMs - previous.startedAtMs);
+  }
   const clock = {
-    ...getTurnClockState(clocked),
-    activePlayerId: previous.activePlayerId,
+    ...previous,
+    elapsedMsByPlayer,
     running: false,
     startedAtMs: null
   };
   const elapsedMs = clock.elapsedMsByPlayer[clock.activePlayerId] ?? 0;
-  return clockEvent(clocked, "turn_clock.paused", { elapsedMs }, clock);
+  return clockEvent(state, "turn_clock.paused", { elapsedMs }, clock);
 }
