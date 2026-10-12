@@ -125,6 +125,9 @@ test("battle shell keeps persistent score, Unit Status, Event Log and roster con
   assert.match(root.html, /Event Log/);
   assert.match(root.html, /data-open-army-roster="p1"/);
   assert.match(root.html, /data-open-army-roster="p2"/);
+  assert.match(root.html, /data-battle-mission-summary-host/);
+  assert.match(root.html, /Primary Missions/);
+  assert.match(root.html, /Secondary Missions/);
 
   shell.destroy();
 });
