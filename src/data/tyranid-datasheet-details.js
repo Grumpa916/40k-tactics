@@ -905,7 +905,11 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
   })
   ,
   "tyranids:hyperadapted-raveners": Object.freeze({
-    characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1 }),
+    characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: "3 (Raveners); 6 (Ravener Prime)", Leadership: "8+ (Raveners); 7+ (Prime)", "Objective Control": 1 }),
+    modelProfiles: Object.freeze([
+      Object.freeze({ name: "Ravener Prime", Move: '10"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1 }),
+      Object.freeze({ name: "Raveners", Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1 })
+    ]),
     keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Burrowers", "Hyperadapted Raveners"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Venom bolt", equipment: "Default", range: '12"', attacks: "D6+3", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Assault, Ignores Cover, Torrent" }),
