@@ -415,6 +415,24 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
   }
 });
 
+test("The Red Terror matches the current official 11th-edition faction pack", () => {
+  const unit = candidate("The Red Terror");
+  assert.deepEqual(unit.datasheet.characteristics, {
+    Move: '10"',
+    Toughness: 8,
+    Save: "3+",
+    Wounds: 9,
+    Leadership: "8+",
+    "Objective Control": 3
+  });
+  assert.deepEqual(unit.datasheet.keywords, [
+    "Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "The Red Terror", "Vanguard Invader"
+  ]);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Serpentine Fiend"));
+  assert.equal(unit.datasheet.dataSource.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
+  assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
+});
+
 test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
   const expected = [
     ["Barbgaunts", 50, [50, 100]],
