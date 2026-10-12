@@ -32,6 +32,14 @@ function setup({ battle = null, scoring = {} } = {}) {
       commands.push(command);
       if (command.type === COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP) {
         state = setEventCompanionMissionSetup(state, command.payload);
+      } else if (command.type === COMMAND_TYPES.SET_PRE_GAME_ROLES) {
+        state = { ...state, preGameSetup: {
+          ...(state.preGameSetup ?? {}),
+          ...command.payload,
+          defenderPlayerId: command.payload.attackerPlayerId
+            ? (state.players ?? []).find((player) => player.id !== command.payload.attackerPlayerId)?.id ?? null
+            : state.preGameSetup?.defenderPlayerId ?? null
+        }};
       }
       return state;
     },
@@ -136,7 +144,7 @@ test("attacker and first-turn role buttons dispatch on click", () => {
   tapRole("firstPlayerId", "p1");
   assert.deepEqual(commands, [
     { type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId: "p2", firstPlayerId: null } },
-    { type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId: null, firstPlayerId: "p1" } }
+    { type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId: "p2", firstPlayerId: "p1" } }
   ]);
   screen.destroy();
 });
