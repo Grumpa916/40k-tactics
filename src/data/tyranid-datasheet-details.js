@@ -892,7 +892,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Titanic scything talons", equipment: "Default", range: "Melee", attacks: 8, skill: "3+", strength: 20, ap: -2, damage: "D6+1" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 2D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise 2D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 2D6 mortal wounds; roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Apex-beast", description: "Each time this model makes an attack targeting a Battle-shocked unit, add 1 to the Hit roll." }),
       Object.freeze({ name: "Stalking Forward", description: "Each time this model makes a Normal, Advance or Fall Back move, it can move over models (excluding Titanic models) and terrain features that are 4 inches or less in height as if they were not there." }),
@@ -911,7 +911,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Gargantuan scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 14, ap: -2, damage: "D6" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 2D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise 2D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 2D6 mortal wounds; roll separately for each affected unit." }),
       Object.freeze({ name: "Hover", description: "This model has the Hover core ability." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Frenzied Metabolism", description: "When selected to shoot, this model can add 1 to Wound rolls for its attacks this phase; afterward, on a D6 roll of 2+, it suffers D3 mortal wounds." }),
