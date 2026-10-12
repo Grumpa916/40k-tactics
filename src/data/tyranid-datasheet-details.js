@@ -190,6 +190,84 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultPoints: 90,
     pointsOptions: Object.freeze([{ models: 1, points: 90 }, { models: 2, points: 180 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Carnifexes datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/carnifexes", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:the-swarmlord": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 10, Save: "2+", Wounds: 10, Leadership: "7+", "Objective Control": 3, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Character", "Epic Hero", "Great Devourer", "Hive Tyrant", "Monster", "Psyker", "Synapse", "The Swarmlord"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Synaptic pulse", equipment: "Default", range: '18"', attacks: "D6+3", skill: "—", strength: 5, ap: -1, damage: 2, abilities: "Psychic, Torrent" }),
+      Object.freeze({ name: "Bone sabres", equipment: "Default", range: "Melee", attacks: 8, skill: "2+", strength: 9, ap: -2, damage: 3, abilities: "Twin-linked" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Leader", description: "Can lead Tyrant Guard, according to the reviewed datasheet listing." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Hive Commander", description: "At the start of your Command phase, if this model is on the battlefield, you gain 1CP." }),
+      Object.freeze({ name: "Malign Presence", description: "Once per turn, when the opponent targets a unit within 12 inches of this model with a Stratagem, increase that use's CP cost by 1." }),
+      Object.freeze({ name: "Domination of the Hive Mind", description: "While a friendly Tyranids unit is within 9 inches of this model, that unit is within your army's Synapse Range." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 210,
+    pointsOptions: Object.freeze([{ models: 1, points: 210 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app The Swarmlord datasheet", sourceUrl: "https://www.40k.app/879/factions/tyranids/units/the-swarmlord", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:neurogaunts": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 3, Save: "6+", Wounds: 1, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Endless Multitude", "Great Devourer", "Infantry", "Neurogaunts"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 3, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Neurocytes", description: "While this unit is within Synapse Range of a friendly Tyranids unit (excluding Neurogaunt units), it has the Synapse keyword." }),
+      Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Neurotyrant to lead this unit." })
+    ]),
+    defaultModelCount: 11,
+    defaultPoints: 45,
+    pointsOptions: Object.freeze([{ models: 11, points: 45 }, { models: 22, points: 90 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Neurogaunts datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/neurogaunts", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:zoanthropes": Object.freeze({
+    characteristics: Object.freeze({ Move: '5"', Toughness: 5, Save: "5+", Wounds: 3, Leadership: "7+", "Objective Control": 1, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Fly", "Great Devourer", "Infantry", "Psyker", "Synapse", "Zoanthropes"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Warp Blast (witchfire)", equipment: "Default", range: '24"', attacks: "D3", skill: "3+", strength: 7, ap: -2, damage: "D3", abilities: "Blast, Psychic" }),
+      Object.freeze({ name: "Warp Blast (focused witchfire)", equipment: "Default", range: '24"', attacks: 1, skill: "3+", strength: 12, ap: -3, damage: "D6+1", abilities: "Lethal Hits, Psychic" }),
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 2, skill: "5+", strength: 3, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Spirit Leech", description: "While an enemy unit is within 6 inches, if this unit contains a Neurothrope, each time that enemy unit fails a Battle-shock test it suffers D3 mortal wounds and one model in this unit regains up to D3 lost wounds." }),
+      Object.freeze({ name: "Warp Field", description: "While a friendly Tyranids unit is within 6 inches of this unit, models in that unit have a 6+ invulnerable save." }),
+      Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Neurotyrant to lead this unit." })
+    ]),
+    defaultModelCount: 3,
+    defaultPoints: 100,
+    pointsOptions: Object.freeze([{ models: 3, points: 100 }, { models: 6, points: 200 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Zoanthropes datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/unit/zoanthropes", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:termagants": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 3, Save: "5+", Wounds: 1, Leadership: "8+", "Objective Control": 2 }),
+    keywords: Object.freeze(["Battleline", "Endless Multitude", "Great Devourer", "Infantry", "Termagants"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Fleshborer", equipment: "Default", range: '18"', attacks: 1, skill: "4+", strength: 5, ap: 0, damage: 1, abilities: "Assault" }),
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 3, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Termagant devourer", equipment: "Wargear option", range: '18"', attacks: 2, skill: "4+", strength: 4, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Termagant spinefists", equipment: "Wargear option", range: '12"', attacks: 2, skill: "4+", strength: 4, ap: 0, damage: 1, abilities: "Assault, Pistol, Twin-linked" }),
+      Object.freeze({ name: "Shardlauncher", equipment: "Wargear option", range: '18"', attacks: "D3", skill: "4+", strength: 5, ap: 0, damage: 1, abilities: "Blast, Heavy" }),
+      Object.freeze({ name: "Spike rifle", equipment: "Wargear option", range: '24"', attacks: 1, skill: "4+", strength: 4, ap: -1, damage: 1, abilities: "Heavy" }),
+      Object.freeze({ name: "Strangleweb", equipment: "Wargear option", range: '18"', attacks: "D6", skill: "—", strength: 2, ap: 0, damage: 1, abilities: "Assault, Devastating Wounds, Torrent" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Skulking Horrors", description: "In the opponent's Movement phase, if an enemy unit ends a move within 8 inches and this unit is not in Engagement Range, this unit can make a Normal move of up to D6 inches." }),
+      Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Tyranid Prime with Lash Whip to lead this unit." })
+    ]),
+    defaultModelCount: 10,
+    defaultPoints: 60,
+    pointsOptions: Object.freeze([{ models: 10, points: 60 }, { models: 20, points: 110 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Termagants datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/termagants", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
 });
 
