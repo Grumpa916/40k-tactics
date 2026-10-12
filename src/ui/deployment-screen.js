@@ -39,13 +39,14 @@ export function createDeploymentScreen(container, {
       unit?.ownerId === playerId && unit.status !== "destroyed");
     if (!eligible.some((unit) => unit.id === selectedUnitId)) {
       selectedUnitId = eligible.find((unit) => !state.battlefieldMap?.actualDeployment?.[unit.id] &&
-        !state.battlefieldMap?.declaredReserves?.[unit.id])?.id ?? eligible[0]?.id ?? null;
+        !state.battlefieldMap?.declaredReserves?.[unit.id] && unit.status !== "reserves")?.id ?? eligible[0]?.id ?? null;
     }
 
     const actual = state.battlefieldMap?.actualDeployment ?? {};
     const reserves = state.battlefieldMap?.declaredReserves ?? {};
-    const deployedCount = eligible.filter((unit) => unit.status === "deployed" && actual[unit.id]).length;
-    const reserveCount = eligible.filter((unit) => reserves[unit.id]).length;
+    const isReserved = (unit) => Boolean(reserves[unit.id] || unit.status === "reserves");
+    const deployedCount = eligible.filter((unit) => unit.status === "deployed" && actual[unit.id] && !isReserved(unit)).length;
+    const reserveCount = eligible.filter(isReserved).length;
     const unaccounted = eligible.length - deployedCount - reserveCount;
     const accountingByPlayer = players.map((player) => {
       const units = (state.units ?? []).filter((unit) => unit?.ownerId === player.id && unit.status !== "destroyed");
@@ -80,7 +81,7 @@ export function createDeploymentScreen(container, {
       renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId }) +
       '<p>Drag any unit marker to its actual starting location. Tap a marker to select it, then tap an empty point as a fallback. Dashed markers are awaiting placement; planned positions are not copied automatically.</p>' +
       '<section class="deployment-reserve-tray" aria-label="Units declared in reserves"><h3>Reserves</h3>' +
-      ((state.units ?? []).filter((unit) => unit && unit.status !== "destroyed" && reserves[unit.id]).map((unit) =>
+      ((state.units ?? []).filter((unit) => unit && unit.status !== "destroyed" && (reserves[unit.id] || unit.status === "reserves")).map((unit) =>
         '<span class="deployment-reserve-tray__unit">' + escapeHtml(unit.name ?? unit.id) + ' · ' +
         escapeHtml(players.find((player) => player.id === unit.ownerId)?.name ?? unit.ownerId) + '</span>'
       ).join("") || '<p>No units declared in reserves.</p>') +
@@ -217,7 +218,7 @@ export function createDeploymentScreen(container, {
       const unaccountedUnits = (state.units ?? []).filter((unit) =>
         unit.status !== "destroyed" &&
         !state.battlefieldMap?.actualDeployment?.[unit.id] &&
-        !state.battlefieldMap?.declaredReserves?.[unit.id]
+        !state.battlefieldMap?.declaredReserves?.[unit.id] && unit.status !== "reserves"
       );
       if (unaccountedUnits.length) {
         message = "Deployment incomplete. Record positions or explicitly declare reserves for all non-destroyed units.";

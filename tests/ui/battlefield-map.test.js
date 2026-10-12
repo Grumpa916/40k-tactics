@@ -181,3 +181,15 @@ test("deployment map shows both armies while excluding declared reserves and des
   assert.doesNotMatch(html,/data-map-unit-id="reserve"/);
   assert.doesNotMatch(html,/data-map-unit-id="destroyed"/);
 });
+
+test("deployment map excludes units marked as reserves even if reserve ledger is missing", () => {
+  const html = renderBattlefieldMap({
+    units: [
+      { id: "declared-by-status", ownerId: "p1", name: "Status Reserve", status: "reserves" },
+      { id: "active", ownerId: "p1", name: "Active Unit", status: "deployed", position: { x: 8, y: 8 } }
+    ],
+    battlefieldMap: { declaredReserves: {} }
+  }, { mode: "deployment", perspectivePlayerId: "p1" });
+  assert.doesNotMatch(html, /data-map-unit-id="declared-by-status"/);
+  assert.match(html, /data-map-unit-id="active"/);
+});
