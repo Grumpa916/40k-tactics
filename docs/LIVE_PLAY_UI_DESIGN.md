@@ -1,0 +1,55 @@
+# Live-Play UI Design Requirements
+
+Last updated: 2026-10-12
+
+This document records agreed design requirements from the Warmind UI/UX comparison. Warmind is a reference for information hierarchy and interactions, not a visual template.
+
+## Responsive battle shell
+
+- Use a landscape-first, responsive three-column layout where width permits.
+- The center column is the active phase workspace and must gain width when a side panel collapses.
+- Left and right panels collapse independently.
+- Start with the left battle-status panel collapsed to a narrow rail on wide screens, while keeping score/CP summary available in the persistent battle header as that header is implemented.
+- The right reference panel defaults open; Stratagems is expanded first, with Army Rules, Detachments, and Terrain Layout independently expandable.
+- When the viewport is too narrow, panels should collapse or stack rather than make text and touch targets too small.
+- Keep persistent My Army and Opponent Army controls at the bottom; opening an army list must not lose the current phase context.
+
+## Unit Status and event history
+
+- Use Unit Status rather than a Destroyed Units-only panel.
+- Show destroyed, reserves/on-battlefield, and currently Battle-shocked states.
+- Distinguish Battle-shock tests known to be due from units whose strength data is insufficient to determine eligibility automatically.
+- In 11th Edition Command Phase, a unit requires a Battle-shock test if it is currently Battle-shocked or at/below half-strength. A passing test clears the Battle-shocked condition; a failed test applies it.
+- Record the player's test outcome, not the individual dice, and append a typed event to authoritative history.
+- Event Log should summarize important phase/turn transitions, activations, combat results and actual damage, Battle-shock outcomes, CP changes, objective control, and VP awards/adjustments. Keep a useful recent view with access to older events.
+
+## Rules and reference panel
+
+- Stratagems should be phase-aware and distinguish the player's options from the opponent's options.
+- Show cost, timing, restrictions, and eligibility reasons where the underlying data supports them; do not imply that listed means currently usable.
+- Army Rules and Detachments should be available for both players, especially when the opponent's army is unfamiliar.
+- Terrain layout and map references are secondary to the active phase.
+- Missing rules data should be labelled as unavailable, never fabricated.
+
+## Decisions and scoring
+
+- Use contextual reminder/decision sheets for required choices, relevant faction abilities, mission events, and scoring checkpoints.
+- Mission sections should be compact and independently collapsible by section and player.
+- Trigger scoring prompts at the mission's configured timing (Command Phase, own end-of-turn, opponent end-of-turn, or end of battle).
+- Show criteria and calculated/confirmed score; only award VP after player confirmation and ledger validation.
+- Don't create a parallel scoring system. Extend the existing mission/scoring coordinator and VP ledger.
+
+## Clock
+
+- Add a persistent Turn Clock control available from every phase.
+- Track each player's elapsed turn time separately.
+- Start, pause, and resume must not lose accumulated time.
+- Switch the active clock on player-turn transitions, not phase transitions.
+- Preserve clock state through battle save/restore. Countdown limits/warnings can be a later enhancement.
+
+## Delivery constraints
+
+- Implement incrementally on feature branches; do not modify main directly.
+- Reuse existing game state, event history, mission timing, and scoring infrastructure.
+- Do not infer legal state from rough map coordinates.
+- Do not claim CI green until the actual workflow reports success.
