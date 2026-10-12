@@ -4,6 +4,7 @@ import { getCommandPointBalance, recordCommandPointChange } from "./command-poin
 import {
   discardSecondaryMission,
   getSecondaryMissionHistory,
+  getSecondaryMissionMode,
   SECONDARY_MISSION_MODES,
   SECONDARY_MISSION_STATUS
 } from "../rules/secondary-mission-lifecycle.js";
@@ -18,7 +19,7 @@ export function useSecondaryMissionRedraw(state, {
   if (state?.phase !== "command") {
     throw new Error("New Orders can only be used during the Command phase.");
   }
-  if (state?.scoring?.secondaryMissionMode !== SECONDARY_MISSION_MODES.TACTICAL) {
+  if (getSecondaryMissionMode(state, playerId) !== SECONDARY_MISSION_MODES.TACTICAL) {
     throw new Error("New Orders is available only when using Tactical secondary missions.");
   }
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
