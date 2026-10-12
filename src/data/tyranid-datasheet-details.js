@@ -269,6 +269,138 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 10, points: 60 }, { models: 20, points: 110 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Termagants datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/termagants", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:winged-hive-tyrant": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "2+", Wounds: 10, Leadership: "7+", "Objective Control": 3, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Character", "Fly", "Great Devourer", "Hive Tyrant", "Monster", "Psyker", "Synapse", "Vanguard Invader", "Winged Hive Tyrant"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Monstrous bonesword and lash whip", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 9, ap: -2, damage: 3, abilities: "Twin-linked" }),
+      Object.freeze({ name: "Tyrant talons", equipment: "Default", range: "Melee", attacks: 5, skill: "2+", strength: 7, ap: -2, damage: 2 }),
+      Object.freeze({ name: "Monstrous scything talons", equipment: "Wargear option", range: "Melee", attacks: 4, skill: "2+", strength: 7, ap: -2, damage: 2, abilities: "Extra Attacks" }),
+      Object.freeze({ name: "Heavy venom cannon", equipment: "Wargear option", range: '36"', attacks: "D3", skill: "2+", strength: 9, ap: -2, damage: 3, abilities: "Blast" }),
+      Object.freeze({ name: "Stranglethorn cannon", equipment: "Wargear option", range: '36"', attacks: "D6+1", skill: "2+", strength: 7, ap: -1, damage: 2, abilities: "Blast" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, reduce the CP cost of a Stratagem targeting a friendly Tyranids unit within 12 inches by 1CP." }),
+      Object.freeze({ name: "Paroxysm", description: "At the start of the Fight phase, select one visible enemy unit within 12 inches and roll a D6; on 2+, subtract 1 from the Attacks characteristic of its weapons for the phase; on a 1, this Psyker suffers D3 mortal wounds." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 185,
+    pointsOptions: Object.freeze([{ models: 1, points: 185, condition: "1 model" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Winged Hive Tyrant datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/winged-hive-tyrant", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:lictor": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 6, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Great Devourer", "Infantry", "Lictor", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Lictor claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 7, ap: -2, damage: 2, abilities: "Precision" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
+      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
+      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
+      Object.freeze({ name: "Pheromone Trail", description: "Once per battle round, this model can be targeted with Rapid Ingress for 0CP." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 60,
+    pointsOptions: Object.freeze([{ models: 1, points: 60, condition: "1 model" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Lictor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/lictor", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:deathleaper": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 6, Save: "3+", Wounds: 7, Leadership: "7+", "Objective Control": 1, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Character", "Deathleaper", "Epic Hero", "Great Devourer", "Infantry", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Lictor claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 7, ap: -2, damage: 2, abilities: "Precision" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
+      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
+      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
+      Object.freeze({ name: "Fear of the Unseen", description: "While an enemy unit is within 6 inches, worsen its Leadership by 1; if it is below Starting Strength during your opponent's Command phase Battle-shock step, it must take a Battle-shock test." }),
+      Object.freeze({ name: "Hunter Organism", description: "This model cannot be your Warlord." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 80,
+    pointsOptions: Object.freeze([{ models: 1, points: 80, condition: "1 model" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Deathleaper datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/deathleaper", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:tervigon": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 11, Save: "2+", Wounds: 16, Leadership: "7+", "Objective Control": 5 }),
+    keywords: Object.freeze(["Character", "Great Devourer", "Monster", "Psyker", "Synapse", "Tervigon"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Stinger salvoes", equipment: "Default", range: '24"', attacks: 8, skill: "3+", strength: 5, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Massive scything talons (strike)", equipment: "Default", range: "Melee", attacks: 4, skill: "3+", strength: 9, ap: -2, damage: "D6" }),
+      Object.freeze({ name: "Massive scything talons (sweep)", equipment: "Default", range: "Melee", attacks: 8, skill: "3+", strength: 7, ap: -1, damage: 2 }),
+      Object.freeze({ name: "Massive crushing claws", equipment: "Wargear option", range: "Melee", attacks: 4, skill: "4+", strength: 12, ap: -3, damage: "D6+1" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Spawn Termagants", description: "In your Command phase, select one friendly Termagants unit within 6 inches and return up to D3+3 destroyed models to it; a unit cannot be selected more than once per phase." }),
+      Object.freeze({ name: "Brood Progenitor", description: "While a friendly Termagants unit is within 6 inches, ranged weapons equipped by models in that unit have Lethal Hits." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 160,
+    pointsOptions: Object.freeze([{ models: 1, points: 160, condition: "1 model" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tervigon datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tervigon", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:tyrannofex": Object.freeze({
+    characteristics: Object.freeze({ Move: '9"', Toughness: 12, Save: "2+", Wounds: 16, Leadership: "8+", "Objective Control": 5 }),
+    keywords: Object.freeze(["Frame", "Great Devourer", "Monster", "Tyrannofex"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Fleshborer hive", equipment: "Default", range: '24"', attacks: 20, skill: "3+", strength: 5, ap: 0, damage: 1, abilities: "Heavy, Sustained Hits 1, Twin-linked" }),
+      Object.freeze({ name: "Stinger salvoes", equipment: "Default", range: '24"', attacks: 8, skill: "3+", strength: 5, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Powerful limbs", equipment: "Default", range: "Melee", attacks: 4, skill: "3+", strength: 8, ap: 0, damage: 2 }),
+      Object.freeze({ name: "Acid spray", equipment: "Wargear option", range: '18"', attacks: "D6+6", skill: "—", strength: 6, ap: -2, damage: 2, abilities: "Torrent" }),
+      Object.freeze({ name: "Rupture cannon", equipment: "Wargear option", range: '48"', attacks: 2, skill: "3+", strength: 18, ap: -4, damage: "D6+6", abilities: "Heavy" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Resilient Organism", description: "Once per battle, when an attack is allocated to this model, change that attack's Damage characteristic to 0." })
+    ]),
+    defaultModelCount: 1,
+    defaultPoints: 180,
+    pointsOptions: Object.freeze([
+      Object.freeze({ models: 1, points: 180, condition: "Base cost" }),
+      Object.freeze({ models: 1, points: 190, condition: "With Acid Spray (+10 points)" }),
+      Object.freeze({ models: 1, points: 200, condition: "With Rupture Cannon (+20 points)" }),
+      Object.freeze({ models: 1, points: 190, condition: "3rd+ Tyrannofex in army (+10 points; base cost)" })
+    ]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyrannofex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyrannofex", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:tyranid-warriors-with-ranged-bio-weapons": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "7+", "Objective Control": 2 }),
+    keywords: Object.freeze(["Great Devourer", "Infantry", "Synapse", "Tyranid Warriors with Ranged Bio-Weapons"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Barbed strangler", equipment: "Wargear option", range: '36"', attacks: "D6+1", skill: "4+", strength: 6, ap: -1, damage: 1, abilities: "Blast" }),
+      Object.freeze({ name: "Deathspitter", equipment: "Wargear option", range: '24"', attacks: 3, skill: "4+", strength: 5, ap: -1, damage: 1 }),
+      Object.freeze({ name: "Devourer", equipment: "Default", range: '18"', attacks: 5, skill: "4+", strength: 4, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Spinefists", equipment: "Wargear option", range: '12"', attacks: 2, skill: "4+", strength: 4, ap: 0, damage: 1, abilities: "Assault, Pistol, Twin-linked" }),
+      Object.freeze({ name: "Venom cannon", equipment: "Wargear option", range: '36"', attacks: "D3", skill: "4+", strength: 9, ap: -2, damage: 2, abilities: "Blast" }),
+      Object.freeze({ name: "Tyranid Warrior claws and talons", equipment: "Default", range: "Melee", attacks: 5, skill: "3+", strength: 5, ap: -1, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Adaptable Predators", description: "This unit is eligible to shoot and declare a charge in a turn in which it Fell Back." })
+    ]),
+    defaultModelCount: 3,
+    defaultPoints: 60,
+    pointsOptions: Object.freeze([{ models: 3, points: 60 }, { models: 6, points: 120 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyranid Warriors with Ranged Bio-weapons datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
