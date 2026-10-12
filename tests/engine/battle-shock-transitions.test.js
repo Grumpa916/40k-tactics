@@ -72,6 +72,20 @@ test("Battle-shock test requires an eligible deployed unit in the active Command
   );
 });
 
+
+test("a Battle-shocked unit in reserves can record its Command-phase retest", () => {
+  const state = activeCommandState({
+    units: [
+      { id: "friendly", ownerId: "p1", name: "Friendly unit", status: "reserves", battleShocked: true },
+      { id: "enemy", ownerId: "p2", name: "Enemy unit", status: "deployed", startingStrength: 10, currentStrength: 2 }
+    ]
+  });
+  const next = recordBattleShockTest(state, { unitId: "friendly", result: "passed" });
+  assert.equal(next.units.find((unit) => unit.id === "friendly").battleShocked, false);
+  assert.equal(next.history.at(-1).payload.battleShockedBefore, true);
+  assert.equal(next.history.at(-1).payload.battleShockedAfter, false);
+});
+
 test("the same unit cannot have duplicate test results in the same turn", () => {
   const state = activeCommandState({
     history: [{ type: "battle_shock.test_recorded", payload: { unitId: "friendly", round: 1, turn: 2 } }]
