@@ -52,7 +52,9 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
   assert.ok(wingedPrime.datasheet.leader.compatibilityReview.sources.includes(
     "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons"
   ));
-  assert.equal(unit("Gargoyles").datasheet, undefined);
+  assert.equal(unit("Gargoyles").verificationStatus, "source-reviewed");
+  assert.ok(unit("Gargoyles").datasheet.weapons.some((weapon) => weapon.name === "Fleshborer"));
+  assert.equal(unit("Spore Mines").datasheet, undefined);
   assert.deepEqual(idsFor("Hyperadapted Raveners"), ["Raveners"]);
   assert.equal(unit("Tervigon").verificationStatus, "source-reviewed");
   assert.equal(unit("Tervigon").datasheet.characteristics.Wounds, 16);
