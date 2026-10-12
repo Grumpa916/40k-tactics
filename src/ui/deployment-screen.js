@@ -32,7 +32,7 @@ export function createDeploymentScreen(container, {
     const players = Array.isArray(state.players) ? state.players : [];
     const playerId = playerFor(state);
     if (!firstPlayerId || !players.some((player) => player.id === firstPlayerId)) {
-      firstPlayerId = state.battle?.firstPlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
+      firstPlayerId = state.preGameSetup?.firstPlayerId ?? state.battle?.firstPlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const eligible = (state.units ?? []).filter((unit) =>
       unit?.ownerId === playerId && unit.status !== "destroyed");
