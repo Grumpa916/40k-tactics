@@ -997,3 +997,26 @@ test("setup navigation exposes staged setup workspaces and a bottom Continue act
   assert.match(root.html, /Continue to Game Size/);
   shell.destroy();
 });
+
+
+test("Deploy and Begin refuses to enter deployment while readiness requirements are missing", () => {
+  const session = sessionFor({
+    phase: "setup",
+    turn: 0,
+    activePlayer: null,
+    battle: { id: "b-readiness", status: "setup", round: 0, activePlayerId: null },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [],
+    objectives: [],
+    history: [],
+    scoring: { turnSnapshots: [] }
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+
+  root.clickData("[data-setup-workspace-tab]", { "data-setup-workspace-tab": "deployment" });
+
+  assert.equal(session.getState().battle.status, "setup");
+  assert.equal(session.getState().phase, "setup");
+  shell.destroy();
+});
