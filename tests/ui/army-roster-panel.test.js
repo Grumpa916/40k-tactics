@@ -48,7 +48,25 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
       matches(selector) { return selector === "[data-roster-create-faction]"; }
     }
   });
-  assert.match(root.detachmentSelect.innerHTML, /Invasion Fleet \(Tyranids\)/);
+  const tyranidDetachments = [
+    ["Ambush Predators", "Disruption", "1 DP"],
+    ["Assimilation Swarm", "Priority Assets", "2 DP"],
+    ["Crusher Stampede", "Purge the Foe", "2 DP"],
+    ["Invasion Fleet", "Take and Hold", "3 DP"],
+    ["Subterranean Assault", "Disruption", "3 DP"],
+    ["Synaptic Nexus", "Disruption", "2 DP"],
+    ["Talons of the Norn Queen", "Take and Hold", "1 DP"],
+    ["Unending Swarm", "Take and Hold", "2 DP"],
+    ["Vanguard Onslaught", "Reconnaissance", "2 DP"],
+    ["Warrior Bioform Onslaught", "Take and Hold", "1 DP"]
+  ];
+  for (const [name, disposition, cost] of tyranidDetachments) {
+    assert.match(root.detachmentSelect.innerHTML, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\  assert.match(root.detachmentSelect.innerHTML, /Invasion Fleet \(Tyranids\)/);
+  assert.match(root.detachmentSelect.innerHTML, /Other \/ enter manually/);")));
+    assert.ok(root.detachmentSelect.innerHTML.includes(disposition), `missing Force Disposition for ${name}`);
+    assert.ok(root.detachmentSelect.innerHTML.includes(cost), `missing Detachment Point cost for ${name}`);
+  }
+  assert.equal((root.detachmentSelect.innerHTML.match(/<option value="/g) ?? []).length, 12);
   assert.match(root.detachmentSelect.innerHTML, /Other \/ enter manually/);
   panel.destroy();
 });
