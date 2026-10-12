@@ -106,9 +106,9 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Leader", description: "Can lead Neurogaunts, Tyrant Guard, or Zoanthropes, according to the reviewed datasheet listing." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
-      Object.freeze({ name: "Node Lash", description: "While leading a unit, add 1 to its models' Hit rolls; against a Battle-shocked target, add 1 to the Wound roll as well." }),
-      Object.freeze({ name: "Psychic Terror", description: "When this model is on the battlefield as Shadow in the Warp is unleashed, subtract 1 from the resulting enemy Battle-shock tests." }),
-      Object.freeze({ name: "Neuroloids", description: "In your Command phase, select up to two friendly Tyranids units within 18 inches to be considered within Synapse Range until your next Command phase." })
+      Object.freeze({ name: "Node Lash (Psychic)", description: "While leading a unit, add 1 to its models' Hit rolls; against a Battle-shocked target, add 1 to the Wound roll as well." }),
+      Object.freeze({ name: "Psychic Terror (Psychic)", description: "When this model is on the battlefield as Shadow in the Warp is unleashed, subtract 1 from the resulting enemy Battle-shock tests." }),
+      Object.freeze({ name: "Neuroloids", description: "In your Command phase, you can select up to two friendly TYRANIDS units within 18 inches of this model’s unit. Until the start of your next Command phase, the selected units are always considered to be within Synapse Range of your army." })
     ]),
     defaultModelCount: 1,
     defaultPoints: 120,
