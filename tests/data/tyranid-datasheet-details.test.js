@@ -549,6 +549,14 @@ test("Tyranid ability descriptions preserve targeting and range restrictions", (
   assert.match(barbs.description, /within Engagement Range of this model/);
 });
 
+test("Harpy and Hive Crone expose the Hover core ability", () => {
+  for (const name of ["Harpy", "Hive Crone"]) {
+    const hover = candidate(name).datasheet.abilities.find((ability) => ability.name === "Hover");
+    assert.ok(hover, name);
+    assert.match(hover.description, /do not subtract 2 inches/);
+  }
+});
+
 test("Eight Tyranid profiles include their current damaged-state hit penalty", () => {
   for (const name of [
     "Exocrine",
