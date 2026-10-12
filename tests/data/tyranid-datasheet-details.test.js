@@ -449,6 +449,23 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
+test("Psychophage and Deathleaper omit outdated abilities; Toxicrene wording matches current listing", () => {
+  const psychophage = candidate("Psychophage");
+  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], undefined);
+  assert.ok(!psychophage.datasheet.abilities.some((ability) => ability.name === "Feel No Pain 5+"));
+  assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Bio-stimulus"));
+  assert.ok(psychophage.datasheet.abilities.some((ability) => ability.name === "Feeding Frenzy"));
+
+  const deathleaper = candidate("Deathleaper");
+  assert.ok(!deathleaper.datasheet.abilities.some((ability) => ability.name === "Hunter Organism"));
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen"));
+
+  const toxicrene = candidate("Toxicrene");
+  const tendrils = toxicrene.datasheet.abilities.find((ability) => ability.name === "Grasping Tendrils");
+  assert.ok(tendrils);
+  assert.match(tendrils.description, /you can roll one D6: on a 3\+/);
+});
+
 test("Hive Tyrant includes Onslaught and Old One Eye has no unsupported Feel No Pain profile", () => {
   const hiveTyrant = candidate("Hive Tyrant");
   const onslaught = hiveTyrant.datasheet.abilities.find((ability) => ability.name === "Onslaught");
