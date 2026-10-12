@@ -145,3 +145,25 @@ test("Command screen records objective control and reflects it on the live map",
   screen.destroy();
   clearCommandHandlers();
 });
+
+test("Command screen makes Tactical secondary-card entry explicit", () => {
+  const state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p1",
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    battle: { id: "b1", status: "active", round: 1 },
+    scoring: { secondaryMissionMode: "tactical", secondaryMissions: [] }
+  });
+  const container = {
+    innerHTML: "", addEventListener() {}, removeEventListener() {},
+    contains() { return true; }, replaceChildren() { this.innerHTML = ""; },
+    querySelector() { return null; }
+  };
+  const session = { getState: () => state, subscribe() { return () => {}; }, dispatch() {} };
+  const screen = createCommandScreen(container, {
+    session, perspectivePlayerId: "p1", missionDefinitions: [], secondaryMissionCatalog: []
+  });
+  assert.match(container.innerHTML, /Enter secondary mission cards/);
+  assert.match(container.innerHTML, /record the two cards drawn from the physical deck/);
+  assert.match(container.innerHTML, /Record secondary card/);
+  screen.destroy();
+});
