@@ -27,7 +27,7 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
 });
 
 test("units without a reviewed profile remain name-only and do not receive invented details", () => {
-  const unit = candidate("Gargoyles");
+  const unit = candidate("Spore Mines");
   assert.equal(unit.verificationStatus, "name-only-unverified");
   assert.equal(unit.defaultPoints, undefined);
   assert.equal(unit.datasheet, undefined);
@@ -269,4 +269,74 @@ test("The Tyranid roster picker includes the remaining current faction candidate
   for (const name of ["The Red Terror", "Mucolid Spores", "Spore Mines", "Venomthropes", "Harpy", "Hive Crone", "Harridan", "Hierophant", "Tyrannocyte", "Sporocyst", "Trygon", "Screamer-Killer", "Mawloc", "Norn Assimilator", "Norn Emissary", "Toxicrene"]) {
     assert.ok(names.has(name), `missing Tyranid candidate: ${name}`);
   }
+});
+
+
+test("Hormagaunts and Genestealers expose sourced infantry profiles and unit-size points", () => {
+  const hormagaunts = candidate("Hormagaunts");
+  assert.equal(hormagaunts.defaultPoints, 70);
+  assert.deepEqual(hormagaunts.pointsOptions.slice(0, 2).map((option) => option.points), [70, 120]);
+  assert.ok(hormagaunts.datasheet.abilities.some((ability) => ability.name === "Bounding Leap"));
+
+  const genestealers = candidate("Genestealers");
+  assert.equal(genestealers.defaultPoints, 75);
+  assert.equal(genestealers.datasheet.characteristics["Invulnerable save"], "5+");
+  assert.ok(genestealers.datasheet.abilities.some((ability) => ability.name === "Vanguard Predator"));
+});
+
+test("Gargoyles and melee Tyranid Warriors expose sourced profiles", () => {
+  const gargoyles = candidate("Gargoyles");
+  assert.equal(gargoyles.defaultModelCount, 10);
+  assert.equal(gargoyles.defaultPoints, 80);
+  assert.ok(gargoyles.datasheet.weapons.some((weapon) => weapon.name === "Fleshborer"));
+  assert.ok(gargoyles.datasheet.abilities.some((ability) => ability.name === "Winged Swarm"));
+
+  const warriors = candidate("Tyranid Warriors with Melee Bio-weapons");
+  assert.equal(warriors.defaultPoints, 75);
+  assert.deepEqual(warriors.pointsOptions.map((option) => option.points), [75, 150]);
+  assert.ok(warriors.datasheet.weapons.some((weapon) => weapon.abilities === "Twin-linked"));
+  assert.ok(warriors.datasheet.abilities.some((ability) => ability.name === "Adaptive Instincts"));
+});
+
+test("Venomthropes and Trygon expose sourced profiles", () => {
+  const venomthropes = candidate("Venomthropes");
+  assert.equal(venomthropes.defaultModelCount, 3);
+  assert.deepEqual(venomthropes.pointsOptions.map((option) => option.points), [55, 110]);
+  assert.ok(venomthropes.datasheet.abilities.some((ability) => ability.name === "Foul Spores"));
+
+  const trygon = candidate("Trygon");
+  assert.equal(trygon.defaultPoints, 135);
+  assert.equal(trygon.datasheet.characteristics.Wounds, 14);
+  assert.ok(trygon.datasheet.abilities.some((ability) => ability.name === "Subterranean Tunnels"));
+});
+
+test("Winged Tyranid Prime profile includes source-reviewed equipment and abilities", () => {
+  const prime = candidate("Winged Tyranid Prime");
+  assert.equal(prime.defaultPoints, 65);
+  assert.equal(prime.datasheet.characteristics.Wounds, 6);
+  assert.ok(prime.datasheet.weapons.some((weapon) => weapon.name === "Prime talons"));
+  assert.ok(prime.datasheet.abilities.some((ability) => ability.name === "Death Blow"));
+});
+
+test("Harpy, Hive Crone, Tyrannocyte, Hierophant, and Harridan expose sourced profiles", () => {
+  const harpy = candidate("Harpy");
+  assert.equal(harpy.defaultPoints, 185);
+  assert.equal(harpy.datasheet.characteristics.Move, "—");
+  assert.ok(harpy.datasheet.abilities.some((ability) => ability.name === "Spore Mine Cysts"));
+
+  const hiveCrone = candidate("Hive Crone");
+  assert.equal(hiveCrone.defaultPoints, 170);
+  assert.ok(hiveCrone.datasheet.weapons.some((weapon) => weapon.name === "Tentaclids"));
+
+  const tyrannocyte = candidate("Tyrannocyte");
+  assert.equal(tyrannocyte.defaultPoints, 80);
+  assert.ok(tyrannocyte.datasheet.abilities.some((ability) => ability.name === "Aerial Seeding"));
+
+  const hierophant = candidate("Hierophant");
+  assert.equal(hierophant.defaultPoints, 810);
+  assert.equal(hierophant.datasheet.characteristics.Wounds, 30);
+
+  const harridan = candidate("Harridan");
+  assert.equal(harridan.defaultPoints, 610);
+  assert.ok(harridan.datasheet.abilities.some((ability) => ability.name === "Frenzied Metabolism"));
 });
