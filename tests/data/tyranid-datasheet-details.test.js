@@ -592,8 +592,11 @@ test("Raveners use the current singular Burrower keyword and official ability ca
   assert.ok(raveners.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
 
   const hyperadapted = candidate("Hyperadapted Raveners");
-  assert.ok(hyperadapted.datasheet.keywords.includes("Burrower"));
-  assert.ok(!hyperadapted.datasheet.keywords.includes("Burrowers"));
+  assert.ok(hyperadapted.datasheet.keywords.includes("Burrowers"));
+  assert.ok(!hyperadapted.datasheet.keywords.includes("Burrower"));
+  assert.ok(!hyperadapted.datasheet.keywords.includes("Fly"));
+  assert.ok(!hyperadapted.datasheet.keywords.includes("Character"));
+  assert.ok(!hyperadapted.datasheet.keywords.includes("Synapse"));
 });
 
 test("Hyperadapted Raveners keep Ravener Prime-only keywords and Shadow in the Warp scoped to that model", () => {
