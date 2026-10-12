@@ -432,6 +432,18 @@ test("Infiltrators and all Deadly Demise variants have actionable descriptions",
   }
 });
 
+test("No Tyranid profile relies on generic core-rule placeholders", () => {
+  for (const unit of findArmyUnitCandidates({ faction: "Tyranids" })) {
+    for (const ability of unit.datasheet.abilities ?? []) {
+      assert.doesNotMatch(
+        ability.description,
+        /consult (?:the )?current (?:Core Rules|rules)/i,
+        `${unit.name}: ${ability.name}`
+      );
+    }
+  }
+});
+
 test("Shared Tyranid core ability summaries match current 11th-edition core rules", () => {
   const shadow = candidate("Hive Tyrant").datasheet.abilities.find((ability) => ability.name === "Shadow in the Warp");
   assert.match(shadow.description, /Once per battle/);
