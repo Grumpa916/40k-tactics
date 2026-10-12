@@ -814,7 +814,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Subterranean Tunnels", description: "When set up using Deep Strike in your Movement phase, this model can be set up more than 6 inches horizontally from enemy units, but cannot declare a charge that turn." })
+      Object.freeze({ name: "Subterranean Tunnels", description: "In your Movement phase, when this model is set up on the battlefield using the Deep Strike ability, it can use a subterranean tunnel. If it does, this model can be set up anywhere on the battlefield that is more than 6 inches horizontally away from all enemy units, but until the end of the turn, it is not eligible to declare a charge." })
     ]),
     defaultModelCount: 1, defaultPoints: 135,
     pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
