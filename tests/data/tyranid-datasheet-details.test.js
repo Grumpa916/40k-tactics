@@ -23,7 +23,7 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
   assert.equal(unit.defaultPoints, 125);
   assert.deepEqual(unit.pointsOptions.map((option) => option.points), [125, 135]);
   assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
 });
 
 
@@ -549,6 +549,17 @@ test("Tyranid ability descriptions preserve targeting and range restrictions", (
   assert.match(barbs.description, /within Engagement Range of this model/);
 });
 
+test("Raveners use the current singular Burrower keyword and official ability casing", () => {
+  const raveners = candidate("Raveners");
+  assert.ok(raveners.datasheet.keywords.includes("Burrower"));
+  assert.ok(!raveners.datasheet.keywords.includes("Burrowers"));
+  assert.ok(raveners.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
+
+  const hyperadapted = candidate("Hyperadapted Raveners");
+  assert.ok(hyperadapted.datasheet.keywords.includes("Burrower"));
+  assert.ok(!hyperadapted.datasheet.keywords.includes("Burrowers"));
+});
+
 test("Hyperadapted Raveners include Hypersensory Array and Parasite infection timing", () => {
   const hyperadapted = candidate("Hyperadapted Raveners");
   const hypersensory = hyperadapted.datasheet.abilities.find((ability) => ability.name === "Hypersensory Array");
@@ -638,10 +649,10 @@ test("Raveners match current official datasheet and keywords", () => {
     "Objective Control": 1
   });
   assert.deepEqual(unit.datasheet.keywords, [
-    "Burrowers", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"
+    "Burrower", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"
   ]);
   assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
   assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 

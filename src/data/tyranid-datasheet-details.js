@@ -49,14 +49,14 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Leadership: "8+",
       "Objective Control": 1
     }),
-    keywords: Object.freeze(["Burrowers", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"]),
+    keywords: Object.freeze(["Burrower", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Ravener claws and talons", range: "Melee", attacks: 3, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Twin-linked" })
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Death from Below", description: "At the end of your opponent's turn, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves." })
+      Object.freeze({ name: "Death From Below", description: "At the end of your opponent's turn, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves." })
     ]),
     defaultModelCount: 5,
     defaultPoints: 125,
@@ -928,7 +928,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Ravener Prime", Move: '10"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1 }),
       Object.freeze({ name: "Raveners", Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1 })
     ]),
-    keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Burrowers", "Hyperadapted Raveners"]),
+    keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Burrower", "Hyperadapted Raveners"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Venom bolt", equipment: "Default", range: '12"', attacks: "D6+3", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Assault, Ignores Cover, Torrent" }),
       Object.freeze({ name: "Prime claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Anti-Monster 5+, Anti-Vehicle 5+, Twin-linked" }),
