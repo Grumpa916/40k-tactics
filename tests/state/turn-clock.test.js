@@ -36,10 +36,11 @@ test("the clock only switches when the active player changes, not when phases ch
     ...state,
     phase: "movement"
   }, "p1", 4000);
-  assert.equal(sameTurn.timers.turnClock.elapsedMsByPlayer.p1, 3000);
+  assert.equal(sameTurn.timers.turnClock.elapsedMsByPlayer.p1 ?? 0, 0);
   assert.equal(sameTurn.timers.turnClock.activePlayerId, "p1");
   assert.equal(sameTurn.timers.turnClock.running, true);
-  assert.equal(sameTurn.timers.turnClock.startedAtMs, 4000);
+  assert.equal(sameTurn.timers.turnClock.startedAtMs, 1000);
+  assert.equal(getTurnClockElapsedMs(sameTurn, "p1", 4000), 3000);
 });
 
 test("turn transition commits the previous player's time and starts the next player's clock", () => {
