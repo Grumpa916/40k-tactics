@@ -43,3 +43,33 @@ test("rejects roster assignment outside setup or for an unknown player", () => {
   }), /only be assigned while battle setup is active/);
   assert.throws(() => applyArmyRosterToBattle(state(), { roster, playerId: "missing" }), /Choose a player/);
 });
+
+test("assigns the selected roster to the opponent without changing the user's army and restores it from serialized state", () => {
+  const initial = state();
+  const next = applyArmyRosterToBattle(initial, {
+    roster,
+    playerId: "p2",
+    snapshotId: "snapshot-opponent",
+    selectedAt: "2026-10-12T00:01:00Z"
+  });
+  const friendly = next.units.filter((unit) => unit.ownerId === "p1");
+  const opponent = next.units.filter((unit) => unit.ownerId === "p2");
+
+  assert.equal(friendly.length, 1);
+  assert.equal(friendly[0].id, "old-friendly");
+  assert.equal(opponent.length, 1);
+  assert.equal(opponent[0].id, "p2:exocrine-1");
+  assert.equal(opponent[0].ownerId, "p2");
+  assert.equal(opponent[0].status, "reserves");
+  assert.equal(opponent[0].metadata.sourceRosterId, "tyranids-list");
+  assert.equal(next.armyRosters.p2.sourceRosterId, "tyranids-list");
+  assert.equal(next.armyRosters.p2.id, "snapshot-opponent");
+  assert.equal(next.history.at(-1).payload.playerId, "p2");
+
+  const restored = JSON.parse(JSON.stringify(next));
+  assert.equal(restored.units.find((unit) => unit.ownerId === "p1")?.id, "old-friendly");
+  assert.equal(restored.units.find((unit) => unit.ownerId === "p2")?.id, "p2:exocrine-1");
+  assert.equal(restored.armyRosters.p2.sourceRosterId, "tyranids-list");
+  assert.equal(restored.armyRosters.p2.id, "snapshot-opponent");
+});
+
