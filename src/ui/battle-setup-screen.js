@@ -87,7 +87,7 @@ export function createBattleSetupScreen(container, {
   }
   function handlePlanningPointerDown(e) {
     const m=e.target?.closest?.("[data-map-unit-id]");if(!m||!m.closest?.('[data-map-mode="planning"]'))return;
-    const b=m.closest("[data-battlefield-map-board]");if(!b)return;selectedPlanUnitId=m.getAttribute("data-map-unit-id");
+    const b=m.closest("[data-battlefield-map-board]");if(!b)return;selectedPlanUnitId=m.getAttribute("data-map-unit-id");e.preventDefault?.();
     planningPointerDrag={unitId:selectedPlanUnitId,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,board:b,marker:m,left:m.style.left,top:m.style.top,moved:false};
     m.classList?.add?.("is-dragging");try{m.setPointerCapture?.(e.pointerId);}catch{}
   }
