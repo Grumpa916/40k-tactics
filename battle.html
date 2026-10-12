@@ -57,8 +57,27 @@
     .battle-shell__army-dialog-header h2 { margin:0; font-size:20px; }
     .battle-shell__army-dialog button { min-height:44px; padding:8px 12px; border:1px solid #697386; border-radius:8px; background:#2a3340; color:inherit; font:inherit; font-weight:700; cursor:pointer; }
     .battle-shell__army-roster { list-style:none; margin:12px 0 0; padding:0; display:grid; gap:8px; }
-    .battle-shell__army-roster li { display:grid; gap:5px; padding:10px; border:1px solid #3c4553; border-radius:8px; background:#202733; }
-    .battle-shell__army-roster li span, .battle-shell__army-roster li small { font-size:12px; opacity:.78; }
+    .battle-shell__army-roster > li { display:block; padding:0; border:0; border-radius:0; background:transparent; }
+    .battle-shell__army-unit { border:1px solid #3c4553; border-radius:8px; background:#202733; }
+    .battle-shell__army-unit > summary { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:48px; padding:10px; cursor:pointer; list-style-position:inside; }
+    .battle-shell__army-unit > summary strong { min-width:0; overflow-wrap:anywhere; }
+    .battle-shell__army-unit > summary span { flex:none; font-size:11px; opacity:.8; text-align:right; }
+    .battle-shell__army-unit-detail { display:grid; gap:12px; padding:0 12px 12px; }
+    .battle-shell__army-unit-detail > section { min-width:0; padding-top:9px; border-top:1px solid #3c4553; }
+    .battle-shell__army-unit-detail h3 { margin:0 0 7px; font-size:13px; }
+    .battle-shell__army-state, .battle-shell__army-attachment { margin:0; font-size:12px; opacity:.76; }
+    .battle-shell__army-characteristics { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+    .battle-shell__army-characteristics > div { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:6px 8px; border:1px solid #3b4553; border-radius:5px; background:#171d26; }
+    .battle-shell__army-characteristics dt { font-size:11px; opacity:.76; }
+    .battle-shell__army-characteristics dd { margin:0; font-size:12px; font-weight:800; text-align:right; overflow-wrap:anywhere; }
+    .battle-shell__army-weapons, .battle-shell__army-abilities { list-style:none; margin:0; padding:0; display:grid; gap:7px; }
+    .battle-shell__army-weapons > li, .battle-shell__army-abilities > li { display:grid; gap:5px; padding:9px; border:1px solid #3b4553; border-radius:6px; background:#171d26; }
+    .battle-shell__army-weapon-heading { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:6px; }
+    .battle-shell__army-weapon-heading strong, .battle-shell__army-abilities strong { font-size:12px; }
+    .battle-shell__army-weapons .battle-context__empty { font-size:11px; }
+    .battle-shell__army-weapons dl { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .battle-shell__army-weapons dl > div { padding:4px 6px; }
+    .battle-shell__army-weapons p, .battle-shell__army-abilities p { margin:0; font-size:11px; line-height:1.4; opacity:.78; }
     .battle-context__section { min-width:0; margin:8px 0; padding:10px; border:1px solid #363f4c; border-radius:8px; background:#191f29; }
     .battle-context__section > summary, .battle-context__reference-section > summary { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:38px; cursor:pointer; font-weight:750; list-style-position:inside; }
     .battle-context__count { flex:none; font-size:11px; opacity:.7; font-weight:600; }
