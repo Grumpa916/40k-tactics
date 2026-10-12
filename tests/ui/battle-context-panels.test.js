@@ -12,7 +12,7 @@ const state = {
   phase: "command",
   turn: 2,
   activePlayer: "p1",
-  battle: { round: 1, activePlayerId: "p1" },
+  battle: { status: "active", round: 1, activePlayerId: "p1" },
   players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
   units: [
     { id: "a", name: "Attacker", ownerId: "p1", status: "deployed", startingStrength: 10, currentStrength: 8 },
@@ -63,6 +63,16 @@ test("Event Log summarizes combat, damage, battle-shock, CP and scoring events",
   assert.match(html, /Victory Points awarded/);
   assert.match(html, /4 events/);
   assert.match(html, /Round 1/);
+});
+
+test("Event Log retains access to older entries beyond the recent view", () => {
+  const history = Array.from({ length: 15 }, (_, index) => ({
+    type: "turn.phase_changed",
+    payload: { phase: "command", round: 1, turn: index + 1 }
+  }));
+  const html = renderEventLogPanel({ ...state, history }, { limit: 10 });
+  assert.match(html, /15 events/);
+  assert.match(html, /Show older events \(5\)/);
 });
 
 test("Event summary includes target wounds after combat", () => {
