@@ -94,3 +94,40 @@ test("unlinked legacy objectives are preserved but never guessed as layout objec
   assert.equal((html.match(/data-layout-objective=/g) ?? []).length, 5);
   assert.doesNotMatch(html, /data-map-objective-id="old-center"/);
 });
+
+test("six-objective Event Companion layouts include two central objectives", () => {
+  const initial = state();
+  const next = setEventCompanionMissionSetup(initial, {
+    myDisposition: "Purge the Foe",
+    opponentDisposition: "Take and Hold",
+    layout: "A"
+  });
+  const geometry = getEventCompanionMapLayout(
+    getBattlePrimaryMissions("Purge the Foe", "Take and Hold").myMission,
+    getBattlePrimaryMissions("Purge the Foe", "Take and Hold").opponentMission,
+    "A"
+  );
+  assert.ok(geometry.objectivePositions["Central 1"]);
+  assert.ok(geometry.objectivePositions["Central 2"]);
+  assert.equal(next.objectives.length, 6);
+  assert.ok(next.objectives.some((item) => item.layoutObjective === "Central 1"));
+  assert.ok(next.objectives.some((item) => item.layoutObjective === "Central 2"));
+  assert.ok(next.objectives.some((item) => item.layoutObjective === "Defender Home"));
+  assert.ok(next.objectives.some((item) => item.layoutObjective === "Attacker Home"));
+  const html = renderBattlefieldMap(next, { mode: "planning", perspectivePlayerId: "me" });
+  assert.equal((html.match(/data-layout-objective=/g) ?? []).length, 6);
+});
+
+test("switching from six to five objectives removes stale Central 2 without adding generic home markers", () => {
+  const six = setEventCompanionMissionSetup(state(), {
+    myDisposition: "Purge the Foe",
+    opponentDisposition: "Take and Hold",
+    layout: "A"
+  });
+  const five = setup("A", six);
+  assert.equal(five.objectives.length, 5);
+  assert.equal(five.objectives.some((item) => item.layoutObjective === "Central 2"), false);
+  assert.deepEqual(five.objectives.map((item) => item.layoutObjective).sort(), [
+    "Attacker Home", "Central 1", "Defender Home", "Expansion 1", "Expansion 2"
+  ]);
+});
