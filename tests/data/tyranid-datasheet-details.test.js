@@ -415,6 +415,34 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
   }
 });
 
+test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
+  const expected = [
+    ["Barbgaunts", 50, [50, 100]],
+    ["Exocrine", 135, [135, 145]],
+    ["Gargoyles", 75, [75, 150]],
+    ["Maleceptor", 180, [180, 190]],
+    ["Mawloc", 130, [130]],
+    ["Neurotyrant", 120, [120]],
+    ["Old One Eye", 130, [130]],
+    ["Parasite of Mortrex", 65, [65]],
+    ["Pyrovores", 40, [40, 50, 70, 80, 100, 110]],
+    ["Termagants", 55, [55, 110]],
+    ["Tervigon", 150, [150]],
+    ["The Red Terror", 120, [120]],
+    ["Trygon", 135, [135]],
+    ["Tyrannofex", 170, [170, 180, 190, 200]],
+    ["Tyrant Guard", 80, [80, 170]],
+    ["Zoanthropes", 90, [90, 190]]
+  ];
+  for (const [name, points, expectedOptions] of expected) {
+    const unit = candidate(name);
+    assert.equal(unit.defaultPoints, points, name);
+    assert.deepEqual([...new Set(unit.pointsOptions.map((option) => option.points))].sort((a, b) => a - b), expectedOptions, name);
+    assert.equal(unit.datasheet.dataSource.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", name);
+    assert.ok(unit.datasheet.dataSource.pointsSourceUrl.includes("warhammer-community.com"), name);
+  }
+});
+
 test("Every Tyranid catalog candidate has a profile record", async () => {
   const { getTyranidDatasheetDetails } = await import("../../src/data/tyranid-datasheet-details.js");
   const names = findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name);
