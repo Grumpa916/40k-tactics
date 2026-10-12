@@ -161,7 +161,6 @@ export function createDeploymentScreen(container, {
     const board = event.target?.closest?.("[data-battlefield-map-board]");
     if (board && board.closest?.('[data-map-mode="deployment"]')) {
       const state = session.getState();
-      const playerId = playerFor(state);
       if (!selectedUnitId) {
         message = "Select a unit before placing it on the map.";
         render();
@@ -178,6 +177,13 @@ export function createDeploymentScreen(container, {
         x: Math.round(Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60)) * 10) / 10,
         y: Math.round(Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44)) * 10) / 10
       };
+      const selectedUnit = (state.units ?? []).find((unit) => unit.id === selectedUnitId);
+      const playerId = selectedUnit?.ownerId;
+      if (!playerId) {
+        message = "Could not identify the selected unit owner.";
+        render();
+        return;
+      }
       try {
         session.dispatch({ type: COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION, payload: {
           unitId: selectedUnitId, playerId, position
