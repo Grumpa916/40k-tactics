@@ -929,21 +929,43 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
   })
   ,
   "tyranids:screamer-killer": Object.freeze({
-    defaultModelCount: 1,
-    defaultPoints: 125,
-    pointsOptions: Object.freeze([{ models: 1, points: 125, condition: "Base cost; additional-unit surcharge needs confirmation" }]),
-    dataSource: Object.freeze({ status: "points-reviewed", sourceName: "40k.app current Tyranids faction listing (points only)", sourceUrl: "https://www.40k.app/factions/tyranids", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", profileCompleteness: "points-only" })
+    characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "2+", Wounds: 10, Leadership: "8+", "Objective Control": 3 }),
+    keywords: Object.freeze(["Screamer-Killer", "Great Devourer", "Monster", "Tyranids"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Bio-plasmic scream", equipment: "Default", range: '18"', attacks: "D6+3", skill: "4+", strength: 8, ap: -2, damage: 1, abilities: "Assault, Blast" }),
+      Object.freeze({ name: "Screamer-Killer talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 10, ap: -2, damage: 3 })
+    ]),
+    abilities: Object.freeze([Object.freeze({ name: "Death Scream", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test, subtracting 1 from that test." })]),
+    defaultModelCount: 1, defaultPoints: 125,
+    pointsOptions: Object.freeze([{ models: 1, points: 125 }, { models: 1, points: 135, condition: "2nd+ Screamer-Killer in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/screamer-killer", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:spore-mines": Object.freeze({
-    defaultPoints: 55,
-    pointsOptions: Object.freeze([{ points: 55, condition: "Current faction-listing baseline; model-count profile pending" }]),
-    dataSource: Object.freeze({ status: "points-reviewed", sourceName: "40k.app current Tyranids faction listing (points only)", sourceUrl: "https://www.40k.app/factions/tyranids", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", profileCompleteness: "points-only" })
+    characteristics: Object.freeze({ Move: '4"', Toughness: 1, Save: "7+", Wounds: 1, Leadership: "8+", "Objective Control": 0 }),
+    keywords: Object.freeze(["Spore Mines", "Great Devourer", "Fly", "Beast", "Tyranids"]),
+    weapons: Object.freeze([]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Bio-minefield", description: "Enemy units cannot start or end an Advance move within 6 inches of this unit." }),
+      Object.freeze({ name: "Floating Death", description: "Each time this unit or an enemy unit ends a move, for each model in this unit within 3 inches of one or more enemy units, select one of those enemy units. Destroy that Spore Mine; on a D6 roll of 2–5 the enemy unit suffers 1 mortal wound, and on a 6 it suffers D3 mortal wounds." })
+    ]),
+    defaultModelCount: 3, defaultPoints: 55,
+    pointsOptions: Object.freeze([{ models: 3, points: 55 }, { models: 6, points: 110 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/spore-mines", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:sporocyst": Object.freeze({
-    defaultModelCount: 1,
-    defaultPoints: 145,
+    characteristics: Object.freeze({ Move: "—", Toughness: 10, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 0 }),
+    keywords: Object.freeze(["Sporocyst", "Great Devourer", "Monster", "Tyranids"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Sporocyst bio-weapons", equipment: "Default", range: '24"', attacks: 10, skill: "4+", strength: 5, ap: -1, damage: 2 }),
+      Object.freeze({ name: "Flensing whips", equipment: "Default", range: "Melee", attacks: 6, skill: "4+", strength: 7, ap: -1, damage: 2 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Seed Mucolids", description: "Once per turn in your Shooting phase, when selected to shoot, this unit can use this ability instead of making ranged attacks. Add one Mucolid Spores unit containing 1 model wholly within 18 inches of this model and more than 8 inches horizontally from enemy units." }),
+      Object.freeze({ name: "Hive Defences", description: "You can target this model with Fire Overwatch for 0CP, even if you have already targeted a different unit with that Stratagem this turn. This model can only be targeted with that Stratagem once per turn." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 145,
     pointsOptions: Object.freeze([{ models: 1, points: 145 }]),
-    dataSource: Object.freeze({ status: "points-reviewed", sourceName: "40k.app current Tyranids faction listing (points only)", sourceUrl: "https://www.40k.app/factions/tyranids", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", profileCompleteness: "points-only" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/sporocyst", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
 });
 
