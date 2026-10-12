@@ -388,7 +388,7 @@ export function createCommandScreen(container, {
       const turn = state.turn ?? 0;
       const missionMode = getSecondaryMissionMode(state, playerId) ?? entry.definition?.missionMode;
       if (!missionMode) {
-        secondaryMissionMessage = "Set the battle-wide Fixed or Tactical mode before recording secondary scoring.";
+        secondaryMissionMessage = "Set this player's Fixed or Tactical mode before recording secondary scoring.";
         render();
         return;
       }
@@ -575,9 +575,9 @@ export function createCommandScreen(container, {
       .map((item) => item.definitionId));
     const selectableSecondaryDefinitions = secondaryDefinitions.filter((definition) =>
       !activeSecondaryIds.has(definition.id) &&
-      !(secondaryMissionMode === "tactical" && seenSecondaryIds.has(definition.id)) &&
+      !(getSecondaryMissionMode(state, selectedSecondaryPlayerId) === "tactical" && seenSecondaryIds.has(definition.id)) &&
       (!secondaryMissionMode || definition.availableModes?.includes(secondaryMissionMode) !== false) &&
-      !(secondaryMissionMode === "fixed" && definition.fixedAvailable === false));
+      !(getSecondaryMissionMode(state, selectedSecondaryPlayerId) === "fixed" && definition.fixedAvailable === false));
     const activeSecondaryForVp = secondaryHistory.filter((item) =>
       item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
       !(((getSecondaryMissionMode(state, item.playerId) ?? item.definition?.missionMode) === "fixed") &&
@@ -656,7 +656,7 @@ export function createCommandScreen(container, {
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>Record secondary card</button>' +
           secondaryModeStatusMarkup + '</div></form>' +
-          '<p>In Tactical mode, use this form during the active player’s Command phase to record the two cards drawn from the physical deck. Choose the printed card from the catalog or type its name. Check the actual card before scoring; no VP is awarded automatically.</p>' +
+          '<p>In Tactical mode, use this form during that player’s Command phase to record the two cards drawn from the physical deck. Choose the printed card from the catalog or type its name. Check the actual card before scoring; no VP is awarded automatically.</p>' +
           '<p>The catalog contains names and Fixed/Tactical availability, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked.</p>';
     const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Enter secondary mission cards</h2>' +
       '<p>Record Fixed cards for the selected player, or record Tactical cards during that player’s Command phase. Each player has an independent Fixed/Tactical mode chosen during Mission &amp; Map setup.</p>' +
