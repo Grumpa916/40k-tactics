@@ -43,6 +43,25 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
+function renderStatusSummaryContent(state, viewedPhase) {
+  const round = state.battle?.round ?? 0;
+  const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+  const players = Array.isArray(state.players) ? state.players : [];
+  const playerSummary = players.map((player) => {
+    const vp = Number.isFinite(state.victoryPoints?.[player.id]) ? state.victoryPoints[player.id] : 0;
+    const cpValue = state.commandPoints?.[player.id];
+    const cp = Number.isFinite(cpValue) ? cpValue :
+      Number.isFinite(cpValue?.current) ? cpValue.current : "—";
+    const active = player.id === activePlayerId ? " is-active" : "";
+    return '<div class="battle-shell__player-summary' + active + '">' +
+      '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
+      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span></div>';
+  }).join("");
+  return '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
+    '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
+    '<div class="battle-shell__player-summaries">' + playerSummary + '</div>';
+}
+
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
   gameData = null,
   perspectivePlayerId = null,
@@ -65,23 +84,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
       '</span></button></li>';
   }).join("");
 
-  const round = state.battle?.round ?? 0;
-  const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
-  const players = Array.isArray(state.players) ? state.players : [];
-  const playerSummary = players.map((player) => {
-    const vp = Number.isFinite(state.victoryPoints?.[player.id]) ? state.victoryPoints[player.id] : 0;
-    const cpValue = state.commandPoints?.[player.id];
-    const cp = Number.isFinite(cpValue) ? cpValue :
-      Number.isFinite(cpValue?.current) ? cpValue.current : "—";
-    const active = player.id === activePlayerId ? " is-active" : "";
-    return '<div class="battle-shell__player-summary' + active + '">' +
-      '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
-      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span></div>';
-  }).join("");
-  const statusSummary = '<section class="battle-shell__status-summary" aria-label="Persistent score and Command Points">' +
-    '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
-    '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
-    '<div class="battle-shell__player-summaries">' + playerSummary + '</div></section>';
+  const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
+    renderStatusSummaryContent(state, viewedPhase) + '</section>';
 
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
@@ -207,6 +211,8 @@ export function createBattleShell(container, {
 
   function refreshPersistentPanels() {
     const state = session.getState();
+    const summaryContainer = container.querySelector?.("[data-battle-status-summary]");
+    if (summaryContainer) summaryContainer.innerHTML = renderStatusSummaryContent(state, viewedPhase);
     const statusContainer = container.querySelector?.("[data-battle-context-body]");
     if (statusContainer) {
       const openSections = readOpenStates(statusContainer, "details[data-context-key]", "data-context-key");
