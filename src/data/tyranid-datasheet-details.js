@@ -110,7 +110,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 1,
     defaultPoints: 120,
     pointsOptions: Object.freeze([{ models: 1, points: 120, condition: "1 model" }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Neurotyrant datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/neurotyrant", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Neurotyrant datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/neurotyrant", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:tyrant-guard": Object.freeze({
     characteristics: Object.freeze({ Move: '6"', Toughness: 8, Save: "3+", Wounds: 4, Leadership: "8+", "Objective Control": 1 }),
@@ -128,7 +128,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 3,
     defaultPoints: 80,
     pointsOptions: Object.freeze([{ models: 3, points: 80 }, { models: 6, points: 170 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyrant Guard datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyrant-guard", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyrant Guard datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyrant-guard", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:broodlord": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1, "Invulnerable save": "4+" }),
@@ -166,7 +166,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 1,
     defaultPoints: 130,
     pointsOptions: Object.freeze([{ models: 1, points: 130 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Old One Eye datasheet", sourceUrl: "https://www.40k.app/879/factions/tyranids/units/old-one-eye", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Old One Eye datasheet", sourceUrl: "https://www.40k.app/879/factions/tyranids/units/old-one-eye", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:carnifexes": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "2+", Wounds: 8, Leadership: "8+", "Objective Control": 3 }),
@@ -245,7 +245,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 3,
     defaultPoints: 90,
     pointsOptions: Object.freeze([{ models: 3, points: 90 }, { models: 6, points: 190 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Zoanthropes datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/unit/zoanthropes", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Zoanthropes datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/unit/zoanthropes", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:termagants": Object.freeze({
     characteristics: Object.freeze({ Move: '6"', Toughness: 3, Save: "5+", Wounds: 1, Leadership: "8+", "Objective Control": 2 }),
@@ -267,7 +267,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 10,
     defaultPoints: 55,
     pointsOptions: Object.freeze([{ models: 10, points: 55 }, { models: 20, points: 110 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Termagants datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/termagants", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Termagants datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/termagants", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
   ,
   "tyranids:winged-hive-tyrant": Object.freeze({
@@ -353,7 +353,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 1,
     defaultPoints: 150,
     pointsOptions: Object.freeze([{ models: 1, points: 150, condition: "1 model" }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tervigon datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tervigon", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tervigon datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tervigon", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:tyrannofex": Object.freeze({
     characteristics: Object.freeze({ Move: '9"', Toughness: 12, Save: "2+", Wounds: 16, Leadership: "8+", "Objective Control": 5 }),
@@ -380,7 +380,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ models: 1, points: 190, condition: "3rd+ Tyrannofex with Acid Spray (+20 points total)" }),
       Object.freeze({ models: 1, points: 200, condition: "3rd+ Tyrannofex with Rupture Cannon (+30 points total)" })
     ]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyrannofex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyrannofex", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyrannofex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyrannofex", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:tyranid-warriors-with-ranged-bio-weapons": Object.freeze({
     characteristics: Object.freeze({ Move: '6"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "7+", "Objective Control": 2 }),
@@ -417,7 +417,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 5, defaultPoints: 50,
     pointsOptions: Object.freeze([{ models: 5, points: 50 }, { models: 10, points: 100 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Barbgaunts datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/barbgaunts", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Barbgaunts datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/barbgaunts", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:biovores": Object.freeze({
     characteristics: Object.freeze({ Move: '5"', Toughness: 6, Save: "3+", Wounds: 5, Leadership: "8+", "Objective Control": 1 }),
@@ -492,7 +492,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ models: 2, points: 80, condition: "3rd+ Pyrovore unit in army (+10 points)" }),
       Object.freeze({ models: 3, points: 110, condition: "3rd+ Pyrovore unit in army (+10 points)" })
     ]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Pyrovores datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/pyrovores", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Pyrovores datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/pyrovores", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:von-ryan-s-leapers": Object.freeze({
     characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1, "Invulnerable save": "6+" }),
@@ -545,7 +545,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 65,
     pointsOptions: Object.freeze([{ models: 1, points: 65 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Parasite of Mortrex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/parasite-of-mortrex", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Parasite of Mortrex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/parasite-of-mortrex", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:exocrine": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 10, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
@@ -561,7 +561,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 135,
     pointsOptions: Object.freeze([{ models: 1, points: 135, condition: "1st–2nd Exocrine in army" }, { models: 1, points: 145, condition: "3rd+ Exocrine in army (+10 points)" }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Exocrine datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/exocrine", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Exocrine datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/exocrine", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:haruspex": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 11, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
@@ -596,7 +596,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 180,
     pointsOptions: Object.freeze([{ models: 1, points: 180, condition: "1st–2nd Maleceptor in army" }, { models: 1, points: 190, condition: "3rd+ Maleceptor in army (+10 points)" }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Maleceptor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/maleceptor", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Maleceptor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/maleceptor", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:psychophage": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 3, "Feel No Pain": "5+" }),
@@ -632,7 +632,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 120,
     pointsOptions: Object.freeze([{ models: 1, points: 120 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app The Red Terror datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/the-red-terror", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app The Red Terror datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/the-red-terror", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:mucolid-spores": Object.freeze({
     characteristics: Object.freeze({ Move: '4"', Toughness: 4, Save: "7+", Wounds: 3, Leadership: "8+", "Objective Control": 0 }),
@@ -662,7 +662,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 130,
     pointsOptions: Object.freeze([{ models: 1, points: 130 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Mawloc datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/mawloc", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Mawloc datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/mawloc", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:norn-assimilator": Object.freeze({
     characteristics: Object.freeze({ Move: '10"', Toughness: 11, Save: "2+", Wounds: 16, Leadership: "7+", "Objective Control": 5 }),
@@ -761,7 +761,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 10, defaultPoints: 75,
     pointsOptions: Object.freeze([{ models: 10, points: 75 }, { models: 20, points: 150 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Gargoyles"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Gargoyles"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:tyranid-warriors-with-melee-bio-weapons": Object.freeze({
     characteristics: Object.freeze({ Move: '6"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "7+", "Objective Control": 2 }),
@@ -803,7 +803,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 135,
     pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Trygon"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Trygon"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:winged-tyranid-prime": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1 }),
