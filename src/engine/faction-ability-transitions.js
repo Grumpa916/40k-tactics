@@ -14,6 +14,8 @@ function requirePlayer(state, playerId) {
 }
 
 function hasDecisionEvent(state, playerId, decisionId) {
+  if (state?.armyRosters?.[playerId]?.battleAbilitySelections?.[decisionId]) return true;
+  if (state?.armyRosters?.[playerId]?.battleAbilityUses?.[decisionId]) return true;
   return (Array.isArray(state.history) ? state.history : []).some((event) =>
     event?.type === "faction_ability.decision_recorded" &&
     event?.payload?.playerId === playerId &&
@@ -41,8 +43,8 @@ export function recordFactionAbilityDecision(state, {
     if (round !== 1 || !isInvasionFleetRoster(state, playerId)) {
       throw new Error("Hyper-adaptations require a Tyranids Invasion Fleet roster at the start of the first battle round.");
     }
-    if (state.phase === "deployment" || state.phase === "setup") {
-      throw new Error("Choose Hyper-adaptations at the start of the first battle round, after deployment.");
+    if (!["start_turn", "command"].includes(state.phase)) {
+      throw new Error("Choose Hyper-adaptations at the start of the first battle round, before later phases.");
     }
     const adaptation = TYRANID_HYPER_ADAPTATIONS.find((item) => item.id === choice);
     if (!adaptation) throw new Error("Choose one of the listed Invasion Fleet Hyper-adaptations.");
