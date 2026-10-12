@@ -72,6 +72,8 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
       sourceName: reviewedSource?.sourceName ?? "Candidate unit name; verify against current datasheet",
       sourceUrl: reviewedSource?.sourceUrl ?? "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
       reviewedAt: reviewedSource?.reviewedAt ?? null,
+      pointsSourceName: reviewedSource?.pointsSourceName ?? null,
+      pointsSourceUrl: reviewedSource?.pointsSourceUrl ?? null,
       officialRulesCrossCheck: reviewedSource?.officialRulesCrossCheck ?? "pending",
       verificationStatus: reviewedSource?.status ?? "name-only-unverified",
       ...(defaultModelCount != null ? { defaultModelCount } : {}),
