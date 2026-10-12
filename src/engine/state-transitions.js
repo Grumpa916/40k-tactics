@@ -27,6 +27,10 @@ export function startBattle(state, { battleId, missionId = null } = {}) {
       round: 0,
       activePlayerId: null,
       firstPlayerId: null
+    },
+    timers: {
+      ...(current.timers ?? {}),
+      turnClock: { elapsedMsByPlayer: {}, activePlayerId: null, running: false, startedAtMs: null }
     }
   }));
 }
@@ -135,7 +139,19 @@ export function startFirstTurn(state, { activePlayerId, nowMs = Date.now() } = {
     round: 1,
     playerId: activePlayerId
   });
-  return updateTurnClockForPlayer(withTurnSnapshot, activePlayerId, nowMs);
+  const clock = withTurnSnapshot.timers?.turnClock ?? {};
+  return {
+    ...withTurnSnapshot,
+    timers: {
+      ...(withTurnSnapshot.timers ?? {}),
+      turnClock: {
+        elapsedMsByPlayer: { ...(clock.elapsedMsByPlayer ?? {}) },
+        activePlayerId,
+        running: true,
+        startedAtMs: nowMs
+      }
+    }
+  };
 }
 
 export function changePhase(state, { phase } = {}) {
