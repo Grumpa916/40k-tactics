@@ -141,7 +141,10 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   clockMessage = "",
   missionDefinitions = [],
   battleShockReminder = null,
-  scoringReviewCheckpoint = null
+  scoringReviewCheckpoint = null,
+  contextOpenStates = { "unit-status": true, "event-log": true },
+  referenceOpenStates = { stratagems: true },
+  missionOpenStates = {}
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -209,15 +212,15 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left">' +
     leftToggle + '<div id="battle-left-panel-body" class="battle-shell__panel-body" data-battle-context-body>' +
-    renderUnitStatusPanel(state) + renderEventLogPanel(state) + '</div></aside>' +
+    renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
     '<section class="battle-shell__content">' +
     '<section data-battle-screen></section>' +
     '<div data-battle-mission-summary-host>' +
-    renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions }) +
+    renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates }) +
     '</div></section>' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right">' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
-    renderReferencePanel(state, gameData ?? {}, perspectivePlayerId) + '</div></aside></section>';
+    renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
   const armyDock = '<nav class="battle-shell__army-dock" aria-label="Open army rosters">' +
     '<button type="button" data-open-army-roster="' + escapeHtml(yourPlayerId ?? "") + '"' +
     (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong><span>' + escapeHtml(myName) + '</span></button>' +
@@ -282,6 +285,9 @@ export function createBattleShell(container, {
   let clockPanelOpen = false;
   let clockMessage = "";
   let clockTickInterval = null;
+  let contextOpenStates = { "unit-status": true, "event-log": true, "older-events": false };
+  let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
+  let missionOpenStates = {};
 
   function destroyMountedScreen() {
     if (mountedScreen?.destroy) mountedScreen.destroy();
@@ -310,6 +316,7 @@ export function createBattleShell(container, {
     const statusContainer = container.querySelector?.("[data-battle-context-body]");
     if (statusContainer) {
       const openSections = readOpenStates(statusContainer, "details[data-context-key]", "data-context-key");
+      contextOpenStates = { ...contextOpenStates, ...openSections };
       statusContainer.innerHTML = (battleShockMessage
         ? '<p role="status" class="battle-context__message">' + escapeHtml(battleShockMessage) + '</p>'
         : "") +
@@ -319,6 +326,7 @@ export function createBattleShell(container, {
     const missionSummaryHost = container.querySelector?.("[data-battle-mission-summary-host]");
     if (missionSummaryHost) {
       const openStates = readOpenStates(missionSummaryHost, "details[data-mission-summary-key]", "data-mission-summary-key");
+      missionOpenStates = { ...missionOpenStates, ...openStates };
       missionSummaryHost.innerHTML = renderPersistentMissionSummary(state, {
         perspectivePlayerId, missionDefinitions, openStates
       });
@@ -326,6 +334,7 @@ export function createBattleShell(container, {
     const referenceContainer = container.querySelector?.("[data-battle-reference-body]");
     if (referenceContainer) {
       const openSections = readOpenStates(referenceContainer, "details[data-reference-key]", "data-reference-key");
+      referenceOpenStates = { ...referenceOpenStates, ...openSections };
       referenceContainer.innerHTML = renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections });
     }
     const overlay = container.querySelector?.("[data-army-roster-overlay]");
@@ -435,6 +444,21 @@ export function createBattleShell(container, {
     observedActivePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
 
     if (viewedPhase !== mountedPhase) {
+      contextOpenStates = {
+        ...contextOpenStates,
+        ...readOpenStates(container.querySelector?.("[data-battle-context-body]"),
+          "details[data-context-key]", "data-context-key")
+      };
+      referenceOpenStates = {
+        ...referenceOpenStates,
+        ...readOpenStates(container.querySelector?.("[data-battle-reference-body]"),
+          "details[data-reference-key]", "data-reference-key")
+      };
+      missionOpenStates = {
+        ...missionOpenStates,
+        ...readOpenStates(container.querySelector?.("[data-battle-mission-summary-host]"),
+          "details[data-mission-summary-key]", "data-mission-summary-key")
+      };
       destroyMountedScreen();
       mountedPersistencePanel?.destroy();
       mountedPersistencePanel = null;
@@ -443,7 +467,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, contextOpenStates, referenceOpenStates, missionOpenStates
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
