@@ -719,8 +719,8 @@ test("manual secondary mission entry records the selected card for the selected 
     missionDefinitions: [secondary]
   });
 
-  assert.match(root.innerHTML, /Manual secondary-mission entry/);
-  assert.match(root.innerHTML, /No automatic draw or selection occurs/);
+  assert.match(root.innerHTML, /Enter secondary mission cards/);
+  assert.match(root.innerHTML, /Tactical cards belong to the active player only/);
   const button = {
     hasAttribute: (name) => name === "data-secondary-mission-add",
     closest(selector) {
