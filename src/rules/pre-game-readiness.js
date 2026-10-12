@@ -77,6 +77,22 @@ export function evaluatePreGameReadiness(state = {}) {
         : "Select a mission and valid battlefield layout before deployment."
   });
 
+  const roleSetup = state.preGameSetup ?? {};
+  const validPlayerIds = new Set(players.map((player) => player?.id).filter(Boolean));
+  const rolesComplete = players.length === 2 &&
+    validPlayerIds.has(roleSetup.attackerPlayerId) &&
+    validPlayerIds.has(roleSetup.defenderPlayerId) &&
+    roleSetup.attackerPlayerId !== roleSetup.defenderPlayerId &&
+    validPlayerIds.has(roleSetup.firstPlayerId);
+  checks.push({
+    id: "battle-roles",
+    label: "Attacker, defender, and first player designated",
+    status: rolesComplete ? "complete" : "incomplete",
+    detail: rolesComplete
+      ? "Attacker and first player are recorded; defender is the other army."
+      : "Choose the attacker and first player. The defender is automatically the other army."
+  });
+
   const missing = checks.filter((check) => check.status !== "complete");
   return {
     ready: missing.length === 0,
