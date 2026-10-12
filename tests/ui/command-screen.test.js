@@ -6,6 +6,7 @@ import { COMMAND_TYPES } from "../../src/commands/game-commands.js";
 import { clearCommandHandlers, executeCommand } from "../../src/engine/command-engine.js";
 import { registerCoreCommandHandlers } from "../../src/engine/register-core-commands.js";
 import { createGameState } from "../../src/state/game-state.js";
+import { getCommandPointBalance } from "../../src/engine/command-points-ledger.js";
 
 test("Command screen exposes and executes safe undo for the latest VP award", () => {
   clearCommandHandlers();
