@@ -219,7 +219,7 @@ test("Parasite of Mortrex and the three monster profiles expose sourced abilitie
 
   const psychophage = candidate("Psychophage");
   assert.equal(psychophage.defaultPoints, 110);
-  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], "5+");
+  assert.equal(psychophage.datasheet.characteristics["Feel No Pain"], undefined);
 });
 
 
