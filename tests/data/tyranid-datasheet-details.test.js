@@ -449,6 +449,29 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
+test("Carnifexes include all current 11th-edition weapon profiles", () => {
+  const carnifexes = candidate("Carnifexes");
+  const weapons = carnifexes.datasheet.weapons;
+  const crushingClaws = weapons.find((weapon) => weapon.name === "Carnifex crushing claws");
+  assert.ok(crushingClaws);
+  assert.deepEqual(
+    [crushingClaws.range, crushingClaws.attacks, crushingClaws.skill, crushingClaws.strength, crushingClaws.ap, crushingClaws.damage],
+    ["Melee", 4, "4+", 12, -3, "D6+1"]
+  );
+  const spineBanks = weapons.find((weapon) => weapon.name === "Spine banks");
+  assert.ok(spineBanks);
+  assert.deepEqual(
+    [spineBanks.range, spineBanks.attacks, spineBanks.skill, spineBanks.strength, spineBanks.ap, spineBanks.damage, spineBanks.abilities],
+    ['6"', 5, "4+", 5, 0, 1, "Assault"]
+  );
+  const stranglethorn = weapons.find((weapon) => weapon.name === "Stranglethorn cannon");
+  assert.ok(stranglethorn);
+  assert.deepEqual(
+    [stranglethorn.range, stranglethorn.attacks, stranglethorn.skill, stranglethorn.strength, stranglethorn.ap, stranglethorn.damage, stranglethorn.abilities],
+    ['36"', "D6+1", "4+", 7, -1, 2, "Blast"]
+  );
+});
+
 test("Tyranid ability descriptions preserve targeting and range restrictions", () => {
   const harpy = candidate("Harpy");
   const cysts = harpy.datasheet.abilities.find((ability) => ability.name === "Spore Mine Cysts");
