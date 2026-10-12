@@ -711,6 +711,27 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
   }
 });
 
+test("Every Tyranid profile includes the Synapse faction ability", () => {
+  for (const name of [
+    "Tyranid Prime with Lash Whip", "Raveners", "Hive Tyrant", "Neurotyrant",
+    "Tyrant Guard", "Broodlord", "Old One Eye", "Carnifexes", "The Swarmlord",
+    "Neurogaunts", "Zoanthropes", "Termagants", "Winged Hive Tyrant", "Lictor",
+    "Deathleaper", "Tervigon", "Tyrannofex", "Tyranid Warriors with Ranged Bio-weapons",
+    "Barbgaunts", "Biovores", "Hive Guard", "Neurolictor", "Pyrovores",
+    "Von Ryan's Leapers", "Ripper Swarms", "Parasite of Mortrex", "Exocrine",
+    "Haruspex", "Maleceptor", "Psychophage", "The Red Terror", "Mucolid Spores",
+    "Mawloc", "Norn Assimilator", "Norn Emissary", "Toxicrene", "Hormagaunts",
+    "Genestealers", "Gargoyles", "Tyranid Warriors with Melee Bio-weapons",
+    "Venomthropes", "Trygon", "Winged Tyranid Prime", "Harpy", "Hive Crone",
+    "Tyrannocyte", "Hierophant", "Harridan", "Hyperadapted Raveners",
+    "Screamer-Killer", "Spore Mines", "Sporocyst", "Malanthrope",
+    "Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Sky-slasher Swarms"
+  ]) {
+    const unit = candidate(name);
+    assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Synapse"), name);
+  }
+});
+
 test("Every Tyranid profile records official MFM v1.5 points provenance", () => {
   for (const unit of findArmyUnitCandidates({ faction: "Tyranids" })) {
     assert.equal(unit.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", unit.name);
