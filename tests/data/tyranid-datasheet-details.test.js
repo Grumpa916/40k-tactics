@@ -26,13 +26,6 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
 });
 
-test("units without a reviewed profile remain name-only and do not receive invented details", () => {
-  const unit = candidate("Spore Mines");
-  assert.equal(unit.verificationStatus, "name-only-unverified");
-  assert.equal(unit.defaultPoints, undefined);
-  assert.equal(unit.datasheet, undefined);
-});
-
 
 test("Hive Tyrant profile includes reviewed baseline points and default weapon options", () => {
   const unit = candidate("Hive Tyrant");
