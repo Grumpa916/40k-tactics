@@ -7,6 +7,7 @@ import { getFightCandidates } from "../rules/fight-candidates.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { createObjectiveState } from "../rules/objective-control-state.js";
 import { captureTurnStartSnapshot } from "./scoring-transitions.js";
+import { updateTurnClockForPlayer } from "../state/turn-clock.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -100,7 +101,7 @@ export function recordObjectiveControl(state, {
   }));
 }
 
-export function startFirstTurn(state, { activePlayerId } = {}) {
+export function startFirstTurn(state, { activePlayerId, nowMs = Date.now() } = {}) {
   requirePlayer(state, activePlayerId);
   if (!state.battle || state.battle.status !== BATTLE_STATUS.DEPLOYMENT) {
     throw new Error("Battle must be in deployment before the first turn.");
@@ -129,11 +130,12 @@ export function startFirstTurn(state, { activePlayerId } = {}) {
     battle: { ...current.battle, activePlayerId }
   }));
 
-  return captureTurnStartSnapshot(turnStarted, {
+  const withTurnSnapshot = captureTurnStartSnapshot(turnStarted, {
     turn: 1,
     round: 1,
     playerId: activePlayerId
   });
+  return updateTurnClockForPlayer(withTurnSnapshot, activePlayerId, nowMs);
 }
 
 export function changePhase(state, { phase } = {}) {
@@ -211,7 +213,7 @@ export function changePhase(state, { phase } = {}) {
   }));
 }
 
-export function endTurn(state, { nextActivePlayerId } = {}) {
+export function endTurn(state, { nextActivePlayerId, nowMs = Date.now() } = {}) {
   if (!state.battle || state.battle.status !== BATTLE_STATUS.ACTIVE) {
     throw new Error("Battle must be active.");
   }
@@ -249,12 +251,13 @@ export function endTurn(state, { nextActivePlayerId } = {}) {
     }
   }));
 
+  const withTurnClock = updateTurnClockForPlayer(ended, nextActivePlayerId, nowMs);
   return battleRoundComplete
-    ? transition(ended, "battle.round_ended", { round: state.battle.round }, (current) => current)
-    : ended;
+    ? transition(withTurnClock, "battle.round_ended", { round: state.battle.round }, (current) => current)
+    : withTurnClock;
 }
 
-export function advanceBattleRound(state) {
+export function advanceBattleRound(state, { nowMs = Date.now() } = {}) {
   if (!state.battle || state.battle.status !== BATTLE_STATUS.ACTIVE) {
     throw new Error("Battle must be active.");
   }
@@ -291,11 +294,12 @@ export function advanceBattleRound(state) {
     battle: { ...current.battle, activePlayerId: current.battle.firstPlayerId }
   }));
 
-  return captureTurnStartSnapshot(turnStarted, {
+  const withTurnSnapshot = captureTurnStartSnapshot(turnStarted, {
     turn: turnNumber,
     round: state.battle.round + 1,
     playerId: state.battle.firstPlayerId
   });
+  return updateTurnClockForPlayer(withTurnSnapshot, state.battle.firstPlayerId, nowMs);
 }
 
 export function completeBattle(state) {
