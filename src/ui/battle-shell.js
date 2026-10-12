@@ -294,7 +294,9 @@ export function createBattleShell(container, {
       mountedAuthPanel = null;
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
-      renderShell(container, state, viewedPhase, scoringReminder, showCloud, {\n        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId\n      });
+      renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId
+      });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
       const rosterContainer = container.querySelector("[data-army-roster-panel]");
