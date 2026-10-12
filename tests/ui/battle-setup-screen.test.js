@@ -125,7 +125,7 @@ test("setup screen uses touch-friendly battle role choices without the pre-game 
   assert.match(root.innerHTML, /Choose attacker/);
   assert.match(root.innerHTML, /Choose first player/);
   assert.match(root.innerHTML, /Defender:/);
-  assert.match(root.innerHTML, /Mission &amp; Map/);
+  assert.match(root.innerHTML, /Primary Missions &amp; Battlefield/);
   screen.destroy();
 });
 
