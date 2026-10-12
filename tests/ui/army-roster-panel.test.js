@@ -116,7 +116,7 @@ test("roster assignment preserves the selected opponent target across rerenders"
   await new Promise((resolve) => setImmediate(resolve));
   await new Promise((resolve) => setImmediate(resolve));
 
-  assert.match(root.innerHTML, /Assign roster to battle side/);
+  assert.match(root.innerHTML, /Assign this roster to a player/);
   root.playerSelect.value = "p2";
   const applyButton = {
     matches(selector) { return selector.includes("[data-roster-apply]"); }
