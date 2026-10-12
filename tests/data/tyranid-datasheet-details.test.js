@@ -51,7 +51,7 @@ test("Tyrant Guard profile lists model-count point options", () => {
   const unit = candidate("Tyrant Guard");
   assert.equal(unit.defaultModelCount, 3);
   assert.equal(unit.defaultPoints, 80);
-  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [80, 160]);
+  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [80, 170]);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.equipment === "Wargear option"));
 });
 
@@ -184,7 +184,7 @@ test("Hive Guard and Neurolictor expose sourced weapon profiles and abilities", 
 
 test("Pyrovores, Von Ryan's Leapers, and Ripper Swarms expose sourced model options", () => {
   const pyrovores = candidate("Pyrovores");
-  assert.equal(pyrovores.defaultPoints, 45);
+  assert.equal(pyrovores.defaultPoints, 40);
   assert.deepEqual(pyrovores.pointsOptions.slice(0, 3).map((option) => option.points), [40, 70, 100]);
   assert.ok(pyrovores.datasheet.weapons.some((weapon) => weapon.name === "Flamespurt"));
 
