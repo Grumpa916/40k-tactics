@@ -80,8 +80,8 @@ export function createBattleSetupScreen(container, {
     if (target?.matches?.("[data-setup-secondary-mode]")) {
       if (!target.value) return;
       try {
-        const playerId = container.querySelector("[data-setup-secondary-player]")?.value || selectedPlayerId;
-        if (!playerId) throw new Error("Select the player whose secondary mode you are setting.");
+        const playerId = target.getAttribute("data-setup-secondary-mode") || selectedPlayerId;
+        if (!playerId) throw new Error("Could not identify the player whose secondary mode you are setting.");
         session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { mode: target.value, playerId } });
         message = "Secondary mode set to " + target.value + " for " + (session.getState().players?.find((player) => player.id === playerId)?.name ?? playerId) + ".";
       } catch (error) {
@@ -90,11 +90,7 @@ export function createBattleSetupScreen(container, {
       render();
       return;
     }
-    if (target?.matches?.("[data-setup-secondary-player]")) {
-      selectedPlayerId = target.value;
-      message = "";
-      render();
-    }
+
   }
 
   function handleClick(event) {
@@ -198,7 +194,9 @@ export function createBattleSetupScreen(container, {
     const target = event.target?.closest?.("[data-setup-fixed-add]");
     if (!target || !container.contains(target)) return;
     const state = session.getState();
-    const playerId = container.querySelector("[data-setup-secondary-player]")?.value || selectedPlayerId;
+    const playerId = target.getAttribute("data-setup-fixed-add") || selectedPlayerId;
+    const playerPanel = target.closest?.("[data-secondary-player-panel]") ?? container;
+    const field = (selector) => playerPanel.querySelector?.(selector) ?? container.querySelector(selector);
     if (state.battle) {
       message = "Fixed secondary cards must be selected before the battle starts.";
       render();
@@ -209,9 +207,9 @@ export function createBattleSetupScreen(container, {
       render();
       return;
     }
-    const definitionId = container.querySelector("[data-setup-secondary-definition]")?.value;
-    const manualName = String(container.querySelector("[data-setup-secondary-name]")?.value ?? "").trim();
-    const manualTiming = container.querySelector("[data-setup-secondary-timing]")?.value;
+    const definitionId = field("[data-setup-secondary-definition]")?.value;
+    const manualName = String(field("[data-setup-secondary-name]")?.value ?? "").trim();
+    const manualTiming = field("[data-setup-secondary-timing]")?.value;
     const definitions = [
       ...missionDefinitions.filter((item) => item?.category === "secondary"),
       ...secondaryMissionCatalog.filter((item) => item?.category === "secondary" &&
@@ -360,43 +358,54 @@ export function createBattleSetupScreen(container, {
     const history = getSecondaryMissionHistory(state);
     const fixedHistory = history.filter((item) =>
       item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
-    const playerOptions = players.map((player) =>
-      '<option value="' + escapeHtml(player.id) + '"' +
-      (player.id === selectedPlayerId ? ' selected' : '') + '>' +
-      escapeHtml(player.name ?? player.id) + '</option>'
-    ).join("");
     const definitions = [
       ...missionDefinitions.filter((item) => item?.category === "secondary"),
       ...secondaryMissionCatalog.filter((item) => item?.category === "secondary" &&
         !missionDefinitions.some((configured) => configured?.id === item.id))
     ];
-    const activeForPlayer = new Set(fixedHistory.filter((item) => item.playerId === selectedPlayerId)
-      .map((item) => item.definitionId));
-    const fixedCount = fixedHistory.filter((item) => item.playerId === selectedPlayerId).length;
-    const fixedOptions = '<option value="">Select a Fixed card...</option>' + definitions
-      .filter((item) => item.fixedAvailable === true ||
-        (Array.isArray(item.availableModes) && item.availableModes.includes("fixed")))
-      .filter((item) => !activeForPlayer.has(item.id))
-      .map((item) => '<option value="' + escapeHtml(item.id) + '">' +
-        escapeHtml(item.name ?? item.id) + '</option>').join("");
     const timingOptions = '<option value="">Choose checkpoint from card...</option>' +
       MANUAL_TIMINGS.map(([value, label]) =>
         '<option value="' + value + '">' + label + '</option>').join("");
-    const fixedCardsMarkup = players.length
-      ? players.map((player) => {
-          const cards = fixedHistory.filter((item) => item.playerId === player.id);
-          return '<li><strong>' + escapeHtml(player.name ?? player.id) + '</strong>: ' +
-            (cards.length ? cards.map((item) => escapeHtml(item.definition?.name ?? item.definitionId)).join(", ") : "No Fixed cards selected") +
-            ' (' + cards.length + '/2)</li>';
-        }).join("")
-      : '<li>Configure players before selecting Fixed cards.</li>';
-
-    const modeGuidance = mode === "fixed"
-      ? '<p>Fixed mode requires two Fixed-available cards for this player. They remain active throughout the battle and can score multiple times; each card is capped at 20 VP.</p>'
-      : mode === "tactical"
-        ? '<p>Tactical cards are drawn manually from the physical deck at the start of each Command phase. This player records two new cards on their Command phase; score or discard them only when the table rules permit.</p>'
-        : '<p>Select Fixed or Tactical separately for each player.</p>';
-
+    const secondaryPlayerPanels = players.map((player) => {
+      const playerMode = getSecondaryMissionMode(state, player.id) ?? "";
+      const playerHistory = history.filter((item) => item.playerId === player.id);
+      const fixedCards = playerHistory.filter((item) =>
+        item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+      const fixedCount = fixedCards.length;
+      const activeForPlayer = new Set(fixedCards.map((item) => item.definitionId));
+      const fixedOptions = '<option value="">Select a Fixed card...</option>' + definitions
+        .filter((item) => item.fixedAvailable === true ||
+          (Array.isArray(item.availableModes) && item.availableModes.includes("fixed")))
+        .filter((item) => !activeForPlayer.has(item.id))
+        .map((item) => '<option value="' + escapeHtml(item.id) + '">' +
+          escapeHtml(item.name ?? item.id) + '</option>').join("");
+      const cardsList = fixedCards.length
+        ? fixedCards.map((item) => '<li>' + escapeHtml(item.definition?.name ?? item.definitionId) + '</li>').join("")
+        : '<li>No Fixed cards selected</li>';
+      const modeGuidance = playerMode === "fixed"
+        ? '<p>Choose two Fixed-available cards for this player. Each card can score repeatedly and is capped at 20 VP.</p>'
+        : playerMode === "tactical"
+          ? '<p>Draw and record Tactical cards manually from the physical deck on this player’s Command phase. Scoring and discards remain manually confirmed.</p>'
+          : '<p>Choose this player’s mode independently of the opponent.</p>';
+      const modeLocked = playerHistory.length > 0;
+      const fixedMarkup = playerMode === "fixed" && !state.battle
+        ? '<div class="command-vp-form"><label>Fixed card<select data-setup-secondary-definition>' + fixedOptions + '</select></label>' +
+          '<label>Checkpoint if not verified<select data-setup-secondary-timing>' + timingOptions + '</select></label>' +
+          '<label>Or type the printed card name<input data-setup-secondary-name maxlength="160" placeholder="Fixed card name"></label>' +
+          '<button type="button" data-setup-fixed-add="' + escapeHtml(player.id) + '"' +
+          (fixedCount >= 2 ? ' disabled' : '') + '>Record Fixed card for ' + escapeHtml(player.name ?? player.id) + '</button></div>' +
+          '<h4>Fixed cards (' + fixedCount + '/2)</h4><ol>' + cardsList + '</ol>'
+        : playerMode === "fixed"
+          ? '<p>Fixed cards must be selected before battle start. Recorded cards remain active.</p><ol>' + cardsList + '</ol>'
+          : '';
+      return '<section class="secondary-player-panel" data-secondary-player-panel="' + escapeHtml(player.id) + '">' +
+        '<h3>' + escapeHtml(player.name ?? player.id) + '</h3>' +
+        '<label>Secondary mission mode<select data-setup-secondary-mode="' + escapeHtml(player.id) + '"' +
+        (modeLocked ? ' disabled' : '') + ' required><option value="">Choose Fixed or Tactical...</option>' +
+        '<option value="fixed"' + (playerMode === "fixed" ? ' selected' : '') + '>Fixed</option>' +
+        '<option value="tactical"' + (playerMode === "tactical" ? ' selected' : '') + '>Tactical</option></select></label>' +
+        modeGuidance + fixedMarkup + '</section>';
+    }).join("");
     const missionMapMarkup = missionSetupMarkup +
       '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
       '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
@@ -406,27 +415,9 @@ export function createBattleSetupScreen(container, {
       renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
       '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>' +
-      '<section><h2>Secondary mission mode</h2>' +
-      '<label>Player<select data-setup-secondary-player>' + playerOptions + '</select></label>' +
-      '<label>Mode for selected player<select data-setup-secondary-mode ' +
-      (history.some((item) => item.playerId === selectedPlayerId) ? 'disabled' : '') + ' required>' +
-      '<option value="">Choose Fixed or Tactical...</option>' +
-      '<option value="fixed"' + (mode === "fixed" ? ' selected' : '') + '>Fixed</option>' +
-      '<option value="tactical"' + (mode === "tactical" ? ' selected' : '') + '>Tactical</option>' +
-      '</select></label>' + modeGuidance + '</section>' +
-      (mode === "fixed" && !state.battle
-        ? '<section><h2>Select Fixed secondary cards</h2>' +
-          '<p>Selected for this player: ' + fixedCount + ' of 2.</p>' +
-          (fixedCount < 2 && players.length
-            ? '<div class="command-vp-form"><label>Fixed card<select data-setup-secondary-definition>' + fixedOptions + '</select></label>' +
-              '<label>Checkpoint if not verified<select data-setup-secondary-timing>' + timingOptions + '</select></label>' +
-              '<label>Or type the printed card name<input data-setup-secondary-name maxlength="160" placeholder="Fixed card name"></label>' +
-              '<button type="button" data-setup-fixed-add>Record Fixed card</button></div>'
-            : '<p>Two Fixed cards have been recorded for this player.</p>') +
-          '<h3>Fixed cards selected</h3><ol>' + fixedCardsMarkup + '</ol></section>'
-        : mode === "fixed" && state.battle
-          ? '<section><p>Fixed cards must be selected before battle start. Existing Fixed cards remain active.</p><ol>' + fixedCardsMarkup + '</ol></section>'
-          : '') +
+      '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
+      '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
+      '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div>' +
       '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p>';
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
