@@ -31,6 +31,8 @@
     .battle-shell__player-summary strong { max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .battle-shell__player-summary span { white-space:nowrap; opacity:.86; }
     .battle-shell__player-summary.is-active { border-color:#b18bd8; box-shadow:inset 0 0 0 1px #76559b; }
+    .battle-shell__workspace.is-setup-view { grid-template-columns:minmax(0,1fr) !important; }
+    .battle-shell__workspace.is-setup-view > .battle-shell__content { grid-column:1 / -1; width:100%; min-width:0; }
     .battle-shell__workspace { display:grid; grid-template-columns:minmax(190px,.78fr) minmax(0,2fr) minmax(220px,.92fr); gap:12px; align-items:start; }
     .battle-shell__workspace[data-left-collapsed="true"] { grid-template-columns:44px minmax(0,2fr) minmax(220px,.92fr); }
     .battle-shell__workspace[data-right-collapsed="true"] { grid-template-columns:minmax(190px,.78fr) minmax(0,2fr) 44px; }
