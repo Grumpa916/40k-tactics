@@ -289,10 +289,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const rightToggle = '<button type="button" class="battle-shell__panel-toggle" data-toggle-battle-panel="right" ' +
     'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
-  const workspace = '<section class="battle-shell__workspace" data-battle-workspace' +
+  const isSetupView = viewedPhase === "setup";
+  const workspace = '<section class="battle-shell__workspace' + (isSetupView ? ' is-setup-view' : '') + '" data-battle-workspace' +
     (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
     ' data-left-collapsed="' + String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
-    '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left">' +
+    '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left"' + (isSetupView ? ' hidden' : '') + '>' +
     leftToggle + '<div id="battle-left-panel-body" class="battle-shell__panel-body" data-battle-context-body>' +
     renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
     '<section class="battle-shell__content">' +
@@ -300,7 +301,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<div data-battle-mission-summary-host>' +
     renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates }) +
     '</div></section>' +
-    '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right">' +
+    '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
     renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
   const armyDock = '<nav class="battle-shell__army-dock" aria-label="Open army rosters">' +
