@@ -1,5 +1,5 @@
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
-import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -90,7 +90,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       (scoring ? '<ul>' + scoring + '</ul>' : '') +
       '<p>' + escapeHtml(rulesNote) + '</p></div></details>';
   }).join("") : '<p class="battle-context__empty">No active secondary missions are recorded for this player.</p>';
-  const mode = state.scoring?.secondaryMissionMode;
+  const mode = getSecondaryMissionMode(state, playerId);
   return '<details class="battle-mission-summary__player" data-mission-summary-key="' + escapeHtml(key) + '"' +
     openAttribute(openStates, key) + '><summary><span>' + escapeHtml(sideLabel) + '</span><strong>' +
     active.length + ' active card' + (active.length === 1 ? '' : 's') + '</strong>' +
