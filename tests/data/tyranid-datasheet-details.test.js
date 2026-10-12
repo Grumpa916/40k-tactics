@@ -82,3 +82,35 @@ test("Old One Eye and Carnifexes have sourced profiles and point options", () =>
   assert.deepEqual(carnifexes.pointsOptions.map((option) => option.points), [90, 180]);
   assert.ok(carnifexes.datasheet.weapons.some((weapon) => weapon.equipment === "Wargear option"));
 });
+
+
+test("The Swarmlord profile includes its current points and Tyrant Guard pairing", () => {
+  const unit = candidate("The Swarmlord");
+  assert.equal(unit.defaultPoints, 210);
+  assert.equal(unit.datasheet.characteristics.Toughness, 10);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Hive Commander"));
+  assert.deepEqual(unit.datasheet.leader.allowedBodyguardDatasheetIds, ["tyranids:tyrant-guard"]);
+});
+
+test("Neurogaunts and Zoanthropes expose sourced model-count point options", () => {
+  const neurogaunts = candidate("Neurogaunts");
+  assert.equal(neurogaunts.defaultModelCount, 11);
+  assert.equal(neurogaunts.defaultPoints, 45);
+  assert.deepEqual(neurogaunts.pointsOptions.map((option) => option.points), [45, 90]);
+  assert.ok(neurogaunts.datasheet.abilities.some((ability) => ability.name === "Neurocytes"));
+
+  const zoanthropes = candidate("Zoanthropes");
+  assert.equal(zoanthropes.defaultModelCount, 3);
+  assert.equal(zoanthropes.defaultPoints, 100);
+  assert.deepEqual(zoanthropes.pointsOptions.map((option) => option.points), [100, 200]);
+  assert.ok(zoanthropes.datasheet.weapons.some((weapon) => weapon.name === "Warp Blast (focused witchfire)"));
+});
+
+test("Termagants expose 10- and 20-model point options and their Leader pairing", () => {
+  const unit = candidate("Termagants");
+  assert.equal(unit.defaultModelCount, 10);
+  assert.equal(unit.defaultPoints, 60);
+  assert.deepEqual(unit.pointsOptions.map((option) => option.points), [60, 110]);
+  assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Strangleweb"));
+  assert.deepEqual(unit.datasheet.bodyguard.compatibilityReview.status, "source-reviewed");
+});
