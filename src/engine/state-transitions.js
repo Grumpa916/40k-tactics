@@ -8,7 +8,7 @@ import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { createObjectiveState } from "../rules/objective-control-state.js";
 import { captureTurnStartSnapshot } from "./scoring-transitions.js";
 import { updateTurnClockForPlayer } from "../state/turn-clock.js";
-import { pauseTurnClock } from "./turn-clock-transitions.js";
+import { pauseTurnClock, startTurnClock } from "./turn-clock-transitions.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -268,7 +268,9 @@ export function endTurn(state, { nextActivePlayerId, nowMs = Date.now() } = {}) 
     }
   }));
 
-  const withTurnClock = updateTurnClockForPlayer(ended, nextActivePlayerId, nowMs);
+  const withTurnClock = battleRoundComplete
+    ? pauseTurnClock(ended, { nowMs })
+    : updateTurnClockForPlayer(ended, nextActivePlayerId, nowMs);
   return battleRoundComplete
     ? transition(withTurnClock, "battle.round_ended", { round: state.battle.round }, (current) => current)
     : withTurnClock;
@@ -316,7 +318,10 @@ export function advanceBattleRound(state, { nowMs = Date.now() } = {}) {
     round: state.battle.round + 1,
     playerId: state.battle.firstPlayerId
   });
-  return updateTurnClockForPlayer(withTurnSnapshot, state.battle.firstPlayerId, nowMs);
+  const withTurnClock = updateTurnClockForPlayer(withTurnSnapshot, state.battle.firstPlayerId, nowMs);
+  return withTurnClock.timers?.turnClock?.running
+    ? withTurnClock
+    : startTurnClock(withTurnClock, { nowMs });
 }
 
 export function completeBattle(state, { nowMs = Date.now() } = {}) {
