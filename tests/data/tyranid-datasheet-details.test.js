@@ -596,6 +596,22 @@ test("Raveners use the current singular Burrower keyword and official ability ca
   assert.ok(!hyperadapted.datasheet.keywords.includes("Burrowers"));
 });
 
+test("Hyperadapted Raveners keep Ravener Prime-only keywords and Shadow in the Warp scoped to that model", () => {
+  const unit = candidate("Hyperadapted Raveners");
+  assert.deepEqual(unit.datasheet.keywords, [
+    "Infantry", "Great Devourer", "Vanguard Invader", "Burrowers", "Hyperadapted Raveners"
+  ]);
+  const prime = unit.datasheet.modelProfiles.find((model) => model.name === "Ravener Prime");
+  const raveners = unit.datasheet.modelProfiles.find((model) => model.name === "Raveners");
+  assert.deepEqual(prime.keywords, ["Character", "Synapse"]);
+  assert.deepEqual(raveners.keywords, []);
+
+  const shadow = unit.datasheet.abilities.find((ability) => ability.name === "Shadow in the Warp");
+  assert.ok(shadow);
+  assert.match(shadow.description, /^Ravener Prime only\./);
+  assert.equal(unit.officialRulesCrossCheck, "pending");
+});
+
 test("Hyperadapted Raveners include Hypersensory Array and Parasite infection timing", () => {
   const hyperadapted = candidate("Hyperadapted Raveners");
   const hypersensory = hyperadapted.datasheet.abilities.find((ability) => ability.name === "Hypersensory Array");
