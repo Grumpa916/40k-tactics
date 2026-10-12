@@ -128,7 +128,7 @@ test("Lictor and Deathleaper profiles contain source-reviewed melee data and abi
   const deathleaper = candidate("Deathleaper");
   assert.equal(deathleaper.defaultPoints, 80);
   assert.equal(deathleaper.datasheet.characteristics.Wounds, 7);
-  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen"));
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen (Aura)"));
 });
 
 test("Tervigon and Tyrannofex profiles expose source-reviewed monster characteristics and options", () => {
@@ -179,7 +179,7 @@ test("Hive Guard and Neurolictor expose sourced weapon profiles and abilities", 
   const neurolictor = candidate("Neurolictor");
   assert.equal(neurolictor.defaultPoints, 80);
   assert.equal(neurolictor.datasheet.characteristics.Wounds, 7);
-  assert.ok(neurolictor.datasheet.abilities.some((ability) => ability.name === "Psychological Saboteur"));
+  assert.ok(neurolictor.datasheet.abilities.some((ability) => ability.name === "Psychological Saboteur (Aura)"));
 });
 
 test("Pyrovores, Von Ryan’s Leapers, and Ripper Swarms expose sourced model options", () => {
@@ -549,7 +549,7 @@ test("Tyranid ability descriptions preserve targeting and range restrictions", (
   assert.match(floatingDeath.description, /select one of those enemy units/);
 
   const tervigon = candidate("Tervigon");
-  const progenitor = tervigon.datasheet.abilities.find((ability) => ability.name === "Brood Progenitor");
+  const progenitor = tervigon.datasheet.abilities.find((ability) => ability.name === "Brood Progenitor (Aura, Psychic)");
   assert.match(progenitor.description, /within 6 inches of this model/);
 
   const norn = candidate("Norn Assimilator");
@@ -657,7 +657,7 @@ test("Psychophage retains Feel No Pain; Deathleaper and Toxicrene use current li
 
   const deathleaper = candidate("Deathleaper");
   assert.ok(!deathleaper.datasheet.abilities.some((ability) => ability.name === "Hunter Organism"));
-  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen"));
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen (Aura)"));
 
   const toxicrene = candidate("Toxicrene");
   const tendrils = toxicrene.datasheet.abilities.find((ability) => ability.name === "Grasping Tendrils");
@@ -788,6 +788,26 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
   assert.ok(blisteringAssault);
   assert.match(blisteringAssault.description, /when an enemy unit has shot/);
   assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
+});
+
+test("Neurolictor, Deathleaper, and Tervigon preserve official Aura ability tags", () => {
+  const neurolictor = candidate("Neurolictor");
+  const saboteur = neurolictor.datasheet.abilities.find((ability) => ability.name === "Psychological Saboteur (Aura)");
+  assert.ok(saboteur);
+  assert.match(saboteur.description, /each time a model in that unit makes an attack/);
+  assert.match(saboteur.description, /friendly TYRANIDS model makes an attack that targets that unit/);
+  const disruption = neurolictor.datasheet.abilities.find((ability) => ability.name === "Neural Disruption");
+  assert.match(disruption.description, /within 12 inches of this model/);
+
+  const deathleaper = candidate("Deathleaper");
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen (Aura)"));
+
+  const tervigon = candidate("Tervigon");
+  const progenitor = tervigon.datasheet.abilities.find((ability) => ability.name === "Brood Progenitor (Aura, Psychic)");
+  assert.ok(progenitor);
+  assert.match(progenitor.description, /within 6 inches of this model/);
+  const spawn = tervigon.datasheet.abilities.find((ability) => ability.name === "Spawn Termagants");
+  assert.match(spawn.description, /A Termagants unit cannot be selected for this ability more than once per phase/);
 });
 
 test("Neurotyrant abilities retain Psychic tags and exact Neuroloids range/timing", () => {
