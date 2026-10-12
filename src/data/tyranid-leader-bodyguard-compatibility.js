@@ -60,7 +60,6 @@ const ids = {
   hormagaunts: "tyranids:hormagaunts",
   termagants: "tyranids:termagants",
   meleeWarriors: "tyranids:tyranid-warriors-with-melee-bio-weapons",
-  rangedWarriors: "tyranids:tyranid-warriors-with-ranged-bio-weapons",
   rangedWarriors: "tyranids:tyranid-warriors-with-ranged-bio-weapons"
 };
 
