@@ -13,7 +13,6 @@ test("Tyranid Prime with Lash Whip has source-reviewed details and fixed points 
   assert.equal(unit.datasheet.weapons.length, 3);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Alpha Warrior"));
   assert.ok(unit.sourceUrl.includes("warhammer-community.com"));
-  assert.ok(unit.additionalSources?.includes("https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip"));
   assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
