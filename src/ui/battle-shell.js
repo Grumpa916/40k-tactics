@@ -16,6 +16,7 @@ import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, rende
 import { renderTurnClockPanel } from "./turn-clock-panel.js";
 import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../state/turn-clock.js";
 import { renderPersistentMissionSummary } from "./mission-summary-panel.js";
+import { getBattleShockEligibility, isUnitBattleShocked } from "../rules/unit-status-summary.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "live" },
@@ -44,6 +45,56 @@ function phaseLabel(phase) {
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+function hasBattleShockTestInCurrentTurn(state, unitId, round, turn) {
+  return (Array.isArray(state.history) ? state.history : []).some((event) =>
+    event?.type === "battle_shock.test_recorded" &&
+    event?.payload?.unitId === unitId &&
+    event?.payload?.round === round &&
+    event?.payload?.turn === turn);
+}
+
+function renderBattleShockReminder(state, reminder) {
+  if (!reminder || state?.battle?.status !== "active" || state.phase !== "command") return "";
+  const round = state.battle?.round ?? 0;
+  const turn = state.turn ?? 0;
+  const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+  if (reminder.playerId !== activePlayerId || reminder.round !== round || reminder.turn !== turn) return "";
+  const units = (Array.isArray(state.units) ? state.units : []).filter((unit) => {
+    if (unit.ownerId !== reminder.playerId ||
+        hasBattleShockTestInCurrentTurn(state, unit.id, round, turn)) return false;
+    const eligibility = getBattleShockEligibility(unit);
+    return eligibility.requiresTest === true || eligibility.requiresTest === null;
+  });
+  if (!units.length) return "";
+
+  const rows = units.map((unit) => {
+    const eligibility = getBattleShockEligibility(unit);
+    const unknown = eligibility.requiresTest === null;
+    const reason = isUnitBattleShocked(unit)
+      ? "Already Battle-shocked — test required"
+      : unknown
+        ? "Strength is not tracked — check the physical unit and datasheet"
+        : "At or below half-strength";
+    const confirmed = unknown ? "true" : "false";
+    const unitId = escapeHtml(unit.id);
+    return '<li class="battle-shock-reminder__unit"><div><strong>' +
+      escapeHtml(unit.name ?? unit.id) + '</strong><small>' + escapeHtml(reason) + '</small></div>' +
+      '<div class="battle-shock-reminder__results">' +
+      '<button type="button" data-battle-shock-result="passed" data-unit-id="' + unitId +
+      '" data-eligibility-confirmed="' + confirmed + '">Passed</button>' +
+      '<button type="button" data-battle-shock-result="failed" data-unit-id="' + unitId +
+      '" data-eligibility-confirmed="' + confirmed + '">Failed</button>' +
+      '</div></li>';
+  }).join("");
+  return '<div class="battle-shock-reminder__backdrop"><section class="battle-shock-reminder" role="dialog" ' +
+    'aria-modal="true" aria-labelledby="battle-shock-reminder-title"><div class="battle-shock-reminder__kicker">COMMAND PHASE</div>' +
+    '<h2 id="battle-shock-reminder-title">Battle-shock checks</h2>' +
+    '<p>Review these units now. Enter the actual result from the table; unknown strength is flagged for your manual check.</p>' +
+    '<ul class="battle-shock-reminder__list">' + rows + '</ul>' +
+    '<div class="battle-shock-reminder__actions"><button type="button" data-dismiss-battle-shock-reminder>Review later</button></div>' +
+    '</section></div>';
 }
 
 function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) {
@@ -81,7 +132,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   armyRosterPlayerId = null,
   clockPanelOpen = false,
   clockMessage = "",
-  missionDefinitions = []
+  missionDefinitions = [],
+  battleShockReminder = null,
+  scoringReviewCheckpoint = null
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -121,6 +174,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
         escapeHtml(item.definition?.name ?? item.definitionId) + '</label>'
       ).join("") +
       '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
+    : "";
+  const battleShockReminderMarkup = !scoringReminder && !scoringReviewCheckpoint
+    ? renderBattleShockReminder(state, battleShockReminder)
     : "";
   const reminderMarkup = scoringReminder ? '<div class="battle-scoring-reminder__backdrop">' +
     '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
@@ -164,7 +220,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId) : "") + '</div>';
 
-  container.innerHTML = '<main class="battle-shell">' + reminderMarkup +
+  container.innerHTML = '<main class="battle-shell">' + reminderMarkup + battleShockReminderMarkup +
     '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
     statusSummary + clockPanel +
     (showCloud && viewedPhase === "setup"
@@ -214,6 +270,8 @@ export function createBattleShell(container, {
   let rightPanelCollapsed = false;
   let armyRosterPlayerId = null;
   let battleShockMessage = "";
+  let battleShockReminder = null;
+  let observedBattleShockContextKey = null;
   let clockPanelOpen = false;
   let clockMessage = "";
   let clockTickInterval = null;
@@ -298,6 +356,21 @@ export function createBattleShell(container, {
   function render() {
     const state = session.getState();
     const actualPhase = state?.phase ?? null;
+    const commandPlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
+    const commandContextKey = state?.battle?.status === "active" && actualPhase === "command" && commandPlayerId
+      ? [state.battle?.round ?? 0, state.turn ?? 0, commandPlayerId].join(":")
+      : null;
+    if (commandContextKey && commandContextKey !== observedBattleShockContextKey) {
+      observedBattleShockContextKey = commandContextKey;
+      battleShockReminder = {
+        round: state.battle?.round ?? 0,
+        turn: state.turn ?? 0,
+        playerId: commandPlayerId
+      };
+    } else if (!commandContextKey) {
+      observedBattleShockContextKey = null;
+      battleShockReminder = null;
+    }
     if (actualPhase !== observedGamePhase) {
       const previousPhase = observedGamePhase;
       const endingPlayerId = observedActivePlayerId;
@@ -363,7 +436,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
@@ -545,7 +618,14 @@ export function createBattleShell(container, {
     const button = event.target?.closest?.("[data-dismiss-scoring-reminder]");
     if (!button || !container.contains(button)) return;
     scoringReminder = null;
-    button.closest(".battle-scoring-reminder__backdrop")?.remove();
+    render();
+  }
+
+  function handleDismissBattleShockReminder(event) {
+    const button = event.target?.closest?.("[data-dismiss-battle-shock-reminder]");
+    if (!button || !container.contains(button)) return;
+    battleShockReminder = null;
+    button.closest(".battle-shock-reminder__backdrop")?.remove();
   }
 
   function handleReviewScoring(event) {
@@ -583,6 +663,7 @@ export function createBattleShell(container, {
   container.addEventListener?.("click", handleCloseArmyRoster);
   container.addEventListener?.("click", handleBattleShockResult);
   container.addEventListener?.("click", handleDismissScoringReminder);
+  container.addEventListener?.("click", handleDismissBattleShockReminder);
   container.addEventListener?.("click", handleReviewScoring);
   container.addEventListener?.("submit", handleSubmit);
   const unsubscribe = session.subscribe(render);
@@ -604,6 +685,7 @@ export function createBattleShell(container, {
       container.removeEventListener?.("click", handleCloseArmyRoster);
       container.removeEventListener?.("click", handleBattleShockResult);
       container.removeEventListener?.("click", handleDismissScoringReminder);
+      container.removeEventListener?.("click", handleDismissBattleShockReminder);
       container.removeEventListener?.("click", handleReviewScoring);
       container.removeEventListener?.("submit", handleSubmit);
       destroyMountedScreen();
