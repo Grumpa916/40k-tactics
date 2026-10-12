@@ -182,7 +182,7 @@ test("Hive Guard and Neurolictor expose sourced weapon profiles and abilities", 
   assert.ok(neurolictor.datasheet.abilities.some((ability) => ability.name === "Psychological Saboteur"));
 });
 
-test("Pyrovores, Von Ryan's Leapers, and Ripper Swarms expose sourced model options", () => {
+test("Pyrovores, Von Ryan’s Leapers, and Ripper Swarms expose sourced model options", () => {
   const pyrovores = candidate("Pyrovores");
   assert.equal(pyrovores.defaultPoints, 40);
   assert.deepEqual(pyrovores.pointsOptions.slice(0, 3).map((option) => option.points), [40, 70, 100]);
@@ -718,7 +718,7 @@ test("Every Tyranid profile includes the Synapse faction ability", () => {
     "Neurogaunts", "Zoanthropes", "Termagants", "Winged Hive Tyrant", "Lictor",
     "Deathleaper", "Tervigon", "Tyrannofex", "Tyranid Warriors with Ranged Bio-weapons",
     "Barbgaunts", "Biovores", "Hive Guard", "Neurolictor", "Pyrovores",
-    "Von Ryan's Leapers", "Ripper Swarms", "Parasite of Mortrex", "Exocrine",
+    "Von Ryan’s Leapers", "Ripper Swarms", "Parasite of Mortrex", "Exocrine",
     "Haruspex", "Maleceptor", "Psychophage", "The Red Terror", "Mucolid Spores",
     "Mawloc", "Norn Assimilator", "Norn Emissary", "Toxicrene", "Hormagaunts",
     "Genestealers", "Gargoyles", "Tyranid Warriors with Melee Bio-weapons",
