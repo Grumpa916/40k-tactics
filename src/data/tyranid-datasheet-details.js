@@ -332,7 +332,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
-      Object.freeze({ name: "Fear of the Unseen", description: "While an enemy unit is within 6 inches of this model, worsen the Leadership characteristic of models in that unit by 1. In the Battle-shock step of your opponent's Command phase, if such an enemy unit is below its Starting Strength, it must take a Battle-shock test." }),
+      Object.freeze({ name: "Fear of the Unseen (Aura)", description: "While an enemy unit is within 6 inches of this model, worsen the Leadership characteristic of models in that unit by 1. In the Battle-shock step of your opponent's Command phase, if such an enemy unit is below its Starting Strength, it must take a Battle-shock test." }),
 
     ]),
     defaultModelCount: 1,
@@ -354,8 +354,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Spawn Termagants", description: "In your Command phase, select one friendly Termagants unit within 6 inches and return up to D3+3 destroyed models to it; a unit cannot be selected more than once per phase." }),
-      Object.freeze({ name: "Brood Progenitor", description: "While a friendly Termagants unit is within 6 inches of this model, ranged weapons equipped by models in that unit have Lethal Hits." })
+      Object.freeze({ name: "Spawn Termagants", description: "In your Command phase, you can select one friendly Termagants unit within 6 inches of this model and return up to D3+3 destroyed models to that unit. A Termagants unit cannot be selected for this ability more than once per phase." }),
+      Object.freeze({ name: "Brood Progenitor (Aura, Psychic)", description: "While a friendly Termagants unit is within 6 inches of this model, ranged weapons equipped by models in that unit have the Lethal Hits ability." })
     ]),
     defaultModelCount: 1,
     defaultPoints: 150,
@@ -472,8 +472,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
-      Object.freeze({ name: "Neural Disruption", description: "In your Command phase, select one enemy unit within 12 inches; it must take a Battle-shock test." }),
-      Object.freeze({ name: "Psychological Saboteur", description: "While a Battle-shocked enemy unit is within 12 inches, subtract 1 from its Hit rolls and add 1 to Wound rolls for friendly Tyranids attacks targeting it." })
+      Object.freeze({ name: "Neural Disruption", description: "In your Command phase, select one enemy unit within 12 inches of this model. That unit must take a Battle-shock test." }),
+      Object.freeze({ name: "Psychological Saboteur (Aura)", description: "While an enemy unit is within 12 inches of this model, if that unit is Battle-shocked, each time a model in that unit makes an attack, subtract 1 from the Hit roll, and each time a friendly TYRANIDS model makes an attack that targets that unit, add 1 to the Wound roll." })
     ]),
     defaultModelCount: 1, defaultPoints: 80,
     pointsOptions: Object.freeze([{ models: 1, points: 80 }, { models: 1, points: 90, condition: "3rd+ Neurolictor in army (+10 points)" }]),
