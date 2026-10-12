@@ -356,3 +356,14 @@ test("Tyranid catalog contains no duplicate candidate names", () => {
   const names = findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name);
   assert.equal(new Set(names).size, names.length);
 });
+
+
+test("Screamer-Killer, Spore Mines, and Sporocyst have sourced points but remain explicitly incomplete", () => {
+  for (const [name, points] of [["Screamer-Killer", 125], ["Spore Mines", 55], ["Sporocyst", 145]]) {
+    const unit = candidate(name);
+    assert.equal(unit.verificationStatus, "points-reviewed");
+    assert.equal(unit.defaultPoints, points);
+    assert.equal(unit.datasheet.characteristics, undefined);
+    assert.equal(unit.officialRulesCrossCheck, "pending");
+  }
+});
