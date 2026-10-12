@@ -40,6 +40,9 @@ test("Hyper-adaptations rejects wrong detachment, invalid choices and later roun
   assert.throws(() => recordFactionAbilityDecision(activeState({
     battle: { id: "b1", status: "active", round: 2, activePlayerId: "p2" }
   }), { playerId: "p1", decisionId: "tyranids.hyper-adaptations", choice: "swarming-instincts" }), /first battle round/);
+  assert.throws(() => recordFactionAbilityDecision(activeState({
+    phase: "movement"
+  }), { playerId: "p1", decisionId: "tyranids.hyper-adaptations", choice: "swarming-instincts" }), /before later phases/);
 });
 
 test("Shadow in the Warp records an optional activation during the opponent's Command phase", () => {
