@@ -1,5 +1,6 @@
 import { createArmyRoster, duplicateArmyRoster } from "../state/army-roster-library.js";
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
+import { getEligibleBodyguards, attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -29,6 +30,41 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   let busy = false;
   let destroyed = false;
 
+  function renderAttachmentControls(unit) {
+    const attachedBodyguard = unit.attachedToBodyguardId
+      ? current?.units.find((candidate) => candidate.id === unit.attachedToBodyguardId)
+      : null;
+    const attachedLeaders = (unit.attachedLeaderIds ?? [])
+      .map((id) => current?.units.find((candidate) => candidate.id === id))
+      .filter(Boolean);
+    const isLeader = unit.datasheet?.leader?.isLeader === true;
+    const isBodyguard = unit.datasheet?.bodyguard?.canReceiveLeader !== undefined ||
+      unit.datasheet?.bodyguard?.maxAttachedLeaders !== undefined;
+    if (!isLeader && !isBodyguard && !attachedBodyguard && attachedLeaders.length === 0) return "";
+    let html = '<section class="army-roster-panel__attachments" aria-label="Leader and Bodyguard attachments"><strong>Leader / Bodyguard</strong>';
+    if (attachedBodyguard) {
+      html += '<p>Attached to: ' + escapeHtml(attachedBodyguard.name) + '</p>' +
+        '<button type="button" data-detach-leader="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '>Detach Leader</button>';
+    } else if (isLeader) {
+      let eligible = [];
+      try { eligible = getEligibleBodyguards(current, unit.id); } catch { eligible = []; }
+      if (eligible.length) {
+        html += '<label>Attach to Bodyguard<select data-bodyguard-choice="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '><option value="">Choose verified Bodyguard…</option>' +
+          eligible.map((bodyguard) => '<option value="' + escapeHtml(bodyguard.id) + '">' + escapeHtml(bodyguard.name) + '</option>').join("") +
+          '</select></label><button type="button" data-attach-leader="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '>Attach Leader</button>';
+      } else {
+        html += '<p>No verified eligible Bodyguard is available. Pairings remain disabled until reviewed datasheet compatibility is recorded.</p>';
+      }
+    }
+    if (isBodyguard) {
+      html += '<p>' + (attachedLeaders.length
+        ? 'Attached Leader' + (attachedLeaders.length === 1 ? ': ' : 's: ') + attachedLeaders.map((leader) => escapeHtml(leader.name)).join(", ")
+        : 'No Leader attached') + '</p>';
+    }
+    html += '</section>';
+    return html;
+  }
+
   function render() {
     if (destroyed) return;
     const options = records.map((record) => '<option value="' + escapeHtml(record.id) + '"' +
@@ -40,6 +76,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       '<label>Unit notes<textarea data-unit-notes="' + escapeHtml(unit.id) + '" rows="2" maxlength="2000" placeholder="Notes for this unit" ' + (busy ? "disabled" : "") + '>' + escapeHtml(unit.notes ?? "") + '</textarea></label>' +
       '<button type="button" data-save-unit="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '>Save unit</button>' +
       '<button type="button" data-view-unit-detail="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '>View details</button>' +
+      renderAttachmentControls(unit) +
       '<button type="button" data-remove-unit="' + escapeHtml(unit.id) + '" ' + (busy ? "disabled" : "") + '>Remove</button>' +
       (openUnitDetailId === unit.id ? '<section aria-label="Unit details"><h5>' + escapeHtml(unit.name) + ' — Unit Details</h5>' +
         '<h6>Characteristics</h6><p>' + escapeHtml(Object.entries(unit.datasheet?.characteristics ?? {}).map(([key, value]) => key + ": " + value).join(" · ") || "Not yet available in the verified catalog.") + '</p>' +
@@ -125,7 +162,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail]");
+    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader]");
     if (!button || !container.contains(button)) return;
     if (button.matches("[data-add-catalog-unit]")) {
       // Capture the selected values before action() re-renders the panel in its busy state.
@@ -152,6 +189,28 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if (button.matches("[data-close-unit-detail]")) {
       openUnitDetailId = "";
       render();
+      return;
+    }
+    if (button.matches("[data-attach-leader]")) {
+      const leaderId = button.getAttribute("data-attach-leader");
+      const bodyguardId = container.querySelector('[data-bodyguard-choice="' + leaderId + '"]')?.value;
+      await action(async () => {
+        if (!current) throw new Error("Open a roster first.");
+        if (!bodyguardId) throw new Error("Choose a verified eligible Bodyguard first.");
+        const updated = attachLeaderToBodyguard(current, leaderId, bodyguardId, { updatedAt: now() });
+        await store.save({ id: updated.id, roster: updated });
+        current = updated;
+      }, "Leader attached to Bodyguard and roster saved.");
+      return;
+    }
+    if (button.matches("[data-detach-leader]")) {
+      const leaderId = button.getAttribute("data-detach-leader");
+      await action(async () => {
+        if (!current) throw new Error("Open a roster first.");
+        const updated = detachLeaderFromBodyguard(current, leaderId, { updatedAt: now() });
+        await store.save({ id: updated.id, roster: updated });
+        current = updated;
+      }, "Leader detached and roster saved.");
       return;
     }
     if (button.matches("[data-save-unit]")) {
@@ -219,7 +278,13 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         if (name == null) return;
         const timestamp = now();
         const copy = duplicateArmyRoster(current, { id: newId(), name, createdAt: timestamp, updatedAt: timestamp });
-        copy.units = copy.units.map((unit) => ({ ...unit, id: newId() }));
+        const remappedIds = new Map(copy.units.map((unit) => [unit.id, newId()]));
+        copy.units = copy.units.map((unit) => {
+          const cloned = { ...unit, id: remappedIds.get(unit.id) };
+          if (unit.attachedToBodyguardId) cloned.attachedToBodyguardId = remappedIds.get(unit.attachedToBodyguardId) ?? unit.attachedToBodyguardId;
+          if (Array.isArray(unit.attachedLeaderIds)) cloned.attachedLeaderIds = unit.attachedLeaderIds.map((id) => remappedIds.get(id) ?? id);
+          return cloned;
+        });
         await store.save({ roster: copy }); selectedId = copy.id; current = copy;
       }, "Independent roster copy created.");
       return;
@@ -236,7 +301,15 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       await action(async () => {
         if (!current) throw new Error("Open a roster first.");
         const unitId = button.getAttribute("data-remove-unit");
-        const updated = { ...current, units: current.units.filter((unit) => unit.id !== unitId), updatedAt: now() };
+        // Detach every relationship touching the unit before removing it, so neither side
+        // retains a dangling attachment reference.
+        let cleaned = current;
+        for (const leader of [...cleaned.units]) {
+          if (leader.id === unitId || leader.attachedToBodyguardId === unitId) {
+            cleaned = detachLeaderFromBodyguard(cleaned, leader.id, { updatedAt: now() });
+          }
+        }
+        const updated = { ...cleaned, units: cleaned.units.filter((unit) => unit.id !== unitId), updatedAt: now() };
         await store.save({ id: updated.id, roster: updated }); current = updated;
       }, "Unit removed and roster saved.");
     }
