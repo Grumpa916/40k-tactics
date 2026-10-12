@@ -117,6 +117,22 @@ test("mission summary preserves all independent expanded states after a state re
   }
 });
 
+
+test("mission summary displays independent Fixed and Tactical modes for each player", () => {
+  const state = sampleState({
+    scoring: {
+      secondaryMissionMode: "fixed",
+      secondaryMissionModeByPlayer: { p1: "fixed", p2: "tactical" },
+      secondaryMissions: sampleState().scoring.secondaryMissions
+    }
+  });
+  const html = renderPersistentMissionSummary(state, { perspectivePlayerId: "p1" });
+  const youBlock = html.match(/data-mission-summary-key="mission-secondary-player-p1"[^]*?<\/details>/)?.[0] ?? "";
+  const opponentBlock = html.match(/data-mission-summary-key="mission-secondary-player-p2"[^]*?<\/details>/)?.[0] ?? "";
+  assert.match(youBlock, />fixed<\/span>/);
+  assert.match(opponentBlock, />tactical<\/span>/);
+});
+
 test("mission summary is display-only and never awards VP or mutates game state", () => {
   const state = sampleState();
   const before = JSON.stringify(state);
