@@ -84,6 +84,7 @@ export function getTyranidDecisionReminders(state, playerId) {
 
   const reminders = [];
   if (state.battle.round === 1 &&
+      ["start_turn", "command"].includes(state.phase) &&
       isInvasionFleetRoster(state, playerId) &&
       !hasRecordedDecision(state, playerId, TYRANID_DECISION_IDS.HYPER_ADAPTATIONS)) {
     reminders.push({
