@@ -245,7 +245,7 @@ export function returnSecondaryMissionToDeck(state, {
 } = {}) {
   requireTurnPosition(round, turn);
   const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "return");
-  if ((state?.scoring?.secondaryMissionMode ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED) {
+  if ((getSecondaryMissionMode(state, playerId) ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED) {
     throw new Error("Fixed secondary cards cannot be returned to the deck.");
   }
   const updated = Object.freeze({
