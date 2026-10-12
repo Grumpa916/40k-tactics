@@ -43,6 +43,7 @@ export function updateTurnClockForPlayer(state, nextPlayerId, nowMs = Date.now()
   if (!stored || typeof stored !== "object") return state;
 
   const clock = getTurnClockState(state);
+  if (clock.activePlayerId === (nextPlayerId ?? null)) return state;
   const elapsedMsByPlayer = { ...clock.elapsedMsByPlayer };
   if (clock.running && clock.activePlayerId && Number.isFinite(clock.startedAtMs)) {
     elapsedMsByPlayer[clock.activePlayerId] =
