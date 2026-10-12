@@ -351,12 +351,26 @@ test("Tyranid catalog contains no duplicate candidate names", () => {
 });
 
 
-test("Screamer-Killer, Spore Mines, and Sporocyst have sourced points but remain explicitly incomplete", () => {
-  for (const [name, points] of [["Screamer-Killer", 125], ["Spore Mines", 55], ["Sporocyst", 145]]) {
-    const unit = candidate(name);
-    assert.equal(unit.verificationStatus, "points-reviewed");
-    assert.equal(unit.defaultPoints, points);
-    assert.equal(unit.datasheet.characteristics, undefined);
-    assert.equal(unit.officialRulesCrossCheck, "pending");
-  }
+test("Screamer-Killer, Spore Mines, and Sporocyst now have complete source-reviewed profiles", () => {
+  const screamerKiller = candidate("Screamer-Killer");
+  assert.equal(screamerKiller.verificationStatus, "source-reviewed");
+  assert.equal(screamerKiller.defaultPoints, 125);
+  assert.equal(screamerKiller.datasheet.characteristics.Wounds, 10);
+  assert.ok(screamerKiller.datasheet.weapons.some((weapon) => weapon.name === "Bio-plasmic scream"));
+  assert.ok(screamerKiller.datasheet.abilities.some((ability) => ability.name === "Death Scream"));
+
+  const sporeMines = candidate("Spore Mines");
+  assert.equal(sporeMines.verificationStatus, "source-reviewed");
+  assert.equal(sporeMines.defaultModelCount, 3);
+  assert.deepEqual(sporeMines.pointsOptions.map((option) => option.points), [55, 110]);
+  assert.equal(sporeMines.datasheet.characteristics["Objective Control"], 0);
+  assert.ok(sporeMines.datasheet.abilities.some((ability) => ability.name === "Floating Death"));
+
+  const sporocyst = candidate("Sporocyst");
+  assert.equal(sporocyst.verificationStatus, "source-reviewed");
+  assert.equal(sporocyst.defaultPoints, 145);
+  assert.equal(sporocyst.datasheet.characteristics.Toughness, 10);
+  assert.ok(sporocyst.datasheet.weapons.some((weapon) => weapon.name === "Sporocyst bio-weapons"));
+  assert.ok(sporocyst.datasheet.abilities.some((ability) => ability.name === "Seed Mucolids"));
+  for (const unit of [screamerKiller, sporeMines, sporocyst]) assert.equal(unit.officialRulesCrossCheck, "pending");
 });
