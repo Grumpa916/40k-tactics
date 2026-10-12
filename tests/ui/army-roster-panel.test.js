@@ -61,7 +61,7 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
     ["Warrior Bioform Onslaught", "Take and Hold", "1 DP"]
   ];
   for (const [name, disposition, cost] of tyranidDetachments) {
-    assert.match(root.detachmentSelect.innerHTML, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\  assert.match(root.detachmentSelect.innerHTML, /Invasion Fleet \(Tyranids\)/);
+    assert.ok(root.detachmentSelect.innerHTML.includes(name), `missing detachment ${name}`);
   assert.match(root.detachmentSelect.innerHTML, /Other \/ enter manually/);")));
     assert.ok(root.detachmentSelect.innerHTML.includes(disposition), `missing Force Disposition for ${name}`);
     assert.ok(root.detachmentSelect.innerHTML.includes(cost), `missing Detachment Point cost for ${name}`);
