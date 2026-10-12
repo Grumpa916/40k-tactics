@@ -790,6 +790,26 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
   assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
 });
 
+test("Neurolictor, Deathleaper, and Tervigon preserve official Aura ability tags", () => {
+  const neurolictor = candidate("Neurolictor");
+  const saboteur = neurolictor.datasheet.abilities.find((ability) => ability.name === "Psychological Saboteur (Aura)");
+  assert.ok(saboteur);
+  assert.match(saboteur.description, /each time a model in that unit makes an attack/);
+  assert.match(saboteur.description, /friendly TYRANIDS model makes an attack that targets that unit/);
+  const disruption = neurolictor.datasheet.abilities.find((ability) => ability.name === "Neural Disruption");
+  assert.match(disruption.description, /within 12 inches of this model/);
+
+  const deathleaper = candidate("Deathleaper");
+  assert.ok(deathleaper.datasheet.abilities.some((ability) => ability.name === "Fear of the Unseen (Aura)"));
+
+  const tervigon = candidate("Tervigon");
+  const progenitor = tervigon.datasheet.abilities.find((ability) => ability.name === "Brood Progenitor (Aura, Psychic)");
+  assert.ok(progenitor);
+  assert.match(progenitor.description, /within 6 inches of this model/);
+  const spawn = tervigon.datasheet.abilities.find((ability) => ability.name === "Spawn Termagants");
+  assert.match(spawn.description, /A Termagants unit cannot be selected for this ability more than once per phase/);
+});
+
 test("Neurotyrant abilities retain Psychic tags and exact Neuroloids range/timing", () => {
   const unit = candidate("Neurotyrant");
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash (Psychic)"));
