@@ -427,6 +427,24 @@
       .battle-shell__setup-tabs button { min-height:48px; }
       .battle-shell__setup-bottom-nav { bottom:64px; }
     }
+  
+    .army-selection { margin:1rem 0; padding:1rem; border:1px solid #7b8794; border-radius:12px; background:#f8fafc; color:#17212b; }
+    .army-selection h2 { margin-top:0; font-size:1.6rem; }
+    .army-selection__sides { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin:1rem 0; }
+    .army-selection-card { min-width:0; padding:1rem; border:2px solid #64748b; border-radius:12px; background:#fff; }
+    .army-selection-card h3 { margin:.1rem 0 .75rem; font-size:1.2rem; }
+    .army-selection-card__name { font-size:1.05rem; }
+    .army-selection-card dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; margin:.75rem 0; }
+    .army-selection-card dl div { padding:.6rem; border-radius:8px; background:#eef2f7; }
+    .army-selection-card dt { font-size:.8rem; color:#475569; }
+    .army-selection-card dd { margin:.2rem 0 0; font-weight:700; overflow-wrap:anywhere; }
+    .army-selection-card label { display:flex; flex-direction:column; gap:.4rem; margin:.75rem 0; font-weight:650; }
+    .army-selection-card select { box-sizing:border-box; width:100%; min-height:50px; padding:.65rem; border:1px solid #64748b; border-radius:8px; background:white; color:#17212b; font:inherit; }
+    .army-selection-card button, .army-selection > button { width:100%; min-height:50px; padding:.7rem; border:1px solid #475569; border-radius:8px; background:#e2e8f0; color:#17212b; font:inherit; font-weight:700; cursor:pointer; touch-action:manipulation; }
+    .army-selection-card button:disabled, .army-selection > button:disabled { opacity:.5; cursor:not-allowed; }
+    .army-selection-card__note { color:#854d0e; font-weight:650; }
+    .army-selection__message { min-height:1.5em; font-weight:650; }
+    @media (max-width:760px) { .army-selection__sides { grid-template-columns:minmax(0,1fr); } }
   </style>
 </head>
 <body>
