@@ -10,11 +10,14 @@ test("catalog candidates are faction-filtered and search is case-insensitive", (
   assert.equal(findArmyUnitCandidates({ faction: "Unknown Faction" }).length, 0);
 });
 
-test("catalog explicitly marks starter entries as unverified names only", () => {
+test("catalog entries declare source status and a source URL", () => {
   assert.ok(ARMY_UNIT_CATALOG.length > 0);
   assert.ok(ARMY_UNIT_CATALOG.every((unit) =>
-    unit.verificationStatus === "name-only-unverified" &&
+    ["name-only-unverified", "source-reviewed"].includes(unit.verificationStatus) &&
     typeof unit.sourceUrl === "string" &&
     unit.sourceUrl.startsWith("https://")
   ));
+  const reviewed = ARMY_UNIT_CATALOG.filter((unit) => unit.verificationStatus === "source-reviewed");
+  assert.ok(reviewed.length > 0);
+  assert.ok(reviewed.every((unit) => unit.datasheet && unit.reviewedAt));
 });
