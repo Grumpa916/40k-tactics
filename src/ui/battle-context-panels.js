@@ -10,6 +10,16 @@ function playerName(state, playerId) {
   return state.players?.find((player) => player.id === playerId)?.name ?? playerId ?? "Unknown player";
 }
 
+function hasBattleShockTestThisTurn(state, unit) {
+  const round = state?.battle?.round ?? 0;
+  const turn = state?.turn ?? 0;
+  return (Array.isArray(state?.history) ? state.history : []).some((event) =>
+    event?.type === "battle_shock.test_recorded" &&
+    event?.payload?.unitId === unit?.id &&
+    event?.payload?.round === round &&
+    event?.payload?.turn === turn);
+}
+
 function humanizeEventType(type) {
   const labels = {
     "battle.started": "Battle started",
@@ -104,8 +114,10 @@ export function summarizeGameEvent(event, state = {}) {
 export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
   const units = Array.isArray(state.units) ? state.units : [];
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
-  const eligible = units.filter((unit) => getBattleShockEligibility(unit).requiresTest === true);
-  const needsReview = units.filter((unit) => getBattleShockEligibility(unit).requiresTest === null);
+  const eligible = units.filter((unit) =>
+    getBattleShockEligibility(unit).requiresTest === true && !hasBattleShockTestThisTurn(state, unit));
+  const needsReview = units.filter((unit) =>
+    getBattleShockEligibility(unit).requiresTest === null && !hasBattleShockTestThisTurn(state, unit));
   const sorted = units.slice().sort((a, b) => {
     const rank = (unit) => {
       if (unit.status === UNIT_STATUS.DESTROYED) return 4;
@@ -120,6 +132,7 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
 
   const rows = sorted.map((unit) => {
     const assessment = getBattleShockEligibility(unit);
+    const testRecordedThisTurn = hasBattleShockTestThisTurn(state, unit);
     const badges = [];
     if (unit.status === UNIT_STATUS.DESTROYED) {
       badges.push('<span class="battle-context__badge battle-context__badge--danger">Destroyed</span>');
@@ -130,6 +143,9 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
     }
     if (isUnitBattleShocked(unit)) {
       badges.push('<span class="battle-context__badge battle-context__badge--danger">Battle-shocked</span>');
+      if (testRecordedThisTurn) badges.push('<span class="battle-context__badge">Test recorded this Command phase</span>');
+    } else if (testRecordedThisTurn) {
+      badges.push('<span class="battle-context__badge">Battle-shock test recorded</span>');
     } else if (assessment.requiresTest === true) {
       badges.push('<span class="battle-context__badge battle-context__badge--warning">Battle-shock test due</span>');
     } else if (assessment.requiresTest === null) {
@@ -144,7 +160,7 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
         (Number.isFinite(lastTest.round) ? ' · Round ' + escapeHtml(lastTest.round) : "") + '</small>'
       : "";
     const hasDueTest = state.battle?.status === "active" && state.phase === "command" && unit.ownerId === activePlayerId &&
-      assessment.requiresTest !== false && unit.status !== UNIT_STATUS.DESTROYED;
+      assessment.requiresTest !== false && !testRecordedThisTurn && unit.status !== UNIT_STATUS.DESTROYED;
     const testControls = hasDueTest
       ? '<div class="battle-context__test-controls"><span>' +
         (assessment.requiresTest === null
@@ -167,7 +183,7 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
     '<summary><span>Unit Status</span><span class="battle-context__count">' + units.length + ' units</span></summary>' +
     '<p class="battle-context__note">Battle-shock tests are required for units that are currently Battle-shocked or at/below half-strength. Missing strength data is flagged for review, not guessed.</p>' +
     (eligible.length ? '<p class="battle-context__alert">' + eligible.length + ' unit(s) need Battle-shock attention.</p>' : '') +
-    (needsReview.length ? '<p class="battle-context__note">' + needsReview.length + ' unit(s) need a manual strength check.</p>' : '') +
+    (reviewCount ? '<p class="battle-context__note">' + reviewCount + ' unit(s) need a manual strength check.</p>' : '') +
     (rows ? '<ul class="battle-context__unit-list">' + rows + '</ul>' : '<p>No units have been added to this battle.</p>') +
     '</details>';
 }
