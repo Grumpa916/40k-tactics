@@ -12,8 +12,8 @@ test("Tyranid Prime with Lash Whip has source-reviewed details and fixed points 
   assert.equal(unit.datasheet.characteristics.Toughness, 5);
   assert.equal(unit.datasheet.weapons.length, 3);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Alpha Warrior"));
-  assert.ok(unit.sourceUrl.includes("40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip"));
-  assert.equal(unit.officialRulesCrossCheck, "pending");
+  assert.ok(unit.sourceUrl.includes("warhammer-community.com"));
+  assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
 test("Raveners expose the five-model baseline and army-count cost adjustment", () => {
@@ -23,7 +23,7 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
   assert.equal(unit.defaultPoints, 125);
   assert.deepEqual(unit.pointsOptions.map((option) => option.points), [125, 135]);
   assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
 });
 
 
@@ -397,7 +397,7 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
     assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === weaponName), name);
     assert.ok(unit.datasheet.keywords.includes("Legends"), name);
     assert.ok(unit.sourceName.includes("Legends"), name);
-    assert.equal(unit.officialRulesCrossCheck, "pending", name);
+    assert.equal(unit.officialRulesCrossCheck, "verified", name);
     assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
   }
   const requiredAbilities = {
@@ -413,6 +413,73 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
       assert.ok(unit.datasheet.abilities.some((entry) => entry.name === ability), `${name} missing ${ability}`);
     }
   }
+});
+
+test("The Red Terror matches the current official 11th-edition faction pack", () => {
+  const unit = candidate("The Red Terror");
+  assert.deepEqual(unit.datasheet.characteristics, {
+    Move: '10"',
+    Toughness: 8,
+    Save: "3+",
+    Wounds: 9,
+    Leadership: "8+",
+    "Objective Control": 3
+  });
+  assert.deepEqual(unit.datasheet.keywords, [
+    "Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "The Red Terror", "Vanguard Invader"
+  ]);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Serpentine Fiend"));
+  assert.ok(!unit.datasheet.keywords.includes("Mobile"));
+  assert.equal(unit.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
+  assert.equal(unit.officialRulesCrossCheck, "verified");
+});
+
+test("Imperial Armour profiles match current official Frame keywords and damaged rules", () => {
+  for (const name of ["Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Harridan", "Hierophant"]) {
+    const unit = candidate(name);
+    assert.ok(unit.datasheet.keywords.includes("Frame"), name);
+    assert.equal(unit.officialRulesCrossCheck, "verified", name);
+    assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
+  }
+  const harridan = candidate("Harridan");
+  assert.ok(harridan.datasheet.abilities.some((ability) => ability.name === "Hover"));
+  const hierophant = candidate("Hierophant");
+  const damaged = hierophant.datasheet.abilities.find((ability) => ability.name === "Damaged: 1-10 Wounds Remaining");
+  assert.ok(damaged);
+  assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
+});
+
+test("Tyranid Prime with Lash Whip matches current official datasheet", () => {
+  const unit = candidate("Tyranid Prime with Lash Whip");
+  assert.deepEqual(unit.datasheet.characteristics, {
+    Move: '10"',
+    Toughness: 5,
+    Save: "3+",
+    Wounds: 6,
+    Leadership: "7+",
+    "Objective Control": 1
+  });
+  assert.equal(unit.datasheet.weapons.length, 3);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Aggressive Leader-beast"));
+  assert.equal(unit.officialRulesCrossCheck, "verified");
+});
+
+test("Raveners match current official datasheet and keywords", () => {
+  const unit = candidate("Raveners");
+  assert.deepEqual(unit.datasheet.characteristics, {
+    Move: '10"',
+    Toughness: 5,
+    Save: "4+",
+    Wounds: 3,
+    Leadership: "8+",
+    "Objective Control": 1
+  });
+  assert.deepEqual(unit.datasheet.keywords, [
+    "Burrowers", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"
+  ]);
+  assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
+  assert.equal(unit.officialRulesCrossCheck, "verified");
 });
 
 test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
