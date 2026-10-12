@@ -168,3 +168,46 @@ test("Command screen makes Tactical secondary-card entry explicit", () => {
   assert.match(container.innerHTML, /Record secondary card/);
   screen.destroy();
 });
+
+test("Command screen records CP changes for the selected opponent", () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  let state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p1",
+    players: [{ id: "p1", name: "Player One" }, { id: "p2", name: "Player Two" }],
+    battle: { id: "b1", status: "active", round: 1 },
+    commandPoints: { p1: 2, p2: 3 }
+  });
+  const listeners = {};
+  const container = {
+    innerHTML: "",
+    addEventListener(type, handler) { listeners[type] = handler; },
+    removeEventListener(type) { delete listeners[type]; },
+    contains() { return true; },
+    replaceChildren() { this.innerHTML = ""; },
+    querySelector(selector) { return selector === "[data-cp-player]" ? { value: "p2" } : null; }
+  };
+  let subscriber = null;
+  const session = {
+    getState() { return state; },
+    subscribe(callback) { subscriber = callback; return () => { subscriber = null; }; },
+    dispatch(command) {
+      state = executeCommand(state, command);
+      subscriber?.(state);
+      return state;
+    }
+  };
+  const screen = createCommandScreen(container, {
+    session, perspectivePlayerId: "p1", missionDefinitions: [], secondaryMissionCatalog: []
+  });
+  const gainButton = {
+    closest(selector) { return selector.includes("[data-cp-gain]") ? this : null; },
+    hasAttribute(name) { return name === "data-cp-gain"; }
+  };
+  listeners.click({ target: gainButton });
+  assert.equal(getCommandPointBalance(state, "p1"), 2);
+  assert.equal(getCommandPointBalance(state, "p2"), 4);
+  assert.equal(state.history.at(-1).payload.playerId, "p2");
+  screen.destroy();
+  clearCommandHandlers();
+});
