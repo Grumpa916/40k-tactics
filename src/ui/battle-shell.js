@@ -208,7 +208,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   factionDecisionMessage = "",
   contextOpenStates = { "unit-status": true, "event-log": true },
   referenceOpenStates = { stratagems: true },
-  missionOpenStates = {}
+  missionOpenStates = {},
+  setupWorkspaceTab = "army-builder"
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -276,8 +277,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const rightToggle = '<button type="button" class="battle-shell__panel-toggle" data-toggle-battle-panel="right" ' +
     'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
-  const workspace = '<section class="battle-shell__workspace" data-battle-workspace data-left-collapsed="' +
-    String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
+  const workspace = '<section class="battle-shell__workspace" data-battle-workspace' +
+    (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
+    ' data-left-collapsed="' + String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left">' +
     leftToggle + '<div id="battle-left-panel-body" class="battle-shell__panel-body" data-battle-context-body>' +
     renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
@@ -302,10 +304,21 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
     '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
     statusSummary + clockPanel +
-    (showCloud && viewedPhase === "setup"
-      ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2>' +
-        '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
-        '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div><div data-army-roster-panel></div></section>'
+    (viewedPhase === "setup"
+      ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
+        '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Army Builder</button>' +
+        '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Saves</button>' +
+        '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + '">Pre-game</button>' +
+        '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + '">Mission &amp; Map</button></nav>' +
+        (showCloud
+          ? '<section class="battle-shell__setup-tools" aria-label="Army Builder and cloud battle saves">' +
+            '<section data-setup-workspace-panel="saves"' + (setupWorkspaceTab === "saves" ? '' : ' hidden') + '><h2>Account &amp; Cloud Saves</h2>' +
+            '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
+            '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' +
+            '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section></section>'
+          : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section>') +
+        '<footer class="battle-shell__setup-bottom-nav"><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
+        '<button type="button" data-setup-workspace-continue>' + setupContinueLabel(setupWorkspaceTab) + '</button></footer>'
       : "") +
     '<p class="battle-shell__view-note">Viewing ' + escapeHtml(phaseLabel(viewedPhase)) +
     '. Selecting a phase changes the screen view, not the recorded game phase.</p>' +
@@ -339,6 +352,7 @@ export function createBattleShell(container, {
   let mountedRosterPanel = null;
   const cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
   const showCloud = Boolean(supabaseClient || cloudStore);
+  let setupWorkspaceTab = "army-builder";
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
   let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
@@ -361,6 +375,34 @@ export function createBattleShell(container, {
   let contextOpenStates = { "unit-status": true, "event-log": true, "older-events": false };
   let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
   let missionOpenStates = {};
+
+  function setupTabLabel(tab) {
+    return ({ "army-builder": "Step 1 of 4 · Army Builder", saves: "Step 2 of 4 · Saves",
+      "pre-game": "Step 3 of 4 · Pre-game", "mission-map": "Step 4 of 4 · Mission & Map" })[tab] ?? "Setup";
+  }
+
+  function setupContinueLabel(tab) {
+    return ({ "army-builder": "Continue to Saves", saves: "Continue to Pre-game",
+      "pre-game": "Continue to Mission & Map", "mission-map": "Back to Army Builder" })[tab] ?? "Continue";
+  }
+
+  function setSetupWorkspaceTab(tab) {
+    if (!["army-builder", "saves", "pre-game", "mission-map"].includes(tab)) return;
+    setupWorkspaceTab = tab;
+    container.querySelectorAll?.("[data-setup-workspace-tab]").forEach((button) => {
+      button.setAttribute("aria-pressed", String(button.getAttribute("data-setup-workspace-tab") === tab));
+    });
+    container.querySelectorAll?.("[data-setup-workspace-panel]").forEach((panel) => {
+      panel.hidden = panel.getAttribute("data-setup-workspace-panel") !== tab;
+    });
+    const workspace = container.querySelector?.("[data-battle-workspace]");
+    if (workspace) workspace.hidden = tab === "army-builder" || tab === "saves";
+    const label = container.querySelector?.("[data-setup-step-label]");
+    if (label) label.textContent = setupTabLabel(tab);
+    const next = container.querySelector?.("[data-setup-workspace-continue]");
+    if (next) next.textContent = setupContinueLabel(tab);
+    mountedScreen?.setTab?.(tab === "mission-map" ? "mission-map" : "pre-game");
+  }
 
   function destroyMountedScreen() {
     if (mountedScreen?.destroy) mountedScreen.destroy();
@@ -599,7 +641,8 @@ export function createBattleShell(container, {
           secondaryMissionCatalog,
           scoringCheckpoint: scoringReviewCheckpoint,
           scoringCheckpointActivePlayerId: scoringReviewActivePlayerId,
-          scoringCheckpointPlayerId: scoringReviewPlayerId
+          scoringCheckpointPlayerId: scoringReviewPlayerId,
+          setupTab: setupWorkspaceTab
         });
         mountedPhase = viewedPhase;
       } else if (screenContainer) {
@@ -804,6 +847,19 @@ export function createBattleShell(container, {
     render();
   }
 
+  function handleSetupWorkspaceNavigation(event) {
+    const tabButton = event.target?.closest?.("[data-setup-workspace-tab]");
+    if (tabButton && container.contains(tabButton)) {
+      setSetupWorkspaceTab(tabButton.getAttribute("data-setup-workspace-tab"));
+      return;
+    }
+    const continueButton = event.target?.closest?.("[data-setup-workspace-continue]");
+    if (!continueButton || !container.contains(continueButton)) return;
+    const order = ["army-builder", "saves", "pre-game", "mission-map"];
+    const index = order.indexOf(setupWorkspaceTab);
+    setSetupWorkspaceTab(order[index === order.length - 1 ? 0 : index + 1]);
+  }
+
   function handlePhaseNavigation(event) {
     const button = event.target?.closest?.("[data-battle-phase-button]");
     if (!button || !container.contains(button)) return;
@@ -819,6 +875,7 @@ export function createBattleShell(container, {
     render();
   }
 
+  container.addEventListener?.("click", handleSetupWorkspaceNavigation);
   container.addEventListener?.("click", handlePhaseNavigation);
   container.addEventListener?.("click", handleToggleTurnClock);
   container.addEventListener?.("click", handleCloseTurnClock);
@@ -844,6 +901,7 @@ export function createBattleShell(container, {
       unsubscribe();
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
+      container.removeEventListener?.("click", handleSetupWorkspaceNavigation);
       container.removeEventListener?.("click", handlePhaseNavigation);
       container.removeEventListener?.("click", handleToggleTurnClock);
       container.removeEventListener?.("click", handleCloseTurnClock);
