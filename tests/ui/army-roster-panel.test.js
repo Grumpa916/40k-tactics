@@ -62,7 +62,6 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
   ];
   for (const [name, disposition, cost] of tyranidDetachments) {
     assert.ok(root.detachmentSelect.innerHTML.includes(name), `missing detachment ${name}`);
-  assert.match(root.detachmentSelect.innerHTML, /Other \/ enter manually/);")));
     assert.ok(root.detachmentSelect.innerHTML.includes(disposition), `missing Force Disposition for ${name}`);
     assert.ok(root.detachmentSelect.innerHTML.includes(cost), `missing Detachment Point cost for ${name}`);
   }
