@@ -22,6 +22,7 @@ export function createDeploymentScreen(container, {
   let selectedUnitId = null;
   let firstPlayerId = null;
   let message = "";
+  let deploymentPointerDrag = null;
 
   function playerFor(state) {
     return selectedPlayerId ?? perspectivePlayerId ?? state.activePlayer ?? state.players?.[0]?.id ?? null;
@@ -76,8 +77,14 @@ export function createDeploymentScreen(container, {
       '<h1>Actual Deployment</h1><p>Record where both armies actually deploy. Planned positions are a guide only and are not copied automatically.</p></header>' +
       '<p class="battlefield-map__notice">The map is approximate context, not a measurement tool. Follow the mission pack and tabletop rules for legal deployment, terrain, and reserve restrictions.</p>' +
       '<section class="battlefield-map-section"><h2>Deployment Map</h2>' +
-      renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: playerId }) +
-      '<p>Select a player and unit, then tap the map to place or correct its actual starting position. Select a unit marker and tap a new point to reposition it.</p></section>' +
+      renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: playerId, selectedUnitId }) +
+      '<p>Drag any unit marker to its actual starting location. Tap a marker to select it, then tap an empty point as a fallback. Dashed markers are awaiting placement; planned positions are not copied automatically.</p>' +
+      '<section class="deployment-reserve-tray" aria-label="Units declared in reserves"><h3>Reserves</h3>' +
+      ((state.units ?? []).filter((unit) => unit && unit.status !== "destroyed" && reserves[unit.id]).map((unit) =>
+        '<span class="deployment-reserve-tray__unit">' + escapeHtml(unit.name ?? unit.id) + ' · ' +
+        escapeHtml(players.find((player) => player.id === unit.ownerId)?.name ?? unit.ownerId) + '</span>'
+      ).join("") || '<p>No units declared in reserves.</p>') +
+      '</section></section>' +
       '<section class="deployment-controls"><label>Army / player<select data-deployment-player>' + playerOptions + '</select></label>' +
       '<label>Unit to place<select data-deployment-unit><option value="">Select a unit…</option>' + unitOptions + '</select></label>' +
       '<p data-deployment-selected-status>' + escapeHtml(selectedStatus) + '</p>' +
@@ -93,6 +100,47 @@ export function createDeploymentScreen(container, {
       (totalUnaccounted ? '<p>Both armies must account for every non-destroyed unit before the first turn can start.</p>' :
         '<p>All units are accounted for. Confirm the first player to begin the battle.</p>') +
       '</section>' + (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</main>';
+  }
+
+  function handleDeploymentPointerDown(event) {
+    const marker = event.target?.closest?.("[data-map-unit-id]");
+    if (!marker || !marker.closest?.('[data-map-mode="deployment"]')) return;
+    deploymentPointerDrag = {
+      unitId: marker.getAttribute("data-map-unit-id"),
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY
+    };
+    selectedUnitId = deploymentPointerDrag.unitId;
+    const unit = (session.getState().units ?? []).find((item) => item.id === selectedUnitId);
+    if (unit?.ownerId) selectedPlayerId = unit.ownerId;
+  }
+
+  function handleDeploymentPointerUp(event) {
+    const drag = deploymentPointerDrag;
+    deploymentPointerDrag = null;
+    if (!drag || drag.pointerId !== event.pointerId ||
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 8) return;
+    const board = event.target?.closest?.('[data-battlefield-map-board]') ??
+      container.querySelector?.('[data-map-mode="deployment"] [data-battlefield-map-board]');
+    if (!board || !board.closest?.('[data-map-mode="deployment"]')) return;
+    const rect = board.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return;
+    const position = {
+      x: Math.round(Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60)) * 10) / 10,
+      y: Math.round(Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44)) * 10) / 10
+    };
+    const unit = (session.getState().units ?? []).find((item) => item.id === drag.unitId);
+    if (!unit?.ownerId) return;
+    try {
+      session.dispatch({ type: COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION, payload: {
+        unitId: drag.unitId, playerId: unit.ownerId, position
+      }});
+      selectedPlayerId = unit.ownerId;
+      selectedUnitId = drag.unitId;
+      message = "Actual deployment position recorded.";
+    } catch (error) { message = error?.message ?? String(error); }
+    render();
   }
 
   function handleChange(event) {
@@ -117,7 +165,9 @@ export function createDeploymentScreen(container, {
     const marker = event.target?.closest?.("[data-map-unit-id]");
     if (marker && marker.closest?.('[data-map-mode="deployment"]')) {
       selectedUnitId = marker.getAttribute?.("data-map-unit-id") ?? marker.dataset?.mapUnitId ?? null;
-      message = selectedUnitId ? "Selected unit. Tap the map to reposition it." : "";
+      const selectedUnit = (session.getState().units ?? []).find((unit) => unit.id === selectedUnitId);
+      if (selectedUnit?.ownerId) selectedPlayerId = selectedUnit.ownerId;
+      message = selectedUnitId ? "Selected unit. Drag it to place or reposition it." : "";
       render();
       return;
     }
@@ -200,6 +250,8 @@ export function createDeploymentScreen(container, {
 
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("click", handleClick);
+  container.addEventListener?.("pointerdown", handleDeploymentPointerDown);
+  container.addEventListener?.("pointerup", handleDeploymentPointerUp);
   const unsubscribe = session.subscribe(render);
   render();
   return {
@@ -208,6 +260,8 @@ export function createDeploymentScreen(container, {
       unsubscribe();
       container.removeEventListener?.("change", handleChange);
       container.removeEventListener?.("click", handleClick);
+      container.removeEventListener?.("pointerdown", handleDeploymentPointerDown);
+      container.removeEventListener?.("pointerup", handleDeploymentPointerUp);
       container.replaceChildren();
     }
   };
