@@ -175,10 +175,13 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Carnifexes", "Great Devourer", "Monster"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Carnifex scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "4+", strength: 9, ap: -2, damage: 3 }),
+      Object.freeze({ name: "Carnifex crushing claws", equipment: "Wargear option", range: "Melee", attacks: 4, skill: "4+", strength: 12, ap: -3, damage: "D6+1" }),
       Object.freeze({ name: "Carnifex extra scything talons", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 9, ap: -2, damage: 3, abilities: "Extra Attacks" }),
       Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 6, ap: 0, damage: 1 }),
       Object.freeze({ name: "Bio-plasma", equipment: "Wargear option", range: '12"', attacks: "D3", skill: "4+", strength: 7, ap: -2, damage: 1, abilities: "Assault, Blast" }),
       Object.freeze({ name: "Heavy venom cannon", equipment: "Wargear option", range: '36"', attacks: "D3", skill: "4+", strength: 9, ap: -2, damage: 3, abilities: "Blast" }),
+      Object.freeze({ name: "Spine banks", equipment: "Default", range: '6"', attacks: 5, skill: "4+", strength: 5, ap: 0, damage: 1, abilities: "Assault" }),
+      Object.freeze({ name: "Stranglethorn cannon", equipment: "Wargear option", range: '36"', attacks: "D6+1", skill: "4+", strength: 7, ap: -1, damage: 2, abilities: "Blast" }),
       Object.freeze({ name: "Deathspitters with slimer maggots", equipment: "Wargear option", range: '24"', attacks: 6, skill: "4+", strength: 7, ap: -2, damage: 1 }),
       Object.freeze({ name: "Devourers with brainleech worms", equipment: "Wargear option", range: '18"', attacks: 12, skill: "4+", strength: 6, ap: 0, damage: 1 })
     ]),
@@ -191,7 +194,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     defaultModelCount: 1,
     defaultPoints: 90,
     pointsOptions: Object.freeze([{ models: 1, points: 90 }, { models: 2, points: 180 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Carnifexes datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/carnifexes", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Carnifexes datasheet; current 11th-edition cross-check", sourceUrl: "https://www.40k.app/factions/tyranids/units/carnifexes", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/carnifexes"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:the-swarmlord": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 10, Save: "2+", Wounds: 10, Leadership: "7+", "Objective Control": 3, "Invulnerable save": "4+" }),
