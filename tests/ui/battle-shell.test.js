@@ -971,7 +971,7 @@ test("battle shell mounts pre-battle mission setup before the battle starts", ()
 });
 
 
-test("setup navigation exposes four focused workspaces and a bottom Continue action", () => {
+test("setup navigation exposes staged setup workspaces and a bottom Continue action", () => {
   const session = sessionFor({
     phase: "setup",
     turn: 0,
@@ -987,7 +987,13 @@ test("setup navigation exposes four focused workspaces and a bottom Continue act
   assert.ok(root.html.indexOf('data-setup-workspace-tab="saves"') < root.html.indexOf('data-setup-workspace-tab="army-builder"'));
   assert.match(root.html, /data-setup-workspace-tab="pre-game"/);
   assert.match(root.html, /data-setup-workspace-tab="mission-map"/);
+  assert.match(root.html, /data-setup-workspace-tab="battlefield"/);
+  assert.match(root.html, /data-setup-workspace-tab="deployment"/);
+  assert.match(root.html, /Step 1 · Game Size &amp; Armies/);
+  assert.match(root.html, /Step 3 · Mission &amp; Secondaries/);
+  assert.match(root.html, /Step 4 · Create the Battlefield/);
+  assert.match(root.html, /Step 5 · Deploy and Begin/);
   assert.match(root.html, /data-setup-workspace-continue/);
-  assert.match(root.html, /Continue to Army Builder/);
+  assert.match(root.html, /Continue to Game Size/);
   shell.destroy();
 });
