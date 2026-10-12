@@ -67,7 +67,8 @@ export function createCommandScreen(container, {
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
-    const playerId = perspectivePlayerId ?? state.activePlayer;
+    const playerId = container.querySelector?.("[data-cp-player]")?.value ||
+      perspectivePlayerId || state.activePlayer || state.players?.[0]?.id;
     if (!playerId) return;
     session.dispatch({ type: COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, payload: {
       playerId, amount, reason, note, turn: state.turn ?? 0, round: state.battle?.round ?? 0
