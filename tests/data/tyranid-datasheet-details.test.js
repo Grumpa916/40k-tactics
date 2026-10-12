@@ -195,7 +195,7 @@ test("Pyrovores, Von Ryan's Leapers, and Ripper Swarms expose sourced model opti
   assert.deepEqual(pyrovores.pointsOptions.slice(0, 3).map((option) => option.points), [45, 65, 95]);
   assert.ok(pyrovores.datasheet.weapons.some((weapon) => weapon.name === "Flamespurt"));
 
-  const leapers = candidate("Von Ryan's Leapers");
+  const leapers = candidate("Von Ryan’s Leapers");
   assert.equal(leapers.defaultModelCount, 3);
   assert.deepEqual(leapers.pointsOptions.map((option) => option.points), [55, 105]);
   assert.ok(leapers.datasheet.abilities.some((ability) => ability.name === "Fights First"));
