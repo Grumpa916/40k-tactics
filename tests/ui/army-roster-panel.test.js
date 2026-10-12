@@ -5,6 +5,8 @@ import { createArmyRosterPanel } from "../../src/ui/army-roster-panel.js";
 function makeContainer() {
   const listeners = new Map();
   const detachmentSelect = { innerHTML: "" };
+  const rosterSelect = { value: "" };
+  const playerSelect = { value: "" };
   return {
     innerHTML: "",
     listeners,
@@ -17,10 +19,15 @@ function makeContainer() {
     },
     contains() { return true; },
     querySelector(selector) {
-      return selector === "[data-roster-detachment-select]" ? detachmentSelect : null;
+      if (selector === "[data-roster-detachment-select]") return detachmentSelect;
+      if (selector === "[data-roster-select]") return rosterSelect;
+      if (selector === "[data-roster-player]") return playerSelect;
+      return null;
     },
     replaceChildren() { this.innerHTML = ""; },
     detachmentSelect,
+    rosterSelect,
+    playerSelect,
     emit(type, event) {
       for (const listener of listeners.get(type) ?? []) listener(event);
     }
@@ -67,5 +74,63 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
   }
   assert.equal((root.detachmentSelect.innerHTML.match(/<option value="/g) ?? []).length, 12);
   assert.match(root.detachmentSelect.innerHTML, /Other \/ enter manually/);
+  panel.destroy();
+});
+
+
+test("roster assignment preserves the selected opponent target across rerenders", async () => {
+  const root = makeContainer();
+  const roster = {
+    id: "roster-opponent",
+    name: "Opponent Orks",
+    faction: "Orks",
+    pointsLimit: 2000,
+    units: [{ id: "orks-unit", name: "Boyz", ownerId: null, modelCount: 10, points: 80 }],
+    createdAt: "2026-10-12T00:00:00.000Z",
+    updatedAt: "2026-10-12T00:00:00.000Z"
+  };
+  const applied = [];
+  const store = {
+    async list() { return [{ id: roster.id, name: roster.name, faction: roster.faction, pointsLimit: roster.pointsLimit }]; },
+    async save() {},
+    async load(id) {
+      assert.equal(id, roster.id);
+      return { roster: structuredClone(roster) };
+    },
+    async remove() {}
+  };
+  const panel = createArmyRosterPanel(root, {
+    store,
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    onApplyRoster: async (selectedRoster, playerId) => applied.push({ selectedRoster, playerId })
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+
+  root.rosterSelect.value = roster.id;
+  const loadButton = {
+    matches(selector) { return selector.includes("[data-roster-load]"); }
+  };
+  root.emit("click", { target: { closest(selector) {
+    return selector.includes("[data-roster-load]") ? loadButton : null;
+  } } });
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.match(root.innerHTML, /Assign roster to battle side/);
+  root.playerSelect.value = "p2";
+  const applyButton = {
+    matches(selector) { return selector.includes("[data-roster-apply]"); }
+  };
+  root.emit("click", { target: { closest(selector) {
+    return selector.includes("[data-roster-apply]") ? applyButton : null;
+  } } });
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(applied.length, 1);
+  assert.equal(applied[0].playerId, "p2");
+  assert.equal(applied[0].selectedRoster.id, roster.id);
+  assert.equal(applied[0].selectedRoster.units[0].name, "Boyz");
+  assert.match(root.innerHTML, /Roster assigned to the selected side/);
   panel.destroy();
 });
