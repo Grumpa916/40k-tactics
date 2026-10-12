@@ -828,6 +828,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Monster", "Fly", "Aircraft", "Great Devourer", "Vanguard Invader", "Harpy"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Stinger salvoes", equipment: "Default", range: '24"', attacks: 8, skill: "3+", strength: 5, ap: 0, damage: 1 }),
+      Object.freeze({ name: "Twin heavy venom cannon", equipment: "Default", range: '36"', attacks: "D3", skill: "3+", strength: 9, ap: -2, damage: 3, abilities: "Blast, Twin-linked" }),
       Object.freeze({ name: "Twin stranglethorn cannon", equipment: "Default", range: '36"', attacks: "D6+1", skill: "2+", strength: 7, ap: -1, damage: 2, abilities: "Blast, Twin-linked" }),
       Object.freeze({ name: "Scything wings", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 7, ap: -1, damage: 2 })
     ]),
@@ -870,7 +871,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Aerial Seeding", description: "This model must start in Reserves and can arrive in the first, second, or third Movement phase regardless of mission rules; embarked units must immediately disembark more than 8 inches from enemy models." }),
+      Object.freeze({ name: "Aerial Seeding", description: "This model must start the battle in Reserves, but neither it nor any units embarked within it are counted towards any limits placed on the maximum number of Reserves units you can start the battle with. It can be set up in the Reinforcements step of your first, second or third Movement phase, regardless of mission rules. Any embarked units must immediately disembark more than 8 inches from all enemy models. After this model has been set up on the battlefield, no units can embark within it." }),
       Object.freeze({ name: "Transport", description: "Transport capacity: 20 Tyranids Infantry models, or 1 Tyranids Monster model with Wounds 12 or less; Infantry models with more than 1 Wound take up 3 spaces." })
     ]),
     defaultModelCount: 1, defaultPoints: 80,
