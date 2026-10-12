@@ -13,7 +13,7 @@ test("records attacker and derives defender while recording first player", () =>
 });
 
 test("allows either setup choice to be recorded before the other", () => {
-  const state = { players: [{ id: "p1" }, { id: "p2" }] };
+  const state = { players: [{ id: "p1" }, { id: "p2" }], history: [] };
   const next = setPreGameRoles(state, { attackerPlayerId: "p1" });
   assert.deepEqual(next.preGameSetup, {
     attackerPlayerId: "p1", defenderPlayerId: "p2", firstPlayerId: null
