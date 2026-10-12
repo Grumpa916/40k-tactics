@@ -168,7 +168,7 @@ test("Shadow in the Warp reminder records use during either player's Command pha
   const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
 
   assert.match(root.html, /Shadow in the Warp/);
-  assert.match(root.html, /either player's Command phase/i);
+  assert.match(root.html, /either player(?:&#039;|')s Command phase/i);
   assert.match(root.html, /Available from:<\/strong> Hive Tyrant/);
   root.clickData("[data-use-faction-decision]", {
     "data-use-faction-decision": "tyranids.shadow-in-the-warp",
