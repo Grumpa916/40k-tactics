@@ -651,8 +651,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Terror From The Deep", description: "When this model is set up using Deep Strike, roll a D6 for each enemy unit within 12 inches: on 2–4 it suffers D3 mortal wounds; on 5+ it suffers 3 mortal wounds and must take a Battle-shock test." })
     ]),
-    defaultModelCount: 1, defaultPoints: 140,
-    pointsOptions: Object.freeze([{ models: 1, points: 140 }]),
+    defaultModelCount: 1, defaultPoints: 135,
+    pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Mawloc datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/mawloc", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:norn-assimilator": Object.freeze({
@@ -792,8 +792,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Subterranean Tunnels", description: "When set up using Deep Strike in your Movement phase, this model can be set up more than 6 inches horizontally from enemy units, but cannot declare a charge that turn." })
     ]),
-    defaultModelCount: 1, defaultPoints: 135,
-    pointsOptions: Object.freeze([{ models: 1, points: 135 }]),
+    defaultModelCount: 1, defaultPoints: 140,
+    pointsOptions: Object.freeze([{ models: 1, points: 140 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Trygon"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:winged-tyranid-prime": Object.freeze({
