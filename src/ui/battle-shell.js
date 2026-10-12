@@ -205,6 +205,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   battleShockReminder = null,
   scoringReviewCheckpoint = null,
   dismissedTyranidDecisionContextKey = null,
+  factionDecisionMessage = "",
   contextOpenStates = { "unit-status": true, "event-log": true },
   referenceOpenStates = { stratagems: true },
   missionOpenStates = {}
@@ -547,7 +548,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, contextOpenStates, referenceOpenStates, missionOpenStates
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
