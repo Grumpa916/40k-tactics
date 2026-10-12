@@ -616,7 +616,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 110,
     pointsOptions: Object.freeze([{ models: 1, points: 110 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Psychophage datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/psychophage", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition Psychophage datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/psychophage", additionalSources: Object.freeze(["https://www.40k.app/factions/tyranids/units/psychophage"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
   ,
   "tyranids:the-red-terror": Object.freeze({
@@ -635,7 +635,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 120,
     pointsOptions: Object.freeze([{ models: 1, points: 120 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://www.40k.app/factions/tyranids/units/the-red-terror"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "verified" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition The Red Terror datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/the-red-terror", additionalSources: Object.freeze(["https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", "https://www.40k.app/factions/tyranids/units/the-red-terror"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:mucolid-spores": Object.freeze({
     characteristics: Object.freeze({ Move: '4"', Toughness: 4, Save: "7+", Wounds: 3, Leadership: "8+", "Objective Control": 0 }),
