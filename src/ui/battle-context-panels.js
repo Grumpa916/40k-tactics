@@ -252,13 +252,13 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
       renderDataList(rulesFor(armyRules, yourPlayerId), "Your Army Rules are not connected to this battle yet.") +
       '</section><section class="battle-context__reference-group"><h3>Opponent Army Rules</h3>' +
       renderDataList(rulesFor(armyRules, opponentPlayerId), "Opponent Army Rules are not connected to this battle yet.") +
-      '</section>'), { open: openSections.armyRules ?? false, key: "army-rules" }) +
+      '</section>', { open: openSections.armyRules ?? false, key: "army-rules" }) +
     referenceSection("Detachments",
       '<section class="battle-context__reference-group"><h3>Your Detachment</h3>' +
       renderDataList(myDetachmentRules, detachmentFor(yourPlayerId) ?? "No detachment has been selected.") +
       '</section><section class="battle-context__reference-group"><h3>Opponent Detachment</h3>' +
       renderDataList(opponentDetachmentRules, detachmentFor(opponentPlayerId) ?? "No opponent detachment has been recorded.") +
-      '</section>'), { open: openSections.detachments ?? false, key: "detachments" }) +
+      '</section>', { open: openSections.detachments ?? false, key: "detachments" }) +
     referenceSection("Terrain Layout", terrainContent, { open: openSections.terrain ?? false, key: "terrain" }) + '</section>';
 }
 
