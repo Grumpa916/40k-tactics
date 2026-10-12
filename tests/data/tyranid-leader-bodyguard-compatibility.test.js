@@ -9,9 +9,10 @@ const unit = (name) => candidates().find((candidate) => candidate.name === name)
 test("Tyranid compatibility metadata records reviewed source provenance separately from full datasheet verification", () => {
   const hiveTyrant = unit("Hive Tyrant");
   assert.equal(hiveTyrant.verificationStatus, "name-only-unverified");
-  assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.status, "cross-checked");
+  assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.status, "source-reviewed");
+  assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.officialRulesCrossCheck, "pending");
   assert.equal(hiveTyrant.datasheet.leader.compatibilityReview.reviewedAt, "2026-10-12");
-  assert.ok(hiveTyrant.datasheet.leader.compatibilityReview.sources.some((source) => source.includes("mfm.warhammer-community.com")));
+  assert.ok(hiveTyrant.datasheet.leader.compatibilityReview.sources.some((source) => source.includes("40k.app")));
 });
 
 test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
