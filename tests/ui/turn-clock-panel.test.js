@@ -28,7 +28,7 @@ test("Turn Clock panel lists both players and accumulated elapsed time", () => {
   assert.match(html, /Opponent/);
   assert.match(html, /01:05/);
   assert.match(html, /02:00/);
-  assert.match(html, /Start clock/);
+  assert.match(html, /Resume clock/);
   assert.match(html, /data-clock-player-elapsed="p1"/);
 });
 
@@ -58,7 +58,8 @@ test("Turn Clock remains accessible but hidden until opened", () => {
 test("starting a clock is disabled until a player turn exists", () => {
   const html = renderTurnClockPanel(state({
     activePlayer: null,
-    battle: { status: "deployment", round: 0, activePlayerId: null }
+    battle: { status: "deployment", round: 0, activePlayerId: null },
+    timers: { turnClock: { elapsedMsByPlayer: { p1: 0, p2: 0 }, activePlayerId: null, running: false, startedAtMs: null } }
   }), { open: true });
   assert.ok(html.includes("Start clock</button>"));
   assert.match(html, /disabled/);
