@@ -1,6 +1,7 @@
 import { recordVictoryPointsAward } from "./victory-points-ledger.js";
 import {
   getSecondaryMissionHistory,
+  getSecondaryMissionMode,
   recordSecondaryMissionScored,
   SECONDARY_MISSION_STATUS,
   SECONDARY_MISSION_MODES
@@ -26,9 +27,9 @@ export function recordSecondaryMissionScore(state, {
     item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
   if (!entry) throw new Error("An active secondary mission for that player is required.");
 
-  const missionMode = state?.scoring?.secondaryMissionMode ?? entry.definition?.missionMode;
+  const missionMode = getSecondaryMissionMode(state, playerId) ?? entry.definition?.missionMode;
   if (!Object.values(SECONDARY_MISSION_MODES).includes(missionMode)) {
-    throw new Error("Set the battle-wide Fixed or Tactical mode before recording secondary scoring.");
+    throw new Error("Set this player's Fixed or Tactical mode before recording secondary scoring.");
   }
 
   const opportunityKey = [instanceId, round, turn, ...(scoringTiming ? [scoringTiming] : [])].join(":");
