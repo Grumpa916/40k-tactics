@@ -951,3 +951,24 @@ test("battle shell mounts pre-battle mission setup before the battle starts", ()
   assert.match(root._screen.innerHTML, /Fixed/);
   shell.destroy();
 });
+
+
+test("setup navigation exposes four focused workspaces and a bottom Continue action", () => {
+  const session = sessionFor({
+    phase: "setup",
+    turn: 0,
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [],
+    history: []
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+
+  assert.match(root.html, /data-setup-workspace-tab="army-builder"/);
+  assert.match(root.html, /data-setup-workspace-tab="saves"/);
+  assert.match(root.html, /data-setup-workspace-tab="pre-game"/);
+  assert.match(root.html, /data-setup-workspace-tab="mission-map"/);
+  assert.match(root.html, /data-setup-workspace-continue/);
+  assert.match(root.html, /Continue to Saves/);
+  shell.destroy();
+});
