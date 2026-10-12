@@ -99,7 +99,7 @@ export function summarizeGameEvent(event, state = {}) {
   };
 }
 
-export function renderUnitStatusPanel(state = {}) {
+export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
   const units = Array.isArray(state.units) ? state.units : [];
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const eligible = units.filter((unit) => getBattleShockEligibility(unit).requiresTest === true);
@@ -160,7 +160,8 @@ export function renderUnitStatusPanel(state = {}) {
       '</div><div class="battle-context__unit-meta">' + wounds + lastTestText + '</div>' + testControls + '</li>';
   }).join("");
 
-  return '<details class="battle-context__section battle-context__unit-status" open>' +
+  return '<details class="battle-context__section battle-context__unit-status" data-context-key="unit-status"' +
+    ((openSections["unit-status"] ?? true) ? " open>" : ">") +
     '<summary><span>Unit Status</span><span class="battle-context__count">' + units.length + ' units</span></summary>' +
     '<p class="battle-context__note">Battle-shock tests are required for units that are currently Battle-shocked or at/below half-strength. Missing strength data is flagged for review, not guessed.</p>' +
     (eligible.length ? '<p class="battle-context__alert">' + eligible.length + ' unit(s) need Battle-shock attention.</p>' : '') +
@@ -169,7 +170,7 @@ export function renderUnitStatusPanel(state = {}) {
     '</details>';
 }
 
-export function renderEventLogPanel(state = {}, { limit = 10 } = {}) {
+export function renderEventLogPanel(state = {}, { limit = 10, openSections = {} } = {}) {
   const history = Array.isArray(state.history) ? state.history : [];
   const events = history.slice(-Math.max(1, limit)).reverse();
   const entries = events.map((event) => {
@@ -178,7 +179,8 @@ export function renderEventLogPanel(state = {}, { limit = 10 } = {}) {
       (summary.detail ? '<span>' + escapeHtml(summary.detail) + '</span>' : '') +
       (summary.context ? '<small>' + escapeHtml(summary.context) + '</small>' : '') + '</li>';
   }).join("");
-  return '<details class="battle-context__section battle-context__event-panel" open>' +
+  return '<details class="battle-context__section battle-context__event-panel" data-context-key="event-log"' +
+    ((openSections["event-log"] ?? true) ? " open>" : ">") +
     '<summary><span>Event Log</span><span class="battle-context__count">' + history.length + ' events</span></summary>' +
     (entries ? '<ol class="battle-context__event-list">' + entries + '</ol>' : '<p>No game events recorded yet.</p>') +
     (history.length > events.length
@@ -203,12 +205,12 @@ function renderDataList(items, emptyText) {
   }).join("") + '</ul>';
 }
 
-function referenceSection(title, content, { open = false } = {}) {
-  return '<details class="battle-context__reference-section"' + (open ? " open" : "") + '>' +
-    '<summary>' + escapeHtml(title) + '</summary>' + content + '</details>';
+function referenceSection(title, content, { open = false, key = "" } = {}) {
+  return '<details class="battle-context__reference-section" data-reference-key="' + escapeHtml(key) + '"' +
+    (open ? " open" : "") + '><summary>' + escapeHtml(title) + '</summary>' + content + '</details>';
 }
 
-export function renderReferencePanel(state = {}, gameData = {}, perspectivePlayerId = null) {
+export function renderReferencePanel(state = {}, gameData = {}, perspectivePlayerId = null, { openSections = {} } = {}) {
   const players = Array.isArray(state.players) ? state.players : [];
   const yourPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
   const opponentPlayerId = players.find((player) => player.id !== yourPlayerId)?.id ?? null;
@@ -244,20 +246,20 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
     '</section>';
   return '<section class="battle-context__references" aria-label="Rules and tactical references">' +
     '<h2 class="battle-context__section-heading">Rules & References</h2>' +
-    referenceSection("Stratagems", groups, { open: true }) +
+    referenceSection("Stratagems", groups, { open: openSections.stratagems ?? true, key: "stratagems" }) +
     referenceSection("Army Rules",
       '<section class="battle-context__reference-group"><h3>Your Army Rules</h3>' +
       renderDataList(rulesFor(armyRules, yourPlayerId), "Your Army Rules are not connected to this battle yet.") +
       '</section><section class="battle-context__reference-group"><h3>Opponent Army Rules</h3>' +
       renderDataList(rulesFor(armyRules, opponentPlayerId), "Opponent Army Rules are not connected to this battle yet.") +
-      '</section>') +
+      '</section>'), { open: openSections.armyRules ?? false, key: "army-rules" }) +
     referenceSection("Detachments",
       '<section class="battle-context__reference-group"><h3>Your Detachment</h3>' +
       renderDataList(myDetachmentRules, detachmentFor(yourPlayerId) ?? "No detachment has been selected.") +
       '</section><section class="battle-context__reference-group"><h3>Opponent Detachment</h3>' +
       renderDataList(opponentDetachmentRules, detachmentFor(opponentPlayerId) ?? "No opponent detachment has been recorded.") +
-      '</section>') +
-    referenceSection("Terrain Layout", terrainContent) + '</section>';
+      '</section>'), { open: openSections.detachments ?? false, key: "detachments" }) +
+    referenceSection("Terrain Layout", terrainContent, { open: openSections.terrain ?? false, key: "terrain" }) + '</section>';
 }
 
 export function renderArmyRosterOverlay(state = {}, playerId = null) {
