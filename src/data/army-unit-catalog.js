@@ -57,7 +57,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
     "Raveners",
     "Tyrant Guard",
     "Tyranid Warriors with Melee Bio-weapons",
-    "Tyranid Warriors with Ranged Bio-weapons"
+    "Tyranid Warriors with Ranged Bio-weapons", "Malanthrope", "Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Sky-slasher Swarms"
   ].map((name) => {
     const id = "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const attachmentMetadata = getTyranidAttachmentMetadata(id);
