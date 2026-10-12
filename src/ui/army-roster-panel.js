@@ -333,11 +333,15 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       return;
     }
     if (button.matches("[data-roster-apply]")) {
+      // Capture the selected side before action() renders its busy state.
+      // Rendering replaces the select element and otherwise resets it to the first player.
+      const playerId = container.querySelector("[data-roster-player]")?.value;
+      const rosterToApply = current;
       await action(async () => {
-        if (!current || !onApplyRoster) throw new Error("Open a roster before assigning it.");
-        const playerId = container.querySelector("[data-roster-player]")?.value;
-        await onApplyRoster(current, playerId);
-      }, "Roster assigned to this battle. Its units are now available for deployment planning.");
+        if (!rosterToApply || !onApplyRoster) throw new Error("Open a roster before assigning it.");
+        if (!playerId) throw new Error("Choose Your army or Opponent army before assigning this roster.");
+        await onApplyRoster(rosterToApply, playerId);
+      }, "Roster assigned to the selected side. Its units are now available for deployment planning.");
       return;
     }
     if (button.matches("[data-roster-load]")) {
