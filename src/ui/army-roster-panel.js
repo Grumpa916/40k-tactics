@@ -17,6 +17,19 @@ function newId() {
 }
 function now() { return new Date().toISOString(); }
 
+function normalizedFaction(value) { return String(value ?? "").trim().toLowerCase(); }
+
+function detachmentOptions(faction, selected = null) {
+  const options = ['<option value="">Choose a detachment…</option>'];
+  if (normalizedFaction(faction) === "tyranids") {
+    options.push('<option value="Invasion Fleet"' + (selected === "Invasion Fleet" ? ' selected' : '') + '>Invasion Fleet (Tyranids)</option>');
+  }
+  const known = normalizedFaction(faction) === "tyranids" && selected === "Invasion Fleet";
+  if (selected && !known) options.push('<option value="__custom__" selected>Other / custom (saved value)</option>');
+  else options.push('<option value="__custom__">Other / enter manually</option>');
+  return options.join("");
+}
+
 /** Small-screen-friendly CRUD UI for the reusable roster library. */
 export function createArmyRosterPanel(container, { store, players = [], onApplyRoster = null, canApply = true } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container is required.");
@@ -118,7 +131,9 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       '<h2 id="army-roster-title">Army Builder &amp; Saved Rosters</h2>' +
       '<p>Create a named roster once, then reuse it for future battles. Unit data entered here is manual; datasheet import/review will be added separately.</p>' +
       '<form data-roster-create><label>New roster name<input name="rosterName" maxlength="120" required placeholder="e.g. Tyranids Tournament List" ' + (busy ? "disabled" : "") + '></label>' +
-      '<label>Faction<select name="faction" ' + (busy ? "disabled" : "") + '><option value="">Choose a faction…</option>' + ['Adeptus Custodes','Adeptus Mechanicus','Aeldari','Agents of the Imperium','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari','Emperor’s Children','Genestealer Cults','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines','Space Wolves','T’au Empire','Thousand Sons','Tyranids','World Eaters','Other / custom'].map((faction) => '<option value="' + escapeHtml(faction) + '">' + escapeHtml(faction) + '</option>').join("") + '</select></label>' +
+      '<label>Faction<select name="faction" data-roster-create-faction ' + (busy ? "disabled" : "") + '><option value="">Choose a faction…</option>' + ['Adeptus Custodes','Adeptus Mechanicus','Aeldari','Agents of the Imperium','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari','Emperor’s Children','Genestealer Cults','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines','Space Wolves','T’au Empire','Thousand Sons','Tyranids','World Eaters','Other / custom'].map((faction) => '<option value="' + escapeHtml(faction) + '">' + escapeHtml(faction) + '</option>').join("") + '</select></label>' +
+      '<label>Detachment<select name="detachment" data-roster-detachment-select ' + (busy ? "disabled" : "") + '>' + detachmentOptions("", null) + '</select></label>' +
+      '<label>Detachment name if not listed<input name="customDetachment" data-roster-custom-detachment maxlength="100" placeholder="Enter printed detachment name" ' + (busy ? "disabled" : "") + '></label>' +
       '<label>Points limit<input name="pointsLimit" type="number" min="0" step="1" placeholder="e.g. 2000" ' + (busy ? "disabled" : "") + '></label>' +
       '<button type="submit" ' + (busy ? "disabled" : "") + '>Create roster</button></form>' +
       '<div class="army-roster-panel__saved"><label>Saved rosters<select data-roster-select ' + (busy ? "disabled" : "") + '><option value="">Choose a roster…</option>' + options + '</select></label>' +
@@ -127,6 +142,9 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       '<button type="button" data-roster-duplicate ' + (!current || busy ? "disabled" : "") + '>Duplicate</button>' +
       '<button type="button" data-roster-delete ' + (!current || busy ? "disabled" : "") + '>Delete roster</button></div></div>' +
       (current ? '<section class="army-roster-panel__editor"><h3>' + escapeHtml(current.name) + '</h3>' +
+        '<div class="army-roster-panel__detachment"><label>Detachment<select data-roster-detachment-select ' + (busy ? "disabled" : "") + '>' + detachmentOptions(current.faction, current.detachment) + '</select></label>' +
+        '<label>Detachment name if not listed<input data-roster-custom-detachment maxlength="100" placeholder="Enter printed detachment name" value="' + escapeHtml(current.detachment && !(normalizedFaction(current.faction) === "tyranids" && current.detachment === "Invasion Fleet") ? current.detachment : "") + '" ' + (busy ? "disabled" : "") + '></label>' +
+        '<button type="button" data-save-detachment ' + (busy ? "disabled" : "") + '>Save detachment</button></div>' +
         (players.length ? '<div class="army-roster-panel__assign"><label>Assign this roster to player<select data-roster-player>' + players.map((player) => '<option value="' + escapeHtml(player.id) + '">' + escapeHtml(player.name || player.id) + '</option>').join("") + '</select></label><button type="button" data-roster-apply ' + (busy || !canApply || !onApplyRoster ? "disabled" : "") + '>Assign roster to battle</button></div>' : "") +
         '<form data-roster-unit><label>Find unit in faction catalog<input name="unitSearch" data-unit-search maxlength="100" placeholder="Search units…" ' + (busy ? "disabled" : "") + '></label>' +
         '<label>Choose unit<select name="catalogUnitId" data-catalog-unit ' + (busy ? "disabled" : "") + '><option value="">Choose a unit…</option>' + findArmyUnitCandidates({ faction: current.faction, query: unitSearch }).map((unit) => '<option value="' + escapeHtml(unit.id) + '">' + escapeHtml(getArmyUnitCandidateLabel(unit)) + '</option>').join("") + '</select></label>' +
@@ -172,6 +190,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         const timestamp = now();
         const roster = createArmyRoster({
           id: newId(), name: values.rosterName, faction: values.faction || null,
+          detachment: (values.detachment === "__custom__" ? values.customDetachment : values.detachment)?.trim() || null,
           pointsLimit: values.pointsLimit === "" ? null : Number(values.pointsLimit),
           units: [], createdAt: timestamp, updatedAt: timestamp
         });
@@ -193,7 +212,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader]");
+    const button = event.target?.closest?.("[data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment]");
     if (!button || !container.contains(button)) return;
     if (button.matches("[data-add-catalog-unit]")) {
       // Capture the selected values before action() re-renders the panel in its busy state.
@@ -260,6 +279,18 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         await store.save({ id: updated.id, roster: updated });
         current = updated;
       }, "Unit points and notes saved.");
+      return;
+    }
+    if (button.matches("[data-save-detachment]")) {
+      const selected = container.querySelector("[data-roster-detachment-select]")?.value ?? "";
+      const custom = container.querySelector("[data-roster-custom-detachment]")?.value ?? "";
+      await action(async () => {
+        if (!current) throw new Error("Open a roster before changing its detachment.");
+        const detachment = (selected === "__custom__" ? custom : selected).trim() || null;
+        const updated = { ...current, detachment, updatedAt: now() };
+        await store.save({ id: updated.id, roster: updated });
+        current = updated;
+      }, "Detachment saved to roster.");
       return;
     }
     if (button.matches("[data-save-points-limit]")) {
@@ -350,6 +381,11 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }
   }
   function handleChange(event) {
+    if (event.target?.matches?.("[data-roster-create-faction]")) {
+      const select = container.querySelector("[data-roster-detachment-select]");
+      if (select) select.innerHTML = detachmentOptions(event.target.value, null);
+      return;
+    }
     if (event.target?.matches?.("[data-roster-select]")) {
       selectedId = event.target.value || "";
       current = null; message = ""; render();
