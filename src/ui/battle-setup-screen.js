@@ -321,6 +321,7 @@ export function createBattleSetupScreen(container, {
       '<p><strong>Defender:</strong> ' + escapeHtml(defender?.name ?? (attacker ? "Automatically assigned to the other army" : "Choose the attacker above")) + '</p>' +
       '<h3>Who takes the first turn?</h3><div class="pre-game-role-choices" role="group" aria-label="Choose first player">' +
       roleButtons("firstPlayerId", preGameSetup.firstPlayerId) + '</div></section>';
+    const preGameMarkup = preGameRolesMarkup;
     const missionSetup = state.battlefieldMap?.missionSetup ?? {};
     const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
       ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
