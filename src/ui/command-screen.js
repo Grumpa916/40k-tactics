@@ -664,7 +664,8 @@ export function createCommandScreen(container, {
       (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
       '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
 
-    const cpHistory = getCommandPointHistory(state, playerId).slice(-5).reverse();
+    const cpPlayerId = container.querySelector("[data-cp-player]")?.value || perspectivePlayerId || state.activePlayer || players[0]?.id;
+    const cpHistory = getCommandPointHistory(state, cpPlayerId).slice(-5).reverse();
     const cpHistoryMarkup = cpHistory.length ? cpHistory.map((entry) =>
       '<li><strong>' + escapeHtml(entry.amount > 0 ? '+' + entry.amount : entry.amount) +
       ' CP</strong> · ' + escapeHtml(entry.reason) + (entry.note ? ' — ' + escapeHtml(entry.note) : '') +
@@ -730,7 +731,9 @@ export function createCommandScreen(container, {
       '<label>Manual adjustment reason<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Correct an entry error" required></label>' +
       '<button type="submit">Confirm VP adjustment</button></form>' : '<p>Configure both players before recording adjustments.</p>') +
       undoVpMarkup + (vpMessage ? '<p role="status">' + escapeHtml(vpMessage) + '</p>' : '') + '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
-      '<section><h2>Command Point ledger</h2><p>Record actual gains and spending. Each entry updates the balance and battle history; the app does not assume a gain occurs automatically.</p>' +
+      '<section><h2>Command Point ledger</h2><p>Select either player to record actual CP gains, spending, or corrections. Entries update only the selected player.</p>' +
+      '<label>Adjust Command Points for<select data-cp-player>' + players.map((player) => '<option value="' + escapeHtml(player.id) + '"' + (player.id === cpPlayerId ? ' selected' : '') + '>' + escapeHtml(player.name ?? player.id) + '</option>').join("") + '</select></label>' +
+      '<p><strong>Current balance:</strong> ' + escapeHtml(commandPointsFor(state, cpPlayerId)) + ' CP</p>' +
       '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
       '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>'; 
   }
