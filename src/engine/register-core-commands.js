@@ -1,6 +1,6 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
-import { setPreGameRoles } from "./battle-setup-transitions.js";
+import { setPreGameRoles, setBattleSize } from "./battle-setup-transitions.js";
 import { registerCommandHandler } from "./command-engine.js";
 import {
   startBattle,
@@ -49,6 +49,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.DECLARE_UNIT_RESERVE, (state, command) => declareUnitReserve(state, command.payload)],
     [COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, (state, command) => setEventCompanionMissionSetup(state, command.payload)],
     [COMMAND_TYPES.SET_PRE_GAME_ROLES, (state, command) => setPreGameRoles(state, command.payload)],
+    [COMMAND_TYPES.SET_BATTLE_SIZE, (state, command) => setBattleSize(state, command.payload)],
     [COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, (state, command) => recordObjectiveControl(state, command.payload)],
     [COMMAND_TYPES.START_FIRST_TURN, (state, command) => startFirstTurn(state, command.payload)],
     [COMMAND_TYPES.CHANGE_PHASE, (state, command) => changePhase(state, command.payload)],
