@@ -97,6 +97,19 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
   }))
 ]);
 
+export function getArmyUnitCandidateLabel(unit) {
+  if (!unit || typeof unit !== "object") return "Unit · verify";
+  if (!unit.datasheet) {
+    return unit.verificationStatus === "points-reviewed"
+      ? unit.name + " · points only; details incomplete"
+      : unit.name + " · name only; verify";
+  }
+  if (unit.officialRulesCrossCheck === "verified") {
+    return unit.name + " · details; official cross-check complete";
+  }
+  return unit.name + " · details; official cross-check pending";
+}
+
 export function findArmyUnitCandidates({ faction, query = "" } = {}) {
   const normalizedFaction = String(faction ?? "").trim().toLowerCase();
   const normalizedQuery = String(query ?? "").trim().toLowerCase();
