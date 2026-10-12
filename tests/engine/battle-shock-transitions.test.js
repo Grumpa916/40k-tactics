@@ -24,7 +24,7 @@ test("failed Command-phase test records Battle-shocked state and a typed event",
   assert.equal(unit.battleShocked, true);
   assert.deepEqual(unit.battleShockLastTest, {
     result: "failed", round: 1, turn: 2, phase: "command",
-    eligibilityStatus: "test-required-below-half-strength"
+    eligibilityStatus: "test-required-at-or-below-half-strength"
   });
   assert.equal(next.history.at(-1).type, "battle_shock.test_recorded");
   assert.equal(next.history.at(-1).payload.battleShockedAfter, true);
