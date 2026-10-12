@@ -967,6 +967,64 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 1, points: 145 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/sporocyst", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:malanthrope": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 5, Save: "4+", Wounds: 10, Leadership: "7+", "Objective Control": 3 }),
+    keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Malanthrope", "Tyranids", "Legends"]),
+    weapons: Object.freeze([Object.freeze({ name: "Grasping tail", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 5, ap: 0, damage: 2 })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Enhanced Toxic Miasma", description: "While this model is leading a unit, the range of that unit's Foul Spores Aura ability is increased to 9 inches." }),
+      Object.freeze({ name: "Prey Adaptation", description: "Each time this model's unit is selected to fight, choose one melee weapon ability for its melee weapons until the end of the phase: Sustained Hits 1, Lance, or Lethal Hits." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 75, legends: true,
+    pointsOptions: Object.freeze([{ models: 1, points: 75 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/malanthrope", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+  }),
+  "tyranids:barbed-hierodule": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 12, Save: "2+", Wounds: 18, Leadership: "8+", "Objective Control": 5 }),
+    keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Barbed Hierodule", "Tyranids", "Legends"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Bio-cannon", equipment: "Default", range: '48"', attacks: "D6+3", skill: "3+", strength: 9, ap: -2, damage: 2, abilities: "Blast" }),
+      Object.freeze({ name: "Hierodule scything talons", equipment: "Default", range: "Melee", attacks: 8, skill: "3+", strength: 14, ap: -2, damage: "D3+3" })
+    ]),
+    abilities: Object.freeze([Object.freeze({ name: "Overgrown Barbs", description: "After this model shoots, select one enemy non-Titanic unit hit. Until the start of your next turn, while this model is on the battlefield, that unit is suppressed and subtracts 1 from Hit rolls for its attacks." })]),
+    defaultModelCount: 1, defaultPoints: 340, legends: true,
+    pointsOptions: Object.freeze([{ models: 1, points: 340 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/barbed-hierodule", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+  }),
+  "tyranids:dimachaeron": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 10, Save: "3+", Wounds: 16, Leadership: "7+", "Objective Control": 5, "Invulnerable save": "5+" }),
+    keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Dimachaeron", "Tyranids", "Legends"]),
+    weapons: Object.freeze([Object.freeze({ name: "Massive scything sickle-talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 9, ap: -2, damage: 3, abilities: "Twin-linked" })]),
+    abilities: Object.freeze([Object.freeze({ name: "Digestion Spine", description: "Each time this model fights, after resolving its attacks, if one or more non-Vehicle enemy models were destroyed, this model regains up to D3 lost wounds." })]),
+    defaultModelCount: 1, defaultPoints: 200, legends: true,
+    pointsOptions: Object.freeze([{ models: 1, points: 200 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/dimachaeron", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+  }),
+  "tyranids:scythed-hierodule": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 12, Save: "2+", Wounds: 18, Leadership: "8+", "Objective Control": 5 }),
+    keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Scythed Hierodule", "Tyranids", "Legends"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Bio-acid spray", equipment: "Default", range: '18"', attacks: "3D6", skill: "—", strength: 6, ap: -2, damage: 1, abilities: "Torrent" }),
+      Object.freeze({ name: "Hierodule scything talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 14, ap: -2, damage: "D3+3" })
+    ]),
+    abilities: Object.freeze([Object.freeze({ name: "Irresistible Force", description: "This model is eligible to declare a charge in a turn in which it Fell Back." })]),
+    defaultModelCount: 1, defaultPoints: 330, legends: true,
+    pointsOptions: Object.freeze([{ models: 1, points: 330 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/scythed-hierodule", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+  }),
+  "tyranids:sky-slasher-swarms": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 2, Save: "6+", Wounds: 4, Leadership: "8+", "Objective Control": 0 }),
+    keywords: Object.freeze(["Swarm", "Great Devourer", "Fly", "Sky-slasher Swarms", "Tyranids", "Legends"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Spinemaws", equipment: "Default", range: '6"', attacks: 4, skill: "5+", strength: 3, ap: 0, damage: 1, abilities: "Pistol" }),
+      Object.freeze({ name: "Claws and teeth", equipment: "Default", range: "Melee", attacks: 6, skill: "5+", strength: 2, ap: 0, damage: 1, abilities: "Sustained Hits 1" })
+    ]),
+    abilities: Object.freeze([Object.freeze({ name: "Chitinous Horrors", description: "While an enemy unit is within Engagement Range of one or more units with this ability, halve the Objective Control characteristic of models in that enemy unit." })]),
+    defaultModelCount: 3, defaultPoints: 60, legends: true,
+    pointsOptions: Object.freeze([{ models: 3, points: 60 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing (Legends)", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/sky-slasher-swarms", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
