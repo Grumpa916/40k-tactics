@@ -4,7 +4,7 @@ import { getCommandPointBalance, getCommandPointHistory } from "../engine/comman
 import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictoryPointScore, hasEffectiveVictoryPointOpportunity } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
-import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function escapeHtml(value) {
@@ -168,14 +168,14 @@ export function createCommandScreen(container, {
         render();
         return;
       }
-      const missionMode = state.scoring?.secondaryMissionMode;
+      const playerId = container.querySelector("[data-secondary-player]")?.value ||
+        perspectivePlayerId || state.activePlayer;
+      const missionMode = getSecondaryMissionMode(state, playerId);
       if (!missionMode) {
-        secondaryMissionMessage = "Choose Fixed or Tactical mode before entering secondary cards.";
+        secondaryMissionMessage = "Choose Fixed or Tactical mode for this player before entering secondary cards.";
         render();
         return;
       }
-      const playerId = container.querySelector("[data-secondary-player]")?.value ||
-        perspectivePlayerId || state.activePlayer;
       const round = state.battle?.round ?? 0;
       const turn = state.turn ?? 0;
       const currentActivePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
