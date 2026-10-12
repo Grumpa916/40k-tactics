@@ -38,6 +38,7 @@ export function createBattleSetupScreen(container, {
   let selectedPlanUnitId = null;
   let activeSetupTab = setupTab === "mission-map" ? "mission-map" : "pre-game";
   let message = "";
+  let battlefieldMapFullscreen = false;
   const configuredSecondaryCatalog = secondaryMissionCatalog.length
     ? secondaryMissionCatalog
     : SECONDARY_MISSION_CATALOG;
@@ -98,6 +99,12 @@ export function createBattleSetupScreen(container, {
   }
 
   function handleClick(event) {
+    const fullscreenButton = event.target?.closest?.("[data-toggle-battlefield-fullscreen]");
+    if (fullscreenButton) {
+      battlefieldMapFullscreen = !battlefieldMapFullscreen;
+      render();
+      return;
+    }
     const dispositionButton = event.target?.closest?.("[data-event-companion-disposition-choice]");
     if (dispositionButton) {
       const state = session.getState();
@@ -418,7 +425,10 @@ export function createBattleSetupScreen(container, {
         modeGuidance + fixedMarkup + '</section>';
     }).join("");
     const missionMapMarkup = missionSetupMarkup +
-      '<section class="battlefield-map-section"><h2>Deployment Planning Map</h2>' +
+      '<section class="battlefield-map-section' + (battlefieldMapFullscreen ? ' is-fullscreen' : '') + '" data-battlefield-map-section>' +
+      '<div class="battlefield-map-section__heading"><h2>Deployment Planning Map</h2>' +
+      '<button type="button" data-toggle-battlefield-fullscreen aria-pressed="' + String(battlefieldMapFullscreen) + '">' +
+      (battlefieldMapFullscreen ? 'Exit full screen' : 'Expand map') + '</button></div>' +
       '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
       (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
         .map((unit) => '<option value="' + escapeHtml(unit.id) + '"' + (unit.id === selectedPlanUnitId ? ' selected' : '') + '>' + escapeHtml(unit.name ?? unit.id) + '</option>').join("") +
