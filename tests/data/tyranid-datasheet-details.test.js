@@ -739,6 +739,18 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
   }
 });
 
+test("Will of the Hive Mind uses model-specific range and a shared once-per-round limit", () => {
+  for (const name of ["Hive Tyrant", "Winged Hive Tyrant"]) {
+    const unit = candidate(name);
+    const ability = unit.datasheet.abilities.find((entry) => entry.name === "Will of the Hive Mind");
+    assert.ok(ability, name);
+    assert.match(ability.description, /one model from your army with this ability/);
+    assert.match(ability.description, /within 12 inches of that model/);
+    assert.match(ability.description, /Once per battle round/);
+    assert.match(ability.description, /reduce the CP cost of that use of that Stratagem by 1CP/);
+  }
+});
+
 test("Trygon Subterranean Tunnels matches the official faction-pack restriction", () => {
   const trygon = candidate("Trygon");
   const tunnels = trygon.datasheet.abilities.find((ability) => ability.name === "Subterranean Tunnels");
