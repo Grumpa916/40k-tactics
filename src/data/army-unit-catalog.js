@@ -10,7 +10,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
     "Termagants", "Hormagaunts", "Neurogaunts", "Genestealers", "Barbgaunts",
     "Zoanthropes", "Tyranid Warriors", "Gargoyles", "Lictor", "Deathleaper",
     "Broodlord", "The Swarmlord", "Old One Eye", "Tyranid Prime with Lash Whip",
-    "Winged Tyranid Prime", "Tyrant Guard", "Tyranid Warriors with Melee Bio-weapons",
+    "Winged Tyranid Prime", "Hyperadapted Raveners", "Raveners", "Tyrant Guard", "Tyranid Warriors with Melee Bio-weapons",
     "Tyranid Warriors with Ranged Bio-weapons"
   ].map((name) => {
     const id = "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
