@@ -88,7 +88,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, one model from your army with this ability can use it when a friendly Tyranids unit within 12 inches of that model is targeted with a Stratagem. If it does, reduce the CP cost of that use of that Stratagem by 1CP." }),
-      Object.freeze({ name: "Onslaught", description: "While a friendly Tyranids unit is within 6 inches of this model, ranged weapons equipped by models in that unit have Assault and Lethal Hits." })
+      Object.freeze({ name: "Onslaught (Aura, Psychic)", description: "While a friendly TYRANIDS unit is within 6 inches of this model, ranged weapons equipped by models in that unit have the Assault and Lethal Hits abilities." })
     ]),
     defaultModelCount: 1,
     defaultPoints: 195,
