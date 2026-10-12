@@ -125,13 +125,18 @@ test("Turn Clock follows player turns and is not reset by phase transitions", ()
   state = advanceToEndOfTurn(state);
   state = endTurn(state, { nextActivePlayerId: "p1", nowMs: 62000 });
   assert.equal(state.timers.turnClock.elapsedMsByPlayer.p2, 32000);
-  assert.equal(state.timers.turnClock.activePlayerId, "p1");
-  assert.equal(state.timers.turnClock.startedAtMs, 62000);
+  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p1, 63500);
+  assert.equal(state.timers.turnClock.activePlayerId, "p2");
+  assert.equal(state.timers.turnClock.running, false);
+  assert.equal(state.timers.turnClock.startedAtMs, null);
 
   state = advanceBattleRound(state, { nowMs: 65000 });
   assert.equal(state.activePlayer, "p1");
   assert.equal(state.timers.turnClock.activePlayerId, "p1");
-  assert.equal(state.timers.turnClock.startedAtMs, 62000);
+  assert.equal(state.timers.turnClock.running, true);
+  assert.equal(state.timers.turnClock.startedAtMs, 65000);
+  assert.equal(state.history.at(-2).type, "turn_clock.started");
+  assert.equal(state.history.at(-1).type, "turn.started");
 });
 
 test("changePhase cannot bypass unfinished Fight activations", () => {
