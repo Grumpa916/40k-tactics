@@ -424,9 +424,8 @@ export function createBattleSetupScreen(container, {
         '<option value="tactical"' + (playerMode === "tactical" ? ' selected' : '') + '>Tactical</option></select></label>' +
         modeGuidance + fixedMarkup + '</section>';
     }).join("");
-    const missionMapMarkup = missionSetupMarkup +
-      '<section class="battlefield-map-section' + (battlefieldMapFullscreen ? ' is-fullscreen' : '') + '" data-battlefield-map-section>' +
-      '<div class="battlefield-map-section__heading"><h2>Deployment Planning Map</h2>' +
+    const battlefieldMarkup = '<section class="battlefield-map-section' + (battlefieldMapFullscreen ? ' is-fullscreen' : '') + '" data-battlefield-map-section>' +
+      '<div class="battlefield-map-section__heading"><h2>Create the Battlefield</h2>' +
       '<button type="button" data-toggle-battlefield-fullscreen aria-pressed="' + String(battlefieldMapFullscreen) + '">' +
       (battlefieldMapFullscreen ? 'Exit full screen' : 'Expand map') + '</button></div>' +
       '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
@@ -435,7 +434,8 @@ export function createBattleSetupScreen(container, {
       '</select></label><p>Select a unit, then tap the map to record or reposition its intended starting point. Planned positions remain separate from actual deployment and live movement.</p>' +
       renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
-      '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>' +
+      '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>';
+    const missionMapMarkup = missionSetupMarkup +
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
       '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
       '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div>' +
@@ -445,6 +445,7 @@ export function createBattleSetupScreen(container, {
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle. Complete pre-game checks, then confirm the mission and map.</p></header>' +
       '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + '</section>' +
       '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + missionMapMarkup + '</section>' +
+      '<section data-setup-content="battlefield"' + (activeSetupTab === "battlefield" ? '' : ' hidden') + '>' + battlefieldMarkup + '</section>' +
       (message ? '<p role="status" class="battle-setup-screen__message">' + escapeHtml(message) + '</p>' : '') + '</main>';
   }
 
@@ -455,7 +456,7 @@ export function createBattleSetupScreen(container, {
   return {
     render,
     setTab(tab) {
-      if (tab === "pre-game" || tab === "mission-map") activeSetupTab = tab;
+      if (tab === "pre-game" || tab === "mission-map" || tab === "battlefield") activeSetupTab = tab;
       render();
     },
     destroy() {
