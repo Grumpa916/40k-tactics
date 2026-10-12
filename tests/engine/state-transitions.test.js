@@ -105,10 +105,9 @@ test("Turn Clock follows player turns and is not reset by phase transitions", ()
     }
   };
 
-  state = changePhase(state, { phase: "command" });
-  state = changePhase(state, { phase: "movement" });
-  assert.equal(state.timers.turnClock.startedAtMs, 1000);
-  assert.equal(state.timers.turnClock.activePlayerId, "p1");
+  const phaseChanged = changePhase(state, { phase: "command" });
+  assert.equal(phaseChanged.timers.turnClock.startedAtMs, 1000);
+  assert.equal(phaseChanged.timers.turnClock.activePlayerId, "p1");
 
   state = advanceToEndOfTurn(state);
   state = endTurn(state, { nextActivePlayerId: "p2", nowMs: 31000 });
