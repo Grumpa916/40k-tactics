@@ -847,7 +847,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Hover", description: "Each time this unit takes to the skies, do not subtract 2 inches from its maximum distance." }),
+
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Spore Mine Cysts", description: "At the end of your opponent's Fight phase, you can do one of the following: select one visible enemy unit (excluding Lone Operative units) within 24 inches of this unit and roll six D6 for that unit, causing 1 mortal wound for each 3+; or add a new Spore Mines unit containing D3 models to your army and set it up anywhere within 6 inches of this model and more than 8 inches horizontally away from all enemy units. You cannot select the Spore Mines option for more than one model per turn." })
     ]),
@@ -867,7 +867,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
-      Object.freeze({ name: "Hover", description: "Each time this unit takes to the skies, do not subtract 2 inches from its maximum distance." }),
+
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Airborne Predator", description: "Each time this model makes a ranged attack targeting a unit that can Fly, add 1 to the Hit roll." })
     ]),
