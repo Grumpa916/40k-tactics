@@ -23,6 +23,7 @@ import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
 import { useSecondaryMissionRedraw } from "./secondary-mission-redraw.js";
 import { discardTacticalSecondariesForCommandPoint } from "./tactical-secondary-discard.js";
 import { recordBattleShockTest } from "./battle-shock-transitions.js";
+import { startTurnClock, pauseTurnClock } from "./turn-clock-transitions.js";
 import {
   setDeploymentPlanPosition,
   clearDeploymentPlanPosition,
@@ -65,6 +66,8 @@ export function registerCoreCommandHandlers() {
     ],
     [COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, (state, command) => recordCommandPointChange(state, command.payload)],
     [COMMAND_TYPES.RECORD_BATTLE_SHOCK_TEST, (state, command) => recordBattleShockTest(state, command.payload)],
+    [COMMAND_TYPES.START_TURN_CLOCK, (state, command) => startTurnClock(state, command.payload)],
+    [COMMAND_TYPES.PAUSE_TURN_CLOCK, (state, command) => pauseTurnClock(state, command.payload)],
     [COMMAND_TYPES.RECORD_VICTORY_POINTS, (state, command) => recordVictoryPointsAward(state, command.payload)],
     [COMMAND_TYPES.ADJUST_VICTORY_POINTS, (state, command) => adjustVictoryPoints(state, command.payload)],
     [COMMAND_TYPES.UNDO_LATEST_VICTORY_POINTS_AWARD, (state, command) => undoLatestVictoryPointsAward(state, command.payload)],
