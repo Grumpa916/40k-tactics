@@ -438,8 +438,8 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
     const unit = candidate(name);
     assert.equal(unit.defaultPoints, points, name);
     assert.deepEqual([...new Set(unit.pointsOptions.map((option) => option.points))].sort((a, b) => a - b), expectedOptions, name);
-    assert.equal(unit.datasheet.dataSource.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", name);
-    assert.ok(unit.datasheet.dataSource.pointsSourceUrl.includes("warhammer-community.com"), name);
+    assert.equal(unit.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", name);
+    assert.ok(unit.pointsSourceUrl.includes("warhammer-community.com"), name);
   }
 });
 
