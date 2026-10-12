@@ -2,6 +2,7 @@ import { createArmyRoster, duplicateArmyRoster, remapRosterUnitIds, removeUnitFr
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { getEligibleBodyguards, attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 import { summarizeRosterPoints } from "../state/army-roster-points-summary.js";
+import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -206,7 +207,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         const resolvedModelCount = modelCount > 1 ? modelCount : (candidate.defaultModelCount ?? modelCount);
         const updated = { ...current, units: [...current.units, {
           id: newId(), name: candidate.name, modelCount: resolvedModelCount,
-          points: candidate.defaultPoints ?? null, pointsOptions: candidate.pointsOptions ?? [], notes: "",
+          points: resolveInitialUnitPoints(candidate, resolvedModelCount), pointsOptions: candidate.pointsOptions ?? [], notes: "",
           datasheet: candidate.datasheet ?? null, datasheetId: candidate.id,
           dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
             reviewedAt: candidate.reviewedAt ?? null, officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" }
