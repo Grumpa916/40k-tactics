@@ -23,7 +23,7 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
       "Tyranid Prime with Lash Whip", "Winged Tyranid Prime", "Tyrant Guard",
       "Neurogaunts", "Zoanthropes", "Genestealers", "Carnifexes", "Hormagaunts",
       "Termagants", "Tyranid Warriors with Melee Bio-weapons",
-      "Tyranid Warriors with Ranged Bio-weapons", "Gargoyles", "Tervigon"
+      "Tyranid Warriors with Ranged Bio-weapons", "Gargoyles", "Hyperadapted Raveners", "Raveners", "Tervigon"
     ].includes(candidate.name)).map((candidate) => ({
       id: "roster-" + candidate.id,
       name: candidate.name,
@@ -50,6 +50,7 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
     "Gargoyles", "Tyranid Warriors with Melee Bio-weapons",
     "Tyranid Warriors with Ranged Bio-weapons"
   ]);
+  assert.deepEqual(idsFor("Hyperadapted Raveners"), ["Raveners"]);
   assert.equal(unit("Tervigon").datasheet, undefined);
 });
 
