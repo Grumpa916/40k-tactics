@@ -321,7 +321,7 @@ export function createBattleSetupScreen(container, {
       '<p><strong>Defender:</strong> ' + escapeHtml(defender?.name ?? (attacker ? "Automatically assigned to the other army" : "Choose the attacker above")) + '</p>' +
       '<h3>Who takes the first turn?</h3><div class="pre-game-role-choices" role="group" aria-label="Choose first player">' +
       roleButtons("firstPlayerId", preGameSetup.firstPlayerId) + '</div></section>';
-    const preGameMarkup = preGameRolesMarkup;
+    const preGameMarkup = preGameRolesMarkup + missionSetupMarkup;
     const missionSetup = state.battlefieldMap?.missionSetup ?? {};
     const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
       ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
@@ -412,7 +412,7 @@ export function createBattleSetupScreen(container, {
       renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
       '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>';
-    const missionMapMarkup = missionSetupMarkup +
+    const missionMapMarkup =
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
       '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
       '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div>' +
