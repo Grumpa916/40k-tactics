@@ -195,9 +195,9 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
 }
 
 function setupTabLabel(tab) {
-  return ({ saves: "Setup · Account & Saves", "army-builder": "Step 1 of 5 · Game Size & Muster Armies",
-    "pre-game": "Step 2 of 5 · Pre-game", "mission-map": "Step 3 of 5 · Mission & Secondaries",
-    battlefield: "Step 4 of 5 · Create the Battlefield", deployment: "Step 5 of 5 · Deploy and Begin" })[tab] ?? "Setup";
+  return ({ saves: "Account & Saves", "army-builder": "Step 1 · Select Armies & Game Size",
+    "pre-game": "Step 2 · Pre-game", "mission-map": "Step 3 · Mission & Secondaries",
+    battlefield: "Step 4 · Create the Battlefield", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
 }
 
 function setupContinueLabel(tab) {
@@ -396,9 +396,9 @@ export function createBattleShell(container, {
   let missionOpenStates = {};
 
   function setupTabLabel(tab) {
-    return ({ saves: "Account & Saves", "army-builder": "Step 1 of 4 · Select Armies & Game Size",
-      "pre-game": "Step 2 of 4 · Pre-game", "mission-map": "Step 3 of 4 · Mission & Secondaries",
-      battlefield: "Step 4 of 4 · Create the Battlefield", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
+    return ({ saves: "Account & Saves", "army-builder": "Step 1 · Select Armies & Game Size",
+      "pre-game": "Step 2 · Pre-game", "mission-map": "Step 3 · Mission & Secondaries",
+      battlefield: "Step 4 · Create the Battlefield", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
   }
 
   function setupContinueLabel(tab) {
