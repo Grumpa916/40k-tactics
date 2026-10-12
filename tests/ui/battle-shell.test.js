@@ -720,7 +720,7 @@ test("manual secondary mission entry records the selected card for the selected 
   });
 
   assert.match(root.innerHTML, /Enter secondary mission cards/);
-  assert.match(root.innerHTML, /Tactical cards belong to the active player only/);
+  assert.match(root.innerHTML, /Each player has an independent Fixed\/Tactical mode chosen during Mission &amp; Map setup/);
   const button = {
     hasAttribute: (name) => name === "data-secondary-mission-add",
     closest(selector) {
