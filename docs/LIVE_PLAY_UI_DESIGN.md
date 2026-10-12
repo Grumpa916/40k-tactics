@@ -56,3 +56,13 @@ This document records agreed design requirements from the Warmind UI/UX comparis
 - Reuse existing game state, event history, mission timing, and scoring infrastructure.
 - Do not infer legal state from rough map coordinates.
 - Do not claim CI green until the actual workflow reports success.
+
+
+## Setup navigation update
+
+- Split setup into four focused workspaces: Army Builder, Saves, Pre-game, and Mission & Map.
+- Keep the top tab navigation and a bottom Continue action visible during setup so iPad users do not need to scroll back to the top.
+- Keep mission readiness visible in Pre-game; place detailed standard procedures and conditional ability guidance in collapsible sections.
+- Tab switching changes only the viewed workspace and must preserve roster edits and battle state.
+- Army roster detachment is saved explicitly. Only reviewed detachment options are offered as named choices; unsupported choices can be entered as printed text without inventing rules.
+- The Turn Clock starts when the first player turn begins, remains running across phase changes, and switches player at turn boundaries.
