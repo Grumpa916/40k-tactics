@@ -189,9 +189,6 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
     (recentEvents.length ? '<ol class="battle-context__event-list">' + makeEntries(recentEvents) + '</ol>' : '<p>No game events recorded yet.</p>') +
     olderMarkup + '</details>';
 }
-ts.</p>' : '') +
-    '</details>';
-}
 
 function renderDataList(items, emptyText) {
   if (!Array.isArray(items) || items.length === 0) {
