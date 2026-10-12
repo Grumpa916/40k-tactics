@@ -664,7 +664,7 @@ export function createCommandScreen(container, {
       (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
       '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
 
-    const cpPlayerId = container.querySelector("[data-cp-player]")?.value || perspectivePlayerId || state.activePlayer || players[0]?.id;
+    const cpPlayerId = container.querySelector?.("[data-cp-player]")?.value || perspectivePlayerId || state.activePlayer || players[0]?.id;
     const cpHistory = getCommandPointHistory(state, cpPlayerId).slice(-5).reverse();
     const cpHistoryMarkup = cpHistory.length ? cpHistory.map((entry) =>
       '<li><strong>' + escapeHtml(entry.amount > 0 ? '+' + entry.amount : entry.amount) +
