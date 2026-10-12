@@ -1,6 +1,7 @@
 import { createArmyRoster, duplicateArmyRoster, remapRosterUnitIds, removeUnitFromRoster } from "../state/army-roster-library.js";
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { getEligibleBodyguards, attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
+import { summarizeRosterPoints } from "../state/army-roster-points-summary.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -65,6 +66,29 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     return html;
   }
 
+  function renderRosterPointsSummary(roster) {
+    const summary = summarizeRosterPoints(roster);
+    let status = "";
+    if (!summary.limitSet) {
+      status = '<p role="note">Points limit not set. Set a limit to check the roster size.</p>';
+    } else if (summary.overLimit) {
+      status = '<p role="alert">Over points limit by ' + escapeHtml(Math.abs(summary.remainingPoints)) + ' pts.</p>';
+    } else if (summary.unitsWithoutPoints === 0 && summary.remainingPoints === 0) {
+      status = '<p role="status">Roster is exactly at its points limit.</p>';
+    } else if (summary.unitsWithoutPoints === 0) {
+      status = '<p role="status">' + escapeHtml(summary.remainingPoints) + ' pts remaining.</p>';
+    } else {
+      status = '<p role="note">Known subtotal is ' + escapeHtml(summary.totalPoints) + ' / ' +
+        escapeHtml(summary.pointsLimit) + ' pts. Remaining points are provisional until all unit costs are set.</p>';
+    }
+    const incomplete = summary.unitsWithoutPoints > 0
+      ? '<p role="note">' + escapeHtml(summary.unitsWithoutPoints) + ' unit cost(s) not set; these are excluded from the subtotal.</p>'
+      : "";
+    return '<div class="army-roster-panel__points-summary" aria-label="Roster points summary">' +
+      '<p>Total assigned unit points: ' + escapeHtml(summary.totalPoints) + ' pts.</p>' +
+      status + incomplete + '</div>';
+  }
+
   function render() {
     if (destroyed) return;
     const options = records.map((record) => '<option value="' + escapeHtml(record.id) + '"' +
@@ -110,7 +134,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         '<p>Catalog is a starter list, not a complete or verified datasheet database. Check current official faction documents before relying on a unit entry.</p>' +
         '<details><summary>Add a unit not in the catalog</summary><label>Manual unit name<input name="manualUnitName" maxlength="120" placeholder="Enter unit name" ' + (busy ? "disabled" : "") + '></label><button type="submit" ' + (busy ? "disabled" : "") + '>Add manual unit</button></details></form>' +
         '<p class="army-roster-panel__attachment-status">Leader / Bodyguard: only source-reviewed pairings are selectable. Units without reviewed compatibility remain unavailable for attachment.</p>' +
-        '<h4>Roster units (' + current.units.length + ')</h4><p>Total assigned unit points: ' + escapeHtml(current.units.reduce((sum, unit) => sum + (Number.isFinite(unit.points) ? unit.points : 0), 0)) + ' pts · unset unit costs excluded.</p><ul>' + (units || '<li>No units added yet.</li>') + '</ul>' +
+        '<h4>Roster units (' + current.units.length + ')</h4>' + renderRosterPointsSummary(current) + '<ul>' + (units || '<li>No units added yet.</li>') + '</ul>' +
         '<div class="army-roster-panel__points"><label>Roster points limit<input data-roster-points-limit type="number" min="0" step="1" placeholder="e.g. 2000" value="' + escapeHtml(current.pointsLimit ?? "") + '" ' + (busy ? "disabled" : "") + '></label><button type="button" data-save-points-limit ' + (busy ? "disabled" : "") + '>Save points limit</button></div>' +
         '<p>Faction: ' + escapeHtml(current.faction || "Not set") + ' · Points limit: ' + escapeHtml(current.pointsLimit ?? "Not set") + '</p></section>' : "") +
       (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</section>';
