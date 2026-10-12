@@ -150,6 +150,18 @@ test("Force Disposition buttons remain enabled during setup and locked during ac
 });
 
 
+test("secondary mission setup shows both players at once with independent mode controls", () => {
+  const { root, session } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  assert.match(root.innerHTML, /class="secondary-player-panels"/);
+  assert.match(root.innerHTML, /data-secondary-player-panel="p1"/);
+  assert.match(root.innerHTML, /data-secondary-player-panel="p2"/);
+  assert.match(root.innerHTML, /data-setup-secondary-mode="p1"/);
+  assert.match(root.innerHTML, /data-setup-secondary-mode="p2"/);
+  assert.doesNotMatch(root.innerHTML, /data-setup-secondary-player/);
+  screen.destroy();
+});
+
 test("Fixed secondary selection validates the selected player's mode without an undefined player reference", () => {
   const { root, session, listeners } = setup({
     scoring: { secondaryMissionModeByPlayer: { p1: "fixed" }, secondaryMissions: [] }
