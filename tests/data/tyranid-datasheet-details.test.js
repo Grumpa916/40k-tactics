@@ -182,7 +182,7 @@ test("Hive Guard and Neurolictor expose sourced weapon profiles and abilities", 
   assert.ok(neurolictor.datasheet.abilities.some((ability) => ability.name === "Psychological Saboteur"));
 });
 
-test("Pyrovores, Von Ryan's Leapers, and Ripper Swarms expose sourced model options", () => {
+test("Pyrovores, Von Ryan’s Leapers, and Ripper Swarms expose sourced model options", () => {
   const pyrovores = candidate("Pyrovores");
   assert.equal(pyrovores.defaultPoints, 40);
   assert.deepEqual(pyrovores.pointsOptions.slice(0, 3).map((option) => option.points), [40, 70, 100]);
@@ -708,6 +708,27 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
     assert.deepEqual([...new Set(unit.pointsOptions.map((option) => option.points))].sort((a, b) => a - b), expectedOptions, name);
     assert.equal(unit.pointsSourceName, "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", name);
     assert.ok(unit.pointsSourceUrl.includes("warhammer-community.com"), name);
+  }
+});
+
+test("Every Tyranid profile includes the Synapse faction ability", () => {
+  for (const name of [
+    "Tyranid Prime with Lash Whip", "Raveners", "Hive Tyrant", "Neurotyrant",
+    "Tyrant Guard", "Broodlord", "Old One Eye", "Carnifexes", "The Swarmlord",
+    "Neurogaunts", "Zoanthropes", "Termagants", "Winged Hive Tyrant", "Lictor",
+    "Deathleaper", "Tervigon", "Tyrannofex", "Tyranid Warriors with Ranged Bio-weapons",
+    "Barbgaunts", "Biovores", "Hive Guard", "Neurolictor", "Pyrovores",
+    "Von Ryan’s Leapers", "Ripper Swarms", "Parasite of Mortrex", "Exocrine",
+    "Haruspex", "Maleceptor", "Psychophage", "The Red Terror", "Mucolid Spores",
+    "Mawloc", "Norn Assimilator", "Norn Emissary", "Toxicrene", "Hormagaunts",
+    "Genestealers", "Gargoyles", "Tyranid Warriors with Melee Bio-weapons",
+    "Venomthropes", "Trygon", "Winged Tyranid Prime", "Harpy", "Hive Crone",
+    "Tyrannocyte", "Hierophant", "Harridan", "Hyperadapted Raveners",
+    "Screamer-Killer", "Spore Mines", "Sporocyst", "Malanthrope",
+    "Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Sky-slasher Swarms"
+  ]) {
+    const unit = candidate(name);
+    assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Synapse"), name);
   }
 });
 
