@@ -873,9 +873,12 @@ export function createBattleShell(container, {
     const continueButton = event.target?.closest?.("[data-setup-workspace-continue]");
     if (!continueButton || !container.contains(continueButton)) return;
     if (setupWorkspaceTab === "mission-map") {
-      const readiness = evaluatePreGameReadiness(session.getState());
-      if (!readiness.ready) {
-        setupNavigationMessage = "Complete before deployment: " + readiness.missing.map((item) => item.label).join(", ") + ".";
+      const currentState = session.getState();
+      const readiness = evaluatePreGameReadiness(currentState);
+      const missing = readiness.missing.map((item) => item.label);
+      if (!currentState.scoring?.secondaryMissionMode) missing.push("Secondary mission mode");
+      if (missing.length) {
+        setupNavigationMessage = "Complete before deployment: " + missing.join(", ") + ".";
         const message = container.querySelector?.("[data-setup-navigation-message]");
         if (message) message.textContent = setupNavigationMessage;
         return;
