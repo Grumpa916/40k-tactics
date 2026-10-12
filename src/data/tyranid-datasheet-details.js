@@ -903,6 +903,26 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 1, points: 610 }, { models: 1, points: 660, condition: "2nd+ Harridan in army (+50 points)" }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Harridan"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:hyperadapted-raveners": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Burrowers", "Hyperadapted Raveners"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Venom bolt", equipment: "Default", range: '12"', attacks: "D6+3", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Assault, Ignores Cover, Torrent" }),
+      Object.freeze({ name: "Prime claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Anti-Monster 5+, Anti-Vehicle 5+, Twin-linked" }),
+      Object.freeze({ name: "Ravener heavy claws and talons", equipment: "Default", range: "Melee", attacks: 3, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Anti-Monster 5+, Anti-Vehicle 5+, Twin-linked" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability for the Ravener Prime; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Leader", description: "The Ravener Prime leads the Hyperadapted Raveners unit." }),
+      Object.freeze({ name: "Alpha Invader", description: "Weapons equipped by models in this unit have Sustained Hits 1." })
+    ]),
+    defaultPoints: 165,
+    pointsOptions: Object.freeze([{ points: 165, condition: "Base unit cost; confirm current model-count options before final roster entry" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hyperadapted-Raveners"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
