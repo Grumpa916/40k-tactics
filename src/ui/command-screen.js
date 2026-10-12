@@ -664,11 +664,12 @@ export function createCommandScreen(container, {
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
-          '<button type="button" data-secondary-mission-add>Record selected mission</button>' +
+          '<button type="button" data-secondary-mission-add>Record secondary card</button>' +
           secondaryModeStatusMarkup + '</div></form>' +
-          '<p>The catalog contains names and Fixed/Tactical availability for all cards, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked. All scoring still requires table-side confirmation; no VP is awarded automatically.</p>';
-    const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Manual secondary-mission entry</h2>' +
-      '<p>No automatic draw or selection occurs. Choose Fixed or Tactical once for the battle before entering cards. The mode is locked after the first card is recorded; card availability is checked against the catalog.</p>' +
+          '<p>In Tactical mode, use this form during the active player’s Command phase to record the two cards drawn from the physical deck. Choose the printed card from the catalog or type its name. Check the actual card before scoring; no VP is awarded automatically.</p>' +
+          '<p>The catalog contains names and Fixed/Tactical availability, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked.</p>';
+    const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Enter secondary mission cards</h2>' +
+      '<p>Record Fixed cards here when selected, or record Tactical cards during each active player’s Command phase. Tactical cards belong to the active player only. Choose Fixed or Tactical once for the battle; the mode locks after the first card is recorded.</p>'
       secondaryEntryMarkup +
       (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
       '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
