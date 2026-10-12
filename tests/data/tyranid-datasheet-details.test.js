@@ -61,3 +61,24 @@ test("Tyrant Guard profile lists model-count point options", () => {
   assert.deepEqual(unit.pointsOptions.map((option) => option.points), [80, 160]);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.equipment === "Wargear option"));
 });
+
+
+test("Broodlord profile includes its Genestealer attachment and points", () => {
+  const unit = candidate("Broodlord");
+  assert.equal(unit.defaultPoints, 80);
+  assert.equal(unit.datasheet.characteristics.Toughness, 5);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Vicious Insight"));
+  assert.deepEqual(unit.datasheet.leader.allowedBodyguardDatasheetIds, ["tyranids:genestealers"]);
+});
+
+test("Old One Eye and Carnifexes have sourced profiles and point options", () => {
+  const oldOneEye = candidate("Old One Eye");
+  assert.equal(oldOneEye.defaultPoints, 140);
+  assert.ok(oldOneEye.datasheet.abilities.some((ability) => ability.name === "Alpha Leader"));
+  assert.deepEqual(oldOneEye.datasheet.leader.allowedBodyguardDatasheetIds, ["tyranids:carnifexes"]);
+
+  const carnifexes = candidate("Carnifexes");
+  assert.equal(carnifexes.defaultPoints, 90);
+  assert.deepEqual(carnifexes.pointsOptions.map((option) => option.points), [90, 180]);
+  assert.ok(carnifexes.datasheet.weapons.some((weapon) => weapon.equipment === "Wargear option"));
+});
