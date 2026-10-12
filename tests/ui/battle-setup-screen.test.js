@@ -157,7 +157,7 @@ test("Fixed secondary card selectors use the shipped catalog when no catalog is 
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
   assert.match(root.innerHTML, /data-setup-secondary-definition/);
   assert.match(root.innerHTML, /Select a Fixed card/);
-  assert.match(root.innerHTML, /Cleanse|Containment|Secure No Man.s Land|Storm Hostile Objective/);
+  assert.match(root.innerHTML, /A Grievous Blow|Assassination|Bring it Down|Engage on All Fronts/);
   const p1Panel = root.innerHTML.split('data-secondary-player-panel="p1"')[1].split("</section>")[0];
   const p2Panel = root.innerHTML.split('data-secondary-player-panel="p2"')[1].split("</section>")[0];
   assert.match(p1Panel, /<option value="secondary-/);
