@@ -10,17 +10,21 @@ export function getEligibleBodyguards(roster, leaderId) {
   if (!leader) throw new RangeError("Leader unit not found: " + leaderId);
   if (leader.datasheet?.leader?.isLeader !== true || leader.attachedToBodyguardId) return [];
 
-  const allowedIds = leader.datasheet.leader.allowedBodyguardDatasheetIds;
-  const status = leader.dataSource?.status;
-  if (!Array.isArray(allowedIds) || !["accepted", "cross-checked"].includes(status)) return [];
+  const leaderMetadata = leader.datasheet?.leader;
+  const allowedIds = leaderMetadata?.allowedBodyguardDatasheetIds;
+  const leaderReviewStatus = leaderMetadata?.compatibilityReview?.status;
+  if (!Array.isArray(allowedIds) || !["accepted", "cross-checked"].includes(leaderReviewStatus)) return [];
 
   return roster.units.filter((unit) => {
     if (unit.id === leader.id) return false;
     const bodyguardId = unit.datasheetId ?? unit.datasheet?.id;
+    const bodyguardMetadata = unit.datasheet?.bodyguard;
+    const bodyguardReviewStatus = bodyguardMetadata?.compatibilityReview?.status;
     const attachedLeaderIds = unit.attachedLeaderIds ?? [];
-    const maxAttachedLeaders = unit.datasheet?.bodyguard?.maxAttachedLeaders ?? 1;
+    const maxAttachedLeaders = bodyguardMetadata?.maxAttachedLeaders ?? 1;
     return Boolean(bodyguardId && allowedIds.includes(bodyguardId) &&
-      unit.datasheet?.bodyguard?.canReceiveLeader !== false &&
+      bodyguardMetadata?.canReceiveLeader === true &&
+      ["accepted", "cross-checked"].includes(bodyguardReviewStatus) &&
       !unit.attachedToBodyguardId &&
       attachedLeaderIds.length < maxAttachedLeaders &&
       !attachedLeaderIds.includes(leaderId));
