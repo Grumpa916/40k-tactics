@@ -13,6 +13,8 @@ function playerName(state, playerId) {
 function humanizeEventType(type) {
   const labels = {
     "battle.started": "Battle started",
+    "turn_clock.started": "Turn Clock started",
+    "turn_clock.paused": "Turn Clock paused",
     "battle.deployment_started": "Deployment started",
     "battle.round_started": "Battle round started",
     "battle.round_ended": "Battle round ended",
