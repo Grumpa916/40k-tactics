@@ -418,7 +418,7 @@ export function createBattleSetupScreen(container, {
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
       '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
       '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div>' +
-      '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p>';
+      '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p></section>';
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle. Complete pre-game checks, then confirm the mission and map.</p></header>' +
