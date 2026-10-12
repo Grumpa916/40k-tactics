@@ -996,7 +996,7 @@ test("setup navigation exposes staged setup workspaces and a bottom Continue act
   assert.match(root.html, /Step 4 · Create the Battlefield/);
   assert.match(root.html, /Step 5 · Deploy and Begin/);
   assert.match(root.html, /data-setup-workspace-continue/);
-  assert.match(root.html, /Continue to Game Size/);
+  assert.match(root.html, /Continue to Select Armies/);
   shell.destroy();
 });
 
