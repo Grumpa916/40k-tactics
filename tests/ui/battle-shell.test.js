@@ -96,6 +96,37 @@ function container() {
   };
 }
 
+test("battle shell keeps persistent score, Unit Status, Event Log and roster controls visible", () => {
+  const session = sessionFor({
+    phase: "command",
+    turn: 1,
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    commandPoints: { p1: 2, p2: 1 },
+    victoryPoints: { p1: 10, p2: 8 },
+    units: [],
+    history: []
+  });
+  const root = container();
+  const shell = createBattleShell(root, {
+    session,
+    perspectivePlayerId: "p1",
+    screenFactories: {}
+  });
+
+  assert.match(root.html, /data-left-collapsed="true"/);
+  assert.match(root.html, /data-right-collapsed="false"/);
+  assert.match(root.html, /10 VP/);
+  assert.match(root.html, /2 CP/);
+  assert.match(root.html, /Unit Status/);
+  assert.match(root.html, /Event Log/);
+  assert.match(root.html, /data-open-army-roster="p1"/);
+  assert.match(root.html, /data-open-army-roster="p2"/);
+
+  shell.destroy();
+});
+
 test("shared battle shell mounts the current implemented phase", () => {
   const session = sessionFor({
     phase: "shooting",
