@@ -8,6 +8,7 @@ import {
   returnSecondaryMissionToDeck,
   getActiveSecondaryMissionDefinitions,
   getSecondaryMissionHistory,
+  getSecondaryMissionMode,
   setSecondaryMissionMode,
   SECONDARY_MISSION_MODES,
   SECONDARY_MISSION_STATUS
@@ -230,4 +231,31 @@ test("Fixed secondary cards remain active after scoring and cannot be discarded 
   assert.throws(() => returnSecondaryMissionToDeck(state, {
     instanceId: entry.instanceId, playerId: "p1", round: 1, turn: 1
   }), /Fixed secondary cards cannot be returned/);
+});
+
+
+test("players can independently select Fixed and Tactical secondary modes", () => {
+  let state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p2",
+    players: [{ id: "p1", name: "Player 1" }, { id: "p2", name: "Player 2" }],
+    battle: { round: 1, activePlayerId: "p2" }
+  });
+  state = setSecondaryMissionMode(state, { playerId: "p1", mode: SECONDARY_MISSION_MODES.FIXED });
+  state = setSecondaryMissionMode(state, { playerId: "p2", mode: SECONDARY_MISSION_MODES.TACTICAL });
+  assert.equal(getSecondaryMissionMode(state, "p1"), SECONDARY_MISSION_MODES.FIXED);
+  assert.equal(getSecondaryMissionMode(state, "p2"), SECONDARY_MISSION_MODES.TACTICAL);
+
+  state = drawSecondaryMission(state, {
+    definition: { ...definition, id: "fixed-p1", availableModes: ["fixed"], fixedAvailable: true },
+    playerId: "p1", round: 1, turn: 1
+  });
+  state = drawSecondaryMission(state, {
+    definition: { ...definition, id: "tactical-p2", availableModes: ["tactical"] },
+    playerId: "p2", round: 1, turn: 1
+  });
+  assert.equal(onlyEntry(state, "p1").definition.missionMode, "fixed");
+  assert.equal(onlyEntry(state, "p2").definition.missionMode, "tactical");
+  assert.throws(() => setSecondaryMissionMode(state, {
+    playerId: "p1", mode: SECONDARY_MISSION_MODES.TACTICAL
+  }), /cannot change after that player has entered a card/);
 });
