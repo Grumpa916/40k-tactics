@@ -63,6 +63,72 @@ test("battle store bounds list limits and scopes mutations to authenticated owne
   assert.deepEqual(deleteQuery.filters, [["id", "battle-1"], ["user_id", "owner-1"]]);
 });
 
+test("battle store checkpoints the running clock in a detached save snapshot", async () => {
+  const { client, calls } = fakeClient();
+  const store = createSupabaseBattleStore(client);
+  const state = createGameState({
+    phase: "command",
+    activePlayer: "p1",
+    players: [{ id: "p1" }, { id: "p2" }],
+    timers: {
+      turnClock: {
+        elapsedMsByPlayer: { p1: 5000, p2: 2000 },
+        activePlayerId: "p1",
+        running: true,
+        startedAtMs: 1000
+      }
+    }
+  });
+  const originalNow = Date.now;
+  Date.now = () => 4000;
+  try {
+    await store.save({ name: "Clock battle", state });
+  } finally {
+    Date.now = originalNow;
+  }
+  const saved = calls.find((call) => call[0] === "from")[2].payload.game_state;
+  assert.equal(saved.timers.turnClock.elapsedMsByPlayer.p1, 8000);
+  assert.equal(saved.timers.turnClock.startedAtMs, 4000);
+  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p1, 5000);
+  assert.equal(state.timers.turnClock.startedAtMs, 1000);
+});
+
+test("battle store re-bases a running clock on load so closed-app time is not counted", async () => {
+  const savedState = createGameState({
+    phase: "command",
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1" }, { id: "p2" }],
+    timers: {
+      turnClock: {
+        elapsedMsByPlayer: { p1: 8000, p2: 2000 },
+        activePlayerId: "p1",
+        running: true,
+        startedAtMs: 4000
+      }
+    }
+  });
+  const { client } = fakeClient({
+    response: {
+      id: "battle-1",
+      name: "Clock battle",
+      state_version: savedState.version,
+      game_state: savedState
+    }
+  });
+  const store = createSupabaseBattleStore(client);
+  const originalNow = Date.now;
+  Date.now = () => 9000;
+  try {
+    const loaded = await store.load("battle-1");
+    assert.equal(loaded.game_state.timers.turnClock.startedAtMs, 9000);
+    assert.equal(loaded.game_state.timers.turnClock.elapsedMsByPlayer.p1, 8000);
+    assert.equal(loaded.game_state.timers.turnClock.running, true);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test("battle store rejects unsupported game-state versions on load", async () => {
   const { client } = fakeClient({ response: { id: "battle-1", name: "Test", state_version: 99, game_state: { version: 99 } } });
   const store = createSupabaseBattleStore(client);
