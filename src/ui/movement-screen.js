@@ -36,6 +36,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
   let selectedUnitId = null;
   let errorMessage = "";
+  let livePointerDrag = null;
 
   function render() {
     const state = session.getState();
@@ -99,6 +100,56 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       (errorMessage ? '<p class="move-error" role="alert">' + escapeHtml(errorMessage) + '</p>' : '') +
       '<section><div class="move-heading"><h2>Eligible units</h2><span>Active player only</span></div><div class="move-units">' +
       unitCards + '</div></section><section>' + editor + '</section></main>';
+  }
+
+  function handleLivePointerDown(event) {
+    const marker = event.target?.closest?.('[data-map-unit-id]');
+    if (!marker || !marker.closest?.('[data-map-mode="live"]')) return;
+    const state = session.getState();
+    const unitId = marker.getAttribute("data-map-unit-id");
+    const unit = state.units.find((item) => item.id === unitId);
+    if (!unit || unit.ownerId !== (perspectivePlayerId ?? state.activePlayer) || unit.status !== "deployed") return;
+    const board = marker.closest("[data-battlefield-map-board]");
+    if (!board) return;
+    livePointerDrag = {
+      unitId, pointerId: event.pointerId,
+      startX: event.clientX, startY: event.clientY,
+      board, marker,
+      markerX: parseFloat(marker.style.left) / 100 * 60,
+      markerY: 44 - parseFloat(marker.style.top) / 100 * 44
+    };
+    selectedUnitId = unitId;
+  }
+
+  function handleLivePointerUp(event) {
+    const drag = livePointerDrag;
+    livePointerDrag = null;
+    if (!drag || drag.pointerId !== event.pointerId ||
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 8) return;
+    const rect = drag.board.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return;
+    const x = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
+    const y = Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44));
+    const dx = x - drag.markerX;
+    const dy = y - drag.markerY;
+    try {
+      const state = session.getState();
+      const unit = state.units.find((item) => item.id === drag.unitId);
+      if (!unit) throw new Error("Selected unit is no longer available.");
+      const models = modelsFor(unit);
+      const moves = models.map((model) => ({
+        modelId: model.id,
+        position: {
+          x: Math.round(Math.max(0, Math.min(60, model.position.x + dx)) * 10) / 10,
+          y: Math.round(Math.max(0, Math.min(44, model.position.y + dy)) * 10) / 10
+        }
+      }));
+      session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
+      errorMessage = "";
+    } catch (error) {
+      errorMessage = error?.message ?? String(error);
+    }
+    render();
   }
 
   function handleClick(event) {
@@ -167,7 +218,9 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   container.addEventListener("click", handleClick);
+  container.addEventListener("pointerdown", handleLivePointerDown);
+  container.addEventListener("pointerup", handleLivePointerUp);
   const unsubscribe = session.subscribe(render);
   render();
-  return { render, destroy() { unsubscribe(); container.removeEventListener("click", handleClick); container.replaceChildren(); } };
+  return { render, destroy() { unsubscribe(); container.removeEventListener("click", handleClick); container.removeEventListener("pointerdown", handleLivePointerDown); container.removeEventListener("pointerup", handleLivePointerUp); container.replaceChildren(); } };
 }
