@@ -5,6 +5,8 @@ import { createCommandScreen } from "../../src/ui/command-screen.js";
 import { createMissionDefinition, SCORING_TIMINGS } from "../../src/rules/mission-definition.js";
 import { SCORING_EVIDENCE } from "../../src/rules/scoring-eligibility.js";
 import { drawSecondaryMission, getSecondaryMissionHistory } from "../../src/rules/secondary-mission-lifecycle.js";
+import { COMMAND_TYPES } from "../../src/commands/game-commands.js";
+import { recordFactionAbilityDecision } from "../../src/engine/faction-ability-transitions.js";
 
 function sessionFor(initialState) {
   let state = initialState;
@@ -18,6 +20,14 @@ function sessionFor(initialState) {
     setState(nextState) {
       state = nextState;
       for (const listener of listeners) listener(state);
+    },
+    dispatch(command) {
+      if (command?.type !== COMMAND_TYPES.RECORD_FACTION_ABILITY_DECISION) {
+        throw new Error("Unsupported command in battle-shell test session: " + command?.type);
+      }
+      state = recordFactionAbilityDecision(state, command.payload);
+      for (const listener of listeners) listener(state);
+      return state;
     }
   };
 }
@@ -62,6 +72,17 @@ function container() {
       };
       for (const listener of this.listeners.get("click") ?? []) listener(event);
     },
+    clickData(selector, attributes = {}) {
+      const button = {
+        getAttribute(name) { return attributes[name] ?? null; }
+      };
+      const event = {
+        target: {
+          closest(candidate) { return candidate === selector ? button : null; }
+        }
+      };
+      for (const listener of this.listeners.get("click") ?? []) listener(event);
+    },
     replaceChildren(...children) {
       this.children = children;
       this.html = "";
@@ -95,6 +116,69 @@ function container() {
     }
   };
 }
+
+test("Invasion Fleet Command shell prompts for Hyper-adaptations and records the selected choice", () => {
+  const session = sessionFor({
+    phase: "start_turn",
+    turn: 1,
+    activePlayer: "p2",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p2" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    armyRosters: {
+      p1: { id: "r1", faction: "Tyranids", detachment: "Invasion Fleet", units: [] },
+      p2: { id: "r2", faction: "Space Marines", detachment: "Gladius Task Force", units: [] }
+    },
+    units: [{ id: "p1:hive", ownerId: "p1", name: "Hive Tyrant", status: "deployed", metadata: { datasheetId: "tyranids:hive-tyrant" } }],
+    history: []
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+
+  assert.match(root.html, /Choose Hyper-adaptations/);
+  assert.match(root.html, /Swarming Instincts/);
+  assert.match(root.html, /Hyper-aggression/);
+  assert.match(root.html, /Hive Predators/);
+  assert.doesNotMatch(root.html, /tyranid-shadow-in-the-warp-title/);
+
+  root.clickData("[data-faction-decision-choice]", {
+    "data-faction-player-id": "p1",
+    "data-faction-decision-id": "tyranids.hyper-adaptations",
+    "data-faction-decision-choice": "hyper-aggression"
+  });
+  assert.equal(shell.getState().armyRosters.p1.battleAbilitySelections["tyranids.hyper-adaptations"], "hyper-aggression");
+  assert.equal(shell.getState().history.at(-1).type, "faction_ability.decision_recorded");
+  shell.destroy();
+});
+
+test("Shadow in the Warp reminder records use during either player's Command phase", () => {
+  const session = sessionFor({
+    phase: "command",
+    turn: 2,
+    activePlayer: "p2",
+    battle: { id: "b1", status: "active", round: 2, activePlayerId: "p2" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    armyRosters: {
+      p1: { id: "r1", faction: "Tyranids", detachment: "Invasion Fleet", units: [] },
+      p2: { id: "r2", faction: "Space Marines", detachment: "Gladius Task Force", units: [] }
+    },
+    units: [{ id: "p1:hive", ownerId: "p1", name: "Hive Tyrant", status: "deployed", metadata: { datasheetId: "tyranids:hive-tyrant" } }],
+    history: []
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+
+  assert.match(root.html, /Shadow in the Warp/);
+  assert.match(root.html, /either player's Command phase/i);
+  assert.match(root.html, /Available from:<\/strong> Hive Tyrant/);
+  root.clickData("[data-use-faction-decision]", {
+    "data-use-faction-decision": "tyranids.shadow-in-the-warp",
+    "data-faction-player-id": "p1"
+  });
+  assert.equal(shell.getState().armyRosters.p1.battleAbilityUses["tyranids.shadow-in-the-warp"], true);
+  assert.equal(shell.getState().history.at(-1).payload.choiceName, "Shadow in the Warp");
+  assert.match(root.html, /does not resolve them|resolve the required Battle-shock tests at the table/i);
+  shell.destroy();
+});
 
 test("battle shell keeps persistent score, Unit Status, Event Log and roster controls visible", () => {
   const session = sessionFor({
