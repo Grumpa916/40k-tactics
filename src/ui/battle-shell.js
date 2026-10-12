@@ -65,9 +65,14 @@ function renderBattleShockReminder(state, reminder) {
     if (unit.ownerId !== reminder.playerId ||
         hasBattleShockTestInCurrentTurn(state, unit.id, round, turn)) return false;
     const eligibility = getBattleShockEligibility(unit);
-    return eligibility.requiresTest === true || eligibility.requiresTest === null;
+    return eligibility.requiresTest === true;
   });
   if (!units.length) return "";
+  const untrackedCount = (Array.isArray(state.units) ? state.units : []).filter((unit) =>
+    unit.ownerId === reminder.playerId &&
+    !hasBattleShockTestInCurrentTurn(state, unit.id, round, turn) &&
+    getBattleShockEligibility(unit).requiresTest === null
+  ).length;
 
   const rows = units.map((unit) => {
     const eligibility = getBattleShockEligibility(unit);
@@ -91,7 +96,9 @@ function renderBattleShockReminder(state, reminder) {
   return '<div class="battle-shock-reminder__backdrop"><section class="battle-shock-reminder" role="dialog" ' +
     'aria-modal="true" aria-labelledby="battle-shock-reminder-title"><div class="battle-shock-reminder__kicker">COMMAND PHASE</div>' +
     '<h2 id="battle-shock-reminder-title">Battle-shock checks</h2>' +
-    '<p>Review these units now. Enter the actual result from the table; unknown strength is flagged for your manual check.</p>' +
+    '<p>Review these units now. Enter the actual result from the table.</p>' +
+    (untrackedCount ? '<p class="battle-shock-reminder__note">' + untrackedCount +
+      ' additional unit(s) have untracked strength. Check Unit Status and the physical unit/card; they are not assumed to need a test.</p>' : '') +
     '<ul class="battle-shock-reminder__list">' + rows + '</ul>' +
     '<div class="battle-shock-reminder__actions"><button type="button" data-dismiss-battle-shock-reminder>Review later</button></div>' +
     '</section></div>';
