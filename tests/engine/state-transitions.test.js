@@ -51,10 +51,13 @@ test("state transitions progress a battle and record events", () => {
   assert.equal(state.activePlayer, "p1");
   assert.equal(state.battle.activePlayerId, "p1");
 
-  state = completeBattle(state);
+  state = completeBattle(state, { nowMs: 5000 });
   assert.equal(state.battle.status, "complete");
   assert.equal(state.phase, "complete");
-  assert.equal(state.history.at(-1).type, "battle.completed");
+  assert.equal(state.timers.turnClock.running, false);
+  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p1, 4000);
+  assert.equal(state.history.at(-2).type, "battle.completed");
+  assert.equal(state.history.at(-1).type, "turn_clock.paused");
 });
 
 test("turns resolve in order and both player turns advance the battle round", () => {
