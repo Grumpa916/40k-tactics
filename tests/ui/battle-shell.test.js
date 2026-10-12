@@ -1014,7 +1014,8 @@ test("Deploy and Begin refuses to enter deployment while readiness requirements 
   const root = container();
   const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
 
-  root.clickData("[data-setup-workspace-tab]", { "data-setup-workspace-tab": "deployment" });
+  root.clickData("[data-setup-workspace-tab]", { "data-setup-workspace-tab": "battlefield" });
+  root.clickData("[data-setup-workspace-continue]");
 
   assert.equal(session.getState().battle.status, "setup");
   assert.equal(session.getState().phase, "setup");
