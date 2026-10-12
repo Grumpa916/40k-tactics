@@ -464,7 +464,7 @@ test("Harpy includes both twin cannons and Tyrannocyte preserves all Aerial Seed
   const tyrannocyte = candidate("Tyrannocyte");
   const aerialSeeding = tyrannocyte.datasheet.abilities.find((ability) => ability.name === "Aerial Seeding");
   assert.ok(aerialSeeding);
-  assert.match(aerialSeeding.description, /do not count towards limits on the maximum number of Reserves units/);
+  assert.match(aerialSeeding.description, /are counted towards any limits placed on the maximum number of Reserves units/);
   assert.match(aerialSeeding.description, /no units can embark within it/);
 });
 
