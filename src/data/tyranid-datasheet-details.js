@@ -188,7 +188,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wound; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Blistering Assault", description: "In the opponent's Shooting phase, if an enemy unit's attacks cause a model in this unit to lose a wound, this unit can make a surge move of up to D6+2 inches." }),
+      Object.freeze({ name: "Blistering Assault", description: "In your opponent's Shooting phase, when an enemy unit has shot, if a model in this unit lost a wound as a result of those attacks, this unit can make a surge move of up to D6+2 inches." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows Old One Eye to lead this unit." })
     ]),
     defaultModelCount: 1,
@@ -209,7 +209,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Hive Commander", description: "At the start of your Command phase, if this model is on the battlefield, you gain 1CP." }),
-      Object.freeze({ name: "Malign Presence", description: "Once per turn, when the opponent targets a unit within 12 inches of this model with a Stratagem, increase that use's CP cost by 1." }),
+      Object.freeze({ name: "Malign Presence", description: "Once per turn, when your opponent targets a unit from their army within 12 inches of this model with a Stratagem, increase the CP cost of that use of that Stratagem by 1CP." }),
       Object.freeze({ name: "Domination of the Hive Mind", description: "While a friendly Tyranids unit is within 9 inches of this model, that unit is within your army's Synapse Range." })
     ]),
     defaultModelCount: 1,
@@ -267,7 +267,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
-      Object.freeze({ name: "Skulking Horrors", description: "In the opponent's Movement phase, if an enemy unit ends a move within 8 inches and this unit is not in Engagement Range, this unit can make a Normal move of up to D6 inches." }),
+      Object.freeze({ name: "Skulking Horrors", description: "In your opponent's Movement phase, if an enemy unit ends a move within 8 inches of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of up to D6 inches." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Tyranid Prime with Lash Whip to lead this unit." })
     ]),
     defaultModelCount: 10,
