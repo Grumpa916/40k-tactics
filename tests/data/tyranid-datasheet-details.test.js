@@ -397,7 +397,7 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
     assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === weaponName), name);
     assert.ok(unit.datasheet.keywords.includes("Legends"), name);
     assert.ok(unit.sourceName.includes("Legends"), name);
-    assert.equal(unit.officialRulesCrossCheck, "pending", name);
+    assert.equal(unit.officialRulesCrossCheck, "verified", name);
     assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
   }
   const requiredAbilities = {
@@ -432,6 +432,21 @@ test("The Red Terror matches the current official 11th-edition faction pack", ()
   assert.ok(!unit.datasheet.keywords.includes("Mobile"));
   assert.equal(unit.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
   assert.equal(unit.officialRulesCrossCheck, "verified");
+});
+
+test("Imperial Armour profiles match current official Frame keywords and damaged rules", () => {
+  for (const name of ["Barbed Hierodule", "Dimachaeron", "Scythed Hierodule", "Harridan", "Hierophant"]) {
+    const unit = candidate(name);
+    assert.ok(unit.datasheet.keywords.includes("Frame"), name);
+    assert.equal(unit.officialRulesCrossCheck, "verified", name);
+    assert.ok(unit.sourceUrl.includes("warhammer-community.com"), name);
+  }
+  const harridan = candidate("Harridan");
+  assert.ok(harridan.datasheet.abilities.some((ability) => ability.name === "Hover"));
+  const hierophant = candidate("Hierophant");
+  const damaged = hierophant.datasheet.abilities.find((ability) => ability.name === "Damaged: 1-10 Wounds Remaining");
+  assert.ok(damaged);
+  assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
 test("Tyranid Prime with Lash Whip matches current official datasheet", () => {
