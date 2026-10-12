@@ -45,21 +45,17 @@ export function createBattleSetupScreen(container, {
 
   function handleChange(event) {
     const target = event.target;
-    if (target?.matches?.("[data-pre-game-role]")) {
+    if (target?.matches?.("[data-pre-game-role-choice]")) {
       const state = session.getState();
       const current = state.preGameSetup ?? {};
-      const kind = target.getAttribute("data-pre-game-role");
-      const nextValue = target.value || null;
+      const kind = target.getAttribute("data-pre-game-role-choice");
+      const nextValue = target.getAttribute("data-player-id") || null;
       const attackerPlayerId = kind === "attackerPlayerId" ? nextValue : (current.attackerPlayerId ?? null);
       const firstPlayerId = kind === "firstPlayerId" ? nextValue : (current.firstPlayerId ?? null);
       try {
-        session.dispatch({ type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: {
-          attackerPlayerId, firstPlayerId
-        }});
+        session.dispatch({ type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId, firstPlayerId }});
         message = "Battle roles saved. Defender is automatically the other army.";
-      } catch (error) {
-        message = error?.message ?? String(error);
-      }
+      } catch (error) { message = error?.message ?? String(error); }
       render();
       return;
     }
@@ -309,42 +305,22 @@ export function createBattleSetupScreen(container, {
       selectedPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const mode = getSecondaryMissionMode(state, selectedPlayerId) ?? "";
-    const readiness = evaluatePreGameReadiness(state);
-    const procedureSteps = getPreGameProcedureSteps();
-    const abilityRules = getPreGameAbilityRules();
     const preGameSetup = state.preGameSetup ?? {};
-    const rolePlayerOptions = '<option value="">Choose a player...</option>' + players.map((player) =>
-      '<option value="' + escapeHtml(player.id) + '">' + escapeHtml(player.name ?? player.id) + '</option>'
-    ).join("");
     const attacker = players.find((player) => player.id === preGameSetup.attackerPlayerId);
     const defender = players.find((player) => player.id === preGameSetup.defenderPlayerId);
+    const roleButtons = (kind, selectedId) => players.map((player) =>
+      '<button type="button" class="pre-game-role-choice' + (player.id === selectedId ? ' is-selected' : '') +
+      '" data-pre-game-role-choice="' + kind + '" data-player-id="' + escapeHtml(player.id) + '"' +
+      (state.battle && state.battle.status !== "setup" ? ' disabled' : '') +
+      ' aria-pressed="' + String(player.id === selectedId) + '">' + escapeHtml(player.name ?? player.id) + '</button>'
+    ).join("");
     const preGameRolesMarkup = '<section class="pre-game-roles"><h2>Battle roles</h2>' +
-      '<p>Record who is the attacker and who takes the first turn. The defender is automatically assigned as the other army.</p>' +
-      '<label>Attacker<select data-pre-game-role="attackerPlayerId" ' +
-      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
-      rolePlayerOptions.replace('value="' + escapeHtml(preGameSetup.attackerPlayerId ?? "") + '"', 'value="' + escapeHtml(preGameSetup.attackerPlayerId ?? "") + '" selected') +
-      '</select></label>' +
-      '<p><strong>Defender:</strong> ' + escapeHtml(defender?.name ?? (attacker ? "Automatically assigned to the other army" : "Selected automatically after choosing attacker")) + '</p>' +
-      '<label>Who goes first?<select data-pre-game-role="firstPlayerId" ' +
-      (state.battle && state.battle.status !== "setup" ? "disabled" : "") + '>' +
-      rolePlayerOptions.replace('value="' + escapeHtml(preGameSetup.firstPlayerId ?? "") + '"', 'value="' + escapeHtml(preGameSetup.firstPlayerId ?? "") + '" selected') +
-      '</select></label></section>';
-    const preGameMarkup = preGameRolesMarkup + `<section class="pre-game-checklist"><h2>Pre-game checklist</h2>
-      <p>These prompts are fixed by the ruleset, not configured separately for each battle. Primary Missions and secondary mission mode are selected in the next step, Mission &amp; Map.</p>
-      <h3>State readiness</h3><ul>${readiness.checks.map((check) =>
-        `<li><strong>${check.status === "complete" ? "Ready: " : "Check: "}${escapeHtml(check.label)}</strong> — ${escapeHtml(check.detail)}</li>`).join("")}</ul>
-      <details><summary>Standard procedure reminders</summary><ol>${procedureSteps.map((step) =>
-        `<li><strong>${escapeHtml(step.title)}</strong> — ${escapeHtml(step.detail)}</li>`).join("")}</ol></details>
-      <details><summary>Conditional ability prompts</summary>${abilityRules.map((rule) =>
-        `<article data-pre-game-ability="${escapeHtml(rule.id)}"><h4>${escapeHtml(rule.name)}</h4>
-        <p><strong>Timing:</strong> ${escapeHtml(rule.timing === "deployment" ? "During deployment" : "Resolve pre-battle abilities")}</p>
-        <p><strong>Applies when:</strong> ${escapeHtml(rule.appliesWhen)}</p>
-        ${rule.procedure ? `<p>${escapeHtml(rule.procedure)}</p>` : ""}
-        ${rule.choices ? `<ul>${rule.choices.map((choice) => `<li>${escapeHtml(choice)}</li>`).join("")}</ul>` : ""}
-        ${rule.scoutMove ? `<p><strong>Scout move:</strong> ${escapeHtml(rule.scoutMove.maximumDistance)} ${escapeHtml(rule.scoutMove.afterMoving)}</p>` : ""}
-        <p>Check the physical unit ability and mission instructions; the map does not validate legality.</p></article>`).join("")}</details>
-      </section>`;
-
+      '<p>Tap a player for each choice. The defender is automatically the other army.</p>' +
+      '<h3>Who is the attacker?</h3><div class="pre-game-role-choices" role="group" aria-label="Choose attacker">' +
+      roleButtons("attackerPlayerId", preGameSetup.attackerPlayerId) + '</div>' +
+      '<p><strong>Defender:</strong> ' + escapeHtml(defender?.name ?? (attacker ? "Automatically assigned to the other army" : "Choose the attacker above")) + '</p>' +
+      '<h3>Who takes the first turn?</h3><div class="pre-game-role-choices" role="group" aria-label="Choose first player">' +
+      roleButtons("firstPlayerId", preGameSetup.firstPlayerId) + '</div></section>';
     const missionSetup = state.battlefieldMap?.missionSetup ?? {};
     const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
       ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
