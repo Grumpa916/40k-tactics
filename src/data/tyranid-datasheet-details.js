@@ -84,7 +84,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Tyrant Guard, according to the reviewed datasheet listing." }),
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, when a friendly Tyranids unit within 12 inches is targeted with a Stratagem, reduce that usage's CP cost by 1." }),
@@ -186,7 +186,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Devourers with brainleech worms", equipment: "Wargear option", range: '18"', attacks: 12, skill: "4+", strength: 6, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Blistering Assault", description: "In the opponent's Shooting phase, if an enemy unit's attacks cause a model in this unit to lose a wound, this unit can make a surge move of up to D6+2 inches." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows Old One Eye to lead this unit." })
@@ -205,7 +205,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Leader", description: "Can lead Tyrant Guard, according to the reviewed datasheet listing." }),
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Hive Commander", description: "At the start of your Command phase, if this model is on the battlefield, you gain 1CP." }),
@@ -286,7 +286,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Stranglethorn cannon", equipment: "Wargear option", range: '36"', attacks: "D6+1", skill: "2+", strength: 7, ap: -1, damage: 2, abilities: "Blast" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
@@ -349,7 +349,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Massive crushing claws", equipment: "Wargear option", range: "Melee", attacks: 4, skill: "4+", strength: 12, ap: -3, damage: "D6+1" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Spawn Termagants", description: "In your Command phase, select one friendly Termagants unit within 6 inches and return up to D3+3 destroyed models to it; a unit cannot be selected more than once per phase." }),
@@ -371,7 +371,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Rupture cannon", equipment: "Wargear option", range: '48"', attacks: 2, skill: "3+", strength: 18, ap: -4, damage: "D6+6", abilities: "Heavy" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Resilient Organism", description: "Once per battle, when an attack is allocated to this model, change that attack's Damage characteristic to 0." })
     ]),
@@ -432,7 +432,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitin-barbed limbs", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 5, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Seed Spore Mines", description: "Once per turn in your Shooting phase, this unit can forgo ranged attacks to add one Spore Mines unit with one model per model in this unit, set up wholly within 48 inches and more than 8 inches from enemy units." })
     ]),
@@ -484,7 +484,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitin-barbed limbs", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 5, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Burning Spray", description: "After this unit shoots, select an enemy unit hit; until the end of the phase, that unit cannot have the Benefit of Cover." })
     ]),
@@ -560,7 +560,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Powerful limbs", equipment: "Default", range: "Melee", attacks: 3, skill: "3+", strength: 7, ap: 0, damage: 2 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Symbiotic Targeting", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. Until the end of the phase, each time a friendly Tyranids model makes an attack that targets that unit, re-roll a Hit roll of 1." })
     ]),
@@ -577,7 +577,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shovelling claws", equipment: "Default", range: "Melee", attacks: 4, skill: "3+", strength: 14, ap: -2, damage: "D6+1", abilities: "Extra Attacks" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Grisly Spectacle", description: "Each time this model is selected to fight, after resolving its attacks, if one or more enemy units were destroyed by those attacks, each enemy unit within 6 inches of this model must take a Battle-shock test." })
     ]),
@@ -594,7 +594,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Massive scything talons (sweep)", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 7, ap: -1, damage: 2 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Encephalic Diffusion", description: "While an enemy unit is within 6 inches of this model, each time a model in that unit makes an attack, subtract 1 from the Hit roll, and, if that enemy unit is Below Half-strength, subtract 1 from the Wound roll as well." })
@@ -611,7 +611,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Talons and betentacled maw", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 6, ap: -2, damage: 2, abilities: "Anti-Psyker 4+, Devastating Wounds" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Feel No Pain 5+", description: "Each time this model would lose a wound, roll one D6: on a 5+, that wound is not lost." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Bio-stimulus", description: "After this model shoots, select an enemy unit hit; until the end of the turn, friendly Tyranids melee attacks targeting it improve AP by 1. The same enemy unit can only be affected once per turn." }),
@@ -679,7 +679,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Toxinjector Harpoon (melee)", equipment: "Default", range: "Melee", attacks: 4, skill: "2+", strength: 12, ap: -3, damage: "D6+1", abilities: "Extra Attacks" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
@@ -700,7 +700,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Monstrous scything talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 9, ap: -2, damage: 3 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Singular Purpose", description: "At the start of the first battle round, select an enemy unit to re-roll Hit and Wound rolls against for the battle, or select an objective marker that grants this model Feel No Pain 5+ and Objective Control 15 while within range." }),
@@ -718,7 +718,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Massive toxic lashes (Melee)", equipment: "Default", range: "Melee", attacks: 12, skill: "3+", strength: 6, ap: -1, damage: 2, abilities: "Anti-Infantry 2+" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Grasping Tendrils", description: "Each time an enemy unit (excluding TITANIC units) within Engagement Range of one or more units from your army with this ability is selected to Fall Back, you can roll one D6: on a 3+, that enemy unit must Remain Stationary instead." }),
       Object.freeze({ name: "Hypertoxic Miasma", description: "At the end of your Movement phase, roll a D6 for each enemy unit within 6 inches: on 2–3 it suffers 1 mortal wound, on 4–5 D3, and on 6 D6." })
@@ -837,7 +837,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Scything wings", equipment: "Default", range: "Melee", attacks: 4, skill: "4+", strength: 7, ap: -1, damage: 2 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Spore Mine Cysts", description: "At the end of your opponent's Fight phase, you can do one of the following: select one visible enemy unit (excluding Lone Operative units) within 24 inches of this unit and roll six D6 for that unit, causing 1 mortal wound for each 3+; or add a new Spore Mines unit containing D3 models to your army and set it up anywhere within 6 inches of this model and more than 8 inches horizontally away from all enemy units. You cannot select the Spore Mines option for more than one model per turn." })
     ]),
@@ -856,7 +856,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Thorax spur", equipment: "Default", range: "Melee", attacks: 1, skill: "3+", strength: 10, ap: -3, damage: "D6", abilities: "Anti-Fly 2+, Extra Attacks" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Airborne Predator", description: "Each time this model makes a ranged attack targeting a unit that can Fly, add 1 to the Hit roll." })
     ]),
@@ -872,7 +872,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Flensing whips", equipment: "Default", range: "Melee", attacks: 6, skill: "4+", strength: 7, ap: -1, damage: 2 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Deadly Demise D3", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D3 mortal wounds; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Aerial Seeding", description: "This model must start the battle in Reserves, but neither it nor any units embarked within it are counted towards any limits placed on the maximum number of Reserves units you can start the battle with. It can be set up in the Reinforcements step of your first, second or third Movement phase, regardless of mission rules. Any embarked units must immediately disembark more than 8 inches from all enemy models. After this model has been set up on the battlefield, no units can embark within it." }),
