@@ -150,6 +150,20 @@ test("Force Disposition buttons remain enabled during setup and locked during ac
 });
 
 
+test("Fixed secondary card selectors use the shipped catalog when no catalog is injected", () => {
+  const { root, session } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  const youMode = root.innerHTML.indexOf('data-setup-secondary-mode="p1"');
+  const opponentMode = root.innerHTML.indexOf('data-setup-secondary-mode="p2"');
+  assert.ok(youMode >= 0);
+  assert.ok(opponentMode >= 0);
+  // Each Fixed panel is rendered from the built-in catalog when callers omit one.
+  session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { playerId: "p1", mode: "fixed" } });
+  assert.match(root.innerHTML, /Select a Fixed card/);
+  assert.match(root.innerHTML, /Cleanse|Containment|Secure No Man.s Land|Storm Hostile Objective/);
+  screen.destroy();
+});
+
 test("secondary mission setup shows both players at once with independent mode controls", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
