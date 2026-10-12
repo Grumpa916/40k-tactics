@@ -259,3 +259,46 @@ test("players can independently select Fixed and Tactical secondary modes", () =
     playerId: "p1", mode: SECONDARY_MISSION_MODES.TACTICAL
   }), /cannot change after that player has entered a card/);
 });
+
+test("opposite player modes govern card lifecycle independently and survive serialization", () => {
+  let state = createGameState({
+    phase: "command", turn: 1, activePlayer: "p2",
+    players: [{ id: "p1", name: "Player 1" }, { id: "p2", name: "Player 2" }],
+    battle: { round: 1, activePlayerId: "p2" }
+  });
+  state = setSecondaryMissionMode(state, { playerId: "p1", mode: "fixed" });
+  state = setSecondaryMissionMode(state, { playerId: "p2", mode: "fixed" });
+  state = drawSecondaryMission(state, {
+    definition: { ...definition, id: "p1-fixed", availableModes: ["fixed"], fixedAvailable: true },
+    playerId: "p1", round: 1, turn: 1
+  });
+
+  // Entering a card locks only its owner's mode; the other player can still choose independently.
+  state = setSecondaryMissionMode(state, { playerId: "p2", mode: "tactical" });
+  state = drawSecondaryMission(state, {
+    definition: { ...definition, id: "p2-tactical", availableModes: ["tactical"] },
+    playerId: "p2", round: 1, turn: 1
+  });
+
+  const restored = JSON.parse(JSON.stringify(state));
+  assert.equal(getSecondaryMissionMode(restored, "p1"), "fixed");
+  assert.equal(getSecondaryMissionMode(restored, "p2"), "tactical");
+
+  const fixedEntry = getSecondaryMissionHistory(restored, "p1")[0];
+  const tacticalEntry = getSecondaryMissionHistory(restored, "p2")[0];
+  const afterFixedScore = recordSecondaryMissionScored(restored, {
+    instanceId: fixedEntry.instanceId, playerId: "p1", round: 1, turn: 1
+  });
+  assert.equal(getSecondaryMissionHistory(afterFixedScore, "p1")[0].status, "active");
+  assert.equal(getSecondaryMissionHistory(afterFixedScore, "p2")[0].status, "active");
+
+  const afterTacticalScore = recordSecondaryMissionScored(afterFixedScore, {
+    instanceId: tacticalEntry.instanceId, playerId: "p2", round: 1, turn: 1
+  });
+  assert.equal(getSecondaryMissionHistory(afterTacticalScore, "p1")[0].status, "active");
+  assert.equal(getSecondaryMissionHistory(afterTacticalScore, "p2")[0].status, "scored");
+  assert.throws(() => setSecondaryMissionMode(afterTacticalScore, {
+    playerId: "p1", mode: "tactical"
+  }), /cannot change after that player has entered a card/);
+});
+
