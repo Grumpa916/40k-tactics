@@ -306,7 +306,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
-      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Infiltrators", description: "During deployment, if every model in this unit has Infiltrators, it can be set up anywhere on the battlefield more than 8 inches horizontally from the opponent’s deployment zone and all enemy units." }),
       Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
       Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
@@ -326,7 +326,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
-      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Infiltrators", description: "During deployment, if every model in this unit has Infiltrators, it can be set up anywhere on the battlefield more than 8 inches horizontally from the opponent’s deployment zone and all enemy units." }),
       Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
       Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
@@ -463,7 +463,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Piercing claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 6, ap: -2, damage: 1, abilities: "Precision" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Infiltrators", description: "During deployment, if every model in this unit has Infiltrators, it can be set up anywhere on the battlefield more than 8 inches horizontally from the opponent’s deployment zone and all enemy units." }),
       Object.freeze({ name: "Lone Operative", description: "Unless this unit is part of an attached unit, enemy models cannot see it unless they are within 12 inches. It also cannot be targeted by Indirect Fire weapons unless the attacking model is within 12 inches." }),
       Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
@@ -507,7 +507,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
-      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Infiltrators", description: "During deployment, if every model in this unit has Infiltrators, it can be set up anywhere on the battlefield more than 8 inches horizontally from the opponent’s deployment zone and all enemy units." }),
       Object.freeze({ name: "Stealth", description: "If every model in this unit has Stealth, ranged attacks targeting the unit grant it the benefit of cover against those attacks." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Pouncing Leap", description: "This unit can be targeted with Heroic Intervention regardless of other uses this phase; that use costs 1 fewer CP and does not prevent uses on other units." })
@@ -1014,7 +1014,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Hierodule scything talons", equipment: "Default", range: "Melee", attacks: 8, skill: "3+", strength: 14, ap: -2, damage: "D3+3" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Overgrown Barbs", description: "In your Shooting phase, after this model has shot, select one enemy unit (excluding TITANIC units) that was hit by one or more of those attacks. Until the start of your next turn, while this model is on the battlefield, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll." }),
       Object.freeze({ name: "Damaged: 1-6 Wounds Remaining", description: "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
@@ -1028,7 +1028,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Monster", "Frame", "Great Devourer", "Dimachaeron", "Tyranids", "Legends"]),
     weapons: Object.freeze([Object.freeze({ name: "Massive scything sickle-talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 9, ap: -2, damage: 3, abilities: "Twin-linked" })]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Digestion Spine", description: "Each time this model fights, after it has resolved its attacks, if one or more enemy models (excluding VEHICLE models) were destroyed as the result of those attacks, this model regains up to D3 wounds." }),
       Object.freeze({ name: "Damaged: 1-5 Wounds Remaining", description: "While this model has 1-5 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
@@ -1045,7 +1045,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Hierodule scything talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 14, ap: -2, damage: "D3+3" })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise D6", description: "Core ability; consult the current Core Rules for its effect." }),
+      Object.freeze({ name: "Deadly Demise D6", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers D6 mortal wounds; roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Irresistible Force", description: "This model is eligible to declare a charge in a turn in which it Fell Back." }),
       Object.freeze({ name: "Damaged: 1-6 Wounds Remaining", description: "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." })
