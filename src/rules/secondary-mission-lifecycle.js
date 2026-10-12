@@ -73,7 +73,10 @@ export function setSecondaryMissionMode(state, { mode, playerId = null } = {}) {
     scoring.secondaryMissionMode = mode;
   }
   const next = { ...state, scoring };
-  return appendHistoryEntry(next, createEvent("secondary_mission.mode_set", { mode, playerId }));
+  return appendHistoryEntry(next, createEvent("secondary_mission.mode_set", {
+    mode,
+    ...(playerId ? { playerId } : {})
+  }));
 }
 
 function requireTurnPosition(round, turn) {
