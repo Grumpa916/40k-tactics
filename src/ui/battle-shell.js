@@ -15,6 +15,7 @@ import { createShootingScreen } from "./shooting-screen.js";
 import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, renderArmyRosterOverlay } from "./battle-context-panels.js";
 import { renderTurnClockPanel } from "./turn-clock-panel.js";
 import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../state/turn-clock.js";
+import { renderPersistentMissionSummary } from "./mission-summary-panel.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "live" },
@@ -79,7 +80,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   rightPanelCollapsed = false,
   armyRosterPlayerId = null,
   clockPanelOpen = false,
-  clockMessage = ""
+  clockMessage = "",
+  missionDefinitions = []
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -145,7 +147,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left">' +
     leftToggle + '<div id="battle-left-panel-body" class="battle-shell__panel-body" data-battle-context-body>' +
     renderUnitStatusPanel(state) + renderEventLogPanel(state) + '</div></aside>' +
-    '<section class="battle-shell__content" data-battle-screen></section>' +
+    '<section class="battle-shell__content">' +
+    '<section data-battle-screen></section>' +
+    '<div data-battle-mission-summary-host>' +
+    renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions }) +
+    '</div></section>' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right">' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
     renderReferencePanel(state, gameData ?? {}, perspectivePlayerId) + '</div></aside></section>';
@@ -244,6 +250,13 @@ export function createBattleShell(container, {
         : "") +
         renderUnitStatusPanel(state, { openSections }) +
         renderEventLogPanel(state, { openSections });
+    }
+    const missionSummaryHost = container.querySelector?.("[data-battle-mission-summary-host]");
+    if (missionSummaryHost) {
+      const openStates = readOpenStates(missionSummaryHost, "details[data-mission-summary-key]", "data-mission-summary-key");
+      missionSummaryHost.innerHTML = renderPersistentMissionSummary(state, {
+        perspectivePlayerId, missionDefinitions, openStates
+      });
     }
     const referenceContainer = container.querySelector?.("[data-battle-reference-body]");
     if (referenceContainer) {
@@ -350,7 +363,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
