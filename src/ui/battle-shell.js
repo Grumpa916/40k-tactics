@@ -414,6 +414,8 @@ export function createBattleShell(container, {
     if (workspace) workspace.hidden = tab === "army-builder" || tab === "saves";
     const label = container.querySelector?.("[data-setup-step-label]");
     if (label) label.textContent = setupTabLabel(tab);
+    const status = container.querySelector?.("[data-setup-navigation-message]");
+    if (status) status.textContent = "";
     const next = container.querySelector?.("[data-setup-workspace-continue]");
     if (next) next.textContent = setupContinueLabel(tab);
     mountedScreen?.setTab?.(tab === "mission-map" ? "mission-map" : "pre-game");
