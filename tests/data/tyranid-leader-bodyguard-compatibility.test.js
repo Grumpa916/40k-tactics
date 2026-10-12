@@ -46,10 +46,12 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
     "Hormagaunts", "Termagants", "Tyranid Warriors with Melee Bio-weapons",
     "Tyranid Warriors with Ranged Bio-weapons"
   ]);
-  assert.deepEqual(idsFor("Winged Tyranid Prime"), [
-    "Gargoyles", "Tyranid Warriors with Melee Bio-weapons",
-    "Tyranid Warriors with Ranged Bio-weapons"
-  ]);
+  assert.deepEqual(idsFor("Winged Tyranid Prime"), ["Tyranid Warriors with Ranged Bio-weapons"]);
+  const wingedPrime = unit("Winged Tyranid Prime");
+  assert.ok(wingedPrime.datasheet.leader.compatibilityReview.sources.includes(
+    "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons"
+  ));
+  assert.equal(unit("Gargoyles").datasheet, undefined);
   assert.deepEqual(idsFor("Hyperadapted Raveners"), ["Raveners"]);
   assert.equal(unit("Tervigon").datasheet, undefined);
 });
