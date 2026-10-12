@@ -374,3 +374,33 @@ test("Screamer-Killer, Spore Mines, and Sporocyst now have complete source-revie
   assert.ok(sporocyst.datasheet.abilities.some((ability) => ability.name === "Seed Mucolids"));
   for (const unit of [screamerKiller, sporeMines, sporocyst]) assert.equal(unit.officialRulesCrossCheck, "pending");
 });
+
+
+test("All five remaining Tyranid Legends units have complete, labeled profiles", () => {
+  const profiles = [
+    ["Malanthrope", 75, 10, "Grasping tail"],
+    ["Barbed Hierodule", 340, 18, "Bio-cannon"],
+    ["Dimachaeron", 200, 16, "Massive scything sickle-talons"],
+    ["Scythed Hierodule", 330, 18, "Bio-acid spray"],
+    ["Sky-slasher Swarms", 60, 4, "Spinemaws"]
+  ];
+  for (const [name, points, wounds, weaponName] of profiles) {
+    const unit = candidate(name);
+    assert.equal(unit.verificationStatus, "source-reviewed", name);
+    assert.equal(unit.defaultPoints, points, name);
+    assert.equal(unit.datasheet.characteristics.Wounds, wounds, name);
+    assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === weaponName), name);
+    assert.ok(unit.datasheet.keywords.includes("Legends"), name);
+    assert.equal(unit.dataSource.availability, "Legends", name);
+    assert.equal(unit.officialRulesCrossCheck, "pending", name);
+  }
+});
+
+test("Every Tyranid catalog candidate has a profile record", async () => {
+  const { getTyranidDatasheetDetails } = await import("../../src/data/tyranid-datasheet-details.js");
+  const names = findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name);
+  assert.equal(new Set(names).size, names.length);
+  for (const unit of findArmyUnitCandidates({ faction: "Tyranids" })) {
+    assert.ok(getTyranidDatasheetDetails(unit.id), `missing detail record: ${unit.name}`);
+  }
+});
