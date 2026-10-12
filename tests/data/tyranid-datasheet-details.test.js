@@ -429,7 +429,41 @@ test("The Red Terror matches the current official 11th-edition faction pack", ()
     "Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "The Red Terror", "Vanguard Invader"
   ]);
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Serpentine Fiend"));
+  assert.ok(!unit.datasheet.keywords.includes("Mobile"));
   assert.equal(unit.datasheet.dataSource.sourceName, "Games Workshop Tyranids Faction Pack v1.0 (11th edition; The Red Terror datasheet)");
+  assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
+});
+
+test("Tyranid Prime with Lash Whip matches current official datasheet", () => {
+  const unit = candidate("Tyranid Prime with Lash Whip");
+  assert.deepEqual(unit.datasheet.characteristics, {
+    Move: '10"',
+    Toughness: 5,
+    Save: "3+",
+    Wounds: 6,
+    Leadership: "7+",
+    "Objective Control": 1
+  });
+  assert.equal(unit.datasheet.weapons.length, 3);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Aggressive Leader-beast"));
+  assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
+});
+
+test("Raveners match current official datasheet and keywords", () => {
+  const unit = candidate("Raveners");
+  assert.deepEqual(unit.datasheet.characteristics, {
+    Move: '10"',
+    Toughness: 5,
+    Save: "4+",
+    Wounds: 3,
+    Leadership: "8+",
+    "Objective Control": 1
+  });
+  assert.deepEqual(unit.datasheet.keywords, [
+    "Burrowers", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"
+  ]);
+  assert.equal(unit.datasheet.weapons[0].abilities, "Twin-linked");
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death from Below"));
   assert.equal(unit.datasheet.dataSource.officialRulesCrossCheck, "verified");
 });
 
