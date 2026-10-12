@@ -116,6 +116,51 @@ test("selecting a unit and tapping the planning map records a bounded coordinate
   screen.destroy();
 });
 
+test("attacker and first-turn role buttons dispatch on click", () => {
+  const { root, session, commands, listeners } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  function tapRole(kind, playerId) {
+    const button = {
+      getAttribute(name) {
+        return name === "data-pre-game-role-choice" ? kind
+          : name === "data-player-id" ? playerId : null;
+      }
+    };
+    listeners.click({
+      target: { closest(selector) {
+        return selector === "[data-pre-game-role-choice]" ? button : null;
+      }}
+    });
+  }
+  tapRole("attackerPlayerId", "p2");
+  tapRole("firstPlayerId", "p1");
+  assert.deepEqual(commands, [
+    { type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId: "p2", firstPlayerId: null } },
+    { type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId: null, firstPlayerId: "p1" } }
+  ]);
+  screen.destroy();
+});
+
+test("selected Event Companion layout renders its map in the pre-game workspace", () => {
+  const { root, session, listeners } = setup();
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  function tapDisposition(kind, value) {
+    const button = { getAttribute(name) {
+      return name === "data-event-companion-disposition-choice" ? kind
+        : name === "data-disposition-value" ? value : null;
+    }};
+    listeners.click({ target: { closest(selector) {
+      return selector === "[data-event-companion-disposition-choice]" ? button : null;
+    }}});
+  }
+  tapDisposition("my", "Take and Hold");
+  tapDisposition("opponent", "Disruption");
+  assert.match(root.innerHTML, /data-map-layout-status/);
+  assert.match(root.innerHTML, /data-terrain=/);
+  assert.match(root.innerHTML, /data-layout-objective=/);
+  screen.destroy();
+});
+
 test("setup screen uses touch-friendly battle role choices without the pre-game checklist", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
