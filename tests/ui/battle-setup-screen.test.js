@@ -6,9 +6,10 @@ import { createUnit, UNIT_STATUS } from "../../src/state/unit.js";
 import { COMMAND_TYPES } from "../../src/commands/game-commands.js";
 import { setEventCompanionMissionSetup } from "../../src/engine/battlefield-map-transitions.js";
 
-function setup({ battle = null } = {}) {
+function setup({ battle = null, scoring = {} } = {}) {
   let state = createGameState({
     battle,
+    scoring,
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
     units: [
       createUnit({ id: "friendly", ownerId: "p1", name: "Friendly Unit", status: UNIT_STATUS.RESERVES }),
@@ -22,6 +23,7 @@ function setup({ battle = null } = {}) {
     addEventListener(type, listener) { listeners[type] = listener; },
     removeEventListener(type) { delete listeners[type]; },
     replaceChildren() { this.innerHTML = ""; },
+    contains() { return true; },
     querySelector() { return null; }
   };
   const session = {
@@ -145,4 +147,18 @@ test("Force Disposition buttons remain enabled during setup and locked during ac
   assert.match(activeState.root.innerHTML, /data-event-companion-disposition-choice="my"[^>]*disabled/);
   assert.match(activeState.root.innerHTML, /data-event-companion-disposition-choice="opponent"[^>]*disabled/);
   activeScreen.destroy();
+});
+
+
+test("Fixed secondary selection validates the selected player's mode without an undefined player reference", () => {
+  const { root, session, listeners } = setup({
+    scoring: { secondaryMissionModeByPlayer: { p1: "fixed" }, secondaryMissions: [] }
+  });
+  const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  const button = {
+    closest(selector) { return selector === "[data-setup-fixed-add]" ? this : null; }
+  };
+  assert.doesNotThrow(() => listeners.click({ target: button }));
+  assert.match(root.innerHTML, /Select a Fixed card|Choose Fixed mode|secondary/i);
+  screen.destroy();
 });
