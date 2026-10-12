@@ -89,6 +89,46 @@ test("turns resolve in order and both player turns advance the battle round", ()
   assert.equal(state.history.at(-1).type, "turn.started");
 });
 
+test("Turn Clock follows player turns and is not reset by phase transitions", () => {
+  let state = createGameState({ players: [{ id: "p1" }, { id: "p2" }] });
+  state = startBattle(state, { battleId: "clock-battle" });
+  state = startFirstTurn(state, { activePlayerId: "p1", nowMs: 1000 });
+  state = {
+    ...state,
+    timers: {
+      turnClock: {
+        elapsedMsByPlayer: { p1: 2500, p2: 1000 },
+        activePlayerId: "p1",
+        running: true,
+        startedAtMs: 1000
+      }
+    }
+  };
+
+  state = changePhase(state, { phase: "command" });
+  state = changePhase(state, { phase: "movement" });
+  assert.equal(state.timers.turnClock.startedAtMs, 1000);
+  assert.equal(state.timers.turnClock.activePlayerId, "p1");
+
+  state = advanceToEndOfTurn(state);
+  state = endTurn(state, { nextActivePlayerId: "p2", nowMs: 31000 });
+  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p1, 32500);
+  assert.equal(state.timers.turnClock.activePlayerId, "p2");
+  assert.equal(state.timers.turnClock.startedAtMs, 31000);
+  assert.equal(state.timers.turnClock.running, true);
+
+  state = advanceToEndOfTurn(state);
+  state = endTurn(state, { nextActivePlayerId: "p1", nowMs: 62000 });
+  assert.equal(state.timers.turnClock.elapsedMsByPlayer.p2, 32000);
+  assert.equal(state.timers.turnClock.activePlayerId, "p1");
+  assert.equal(state.timers.turnClock.startedAtMs, 62000);
+
+  state = advanceBattleRound(state, { nowMs: 65000 });
+  assert.equal(state.activePlayer, "p1");
+  assert.equal(state.timers.turnClock.activePlayerId, "p1");
+  assert.equal(state.timers.turnClock.startedAtMs, 62000);
+});
+
 test("changePhase cannot bypass unfinished Fight activations", () => {
   const state = createGameState({
     phase: "fight",
