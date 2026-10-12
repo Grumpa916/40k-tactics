@@ -7,6 +7,7 @@ import {
   duplicateArmyRoster,
   renameArmyRoster,
   removeUnitFromRoster,
+  remapRosterUnitIds,
   selectRosterForBattle,
   updateRosterUnit
 } from "../../src/state/army-roster-library.js";
@@ -82,4 +83,65 @@ test("battle selection snapshots the roster so later edits cannot change the bat
   assert.equal(snapshot.isBattleSnapshot, true);
   assert.equal(snapshot.units[0].modelCount, 1);
   assert.equal(edited.units[0].modelCount, 3);
+});
+
+
+test("removing either side of an attachment clears the reciprocal reference", () => {
+  const attachedRoster = createArmyRoster({
+    id: "attached-roster",
+    name: "Attached Tyranids",
+    faction: "Tyranids",
+    units: [
+      { id: "leader-1", name: "Neurotyrant", attachedToBodyguardId: "bodyguard-1" },
+      { id: "bodyguard-1", name: "Tyrant Guard", attachedLeaderIds: ["leader-1", "leader-2"] },
+      { id: "leader-2", name: "Hive Tyrant", attachedToBodyguardId: "bodyguard-1" }
+    ]
+  });
+
+  const withoutLeader = removeUnitFromRoster(attachedRoster, "leader-1");
+  assert.equal(withoutLeader.units.find((unit) => unit.id === "bodyguard-1").attachedLeaderIds.includes("leader-1"), false);
+  assert.deepEqual(withoutLeader.units.find((unit) => unit.id === "bodyguard-1").attachedLeaderIds, ["leader-2"]);
+
+  const withoutBodyguard = removeUnitFromRoster(attachedRoster, "bodyguard-1");
+  assert.equal(withoutBodyguard.units.find((unit) => unit.id === "leader-1").attachedToBodyguardId, undefined);
+  assert.equal(withoutBodyguard.units.find((unit) => unit.id === "leader-2").attachedToBodyguardId, undefined);
+  assert.equal(attachedRoster.units.find((unit) => unit.id === "leader-1").attachedToBodyguardId, "bodyguard-1");
+});
+
+test("duplicated roster unit IDs are remapped with all attachment references kept internal", () => {
+  const roster = createArmyRoster({
+    id: "source",
+    name: "Source",
+    units: [
+      { id: "leader", name: "Leader", attachedToBodyguardId: "bodyguard" },
+      { id: "bodyguard", name: "Bodyguard", attachedLeaderIds: ["leader"] }
+    ]
+  });
+  const copy = remapRosterUnitIds(duplicateArmyRoster(roster, { id: "copy", name: "Copy" }), {
+    createId: (unit) => "copy-" + unit.id
+  });
+  assert.equal(copy.units[0].id, "copy-leader");
+  assert.equal(copy.units[0].attachedToBodyguardId, "copy-bodyguard");
+  assert.deepEqual(copy.units[1].attachedLeaderIds, ["copy-leader"]);
+  assert.equal(roster.units[0].id, "leader");
+});
+
+test("battle roster snapshots preserve attachment links without sharing mutable unit data", () => {
+  const roster = createArmyRoster({
+    id: "attached-source",
+    name: "Attached Source",
+    units: [
+      { id: "leader", name: "Leader", attachedToBodyguardId: "bodyguard" },
+      { id: "bodyguard", name: "Bodyguard", attachedLeaderIds: ["leader"] }
+    ]
+  });
+  const snapshot = selectRosterForBattle(roster, {
+    playerId: "player-1",
+    snapshotId: "battle-snapshot",
+    battleId: "battle-1"
+  });
+  assert.equal(snapshot.units[0].attachedToBodyguardId, "bodyguard");
+  assert.deepEqual(snapshot.units[1].attachedLeaderIds, ["leader"]);
+  snapshot.units[1].attachedLeaderIds.push("other");
+  assert.deepEqual(roster.units[1].attachedLeaderIds, ["leader"]);
 });
