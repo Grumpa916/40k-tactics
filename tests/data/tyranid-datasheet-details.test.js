@@ -26,13 +26,6 @@ test("Raveners expose the five-model baseline and army-count cost adjustment", (
   assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Death From Below"));
 });
 
-test("units without a reviewed profile remain name-only and do not receive invented details", () => {
-  const unit = candidate("Spore Mines");
-  assert.equal(unit.verificationStatus, "name-only-unverified");
-  assert.equal(unit.defaultPoints, undefined);
-  assert.equal(unit.datasheet, undefined);
-});
-
 
 test("Hive Tyrant profile includes reviewed baseline points and default weapon options", () => {
   const unit = candidate("Hive Tyrant");
@@ -355,4 +348,15 @@ test("Hyperadapted Raveners expose the Ravener Prime and Ravener profile", () =>
 test("Tyranid catalog contains no duplicate candidate names", () => {
   const names = findArmyUnitCandidates({ faction: "Tyranids" }).map((unit) => unit.name);
   assert.equal(new Set(names).size, names.length);
+});
+
+
+test("Screamer-Killer, Spore Mines, and Sporocyst have sourced points but remain explicitly incomplete", () => {
+  for (const [name, points] of [["Screamer-Killer", 125], ["Spore Mines", 55], ["Sporocyst", 145]]) {
+    const unit = candidate(name);
+    assert.equal(unit.verificationStatus, "points-reviewed");
+    assert.equal(unit.defaultPoints, points);
+    assert.equal(unit.datasheet.characteristics, undefined);
+    assert.equal(unit.officialRulesCrossCheck, "pending");
+  }
 });
