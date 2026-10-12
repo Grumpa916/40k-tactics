@@ -132,6 +132,61 @@ test("battle shell keeps persistent score, Unit Status, Event Log and roster con
   shell.destroy();
 });
 
+test("Command Phase shows a Battle-shock reminder for known pending tests only", () => {
+  const session = sessionFor({
+    phase: "command",
+    turn: 2,
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [
+      { id: "due", ownerId: "p1", name: "Due Squad", status: "deployed", startingStrength: 10, currentStrength: 5 },
+      { id: "unknown", ownerId: "p1", name: "Untracked Squad", status: "deployed", metadata: { modelCount: 10 } },
+      { id: "already-tested", ownerId: "p1", name: "Already Tested", status: "deployed", startingStrength: 10, currentStrength: 4 }
+    ],
+    history: [{
+      type: "battle_shock.test_recorded",
+      payload: { unitId: "already-tested", result: "passed", battleShockedAfter: false, round: 1, turn: 2 }
+    }]
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+
+  const start = root.html.indexOf('<div class="battle-shock-reminder__backdrop">');
+  assert.notEqual(start, -1);
+  const end = root.html.indexOf('</section></div>', start);
+  const prompt = root.html.slice(start, end + '</section></div>'.length);
+  assert.match(prompt, /Battle-shock checks/);
+  assert.match(prompt, /Due Squad/);
+  assert.match(prompt, /At or below half-strength/);
+  assert.doesNotMatch(prompt, /Untracked Squad/);
+  assert.doesNotMatch(prompt, /Already Tested/);
+  assert.match(prompt, /untracked strength/);
+  assert.match(prompt, /data-battle-shock-result="passed"/);
+  assert.match(prompt, /data-battle-shock-result="failed"/);
+
+  shell.destroy();
+});
+
+test("Command Phase does not repeat a Battle-shock reminder for a unit already tested this turn", () => {
+  const session = sessionFor({
+    phase: "command",
+    turn: 2,
+    activePlayer: "p1",
+    battle: { id: "b1", status: "active", round: 1, activePlayerId: "p1" },
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [{ id: "tested", ownerId: "p1", name: "Tested Squad", status: "deployed", startingStrength: 10, currentStrength: 4 }],
+    history: [{
+      type: "battle_shock.test_recorded",
+      payload: { unitId: "tested", result: "failed", battleShockedAfter: true, round: 1, turn: 2 }
+    }]
+  });
+  const root = container();
+  const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
+  assert.doesNotMatch(root.html, /battle-shock-reminder__backdrop/);
+  shell.destroy();
+});
+
 test("shared battle shell mounts the current implemented phase", () => {
   const session = sessionFor({
     phase: "shooting",
