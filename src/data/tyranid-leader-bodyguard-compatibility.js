@@ -8,13 +8,13 @@
 const REVIEWED_AT = "2026-10-12";
 const RULES_VERSION = "Warhammer 40,000 11th edition; 40k.app datasheet listings checked 2026-10-12";
 
-function review(sourcePage) {
+function review(sourcePages) {
   return Object.freeze({
     status: "source-reviewed",
     officialRulesCrossCheck: "pending",
     reviewedAt: REVIEWED_AT,
     rulesVersion: RULES_VERSION,
-    sources: Object.freeze([sourcePage])
+    sources: Object.freeze(Array.isArray(sourcePages) ? sourcePages : [sourcePages])
   });
 }
 
@@ -52,6 +52,8 @@ const ids = {
   oldOneEye: "tyranids:old-one-eye",
   tyranidPrime: "tyranids:tyranid-prime-with-lash-whip",
   wingedPrime: "tyranids:winged-tyranid-prime",
+  malanthrope: "tyranids:malanthrope",
+  venomthropes: "tyranids:venomthropes",
   hyperadaptedRaveners: "tyranids:hyperadapted-raveners",
   raveners: "tyranids:raveners",
   tyrantGuard: "tyranids:tyrant-guard",
@@ -62,7 +64,8 @@ const ids = {
   hormagaunts: "tyranids:hormagaunts",
   termagants: "tyranids:termagants",
   meleeWarriors: "tyranids:tyranid-warriors-with-melee-bio-weapons",
-  rangedWarriors: "tyranids:tyranid-warriors-with-ranged-bio-weapons"
+  rangedWarriors: "tyranids:tyranid-warriors-with-ranged-bio-weapons",
+  gargoyles: "tyranids:gargoyles"
 };
 
 const pages = {
@@ -73,6 +76,10 @@ const pages = {
   oldOneEye: "https://www.40k.app/879/factions/tyranids/units/old-one-eye",
   tyranidPrime: "https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip",
   rangedWarriors: "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons",
+  wingedPrime: "https://www.40k.app/factions/tyranids/units/winged-tyranid-prime",
+  malanthrope: "https://wh-rules.ru/factions/tyranids/datasheets/malanthrope",
+  venomthropes: "https://www.40k.app/factions/tyranids/units/venomthropes",
+  officialMfm: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
   raveners: "https://www.40k.app/factions/tyranids/units/raveners"
 };
 
@@ -83,7 +90,8 @@ const leaderRecords = {
   [ids.swarmlord]: leader([ids.tyrantGuard], pages.swarmlord),
   [ids.oldOneEye]: leader([ids.carnifexes], pages.oldOneEye),
   [ids.tyranidPrime]: leader([ids.hormagaunts, ids.termagants, ids.meleeWarriors, ids.rangedWarriors], pages.tyranidPrime),
-  [ids.wingedPrime]: leader([ids.rangedWarriors], pages.rangedWarriors),
+  [ids.wingedPrime]: leader([ids.gargoyles, ids.meleeWarriors, ids.rangedWarriors], [pages.wingedPrime, pages.officialMfm]),
+  [ids.malanthrope]: leader([ids.venomthropes], [pages.malanthrope, pages.officialMfm]),
   [ids.hyperadaptedRaveners]: leader([ids.raveners], pages.raveners)
 };
 
@@ -96,7 +104,9 @@ const bodyguardRecords = {
   [ids.hormagaunts]: bodyguard([pages.tyranidPrime]),
   [ids.termagants]: bodyguard([pages.tyranidPrime]),
   [ids.meleeWarriors]: bodyguard([pages.tyranidPrime]),
-  [ids.rangedWarriors]: bodyguard([pages.tyranidPrime, pages.rangedWarriors]),
+  [ids.rangedWarriors]: bodyguard([pages.tyranidPrime, pages.rangedWarriors, pages.officialMfm]),
+  [ids.gargoyles]: bodyguard([pages.wingedPrime, pages.officialMfm]),
+  [ids.venomthropes]: bodyguard([pages.malanthrope, pages.venomthropes, pages.officialMfm]),
   [ids.raveners]: bodyguard([pages.raveners])
 };
 
