@@ -964,11 +964,12 @@ test("setup navigation exposes four focused workspaces and a bottom Continue act
   const root = container();
   const shell = createBattleShell(root, { session, perspectivePlayerId: "p1", screenFactories: {} });
 
+  assert.match(root.html, /data-setup-workspace-tab="saves"[^>]*>Account &amp; Saves/);
   assert.match(root.html, /data-setup-workspace-tab="army-builder"/);
-  assert.match(root.html, /data-setup-workspace-tab="saves"/);
+  assert.ok(root.html.indexOf('data-setup-workspace-tab="saves"') < root.html.indexOf('data-setup-workspace-tab="army-builder"'));
   assert.match(root.html, /data-setup-workspace-tab="pre-game"/);
   assert.match(root.html, /data-setup-workspace-tab="mission-map"/);
   assert.match(root.html, /data-setup-workspace-continue/);
-  assert.match(root.html, /Continue to Saves/);
+  assert.match(root.html, /Continue to Army Builder/);
   shell.destroy();
 });
