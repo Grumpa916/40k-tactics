@@ -4,6 +4,7 @@ import { recordCommandPointChange } from "./command-points-ledger.js";
 import {
   discardSecondaryMission,
   getSecondaryMissionHistory,
+  getSecondaryMissionMode,
   SECONDARY_MISSION_MODES,
   SECONDARY_MISSION_STATUS
 } from "../rules/secondary-mission-lifecycle.js";
@@ -18,7 +19,7 @@ export function discardTacticalSecondariesForCommandPoint(state, {
   if (state?.phase !== "end_turn") {
     throw new Error("Tactical secondary discards for CP are available only at the end of a turn.");
   }
-  if (state?.scoring?.secondaryMissionMode !== SECONDARY_MISSION_MODES.TACTICAL) {
+  if (getSecondaryMissionMode(state, playerId) !== SECONDARY_MISSION_MODES.TACTICAL) {
     throw new Error("This discard-for-CP rule applies only to Tactical secondary missions.");
   }
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
