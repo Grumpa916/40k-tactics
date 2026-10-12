@@ -151,16 +151,17 @@ test("Force Disposition buttons remain enabled during setup and locked during ac
 
 
 test("Fixed secondary card selectors use the shipped catalog when no catalog is injected", () => {
-  const { root, session } = setup();
+  const { root, session } = setup({
+    scoring: { secondaryMissionModeByPlayer: { p1: "fixed", p2: "fixed" }, secondaryMissions: [] }
+  });
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
-  const youMode = root.innerHTML.indexOf('data-setup-secondary-mode="p1"');
-  const opponentMode = root.innerHTML.indexOf('data-setup-secondary-mode="p2"');
-  assert.ok(youMode >= 0);
-  assert.ok(opponentMode >= 0);
-  // Each Fixed panel is rendered from the built-in catalog when callers omit one.
-  session.dispatch({ type: COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, payload: { playerId: "p1", mode: "fixed" } });
+  assert.match(root.innerHTML, /data-setup-secondary-definition/);
   assert.match(root.innerHTML, /Select a Fixed card/);
   assert.match(root.innerHTML, /Cleanse|Containment|Secure No Man.s Land|Storm Hostile Objective/);
+  const p1Panel = root.innerHTML.split('data-secondary-player-panel="p1"')[1].split("</section>")[0];
+  const p2Panel = root.innerHTML.split('data-secondary-player-panel="p2"')[1].split("</section>")[0];
+  assert.match(p1Panel, /<option value="secondary-/);
+  assert.match(p2Panel, /<option value="secondary-/);
   screen.destroy();
 });
 
