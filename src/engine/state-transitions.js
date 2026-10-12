@@ -8,6 +8,7 @@ import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { createObjectiveState } from "../rules/objective-control-state.js";
 import { captureTurnStartSnapshot } from "./scoring-transitions.js";
 import { updateTurnClockForPlayer } from "../state/turn-clock.js";
+import { pauseTurnClock } from "./turn-clock-transitions.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -318,13 +319,15 @@ export function advanceBattleRound(state, { nowMs = Date.now() } = {}) {
   return updateTurnClockForPlayer(withTurnSnapshot, state.battle.firstPlayerId, nowMs);
 }
 
-export function completeBattle(state) {
+export function completeBattle(state, { nowMs = Date.now() } = {}) {
   if (!state.battle || state.battle.status !== BATTLE_STATUS.ACTIVE) {
     throw new Error("Battle must be active before completion.");
   }
-  return transition(state, "battle.completed", {}, (current) => ({
+  if (!Number.isFinite(nowMs)) throw new TypeError("A valid clock timestamp is required.");
+  const completed = transition(state, "battle.completed", {}, (current) => ({
     ...current,
     phase: "complete",
     battle: { ...current.battle, status: BATTLE_STATUS.COMPLETE }
   }));
+  return pauseTurnClock(completed, { nowMs });
 }
