@@ -86,6 +86,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
 
   const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
     renderStatusSummaryContent(state, viewedPhase) + '</section>';
+  const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const players = Array.isArray(state.players) ? state.players : [];
 
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
