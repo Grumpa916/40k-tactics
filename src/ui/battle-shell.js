@@ -11,6 +11,7 @@ import { createSupabaseAuthPanel } from "./supabase-auth-panel.js";
 import { createSupabaseBattleStore } from "../persistence/supabase-battle-store.js";
 import { createSupabaseArmyRosterStore } from "../persistence/supabase-army-roster-store.js";
 import { createArmyRosterPanel } from "./army-roster-panel.js";
+import { createArmySelectionPanel } from "./army-selection-panel.js";
 import { createShootingScreen } from "./shooting-screen.js";
 import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, renderArmyRosterOverlay } from "./battle-context-panels.js";
 import { renderTurnClockPanel } from "./turn-clock-panel.js";
@@ -322,7 +323,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
         '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
-        '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Step 1 · Game Size &amp; Armies</button>' +
+        '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Army Builder</button>' +
+        '<button type="button" data-setup-workspace-tab="army-selection" aria-pressed="' + String(setupWorkspaceTab === "army-selection") + '">Step 1 · Select Armies</button>' +
         '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + '">Step 2 · Pre-game</button>' +
         '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + '">Step 3 · Mission &amp; Secondaries</button>' +
         '<button type="button" data-setup-workspace-tab="battlefield" aria-pressed="' + String(setupWorkspaceTab === "battlefield") + '">Step 4 · Create the Battlefield</button>' +
@@ -332,8 +334,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
             '<section data-setup-workspace-panel="saves"' + (setupWorkspaceTab === "saves" ? '' : ' hidden') + '><h2>Account &amp; Cloud Saves</h2>' +
             '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
             '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' +
-            '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section></section>'
-          : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section>') +
+            '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section>' +
+            '<section data-setup-workspace-panel="army-selection"' + (setupWorkspaceTab === "army-selection" ? '' : ' hidden') + '><div data-army-selection-panel></div></section></section>'
+          : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section><section data-setup-workspace-panel="army-selection" hidden><p>Sign in to select saved army lists.</p></section>') +
         '<footer class="battle-shell__setup-bottom-nav"><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
         '<p role="status" data-setup-navigation-message>' + escapeHtml(setupNavigationMessage) + '</p></div>' +
         '<button type="button" data-setup-workspace-continue>' + setupContinueLabel(setupWorkspaceTab) + '</button></footer>'
@@ -368,6 +371,7 @@ export function createBattleShell(container, {
   let mountedPersistencePanel = null;
   let mountedAuthPanel = null;
   let mountedRosterPanel = null;
+  let mountedArmySelectionPanel = null;
   const cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
   const showCloud = Boolean(supabaseClient || cloudStore);
   let setupWorkspaceTab = "saves";
@@ -408,7 +412,7 @@ export function createBattleShell(container, {
   }
 
   function setSetupWorkspaceTab(tab) {
-    if (!["army-builder", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
+    if (!["army-builder", "army-selection", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
     setupWorkspaceTab = tab;
     setupNavigationMessage = "";
     container.querySelectorAll?.("[data-setup-workspace-tab]").forEach((button) => {
@@ -418,7 +422,7 @@ export function createBattleShell(container, {
       panel.hidden = panel.getAttribute("data-setup-workspace-panel") !== tab;
     });
     const workspace = container.querySelector?.("[data-battle-workspace]");
-    if (workspace) workspace.hidden = tab === "army-builder" || tab === "saves";
+    if (workspace) workspace.hidden = tab === "army-builder" || tab === "army-selection" || tab === "saves";
     const label = container.querySelector?.("[data-setup-step-label]");
     if (label) label.textContent = setupTabLabel(tab);
     const status = container.querySelector?.("[data-setup-navigation-message]");
@@ -619,27 +623,35 @@ export function createBattleShell(container, {
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
       const rosterContainer = container.querySelector("[data-army-roster-panel]");
+      const selectionContainer = container.querySelector("[data-army-selection-panel]");
       const rosterStore = supabaseClient ? createSupabaseArmyRosterStore(supabaseClient) : null;
       const mountPersistenceForUser = (user) => {
         mountedPersistencePanel?.destroy();
         mountedPersistencePanel = null;
         mountedRosterPanel?.destroy();
         mountedRosterPanel = null;
+        mountedArmySelectionPanel?.destroy();
+        mountedArmySelectionPanel = null;
         if (user && cloudStore && persistenceContainer) {
           mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
         }
         if (user && rosterStore && rosterContainer) {
           mountedRosterPanel = createArmyRosterPanel(rosterContainer, {
             store: rosterStore,
-            players: session.getState()?.players ?? [],
-            canApply: session.getState()?.phase === "setup" && session.getState()?.battle?.status === "setup",
-            onApplyRoster: (roster, playerId) => session.dispatch({
-              type: COMMAND_TYPES.APPLY_ARMY_ROSTER_TO_BATTLE,
-              payload: { roster, playerId }
-            })
+            players: [],
+            canApply: false
           });
         } else if (rosterContainer) {
           rosterContainer.innerHTML = "<p>Sign in to create and reuse saved army rosters. Roster storage uses the same account as cloud battle saves.</p>";
+        }
+        if (user && rosterStore && selectionContainer) {
+          mountedArmySelectionPanel = createArmySelectionPanel(selectionContainer, {
+            store: rosterStore,
+            session,
+            canApply: true
+          });
+        } else if (selectionContainer) {
+          selectionContainer.innerHTML = "<p>Sign in to select saved army lists for this battle.</p>";
         }
       };
       if (supabaseClient) {
@@ -650,6 +662,7 @@ export function createBattleShell(container, {
       } else if (cloudStore && persistenceContainer) {
         mountedPersistencePanel = createBattlePersistencePanel(persistenceContainer, { session, store: cloudStore });
         if (rosterContainer) rosterContainer.innerHTML = "<p>Army roster management requires the signed-in Supabase account.</p>";
+        if (selectionContainer) selectionContainer.innerHTML = "<p>Army selection requires the signed-in Supabase account.</p>";
       }
 
       const screenContainer = container.querySelector("[data-battle-screen]");
@@ -907,7 +920,7 @@ export function createBattleShell(container, {
       }
       return;
     }
-    const order = ["saves", "army-builder", "pre-game", "mission-map", "battlefield"];
+    const order = ["saves", "army-selection", "pre-game", "mission-map", "battlefield"];
     const index = order.indexOf(setupWorkspaceTab);
     setSetupWorkspaceTab(order[index + 1] ?? "deployment");
   }
