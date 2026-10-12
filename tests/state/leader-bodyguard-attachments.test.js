@@ -4,8 +4,8 @@ import { attachLeaderToBodyguard, detachLeaderFromBodyguard, getEligibleBodyguar
 
 function fixture() {
   return { id: "roster", name: "Test", updatedAt: null, units: [
-    { id: "leader", name: "Captain", datasheetId: "captain", dataSource: { status: "accepted" }, datasheet: { leader: { isLeader: true, allowedBodyguardDatasheetIds: ["intercessors"] } } },
-    { id: "bodyguard", name: "Intercessors", datasheetId: "intercessors", datasheet: { bodyguard: { canReceiveLeader: true } } },
+    { id: "leader", name: "Captain", datasheetId: "captain", dataSource: { status: "accepted" }, datasheet: { leader: { isLeader: true, allowedBodyguardDatasheetIds: ["intercessors"], compatibilityReview: { status: "cross-checked" } } } },
+    { id: "bodyguard", name: "Intercessors", datasheetId: "intercessors", datasheet: { bodyguard: { canReceiveLeader: true, compatibilityReview: { status: "cross-checked" } } } },
     { id: "bodyguard-2", name: "Intercessors 2", datasheetId: "intercessors", datasheet: { bodyguard: { canReceiveLeader: true } } },
     { id: "other", name: "Terminators", datasheetId: "terminators", datasheet: {} }
   ] };
@@ -14,7 +14,7 @@ function fixture() {
 test("only source-verified compatible Bodyguards are eligible", () => {
   const roster = fixture();
   assert.deepEqual(getEligibleBodyguards(roster, "leader").map((unit) => unit.id), ["bodyguard", "bodyguard-2"]);
-  roster.units[0].dataSource.status = "name-only-unverified";
+  roster.units[0].datasheet.leader.compatibilityReview.status = "name-only-unverified";
   assert.deepEqual(getEligibleBodyguards(roster, "leader"), []);
 });
 
@@ -54,7 +54,7 @@ test("Bodyguard capacity is enforced", () => {
 test("unknown or incompatible pairings are rejected rather than guessed", () => {
   assert.throws(() => attachLeaderToBodyguard(fixture(), "leader", "other"), /not verified as legal/);
   const roster = fixture();
-  roster.units[0].dataSource.status = "name-only-unverified";
+  roster.units[0].datasheet.leader.compatibilityReview.status = "name-only-unverified";
   assert.throws(() => attachLeaderToBodyguard(roster, "leader", "bodyguard"), /not verified as legal/);
 });
 
