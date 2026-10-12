@@ -26,8 +26,10 @@ export function recordBattleShockTest(state, {
 
   const unit = (Array.isArray(state.units) ? state.units : []).find((item) => item.id === unitId);
   if (!unit) throw new Error("Battle-shock unit not found: " + unitId);
-  if (unit.status !== UNIT_STATUS.DEPLOYED) {
-    throw new Error("Battle-shock tests can only be recorded for units on the battlefield.");
+  const wasAlreadyBattleShocked = isUnitBattleShocked(unit);
+  if (unit.status !== UNIT_STATUS.DEPLOYED &&
+      !(unit.status === UNIT_STATUS.RESERVES && wasAlreadyBattleShocked)) {
+    throw new Error("Battle-shock tests require a deployed unit, unless a unit in reserves is already Battle-shocked.");
   }
   const activePlayerId = state.activePlayer ?? state.battle.activePlayerId ?? null;
   if (!activePlayerId || unit.ownerId !== activePlayerId) {
