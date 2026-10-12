@@ -394,7 +394,8 @@ export function createBattleSetupScreen(container, {
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Setup workspace</h1><p>Complete pre-game checks, then confirm the mission and map.</p></header>' +
       '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + '</section>' +
-      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + missionMapMarkup + '</section></main>';
+      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + missionMapMarkup + '</section>' +
+      (message ? '<p role="status" class="battle-setup-screen__message">' + escapeHtml(message) + '</p>' : '') + '</main>';
   }
 
   container.addEventListener?.("change", handleChange);
