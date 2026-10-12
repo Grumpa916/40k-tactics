@@ -195,12 +195,12 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
 }
 
 function setupTabLabel(tab) {
-  return ({ "army-builder": "Step 1 of 4 · Army Builder", saves: "Step 2 of 4 · Saves",
+  return ({ saves: "Step 1 of 4 · Account & Saves", "army-builder": "Step 2 of 4 · Army Builder",
     "pre-game": "Step 3 of 4 · Pre-game", "mission-map": "Step 4 of 4 · Mission & Map" })[tab] ?? "Setup";
 }
 
 function setupContinueLabel(tab) {
-  return ({ "army-builder": "Continue to Saves", saves: "Continue to Pre-game",
+  return ({ saves: "Continue to Army Builder", "army-builder": "Continue to Pre-game",
     "pre-game": "Continue to Mission &amp; Map", "mission-map": "Continue to Deployment" })[tab] ?? "Continue";
 }
 
@@ -318,8 +318,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     statusSummary + clockPanel +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
+        '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
         '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Army Builder</button>' +
-        '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Saves</button>' +
         '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + '">Pre-game</button>' +
         '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + '">Mission &amp; Map</button></nav>' +
         (showCloud
