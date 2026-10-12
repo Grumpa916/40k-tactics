@@ -720,6 +720,26 @@ test("Tyranid roster points match official Munitorum Field Manual v1.5", () => {
   }
 });
 
+test("Tyranid datasheet abilities match current official FAQ timing and targeting", () => {
+  const swarmlord = candidate("The Swarmlord");
+  const malignPresence = swarmlord.datasheet.abilities.find((ability) => ability.name === "Malign Presence");
+  assert.ok(malignPresence);
+  assert.match(malignPresence.description, /your opponent targets a unit from their army within 12 inches of this model/);
+  assert.match(malignPresence.description, /increase the CP cost of that use of that Stratagem by 1CP/);
+
+  const termagants = candidate("Termagants");
+  const skulkingHorrors = termagants.datasheet.abilities.find((ability) => ability.name === "Skulking Horrors");
+  assert.ok(skulkingHorrors);
+  assert.match(skulkingHorrors.description, /ends a move within 8 inches of this unit/);
+  assert.match(skulkingHorrors.description, /not within Engagement Range of one or more enemy units/);
+
+  const carnifexes = candidate("Carnifexes");
+  const blisteringAssault = carnifexes.datasheet.abilities.find((ability) => ability.name === "Blistering Assault");
+  assert.ok(blisteringAssault);
+  assert.match(blisteringAssault.description, /when an enemy unit has shot/);
+  assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
+});
+
 test("Every Tyranid profile includes the Synapse faction ability", () => {
   for (const name of [
     "Tyranid Prime with Lash Whip", "Raveners", "Hive Tyrant", "Neurotyrant",
