@@ -119,6 +119,8 @@ test("battle shell keeps persistent score, Unit Status, Event Log and roster con
   assert.match(root.html, /data-right-collapsed="false"/);
   assert.match(root.html, /10 VP/);
   assert.match(root.html, /2 CP/);
+  assert.match(root.html, /data-toggle-turn-clock/);
+  assert.match(root.html, /data-turn-clock-panel/);
   assert.match(root.html, /Unit Status/);
   assert.match(root.html, /Event Log/);
   assert.match(root.html, /data-open-army-roster="p1"/);
