@@ -21,7 +21,7 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
     name: "Tyranid test",
     units: candidates().filter((candidate) => [
       "Hive Tyrant", "Neurotyrant", "Broodlord", "The Swarmlord", "Old One Eye",
-      "Tyranid Prime with Lash Whip", "Winged Tyranid Prime", "Tyrant Guard",
+      "Tyranid Prime with Lash Whip", "Winged Tyranid Prime", "Malanthrope", "Venomthropes", "Tyrant Guard",
       "Neurogaunts", "Zoanthropes", "Genestealers", "Carnifexes", "Hormagaunts",
       "Termagants", "Tyranid Warriors with Melee Bio-weapons",
       "Tyranid Warriors with Ranged Bio-weapons", "Gargoyles", "Hyperadapted Raveners", "Raveners", "Tervigon"
@@ -47,11 +47,16 @@ test("Tyranid Leaders expose only source-reviewed Bodyguard pairings", () => {
     "Hormagaunts", "Termagants", "Tyranid Warriors with Melee Bio-weapons",
     "Tyranid Warriors with Ranged Bio-weapons"
   ]);
-  assert.deepEqual(idsFor("Winged Tyranid Prime"), ["Tyranid Warriors with Ranged Bio-weapons"]);
+  assert.deepEqual(idsFor("Winged Tyranid Prime"), ["Gargoyles", "Tyranid Warriors with Melee Bio-weapons", "Tyranid Warriors with Ranged Bio-weapons"].sort());
   const wingedPrime = unit("Winged Tyranid Prime");
   assert.ok(wingedPrime.datasheet.leader.compatibilityReview.sources.includes(
-    "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons"
+    "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
   ));
+  assert.deepEqual(idsFor("Malanthrope"), ["Venomthropes"]);
+  assert.ok(unit("Malanthrope").datasheet.leader.compatibilityReview.sources.includes(
+    "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
+  ));
+  assert.equal(unit("Venomthropes").datasheet.bodyguard.canReceiveLeader, true);
   assert.equal(unit("Gargoyles").verificationStatus, "source-reviewed");
   assert.ok(unit("Gargoyles").datasheet.weapons.some((weapon) => weapon.name === "Fleshborer"));
   assert.equal(unit("Spore Mines").verificationStatus, "source-reviewed");
