@@ -176,7 +176,7 @@ test("Shadow in the Warp reminder records use during either player's Command pha
   });
   assert.equal(shell.getState().armyRosters.p1.battleAbilityUses["tyranids.shadow-in-the-warp"], true);
   assert.equal(shell.getState().history.at(-1).payload.choiceName, "Shadow in the Warp");
-  assert.match(root.html, /does not resolve them|resolve the required Battle-shock tests at the table/i);
+  assert.match(root.html, /Battle-shock tests at the table/i);
   shell.destroy();
 });
 
