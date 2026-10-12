@@ -141,7 +141,7 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
       ? '<small>Last test: ' + escapeHtml(lastTest.result === "passed" ? "Passed" : "Failed") +
         (Number.isFinite(lastTest.round) ? ' · Round ' + escapeHtml(lastTest.round) : "") + '</small>'
       : "";
-    const hasDueTest = state.phase === "command" && unit.ownerId === activePlayerId &&
+    const hasDueTest = state.battle?.status === "active" && state.phase === "command" && unit.ownerId === activePlayerId &&
       assessment.requiresTest !== false && unit.status !== UNIT_STATUS.DESTROYED;
     const testControls = hasDueTest
       ? '<div class="battle-context__test-controls"><span>' +
@@ -166,25 +166,30 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
     '<p class="battle-context__note">Battle-shock tests are required for units that are currently Battle-shocked or at/below half-strength. Missing strength data is flagged for review, not guessed.</p>' +
     (eligible.length ? '<p class="battle-context__alert">' + eligible.length + ' unit(s) need Battle-shock attention.</p>' : '') +
     (needsReview.length ? '<p class="battle-context__note">' + needsReview.length + ' unit(s) need a manual strength check.</p>' : '') +
-    (rows ? '<ul class="battle-context__unit-list">' + rows + '</ul>' : '<p>No units have been added to this battle.</p>') +
-    '</details>';
-}
-
-export function renderEventLogPanel(state = {}, { limit = 10, openSections = {} } = {}) {
+    (rows ? '<ul class="battle-context__unit-list">' + rows + '</ul>' : '<p>No units have been added to this export function renderEventLogPanel(state = {}, { limit = 10, openSections = {} } = {}) {
   const history = Array.isArray(state.history) ? state.history : [];
-  const events = history.slice(-Math.max(1, limit)).reverse();
-  const entries = events.map((event) => {
+  const visibleLimit = Math.max(1, limit);
+  const recentEvents = history.slice(-visibleLimit).reverse();
+  const olderEvents = history.slice(0, Math.max(0, history.length - recentEvents.length)).reverse();
+  const makeEntries = (events) => events.map((event) => {
     const summary = summarizeGameEvent(event, state);
     return '<li class="battle-context__event"><strong>' + escapeHtml(summary.title) + '</strong>' +
       (summary.detail ? '<span>' + escapeHtml(summary.detail) + '</span>' : '') +
       (summary.context ? '<small>' + escapeHtml(summary.context) + '</small>' : '') + '</li>';
   }).join("");
+  const olderMarkup = olderEvents.length
+    ? '<details class="battle-context__older-events" data-context-key="older-events"' +
+      ((openSections["older-events"] ?? false) ? ' open>' : '>') +
+      '<summary>Show older events (' + olderEvents.length + ')</summary>' +
+      '<ol class="battle-context__event-list">' + makeEntries(olderEvents) + '</ol></details>'
+    : "";
   return '<details class="battle-context__section battle-context__event-panel" data-context-key="event-log"' +
     ((openSections["event-log"] ?? true) ? " open>" : ">") +
     '<summary><span>Event Log</span><span class="battle-context__count">' + history.length + ' events</span></summary>' +
-    (entries ? '<ol class="battle-context__event-list">' + entries + '</ol>' : '<p>No game events recorded yet.</p>') +
-    (history.length > events.length
-      ? '<p class="battle-context__note">Showing the latest ' + events.length + ' of ' + history.length + ' events.</p>' : '') +
+    (recentEvents.length ? '<ol class="battle-context__event-list">' + makeEntries(recentEvents) + '</ol>' : '<p>No game events recorded yet.</p>') +
+    olderMarkup + '</details>';
+}
+ts.</p>' : '') +
     '</details>';
 }
 
