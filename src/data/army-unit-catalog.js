@@ -1,3 +1,5 @@
+import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
+
 // Starter name-only catalog for the roster picker.
 // These entries are convenience candidates, not verified datasheets or a complete faction roster.
 // Add full characteristics/points only after source review.
@@ -6,15 +8,23 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
     "Hive Tyrant", "Winged Hive Tyrant", "Neurotyrant", "Tervigon", "Tyrannofex",
     "Exocrine", "Maleceptor", "Psychophage", "Screamer-Killer", "Carnifexes",
     "Termagants", "Hormagaunts", "Neurogaunts", "Genestealers", "Barbgaunts",
-    "Zoanthropes", "Tyranid Warriors", "Gargoyles", "Lictor", "Deathleaper"
-  ].map((name) => Object.freeze({
-    id: "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-    name,
-    faction: "Tyranids",
-    sourceName: "Candidate unit name; verify against current datasheet",
-    sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
-    verificationStatus: "name-only-unverified"
-  })),
+    "Zoanthropes", "Tyranid Warriors", "Gargoyles", "Lictor", "Deathleaper",
+    "Broodlord", "The Swarmlord", "Old One Eye", "Tyranid Prime with Lash Whip",
+    "Winged Tyranid Prime", "Tyrant Guard", "Tyranid Warriors with Melee Bio-weapons",
+    "Tyranid Warriors with Ranged Bio-weapons"
+  ].map((name) => {
+    const id = "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const attachmentMetadata = getTyranidAttachmentMetadata(id);
+    return Object.freeze({
+      id,
+      name,
+      faction: "Tyranids",
+      sourceName: "Candidate unit name; verify against current datasheet",
+      sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
+      verificationStatus: "name-only-unverified",
+      ...(attachmentMetadata ? { datasheet: attachmentMetadata } : {})
+    });
+  }),
   ...[
     "Captain", "Lieutenant", "Librarian", "Chaplain", "Intercessor Squad",
     "Assault Intercessor Squad", "Infernus Squad", "Hellblaster Squad",
