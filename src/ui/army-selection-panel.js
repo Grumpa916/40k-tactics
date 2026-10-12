@@ -1,3 +1,5 @@
+import { COMMAND_TYPES } from "../commands/game-commands.js";
+
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -46,9 +48,28 @@ export function createArmySelectionPanel(container, { store, session, canApply =
         '</select></label><button type="button" data-army-selection-apply="' + escapeHtml(player.id) + '"' +
         (!currentCanApply || busyPlayerId ? " disabled" : "") + '>Use selected roster</button></article>';
     }).join("");
+    const battleSetup = state.battleSetup ?? {};
+    const selectedSize = battleSetup.battleSize ?? "";
+    const sizeRules = {
+      incursion: { label: "Incursion", points: 1000, dp: 2, enhancements: 2, units: 2 },
+      strike_force: { label: "Strike Force", points: 2000, dp: 3, enhancements: 4, units: 3 }
+    };
+    const selectedRules = sizeRules[selectedSize] ?? null;
+    const sizeMarkup = '<section class="army-selection__battle-size"><h3>Battle size</h3>' +
+      '<label>Agreed game size<select data-battle-size' + (!currentCanApply ? " disabled" : "") + '>' +
+      '<option value="">Choose battle size…</option>' +
+      '<option value="incursion"' + (selectedSize === "incursion" ? " selected" : "") + '>Incursion · 1,000 points</option>' +
+      '<option value="strike_force"' + (selectedSize === "strike_force" ? " selected" : "") + '>Strike Force · 2,000 points</option>' +
+      '</select></label>' +
+      (selectedRules ? '<p><strong>' + selectedRules.label + ' limits:</strong> ' + selectedRules.points +
+        ' points per army · ' + selectedRules.dp + ' Detachment Points · ' + selectedRules.enhancements +
+        ' enhancements · ' + selectedRules.units + ' copies per datasheet (BATTLELINE and Dedicated Transports double; EPIC HERO limit remains 1).</p>' :
+        '<p>Choose the agreed battle size before continuing. Limits shown here follow the published 11th-edition muster table.</p>') +
+      '</section>';
     container.innerHTML = '<section class="army-selection" aria-labelledby="army-selection-title">' +
       '<header><h2 id="army-selection-title">Select Armies for This Battle</h2>' +
       '<p>Choose a saved roster for each side. Army lists stay reusable; this step assigns them to this battle only.</p></header>' +
+      sizeMarkup +
       '<div class="army-selection__sides">' + sides + '</div>' +
       '<p class="army-selection__message" role="status">' + escapeHtml(message) + '</p>' +
       '<button type="button" data-army-selection-refresh' + (busyPlayerId ? " disabled" : "") + '>Refresh saved lists</button></section>';
@@ -59,6 +80,18 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       if (!store || typeof store.list !== "function") throw new Error("Sign in to access saved army lists.");
       records = await store.list();
       message = records.length ? "" : "No saved lists found. Open Army Builder to create your first list.";
+    } catch (error) {
+      message = error?.message ?? String(error);
+    }
+    render();
+  }
+
+  function handleChange(event) {
+    const select = event.target?.closest?.("[data-battle-size]");
+    if (!select || !container.contains(select)) return;
+    try {
+      session.dispatch({ type: COMMAND_TYPES.SET_BATTLE_SIZE, payload: { battleSize: select.value || null } });
+      message = select.value ? "Battle size saved for this battle." : "Choose the agreed battle size.";
     } catch (error) {
       message = error?.message ?? String(error);
     }
@@ -99,6 +132,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
   }
 
   container.addEventListener?.("click", handleClick);
+  container.addEventListener?.("change", handleChange);
   const unsubscribe = session.subscribe?.(render) ?? (() => {});
   void refresh();
   return {
@@ -107,6 +141,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       destroyed = true;
       unsubscribe();
       container.removeEventListener?.("click", handleClick);
+      container.removeEventListener?.("change", handleChange);
     }
   };
 }
