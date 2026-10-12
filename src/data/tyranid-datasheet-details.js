@@ -1018,7 +1018,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 75, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 75 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/malanthrope"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "verified", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition community Legends datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/malanthrope", additionalSources: Object.freeze(["https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:barbed-hierodule": Object.freeze({
     characteristics: Object.freeze({ Move: '8"', Toughness: 12, Save: "2+", Wounds: 18, Leadership: "8+", "Objective Control": 5 }),
@@ -1035,7 +1035,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 340, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 340 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/barbed-hierodule"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "verified", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition community Legends datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/barbed-hierodule", additionalSources: Object.freeze(["https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:dimachaeron": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 10, Save: "3+", Wounds: 16, Leadership: "7+", "Objective Control": 5, "Invulnerable save": "5+" }),
@@ -1049,7 +1049,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 200, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 200 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/dimachaeron"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "verified", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition community Legends datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/dimachaeron", additionalSources: Object.freeze(["https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:scythed-hierodule": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 12, Save: "2+", Wounds: 18, Leadership: "8+", "Objective Control": 5 }),
@@ -1066,7 +1066,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 1, defaultPoints: 330, legends: true,
     pointsOptions: Object.freeze([{ models: 1, points: 330 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/scythed-hierodule"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "verified", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition community Legends datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/scythed-hierodule", additionalSources: Object.freeze(["https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   }),
   "tyranids:sky-slasher-swarms": Object.freeze({
     characteristics: Object.freeze({ Move: '12"', Toughness: 2, Save: "6+", Wounds: 4, Leadership: "8+", "Objective Control": 0 }),
@@ -1082,7 +1082,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     defaultModelCount: 3, defaultPoints: 60, legends: true,
     pointsOptions: Object.freeze([{ models: 3, points: 60 }]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Legends datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://wh-rules.ru/factions/tyranids/datasheets/sky-slasher-swarms"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "verified", availability: "Legends" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Current 11th-edition community Legends datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/sky-slasher-swarms", additionalSources: Object.freeze(["https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", availability: "Legends" })
   })
 });
 
