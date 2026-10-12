@@ -88,7 +88,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     try {
       const result = await store.load(rosterId);
       if (!result?.roster) throw new Error("The selected saved roster could not be loaded.");
-      session.dispatch({ type: "army_roster.apply_to_battle", payload: { roster: result.roster, playerId } });
+      session.dispatch({ type: "battle.apply_army_roster", payload: { roster: result.roster, playerId } });
       message = "Roster assigned to this battle side.";
     } catch (error) {
       message = error?.message ?? String(error);
