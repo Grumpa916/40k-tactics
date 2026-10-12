@@ -39,7 +39,7 @@ export function renderTurnClockPanel(state = {}, {
     : startAllowed
       ? 'Clock is paused. Start or resume it for the current player.'
       : 'The clock can be started after the first player turn begins.';
-  return '<section class="battle-shell__clock-panel" data-turn-clock-panel role="region" aria-label="Turn Clock"' +
+  return '<section id="battle-turn-clock-panel" class="battle-shell__clock-panel" data-turn-clock-panel role="region" aria-label="Turn Clock"' +
     (open ? '' : ' hidden') + '><header class="battle-shell__clock-header"><div><h2>Turn Clock</h2>' +
     '<p>' + runningNote + '</p></div><button type="button" data-close-turn-clock aria-label="Close Turn Clock">Close</button></header>' +
     (rows ? '<ul class="battle-shell__clock-list">' + rows + '</ul>' : '<p>Add both players before using the Turn Clock.</p>') +
