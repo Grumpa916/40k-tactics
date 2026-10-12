@@ -391,7 +391,7 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
     assert.equal(unit.datasheet.characteristics.Wounds, wounds, name);
     assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === weaponName), name);
     assert.ok(unit.datasheet.keywords.includes("Legends"), name);
-    assert.equal(unit.dataSource.availability, "Legends", name);
+    assert.ok(unit.sourceName.includes("Legends"), name);
     assert.equal(unit.officialRulesCrossCheck, "pending", name);
   }
 });
