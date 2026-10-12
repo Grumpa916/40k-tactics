@@ -131,7 +131,7 @@ const EVENT_COMPANION_FORCE_DISPOSITIONS = Object.freeze([
 ]);
 
 const EVENT_COMPANION_OBJECTIVE_NAMES = Object.freeze([
-  "Defender Home", "Attacker Home", "Central 1", "Expansion 1", "Expansion 2"
+  "Defender Home", "Attacker Home", "Central 1", "Central 2", "Expansion 1", "Expansion 2"
 ]);
 
 function synchronizeCanonicalLayoutObjectives(state, missionSetup) {
