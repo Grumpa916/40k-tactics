@@ -144,6 +144,26 @@
     .battle-mission-summary__card { margin:6px 0; border:1px solid #3c4654; border-radius:6px; background:#151b24; }
     .battle-mission-summary__card > summary { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:42px; padding:8px 10px; cursor:pointer; font-weight:750; overflow-wrap:anywhere; }
     .battle-mission-summary__card > summary::marker { color:#ac85d2; }
+    .tyranid-decision-reminder__backdrop { position:fixed; inset:0; z-index:1180; display:grid; place-items:center; padding:16px; background:rgba(0,0,0,.8); }
+    .tyranid-decision-reminder { width:min(100%,640px); max-height:85dvh; overflow:auto; padding:18px; border:1px solid #7c619b; border-radius:12px; background:#1b222d; color:#f2f4f8; box-shadow:0 18px 60px rgba(0,0,0,.6); }
+    .tyranid-decision-reminder__kicker { margin-bottom:5px; color:#c39bea; font-size:10px; font-weight:900; letter-spacing:.13em; }
+    .tyranid-decision-reminder h2 { margin:0 0 8px; font-size:21px; }
+    .tyranid-decision-reminder > p { font-size:13px; line-height:1.45; opacity:.86; }
+    .tyranid-decision-reminder__options { display:grid; gap:8px; margin:14px 0; padding:0; list-style:none; }
+    .tyranid-decision-reminder__option { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:11px; border:1px solid #3f4958; border-radius:8px; background:#202733; }
+    .tyranid-decision-reminder__option strong { font-size:14px; }
+    .tyranid-decision-reminder__option p { margin:5px 0 0; font-size:12px; line-height:1.4; opacity:.78; }
+    .tyranid-decision-reminder button { min-height:44px; padding:9px 14px; border:1px solid #8a70a7; border-radius:7px; background:#30243b; color:inherit; font:inherit; font-weight:800; cursor:pointer; touch-action:manipulation; }
+    .tyranid-decision-reminder button:focus-visible { outline:2px solid #c5a2ed; outline-offset:2px; }
+    .tyranid-decision-reminder__note { padding:8px; border-left:3px solid #8a70a7; background:#251f30; font-size:11px !important; }
+    .tyranid-decision-reminder__actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-top:16px; }
+    .tyranid-decision-reminder__actions button[data-dismiss-faction-decision] { background:#242b36; border-color:#5e6878; }
+    .battle-shell__faction-decision-message:empty { display:none; }
+    .battle-shell__faction-decision-message { margin:5px 0; font-size:12px; color:#c5a2ed; }
+    @media(max-width:520px) {
+      .tyranid-decision-reminder__option { grid-template-columns:minmax(0,1fr); }
+      .tyranid-decision-reminder__option button { justify-self:stretch; }
+    }
     .battle-shock-reminder__backdrop { position:fixed; inset:0; z-index:1150; display:grid; place-items:center; padding:16px; background:rgba(0,0,0,.78); }
     .battle-shock-reminder { width:min(100%,610px); max-height:84dvh; overflow:auto; padding:18px; border:1px solid #697386; border-radius:12px; background:#1b222d; color:#f2f4f8; box-shadow:0 18px 60px rgba(0,0,0,.58); }
     .battle-shock-reminder__kicker { margin-bottom:5px; font-size:10px; font-weight:900; letter-spacing:.13em; color:#c39bea; }
