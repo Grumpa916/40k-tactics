@@ -43,7 +43,7 @@ export function recordFactionAbilityDecision(state, {
     if (round !== 1 || !isInvasionFleetRoster(state, playerId)) {
       throw new Error("Hyper-adaptations require a Tyranids Invasion Fleet roster at the start of the first battle round.");
     }
-    if (!["start_turn", "command"].includes(state.phase)) {
+    if (state.phase !== "command") {
       throw new Error("Choose Hyper-adaptations at the start of the first battle round, before later phases.");
     }
     const adaptation = TYRANID_HYPER_ADAPTATIONS.find((item) => item.id === choice);
