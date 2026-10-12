@@ -294,7 +294,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
   const isSetupView = viewedPhase === "setup" || setupWorkspaceTab !== "deployment";
   const workspace = '<section class="battle-shell__workspace' + (isSetupView ? ' is-setup-view' : '') + '" data-battle-workspace' +
-    (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
+    (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "army-selection" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
     ' data-left-collapsed="' + String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left"' + (isSetupView ? ' hidden' : '') + '>' +
     leftToggle + '<div id="battle-left-panel-body" class="battle-shell__panel-body" data-battle-context-body>' +
