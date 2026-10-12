@@ -1,4 +1,4 @@
-import { getSecondaryMissionHistory, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { createChargeScreen } from "./charge-screen.js";
 import { createCommandScreen } from "./command-screen.js";
@@ -247,7 +247,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
 
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
-    state.scoring?.secondaryMissionMode === SECONDARY_MISSION_MODES.TACTICAL && reminderPlayerId
+    getSecondaryMissionMode(state, reminderPlayerId) === SECONDARY_MISSION_MODES.TACTICAL && reminderPlayerId
     ? getSecondaryMissionHistory(state, reminderPlayerId).filter((item) =>
         item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
         item.definition?.missionMode === SECONDARY_MISSION_MODES.TACTICAL)
@@ -876,7 +876,7 @@ export function createBattleShell(container, {
       const currentState = session.getState();
       const readiness = evaluatePreGameReadiness(currentState);
       const missing = readiness.missing.map((item) => item.label);
-      if (!currentState.scoring?.secondaryMissionMode) missing.push("Secondary mission mode");
+      if ((currentState.players ?? []).some((player) => !getSecondaryMissionMode(currentState, player.id))) missing.push("Set Fixed or Tactical secondary mode for both players");
       if (missing.length) {
         setupNavigationMessage = "Complete before deployment: " + missing.join(", ") + ".";
         const message = container.querySelector?.("[data-setup-navigation-message]");
