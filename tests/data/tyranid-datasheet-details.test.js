@@ -743,7 +743,7 @@ test("Trygon Subterranean Tunnels matches the official faction-pack restriction"
   const trygon = candidate("Trygon");
   const tunnels = trygon.datasheet.abilities.find((ability) => ability.name === "Subterranean Tunnels");
   assert.ok(tunnels);
-  assert.match(tunnels.description, /in your Movement phase/);
+  assert.match(tunnels.description, /In your Movement phase/);
   assert.match(tunnels.description, /using the Deep Strike ability/);
   assert.match(tunnels.description, /more than 6 inches horizontally away from all enemy units/);
   assert.match(tunnels.description, /not eligible to declare a charge/);
