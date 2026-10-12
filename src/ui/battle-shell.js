@@ -220,7 +220,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   contextOpenStates = { "unit-status": true, "event-log": true },
   referenceOpenStates = { stratagems: true },
   missionOpenStates = {},
-  setupWorkspaceTab = "army-builder",
+  setupWorkspaceTab = "saves",
   setupNavigationMessage = ""
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
@@ -365,7 +365,7 @@ export function createBattleShell(container, {
   let mountedRosterPanel = null;
   const cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
   const showCloud = Boolean(supabaseClient || cloudStore);
-  let setupWorkspaceTab = "army-builder";
+  let setupWorkspaceTab = "saves";
   let setupNavigationMessage = "";
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
@@ -893,7 +893,7 @@ export function createBattleShell(container, {
       }
       return;
     }
-    const order = ["army-builder", "saves", "pre-game", "mission-map"];
+    const order = ["saves", "army-builder", "pre-game", "mission-map"];
     const index = order.indexOf(setupWorkspaceTab);
     setSetupWorkspaceTab(order[index + 1]);
   }
