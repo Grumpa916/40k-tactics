@@ -30,6 +30,18 @@ function validateState(state) {
   } catch {
     throw new TypeError("The game state must be JSON-serializable before saving.");
   }
+  // Save the live clock's elapsed interval into the detached snapshot and
+  // rebase its start timestamp so offline time is not counted after restoration.
+  const clock = snapshot?.timers?.turnClock;
+  const nowMs = Date.now();
+  if (clock?.running === true && clock.activePlayerId && Number.isFinite(clock.startedAtMs)) {
+    clock.elapsedMsByPlayer = { ...(clock.elapsedMsByPlayer ?? {}) };
+    const prior = Number.isFinite(clock.elapsedMsByPlayer[clock.activePlayerId])
+      ? clock.elapsedMsByPlayer[clock.activePlayerId]
+      : 0;
+    clock.elapsedMsByPlayer[clock.activePlayerId] = prior + Math.max(0, nowMs - clock.startedAtMs);
+    clock.startedAtMs = nowMs;
+  }
   if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
     throw new TypeError("The serialized game state must be an object.");
   }
@@ -109,7 +121,14 @@ export function createSupabaseBattleStore(client, { table = DEFAULT_TABLE } = {}
         throw new Error("This battle uses game-state version " + data.state_version +
           "; this app supports version " + GAME_STATE_VERSION + ". A migration is required before loading it.");
       }
-      return { ...data, game_state: JSON.parse(JSON.stringify(data.game_state)) };
+      const restoredState = JSON.parse(JSON.stringify(data.game_state));
+      const restoredClock = restoredState?.timers?.turnClock;
+      if (restoredClock?.running === true) {
+        // A saved clock resumes at load time; time spent away from the app is
+        // not charged to either player.
+        restoredClock.startedAtMs = Date.now();
+      }
+      return { ...data, game_state: restoredState };
     },
 
     async remove(id) {
