@@ -23,6 +23,7 @@ function hasBattleShockTestThisTurn(state, unit) {
 function humanizeEventType(type) {
   const labels = {
     "battle.started": "Battle started",
+    "faction_ability.decision_recorded": "Faction ability decision recorded",
     "turn_clock.started": "Turn Clock started",
     "turn_clock.paused": "Turn Clock paused",
     "battle.deployment_started": "Deployment started",
@@ -93,6 +94,8 @@ export function summarizeGameEvent(event, state = {}) {
     if (payload.phase) details.push(payload.phase);
     if (payload.reason) details.push(payload.reason);
     if (payload.outcome) details.push(payload.outcome);
+    if (payload.choiceName) details.push(payload.choiceName);
+    else if (payload.decisionId) details.push(payload.decisionId);
     if (payload.objectiveId) {
       const objective = state.objectives?.find((item) => item.id === payload.objectiveId);
       details.push(objective?.name ?? payload.objectiveId);
