@@ -379,7 +379,7 @@ export function createBattleSetupScreen(container, {
         '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
-    const preGameMarkup = preGameRolesMarkup + missionSetupMarkup;
+    const preGameMarkup = missionSetupMarkup;
     const history = getSecondaryMissionHistory(state);
     const fixedHistory = history.filter((item) =>
       item.definition?.missionMode === "fixed" && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
@@ -441,7 +441,8 @@ export function createBattleSetupScreen(container, {
       '</select></label><p>Select a unit, then tap the map to record or reposition its intended starting point. Planned positions remain separate from actual deployment and live movement.</p>' +
       renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
-      '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p></section>';
+      '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p>' +
+      preGameRolesMarkup + '</section>';
     const missionMapMarkup =
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
       '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
