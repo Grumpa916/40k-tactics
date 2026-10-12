@@ -186,7 +186,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Devourers with brainleech worms", equipment: "Wargear option", range: '18"', attacks: 12, skill: "4+", strength: 6, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wounds; if that amount is random, roll separately for each affected unit." }),
+      Object.freeze({ name: "Deadly Demise 1", description: "Each time this model is destroyed, after any embarked units make emergency disembark moves, roll one D6. On a 6, each unit within 6 inches suffers 1 mortal wound; if that amount is random, roll separately for each affected unit." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Blistering Assault", description: "In the opponent's Shooting phase, if an enemy unit's attacks cause a model in this unit to lose a wound, this unit can make a surge move of up to D6+2 inches." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows Old One Eye to lead this unit." })
