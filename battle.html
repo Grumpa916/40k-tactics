@@ -21,7 +21,7 @@
     .battle-phase.is-active { border-color:#aaa; background:#292929; }
     .battle-shell__view-note { margin:-6px 0 14px; font-size:13px; opacity:.7; }
 
-    .battle-shell { max-width: 1600px; }
+    .battle-shell { max-width: 1600px; padding-bottom: 84px; }
     .battle-shell__status-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 12px; padding:10px 12px; border:1px solid #424954; border-radius:10px; background:#171c24; }
     .battle-shell__round-summary { display:flex; flex-direction:column; gap:3px; }
     .battle-shell__round-summary strong { font-size:15px; }
@@ -46,7 +46,7 @@
     .battle-shell__workspace[data-left-collapsed="true"] .battle-shell__side-panel--left .battle-shell__panel-toggle span,
     .battle-shell__workspace[data-right-collapsed="true"] .battle-shell__side-panel--right .battle-shell__panel-toggle span { writing-mode:vertical-rl; font-size:11px; line-height:1.25; }
     .battle-shell__content { min-width:0; }
-    .battle-shell__army-dock { position:sticky; bottom:0; z-index:40; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:14px -4px -8px; padding:8px; border:1px solid #424954; border-radius:10px 10px 0 0; background:rgba(16,20,27,.96); backdrop-filter:blur(10px); }
+    .battle-shell__army-dock { position:fixed; left:50%; transform:translateX(-50%); bottom:0; z-index:1000; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; width:min(1600px,calc(100vw - 16px)); margin:0; padding:8px; border:1px solid #424954; border-bottom:0; border-radius:10px 10px 0 0; background:rgba(16,20,27,.96); backdrop-filter:blur(10px); box-sizing:border-box; }
     .battle-shell__army-dock button { display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:0; min-height:48px; padding:9px 12px; border:1px solid #424954; border-radius:8px; background:#202631; color:inherit; font:inherit; text-align:left; cursor:pointer; touch-action:manipulation; }
     .battle-shell__army-dock button:disabled { opacity:.45; cursor:not-allowed; }
     .battle-shell__army-dock button span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; opacity:.72; }
