@@ -1,19 +1,20 @@
 /**
- * Reviewed Tyranid Leader/Bodyguard compatibility only.
- * This does not mark the full datasheet (points, profiles, abilities) as verified.
- * Pairings were cross-checked against the official Munitorum Field Manual and
- * the linked 40k.app datasheet pages on 2026-10-12.
+ * Tyranid Leader/Bodyguard pairings transcribed from current 40k.app datasheet
+ * "Leads"/"Led by" entries on 2026-10-12. This is compatibility-only metadata:
+ * points, profiles, weapons, and abilities remain unverified. Official GW
+ * cross-check is explicitly pending where a public current datasheet source
+ * was not available for this review.
  */
 const REVIEWED_AT = "2026-10-12";
-const RULES_VERSION = "Warhammer 40,000 Munitorum Field Manual; official downloads page updated 2026-09-30";
-const OFFICIAL_MFM = "https://mfm.warhammer-community.com/en/tyranids";
+const RULES_VERSION = "Warhammer 40,000 11th edition; 40k.app datasheet listings checked 2026-10-12";
 
-function review(leaderPage) {
+function review(sourcePage) {
   return Object.freeze({
-    status: "cross-checked",
+    status: "source-reviewed",
+    officialRulesCrossCheck: "pending",
     reviewedAt: REVIEWED_AT,
     rulesVersion: RULES_VERSION,
-    sources: Object.freeze([OFFICIAL_MFM, leaderPage])
+    sources: Object.freeze([sourcePage])
   });
 }
 
@@ -33,10 +34,11 @@ function bodyguard(sourcePages) {
       canReceiveLeader: true,
       maxAttachedLeaders: 1,
       compatibilityReview: Object.freeze({
-        status: "cross-checked",
+        status: "source-reviewed",
+        officialRulesCrossCheck: "pending",
         reviewedAt: REVIEWED_AT,
         rulesVersion: RULES_VERSION,
-        sources: Object.freeze([OFFICIAL_MFM, ...sourcePages])
+        sources: Object.freeze(sourcePages)
       })
     })
   });
