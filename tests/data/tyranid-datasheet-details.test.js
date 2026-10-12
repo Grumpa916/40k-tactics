@@ -449,6 +449,20 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
+test("Hyperadapted Raveners include Hypersensory Array and Parasite infection timing", () => {
+  const hyperadapted = candidate("Hyperadapted Raveners");
+  const hypersensory = hyperadapted.datasheet.abilities.find((ability) => ability.name === "Hypersensory Array");
+  assert.ok(hypersensory);
+  assert.match(hypersensory.description, /Rapid Ingress or Heroic Intervention Stratagem/);
+  assert.match(hypersensory.description, /costs 1 fewer CP/);
+
+  const parasite = candidate("Parasite of Mortrex");
+  const infection = parasite.datasheet.abilities.find((ability) => ability.name === "Parasitic Infection");
+  assert.ok(infection);
+  assert.match(infection.description, /after this model has finished making its attacks/);
+  assert.match(infection.description, /you can add one new Ripper Swarms unit/);
+});
+
 test("Harpy includes both twin cannons and Tyrannocyte preserves all Aerial Seeding restrictions", () => {
   const harpy = candidate("Harpy");
   const heavyVenomCannon = harpy.datasheet.weapons.find((weapon) => weapon.name === "Twin heavy venom cannon");
