@@ -41,7 +41,7 @@ test("Neurotyrant profile includes verified attachment targets and sourced detai
   assert.equal(unit.defaultPoints, 120);
   assert.equal(unit.datasheet.characteristics.Wounds, 9);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Psychic scream"));
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash (Psychic)"));
   assert.deepEqual([...unit.datasheet.leader.allowedBodyguardDatasheetIds].sort(), [
     "tyranids:neurogaunts", "tyranids:tyrant-guard", "tyranids:zoanthropes"
   ]);
@@ -788,6 +788,20 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
   assert.ok(blisteringAssault);
   assert.match(blisteringAssault.description, /when an enemy unit has shot/);
   assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
+});
+
+test("Neurotyrant abilities retain Psychic tags and exact Neuroloids range/timing", () => {
+  const unit = candidate("Neurotyrant");
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash (Psychic)"));
+  const nodeLash = unit.datasheet.abilities.find((ability) => ability.name === "Node Lash (Psychic)");
+  assert.match(nodeLash.description, /each time a model in that unit makes an attack/);
+  assert.match(nodeLash.description, /If the target is Battle-shocked/);
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Psychic Terror (Psychic)"));
+  const neuroloids = unit.datasheet.abilities.find((ability) => ability.name === "Neuroloids");
+  assert.ok(neuroloids);
+  assert.match(neuroloids.description, /within 18 inches of this model’s unit/);
+  assert.match(neuroloids.description, /Until the start of your next Command phase/);
+  assert.match(neuroloids.description, /within Synapse Range of your army/);
 });
 
 test("Screamer-Killer includes its Deadly Demise 1 core ability", () => {
