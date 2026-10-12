@@ -927,6 +927,24 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ points: 165, condition: "Base unit cost; confirm current model-count options before final roster entry" }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hyperadapted-Raveners"]), reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:screamer-killer": Object.freeze({
+    defaultModelCount: 1,
+    defaultPoints: 125,
+    pointsOptions: Object.freeze([{ models: 1, points: 125, condition: "Base cost; additional-unit surcharge needs confirmation" }]),
+    dataSource: Object.freeze({ status: "points-reviewed", sourceName: "40k.app current Tyranids faction listing (points only)", sourceUrl: "https://www.40k.app/factions/tyranids", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", profileCompleteness: "points-only" })
+  }),
+  "tyranids:spore-mines": Object.freeze({
+    defaultPoints: 55,
+    pointsOptions: Object.freeze([{ points: 55, condition: "Current faction-listing baseline; model-count profile pending" }]),
+    dataSource: Object.freeze({ status: "points-reviewed", sourceName: "40k.app current Tyranids faction listing (points only)", sourceUrl: "https://www.40k.app/factions/tyranids", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", profileCompleteness: "points-only" })
+  }),
+  "tyranids:sporocyst": Object.freeze({
+    defaultModelCount: 1,
+    defaultPoints: 145,
+    pointsOptions: Object.freeze([{ models: 1, points: 145 }]),
+    dataSource: Object.freeze({ status: "points-reviewed", sourceName: "40k.app current Tyranids faction listing (points only)", sourceUrl: "https://www.40k.app/factions/tyranids", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending", profileCompleteness: "points-only" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
