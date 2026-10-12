@@ -37,6 +37,9 @@ test("state transitions progress a battle and record events", () => {
   assert.equal(state.phase, "start_turn");
   assert.equal(state.battle.status, "active");
   assert.equal(state.battle.firstPlayerId, "p1");
+  assert.equal(state.timers.turnClock.running, true);
+  assert.equal(state.timers.turnClock.activePlayerId, "p1");
+  assert.equal(state.timers.turnClock.startedAtMs, Date.now());
   assert.deepEqual(state.history.slice(-2).map((event) => event.type), [
     "battle.round_started",
     "turn.started"
