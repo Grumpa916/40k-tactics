@@ -224,6 +224,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 3, ap: 0, damage: 1 })
     ]),
     abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Neurocytes", description: "While this unit is within Synapse Range of a friendly Tyranids unit (excluding Neurogaunt units), it has the Synapse keyword." }),
       Object.freeze({ name: "Leader compatibility", description: "The reviewed datasheet listing allows a Neurotyrant to lead this unit." })
     ]),
@@ -967,7 +968,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Bio-plasmic scream", equipment: "Default", range: '18"', attacks: "D6+3", skill: "4+", strength: 8, ap: -2, damage: 1, abilities: "Assault, Blast" }),
       Object.freeze({ name: "Screamer-Killer talons", equipment: "Default", range: "Melee", attacks: 10, skill: "3+", strength: 10, ap: -2, damage: 3 })
     ]),
-    abilities: Object.freeze([Object.freeze({ name: "Death Scream", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test, subtracting 1 from that test." })]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),Object.freeze({ name: "Death Scream", description: "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks. That unit must take a Battle-shock test, subtracting 1 from that test." })]),
     defaultModelCount: 1, defaultPoints: 125,
     pointsOptions: Object.freeze([{ models: 1, points: 125 }, { models: 1, points: 135, condition: "2nd+ Screamer-Killer in army (+10 points)" }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Warhammer 40,000 11th Ed Tyranids datasheet listing", sourceUrl: "https://wh-rules.ru/factions/tyranids/datasheets/screamer-killer", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
@@ -977,6 +979,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     keywords: Object.freeze(["Spore Mines", "Great Devourer", "Fly", "Beast", "Tyranids"]),
     weapons: Object.freeze([]),
     abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Bio-minefield", description: "Enemy units cannot start or end an Advance move within 6 inches of this unit." }),
       Object.freeze({ name: "Floating Death", description: "Each time this unit or an enemy unit ends a move, for each model in this unit within 3 inches of one or more enemy units, select one of those enemy units. Destroy that Spore Mine; on a D6 roll of 2–5 the enemy unit suffers 1 mortal wound, and on a 6 it suffers D3 mortal wounds." })
     ]),
@@ -992,6 +995,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Flensing whips", equipment: "Default", range: "Melee", attacks: 6, skill: "4+", strength: 7, ap: -1, damage: 2 })
     ]),
     abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Seed Mucolids", description: "Once per turn in your Shooting phase, when selected to shoot, this unit can use this ability instead of making ranged attacks. Add one Mucolid Spores unit containing 1 model wholly within 18 inches of this model and more than 8 inches horizontally from enemy units." }),
       Object.freeze({ name: "Hive Defences", description: "You can target this model with Fire Overwatch for 0CP, even if you have already targeted a different unit with that Stratagem this turn. This model can only be targeted with that Stratagem once per turn." })
     ]),
