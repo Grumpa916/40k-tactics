@@ -42,6 +42,7 @@ function setup({ battle = null, scoring = {} } = {}) {
 
 test("planning map can expand to full screen and return without changing setup state", () => {
   const { root, session, listeners } = setup();
+  const stateBeforeFullscreen = session.getState();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
   assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
   assert.doesNotMatch(root.innerHTML, /battlefield-map-section is-fullscreen/);
@@ -62,7 +63,7 @@ test("planning map can expand to full screen and return without changing setup s
     }
   });
   assert.doesNotMatch(root.innerHTML, /battlefield-map-section is-fullscreen/);
-  assert.equal(session.getState().battlefieldMap.missionSetup.layout, "A");
+  assert.deepEqual(session.getState(), stateBeforeFullscreen);
   screen.destroy();
 });
 
