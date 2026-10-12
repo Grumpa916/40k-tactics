@@ -228,7 +228,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button></nav>';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
-    (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId) : "") + '</div>';
+    (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
 
   container.innerHTML = '<main class="battle-shell">' + reminderMarkup + battleShockReminderMarkup +
     '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
@@ -595,7 +595,7 @@ export function createBattleShell(container, {
     armyRosterPlayerId = playerId;
     const overlay = container.querySelector?.("[data-army-roster-overlay]");
     if (!overlay) return;
-    overlay.innerHTML = renderArmyRosterOverlay(session.getState(), playerId);
+    overlay.innerHTML = renderArmyRosterOverlay(session.getState(), playerId, gameData ?? {});
     overlay.hidden = false;
   }
 
