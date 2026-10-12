@@ -781,6 +781,14 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
   assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
 });
 
+test("Screamer-Killer includes its Deadly Demise 1 core ability", () => {
+  const unit = candidate("Screamer-Killer");
+  const deadlyDemise = unit.datasheet.abilities.find((ability) => ability.name === "Deadly Demise 1");
+  assert.ok(deadlyDemise);
+  assert.match(deadlyDemise.description, /On a 6/);
+  assert.match(deadlyDemise.description, /within 6 inches suffers 1 mortal wound/);
+});
+
 test("Every Tyranid profile includes the Synapse faction ability", () => {
   for (const name of [
     "Tyranid Prime with Lash Whip", "Raveners", "Hive Tyrant", "Neurotyrant",
