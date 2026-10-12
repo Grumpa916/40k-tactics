@@ -601,7 +601,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Maleceptor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/maleceptor", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:psychophage": Object.freeze({
-    characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 3 }),
+    characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 3, "Feel No Pain": "5+" }),
     keywords: Object.freeze(["Great Devourer", "Harvester", "Monster", "Psychophage", "Smoke"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Psychoclastic torrent", equipment: "Default", range: '12"', attacks: "D6", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Ignores Cover, Torrent" }),
@@ -609,6 +609,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Feel No Pain 5+", description: "Each time this model would lose a wound, roll one D6: on a 5+, that wound is not lost." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Bio-stimulus", description: "After this model shoots, select an enemy unit hit; until the end of the turn, friendly Tyranids melee attacks targeting it improve AP by 1. The same enemy unit can only be affected once per turn." }),
       Object.freeze({ name: "Feeding Frenzy", description: "Melee attacks targeting a unit below Starting Strength gain +1 to Hit; if the target is also Below Half-strength, they gain +1 to Wound." })
@@ -620,7 +621,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
   ,
   "tyranids:the-red-terror": Object.freeze({
     characteristics: Object.freeze({ Move: '10"', Toughness: 8, Save: "3+", Wounds: 9, Leadership: "8+", "Objective Control": 3 }),
-    keywords: Object.freeze(["Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "The Red Terror", "Vanguard Invader"]),
+    keywords: Object.freeze(["Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "Mobile", "The Red Terror", "Vanguard Invader"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Gaping maw", equipment: "Default", range: "Melee", attacks: 1, skill: "2+", strength: 5, ap: "—", damage: "D3+2", abilities: "Extra Attacks, Devastating Wounds, Precision" }),
       Object.freeze({ name: "Scything talons", equipment: "Default", range: "Melee", attacks: 12, skill: "2+", strength: 7, ap: -2, damage: 2 })
