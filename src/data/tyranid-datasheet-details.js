@@ -936,10 +936,10 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
   "tyranids:hyperadapted-raveners": Object.freeze({
     characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: "3 (Raveners); 6 (Ravener Prime)", Leadership: "8+ (Raveners); 7+ (Prime)", "Objective Control": 1 }),
     modelProfiles: Object.freeze([
-      Object.freeze({ name: "Ravener Prime", Move: '10"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1 }),
-      Object.freeze({ name: "Raveners", Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1 })
+      Object.freeze({ name: "Ravener Prime", Move: '10"', Toughness: 5, Save: "4+", Wounds: 6, Leadership: "7+", "Objective Control": 1, keywords: Object.freeze(["Character", "Synapse"]) }),
+      Object.freeze({ name: "Raveners", Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1, keywords: Object.freeze([]) })
     ]),
-    keywords: Object.freeze(["Infantry", "Character", "Fly", "Great Devourer", "Synapse", "Vanguard Invader", "Burrower", "Hyperadapted Raveners"]),
+    keywords: Object.freeze(["Infantry", "Great Devourer", "Vanguard Invader", "Burrowers", "Hyperadapted Raveners"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Venom bolt", equipment: "Default", range: '12"', attacks: "D6+3", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Assault, Ignores Cover, Torrent" }),
       Object.freeze({ name: "Prime claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Anti-Monster 5+, Anti-Vehicle 5+, Twin-linked" }),
@@ -947,7 +947,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deep Strike", description: "During an ingress move, if every model in this unit has Deep Strike, it can be set up anywhere on the battlefield more than 8 inches horizontally from all enemy units, including within the opponent's deployment zone." }),
-      Object.freeze({ name: "Shadow in the Warp", description: "Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Ravener Prime only. Once per battle, in either player's Command phase, if a unit from your army with this ability is on the battlefield, you can unleash it. Each enemy unit on the battlefield must take a Battle-shock test; subtract 1 from each such test if that enemy unit is within 6 inches of one or more SYNAPSE units from your army." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Leader", description: "The Ravener Prime leads the Hyperadapted Raveners unit." }),
       Object.freeze({ name: "Alpha Invader", description: "Weapons equipped by models in this unit have Sustained Hits 1." }),
@@ -958,7 +958,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ models: 5, points: 165, condition: "1st or 2nd Hyperadapted Raveners unit in the army" }),
       Object.freeze({ models: 5, points: 175, condition: "3rd+ Hyperadapted Raveners unit in the army (+10 points)" })
     ]),
-    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app points listing and current 11th-edition datasheet", sourceUrl: "https://www.40k.app/factions/tyranids", additionalSources: Object.freeze(["https://www.wahapedia.ru/wh40k11ed/factions/genestealer-cults/Hyperadapted-Raveners"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Hyperadapted Raveners datasheet)", sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf", additionalSources: Object.freeze(["https://www.40k.app/factions/tyranids", "https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Hyperadapted-Raveners"]), pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
   ,
   "tyranids:screamer-killer": Object.freeze({
