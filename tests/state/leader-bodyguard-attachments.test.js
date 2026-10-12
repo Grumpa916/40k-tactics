@@ -6,7 +6,7 @@ function fixture() {
   return { id: "roster", name: "Test", updatedAt: null, units: [
     { id: "leader", name: "Captain", datasheetId: "captain", dataSource: { status: "accepted" }, datasheet: { leader: { isLeader: true, allowedBodyguardDatasheetIds: ["intercessors"], compatibilityReview: { status: "cross-checked" } } } },
     { id: "bodyguard", name: "Intercessors", datasheetId: "intercessors", datasheet: { bodyguard: { canReceiveLeader: true, compatibilityReview: { status: "cross-checked" } } } },
-    { id: "bodyguard-2", name: "Intercessors 2", datasheetId: "intercessors", datasheet: { bodyguard: { canReceiveLeader: true } } },
+    { id: "bodyguard-2", name: "Intercessors 2", datasheetId: "intercessors", datasheet: { bodyguard: { canReceiveLeader: true, compatibilityReview: { status: "cross-checked" } } } },
     { id: "other", name: "Terminators", datasheetId: "terminators", datasheet: {} }
   ] };
 }
