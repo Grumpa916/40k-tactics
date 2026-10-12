@@ -166,7 +166,11 @@ export function renderUnitStatusPanel(state = {}, { openSections = {} } = {}) {
     '<p class="battle-context__note">Battle-shock tests are required for units that are currently Battle-shocked or at/below half-strength. Missing strength data is flagged for review, not guessed.</p>' +
     (eligible.length ? '<p class="battle-context__alert">' + eligible.length + ' unit(s) need Battle-shock attention.</p>' : '') +
     (needsReview.length ? '<p class="battle-context__note">' + needsReview.length + ' unit(s) need a manual strength check.</p>' : '') +
-    (rows ? '<ul class="battle-context__unit-list">' + rows + '</ul>' : '<p>No units have been added to this export function renderEventLogPanel(state = {}, { limit = 10, openSections = {} } = {}) {
+    (rows ? '<ul class="battle-context__unit-list">' + rows + '</ul>' : '<p>No units have been added to this battle.</p>') +
+    '</details>';
+}
+
+export function renderEventLogPanel(state = {}, { limit = 10, openSections = {} } = {}) {
   const history = Array.isArray(state.history) ? state.history : [];
   const visibleLimit = Math.max(1, limit);
   const recentEvents = history.slice(-visibleLimit).reverse();
