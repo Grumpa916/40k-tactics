@@ -12,6 +12,7 @@ import { createSupabaseBattleStore } from "../persistence/supabase-battle-store.
 import { createSupabaseArmyRosterStore } from "../persistence/supabase-army-roster-store.js";
 import { createArmyRosterPanel } from "./army-roster-panel.js";
 import { createShootingScreen } from "./shooting-screen.js";
+import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, renderArmyRosterOverlay } from "./battle-context-panels.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "live" },
@@ -42,7 +43,13 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false) {
+function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
+  gameData = null,
+  perspectivePlayerId = null,
+  leftPanelCollapsed = true,
+  rightPanelCollapsed = false,
+  armyRosterPlayerId = null
+} = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
     ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
@@ -50,12 +57,31 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const phaseItems = visiblePhases.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
-    return `<li class="battle-phase${active}">
-      <button type="button" class="battle-phase__button" data-battle-phase-button="${phase.id}" aria-pressed="${phase.id === viewedPhase}">
-        <strong>${phase.label}</strong><span>${phase.id === "setup" ? "Pre-game & cloud saves" : status}</span>
-      </button>
-    </li>`;
+    return '<li class="battle-phase' + active + '">' +
+      '<button type="button" class="battle-phase__button" data-battle-phase-button="' + phase.id +
+      '" aria-pressed="' + String(phase.id === viewedPhase) + '">' +
+      '<strong>' + phase.label + '</strong><span>' +
+      (phase.id === "setup" ? "Pre-game & cloud saves" : status) +
+      '</span></button></li>';
   }).join("");
+
+  const round = state.battle?.round ?? 0;
+  const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+  const players = Array.isArray(state.players) ? state.players : [];
+  const playerSummary = players.map((player) => {
+    const vp = Number.isFinite(state.victoryPoints?.[player.id]) ? state.victoryPoints[player.id] : 0;
+    const cpValue = state.commandPoints?.[player.id];
+    const cp = Number.isFinite(cpValue) ? cpValue :
+      Number.isFinite(cpValue?.current) ? cpValue.current : "—";
+    const active = player.id === activePlayerId ? " is-active" : "";
+    return '<div class="battle-shell__player-summary' + active + '">' +
+      '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
+      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span></div>';
+  }).join("");
+  const statusSummary = '<section class="battle-shell__status-summary" aria-label="Persistent score and Command Points">' +
+    '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
+    '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
+    '<div class="battle-shell__player-summaries">' + playerSummary + '</div></section>';
 
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
@@ -74,25 +100,55 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
       ).join("") +
       '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
     : "";
-  const reminderMarkup = scoringReminder ? `<div class="battle-scoring-reminder__backdrop">
-    <section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">
-      <h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>
-      <p>${escapeHtml(scoringReminder.label)}. Check any Primary or Secondary mission due now.</p>
-      <ul>${scoringReminder.missions.map((mission) => `<li>${escapeHtml(mission)}</li>`).join("") || "<li>Review your mission cards and confirm any points earned.</li>"}</ul>
-      ${tacticalDiscardForm}
-      <div class="battle-scoring-reminder__actions">
-        <button type="button" data-review-scoring>Review scoring</button>
-        <button type="button" data-dismiss-scoring-reminder>Remind me later</button>
-      </div>
-    </section>
-  </div>` : "";
-  container.innerHTML = `<main class="battle-shell">
-    ${reminderMarkup}
-    <ol class="battle-shell__phases" aria-label="Battle phase navigation">${phaseItems}</ol>
-    ${showCloud && viewedPhase === "setup" ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2><p>Sign in to save a battle before play or load a previous battle to resume it.</p><div data-supabase-auth-panel></div><div data-battle-persistence-panel></div><div data-army-roster-panel></div></section>' : ""}
-    <p class="battle-shell__view-note">Viewing ${phaseLabel(viewedPhase)}. Selecting a phase changes the screen view, not the recorded game phase.</p>
-    <section class="battle-shell__content" data-battle-screen></section>
-  </main>`;
+  const reminderMarkup = scoringReminder ? '<div class="battle-scoring-reminder__backdrop">' +
+    '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
+    '<h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>' +
+    '<p>' + escapeHtml(scoringReminder.label) + '. Check any Primary or Secondary mission due now.</p>' +
+    '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
+      '<li>Review your mission cards and confirm any points earned.</li>') + '</ul>' +
+    tacticalDiscardForm +
+    '<div class="battle-scoring-reminder__actions"><button type="button" data-review-scoring>Review scoring</button>' +
+    '<button type="button" data-dismiss-scoring-reminder>Remind me later</button></div></section></div>' : "";
+
+  const yourPlayerId = perspectivePlayerId ?? activePlayerId ?? players[0]?.id ?? null;
+  const opponentPlayerId = players.find((player) => player.id !== yourPlayerId)?.id ?? null;
+  const myName = players.find((player) => player.id === yourPlayerId)?.name ?? "My Army";
+  const opponentName = players.find((player) => player.id === opponentPlayerId)?.name ?? "Opponent Army";
+  const leftToggle = '<button type="button" class="battle-shell__panel-toggle" data-toggle-battle-panel="left" ' +
+    'aria-controls="battle-left-panel-body" aria-expanded="' + String(!leftPanelCollapsed) + '">' +
+    '<span data-panel-toggle-label>' + (leftPanelCollapsed ? '› Show status' : '‹ Hide status') + '</span></button>';
+  const rightToggle = '<button type="button" class="battle-shell__panel-toggle" data-toggle-battle-panel="right" ' +
+    'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
+    '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
+  const workspace = '<section class="battle-shell__workspace" data-battle-workspace data-left-collapsed="' +
+    String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
+    '<aside class="battle-shell__side-panel battle-shell__side-panel--left" data-battle-side-panel="left">' +
+    leftToggle + '<div id="battle-left-panel-body" class="battle-shell__panel-body" data-battle-context-body>' +
+    renderUnitStatusPanel(state) + renderEventLogPanel(state) + '</div></aside>' +
+    '<section class="battle-shell__content" data-battle-screen></section>' +
+    '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right">' +
+    rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
+    renderReferencePanel(state, gameData ?? {}, perspectivePlayerId) + '</div></aside></section>';
+  const armyDock = '<nav class="battle-shell__army-dock" aria-label="Open army rosters">' +
+    '<button type="button" data-open-army-roster="' + escapeHtml(yourPlayerId ?? "") + '"' +
+    (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong><span>' + escapeHtml(myName) + '</span></button>' +
+    '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
+    (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button></nav>';
+  const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
+    (armyRosterPlayerId ? "" : " hidden") + '>' +
+    (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId) : "") + '</div>';
+
+  container.innerHTML = '<main class="battle-shell">' + reminderMarkup +
+    '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
+    statusSummary +
+    (showCloud && viewedPhase === "setup"
+      ? '<section class="battle-shell__setup-tools" aria-label="Account and cloud battle saves"><h2>Account & Cloud Saves</h2>' +
+        '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
+        '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div><div data-army-roster-panel></div></section>'
+      : "") +
+    '<p class="battle-shell__view-note">Viewing ' + escapeHtml(phaseLabel(viewedPhase)) +
+    '. Selecting a phase changes the screen view, not the recorded game phase.</p>' +
+    workspace + armyDock + armyOverlay + '</main>';
 }
 
 export function createBattleShell(container, {
