@@ -417,7 +417,7 @@ test("All five remaining Tyranid Legends units have complete, labeled profiles",
 
 test("Infiltrators and all Deadly Demise variants have actionable descriptions", () => {
   const infiltrators = candidate("Lictor").datasheet.abilities.find((ability) => ability.name === "Infiltrators");
-  assert.match(infiltrators.description, /during deployment/);
+  assert.match(infiltrators.description, /During deployment/);
   assert.match(infiltrators.description, /more than 8 inches horizontally/);
 
   for (const [unitName, abilityName, amount] of [
