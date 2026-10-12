@@ -396,13 +396,15 @@ export function createBattleShell(container, {
   let missionOpenStates = {};
 
   function setupTabLabel(tab) {
-    return ({ "army-builder": "Step 1 of 4 · Army Builder", saves: "Step 2 of 4 · Saves",
-      "pre-game": "Step 3 of 4 · Pre-game", "mission-map": "Step 4 of 4 · Mission & Map" })[tab] ?? "Setup";
+    return ({ saves: "Account & Saves", "army-builder": "Step 1 of 4 · Select Armies & Game Size",
+      "pre-game": "Step 2 of 4 · Pre-game", "mission-map": "Step 3 of 4 · Mission & Secondaries",
+      battlefield: "Step 4 of 4 · Create the Battlefield", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
   }
 
   function setupContinueLabel(tab) {
-    return ({ "army-builder": "Continue to Saves", saves: "Continue to Pre-game",
-      "pre-game": "Continue to Mission & Map", "mission-map": "Back to Army Builder" })[tab] ?? "Continue";
+    return ({ saves: "Continue to Select Armies", "army-builder": "Continue to Pre-game",
+      "pre-game": "Continue to Mission & Secondaries", "mission-map": "Continue to Create the Battlefield",
+      battlefield: "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
   }
 
   function setSetupWorkspaceTab(tab) {
