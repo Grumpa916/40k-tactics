@@ -401,6 +401,212 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     pointsOptions: Object.freeze([{ models: 3, points: 60 }, { models: 6, points: 120 }]),
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Tyranid Warriors with Ranged Bio-weapons datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/tyranid-warriors-with-ranged-bio-weapons", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   })
+  ,
+  "tyranids:barbgaunts": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 4, Save: "4+", Wounds: 2, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Barbgaunts", "Great Devourer", "Infantry"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Barblauncher", equipment: "Default", range: '24"', attacks: "D6", skill: "4+", strength: 5, ap: 0, damage: 1, abilities: "Blast, Heavy" }),
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 1, skill: "4+", strength: 4, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Disruption Bombardment", description: "After this unit shoots, select an enemy Infantry unit hit; until the end of the opponent's next turn, subtract 2 from its Move and from its Advance and Charge rolls." })
+    ]),
+    defaultModelCount: 5, defaultPoints: 55,
+    pointsOptions: Object.freeze([{ models: 5, points: 55 }, { models: 10, points: 110 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Barbgaunts datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/barbgaunts", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:biovores": Object.freeze({
+    characteristics: Object.freeze({ Move: '5"', Toughness: 6, Save: "3+", Wounds: 5, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Biovores", "Great Devourer", "Infantry"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Spore Mine launcher", equipment: "Default", range: '48"', attacks: "D3", skill: "4+", strength: 6, ap: -1, damage: 2, abilities: "Blast, Devastating Wounds, Heavy, Indirect Fire" }),
+      Object.freeze({ name: "Chitin-barbed limbs", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 5, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Seed Spore Mines", description: "Once per turn in your Shooting phase, this unit can forgo ranged attacks to add one Spore Mines unit with one model per model in this unit, set up wholly within 48 inches and more than 8 inches from enemy units." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 60,
+    pointsOptions: Object.freeze([{ models: 1, points: 60 }, { models: 2, points: 100 }, { models: 3, points: 140 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Biovores datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/biovores", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:hive-guard": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 7, Save: "3+", Wounds: 4, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Great Devourer", "Hive Guard", "Infantry"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Shockcannon", equipment: "Default", range: '24"', attacks: 2, skill: "3+", strength: 7, ap: -1, damage: 3, abilities: "Anti-Vehicle 2+" }),
+      Object.freeze({ name: "Impaler cannon", equipment: "Wargear option", range: '36"', attacks: 4, skill: "4+", strength: 5, ap: -1, damage: 1, abilities: "Heavy, Indirect Fire" }),
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 3, skill: "4+", strength: 5, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Defensive Stance", description: "When targeted with Fire Overwatch, unmodified Hit rolls of 5+ score hits, or 4+ instead while within range of an objective marker you control." })
+    ]),
+    defaultModelCount: 3, defaultPoints: 80,
+    pointsOptions: Object.freeze([{ models: 3, points: 80 }, { models: 6, points: 160 }, { models: 3, points: 90, condition: "3rd+ Hive Guard unit in army (+10 points)" }, { models: 6, points: 170, condition: "3rd+ Hive Guard unit in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Hive Guard datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/hive-guard", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:neurolictor": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 5, Save: "4+", Wounds: 7, Leadership: "7+", "Objective Control": 1, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Great Devourer", "Infantry", "Neurolictor", "Synapse", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Piercing claws and talons", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 6, ap: -2, damage: 1, abilities: "Precision" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
+      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Feeder Tendrils", description: "Each time this model destroys an enemy Character model, you gain 1CP." }),
+      Object.freeze({ name: "Neural Disruption", description: "In your Command phase, select one enemy unit within 12 inches; it must take a Battle-shock test." }),
+      Object.freeze({ name: "Psychological Saboteur", description: "While a Battle-shocked enemy unit is within 12 inches, subtract 1 from its Hit rolls and add 1 to Wound rolls for friendly Tyranids attacks targeting it." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 80,
+    pointsOptions: Object.freeze([{ models: 1, points: 80 }, { models: 1, points: 90, condition: "3rd+ Neurolictor in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Neurolictor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/neurolictor", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:pyrovores": Object.freeze({
+    characteristics: Object.freeze({ Move: '5"', Toughness: 6, Save: "3+", Wounds: 5, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Great Devourer", "Harvester", "Infantry", "Pyrovores"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Flamespurt", equipment: "Default", range: '12"', attacks: "D6+1", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Ignores Cover, Torrent, Twin-linked" }),
+      Object.freeze({ name: "Chitin-barbed limbs", equipment: "Default", range: "Melee", attacks: 2, skill: "4+", strength: 5, ap: 0, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Burning Spray", description: "After this unit shoots, select an enemy unit hit; until the end of the phase, that unit cannot have the Benefit of Cover." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 45,
+    pointsOptions: Object.freeze([{ models: 1, points: 45 }, { models: 2, points: 65 }, { models: 3, points: 95 }, { models: 1, points: 55, condition: "3rd+ Pyrovore unit in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Pyrovores datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/pyrovores", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:von-ryans-leapers": Object.freeze({
+    characteristics: Object.freeze({ Move: '10"', Toughness: 5, Save: "4+", Wounds: 3, Leadership: "8+", "Objective Control": 1, "Invulnerable save": "6+" }),
+    keywords: Object.freeze(["Great Devourer", "Infantry", "Vanguard Invader", "Von Ryan's Leapers"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Leaper's talons", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 5, ap: -1, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Fights First", description: "This unit is eligible to fight in the Fights First step." }),
+      Object.freeze({ name: "Infiltrators", description: "This unit can be deployed using the Infiltrators ability." }),
+      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Pouncing Leap", description: "This unit can be targeted with Heroic Intervention regardless of other uses this phase; that use costs 1 fewer CP and does not prevent uses on other units." })
+    ]),
+    defaultModelCount: 3, defaultPoints: 55,
+    pointsOptions: Object.freeze([{ models: 3, points: 55 }, { models: 6, points: 105 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Von Ryan's Leapers datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/von-ryans-leapers", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:ripper-swarms": Object.freeze({
+    characteristics: Object.freeze({ Move: '6"', Toughness: 2, Save: "6+", Wounds: 4, Leadership: "8+", "Objective Control": 0 }),
+    keywords: Object.freeze(["Great Devourer", "Harvester", "Ripper Swarms", "Swarm"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Chitinous claws and teeth", equipment: "Default", range: "Melee", attacks: 6, skill: "5+", strength: 2, ap: 0, damage: 1, abilities: "Sustained Hits 1" }),
+      Object.freeze({ name: "Spinemaws", equipment: "Wargear option", range: '6"', attacks: 4, skill: "5+", strength: 3, ap: 0, damage: 1, abilities: "Pistol" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Chitinous Horrors", description: "While an enemy unit is within Engagement Range of this unit, halve the Objective Control characteristic of models in that enemy unit." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 30,
+    pointsOptions: Object.freeze([{ models: 1, points: 30 }, { models: 2, points: 40 }, { models: 3, points: 50 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Ripper Swarms datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/ripper-swarms", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:parasite-of-mortrex": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 5, Save: "4+", Wounds: 5, Leadership: "8+", "Objective Control": 1 }),
+    keywords: Object.freeze(["Character", "Fly", "Great Devourer", "Infantry", "Parasite of Mortrex", "Synapse", "Vanguard Invader"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Barbed ovipositor", equipment: "Default", range: "Melee", attacks: 1, skill: "2+", strength: 3, ap: -2, damage: 3, abilities: "Anti-Infantry 3+, Extra Attacks" }),
+      Object.freeze({ name: "Clawed limbs", equipment: "Default", range: "Melee", attacks: 6, skill: "2+", strength: 5, ap: -1, damage: 1 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
+      Object.freeze({ name: "Lone Operative", description: "Ranged attacks can only target this unit if the attacking model is within 12 inches, subject to the current rule's exceptions." }),
+      Object.freeze({ name: "Stealth", description: "Subtract 1 from Hit rolls for ranged attacks targeting this unit." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Parasitic Infection", description: "When an Infantry model is destroyed by this model's barbed ovipositor, add a Ripper Swarms unit with D3 models within 3 inches; it can be set up within Engagement Range of the destroyed model's unit, but not other enemy units." }),
+      Object.freeze({ name: "It Itches!", description: "At the start of the Fight phase, select one enemy unit within Engagement Range; it must take a Battle-shock test." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 70,
+    pointsOptions: Object.freeze([{ models: 1, points: 70 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Parasite of Mortrex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/parasite-of-mortrex", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:exocrine": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 10, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
+    keywords: Object.freeze(["Exocrine", "Great Devourer", "Monster"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Bio-plasmic cannon", equipment: "Default", range: '36"', attacks: "D6+3", skill: "3+", strength: 9, ap: -3, damage: 3, abilities: "Blast, Heavy" }),
+      Object.freeze({ name: "Powerful limbs", equipment: "Default", range: "Melee", attacks: 3, skill: "3+", strength: 7, ap: 0, damage: 2 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Symbiotic Targeting", description: "After this model shoots, select an enemy unit hit; until the end of the phase, friendly Tyranids attacks targeting that unit can re-roll a Hit roll of 1." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 140,
+    pointsOptions: Object.freeze([{ models: 1, points: 140 }, { models: 1, points: 150, condition: "3rd+ Exocrine in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Exocrine datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/exocrine", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:haruspex": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 11, Save: "3+", Wounds: 14, Leadership: "8+", "Objective Control": 4 }),
+    keywords: Object.freeze(["Great Devourer", "Haruspex", "Harvester", "Monster"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Grasping tongue", equipment: "Default", range: '12"', attacks: 1, skill: "3+", strength: 6, ap: -2, damage: "D6+1", abilities: "Precision" }),
+      Object.freeze({ name: "Ravenous maw", equipment: "Default", range: "Melee", attacks: 14, skill: "3+", strength: 7, ap: -1, damage: 2 }),
+      Object.freeze({ name: "Shovelling claws", equipment: "Default", range: "Melee", attacks: 4, skill: "3+", strength: 14, ap: -2, damage: "D6+1", abilities: "Extra Attacks" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Grisly Spectacle", description: "After this model fights, if it destroyed one or more enemy units, each enemy unit within 6 inches must take a Battle-shock test." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 125,
+    pointsOptions: Object.freeze([{ models: 1, points: 125 }, { models: 1, points: 135, condition: "3rd+ Haruspex in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Haruspex datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/haruspex", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:maleceptor": Object.freeze({
+    characteristics: Object.freeze({ Move: '8"', Toughness: 11, Save: "3+", Wounds: 14, Leadership: "7+", "Objective Control": 4, "Invulnerable save": "4+" }),
+    keywords: Object.freeze(["Great Devourer", "Maleceptor", "Monster", "Psyker", "Synapse"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Psychic overload", equipment: "Default", range: '18"', attacks: "D6+3", skill: "3+", strength: 10, ap: -2, damage: 3, abilities: "Blast, Psychic" }),
+      Object.freeze({ name: "Massive scything talons (strike)", equipment: "Default", range: "Melee", attacks: 3, skill: "3+", strength: 9, ap: -2, damage: "D6+1" }),
+      Object.freeze({ name: "Massive scything talons (sweep)", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 7, ap: -1, damage: 2 })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Encephalic Diffusion", description: "While an enemy unit is within 6 inches, subtract 1 from its Hit rolls; if it is Below Half-strength, subtract 1 from its Wound rolls as well." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 190,
+    pointsOptions: Object.freeze([{ models: 1, points: 190 }, { models: 1, points: 200, condition: "3rd+ Maleceptor in army (+10 points)" }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Maleceptor datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/maleceptor", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  }),
+  "tyranids:psychophage": Object.freeze({
+    characteristics: Object.freeze({ Move: '12"', Toughness: 9, Save: "3+", Wounds: 10, Leadership: "8+", "Objective Control": 3, "Feel No Pain": "5+" }),
+    keywords: Object.freeze(["Great Devourer", "Harvester", "Monster", "Psychophage", "Smoke"]),
+    weapons: Object.freeze([
+      Object.freeze({ name: "Psychoclastic torrent", equipment: "Default", range: '12"', attacks: "D6", skill: "—", strength: 6, ap: -1, damage: 1, abilities: "Ignores Cover, Torrent" }),
+      Object.freeze({ name: "Talons and betentacled maw", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 6, ap: -2, damage: 2, abilities: "Anti-Psyker 4+, Devastating Wounds" })
+    ]),
+    abilities: Object.freeze([
+      Object.freeze({ name: "Deadly Demise 1", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
+      Object.freeze({ name: "Feel No Pain 5+", description: "This model has Feel No Pain 5+." }),
+      Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
+      Object.freeze({ name: "Bio-stimulus", description: "After this model shoots, select an enemy unit hit; until the end of the turn, friendly Tyranids melee attacks targeting it improve AP by 1. The same enemy unit can only be affected once per turn." }),
+      Object.freeze({ name: "Feeding Frenzy", description: "Melee attacks targeting a unit below Starting Strength gain +1 to Hit; if the target is also Below Half-strength, they gain +1 to Wound." })
+    ]),
+    defaultModelCount: 1, defaultPoints: 110,
+    pointsOptions: Object.freeze([{ models: 1, points: 110 }]),
+    dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Psychophage datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/psychophage", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
+  })
 });
 
 export function getTyranidDatasheetDetails(datasheetId) {
