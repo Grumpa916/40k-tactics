@@ -198,17 +198,17 @@ export function createBattleSetupScreen(container, {
     const target = event.target?.closest?.("[data-setup-fixed-add]");
     if (!target || !container.contains(target)) return;
     const state = session.getState();
+    const playerId = container.querySelector("[data-setup-secondary-player]")?.value || selectedPlayerId;
     if (state.battle) {
       message = "Fixed secondary cards must be selected before the battle starts.";
       render();
       return;
     }
-    if (getSecondaryMissionMode(state, playerId) !== "fixed") {
+    if (!playerId || getSecondaryMissionMode(state, playerId) !== "fixed") {
       message = "Choose Fixed mode for this player before selecting Fixed secondary cards.";
       render();
       return;
     }
-    const playerId = container.querySelector("[data-setup-secondary-player]")?.value || selectedPlayerId;
     const definitionId = container.querySelector("[data-setup-secondary-definition]")?.value;
     const manualName = String(container.querySelector("[data-setup-secondary-name]")?.value ?? "").trim();
     const manualTiming = container.querySelector("[data-setup-secondary-timing]")?.value;
