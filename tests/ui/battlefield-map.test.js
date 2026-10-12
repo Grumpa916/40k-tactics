@@ -142,3 +142,25 @@ test("live game status is not invented when there is no active battle", () => {
   const html = renderBattlefieldMap({ units: [] }, { mode: "live" });
   assert.doesNotMatch(html, /data-map-game-status/);
 });
+
+test("planning and deployment maps stage unplaced units as selectable markers", () => {
+  const state = {
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [
+      { id: "friendly", ownerId: "p1", name: "Friendly Unit", status: "reserves" },
+      { id: "enemy", ownerId: "p2", name: "Opponent Unit", status: "reserves" },
+      { id: "reserve", ownerId: "p1", name: "Declared Reserve", status: "reserves" }
+    ],
+    battlefieldMap: { deploymentPlan: {}, actualDeployment: {}, declaredReserves: { reserve: true } }
+  };
+  const planning = renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: "p1", selectedUnitId: "friendly" });
+  assert.match(planning, /data-map-unit-id="friendly"/);
+  assert.match(planning, /data-map-unit-unplaced="true"/);
+  assert.match(planning, /is-selected/);
+  assert.doesNotMatch(planning, /data-map-unit-id="enemy"/);
+
+  const deployment = renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: "p1" });
+  assert.match(deployment, /data-map-unit-id="friendly"/);
+  assert.match(deployment, /data-map-unit-id="enemy"/);
+  assert.doesNotMatch(deployment, /data-map-unit-id="reserve"/);
+});
