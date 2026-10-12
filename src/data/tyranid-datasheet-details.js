@@ -26,17 +26,18 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Alpha Warrior", description: "Weapons equipped by models in this model's unit have Sustained Hits 1." }),
-      Object.freeze({ name: "Aggressive Leader-beast", description: "In the opponent's Shooting phase, if a model in this unit is destroyed by an enemy unit's attacks, this unit can make a surge move of up to D6 inches." })
+      Object.freeze({ name: "Aggressive Leader-beast", description: "In your opponent's Shooting phase, when an enemy unit has shot, if a model in this unit was destroyed by those attacks, this unit can make a surge move of up to D6 inches." })
     ]),
     defaultModelCount: 1,
     defaultPoints: 75,
     pointsOptions: Object.freeze([{ models: 1, points: 75, condition: "1 model" }]),
     dataSource: Object.freeze({
       status: "source-reviewed",
-      sourceName: "40k.app Tyranid Prime with Lash Whip datasheet",
-      sourceUrl: "https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip",
+      sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Tyranid Prime with Lash Whip datasheet)",
+      sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf",
+      additionalSources: Object.freeze(["https://www.40k.app/factions/tyranids/units/tyranid-prime-with-lash-whip"]),
       pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT,
-      officialRulesCrossCheck: "pending"
+      officialRulesCrossCheck: "verified"
     })
   }),
   "tyranids:raveners": Object.freeze({
@@ -48,14 +49,14 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Leadership: "8+",
       "Objective Control": 1
     }),
-    keywords: Object.freeze(["Burrower", "Great Devourer", "Infantry", "Raveners"]),
+    keywords: Object.freeze(["Burrowers", "Great Devourer", "Infantry", "Raveners", "Vanguard Invader"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Ravener claws and talons", range: "Melee", attacks: 3, skill: "3+", strength: 5, ap: -2, damage: 2, abilities: "Twin-linked" })
     ]),
     abilities: Object.freeze([
       Object.freeze({ name: "Deep Strike", description: "This unit can be set up using the Deep Strike rules." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Death From Below", description: "At the end of the opponent's turn, if this unit is not within Engagement Range of an enemy unit, it can be removed from the battlefield and placed into Strategic Reserves." })
+      Object.freeze({ name: "Death from Below", description: "At the end of your opponent's turn, if this unit is not within Engagement Range of one or more enemy units, you can remove it from the battlefield and place it into Strategic Reserves." })
     ]),
     defaultModelCount: 5,
     defaultPoints: 125,
@@ -65,10 +66,11 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     ]),
     dataSource: Object.freeze({
       status: "source-reviewed",
-      sourceName: "40k.app Raveners datasheet",
-      sourceUrl: "https://www.40k.app/factions/tyranids/units/raveners",
+      sourceName: "Games Workshop Tyranids Faction Pack v1.0 (11th edition; Raveners datasheet)",
+      sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf",
+      additionalSources: Object.freeze(["https://www.40k.app/factions/tyranids/units/raveners"]),
       pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT,
-      officialRulesCrossCheck: "pending"
+      officialRulesCrossCheck: "verified"
     })
   }),
   "tyranids:hive-tyrant": Object.freeze({
