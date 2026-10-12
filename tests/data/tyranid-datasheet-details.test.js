@@ -790,6 +790,20 @@ test("Tyranid datasheet abilities match current official FAQ timing and targetin
   assert.match(blisteringAssault.description, /lost a wound as a result of those attacks/);
 });
 
+test("Maleceptor and Zoanthropes preserve Aura/Psychic tags and Spirit Leech range", () => {
+  const maleceptor = candidate("Maleceptor");
+  const diffusion = maleceptor.datasheet.abilities.find((ability) => ability.name === "Encephalic Diffusion (Aura, Psychic)");
+  assert.ok(diffusion);
+  assert.match(diffusion.description, /within 6 inches of this model/);
+
+  const zoanthropes = candidate("Zoanthropes");
+  const leech = zoanthropes.datasheet.abilities.find((ability) => ability.name === "Spirit Leech (Aura, Psychic)");
+  assert.ok(leech);
+  assert.match(leech.description, /within 6 inches of this unit/);
+  assert.match(leech.description, /if this unit contains a Neurothrope/);
+  assert.ok(zoanthropes.datasheet.abilities.some((ability) => ability.name === "Warp Field (Aura, Psychic)"));
+});
+
 test("Neurolictor, Deathleaper, and Tervigon preserve official Aura ability tags", () => {
   const neurolictor = candidate("Neurolictor");
   const saboteur = neurolictor.datasheet.abilities.find((ability) => ability.name === "Psychological Saboteur (Aura)");
