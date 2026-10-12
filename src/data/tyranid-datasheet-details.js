@@ -87,7 +87,8 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, when a friendly Tyranids unit within 12 inches is targeted with a Stratagem, reduce that usage's CP cost by 1." })
+      Object.freeze({ name: "Will of the Hive Mind", description: "Once per battle round, when a friendly Tyranids unit within 12 inches is targeted with a Stratagem, reduce that usage's CP cost by 1." }),
+      Object.freeze({ name: "Onslaught", description: "While a friendly Tyranids unit is within 6 inches of this model, ranged weapons equipped by models in that unit have Assault and Lethal Hits." })
     ]),
     defaultModelCount: 1,
     defaultPoints: 195,
@@ -152,14 +153,13 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
     dataSource: Object.freeze({ status: "source-reviewed", sourceName: "40k.app Broodlord datasheet", sourceUrl: "https://www.40k.app/factions/tyranids/units/broodlord", pointsSourceName: "Games Workshop Munitorum Field Manual v1.5 (2026-09-30)", pointsSourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/", reviewedAt: REVIEWED_AT, officialRulesCrossCheck: "pending" })
   }),
   "tyranids:old-one-eye": Object.freeze({
-    characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "2+", Wounds: 9, Leadership: "8+", "Objective Control": 3, "Feel No Pain": "5+" }),
+    characteristics: Object.freeze({ Move: '8"', Toughness: 9, Save: "2+", Wounds: 9, Leadership: "8+", "Objective Control": 3 }),
     keywords: Object.freeze(["Character", "Epic Hero", "Great Devourer", "Monster", "Old One Eye"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Old One Eye's claws and talons (strike)", equipment: "Default", range: "Melee", attacks: 6, skill: "3+", strength: 14, ap: -3, damage: "D6+1" }),
       Object.freeze({ name: "Old One Eye's claws and talons (sweep)", equipment: "Default", range: "Melee", attacks: 12, skill: "3+", strength: 6, ap: -1, damage: 1 })
     ]),
     abilities: Object.freeze([
-      Object.freeze({ name: "Feel No Pain 5+", description: "This model has Feel No Pain 5+." }),
       Object.freeze({ name: "Leader", description: "Can lead Carnifexes, according to the reviewed datasheet listing." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Alpha Leader", description: "While leading a unit, each time a model in that unit makes an attack, you can re-roll the Hit roll." }),
@@ -594,7 +594,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Deadly Demise D3", description: "When destroyed, this model can inflict mortal wounds as described by the current rule." }),
       Object.freeze({ name: "Shadow in the Warp", description: "Tyranid faction ability; consult current rules for its full effect." }),
       Object.freeze({ name: "Synapse", description: "Tyranid faction ability; consult current rules for its full effect." }),
-      Object.freeze({ name: "Encephalic Diffusion", description: "While an enemy unit is within 6 inches, subtract 1 from its Hit rolls; if it is Below Half-strength, subtract 1 from its Wound rolls as well." })
+      Object.freeze({ name: "Encephalic Diffusion", description: "While an enemy unit is within 6 inches of this model, each time a model in that unit makes an attack, subtract 1 from the Hit roll, and, if that enemy unit is Below Half-strength, subtract 1 from the Wound roll as well." })
     ]),
     defaultModelCount: 1, defaultPoints: 180,
     pointsOptions: Object.freeze([{ models: 1, points: 180, condition: "1st–2nd Maleceptor in army" }, { models: 1, points: 190, condition: "3rd+ Maleceptor in army (+10 points)" }]),

@@ -449,6 +449,19 @@ test("Imperial Armour profiles match current official Frame keywords and damaged
   assert.match(damaged.description, /subtract 6 from this model’s Objective Control characteristic/);
 });
 
+test("Hive Tyrant includes Onslaught and Old One Eye has no unsupported Feel No Pain profile", () => {
+  const hiveTyrant = candidate("Hive Tyrant");
+  const onslaught = hiveTyrant.datasheet.abilities.find((ability) => ability.name === "Onslaught");
+  assert.ok(onslaught);
+  assert.match(onslaught.description, /Assault and Lethal Hits/);
+
+  const oldOneEye = candidate("Old One Eye");
+  assert.equal(oldOneEye.datasheet.characteristics["Feel No Pain"], undefined);
+  assert.ok(!oldOneEye.datasheet.abilities.some((ability) => ability.name === "Feel No Pain 5+"));
+  assert.ok(oldOneEye.datasheet.abilities.some((ability) => ability.name === "Alpha Leader"));
+  assert.ok(oldOneEye.datasheet.abilities.some((ability) => ability.name === "Unstoppable Monster"));
+});
+
 test("Tyranid Prime with Lash Whip matches current official datasheet", () => {
   const unit = candidate("Tyranid Prime with Lash Whip");
   assert.deepEqual(unit.datasheet.characteristics, {
