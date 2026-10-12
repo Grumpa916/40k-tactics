@@ -41,7 +41,7 @@ test("Neurotyrant profile includes verified attachment targets and sourced detai
   assert.equal(unit.defaultPoints, 120);
   assert.equal(unit.datasheet.characteristics.Wounds, 9);
   assert.ok(unit.datasheet.weapons.some((weapon) => weapon.name === "Psychic scream"));
-  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash"));
+  assert.ok(unit.datasheet.abilities.some((ability) => ability.name === "Node Lash (Psychic)"));
   assert.deepEqual([...unit.datasheet.leader.allowedBodyguardDatasheetIds].sort(), [
     "tyranids:neurogaunts", "tyranids:tyrant-guard", "tyranids:zoanthropes"
   ]);
