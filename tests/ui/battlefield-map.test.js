@@ -203,7 +203,7 @@ test("Layout A terrain setup derives edge guides from the selected terrain geome
   assert.match(html, /Event Companion layout A · p\\. 27/);
   assert.match(html, /data-terrain-corner=/);
   assert.match(html, /data-edge-distance=/);
-  assert.doesNotMatch(html, />999&quot;<\\/text>/);
+  assert.doesNotMatch(html, />999&quot;<\/text>/);
 });
 
 test("planning and deployment maps stage unplaced units as selectable markers", () => {
@@ -271,8 +271,8 @@ test("terrain setup displays stored Event Companion labels without recalculating
   assert.match(html, /Terrain placement reference/);
   assert.match(html, /aria-label="Original Event Companion terrain measurements"/);
   assert.match(html, /data-source-x="-3.45" data-source-y="9.16"/);
-  assert.match(html, />26&quot;<\\/text>/);
-  assert.match(html, />5&quot;<\\/text>/);
+  assert.match(html, />26&quot;<\/text>/);
+  assert.match(html, />5&quot;<\/text>/);
   assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
   assert.doesNotMatch(html, /data-edge-distance=/);
   assert.doesNotMatch(html, /data-terrain-corner=/);
@@ -301,8 +301,8 @@ test("terrain measurement labels retain source values and positions only", () =>
       { value: '7"', x: 30, y: 20 }
     ]
   });
-  assert.match(html, />12&quot;<\\/text>/);
-  assert.match(html, />7&quot;<\\/text>/);
+  assert.match(html, />12&quot;<\/text>/);
+  assert.match(html, />7&quot;<\/text>/);
   assert.match(html, /data-source-x="20" data-source-y="15"/);
   assert.match(html, /data-source-x="30" data-source-y="20"/);
   assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
