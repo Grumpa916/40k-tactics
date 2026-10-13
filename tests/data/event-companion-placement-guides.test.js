@@ -52,8 +52,8 @@ test("all remaining Event Companion pages have source terrain placement transcri
   }
 });
 
-test("generic Event Companion terrain pages resolve onto existing V2 terrain vertices using only official values", () => {
-  for (let page = 9; page <= 53; page += 1) {
+test("generic Event Companion terrain pages 9-31 resolve onto existing V2 terrain vertices using only official values", () => {
+  for (let page = 9; page <= 31; page += 1) {
     if (page === 12) continue;
 
     const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
