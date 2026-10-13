@@ -66,9 +66,9 @@ function selectedLayoutGeometry(state) {
   return getEventCompanionMapLayout(missions.myMission, missions.opponentMission, setup.layout);
 }
 
-function geometryOverlay(geometry) {
+function geometryOverlay(geometry, terrainOnly = false) {
   if (!geometry?.verified) return "";
-  const zones = Object.entries(geometry.deploymentZones ?? {}).map(([name, shape]) => {
+  const zones = terrainOnly ? "" : Object.entries(geometry.deploymentZones ?? {}).map(([name, shape]) => {
     const points = (shape.points ?? []).map((point) => point.x + "," + (44 - point.y)).join(" ");
     return '<polygon class="battlefield-map__zone" data-zone="' + escapeHtml(name) +
       '" points="' + points + '" aria-label="Deployment zone ' + escapeHtml(name) + '"></polygon>';
@@ -83,71 +83,19 @@ function geometryOverlay(geometry) {
 }
 function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
-  const entries = Object.entries(geometry.terrainGeometry).filter(([, shape]) =>
-    Array.isArray(shape?.points) && shape.points.length >= 3);
-  const useExactLabels = Array.isArray(exactMeasurements) && exactMeasurements.length > 0;
-  const fmt = (number) => {
-    const value = Math.round(Number(number) * 10) / 10;
-    return Number.isInteger(value) ? String(value) : value.toFixed(1);
-  };
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  const line = (x1, y1, x2, y2, className = "battlefield-map__dimension-line") =>
-    '<line class="' + className + '" x1="' + px(x1) + '" y1="' + py(y1) +
-    '" x2="' + px(x2) + '" y2="' + py(y2) + '"/>';
-  const label = (x, y, value, anchor = "middle") =>
+  const label = (x, y, value) =>
     '<text class="battlefield-map__dimension-text" x="' + px(x) + '" y="' + py(y) +
-    '" text-anchor="' + anchor + '">' + escapeHtml(value) + '</text>';
-  const parts = [];
-  entries.forEach(([key, shape], index) => {
-    const points = shape.points.map((point) => ({ x: Number(point.x), y: Number(point.y) }));
-    if (!points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))) return;
-    const xs = points.map((point) => point.x), ys = points.map((point) => point.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
-    parts.push('<polygon class="battlefield-map__measurement-box" points="' +
-      points.map((point) => px(point.x) + ',' + py(point.y)).join(' ') + '"/>');
-
-    // Dimension leaders use the exact verified footprint geometry. When source-verified
-    // measurement labels are available, display them unchanged instead of recomputing values.
-    const left = minX, right = 60 - maxX;
-    const horizontalSide = left <= right ? "LEFT" : "RIGHT";
-    const horizontalDistance = horizontalSide === "LEFT" ? left : right;
-    if (horizontalDistance > 0.05) {
-      const edgeX = horizontalSide === "LEFT" ? 0 : 60;
-      const terrainX = horizontalSide === "LEFT" ? minX : maxX;
-      const y = Math.max(1.4, Math.min(42.6, centerY + ((index % 3) - 1) * 1.2));
-      parts.push(
-        line(edgeX, y, terrainX, y, "battlefield-map__edge-dimension-line"),
-        line(edgeX, y - 0.55, edgeX, y + 0.55, "battlefield-map__dimension-tick"),
-        line(terrainX, y - 0.55, terrainX, y + 0.55, "battlefield-map__dimension-tick")
-      );
-      if (!useExactLabels) parts.push(label((edgeX + terrainX) / 2, y - 0.72, fmt(horizontalDistance) + '″'));
-    }
-    const bottom = minY, top = 44 - maxY;
-    const verticalSide = top <= bottom ? "TOP" : "BOTTOM";
-    const verticalDistance = verticalSide === "TOP" ? top : bottom;
-    if (verticalDistance > 0.05) {
-      const edgeY = verticalSide === "TOP" ? 44 : 0;
-      const terrainY = verticalSide === "TOP" ? maxY : minY;
-      const x = Math.max(1.4, Math.min(58.6, centerX + (((index + 1) % 3) - 1) * 1.2));
-      parts.push(
-        line(x, edgeY, x, terrainY, "battlefield-map__edge-dimension-line"),
-        line(x - 0.55, edgeY, x + 0.55, edgeY, "battlefield-map__dimension-tick"),
-        line(x - 0.55, terrainY, x + 0.55, terrainY, "battlefield-map__dimension-tick")
-      );
-      if (!useExactLabels) parts.push(label(x, (edgeY + terrainY) / 2, fmt(verticalDistance) + '″', x < centerX ? "end" : "start"));
-    }
-  });
-  if (useExactLabels) {
-    exactMeasurements.filter((item) =>
-      item && typeof item.value === "string" &&
-      Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
-    ).forEach((item) => parts.push(label(Number(item.x), Number(item.y), item.value)));
-  }
+    '" text-anchor="middle">' + escapeHtml(value) + '</text>';
+  // Use only the source-verified Event Companion callouts. Do not draw independently
+  // calculated leaders: those leaders can point somewhere different from the source labels.
+  const parts = (Array.isArray(exactMeasurements) ? exactMeasurements : []).filter((item) =>
+    item && typeof item.value === "string" &&
+    Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
+  ).map((item) => label(Number(item.x), Number(item.y), item.value));
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Battlefield edge to terrain placement dimensions">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain to battlefield edge measurements">' + parts.join("") + '</svg>'
     : "";
 }
 
@@ -337,7 +285,7 @@ export function renderBattlefieldMap(state, {
       '</div><div class="battlefield-map__ruler battlefield-map__ruler--left" aria-label="Vertical inch measurements">' +
       [0,10,20,30,40,44].map((inch) => '<span style="top:' + ((44 - inch) / 44 * 100) + '%">' + inch + '″</span>').join("") +
       '</div>' : '') +
-    geometryOverlay(layoutGeometry) + terrainMeasurementOverlay + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
+    geometryOverlay(layoutGeometry, showTerrainEdgeMeasurements) + terrainMeasurementOverlay + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
     (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') +
     '</div>' + (showUnits
       ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span>' +
