@@ -85,16 +85,31 @@ function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  // Render only the extracted source callouts. Do not infer measurement endpoints
-  // from label proximity or value; the source coordinates do not encode endpoints.
-  const parts = (Array.isArray(exactMeasurements) ? exactMeasurements : []).filter((item) =>
-    item && typeof item.value === "string" &&
-    Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
+  const measurements = Array.isArray(exactMeasurements) ? exactMeasurements : [];
+  const validPoint = (x, y) => Number.isFinite(Number(x)) && Number.isFinite(Number(y));
+  const lines = measurements.filter((item) =>
+    item && validPoint(item.x1, item.y1) && validPoint(item.x2, item.y2)
+  ).map((item) => {
+    const x1 = px(item.x1), y1 = py(item.y1), x2 = px(item.x2), y2 = py(item.y2);
+    const line = '<line class="battlefield-map__dimension-line" data-source-measurement="' +
+      escapeHtml(item.value ?? "") + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>';
+    const tick = (x, y, vertical) => {
+      const half = 0.65;
+      return '<line class="battlefield-map__dimension-tick" x1="' + (vertical ? x - half : x) +
+        '" y1="' + (vertical ? y : y - half) + '" x2="' + (vertical ? x + half : x) +
+        '" y2="' + (vertical ? y : y + half) + '"></line>';
+    };
+    const vertical = Math.abs(x2 - x1) < Math.abs(y2 - y1);
+    return line + tick(x1, y1, vertical) + tick(x2, y2, vertical);
+  });
+  const labels = measurements.filter((item) =>
+    item && typeof item.value === "string" && validPoint(item.x, item.y)
   ).map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) +
     '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) +
     '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
+  const parts = [...lines, ...labels];
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain to battlefield edge measurements">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain measurements">' + parts.join("") + '</svg>'
     : "";
 }
 
