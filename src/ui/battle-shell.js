@@ -204,7 +204,7 @@ function setupTabLabel(tab) {
 function setupContinueLabel(tab) {
   return ({ saves: "Continue to Select Armies", "army-builder": "Back to Select Armies", "army-selection": "Continue to Mission & Planning",
     "pre-game": "Continue to Terrain Setup", battlefield: "Continue to Pre-First Turn",
-    "mission-map": "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
+    "mission-map": "Continue", deployment: "Deploy and Begin" })[tab] ?? "Continue";
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
@@ -337,7 +337,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
             '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section>' +
             '<section data-setup-workspace-panel="army-selection"' + (setupWorkspaceTab === "army-selection" ? '' : ' hidden') + '><div data-army-selection-panel></div></section></section>'
           : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section><section data-setup-workspace-panel="army-selection" hidden><p>Sign in to select saved army lists.</p></section>') +
-        '<footer class="battle-shell__setup-bottom-nav"><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
+        '<style>.battle-shell__setup-bottom-nav [data-setup-workspace-continue]{width:auto;min-width:0;max-width:190px;padding:8px 12px;white-space:nowrap}</style><footer class="battle-shell__setup-bottom-nav"><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
         '<p role="status" data-setup-navigation-message>' + escapeHtml(setupNavigationMessage) + '</p></div>' +
         '<button type="button" data-setup-workspace-continue>' + setupContinueLabel(setupWorkspaceTab) + '</button></footer>'
       : "") +
