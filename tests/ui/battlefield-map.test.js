@@ -265,6 +265,7 @@ test("terrain setup displays stored Event Companion labels without recalculating
       { value: '26"', x: -3.45, y: 9.16 },
       { value: '5"', x: 12, y: 3 }
     ],
+    terrainMeasurementLines: [[0, 5, 0, 20], [12, 3, 25, 3]],
     mapLabel: "Terrain placement reference"
   });
 
@@ -276,7 +277,7 @@ test("terrain setup displays stored Event Companion labels without recalculating
   assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
   assert.doesNotMatch(html, /data-edge-distance=/);
   assert.doesNotMatch(html, /data-terrain-corner=/);
-  assert.doesNotMatch(html, /battlefield-map__dimension-line/);
+  assert.match(html, /class="battlefield-map__dimension-line" data-source-line="true"/);
   assert.doesNotMatch(html, /Opponent edge · Y=44″/);
   assert.doesNotMatch(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
