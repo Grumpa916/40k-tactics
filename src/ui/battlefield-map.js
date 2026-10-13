@@ -10,53 +10,36 @@ function escapeHtml(value) {
 }
 
 export function isValidBattlefieldPosition(position) {
-  return Boolean(position &&
-    Number.isFinite(position.x) && Number.isFinite(position.y) &&
-    position.x >= 0 && position.x <= BATTLEFIELD_WIDTH_IN &&
-    position.y >= 0 && position.y <= BATTLEFIELD_HEIGHT_IN);
+  return Boolean(position && Number.isFinite(position.x) && Number.isFinite(position.y) &&
+    position.x >= 0 && position.x <= BATTLEFIELD_WIDTH_IN && position.y >= 0 && position.y <= BATTLEFIELD_HEIGHT_IN);
 }
 
 export function battlefieldPositionToPercent(position) {
   if (!isValidBattlefieldPosition(position)) return null;
-  return {
-    left: position.x / BATTLEFIELD_WIDTH_IN * 100,
-    // The player-facing edge is y=0 and is always rendered at the bottom.
-    top: (BATTLEFIELD_HEIGHT_IN - position.y) / BATTLEFIELD_HEIGHT_IN * 100
-  };
+  return { left: position.x / BATTLEFIELD_WIDTH_IN * 100, top: (BATTLEFIELD_HEIGHT_IN - position.y) / BATTLEFIELD_HEIGHT_IN * 100 };
 }
 
 function averagePosition(positions) {
   const valid = positions.filter(isValidBattlefieldPosition);
   if (!valid.length) return null;
-  return {
-    x: valid.reduce((sum, position) => sum + position.x, 0) / valid.length,
-    y: valid.reduce((sum, position) => sum + position.y, 0) / valid.length
-  };
+  return { x: valid.reduce((sum, position) => sum + position.x, 0) / valid.length,
+    y: valid.reduce((sum, position) => sum + position.y, 0) / valid.length };
 }
 
 function unitPosition(unit, state) {
   const initialDeployment = state.battlefieldMap?.actualDeployment?.[unit.id];
   const hasRecordedMovement = (state.history ?? []).some((event) =>
-    ["unit.normal_move_resolved", "unit.advanced"].includes(event?.type) &&
-    event.payload?.unitId === unit.id &&
-    Array.isArray(event.payload?.moves) &&
-    event.payload.moves.length > 0
-  );
-
-  // A unit-level deployment point is the only recorded live anchor until
-  // model-level movement has actually supplied newer coordinates.
+    ["unit.normal_move_resolved", "unit.advanced"].includes(event?.type) && event.payload?.unitId === unit.id &&
+    Array.isArray(event.payload?.moves) && event.payload.moves.length > 0);
   if (initialDeployment && !hasRecordedMovement) {
     const position = initialDeployment.position ?? initialDeployment;
     if (isValidBattlefieldPosition(position)) return position;
   }
-
-  if (Array.isArray(unit.models) && unit.models.length &&
-      unit.models.every((model) => isValidBattlefieldPosition(model?.position))) {
+  if (Array.isArray(unit.models) && unit.models.length && unit.models.every((model) => isValidBattlefieldPosition(model?.position))) {
     return averagePosition(unit.models.map((model) => model.position));
   }
   return isValidBattlefieldPosition(unit.position) ? unit.position : null;
 }
-
 
 function selectedLayoutGeometry(state) {
   const setup = state.battlefieldMap?.missionSetup;
@@ -70,37 +53,24 @@ function geometryOverlay(geometry, terrainOnly = false) {
   if (!geometry?.verified) return "";
   const zones = terrainOnly ? "" : Object.entries(geometry.deploymentZones ?? {}).map(([name, shape]) => {
     const points = (shape.points ?? []).map((point) => point.x + "," + (44 - point.y)).join(" ");
-    return '<polygon class="battlefield-map__zone" data-zone="' + escapeHtml(name) +
-      '" points="' + points + '" aria-label="Deployment zone ' + escapeHtml(name) + '"></polygon>';
+    return '<polygon class="battlefield-map__zone" data-zone="' + escapeHtml(name) + '" points="' + points + '" aria-label="Deployment zone ' + escapeHtml(name) + '"></polygon>';
   }).join("");
   const terrain = Object.entries(geometry.terrainGeometry ?? {}).map(([name, shape]) => {
     const points = (shape.points ?? []).map((point) => point.x + "," + (44 - point.y)).join(" ");
-    return '<polygon class="battlefield-map__terrain" data-terrain="' + escapeHtml(name) +
-      '" points="' + points + '" aria-label="Terrain footprint ' + escapeHtml(name) + '"></polygon>';
+    return '<polygon class="battlefield-map__terrain" data-terrain="' + escapeHtml(name) + '" points="' + points + '" aria-label="Terrain footprint ' + escapeHtml(name) + '"></polygon>';
   }).join("");
-  return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Battlefield layout overview; use the official Event Companion diagram for exact terrain placement">' +
-    zones + terrain + '</svg>';
+  return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Battlefield layout overview; use the official Event Companion diagram for exact terrain placement">' + zones + terrain + '</svg>';
 }
+
 function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = [], sourceLines = []) {
-  if (!geometry?.verified || !geometry.terrainGeometry ||
-      (!Array.isArray(sourceMeasurements) && !Array.isArray(sourceLines))) return "";
+  if (!geometry?.verified || !geometry.terrainGeometry || (!Array.isArray(sourceMeasurements) && !Array.isArray(sourceLines))) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  // Source lines are copied from the official Event Companion diagram artwork.
-  // Never infer endpoints or calculate replacement distances.
-  const lines = (Array.isArray(sourceLines) ? sourceLines : []).filter((line) =>
-    Array.isArray(line) && line.length === 4 && line.every((v) => Number.isFinite(Number(v)))
-  ).map((line) => '<line class="battlefield-map__dimension-line" data-source-line="true" x1="' +
-    px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"/>');
-  const labels = (Array.isArray(sourceMeasurements) ? sourceMeasurements : []).filter((item) =>
-    item && typeof item.value === "string" &&
-    Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
-  ).map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) +
-    '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) +
-    '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
-  return lines.length || labels.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + lines.join("") + labels.join("") + '</svg>'
-    : "";
+  const lines = (Array.isArray(sourceLines) ? sourceLines : []).filter((line) => Array.isArray(line) && line.length === 4 && line.every((v) => Number.isFinite(Number(v))))
+    .map((line) => '<line class="battlefield-map__dimension-line" data-source-line="true" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"/>');
+  const labels = (Array.isArray(sourceMeasurements) ? sourceMeasurements : []).filter((item) => item && typeof item.value === "string" && Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
+    .map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) + '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) + '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
+  return lines.length || labels.length ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + lines.join("") + labels.join("") + '</svg>' : "";
 }
 
 function positionsForMode(state, mode) {
@@ -108,18 +78,13 @@ function positionsForMode(state, mode) {
   if (mode === "deployment") return state.battlefieldMap?.actualDeployment ?? {};
   return null;
 }
-
 function modeDescription(mode, mapLabel = null) {
   if (mapLabel) return mapLabel;
   if (mode === "planning") return "Planning positions only";
   if (mode === "deployment") return "Actual initial deployment";
   return "Live battlefield positions";
 }
-
-function playerLabel(state, playerId) {
-  return (state.players ?? []).find((player) => player.id === playerId)?.name ?? playerId ?? "Unknown player";
-}
-
+function playerLabel(state, playerId) { return (state.players ?? []).find((player) => player.id === playerId)?.name ?? playerId ?? "Unknown player"; }
 function objectiveControlLabel(objective, state) {
   const control = objective.control;
   if (!control || !control.controlState) return "Control not recorded";
@@ -131,7 +96,6 @@ function objectiveControlLabel(objective, state) {
   if (control.controllerId) return "Controlled by " + playerLabel(state, control.controllerId);
   return "Control not recorded";
 }
-
 function liveStatusLabel(state) {
   if (!state.battle) return "";
   if (state.battle.status === "deployment") return "Deployment in progress";
@@ -145,18 +109,11 @@ function liveStatusLabel(state) {
 }
 
 export function renderBattlefieldMap(state, {
-  mode = "live",
-  perspectivePlayerId = state?.activePlayer ?? null,
-  selectedUnitId = null,
-  showUnits = true,
-  showMeasurements = mode === "live",
-  showTerrainEdgeMeasurements = false,
-  terrainMeasurements = [],
-  mapLabel = null
+  mode = "live", perspectivePlayerId = state?.activePlayer ?? null, selectedUnitId = null, showUnits = true,
+  showMeasurements = mode === "live", showTerrainEdgeMeasurements = false, terrainMeasurements = [],
+  terrainMeasurementLines = [], mapLabel = null
 } = {}) {
-  if (!["planning", "deployment", "live"].includes(mode)) {
-    throw new RangeError("Unknown battlefield map mode: " + mode);
-  }
+  if (!["planning", "deployment", "live"].includes(mode)) throw new RangeError("Unknown battlefield map mode: " + mode);
   const safeState = state && typeof state === "object" ? state : {};
   const plannedOrDeployed = positionsForMode(safeState, mode);
   const layoutGeometry = selectedLayoutGeometry(safeState);
@@ -171,132 +128,54 @@ export function renderBattlefieldMap(state, {
     return unit.status === "deployed";
   }) : [];
   const stagedPosition = (index, total, friendly) => {
-    const columns = Math.min(6, Math.max(1, total));
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    return {
-      x: 5 + column * (50 / Math.max(1, columns - 1)),
-      y: friendly ? 2.5 + row * 3.2 : 41.5 - row * 3.2
-    };
+    const columns = Math.min(6, Math.max(1, total)); const column = index % columns; const row = Math.floor(index / columns);
+    return { x: 5 + column * (50 / Math.max(1, columns - 1)), y: friendly ? 2.5 + row * 3.2 : 41.5 - row * 3.2 };
   };
   const visibleIndex = new Map();
   for (const unit of visibleUnits) {
     const friendly = perspectivePlayerId != null && unit.ownerId === perspectivePlayerId;
     const key = mode === "planning" ? "friendly" : (friendly ? "friendly" : "opponent");
-    const index = visibleIndex.get(key) ?? 0;
-    visibleIndex.set(key, index + 1);
-    let position = null;
-    let unplaced = false;
-    if (mode === "live") {
-      position = unitPosition(unit, safeState);
-    } else {
-      const record = plannedOrDeployed?.[unit.id];
-      position = record?.position ?? record ?? null;
+    const index = visibleIndex.get(key) ?? 0; visibleIndex.set(key, index + 1);
+    let position = null; let unplaced = false;
+    if (mode === "live") position = unitPosition(unit, safeState);
+    else {
+      const record = plannedOrDeployed?.[unit.id]; position = record?.position ?? record ?? null;
       if (!isValidBattlefieldPosition(position)) {
         unplaced = true;
-        const total = visibleUnits.filter((candidate) => mode === "planning"
-          ? candidate.ownerId === perspectivePlayerId
-          : (perspectivePlayerId != null && candidate.ownerId === perspectivePlayerId) === friendly).length;
+        const total = visibleUnits.filter((candidate) => mode === "planning" ? candidate.ownerId === perspectivePlayerId : (perspectivePlayerId != null && candidate.ownerId === perspectivePlayerId) === friendly).length;
         position = stagedPosition(index, total, friendly);
       }
     }
-    const percent = battlefieldPositionToPercent(position);
-    if (!percent) continue;
-    positionedUnits += 1;
-    const sideClass = friendly ? "friendly" : "opponent";
-    const marker = escapeHtml((unit.name ?? unit.id).slice(0, 22));
-    const modelCount = Array.isArray(unit.models) ? unit.models.length : 0;
-    const isSelected = unit.id === selectedUnitId;
-    unitNodes.push('<div class="battlefield-map__unit ' + sideClass +
-      (isSelected ? ' is-selected' : '') + (unplaced ? ' is-unplaced' : '') +
-      '" data-map-unit-id="' + escapeHtml(unit.id) + '"' +
-      (unplaced ? ' data-map-unit-unplaced="true"' : '') +
-      (mode !== "live" || friendly ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(unit.name ?? unit.id) + '"' : '') +
-      ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(unit.name ?? unit.id) +
-      (unplaced ? ' · not placed' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + '</div>');
+    const percent = battlefieldPositionToPercent(position); if (!percent) continue; positionedUnits += 1;
+    const sideClass = friendly ? "friendly" : "opponent"; const marker = escapeHtml((unit.name ?? unit.id).slice(0, 22));
+    const modelCount = Array.isArray(unit.models) ? unit.models.length : 0; const isSelected = unit.id === selectedUnitId;
+    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (isSelected ? ' is-selected' : '') + (unplaced ? ' is-unplaced' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || friendly ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(unit.name ?? unit.id) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(unit.name ?? unit.id) + (unplaced ? ' · not placed' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + '</div>');
   }
-
   const objectives = Array.isArray(safeState.objectives) ? safeState.objectives : [];
-  // When a verified layout is selected, its catalog owns objective positions.
-  // Control state is linked only by an explicit layoutObjective key or the stable
-  // event-companion:<label> ID; no positional/order-based matching is inferred.
-  const layoutObjectiveNodes = layoutGeometry
-    ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {
-      const percent = battlefieldPositionToPercent(position);
-      if (!percent) return "";
-      const objective = objectives.find((item) =>
-        item && (item.layoutObjective === name || item.id === "event-companion:" + name)
-      );
-      const objectiveId = objective?.id ?? ("event-companion:" + name);
-      const controlLabel = objective ? objectiveControlLabel(objective, safeState) : "Control not recorded";
-      const label = name.replace("Defender Home", "D Home").replace("Attacker Home", "A Home");
-      return '<div class="battlefield-map__objective battlefield-map__objective--layout" data-layout-objective="' +
-        escapeHtml(name) + '" data-map-objective-id="' + escapeHtml(objectiveId) +
-        '" data-objective-control="' + escapeHtml(controlLabel) +
-        '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
-        escapeHtml(name + " · " + controlLabel + " · Event Companion p. " + layoutGeometry.page) + '">' +
-        escapeHtml(label) + '</div>';
-    }).join("")
-    : "";
-
-  const objectiveNodes = layoutGeometry
-    ? ""
-    : objectives.filter((objective) =>
-      objective && isValidBattlefieldPosition(objective.position)).map((objective) => {
-      const percent = battlefieldPositionToPercent(objective.position);
-      const name = objective.name ?? objective.id ?? "Objective";
-      const controlLabel = objectiveControlLabel(objective, safeState);
-      return '<div class="battlefield-map__objective" data-map-objective-id="' +
-        escapeHtml(objective.id ?? objective.name) + '" data-objective-control="' + escapeHtml(controlLabel) +
-        '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' +
-        escapeHtml(name + " · " + controlLabel) + '">' +
-        escapeHtml(String(name).slice(0, 12)) + '</div>';
-    }).join("");
-
-  const emptyMessage = !showUnits || positionedUnits
-    ? ""
-    : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
-  const terrainMeasurementOverlay = showTerrainEdgeMeasurements
-    ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements, options.terrainMeasurementLines ?? [])
-    : "";
-
-  const liveStatus = mode === "live" ? liveStatusLabel(safeState) : "";
-  const showCoordinateMeasurements = showMeasurements;
-  const shownMapLabel = modeDescription(mode, mapLabel);
-  const objectiveStatusSummary = objectives.filter((objective) =>
-    objective && isValidBattlefieldPosition(objective.position)).length
-    ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position))
-      .map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " +
-        objectiveControlLabel(objective, safeState))).join(" · ")
-    : "";
-  const boardAriaLabel = showCoordinateMeasurements
-    ? shownMapLabel + ", 60 by 44 inch reference board with inch coordinate labels"
-    : shownMapLabel + ", battlefield board";
-  return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode +
-    '" data-battlefield-map data-map-mode="' + mode + '">' +
-    '<div class="battlefield-map__meta"><span>' + shownMapLabel +
-    '</span>' + (showCoordinateMeasurements ? '<span>60″ × 44″ reference grid</span>' : '') +
-    (liveStatus ? '<span data-map-game-status>' + escapeHtml(liveStatus) + '</span>' : '') +
-    (layoutGeometry ? '<span data-map-layout-status>Event Companion layout ' + escapeHtml(layoutGeometry.layout) + ' · p. ' + layoutGeometry.page + '</span>' : '') + '</div>' +
-    (objectiveStatusSummary && mode === "live"
-      ? '<p class="battlefield-map__meta" data-map-objective-status>' + objectiveStatusSummary + '</p>'
-      : '') +
-    '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' +
-    boardAriaLabel + '">' +
+  const layoutObjectiveNodes = layoutGeometry ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {
+    const percent = battlefieldPositionToPercent(position); if (!percent) return "";
+    const objective = objectives.find((item) => item && (item.layoutObjective === name || item.id === "event-companion:" + name));
+    const objectiveId = objective?.id ?? ("event-companion:" + name); const controlLabel = objective ? objectiveControlLabel(objective, safeState) : "Control not recorded";
+    const label = name.replace("Defender Home", "D Home").replace("Attacker Home", "A Home");
+    return '<div class="battlefield-map__objective battlefield-map__objective--layout" data-layout-objective="' + escapeHtml(name) + '" data-map-objective-id="' + escapeHtml(objectiveId) + '" data-objective-control="' + escapeHtml(controlLabel) + '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(name + " · " + controlLabel + " · Event Companion p. " + layoutGeometry.page) + '">' + escapeHtml(label) + '</div>';
+  }).join("") : "";
+  const objectiveNodes = layoutGeometry ? "" : objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).map((objective) => {
+    const percent = battlefieldPositionToPercent(objective.position); const name = objective.name ?? objective.id ?? "Objective"; const controlLabel = objectiveControlLabel(objective, safeState);
+    return '<div class="battlefield-map__objective" data-map-objective-id="' + escapeHtml(objective.id ?? objective.name) + '" data-objective-control="' + escapeHtml(controlLabel) + '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(name + " · " + controlLabel) + '">' + escapeHtml(String(name).slice(0, 12)) + '</div>';
+  }).join("");
+  const emptyMessage = !showUnits || positionedUnits ? "" : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
+  const terrainMeasurementOverlay = showTerrainEdgeMeasurements ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements, terrainMeasurementLines) : "";
+  const liveStatus = mode === "live" ? liveStatusLabel(safeState) : ""; const showCoordinateMeasurements = showMeasurements; const shownMapLabel = modeDescription(mode, mapLabel);
+  const objectiveStatusSummary = objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).length ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " + objectiveControlLabel(objective, safeState))).join(" · ") : "";
+  const boardAriaLabel = showCoordinateMeasurements ? shownMapLabel + ", 60 by 44 inch reference board with inch coordinate labels" : shownMapLabel + ", battlefield board";
+  return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode + '" data-battlefield-map data-map-mode="' + mode + '">' +
+    '<div class="battlefield-map__meta"><span>' + shownMapLabel + '</span>' + (showCoordinateMeasurements ? '<span>60″ × 44″ reference grid</span>' : '') + (liveStatus ? '<span data-map-game-status>' + escapeHtml(liveStatus) + '</span>' : '') + (layoutGeometry ? '<span data-map-layout-status>Event Companion layout ' + escapeHtml(layoutGeometry.layout) + ' · p. ' + layoutGeometry.page + '</span>' : '') + '</div>' +
+    (objectiveStatusSummary && mode === "live" ? '<p class="battlefield-map__meta" data-map-objective-status>' + objectiveStatusSummary + '</p>' : '') +
+    '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' + boardAriaLabel + '">' +
     (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' : '') +
-    (showCoordinateMeasurements ? '<div class="battlefield-map__ruler battlefield-map__ruler--top" aria-label="Horizontal inch measurements">' +
-      [0,10,20,30,40,50,60].map((inch) => '<span style="left:' + (inch / 60 * 100) + '%">' + inch + '″</span>').join("") +
-      '</div><div class="battlefield-map__ruler battlefield-map__ruler--left" aria-label="Vertical inch measurements">' +
-      [0,10,20,30,40,44].map((inch) => '<span style="top:' + ((44 - inch) / 44 * 100) + '%">' + inch + '″</span>').join("") +
-      '</div>' : '') +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__ruler battlefield-map__ruler--top" aria-label="Horizontal inch measurements">' + [0,10,20,30,40,50,60].map((inch) => '<span style="left:' + (inch / 60 * 100) + '%">' + inch + '″</span>').join("") + '</div><div class="battlefield-map__ruler battlefield-map__ruler--left" aria-label="Vertical inch measurements">' + [0,10,20,30,40,44].map((inch) => '<span style="top:' + ((44 - inch) / 44 * 100) + '%">' + inch + '″</span>').join("") + '</div>' : '') +
     geometryOverlay(layoutGeometry, showTerrainEdgeMeasurements) + terrainMeasurementOverlay + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
-    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') +
-    '</div>' + (showUnits
-      ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span>' +
-        '<span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>'
-      : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
-    '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements
-      ? "Two approximate distances per terrain piece run from one marked corner to adjacent battlefield edges. Labels are separated along the edges; use the official Event Companion diagram as the final reference."
-      : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p>' +
-    '</div>';
+    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') + '</div>' +
+    (showUnits ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span><span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>' : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
+    '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements ? "Two approximate distances per terrain piece run from one marked corner to adjacent battlefield edges. Labels are separated along the edges; use the official Event Companion diagram as the final reference." : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p></div>';
 }
