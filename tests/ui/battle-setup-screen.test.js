@@ -278,15 +278,35 @@ test("Fixed secondary selection validates the selected player's mode without an 
 });
 
 
-test("terrain setup map hides army units and separates terrain setup from unit planning", () => {
-  const { root, session } = setup();
+test("terrain setup displays the selected official Event Companion PDF page without army units", () => {
+  const { root, session, listeners } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  function tapDisposition(kind, value) {
+    const button = { getAttribute(name) {
+      return name === "data-event-companion-disposition-choice" ? kind
+        : name === "data-disposition-value" ? value : null;
+    }};
+    listeners.click({ target: { closest(selector) {
+      return selector === "[data-event-companion-disposition-choice]" ? button : null;
+    }}});
+  }
+  tapDisposition("my", "Take and Hold");
+  tapDisposition("opponent", "Disruption");
+  const layoutButton = { getAttribute(name) {
+    return name === "data-event-companion-layout" ? "A" : null;
+  }};
+  listeners.click({ target: { closest(selector) {
+    return selector === "[data-event-companion-layout]" ? layoutButton : null;
+  }}});
   screen.setTab("battlefield");
 
-  assert.match(root.innerHTML, /Terrain placement reference for the selected Event Companion layout/);
-  assert.doesNotMatch(root.innerHTML, /data-planning-unit-select/);
-  assert.doesNotMatch(root.innerHTML, /data-clear-deployment-plan/);
+  assert.match(root.innerHTML, /official Event Companion terrain layout A · page 9/i);
+  assert.match(root.innerHTML, /eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x\.pdf#page=9&amp;zoom=125/);
+  assert.match(root.innerHTML, /<iframe[^>]+title="Official Event Companion terrain layout A, page 9"/);
   assert.doesNotMatch(root.innerHTML, /data-map-unit-id=/);
+  assert.doesNotMatch(root.innerHTML, /data-terrain-measurement=/);
+  assert.doesNotMatch(root.innerHTML, /data-table-edge-measurement=/);
+  assert.doesNotMatch(root.innerHTML, /data-planning-unit-select/);
   assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
   screen.destroy();
 });
