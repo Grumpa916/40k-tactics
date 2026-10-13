@@ -87,17 +87,16 @@ test("mission and battlefield setup are separate stages", () => {
   assert.match(root.innerHTML, /data-battlefield-map/);
   screen.destroy();
 });
-test("setup planning map offers only the perspective player's units", () => {
+test("terrain setup map omits unit markers even when armies are loaded", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
   screen.setTab("battlefield");
-  assert.match(root.innerHTML, /Create the Battlefield/);
-  assert.match(root.innerHTML, /Friendly Unit/);
-  assert.doesNotMatch(root.innerHTML, /<option value="enemy"/);
-  assert.match(root.innerHTML, /data-battlefield-map/);
+
+  assert.doesNotMatch(root.innerHTML, /data-map-unit-id=/);
+  assert.doesNotMatch(root.innerHTML, /Friendly Unit/);
+  assert.doesNotMatch(root.innerHTML, /Opponent Unit/);
   screen.destroy();
 });
-
 test("selecting a unit and tapping the planning map records a bounded coordinate command", () => {
   const { root, session, commands, listeners } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
