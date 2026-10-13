@@ -75,7 +75,7 @@ test("verified Event Companion layouts show terrain-corner-to-table-edge dimensi
 
   assert.match(html, /data-table-edge-dimension="T1"/);
   assert.match(html, /data-table-edge-measurement="T1"/);
-  assert.match(html, /data-distance-inches="\\d+(?:\\.\\d+)?"/);
+  assert.match(html, /data-distance-inches="\\d+"/);
   assert.match(html, /data-nearest-edge="(?:left|right|top|bottom)"/);
   assert.doesNotMatch(html, /data-terrain-measurement/);
   assert.doesNotMatch(html, /data-map-unit-id="unit-on-setup-map"/);
