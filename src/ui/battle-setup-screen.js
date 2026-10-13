@@ -461,8 +461,8 @@ export function createBattleSetupScreen(container, {
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle. Complete pre-game checks, then confirm the mission and map.</p></header>' +
-      '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preFirstTurnMarkup + '</section>' +
-      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + preGameMarkup + missionMapMarkup + '</section>' +
+      '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + missionMapMarkup + '</section>' +
+      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + preFirstTurnMarkup + '</section>' +
       '<section data-setup-content="battlefield"' + (activeSetupTab === "battlefield" ? '' : ' hidden') + '>' + battlefieldMarkup + '</section>' +
       (message ? '<p role="status" class="battle-setup-screen__message">' + escapeHtml(message) + '</p>' : '') + '</main>';
   }
