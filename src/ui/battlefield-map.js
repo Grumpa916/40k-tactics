@@ -97,24 +97,38 @@ function terrainEdgeMeasurementOverlay(geometry) {
       Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
     ).map((point, index) => ({ x: Number(point.x), y: Number(point.y), index }));
     if (!corners.length) return;
-    // For each terrain footprint, select its closest corner for each nearby board edge.
-    // The line endpoint is the actual polygon vertex, so it can be reproduced on the table.
-    edgeCandidates.forEach((edge) => {
-      const corner = corners.reduce((best, point) =>
-        !best || edge.distance(point) < edge.distance(best) ? point : best, null);
-      const distance = edge.distance(corner);
-      if (distance < 0 || distance > 30) return;
-      const endpoint = edge.project(corner);
-      const nearestEdge = edgeCandidates.reduce((best, candidate) =>
-        candidate.distance(corner) < best.distance(corner) ? candidate : best, edgeCandidates[0]);
-      if (nearestEdge.edge !== edge.edge) return;
-      guides.push({
-        terrainId, corner, endpoint, distance,
-        label: Math.round(distance) + '"',
-        horizontal: edge.horizontal,
-        key: terrainId + ":" + edge.edge
-      });
-    });
+
+    // Choose one reproducible anchor vertex per terrain footprint: the vertex
+    // nearest any board corner. Two perpendicular measurements from this anchor
+    // provide both coordinates needed to place the footprint.
+    const anchor = corners.reduce((best, point) => {
+      const horizontal = Math.min(point.x, 60 - point.x);
+      const vertical = Math.min(point.y, 44 - point.y);
+      const score = horizontal + vertical;
+      return !best || score < best.score ? { point, score } : best;
+    }, null).point;
+    const horizontalEdge = anchor.x <= 30 ? "left" : "right";
+    const verticalEdge = anchor.y <= 22 ? "bottom" : "top";
+    const measurements = [
+      {
+        edge: horizontalEdge, start: anchor,
+        end: horizontalEdge === "left" ? { x: 0, y: anchor.y } : { x: 60, y: anchor.y },
+        distance: horizontalEdge === "left" ? anchor.x : 60 - anchor.x,
+        axis: "horizontal"
+      },
+      {
+        edge: verticalEdge, start: anchor,
+        end: verticalEdge === "bottom" ? { x: anchor.x, y: 0 } : { x: anchor.x, y: 44 },
+        distance: verticalEdge === "bottom" ? anchor.y : 44 - anchor.y,
+        axis: "vertical"
+      }
+    ];
+    measurements.forEach((measurement) => guides.push({
+      terrainId, corner: measurement.start, endpoint: measurement.end,
+      distance: measurement.distance, label: Math.round(measurement.distance) + '"',
+      horizontal: measurement.axis === "horizontal", axis: measurement.axis,
+      key: terrainId + ":" + measurement.axis
+    }));
   });
   // Avoid nearly identical duplicate callouts where adjacent pieces touch or overlap.
   const filtered = guides.filter((guide, index) => !guides.slice(0, index).some((prior) =>
