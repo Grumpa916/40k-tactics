@@ -375,7 +375,7 @@ export function createBattleSetupScreen(container, {
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
           ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
         '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p>' +
-        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: true }) +
+        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: false }) +
         '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
