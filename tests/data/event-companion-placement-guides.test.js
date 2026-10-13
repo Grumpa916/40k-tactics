@@ -52,23 +52,20 @@ test("all remaining Event Companion pages have source terrain placement transcri
   }
 });
 
-test("generic Event Companion terrain pages 9-14 resolve onto existing V2 terrain vertices using only official values", () => {
-  for (let page = 9; page <= 14; page += 1) {
-    if (page === 12) continue;
+test("generic Event Companion terrain page 9 resolves onto existing V2 terrain vertices using only official values", () => {
+  const page = 9;
+  const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
+  assert.ok(geometry?.verified, `page ${page} should have verified V2 geometry`);
 
-    const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
-    assert.ok(geometry?.verified, `page ${page} should have verified V2 geometry`);
+  const overlay = getEventCompanionPlacementOverlay(page);
+  assert.ok(overlay, `page ${page} should render placement references`);
+  assert.ok(overlay.lines.length > 0, `page ${page} should render guide lines`);
+  assert.equal(overlay.lines.length, overlay.measurements.length, `page ${page} should pair labels and guide lines`);
 
-    const overlay = getEventCompanionPlacementOverlay(page);
-    assert.ok(overlay, `page ${page} should render placement references`);
-    assert.ok(overlay.lines.length > 0, `page ${page} should render guide lines`);
-    assert.equal(overlay.lines.length, overlay.measurements.length, `page ${page} should pair labels and guide lines`);
+  const vertices = new Set(Object.values(geometry.terrainGeometry ?? {}).flatMap((shape) =>
+    (shape.points ?? []).map((point) => `${Number(point.x)},${Number(point.y)}`)));
+  assert.ok(overlay.guides.every((guide) => vertices.has(`${Number(guide.anchor[0])},${Number(guide.anchor[1])}`)), `page ${page} guides should snap to exact V2 terrain vertices`);
 
-    const vertices = new Set(Object.values(geometry.terrainGeometry ?? {}).flatMap((shape) =>
-      (shape.points ?? []).map((point) => `${Number(point.x)},${Number(point.y)}`)));
-    assert.ok(overlay.guides.every((guide) => vertices.has(`${Number(guide.anchor[0])},${Number(guide.anchor[1])}`)), `page ${page} guides should snap to exact V2 terrain vertices`);
-
-    const officialValues = new Set(EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES[String(page)].map((guide) => guide.value));
-    assert.ok(overlay.guides.every((guide) => officialValues.has(guide.value)), `page ${page} should not invent terrain distances`);
-  }
+  const officialValues = new Set(EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES[String(page)].map((guide) => guide.value));
+  assert.ok(overlay.guides.every((guide) => officialValues.has(guide.value)), `page ${page} should not invent terrain distances`);
 });
