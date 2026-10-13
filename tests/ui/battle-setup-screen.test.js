@@ -306,7 +306,11 @@ test("terrain setup displays the selected official Event Companion PDF page with
 
   assert.match(root.innerHTML, /official Event Companion terrain layout A · page 9/i);
   assert.match(root.innerHTML, /eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x\.pdf#page=9&amp;zoom=125/);
-  assert.match(root.innerHTML, /<iframe[^>]+title="Official Event Companion terrain layout A, page 9"/);
+  assert.match(root.innerHTML, /data-battlefield-map/);
+  assert.match(root.innerHTML, /data-map-layout-status/);
+  assert.match(root.innerHTML, /battlefield-map__ruler--top/);
+  assert.match(root.innerHTML, /battlefield-map__ruler--left/);
+  assert.doesNotMatch(root.innerHTML, /<iframe[^>]+Official Event Companion terrain layout/);
   assert.doesNotMatch(root.innerHTML, /data-map-unit-id=/);
   assert.doesNotMatch(root.innerHTML, /data-terrain-measurement=/);
   assert.doesNotMatch(root.innerHTML, /data-table-edge-measurement=/);
