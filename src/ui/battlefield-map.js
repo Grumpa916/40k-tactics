@@ -87,29 +87,50 @@ function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
   const py = (y) => (44 - Number(y)) / 44 * 100;
   const measurements = Array.isArray(exactMeasurements) ? exactMeasurements : [];
   const validPoint = (x, y) => Number.isFinite(Number(x)) && Number.isFinite(Number(y));
-  const lines = measurements.filter((item) =>
-    item && validPoint(item.x1, item.y1) && validPoint(item.x2, item.y2)
-  ).map((item) => {
-    const x1 = px(item.x1), y1 = py(item.y1), x2 = px(item.x2), y2 = py(item.y2);
+  const inferredEndpoints = (item) => {
+    if (validPoint(item.x1, item.y1) && validPoint(item.x2, item.y2)) {
+      return { x1: Number(item.x1), y1: Number(item.y1), x2: Number(item.x2), y2: Number(item.y2) };
+    }
+    // Older source records preserve the printed callout's approximate position, but
+    // not its vector endpoints. Use that point to draw a visual guide to the nearest
+    // board edge; this is deliberately an illustration, not a recalculated distance.
+    if (!validPoint(item.x, item.y)) return null;
+    const x = Math.max(0, Math.min(60, Number(item.x)));
+    const y = Math.max(0, Math.min(44, Number(item.y)));
+    const distances = [
+      { edge: "left", distance: x },
+      { edge: "right", distance: 60 - x },
+      { edge: "bottom", distance: y },
+      { edge: "top", distance: 44 - y }
+    ];
+    const nearest = distances.reduce((best, candidate) => candidate.distance < best.distance ? candidate : best);
+    if (nearest.edge === "left") return { x1: 0, y1: y, x2: x, y2: y };
+    if (nearest.edge === "right") return { x1: x, y1: y, x2: 60, y2: y };
+    if (nearest.edge === "bottom") return { x1: x, y1: 0, x2: x, y2: y };
+    return { x1: x, y1: y, x2: x, y2: 44 };
+  };
+  const dimensionLines = measurements.filter((item) => item && inferredEndpoints(item)).map((item) => {
+    const { x1, y1, x2, y2 } = inferredEndpoints(item);
+    const sx1 = px(x1), sy1 = py(y1), sx2 = px(x2), sy2 = py(y2);
     const line = '<line class="battlefield-map__dimension-line" data-source-measurement="' +
-      escapeHtml(item.value ?? "") + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>';
+      escapeHtml(item.value ?? "") + '" x1="' + sx1 + '" y1="' + sy1 + '" x2="' + sx2 + '" y2="' + sy2 + '"></line>';
     const tick = (x, y, vertical) => {
       const half = 0.65;
       return '<line class="battlefield-map__dimension-tick" x1="' + (vertical ? x - half : x) +
         '" y1="' + (vertical ? y : y - half) + '" x2="' + (vertical ? x + half : x) +
         '" y2="' + (vertical ? y : y + half) + '"></line>';
     };
-    const vertical = Math.abs(x2 - x1) < Math.abs(y2 - y1);
-    return line + tick(x1, y1, vertical) + tick(x2, y2, vertical);
+    const vertical = Math.abs(sx2 - sx1) < Math.abs(sy2 - sy1);
+    return line + tick(sx1, sy1, vertical) + tick(sx2, sy2, vertical);
   });
   const labels = measurements.filter((item) =>
     item && typeof item.value === "string" && validPoint(item.x, item.y)
   ).map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) +
     '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) +
     '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
-  const parts = [...lines, ...labels];
+  const parts = [...dimensionLines, ...labels];
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain measurements">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain measurements; edge lines are visual guides">' + parts.join("") + '</svg>'
     : "";
 }
 
