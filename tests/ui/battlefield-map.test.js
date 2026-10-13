@@ -309,7 +309,7 @@ test("terrain measurement overlay renders only explicitly sourced dimension endp
     ]
   });
   assert.match(html, /class="battlefield-map__dimension-line"[^>]*x1="16\.666666666666664"[^>]*y1="65\.9090909090909"[^>]*x2="33\.33333333333333"[^>]*y2="65\.9090909090909"/);
-  assert.match(html, /data-source-measurement="12&amp;quot;"/);
+  assert.match(html, /data-source-measurement="12&quot;"/);
   assert.equal((html.match(/class="battlefield-map__dimension-line"/g) ?? []).length, 1);
   assert.equal((html.match(/class="battlefield-map__dimension-tick"/g) ?? []).length, 2);
   assert.match(html, />7"<\/text>/);
