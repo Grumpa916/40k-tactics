@@ -93,7 +93,9 @@ function terrainTableEdgeDimension(name, terrainPoints) {
     }
   ];
   return dimensions.filter((item) => item.distance > 0).map((item) => {
-    const label = Number.isInteger(item.distance) ? String(item.distance) : String(Number(item.distance.toFixed(1)));
+    // Catalog coordinates come from vector artwork and may vary by fractions of an inch.
+    // Event Companion setup callouts use practical whole-inch measurements.
+    const label = String(Math.round(item.distance));
     const x = (item.x1 + item.x2) / 2;
     const y = (item.y1 + item.y2) / 2;
     const labelX = item.axis === "vertical" ? x + 0.9 : x;
