@@ -8,6 +8,7 @@ import {
 } from "../../src/data/event-companion-placement-guides.js";
 
 import { EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES } from "../../src/data/event-companion-placement-source-guides.js";
+import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
 
 test("page 12 terrain placement transcription keeps the 18 official terrain dimensions", () => {
   assert.equal(PAGE_12_GUIDES.length, 18);
@@ -48,5 +49,29 @@ test("all remaining Event Companion pages have source terrain placement transcri
     assert.ok(Array.isArray(sourceGuides) && sourceGuides.length > 0, `page ${page} should have source guides`);
     assert.ok(sourceGuides.every((guide) => typeof guide.value === "string" && guide.value.endsWith('"')), `page ${page} values should be official inch labels`);
     assert.ok(sourceGuides.every((guide) => ["left", "right", "top", "bottom"].includes(guide.edge)), `page ${page} edges should be valid`);
+  }
+});
+
+test("every Event Companion map renders its full official terrain-placement transcription onto V2 terrain vertices", () => {
+  for (let page = 9; page <= 53; page += 1) {
+    const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
+    assert.ok(geometry?.verified, `page ${page} should have verified V2 geometry`);
+
+    const overlay = getEventCompanionPlacementOverlay(page, geometry);
+    assert.ok(overlay, `page ${page} should render placement references`);
+    assert.equal(overlay.lines.length, overlay.measurements.length, `page ${page} should pair every guide line and label`);
+
+    const vertices = new Set(Object.values(geometry.terrainGeometry ?? {}).flatMap((shape) =>
+      (shape.points ?? []).map((point) => `${Number(point.x)},${Number(point.y)}`)));
+    assert.ok(overlay.guides.every((guide) => vertices.has(`${Number(guide.anchor[0])},${Number(guide.anchor[1])}`)), `page ${page} guides should terminate on V2 terrain vertices`);
+
+    const officialValues = new Set((EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES[String(page)] ?? PAGE_12_GUIDES).map((guide) => guide.value));
+    assert.ok(overlay.guides.every((guide) => officialValues.has(guide.value)), `page ${page} should reuse only official printed values`);
+
+    if (page !== 12) {
+      const sourceCount = EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES[String(page)].length;
+      const originalCount = overlay.guides.filter((guide) => !guide.mirrored).length;
+      assert.equal(originalCount, sourceCount, `page ${page} should preserve every official terrain-placement guide`);
+    }
   }
 });
