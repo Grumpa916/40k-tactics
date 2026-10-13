@@ -81,79 +81,20 @@ function geometryOverlay(geometry, terrainOnly = false) {
   return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Battlefield layout overview; use the official Event Companion diagram for exact terrain placement">' +
     zones + terrain + '</svg>';
 }
-function terrainEdgeMeasurementOverlay(geometry) {
-  if (!geometry?.verified || !geometry.terrainGeometry) return "";
+function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = []) {
+  if (!geometry?.verified || !geometry.terrainGeometry || !Array.isArray(sourceMeasurements)) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  const pieces = [];
-  Object.entries(geometry.terrainGeometry).forEach(([terrainId, shape]) => {
-    const corners = (shape.points ?? []).filter((p) =>
-      Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y))
-    ).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
-    if (!corners.length) return;
-    // One stable corner per piece, selected near a board corner. Two perpendicular
-    // distances locate that point without flooding the map with every polygon vertex.
-    const anchor = corners.reduce((best, point) => {
-      const score = Math.min(point.x, 60 - point.x) + Math.min(point.y, 44 - point.y);
-      return !best || score < best.score ? { point, score } : best;
-    }, null).point;
-    pieces.push({ terrainId, corner: anchor,
-      horizontalEdge: anchor.x <= 30 ? "left" : "right",
-      verticalEdge: anchor.y <= 22 ? "bottom" : "top" });
-  });
-  const guides = [];
-  pieces.forEach((piece) => {
-    const { corner, terrainId } = piece;
-    const horiz = piece.horizontalEdge;
-    const vert = piece.verticalEdge;
-    guides.push({
-      terrainId, corner, edge: horiz,
-      endpoint: { x: horiz === "left" ? 0 : 60, y: corner.y },
-      distance: horiz === "left" ? corner.x : 60 - corner.x,
-      axis: "horizontal"
-    });
-    guides.push({
-      terrainId, corner, edge: vert,
-      endpoint: { x: corner.x, y: vert === "bottom" ? 0 : 44 },
-      distance: vert === "bottom" ? corner.y : 44 - corner.y,
-      axis: "vertical"
-    });
-  });
-  const edges = ["left", "right", "top", "bottom"];
-  const groups = new Map(edges.map((edge) => [edge, []]));
-  guides.forEach((guide) => groups.get(guide.edge).push(guide));
-  groups.forEach((items, edge) => {
-    items.sort((a, b) => edge === "left" || edge === "right"
-      ? a.corner.y - b.corner.y : a.corner.x - b.corner.x);
-    items.forEach((item, index) => { item.slot = index; item.total = items.length; });
-  });
-  const parts = guides.map((guide) => {
-    const x1 = px(guide.corner.x), y1 = py(guide.corner.y);
-    const x2 = px(guide.endpoint.x), y2 = py(guide.endpoint.y);
-    let labelX, labelY, leaderX, leaderY;
-    if (guide.edge === "left" || guide.edge === "right") {
-      labelX = guide.edge === "left" ? 2.2 : 97.8;
-      labelY = 3.5 + (guide.slot + 0.5) * 93 / Math.max(1, guide.total);
-      leaderX = x2;
-      leaderY = labelY;
-    } else {
-      labelX = 2.5 + (guide.slot + 0.5) * 95 / Math.max(1, guide.total);
-      labelY = guide.edge === "top" ? 3.0 : 97.0;
-      leaderX = labelX;
-      leaderY = y2;
-    }
-    const line = '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
-      '" data-edge="' + guide.edge + '" data-edge-distance="' + guide.distance.toFixed(2) +
-      '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>';
-    const leader = '<line class="battlefield-map__dimension-leader" x1="' + x2 + '" y1="' + y2 +
-      '" x2="' + leaderX + '" y2="' + leaderY + '"></line>';
-    const anchor = '<circle class="battlefield-map__dimension-anchor" cx="' + x1 + '" cy="' + y1 + '" r="0.65"></circle>';
-    const label = '<text class="battlefield-map__dimension-text" x="' + labelX + '" y="' + labelY +
-      '" text-anchor="middle">' + escapeHtml(Math.round(guide.distance) + String.fromCharCode(34)) + '</text>';
-    return line + leader + anchor + label;
-  });
-  return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Two approximate placement distances per terrain piece">' + parts.join("") + '</svg>'
+  // Display only the original Event Companion labels and their stored source
+  // positions. Do not infer endpoints, recalculate distances, or alter values.
+  const labels = sourceMeasurements.filter((item) =>
+    item && typeof item.value === "string" &&
+    Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
+  ).map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) +
+    '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) +
+    '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
+  return labels.length
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + labels.join("") + '</svg>'
     : "";
 }
 
