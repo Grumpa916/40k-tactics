@@ -76,15 +76,16 @@ test("planning map can expand to full screen and return without changing setup s
   screen.destroy();
 });
 
-test("mission and battlefield setup are separate stages", () => {
+test("mission planning, secondary missions, and official terrain setup are separate stages", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
+  assert.match(root.innerHTML, /data-setup-content="pre-game"/);
+  assert.match(root.innerHTML, /data-event-companion-disposition-choice="my"/);
   assert.match(root.innerHTML, /data-setup-content="mission-map"/);
   assert.match(root.innerHTML, /data-secondary-player-panel="p1"/);
-  assert.match(root.innerHTML, /data-event-companion-disposition-choice="my"/);
   screen.setTab("battlefield");
   assert.match(root.innerHTML, /data-setup-content="battlefield"/);
-  assert.match(root.innerHTML, /data-battlefield-map/);
+  assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
   screen.destroy();
 });
 test("terrain setup map omits unit markers even when armies are loaded", () => {
