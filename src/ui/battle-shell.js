@@ -914,6 +914,7 @@ export function createBattleShell(container, {
         session.dispatch({ type: COMMAND_TYPES.ENTER_DEPLOYMENT, payload: {} });
         setupNavigationMessage = "";
         viewedPhase = "deployment";
+        render();
       } catch (error) {
         setupNavigationMessage = error?.message ?? String(error);
         const message = container.querySelector?.("[data-setup-navigation-message]");
