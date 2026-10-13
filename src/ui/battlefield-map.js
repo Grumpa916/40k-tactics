@@ -85,17 +85,61 @@ function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  const label = (x, y, value) =>
-    '<text class="battlefield-map__dimension-text" x="' + px(x) + '" y="' + py(y) +
-    '" text-anchor="middle">' + escapeHtml(value) + '</text>';
-  // Use only the source-verified Event Companion callouts. Do not draw independently
-  // calculated leaders: those leaders can point somewhere different from the source labels.
-  const parts = (Array.isArray(exactMeasurements) ? exactMeasurements : []).filter((item) =>
-    item && typeof item.value === "string" &&
-    Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
-  ).map((item) => label(Number(item.x), Number(item.y), item.value));
-  return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain to battlefield edge measurements">' + parts.join("") + '</svg>'
+  const clampX = (x) => Math.max(0, Math.min(60, Number(x)));
+  const clampY = (y) => Math.max(0, Math.min(44, Number(y)));
+  const edgeFor = (x, y) => {
+    if (x < 0) return "left";
+    if (x > 60) return "right";
+    if (y < 0) return "bottom";
+    if (y > 44) return "top";
+    return [
+      { edge: "left", distance: x },
+      { edge: "right", distance: 60 - x },
+      { edge: "bottom", distance: y },
+      { edge: "top", distance: 44 - y }
+    ].sort((a, b) => a.distance - b.distance)[0].edge;
+  };
+  const measurementParts = (Array.isArray(exactMeasurements) ? exactMeasurements : [])
+    .filter((item) => item && typeof item.value === "string" &&
+      Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)) &&
+      Number.isFinite(Number.parseFloat(item.value)) && Number.parseFloat(item.value) > 0)
+    .map((item) => {
+      const sourceX = Number(item.x);
+      const sourceY = Number(item.y);
+      const x = clampX(sourceX);
+      const y = clampY(sourceY);
+      const length = Number.parseFloat(item.value);
+      const edge = edgeFor(sourceX, sourceY);
+      let x1, y1, x2, y2;
+      if (edge === "left") {
+        x1 = px(0); x2 = px(Math.min(60, length)); y1 = y2 = py(y);
+      } else if (edge === "right") {
+        x1 = px(Math.max(0, 60 - length)); x2 = px(60); y1 = y2 = py(y);
+      } else if (edge === "bottom") {
+        x1 = x2 = px(x); y1 = py(Math.min(44, length)); y2 = py(0);
+      } else {
+        x1 = x2 = px(x); y1 = py(44); y2 = py(Math.max(0, 44 - length));
+      }
+      const tickX = 0.65 / 60 * 100;
+      const tickY = 0.65 / 44 * 100;
+      const ticks = edge === "left" || edge === "right"
+        ? '<line class="battlefield-map__dimension-tick" x1="' + x1 + '" y1="' + (y1 - tickY) + '" x2="' + x1 + '" y2="' + (y1 + tickY) + '"></line>' +
+          '<line class="battlefield-map__dimension-tick" x1="' + x2 + '" y1="' + (y2 - tickY) + '" x2="' + x2 + '" y2="' + (y2 + tickY) + '"></line>'
+        : '<line class="battlefield-map__dimension-tick" x1="' + (x1 - tickX) + '" y1="' + y1 + '" x2="' + (x1 + tickX) + '" y2="' + y1 + '"></line>' +
+          '<line class="battlefield-map__dimension-tick" x1="' + (x2 - tickX) + '" y1="' + y2 + '" x2="' + (x2 + tickX) + '" y2="' + y2 + '"></line>';
+      const line = '<line class="battlefield-map__edge-dimension-line" data-measurement-edge="' + edge +
+        '" data-measurement-value="' + escapeHtml(item.value) + '" x1="' + x1 + '" y1="' + y1 +
+        '" x2="' + x2 + '" y2="' + y2 + '"></line>' + ticks;
+      // Preserve each exact printed value and its extracted label anchor. Labels placed
+      // just outside the board are kept visible at the nearest edge; their source
+      // coordinates remain recorded for regression checks.
+      const label = '<text class="battlefield-map__dimension-text" data-source-x="' + sourceX +
+        '" data-source-y="' + sourceY + '" x="' + px(x) + '" y="' + py(y) +
+        '" text-anchor="middle">' + escapeHtml(item.value) + '</text>';
+      return line + label;
+    });
+  return measurementParts.length
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain to battlefield edge measurements">' + measurementParts.join("") + '</svg>'
     : "";
 }
 
