@@ -924,7 +924,7 @@ export function createBattleShell(container, {
       setSetupWorkspaceTab("army-selection");
       return;
     }
-    const order = ["saves", "army-selection", "pre-game", "battlefield", "mission-map"];
+    const order = ["saves", "army-selection", "pre-game", "mission-map", "battlefield"];
     const index = order.indexOf(setupWorkspaceTab);
     setSetupWorkspaceTab(order[index + 1] ?? "deployment");
   }
