@@ -81,64 +81,62 @@ function geometryOverlay(geometry, terrainOnly = false) {
   return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Battlefield layout overview; use the official Event Companion diagram for exact terrain placement">' +
     zones + terrain + '</svg>';
 }
-function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
+function terrainEdgeMeasurementOverlay(geometry) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  const measurements = Array.isArray(exactMeasurements) ? exactMeasurements : [];
-  const validPoint = (x, y) => Number.isFinite(Number(x)) && Number.isFinite(Number(y));
-  const inferredEndpoints = (item) => {
-    if (validPoint(item.x1, item.y1) && validPoint(item.x2, item.y2)) {
-      return { x1: Number(item.x1), y1: Number(item.y1), x2: Number(item.x2), y2: Number(item.y2) };
-    }
-    // Older source records preserve the printed callout's approximate position, but
-    // not its vector endpoints. Anchor the visual guide to the nearest terrain corner,
-    // then connect that corner to its nearest board edge. This is an illustration, not
-    // a recalculated distance; explicit source endpoints always take precedence.
-    if (!validPoint(item.x, item.y)) return null;
-    const corners = Object.values(geometry.terrainGeometry).flatMap((shape) =>
-      (shape.points ?? []).filter((point) => validPoint(point.x, point.y))
-    );
-    const anchor = corners.reduce((best, point) => {
-      const distance = (Number(point.x) - Number(item.x)) ** 2 + (Number(point.y) - Number(item.y)) ** 2;
-      return !best || distance < best.distance ? { point, distance } : best;
-    }, null)?.point;
-    const x = Math.max(0, Math.min(60, Number(anchor?.x ?? item.x)));
-    const y = Math.max(0, Math.min(44, Number(anchor?.y ?? item.y)));
-    const distances = [
-      { edge: "left", distance: x },
-      { edge: "right", distance: 60 - x },
-      { edge: "bottom", distance: y },
-      { edge: "top", distance: 44 - y }
-    ];
-    const nearest = distances.reduce((best, candidate) => candidate.distance < best.distance ? candidate : best);
-    if (nearest.edge === "left") return { x1: 0, y1: y, x2: x, y2: y };
-    if (nearest.edge === "right") return { x1: x, y1: y, x2: 60, y2: y };
-    if (nearest.edge === "bottom") return { x1: x, y1: 0, x2: x, y2: y };
-    return { x1: x, y1: y, x2: x, y2: 44 };
-  };
-  const dimensionLines = measurements.filter((item) => item && inferredEndpoints(item)).map((item) => {
-    const { x1, y1, x2, y2 } = inferredEndpoints(item);
-    const sx1 = px(x1), sy1 = py(y1), sx2 = px(x2), sy2 = py(y2);
-    const line = '<line class="battlefield-map__dimension-line" data-source-measurement="' +
-      escapeHtml(item.value ?? "") + '" x1="' + sx1 + '" y1="' + sy1 + '" x2="' + sx2 + '" y2="' + sy2 + '"></line>';
-    const tick = (x, y, vertical) => {
-      const half = 0.65;
-      return '<line class="battlefield-map__dimension-tick" x1="' + (vertical ? x - half : x) +
-        '" y1="' + (vertical ? y : y - half) + '" x2="' + (vertical ? x + half : x) +
-        '" y2="' + (vertical ? y : y + half) + '"></line>';
-    };
-    const vertical = Math.abs(sx2 - sx1) < Math.abs(sy2 - sy1);
-    return line + tick(sx1, sy1, vertical) + tick(sx2, sy2, vertical);
+  const edgeCandidates = [
+    { edge: "left", distance: (point) => point.x, project: (point) => ({ x: 0, y: point.y }), horizontal: true },
+    { edge: "right", distance: (point) => 60 - point.x, project: (point) => ({ x: 60, y: point.y }), horizontal: true },
+    { edge: "bottom", distance: (point) => point.y, project: (point) => ({ x: point.x, y: 0 }), horizontal: false },
+    { edge: "top", distance: (point) => 44 - point.y, project: (point) => ({ x: point.x, y: 44 }), horizontal: false }
+  ];
+  const guides = [];
+  Object.entries(geometry.terrainGeometry).forEach(([terrainId, shape]) => {
+    const corners = (shape.points ?? []).filter((point) =>
+      Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
+    ).map((point, index) => ({ x: Number(point.x), y: Number(point.y), index }));
+    if (!corners.length) return;
+    // For each terrain footprint, select its closest corner for each nearby board edge.
+    // The line endpoint is the actual polygon vertex, so it can be reproduced on the table.
+    edgeCandidates.forEach((edge) => {
+      const corner = corners.reduce((best, point) =>
+        !best || edge.distance(point) < edge.distance(best) ? point : best, null);
+      const distance = edge.distance(corner);
+      if (distance < 0 || distance > 24) return;
+      const endpoint = edge.project(corner);
+      const nearestEdge = edgeCandidates.reduce((best, candidate) =>
+        candidate.distance(corner) < best.distance(corner) ? candidate : best, edgeCandidates[0]);
+      if (nearestEdge.edge !== edge.edge) return;
+      guides.push({
+        terrainId, corner, endpoint, distance,
+        label: Math.round(distance) + '"',
+        horizontal: edge.horizontal,
+        key: terrainId + ":" + edge.edge
+      });
+    });
   });
-  const labels = measurements.filter((item) =>
-    item && typeof item.value === "string" && validPoint(item.x, item.y)
-  ).map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) +
-    '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) +
-    '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
-  const parts = [...dimensionLines, ...labels];
+  // Avoid nearly identical duplicate callouts where adjacent pieces touch or overlap.
+  const filtered = guides.filter((guide, index) => !guides.slice(0, index).some((prior) =>
+    prior.terrainId === guide.terrainId &&
+    Math.hypot(prior.corner.x - guide.corner.x, prior.corner.y - guide.corner.y) < 0.25
+  ));
+  const parts = filtered.map((guide) => {
+    const x1 = px(guide.corner.x), y1 = py(guide.corner.y);
+    const x2 = px(guide.endpoint.x), y2 = py(guide.endpoint.y);
+    const midpointX = (x1 + x2) / 2;
+    const midpointY = (y1 + y2) / 2;
+    const labelX = Math.max(2, Math.min(98, midpointX + (guide.horizontal ? 0 : 1.4)));
+    const labelY = Math.max(2, Math.min(98, midpointY + (guide.horizontal ? -1.4 : 0)));
+    return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
+      '" data-edge-distance="' + guide.distance.toFixed(2) + '" x1="' + x1 + '" y1="' + y1 +
+      '" x2="' + x2 + '" y2="' + y2 + '"></line>' +
+      '<circle class="battlefield-map__dimension-anchor" cx="' + x1 + '" cy="' + y1 + '" r="0.65"></circle>' +
+      '<text class="battlefield-map__dimension-text" x="' + labelX + '" y="' + labelY +
+      '" text-anchor="middle">' + escapeHtml(guide.label) + '</text>';
+  });
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain measurements; edge lines are visual guides">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate distances from terrain corners to nearest battlefield edges">' + parts.join("") + '</svg>'
     : "";
 }
 
