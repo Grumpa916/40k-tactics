@@ -96,52 +96,29 @@ function terrainEdgeMeasurementOverlay(geometry) {
     const corners = (shape.points ?? []).filter((point) =>
       Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
     ).map((point, index) => ({ x: Number(point.x), y: Number(point.y), index }));
-    if (!corners.length) return;
-
-    // Choose one reproducible anchor vertex per terrain footprint: the vertex
-    // nearest any board corner. Two perpendicular measurements from this anchor
-    // provide both coordinates needed to place the footprint.
-    const anchor = corners.reduce((best, point) => {
-      const horizontal = Math.min(point.x, 60 - point.x);
-      const vertical = Math.min(point.y, 44 - point.y);
-      const score = horizontal + vertical;
-      return !best || score < best.score ? { point, score } : best;
-    }, null).point;
-    const horizontalEdge = anchor.x <= 30 ? "left" : "right";
-    const verticalEdge = anchor.y <= 22 ? "bottom" : "top";
-    const measurements = [
-      {
-        edge: horizontalEdge, start: anchor,
-        end: horizontalEdge === "left" ? { x: 0, y: anchor.y } : { x: 60, y: anchor.y },
-        distance: horizontalEdge === "left" ? anchor.x : 60 - anchor.x,
-        axis: "horizontal"
-      },
-      {
-        edge: verticalEdge, start: anchor,
-        end: verticalEdge === "bottom" ? { x: anchor.x, y: 0 } : { x: anchor.x, y: 44 },
-        distance: verticalEdge === "bottom" ? anchor.y : 44 - anchor.y,
-        axis: "vertical"
-      }
-    ];
-    measurements.forEach((measurement) => guides.push({
-      terrainId, corner: measurement.start, endpoint: measurement.end,
-      distance: measurement.distance, label: Math.round(measurement.distance) + '"',
-      horizontal: measurement.axis === "horizontal", axis: measurement.axis,
-      key: terrainId + ":" + measurement.axis
-    }));
+    corners.forEach((corner) => {
+      const distances = [
+        { edge: "left", distance: corner.x, endpoint: { x: 0, y: corner.y }, horizontal: true },
+        { edge: "right", distance: 60 - corner.x, endpoint: { x: 60, y: corner.y }, horizontal: true },
+        { edge: "bottom", distance: corner.y, endpoint: { x: corner.x, y: 0 }, horizontal: false },
+        { edge: "top", distance: 44 - corner.y, endpoint: { x: corner.x, y: 44 }, horizontal: false }
+      ];
+      const nearest = distances.reduce((best, candidate) => candidate.distance < best.distance ? candidate : best);
+      guides.push({
+        terrainId, corner, endpoint: nearest.endpoint, distance: nearest.distance,
+        edge: nearest.edge, label: Math.round(nearest.distance) + String.fromCharCode(34),
+        horizontal: nearest.horizontal, key: terrainId + ":" + corner.index
+      });
+    });
   });
-  // Avoid nearly identical duplicate callouts where adjacent pieces touch or overlap.
-  const filtered = guides.filter((guide, index) => !guides.slice(0, index).some((prior) =>
-    prior.terrainId === guide.terrainId && prior.axis === guide.axis &&
-    Math.hypot(prior.corner.x - guide.corner.x, prior.corner.y - guide.corner.y) < 0.25
-  ));
+  const filtered = guides;
   const parts = filtered.map((guide) => {
     const x1 = px(guide.corner.x), y1 = py(guide.corner.y);
     const x2 = px(guide.endpoint.x), y2 = py(guide.endpoint.y);
     const midpointX = (x1 + x2) / 2;
     const midpointY = (y1 + y2) / 2;
-    const labelX = Math.max(2, Math.min(98, midpointX + (guide.horizontal ? 0 : 1.4)));
-    const labelY = Math.max(2, Math.min(98, midpointY + (guide.horizontal ? -1.4 : 0)));
+    const labelX = Math.max(2, Math.min(98, midpointX + (guide.horizontal ? 0 : (guide.edge === "left" ? 1.4 : -1.4))));
+    const labelY = Math.max(2, Math.min(98, midpointY + (guide.horizontal ? (guide.edge === "top" ? 1.4 : -1.4) : 0)));
     return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
       '" data-edge-distance="' + guide.distance.toFixed(2) + '" x1="' + x1 + '" y1="' + y1 +
       '" x2="' + x2 + '" y2="' + y2 + '"></line>' +
