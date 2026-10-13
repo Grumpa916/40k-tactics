@@ -149,7 +149,7 @@ export function createDeploymentScreen(container, {
 
   function handleClick(event) {
     const reserveToken = event.target?.closest?.("[data-reserve-select]");
-    if (reserveToken && container.contains(reserveToken)) {
+    if (reserveToken) {
       const reserveUnitId = reserveToken.getAttribute("data-reserve-select");
       const reserveUnit = (session.getState().units ?? []).find((unit) => unit.id === reserveUnitId);
       if (reserveUnit && reserveUnit.status !== "destroyed" && session.getState().battlefieldMap?.declaredReserves?.[reserveUnitId]) {
