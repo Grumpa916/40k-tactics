@@ -325,9 +325,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
         '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
         '<button type="button" data-setup-workspace-tab="army-builder" aria-pressed="' + String(setupWorkspaceTab === "army-builder") + '">Army Builder</button>' +
         '<button type="button" data-setup-workspace-tab="army-selection" aria-pressed="' + String(setupWorkspaceTab === "army-selection") + '">Step 1 · Select Armies</button>' +
-        '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + '">Step 2 · Pre-game</button>' +
-        '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + '">Step 3 · Mission &amp; Secondaries</button>' +
-        '<button type="button" data-setup-workspace-tab="battlefield" aria-pressed="' + String(setupWorkspaceTab === "battlefield") + '">Step 4 · Create the Battlefield</button>' +
+        '<button type="button" data-setup-workspace-tab="pre-game" aria-pressed="' + String(setupWorkspaceTab === "pre-game") + ''>Step 2 · Mission &amp; Planning</button>' +
+        '<button type="button" data-setup-workspace-tab="battlefield" aria-pressed="' + String(setupWorkspaceTab === "battlefield") + ''>Step 3 · Terrain Setup</button>' +
+        '<button type="button" data-setup-workspace-tab="mission-map" aria-pressed="' + String(setupWorkspaceTab === "mission-map") + ''>Step 4 · Pre-First Turn</button>' +
         '<button type="button" data-setup-workspace-tab="deployment" aria-pressed="' + String(setupWorkspaceTab === "deployment") + '">Step 5 · Deploy and Begin</button></nav>' +
         (showCloud
           ? '<section class="battle-shell__setup-tools" aria-label="Army Builder and cloud battle saves">' +
