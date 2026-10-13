@@ -333,7 +333,7 @@ export function renderBattlefieldMap(state, {
         '<span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>'
       : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
     '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements
-      ? "Terrain-edge distances are shown from the selected verified Event Companion layout. Use the official diagram as the final reference; line of sight is not inferred."
+      ? "Approximate distances run from terrain corners to the nearest battlefield edge and are rounded to the nearest inch. Use the official Event Companion diagram as the final reference; line of sight is not inferred."
       : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p>' +
     '</div>';
 }
