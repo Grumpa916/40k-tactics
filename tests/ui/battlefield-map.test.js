@@ -206,11 +206,11 @@ test("Layout A page 27 renders every stored Event Companion edge callout without
   });
 
   const renderedValues = Array.from(html.matchAll(
-    /<text class="battlefield-map__dimension-text"[^>]*>(.*?)<\\/text>/g
+    /<text class="battlefield-map__dimension-text"[^>]*>(.*?)<\/text>/g
   ), (match) => match[1].replaceAll("&quot;", '"'));
   assert.deepEqual(renderedValues, sourceMeasurements.map((item) => item.value));
   assert.equal((html.match(/class="battlefield-map__edge-dimension-line"/g) ?? []).length, sourceMeasurements.length);
-  assert.match(html, /Event Companion layout A · p\\. 27/);
+  assert.match(html, /Event Companion layout A · p\. 27/);
 });
 
 test("planning and deployment maps stage unplaced units as selectable markers", () => {
