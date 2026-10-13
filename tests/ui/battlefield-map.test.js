@@ -59,6 +59,27 @@ test("missing positions remain visibly unrecorded and objectives require explici
   assert.match(html, /not inferred by this reference grid/);
 });
 
+
+test("planning and deployment maps omit coordinate measurements", () => {
+  const state = {
+    units: [{ id: "u1", ownerId: "p1", name: "Unit", status: "deployed" }],
+    battlefieldMap: { deploymentPlan: {}, actualDeployment: {} }
+  };
+  for (const mode of ["planning", "deployment"]) {
+    const html = renderBattlefieldMap(state, { mode, perspectivePlayerId: "p1" });
+    assert.doesNotMatch(html, /60″ × 44″ reference grid/);
+    assert.doesNotMatch(html, /Y=44″|Y=0″/);
+    assert.doesNotMatch(html, /60 by 44 inch reference board/);
+  }
+});
+
+test("live map retains coordinate reference labels", () => {
+  const html = renderBattlefieldMap({ units: [] }, { mode: "live" });
+  assert.match(html, /60″ × 44″ reference grid/);
+  assert.match(html, /Y=44″/);
+  assert.match(html, /Y=0″/);
+});
+
 test("unknown map mode is rejected", () => {
   assert.throws(() => renderBattlefieldMap({}, { mode: "terrain" }), /Unknown battlefield map mode/);
 });
