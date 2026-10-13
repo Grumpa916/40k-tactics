@@ -96,7 +96,6 @@ test("battlefield overview shows verified terrain footprints without invented me
   }, { mode: "planning", perspectivePlayerId: "p1", showUnits: false });
 
   assert.match(html, /data-terrain="T1"/);
-  assert.doesNotMatch(html, /data-zone=/);
   assert.match(html, /official Event Companion diagram for exact terrain placement/);
   assert.doesNotMatch(html, /data-table-edge-dimension/);
   assert.doesNotMatch(html, /data-table-edge-measurement/);
@@ -247,6 +246,7 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
 
   assert.match(html, /Terrain placement reference/);
   assert.match(html, /Verified Event Companion terrain to battlefield edge measurements/);
+  assert.doesNotMatch(html, /data-zone=/);
   assert.match(html, /Event Companion layout A · p\. 18/);
   assert.match(html, /aria-label="Verified Event Companion terrain to battlefield edge measurements"/);
   assert.doesNotMatch(html, /class="battlefield-map__edge-dimension-line"/);
