@@ -68,9 +68,11 @@ function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = [], source
   const py = (y) => (44 - Number(y)) / 44 * 100;
   const lines = (Array.isArray(sourceLines) ? sourceLines : []).filter((line) => Array.isArray(line) && line.length === 4 && line.every((v) => Number.isFinite(Number(v))))
     .map((line) => '<line class="battlefield-map__dimension-line" data-source-line="true" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"/>');
+  const sourcePlacementAnchors = Number(geometry.page) === 12 ? [[27.8, 33.8], [31.8, 10.1]] : [];
+  const anchors = sourcePlacementAnchors.map(([x, y]) => '<circle class="battlefield-map__dimension-anchor" data-source-placement-anchor="true" data-source-x="' + x + '" data-source-y="' + y + '" cx="' + px(x) + '" cy="' + py(y) + '" r=".8"></circle>');
   const labels = (Array.isArray(sourceMeasurements) ? sourceMeasurements : []).filter((item) => item && typeof item.value === "string" && Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
     .map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) + '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) + '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
-  return lines.length || labels.length ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + lines.join("") + labels.join("") + '</svg>' : "";
+  return lines.length || anchors.length || labels.length ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + lines.join("") + anchors.join("") + labels.join("") + '</svg>' : "";
 }
 
 function positionsForMode(state, mode) {
