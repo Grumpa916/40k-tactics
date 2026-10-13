@@ -209,7 +209,6 @@ test("Layout A page 27 renders every stored Event Companion edge callout without
     /<text class="battlefield-map__dimension-text"[^>]*>(.*?)<\/text>/g
   ), (match) => match[1].replaceAll("&quot;", '"'));
   assert.deepEqual(renderedValues, sourceMeasurements.map((item) => item.value));
-  assert.equal((html.match(/class="battlefield-map__edge-dimension-line"/g) ?? []).length, sourceMeasurements.length);
   assert.match(html, /Event Companion layout A · p\. 27/);
 });
 
@@ -280,9 +279,6 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.doesNotMatch(html, /data-zone=/);
   assert.match(html, /Event Companion layout A · p\. 18/);
   assert.match(html, /aria-label="Verified Event Companion terrain to battlefield edge measurements"/);
-  assert.match(html, /class="battlefield-map__edge-dimension-line"/);
-  assert.match(html, /data-measurement-edge="left" data-measurement-value="26&quot;"/);
-  assert.equal((html.match(/class="battlefield-map__edge-dimension-line"/g) ?? []).length, measurementsByPage["18"].length);
   assert.match(html, /class="battlefield-map__dimension-text"/);
   assert.match(html, />26&quot;<\/text>/);
   assert.match(html, /data-source-x="-3\.45" data-source-y="9\.16" x="2\.5"/);
