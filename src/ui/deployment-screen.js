@@ -79,11 +79,11 @@ export function createDeploymentScreen(container, {
       '<section class="battlefield-map-section"><h2>Deployment Map</h2>' +
       renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId }) +
       '<p>Drag any unit marker to its actual starting location. Tap a marker to select it, then tap an empty point as a fallback. Dashed markers are awaiting placement; planned positions are not copied automatically.</p>' +
-      '<section class="deployment-reserve-tray" aria-label="Units declared in reserves"><h3>Reserves</h3>' +
+      '<style>.deployment-reserve-tray__unit{display:inline-flex;flex-direction:column;gap:5px;min-height:44px;margin:4px;padding:9px 12px;border:1px solid #8b6aa8;border-radius:7px;background:#21182b;color:#fff;text-align:left;font-weight:700;cursor:pointer}.deployment-reserve-tray__unit small{font-size:11px;font-weight:400}</style><section class="deployment-reserve-tray" aria-label="Units declared in reserves"><h3>Reserves</h3>' +
       ((state.units ?? []).filter((unit) => unit && unit.status !== "destroyed" && reserves[unit.id]).map((unit) =>
-        '<span class="deployment-reserve-tray__unit">' + escapeHtml(unit.name ?? unit.id) + ' · ' +
-        escapeHtml(players.find((player) => player.id === unit.ownerId)?.name ?? unit.ownerId) + '</span>'
-      ).join("") || '<p>No units declared in reserves.</p>') +
+        '<button type="button" class="deployment-reserve-tray__unit" data-reserve-select="' + escapeHtml(unit.id) + '" aria-pressed="' + String(selectedUnitId === unit.id) + '">' + escapeHtml(unit.name ?? unit.id) + ' · ' +
+        escapeHtml(players.find((player) => player.id === unit.ownerId)?.name ?? unit.ownerId) + '<small>Tap to select, then tap the map to deploy</small></button>'
+      ).join("") || '<p>No units declared in reserves. Select a unit above and use “Declare selected unit in reserves”.</p>') +
       '</section></section>' +
       '<section class="deployment-controls"><label>Army / player<select data-deployment-player>' + playerOptions + '</select></label>' +
       '<label>Unit to place<select data-deployment-unit><option value="">Select a unit…</option>' + unitOptions + '</select></label>' +
@@ -148,6 +148,18 @@ export function createDeploymentScreen(container, {
   }
 
   function handleClick(event) {
+    const reserveToken = event.target?.closest?.("[data-reserve-select]");
+    if (reserveToken && container.contains(reserveToken)) {
+      const reserveUnitId = reserveToken.getAttribute("data-reserve-select");
+      const reserveUnit = (session.getState().units ?? []).find((unit) => unit.id === reserveUnitId);
+      if (reserveUnit && reserveUnit.status !== "destroyed" && session.getState().battlefieldMap?.declaredReserves?.[reserveUnitId]) {
+        selectedUnitId = reserveUnitId;
+        selectedPlayerId = reserveUnit.ownerId;
+        message = "Reserve unit selected. Tap an empty point on the map when it arrives to record its actual deployment.";
+      }
+      render();
+      return;
+    }
     const marker = event.target?.closest?.("[data-map-unit-id]");
     if (marker && marker.closest?.('[data-map-mode="deployment"]')) {
       selectedUnitId = marker.getAttribute?.("data-map-unit-id") ?? marker.dataset?.mapUnitId ?? null;
