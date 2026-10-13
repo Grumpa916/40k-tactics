@@ -75,3 +75,32 @@ test("every Event Companion map renders its full official terrain-placement tran
     }
   }
 });
+
+test("every terrain placement guide terminates at a battlefield edge", () => {
+  for (let page = 9; page <= 53; page += 1) {
+    const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
+    const overlay = getEventCompanionPlacementOverlay(page, geometry);
+    assert.ok(overlay, `page ${page} should render placement references`);
+    for (const [x1, y1, x2, y2] of overlay.lines) {
+      assert.ok(Number.isFinite(x1) && Number.isFinite(y1), `page ${page} should start guides on terrain`);
+      assert.ok(x2 === 0 || x2 === 60 || y2 === 0 || y2 === 44, `page ${page} guide must terminate at a battlefield edge`);
+    }
+  }
+});
+
+test("every generic terrain piece has at least two distinct measured corners", () => {
+  const failures = [];
+  for (let page = 9; page <= 53; page += 1) {
+    if (page === 12) continue;
+    const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
+    const overlay = getEventCompanionPlacementOverlay(page, geometry);
+    assert.ok(overlay, `page ${page} should render placement references`);
+
+    for (const terrain of Object.keys(geometry.terrainGeometry ?? {})) {
+      const guides = overlay.guides.filter((guide) => guide.terrain === terrain);
+      const corners = new Set(guides.map((guide) => guide.anchor.join(",")));
+      if (corners.size < 2) failures.push(`p${page}:${terrain}=${corners.size}`);
+    }
+  }
+  assert.deepEqual(failures, [], `terrain pieces missing two measured corners: ${failures.join(", ")}`);
+});
