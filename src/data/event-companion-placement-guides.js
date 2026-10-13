@@ -33,8 +33,47 @@ const PAGE_12_GUIDES = Object.freeze([
   { value: '21"', edge: "left",   terrain: "T6",       anchor: [20.9, 23.0], sourceAnchor: [21.01, 22.91] }
 ]);
 
+// Layout A is rotationally symmetric. These are the exact V2 counterpart corners
+// for the source-side anchors above. Mirrored guides reuse the official printed
+// value; no new distance is calculated. This is a display aid so the opposite
+// terrain pieces can be placed from the same official reference relationship.
+const PAGE_12_MIRROR_ANCHORS = Object.freeze({
+  "20.6,34.8": [39.0, 9.0],
+  "36.8,39": [22.9, 4.8],
+  "27.8,33.8": [31.8, 10.1],
+  "43.5,40.1": [16.5, 3.8],
+  "5.8,39": [54.1, 5.0],
+  "17,28.1": [43.0, 15.9],
+  "22.1,14.9": [37.9, 29.0],
+  "55.1,34.1": [4.9, 9.9],
+  "15.7,21": [44.3, 23.0],
+  "17.4,39": [42.4, 5.0],
+  "9.9,26.3": [50.1, 17.7],
+  "55.1,27": [4.9, 16.9],
+  "20.9,23": [38.9, 20.9]
+});
+
+const MIRROR_EDGE = Object.freeze({ left: "right", right: "left", top: "bottom", bottom: "top" });
+
+function page12MirroredGuide(guide) {
+  const exactCounterpart = PAGE_12_MIRROR_ANCHORS[guide.anchor.join(",")];
+  const anchor = exactCounterpart ?? [60 - guide.anchor[0], 44 - guide.anchor[1]];
+  return {
+    ...guide,
+    terrain: "mirror:" + guide.terrain,
+    edge: MIRROR_EDGE[guide.edge],
+    anchor,
+    mirrored: true
+  };
+}
+
+const PAGE_12_COMPLETE_GUIDES = Object.freeze([
+  ...PAGE_12_GUIDES,
+  ...PAGE_12_GUIDES.map(page12MirroredGuide)
+]);
+
 const PAGE_GUIDES = Object.freeze({
-  "12": PAGE_12_GUIDES
+  "12": PAGE_12_COMPLETE_GUIDES
 });
 
 function endpointFor(anchor, edge) {
@@ -80,4 +119,4 @@ export function getEventCompanionPlacementOverlay(page) {
   return { guides, lines, measurements, anchors };
 }
 
-export { PAGE_12_GUIDES };
+export { PAGE_12_GUIDES, PAGE_12_COMPLETE_GUIDES };
