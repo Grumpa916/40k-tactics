@@ -5,7 +5,6 @@ import {
   isValidBattlefieldPosition,
   renderBattlefieldMap
 } from "../../src/ui/battlefield-map.js";
-import { loadEventCompanionEdgeMeasurements } from "../../src/data/event-companion-edge-measurements.js";
 
 test("battlefield coordinates map to a 60 by 44 board with the player's edge at the bottom", () => {
   assert.deepEqual(battlefieldPositionToPercent({ x: 0, y: 0 }), { left: 0, top: 100 });
@@ -223,10 +222,7 @@ test("deployment map shows both armies while excluding declared reserves and des
 
 
 
-test("terrain setup renders exact verified Event Companion corner measurements without recomputing values", async () => {
-  const measurementsByPage = await loadEventCompanionEdgeMeasurements();
-  assert.ok(Array.isArray(measurementsByPage["18"]));
-  assert.ok(measurementsByPage["18"].some((item) => item.value === '26"' && item.x === -3.45));
+test("terrain setup restores edge-distance callouts on the verified terrain layout only", () => {
   const html = renderBattlefieldMap({
     battlefieldMap: { missionSetup: {
       myDisposition: "Take and Hold",
@@ -237,11 +233,20 @@ test("terrain setup renders exact verified Event Companion corner measurements w
   }, {
     mode: "planning",
     showUnits: false,
-    showMeasurements: true,
-    terrainMeasurements: measurementsByPage["18"]
+    showMeasurements: false,
+    showTerrainEdgeMeasurements: true,
+    mapLabel: "Terrain placement reference"
   });
-  assert.match(html, /Verified Event Companion terrain corner measurements/);
-  assert.match(html, />26&quot;<\/text>/);
-  assert.match(html, /x="-3.45"/);
+
+  assert.match(html, /Terrain placement reference/);
+  assert.match(html, /Event Companion layout A · p\. 9/);
+  assert.match(html, /aria-label="Battlefield edge to terrain placement dimensions"/);
+  assert.match(html, /class="battlefield-map__edge-dimension-line"/);
+  assert.match(html, /class="battlefield-map__dimension-text"/);
+  assert.match(html, /Opponent edge · Y=44″/);
+  assert.match(html, /Your edge · Y=0″/);
+  assert.doesNotMatch(html, /class="battlefield-map__ruler/);
+  assert.doesNotMatch(html, /60″ × 44″ reference grid/);
+  assert.doesNotMatch(html, /No positions recorded/);
   assert.doesNotMatch(html, /data-map-unit-id=/);
 });
