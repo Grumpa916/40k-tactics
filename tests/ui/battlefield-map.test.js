@@ -241,7 +241,7 @@ test("terrain setup renders exact verified Event Companion corner measurements w
     terrainMeasurements: measurementsByPage["18"]
   });
   assert.match(html, /Verified Event Companion terrain corner measurements/);
-  assert.match(html, />26\"<\/text>/);
+  assert.match(html, />26&amp;quot;<\/text>/);
   assert.match(html, /x="-3.45"/);
   assert.doesNotMatch(html, /data-map-unit-id=/);
 });
