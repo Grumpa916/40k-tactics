@@ -253,7 +253,7 @@ export function renderBattlefieldMap(state, {
       : '') +
     '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' +
     boardAriaLabel + '">' +
-    (showCoordinateMeasurements ? '<div class="battlefield-map__ruler battlefield-map__ruler--top" aria-label="Horizontal inch measurements">' +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div><div class="battlefield-map__ruler battlefield-map__ruler--top" aria-label="Horizontal inch measurements">' +
       [0,10,20,30,40,50,60].map((inch) => '<span style="left:' + (inch / 60 * 100) + '%">' + inch + '″</span>').join("") +
       '</div><div class="battlefield-map__ruler battlefield-map__ruler--left" aria-label="Vertical inch measurements">' +
       [0,10,20,30,40,44].map((inch) => '<span style="top:' + ((44 - inch) / 44 * 100) + '%">' + inch + '″</span>').join("") +
