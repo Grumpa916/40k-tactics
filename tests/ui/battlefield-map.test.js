@@ -247,40 +247,43 @@ test("deployment map shows both armies while excluding declared reserves and des
 
 
 
-test("terrain setup draws corner-anchored visual distances and ignores legacy callouts", () => {
-  const html = renderBattlefieldMap({
+test("terrain setup displays stored Event Companion labels without recalculating distances", () => {
+  const state = {
+    units: [],
     battlefieldMap: { missionSetup: {
       myDisposition: "Take and Hold",
       opponentDisposition: "Reconnaissance",
       layout: "A"
-    }},
-    units: []
-  }, {
+    }}
+  };
+  const html = renderBattlefieldMap(state, {
     mode: "planning",
     showUnits: false,
     showMeasurements: false,
     showTerrainEdgeMeasurements: true,
-    terrainMeasurements: [{ value: '26"', x: -3.45, y: 9.16 }],
+    terrainMeasurements: [
+      { value: '26"', x: -3.45, y: 9.16 },
+      { value: '5"', x: 12, y: 3 }
+    ],
     mapLabel: "Terrain placement reference"
   });
 
   assert.match(html, /Terrain placement reference/);
-  assert.match(html, /Event Companion layout A · p\\. 18/);
-  assert.match(html, /aria-label="Approximate distances from terrain corners to nearest battlefield edges"/);
-  assert.match(html, /class="battlefield-map__dimension-line"[^>]*data-terrain-corner=/);
-  assert.match(html, /class="battlefield-map__dimension-anchor"/);
-  assert.match(html, /class="battlefield-map__dimension-text"/);
-  assert.doesNotMatch(html, />26&quot;<\\/text>/);
-  assert.doesNotMatch(html, /data-source-x=/);
+  assert.match(html, /aria-label="Original Event Companion terrain measurements"/);
+  assert.match(html, /data-source-x="-3.45" data-source-y="9.16"/);
+  assert.match(html, />26&quot;<\\/text>/);
+  assert.match(html, />5&quot;<\\/text>/);
+  assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /data-edge-distance=/);
+  assert.doesNotMatch(html, /data-terrain-corner=/);
+  assert.doesNotMatch(html, /battlefield-map__dimension-line/);
   assert.doesNotMatch(html, /Opponent edge · Y=44″/);
   assert.doesNotMatch(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
   assert.doesNotMatch(html, /60″ × 44″ reference grid/);
-  assert.doesNotMatch(html, /No positions recorded/);
-  assert.doesNotMatch(html, /data-map-unit-id=/);
 });
 
-test("terrain measurement overlay anchors each guide at a real terrain corner", () => {
+test("terrain measurement labels retain source values and positions only", () => {
   const state = {
     units: [],
     battlefieldMap: { missionSetup: {
@@ -294,15 +297,15 @@ test("terrain measurement overlay anchors each guide at a real terrain corner", 
     showUnits: false,
     showTerrainEdgeMeasurements: true,
     terrainMeasurements: [
-      { value: '12"', x: 20, y: 15, x1: 10, y1: 15, x2: 20, y2: 15 },
+      { value: '12"', x: 20, y: 15 },
       { value: '7"', x: 30, y: 20 }
     ]
   });
-  const lines = html.match(/class="battlefield-map__dimension-line"[^>]*data-terrain-corner="[^"]+"[^>]*x1="[^"]+"[^>]*y1="[^"]+"[^>]*x2="[^"]+"[^>]*y2="[^"]+"/g) ?? [];
-  assert.ok(lines.length > 0);
-  assert.equal((html.match(/class="battlefield-map__dimension-anchor"/g) ?? []).length, lines.length);
-  assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, lines.length);
-  assert.doesNotMatch(html, /data-source-measurement=/);
-  assert.doesNotMatch(html, />12&quot;<\\/text>/);
-  assert.doesNotMatch(html, />7&quot;<\\/text>/);
+  assert.match(html, />12&quot;<\\/text>/);
+  assert.match(html, />7&quot;<\\/text>/);
+  assert.match(html, /data-source-x="20" data-source-y="15"/);
+  assert.match(html, /data-source-x="30" data-source-y="20"/);
+  assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /data-edge-distance=/);
+  assert.doesNotMatch(html, /battlefield-map__dimension-line/);
 });
