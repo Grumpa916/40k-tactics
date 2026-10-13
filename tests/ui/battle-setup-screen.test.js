@@ -282,7 +282,7 @@ test("Fixed secondary selection validates the selected player's mode without an 
 });
 
 
-test("terrain setup displays the selected official Event Companion PDF page without army units", () => {
+test("terrain setup displays the selected digital Event Companion layout with inch rulers and no army units", () => {
   const { root, session, listeners } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
   function tapDisposition(kind, value) {
@@ -304,8 +304,8 @@ test("terrain setup displays the selected official Event Companion PDF page with
   }}});
   screen.setTab("battlefield");
 
-  assert.match(root.innerHTML, /official Event Companion terrain layout A · page 9/i);
-  assert.match(root.innerHTML, /eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x\.pdf#page=9&amp;zoom=125/);
+  assert.match(root.innerHTML, /Digital Battlefield Setup/);
+  assert.match(root.innerHTML, /source page 9/);
   assert.match(root.innerHTML, /data-battlefield-map/);
   assert.match(root.innerHTML, /data-map-layout-status/);
   assert.match(root.innerHTML, /battlefield-map__ruler--top/);
