@@ -279,46 +279,15 @@ test("Fixed secondary selection validates the selected player's mode without an 
 });
 
 
-test("planning map markers can be selected and dragged with pointer events", () => {
-  const { root, session, commands, listeners } = setup();
+test("terrain setup map hides army units and separates terrain setup from unit planning", () => {
+  const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
   screen.setTab("battlefield");
 
-  const board = {
-    closest(selector) {
-      return selector === '[data-map-mode="planning"]' ? {} : null;
-    },
-    getBoundingClientRect() { return { left: 0, top: 0, width: 600, height: 440 }; }
-  };
-  const marker = {
-    style: { left: "10%", top: "90%" },
-    classList: { add() {}, remove() {} },
-    setPointerCapture() {},
-    getAttribute(name) { return name === "data-map-unit-id" ? "friendly" : null; },
-    closest(selector) {
-      if (selector === "[data-map-mode=\"planning\"]") return {};
-      if (selector === "[data-battlefield-map-board]") return board;
-      return null;
-    }
-  };
-  const target = { closest(selector) {
-    return selector === "[data-map-unit-id]" ? marker : null;
-  } };
-
-  listeners.pointerdown({
-    target, pointerId: 7, clientX: 60, clientY: 44,
-    preventDefault() {}
-  });
-  listeners.pointermove({
-    pointerId: 7, clientX: 300, clientY: 220,
-    preventDefault() {}
-  });
-  listeners.pointerup({ pointerId: 7, clientX: 300, clientY: 220 });
-
-  assert.deepEqual(commands, [{
-    type: COMMAND_TYPES.SET_DEPLOYMENT_PLAN_POSITION,
-    payload: { unitId: "friendly", playerId: "p1", position: { x: 30, y: 22 } }
-  }]);
-  assert.match(root.innerHTML, /battlefield-map__unit friendly is-selected is-unplaced/);
+  assert.match(root.innerHTML, /Terrain placement reference for the selected Event Companion layout/);
+  assert.doesNotMatch(root.innerHTML, /data-planning-unit-select/);
+  assert.doesNotMatch(root.innerHTML, /data-clear-deployment-plan/);
+  assert.doesNotMatch(root.innerHTML, /data-map-unit-id=/);
+  assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
   screen.destroy();
 });
