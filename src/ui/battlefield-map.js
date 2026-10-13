@@ -1,4 +1,4 @@
-const BATTLEFIELD_MAP_STYLES = ".battlefield-map{color:inherit;min-width:0}.battlefield-map__meta,.battlefield-map__legend{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:#aeb9c7;font-size:12px;margin:8px 0}.battlefield-map__board{position:relative;width:100%;aspect-ratio:15/11;overflow:hidden;border:1px solid #596879;border-radius:10px;background-color:#17221f;background-image:linear-gradient(to right,rgba(220,235,230,.10) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.10) 1px,transparent 1px);background-size:10% 9.0909%;touch-action:pan-y;overscroll-behavior:contain}.battlefield-map__edge{position:absolute;left:0;right:0;z-index:1;text-align:center;padding:3px 4px;font-size:10px;letter-spacing:.03em;background:rgba(8,14,18,.72);color:#dbe5ee;pointer-events:none}.battlefield-map__edge--top{top:0}.battlefield-map__edge--bottom{bottom:0}.battlefield-map__ruler{position:absolute;inset:0;z-index:2;pointer-events:none;color:#fff;font-size:10px;font-weight:800;text-shadow:0 1px 3px #000;background:transparent}.battlefield-map__ruler span{position:absolute;padding:1px 3px;border-radius:3px;background:#101820d9;transform:translate(-50%,-50%)}.battlefield-map__ruler--top{inset:14px 0 auto;height:0}.battlefield-map__ruler--left{inset:0 auto 0 2px;width:0}.battlefield-map__ruler--left span{transform:translateY(-50%)}.battlefield-map__terrain-measurements{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}.battlefield-map__measurement-box{fill:rgba(115,155,190,.08);stroke:#6f8fa9;stroke-width:.28;vector-effect:non-scaling-stroke;opacity:.85}.battlefield-map__dimension-line,.battlefield-map__dimension-tick{stroke:#e7eef5;stroke-width:.24;vector-effect:non-scaling-stroke}.battlefield-map__dimension-anchor{fill:#f6d783;stroke:#101820;stroke-width:.25;vector-effect:non-scaling-stroke}.battlefield-map__edge-dimension-line{stroke:#d9e5ef;stroke-width:.24;stroke-dasharray:1 .65;vector-effect:non-scaling-stroke}.battlefield-map__dimension-text{fill:#f4f8fb;font-family:Arial,sans-serif;font-size:2.15px;font-weight:900;paint-order:stroke;stroke:#071019;stroke-width:.7px;stroke-linejoin:round}.battlefield-map__geometry{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}.battlefield-map__zone{fill:rgba(84,150,196,.12);stroke:rgba(130,190,232,.85);stroke-width:.18;stroke-dasharray:.7 .45}.battlefield-map__terrain{fill:rgba(135,145,132,.8);stroke:#d0d7d0;stroke-width:.28;stroke-linejoin:round}.battlefield-map__unit{position:absolute;transform:translate(-50%,-50%);z-index:2;max-width:32%;padding:4px 6px;border:1px solid #a9d8ff;border-radius:6px;background:#17344a;color:#f4f8ff;font-size:10px;font-weight:700;line-height:1.2;text-align:center;overflow-wrap:anywhere;box-shadow:0 1px 4px #0008;cursor:default;user-select:none;-webkit-user-select:none}.battlefield-map--planning .battlefield-map__unit,.battlefield-map--deployment .battlefield-map__unit{cursor:grab;touch-action:none}.battlefield-map__unit.is-selected{outline:3px solid #d6a8ff;outline-offset:2px;z-index:5}.battlefield-map__unit.is-unplaced{border-style:dashed;opacity:.9}.battlefield-map__unit.is-dragging{cursor:grabbing;z-index:8}.battlefield-map--live .battlefield-map__unit[role=button]{cursor:grab;touch-action:none}.battlefield-map__unit.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__objective{position:absolute;z-index:2;transform:translate(-50%,-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #f6d783;border-radius:50%;background:#46391a;color:#fff6d8;font-size:8px;font-weight:800;box-shadow:0 1px 4px #0008;overflow:hidden}.battlefield-map__empty{position:absolute;inset:14% 8%;display:flex;align-items:center;justify-content:center;text-align:center;color:#d5e0df;font-size:13px;padding:12px;pointer-events:none}.battlefield-map__legend{justify-content:flex-start;gap:16px}.battlefield-map__legend span{display:inline-flex;align-items:center;gap:5px}.battlefield-map__legend i{width:10px;height:10px;display:inline-block;border:1px solid #a9d8ff;border-radius:3px;background:#17344a}.battlefield-map__legend i.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__legend i.objective{border:2px solid #f6d783;border-radius:50%;background:#46391a}.battlefield-map__notice{margin:8px 0 0;color:#9daab8;font-size:11px;line-height:1.4}.battlefield-map-section{min-width:0}.battlefield-map-section.is-fullscreen{position:fixed;inset:0;z-index:9999;overflow:auto;box-sizing:border-box;padding:12px;background:#101820}.battlefield-map-section.is-fullscreen .battlefield-map__board{height:calc(100vh - 190px);min-height:55vh;aspect-ratio:auto}.battlefield-map-section.is-fullscreen .battlefield-map__geometry{max-height:100%}.deployment-reserve-tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;padding:12px;border:1px solid #8d6bb1;border-radius:9px;background:#20182a;color:#f2eaff}.deployment-reserve-tray h3{flex:0 0 100%;margin:0;font-size:14px}.deployment-reserve-tray__unit{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border:1px solid #8d6bb1;border-radius:7px;background:#30213e;font-size:12px;font-weight:750;overflow-wrap:anywhere}.deployment-reserve-tray p{margin:0;font-size:12px;opacity:.8}@media(max-width:650px){.battlefield-map__unit{max-width:36%;padding:3px 4px;font-size:9px}.battlefield-map__edge{font-size:9px}}";
+const BATTLEFIELD_MAP_STYLES = ".battlefield-map{color:inherit;min-width:0}.battlefield-map__meta,.battlefield-map__legend{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:#aeb9c7;font-size:12px;margin:8px 0}.battlefield-map__board{position:relative;width:100%;aspect-ratio:15/11;overflow:hidden;border:1px solid #596879;border-radius:10px;background-color:#17221f;background-image:linear-gradient(to right,rgba(220,235,230,.10) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.10) 1px,transparent 1px);background-size:10% 9.0909%;touch-action:pan-y;overscroll-behavior:contain}.battlefield-map__edge{position:absolute;left:0;right:0;z-index:1;text-align:center;padding:3px 4px;font-size:10px;letter-spacing:.03em;background:rgba(8,14,18,.72);color:#dbe5ee;pointer-events:none}.battlefield-map__edge--top{top:0}.battlefield-map__edge--bottom{bottom:0}.battlefield-map__ruler{position:absolute;inset:0;z-index:2;pointer-events:none;color:#fff;font-size:10px;font-weight:800;text-shadow:0 1px 3px #000;background:transparent}.battlefield-map__ruler span{position:absolute;padding:1px 3px;border-radius:3px;background:#101820d9;transform:translate(-50%,-50%)}.battlefield-map__ruler--top{inset:14px 0 auto;height:0}.battlefield-map__ruler--left{inset:0 auto 0 2px;width:0}.battlefield-map__ruler--left span{transform:translateY(-50%)}.battlefield-map__terrain-measurements{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}.battlefield-map__measurement-box{fill:rgba(115,155,190,.08);stroke:#6f8fa9;stroke-width:.28;vector-effect:non-scaling-stroke;opacity:.85}.battlefield-map__dimension-line,.battlefield-map__dimension-tick{stroke:#e7eef5;stroke-width:.24;vector-effect:non-scaling-stroke}.battlefield-map__dimension-anchor{fill:#f6d783;stroke:#101820;stroke-width:.25;vector-effect:non-scaling-stroke}.battlefield-map__dimension-leader{stroke:#aeb9c7;stroke-width:.18;stroke-dasharray:.6 .5;vector-effect:non-scaling-stroke}.battlefield-map__edge-dimension-line{stroke:#d9e5ef;stroke-width:.24;stroke-dasharray:1 .65;vector-effect:non-scaling-stroke}.battlefield-map__dimension-text{fill:#f4f8fb;font-family:Arial,sans-serif;font-size:2.15px;font-weight:900;paint-order:stroke;stroke:#071019;stroke-width:.7px;stroke-linejoin:round}.battlefield-map__geometry{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}.battlefield-map__zone{fill:rgba(84,150,196,.12);stroke:rgba(130,190,232,.85);stroke-width:.18;stroke-dasharray:.7 .45}.battlefield-map__terrain{fill:rgba(135,145,132,.8);stroke:#d0d7d0;stroke-width:.28;stroke-linejoin:round}.battlefield-map__unit{position:absolute;transform:translate(-50%,-50%);z-index:2;max-width:32%;padding:4px 6px;border:1px solid #a9d8ff;border-radius:6px;background:#17344a;color:#f4f8ff;font-size:10px;font-weight:700;line-height:1.2;text-align:center;overflow-wrap:anywhere;box-shadow:0 1px 4px #0008;cursor:default;user-select:none;-webkit-user-select:none}.battlefield-map--planning .battlefield-map__unit,.battlefield-map--deployment .battlefield-map__unit{cursor:grab;touch-action:none}.battlefield-map__unit.is-selected{outline:3px solid #d6a8ff;outline-offset:2px;z-index:5}.battlefield-map__unit.is-unplaced{border-style:dashed;opacity:.9}.battlefield-map__unit.is-dragging{cursor:grabbing;z-index:8}.battlefield-map--live .battlefield-map__unit[role=button]{cursor:grab;touch-action:none}.battlefield-map__unit.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__objective{position:absolute;z-index:2;transform:translate(-50%,-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #f6d783;border-radius:50%;background:#46391a;color:#fff6d8;font-size:8px;font-weight:800;box-shadow:0 1px 4px #0008;overflow:hidden}.battlefield-map__empty{position:absolute;inset:14% 8%;display:flex;align-items:center;justify-content:center;text-align:center;color:#d5e0df;font-size:13px;padding:12px;pointer-events:none}.battlefield-map__legend{justify-content:flex-start;gap:16px}.battlefield-map__legend span{display:inline-flex;align-items:center;gap:5px}.battlefield-map__legend i{width:10px;height:10px;display:inline-block;border:1px solid #a9d8ff;border-radius:3px;background:#17344a}.battlefield-map__legend i.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__legend i.objective{border:2px solid #f6d783;border-radius:50%;background:#46391a}.battlefield-map__notice{margin:8px 0 0;color:#9daab8;font-size:11px;line-height:1.4}.battlefield-map-section{min-width:0}.battlefield-map-section.is-fullscreen{position:fixed;inset:0;z-index:9999;overflow:auto;box-sizing:border-box;padding:12px;background:#101820}.battlefield-map-section.is-fullscreen .battlefield-map__board{height:calc(100vh - 190px);min-height:55vh;aspect-ratio:auto}.battlefield-map-section.is-fullscreen .battlefield-map__geometry{max-height:100%}.deployment-reserve-tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;padding:12px;border:1px solid #8d6bb1;border-radius:9px;background:#20182a;color:#f2eaff}.deployment-reserve-tray h3{flex:0 0 100%;margin:0;font-size:14px}.deployment-reserve-tray__unit{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border:1px solid #8d6bb1;border-radius:7px;background:#30213e;font-size:12px;font-weight:750;overflow-wrap:anywhere}.deployment-reserve-tray p{margin:0;font-size:12px;opacity:.8}@media(max-width:650px){.battlefield-map__unit{max-width:36%;padding:3px 4px;font-size:9px}.battlefield-map__edge{font-size:9px}}";
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
 
 const BATTLEFIELD_WIDTH_IN = 60;
@@ -85,60 +85,75 @@ function terrainEdgeMeasurementOverlay(geometry) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  const edges = [
-    { edge: "left", distance: (p) => p.x, endpoint: (p) => ({ x: 0, y: p.y }), along: (p) => p.y, horizontal: true },
-    { edge: "right", distance: (p) => 60 - p.x, endpoint: (p) => ({ x: 60, y: p.y }), along: (p) => p.y, horizontal: true },
-    { edge: "bottom", distance: (p) => p.y, endpoint: (p) => ({ x: p.x, y: 0 }), along: (p) => p.x, horizontal: false },
-    { edge: "top", distance: (p) => 44 - p.y, endpoint: (p) => ({ x: p.x, y: 44 }), along: (p) => p.x, horizontal: false }
-  ];
-  const guides = [];
+  const pieces = [];
   Object.entries(geometry.terrainGeometry).forEach(([terrainId, shape]) => {
-    const points = (shape.points ?? []).filter((p) =>
+    const corners = (shape.points ?? []).filter((p) =>
       Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y))
     ).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
-    points.forEach((corner, index) => {
-      const distances = edges.map((edge) => ({ edge, distance: edge.distance(corner) }))
-        .sort((a, b) => a.distance - b.distance);
-      const chosen = distances[0];
-      guides.push({
-        terrainId, corner, index, edge: chosen.edge.edge,
-        endpoint: chosen.edge.endpoint(corner), distance: chosen.distance,
-        horizontal: chosen.edge.horizontal, along: chosen.edge.along(corner)
-      });
+    if (!corners.length) return;
+    // One stable corner per piece, selected near a board corner. Two perpendicular
+    // distances locate that point without flooding the map with every polygon vertex.
+    const anchor = corners.reduce((best, point) => {
+      const score = Math.min(point.x, 60 - point.x) + Math.min(point.y, 44 - point.y);
+      return !best || score < best.score ? { point, score } : best;
+    }, null).point;
+    pieces.push({ terrainId, corner: anchor,
+      horizontalEdge: anchor.x <= 30 ? "left" : "right",
+      verticalEdge: anchor.y <= 22 ? "bottom" : "top" });
+  });
+  const guides = [];
+  pieces.forEach((piece) => {
+    const { corner, terrainId } = piece;
+    const horiz = piece.horizontalEdge;
+    const vert = piece.verticalEdge;
+    guides.push({
+      terrainId, corner, edge: horiz,
+      endpoint: { x: horiz === "left" ? 0 : 60, y: corner.y },
+      distance: horiz === "left" ? corner.x : 60 - corner.x,
+      axis: "horizontal"
+    });
+    guides.push({
+      terrainId, corner, edge: vert,
+      endpoint: { x: corner.x, y: vert === "bottom" ? 0 : 44 },
+      distance: vert === "bottom" ? corner.y : 44 - corner.y,
+      axis: "vertical"
     });
   });
-
-  // Keep a single distance label per terrain vertex. Lines terminate at the
-  // selected board edge; labels are moved into a dedicated gutter on that edge
-  // so they do not stack along the board boundary.
-  const groups = new Map(edges.map((edge) => [edge.edge, []]));
+  const edges = ["left", "right", "top", "bottom"];
+  const groups = new Map(edges.map((edge) => [edge, []]));
   guides.forEach((guide) => groups.get(guide.edge).push(guide));
-  groups.forEach((items) => {
-    items.sort((a, b) => a.along - b.along);
+  groups.forEach((items, edge) => {
+    items.sort((a, b) => edge === "left" || edge === "right"
+      ? a.corner.y - b.corner.y : a.corner.x - b.corner.x);
     items.forEach((item, index) => { item.slot = index; item.total = items.length; });
   });
-
   const parts = guides.map((guide) => {
     const x1 = px(guide.corner.x), y1 = py(guide.corner.y);
     const x2 = px(guide.endpoint.x), y2 = py(guide.endpoint.y);
-    let labelX = x2, labelY = y2;
+    let labelX, labelY, leaderX, leaderY;
     if (guide.edge === "left" || guide.edge === "right") {
-      labelX = guide.edge === "left" ? 2.0 : 98.0;
-      labelY = 4 + (guide.slot + 0.5) * 92 / Math.max(1, guide.total);
+      labelX = guide.edge === "left" ? 2.2 : 97.8;
+      labelY = 3.5 + (guide.slot + 0.5) * 93 / Math.max(1, guide.total);
+      leaderX = x2;
+      leaderY = labelY;
     } else {
-      labelX = 2 + (guide.slot + 0.5) * 96 / Math.max(1, guide.total);
-      labelY = guide.edge === "top" ? 3.2 : 96.8;
+      labelX = 2.5 + (guide.slot + 0.5) * 95 / Math.max(1, guide.total);
+      labelY = guide.edge === "top" ? 3.0 : 97.0;
+      leaderX = labelX;
+      leaderY = y2;
     }
-    return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
+    const line = '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
       '" data-edge="' + guide.edge + '" data-edge-distance="' + guide.distance.toFixed(2) +
-      '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>' +
-      '<circle class="battlefield-map__dimension-anchor" cx="' + x1 + '" cy="' + y1 + '" r="0.65"></circle>' +
-      '<text class="battlefield-map__dimension-text" x="' + labelX + '" y="' + labelY +
-      '" text-anchor="middle" data-distance-label-edge="' + guide.edge + '">' +
-      escapeHtml(Math.round(guide.distance) + String.fromCharCode(34)) + '</text>';
+      '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>';
+    const leader = '<line class="battlefield-map__dimension-leader" x1="' + x2 + '" y1="' + y2 +
+      '" x2="' + leaderX + '" y2="' + leaderY + '"></line>';
+    const anchor = '<circle class="battlefield-map__dimension-anchor" cx="' + x1 + '" cy="' + y1 + '" r="0.65"></circle>';
+    const label = '<text class="battlefield-map__dimension-text" x="' + labelX + '" y="' + labelY +
+      '" text-anchor="middle">' + escapeHtml(Math.round(guide.distance) + String.fromCharCode(34)) + '</text>';
+    return line + leader + anchor + label;
   });
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate distances from terrain corners to nearest battlefield edges">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Two approximate placement distances per terrain piece">' + parts.join("") + '</svg>'
     : "";
 }
 
@@ -335,7 +350,7 @@ export function renderBattlefieldMap(state, {
         '<span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>'
       : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
     '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements
-      ? "Approximate distances run from terrain corners to the nearest battlefield edge and are rounded to the nearest inch. Use the official Event Companion diagram as the final reference; line of sight is not inferred."
+      ? "Two approximate distances per terrain piece run from one marked corner to adjacent battlefield edges. Labels are separated along the edges; use the official Event Companion diagram as the final reference."
       : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p>' +
     '</div>';
 }
