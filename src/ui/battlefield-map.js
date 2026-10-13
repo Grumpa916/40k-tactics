@@ -238,6 +238,9 @@ export function renderBattlefieldMap(state, {
       .map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " +
         objectiveControlLabel(objective, safeState))).join(" · ")
     : "";
+  const boardAriaLabel = showCoordinateMeasurements
+    ? modeDescription(mode) + ", 60 by 44 inch reference board"
+    : modeDescription(mode) + ", battlefield board";
   return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode +
     '" data-battlefield-map data-map-mode="' + mode + '">' +
     '<div class="battlefield-map__meta"><span>' + modeDescription(mode) +
@@ -248,10 +251,10 @@ export function renderBattlefieldMap(state, {
       ? '<p class="battlefield-map__meta" data-map-objective-status>' + objectiveStatusSummary + '</p>'
       : '') +
     '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' +
-    modeDescription(mode) + ', 60 by 44 inch reference board">' +
-    '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' +
+    boardAriaLabel + '">' +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' : '') +
     geometryOverlay(layoutGeometry) + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
-    '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') +
     '</div>' + (showUnits
       ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span>' +
         '<span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>'
