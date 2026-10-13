@@ -290,7 +290,7 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.doesNotMatch(html, /data-map-unit-id=/);
 });
 
-test("terrain measurement overlay renders only explicitly sourced dimension endpoints", () => {
+test("terrain measurement overlay draws explicit endpoints and inferred corner-to-edge guides", () => {
   const state = {
     units: [],
     battlefieldMap: { missionSetup: {
