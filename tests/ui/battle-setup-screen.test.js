@@ -161,7 +161,7 @@ test("selected Event Companion layout renders its map in the pre-game workspace"
     }}});
   }
   tapDisposition("my", "Take and Hold");
-  tapDisposition("opponent", "Disruption");
+  tapDisposition("opponent", "Take and Hold");
   assert.match(root.innerHTML, /data-map-layout-status/);
   assert.match(root.innerHTML, /data-terrain=/);
   assert.match(root.innerHTML, /data-layout-objective=/);
