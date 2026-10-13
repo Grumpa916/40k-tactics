@@ -4,7 +4,7 @@ import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_
 import { getPreGameAbilityRules, getPreGameProcedureSteps } from "../rules/pre-game-procedure.js";
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
-import { loadEventCompanionEdgeMeasurements } from "../data/event-companion-edge-measurements.js";
+import { loadEventCompanionEdgeMeasurements, loadEventCompanionMeasurementLines } from "../data/event-companion-edge-measurements.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
 import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
@@ -43,6 +43,7 @@ export function createBattleSetupScreen(container, {
   let battlefieldMapFullscreen = false;
   let screenDestroyed = false;
   let edgeMeasurementsByPage = {};
+  let edgeMeasurementLinesByPage = {};
   const configuredSecondaryCatalog = secondaryMissionCatalog.length
     ? secondaryMissionCatalog
     : SECONDARY_MISSION_CATALOG;
@@ -443,6 +444,7 @@ export function createBattleSetupScreen(container, {
           showMeasurements: false,
           showTerrainEdgeMeasurements: true,
           terrainMeasurements: edgeMeasurementsByPage[String(selectedLayoutOption.page)] ?? [],
+          terrainMeasurementLines: edgeMeasurementLinesByPage[String(selectedLayoutOption.page)] ?? [],
           mapLabel: "Terrain placement reference"
         })
       : '<div class="terrain-reference-missing"><strong>Verified digital terrain layout unavailable.</strong>' +
@@ -484,9 +486,10 @@ export function createBattleSetupScreen(container, {
   container.addEventListener?.("pointercancel", handlePlanningPointerCancel);
   const unsubscribe = session.subscribe(render);
   render();
-  loadEventCompanionEdgeMeasurements().then((measurements) => {
-    if (screenDestroyed || !measurements || !Object.keys(measurements).length) return;
-    edgeMeasurementsByPage = measurements;
+  Promise.all([loadEventCompanionEdgeMeasurements(), loadEventCompanionMeasurementLines()]).then(([measurements, lines]) => {
+    if (screenDestroyed) return;
+    if (measurements && Object.keys(measurements).length) edgeMeasurementsByPage = measurements;
+    if (lines && Object.keys(lines).length) edgeMeasurementLinesByPage = lines;
     render();
   });
   return {
