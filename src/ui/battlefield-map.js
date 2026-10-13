@@ -133,8 +133,10 @@ function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
       // Preserve each exact printed value and its extracted label anchor. Labels placed
       // just outside the board are kept visible at the nearest edge; their source
       // coordinates remain recorded for regression checks.
+      const labelX = sourceX < 0 ? 1.5 : sourceX > 60 ? 58.5 : x;
+      const labelY = sourceY < 0 ? 1.5 : sourceY > 44 ? 42.5 : y;
       const label = '<text class="battlefield-map__dimension-text" data-source-x="' + sourceX +
-        '" data-source-y="' + sourceY + '" x="' + px(x) + '" y="' + py(y) +
+        '" data-source-y="' + sourceY + '" x="' + px(labelX) + '" y="' + py(labelY) +
         '" text-anchor="middle">' + escapeHtml(item.value) + '</text>';
       return line + label;
     });
