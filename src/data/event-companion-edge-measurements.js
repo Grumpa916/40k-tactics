@@ -18,3 +18,38 @@ export async function loadEventCompanionEdgeMeasurements() {
     return {};
   }
 }
+
+
+// Official source-page measurement guide segments extracted from the PDF vector artwork.
+// Coordinates are inches on the V2 landscape battlefield; endpoints are transformed from the printed diagram.
+// Page 18 is the current Layout A reference under visual review.
+const SOURCE_MEASUREMENT_LINES = Object.freeze({
+  "18": [
+    [33.894, 0.458, 26.084, 43.771],
+    [35.891, 17.025, 59.96, 17.025],
+    [59.985, 25.487, 55.077, 25.487],
+    [59.985, 21.747, 51.2, 21.747],
+    [41.052, 40.0, 41.052, 43.997],
+    [45.081, 43.962, 45.081, 30.019],
+    [55.11, 37.037, 55.11, 44.017],
+    [60.09, 9.969, 47.215, 9.969],
+    [60.158, 40.0, 41.092, 40.0],
+    [35.747, 43.981, 35.747, 27.138],
+    [33.982, 4.927, 33.982, -0.124],
+    [34.01, 4.927, 60.078, 4.927],
+    [25.953, 9.855, 25.953, -0.124],
+    [24.231, 43.956, 24.231, 27.112],
+    [47.099, 4.056, 47.099, -0.1],
+    [40.201, 4.036, 40.201, -0.1],
+    [59.985, 37.037, 55.077, 37.037],
+    [59.985, 30.019, 45.087, 30.019],
+    [11.992, 42.971, -0.107, 42.971],
+    [48.11, 0.993, 60.088, 0.993],
+    [59.978, 42.971, 40.077, 42.971],
+    [0.003, 0.993, 19.904, 0.993]
+  ]
+});
+
+export async function loadEventCompanionMeasurementLines() {
+  return SOURCE_MEASUREMENT_LINES;
+}
