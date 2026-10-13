@@ -431,14 +431,23 @@ export function createBattleSetupScreen(container, {
         '<option value="tactical"' + (playerMode === "tactical" ? ' selected' : '') + '>Tactical</option></select></label>' +
         modeGuidance + fixedMarkup + '</section>';
     }).join("");
-    const battlefieldMarkup = '<section class="battlefield-map-section' + (battlefieldMapFullscreen ? ' is-fullscreen' : '') + '" data-battlefield-map-section>' +
+    const selectedLayoutOption = layoutOptions?.layouts.find((item) => item.layout === missionSetup.layout);
+    const terrainReferenceMarkup = selectedLayoutOption
+      ? '<div class="terrain-reference-frame"><iframe src="' +
+        escapeHtml(EVENT_COMPANION_MAP_CATALOG.source.sourceUrl + '#page=' + selectedLayoutOption.page + '&zoom=125') +
+        '" title="Official Event Companion terrain layout ' + escapeHtml(selectedLayoutOption.layout) +
+        ', page ' + selectedLayoutOption.page + '" loading="eager"></iframe></div>'
+      : '<div class="terrain-reference-missing"><strong>Official terrain layout unavailable.</strong>' +
+        '<p>Select both Force Dispositions and a valid Layout A, B, or C on the mission setup screen.</p></div>';
+    const battlefieldMarkup = '<style>.battlefield-map-section{min-width:0}.battlefield-map-section.is-fullscreen{position:fixed;inset:0;z-index:9999;overflow:auto;box-sizing:border-box;padding:12px;background:#101820}.terrain-reference-frame{width:100%;height:min(76vh,900px);min-height:420px;background:#fff;border:1px solid #596879;border-radius:8px;overflow:hidden}.terrain-reference-frame iframe{display:block;width:100%;height:100%;border:0;background:#fff}.battlefield-map-section.is-fullscreen .terrain-reference-frame{height:calc(100vh - 100px);min-height:0}.terrain-reference-missing{padding:24px;border:1px solid #596879;border-radius:8px}</style>' +
+      '<section class="battlefield-map-section' + (battlefieldMapFullscreen ? ' is-fullscreen' : '') + '" data-battlefield-map-section>' +
       '<div class="battlefield-map-section__heading"><h2>Create the Battlefield</h2>' +
       '<button type="button" data-toggle-battlefield-fullscreen aria-pressed="' + String(battlefieldMapFullscreen) + '">' +
       (battlefieldMapFullscreen ? 'Exit full screen' : 'Expand map') + '</button></div>' +
-      '<p>Terrain placement reference for the selected Event Companion layout. Unit planning and deployment are handled separately.</p>' +
-      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, showUnits: false }) +
-      '<p>Use the dimension guides to position terrain from the battlefield edges. Confirm final measurements on the physical tabletop.</p>' +
-      preGameRolesMarkup + '</section>';
+      '<p>Official Event Companion terrain layout ' + escapeHtml(missionSetup.layout ?? 'not selected') +
+      (selectedLayoutOption ? ' · page ' + selectedLayoutOption.page : '') +
+      '. This source diagram is authoritative for terrain placement; no reconstructed measurements are overlaid.</p>' +
+      terrainReferenceMarkup + preGameRolesMarkup + '</section>';
     const missionMapMarkup =
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
       '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
