@@ -81,20 +81,25 @@ function geometryOverlay(geometry, terrainOnly = false) {
   return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Battlefield layout overview; use the official Event Companion diagram for exact terrain placement">' +
     zones + terrain + '</svg>';
 }
-function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = []) {
-  if (!geometry?.verified || !geometry.terrainGeometry || !Array.isArray(sourceMeasurements)) return "";
+function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = [], sourceLines = []) {
+  if (!geometry?.verified || !geometry.terrainGeometry ||
+      (!Array.isArray(sourceMeasurements) && !Array.isArray(sourceLines))) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  // Display only the original Event Companion labels and their stored source
-  // positions. Do not infer endpoints, recalculate distances, or alter values.
-  const labels = sourceMeasurements.filter((item) =>
+  // Source lines are copied from the official Event Companion diagram artwork.
+  // Never infer endpoints or calculate replacement distances.
+  const lines = (Array.isArray(sourceLines) ? sourceLines : []).filter((line) =>
+    Array.isArray(line) && line.length === 4 && line.every((v) => Number.isFinite(Number(v)))
+  ).map((line) => '<line class="battlefield-map__dimension-line" data-source-line="true" x1="' +
+    px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"/>');
+  const labels = (Array.isArray(sourceMeasurements) ? sourceMeasurements : []).filter((item) =>
     item && typeof item.value === "string" &&
     Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
   ).map((item) => '<text class="battlefield-map__dimension-text" data-source-x="' + Number(item.x) +
     '" data-source-y="' + Number(item.y) + '" x="' + px(item.x) + '" y="' + py(item.y) +
     '" text-anchor="middle">' + escapeHtml(item.value) + '</text>');
-  return labels.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + labels.join("") + '</svg>'
+  return lines.length || labels.length
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Original Event Companion terrain measurements">' + lines.join("") + labels.join("") + '</svg>'
     : "";
 }
 
@@ -252,7 +257,7 @@ export function renderBattlefieldMap(state, {
     ? ""
     : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
   const terrainMeasurementOverlay = showTerrainEdgeMeasurements
-    ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements)
+    ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements, options.terrainMeasurementLines ?? [])
     : "";
 
   const liveStatus = mode === "live" ? liveStatusLabel(safeState) : "";
