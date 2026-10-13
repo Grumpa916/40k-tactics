@@ -81,10 +81,11 @@ function geometryOverlay(geometry) {
   return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Battlefield layout overview; use the official Event Companion diagram for exact terrain placement">' +
     zones + terrain + '</svg>';
 }
-function terrainEdgeMeasurementOverlay(geometry) {
+function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
   const entries = Object.entries(geometry.terrainGeometry).filter(([, shape]) =>
     Array.isArray(shape?.points) && shape.points.length >= 3);
+  const useExactLabels = Array.isArray(exactMeasurements) && exactMeasurements.length > 0;
   const fmt = (number) => {
     const value = Math.round(Number(number) * 10) / 10;
     return Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -105,9 +106,11 @@ function terrainEdgeMeasurementOverlay(geometry) {
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
-    // Match the previous terrain map: exact verified footprints with edge-to-edge callouts.
     parts.push('<polygon class="battlefield-map__measurement-box" points="' +
       points.map((point) => px(point.x) + ',' + py(point.y)).join(' ') + '"/>');
+
+    // Dimension leaders use the exact verified footprint geometry. When source-verified
+    // measurement labels are available, display them unchanged instead of recomputing values.
     const left = minX, right = 60 - maxX;
     const horizontalSide = left <= right ? "LEFT" : "RIGHT";
     const horizontalDistance = horizontalSide === "LEFT" ? left : right;
@@ -118,9 +121,9 @@ function terrainEdgeMeasurementOverlay(geometry) {
       parts.push(
         line(edgeX, y, terrainX, y, "battlefield-map__edge-dimension-line"),
         line(edgeX, y - 0.55, edgeX, y + 0.55, "battlefield-map__dimension-tick"),
-        line(terrainX, y - 0.55, terrainX, y + 0.55, "battlefield-map__dimension-tick"),
-        label((edgeX + terrainX) / 2, y - 0.72, fmt(horizontalDistance) + '″')
+        line(terrainX, y - 0.55, terrainX, y + 0.55, "battlefield-map__dimension-tick")
       );
+      if (!useExactLabels) parts.push(label((edgeX + terrainX) / 2, y - 0.72, fmt(horizontalDistance) + '″'));
     }
     const bottom = minY, top = 44 - maxY;
     const verticalSide = top <= bottom ? "TOP" : "BOTTOM";
@@ -132,11 +135,17 @@ function terrainEdgeMeasurementOverlay(geometry) {
       parts.push(
         line(x, edgeY, x, terrainY, "battlefield-map__edge-dimension-line"),
         line(x - 0.55, edgeY, x + 0.55, edgeY, "battlefield-map__dimension-tick"),
-        line(x - 0.55, terrainY, x + 0.55, terrainY, "battlefield-map__dimension-tick"),
-        label(x, (edgeY + terrainY) / 2, fmt(verticalDistance) + '″', x < centerX ? "end" : "start")
+        line(x - 0.55, terrainY, x + 0.55, terrainY, "battlefield-map__dimension-tick")
       );
+      if (!useExactLabels) parts.push(label(x, (edgeY + terrainY) / 2, fmt(verticalDistance) + '″', x < centerX ? "end" : "start"));
     }
   });
+  if (useExactLabels) {
+    exactMeasurements.filter((item) =>
+      item && typeof item.value === "string" &&
+      Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))
+    ).forEach((item) => parts.push(label(Number(item.x), Number(item.y), item.value)));
+  }
   return parts.length
     ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Battlefield edge to terrain placement dimensions">' + parts.join("") + '</svg>'
     : "";
@@ -190,6 +199,7 @@ export function renderBattlefieldMap(state, {
   showUnits = true,
   showMeasurements = mode === "live",
   showTerrainEdgeMeasurements = false,
+  terrainMeasurements = [],
   mapLabel = null
 } = {}) {
   if (!["planning", "deployment", "live"].includes(mode)) {
@@ -295,7 +305,7 @@ export function renderBattlefieldMap(state, {
     ? ""
     : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
   const terrainMeasurementOverlay = showTerrainEdgeMeasurements
-    ? terrainEdgeMeasurementOverlay(layoutGeometry)
+    ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements)
     : "";
 
   const liveStatus = mode === "live" ? liveStatusLabel(safeState) : "";
