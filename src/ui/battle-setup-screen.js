@@ -375,7 +375,7 @@ export function createBattleSetupScreen(container, {
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
           ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
         '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p>' +
-        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: false }) +
+        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: true }) +
         '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
@@ -447,17 +447,22 @@ export function createBattleSetupScreen(container, {
       '<p>Official Event Companion terrain layout ' + escapeHtml(missionSetup.layout ?? 'not selected') +
       (selectedLayoutOption ? ' · page ' + selectedLayoutOption.page : '') +
       '. This source diagram is authoritative for terrain placement; no reconstructed measurements are overlaid.</p>' +
-      terrainReferenceMarkup + preGameRolesMarkup + '</section>';
+      terrainReferenceMarkup + '</section>';
     const missionMapMarkup =
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
       '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
       '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div>' +
       '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p></section>';
+    const preFirstTurnSteps = getPreGameProcedureSteps().filter((step) =>
+      !["confirm-mission", "confirm-armies", "terrain-objectives", "actual-deployment"].includes(step.id));
+    const preFirstTurnMarkup = '<section class="pre-first-turn"><h2>Before the First Turn</h2><ol>' +
+      preFirstTurnSteps.map((step) => '<li><strong>' + escapeHtml(step.title) + '</strong><p>' + escapeHtml(step.detail) + '</p></li>').join("") +
+      '</ol>' + preGameRolesMarkup + '</section>';
 
     container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle. Complete pre-game checks, then confirm the mission and map.</p></header>' +
       '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + '</section>' +
-      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + missionMapMarkup + '</section>' +
+      '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + preFirstTurnMarkup + '</section>' +
       '<section data-setup-content="battlefield"' + (activeSetupTab === "battlefield" ? '' : ' hidden') + '>' + battlefieldMarkup + '</section>' +
       (message ? '<p role="status" class="battle-setup-screen__message">' + escapeHtml(message) + '</p>' : '') + '</main>';
   }
