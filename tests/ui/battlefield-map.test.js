@@ -69,6 +69,7 @@ test("planning and deployment maps omit coordinate measurements", () => {
   for (const mode of ["planning", "deployment"]) {
     const html = renderBattlefieldMap(state, { mode, perspectivePlayerId: "p1" });
     assert.doesNotMatch(html, /60″ × 44″ reference grid/);
+    assert.doesNotMatch(html, /class="battlefield-map__edge-dimension-line"/);
     assert.doesNotMatch(html, /Y=44″|Y=0″/);
     assert.doesNotMatch(html, /60 by 44 inch reference board/);
   }
@@ -250,7 +251,8 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.match(html, /Event Companion layout A · p\. 18/);
   assert.match(html, /aria-label="Verified Event Companion terrain to battlefield edge measurements"/);
   assert.match(html, /class="battlefield-map__edge-dimension-line"/);
-  assert.match(html, /data-measurement-edge="left" data-measurement-value="26&amp;quot;|data-measurement-edge="left" data-measurement-value="26&quot;"/);
+  assert.match(html, /data-measurement-edge="left" data-measurement-value="26&quot;"/);
+  assert.equal((html.match(/class="battlefield-map__edge-dimension-line"/g) ?? []).length, measurementsByPage["18"].length);
   assert.match(html, /class="battlefield-map__dimension-text"/);
   assert.match(html, />26&quot;<\/text>/);
   assert.match(html, /data-source-x="-3\.45" data-source-y="9\.16" x="2\.5"/);
