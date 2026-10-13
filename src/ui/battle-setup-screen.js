@@ -435,13 +435,9 @@ export function createBattleSetupScreen(container, {
       '<div class="battlefield-map-section__heading"><h2>Create the Battlefield</h2>' +
       '<button type="button" data-toggle-battlefield-fullscreen aria-pressed="' + String(battlefieldMapFullscreen) + '">' +
       (battlefieldMapFullscreen ? 'Exit full screen' : 'Expand map') + '</button></div>' +
-      '<label>Unit to plan<select data-planning-unit-select><option value="">Select your unit…</option>' +
-      (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
-        .map((unit) => '<option value="' + escapeHtml(unit.id) + '"' + (unit.id === selectedPlanUnitId ? ' selected' : '') + '>' + escapeHtml(unit.name ?? unit.id) + '</option>').join("") +
-      '</select></label><p>Select a unit, then tap the map to record or reposition its intended starting point. Planned positions remain separate from actual deployment and live movement.</p>' +
-      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: false }) +
-      '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
-      '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p>' +
+      '<p>Terrain placement reference for the selected Event Companion layout. Unit planning and deployment are handled separately.</p>' +
+      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, showUnits: false }) +
+      '<p>Use the dimension guides to position terrain from the battlefield edges. Confirm final measurements on the physical tabletop.</p>' +
       preGameRolesMarkup + '</section>';
     const missionMapMarkup =
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
