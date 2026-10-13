@@ -72,9 +72,11 @@ function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = [], source
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
   const verifiedPageLines = getEventCompanionTerrainPlacementLines(geometry.page);
-  const candidateLines = verifiedPageLines.length ? verifiedPageLines : (Array.isArray(sourceLines) ? sourceLines : []);
+  const usesVerifiedPageLines = verifiedPageLines.length > 0;
+  const candidateLines = usesVerifiedPageLines ? verifiedPageLines : (Array.isArray(sourceLines) ? sourceLines : []);
   const validLines = candidateLines.filter((line) => {
     if (!Array.isArray(line) || line.length !== 4 || !line.every((v) => Number.isFinite(Number(v)))) return false;
+    if (!usesVerifiedPageLines) return true;
     const [x1, y1, x2, y2] = line.map(Number);
     const startOnEdge = isBattlefieldEdgePoint(x1, y1);
     const endOnEdge = isBattlefieldEdgePoint(x2, y2);
@@ -82,11 +84,13 @@ function terrainEdgeMeasurementOverlay(geometry, sourceMeasurements = [], source
   });
   const lines = validLines.map((line) => '<line class="battlefield-map__dimension-line" data-source-line="true" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"/>');
   const anchorMap = new Map();
-  for (const line of validLines) {
-    const [x1, y1, x2, y2] = line.map(Number);
-    const interior = isBattlefieldEdgePoint(x1, y1) ? [x2, y2] : [x1, y1];
-    const key = interior.map((value) => value.toFixed(3)).join(",");
-    anchorMap.set(key, interior);
+  if (usesVerifiedPageLines) {
+    for (const line of validLines) {
+      const [x1, y1, x2, y2] = line.map(Number);
+      const interior = isBattlefieldEdgePoint(x1, y1) ? [x2, y2] : [x1, y1];
+      const key = interior.map((value) => value.toFixed(3)).join(",");
+      anchorMap.set(key, interior);
+    }
   }
   const anchors = [...anchorMap.values()].map(([x, y]) => '<circle class="battlefield-map__dimension-anchor" data-source-placement-anchor="true" data-source-x="' + x + '" data-source-y="' + y + '" cx="' + px(x) + '" cy="' + py(y) + '" r=".8"></circle>');
   const labels = (Array.isArray(sourceMeasurements) ? sourceMeasurements : []).filter((item) => item && typeof item.value === "string" && Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
@@ -186,6 +190,7 @@ export function renderBattlefieldMap(state, {
   }).join("");
   const emptyMessage = !showUnits || positionedUnits ? "" : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
   const terrainMeasurementOverlay = showTerrainEdgeMeasurements ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements, terrainMeasurementLines) : "";
+  const hasVerifiedPlacementGuides = Boolean(layoutGeometry && getEventCompanionTerrainPlacementLines(layoutGeometry.page).length);
   const liveStatus = mode === "live" ? liveStatusLabel(safeState) : ""; const showCoordinateMeasurements = showMeasurements; const shownMapLabel = modeDescription(mode, mapLabel);
   const objectiveStatusSummary = objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).length ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " + objectiveControlLabel(objective, safeState))).join(" · ") : "";
   const boardAriaLabel = showCoordinateMeasurements ? shownMapLabel + ", 60 by 44 inch reference board with inch coordinate labels" : shownMapLabel + ", battlefield board";
@@ -198,5 +203,5 @@ export function renderBattlefieldMap(state, {
     geometryOverlay(layoutGeometry, showTerrainEdgeMeasurements) + terrainMeasurementOverlay + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
     (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') + '</div>' +
     (showUnits ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span><span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>' : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
-    '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements ? "Only verified Event Companion placement guides that run from a terrain placement point to a battlefield edge are shown. Printed distances are reproduced from the source; no values are calculated. Terrain without two verified corner references remains intentionally unfilled." : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p></div>';
+    '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements ? (hasVerifiedPlacementGuides ? "Only verified Event Companion placement guides that run from a terrain placement point to a battlefield edge are shown. Printed distances are reproduced from the source; no values are calculated. Terrain without two verified corner references remains intentionally unfilled." : "Stored Event Companion source labels and guide lines are shown as recorded; no values are calculated. Use the official Event Companion diagram as the final placement reference.") : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p></div>';
 }
