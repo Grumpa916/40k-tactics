@@ -246,8 +246,8 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
 
   assert.match(html, /Terrain placement reference/);
   assert.match(html, /Event Companion layout A · p\. 18/);
-  assert.match(html, /aria-label="Battlefield edge to terrain placement dimensions"/);
-  assert.match(html, /class="battlefield-map__edge-dimension-line"/);
+  assert.match(html, /aria-label="Verified Event Companion terrain to battlefield edge measurements"/);
+  assert.doesNotMatch(html, /class="battlefield-map__edge-dimension-line"/);
   assert.match(html, /class="battlefield-map__dimension-text"/);
   assert.match(html, />26&quot;<\/text>/);
   assert.match(html, /x="-5\.75"/);
