@@ -5,9 +5,16 @@ import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 //
 // Source of truth: official Warhammer 40,000 Event Companion.
 // Printed values are never calculated. Source anchors identify the terrain-side
-// endpoint of the official dimension line after rotating the portrait battlefield
-// into V2's 60 x 44 landscape orientation. The generic path first identifies the
-// nearest V2 terrain boundary, then uses a reproducible corner on that same piece.
+// endpoint of an official Event Companion dimension after rotating the portrait
+// battlefield into V2's 60 x 44 landscape orientation.
+//
+// Rendering rule:
+// - every guide starts at a reproducible V2 terrain corner;
+// - every guide ends at one of the four battlefield edges;
+// - only official printed values, or their direct 180-degree counterpart, are reused;
+// - generic layouts propagate official references between rotationally paired terrain
+//   pieces until each piece has at least two distinct measured corners where the
+//   Event Companion establishes enough information to do so.
 //
 // Page 12 remains the hand-verified baseline approved in browser testing.
 const PAGE_12_GUIDES = Object.freeze([
@@ -91,10 +98,14 @@ function pointToSegmentDistanceSquared(point, start, end) {
   return distanceSquared(point, [ax + t * dx, ay + t * dy]);
 }
 
-function shapeBoundaryDistanceSquared(sourceAnchor, shape) {
-  const points = (shape?.points ?? [])
+function shapePoints(shape) {
+  return (shape?.points ?? [])
     .filter((point) => Number.isFinite(Number(point?.x)) && Number.isFinite(Number(point?.y)))
     .map((point) => [Number(point.x), Number(point.y)]);
+}
+
+function shapeBoundaryDistanceSquared(sourceAnchor, shape) {
+  const points = shapePoints(shape);
   if (!points.length) return Infinity;
   if (points.length === 1) return distanceSquared(sourceAnchor, points[0]);
   let best = Infinity;
@@ -104,6 +115,19 @@ function shapeBoundaryDistanceSquared(sourceAnchor, shape) {
     best = Math.min(best, pointToSegmentDistanceSquared(sourceAnchor, start, end));
   }
   return best;
+}
+
+function nearestShapeVertex(sourceAnchor, shape) {
+  let bestAnchor = null;
+  let bestDistance = Infinity;
+  for (const anchor of shapePoints(shape)) {
+    const vertexDistance = distanceSquared(sourceAnchor, anchor);
+    if (vertexDistance < bestDistance) {
+      bestAnchor = anchor;
+      bestDistance = vertexDistance;
+    }
+  }
+  return bestAnchor;
 }
 
 function snapToTerrainBoundaryVertex(sourceAnchor, geometry) {
@@ -119,23 +143,99 @@ function snapToTerrainBoundaryVertex(sourceAnchor, geometry) {
     }
   }
   if (!bestShape) return null;
-
-  let bestAnchor = null;
-  let bestVertexDistance = Infinity;
-  for (const point of bestShape.points ?? []) {
-    const anchor = [Number(point.x), Number(point.y)];
-    if (!anchor.every(Number.isFinite)) continue;
-    const vertexDistance = distanceSquared(sourceAnchor, anchor);
-    if (vertexDistance < bestVertexDistance) {
-      bestAnchor = anchor;
-      bestVertexDistance = vertexDistance;
-    }
-  }
+  const bestAnchor = nearestShapeVertex(sourceAnchor, bestShape);
   return bestAnchor ? {
     terrain: bestTerrain,
     anchor: bestAnchor,
     sourceBoundaryDistance: Math.sqrt(bestBoundaryDistance)
   } : null;
+}
+
+function shapeCentroid(shape) {
+  const points = shapePoints(shape);
+  if (!points.length) return null;
+  const total = points.reduce((sum, [x, y]) => [sum[0] + x, sum[1] + y], [0, 0]);
+  return [total[0] / points.length, total[1] / points.length];
+}
+
+function findRotationalPairTerrain(terrain, geometry) {
+  const shape = geometry?.terrainGeometry?.[terrain];
+  const centroid = shapeCentroid(shape);
+  if (!centroid) return null;
+  const mirroredCentroid = [60 - centroid[0], 44 - centroid[1]];
+  let bestTerrain = null;
+  let bestDistance = Infinity;
+  for (const [candidateTerrain, candidateShape] of Object.entries(geometry?.terrainGeometry ?? {})) {
+    if (candidateTerrain === terrain) continue;
+    const candidateCentroid = shapeCentroid(candidateShape);
+    if (!candidateCentroid) continue;
+    const d2 = distanceSquared(mirroredCentroid, candidateCentroid);
+    if (d2 < bestDistance) {
+      bestTerrain = candidateTerrain;
+      bestDistance = d2;
+    }
+  }
+  return bestTerrain;
+}
+
+function uniqueAnchorKeys(guides) {
+  return new Set(guides.map((guide) => guide.anchor.join(",")));
+}
+
+function dedupeGuides(guides) {
+  const seen = new Set();
+  const result = [];
+  for (const guide of guides) {
+    const key = [guide.terrain, guide.value, guide.edge, guide.anchor[0], guide.anchor[1]].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(guide);
+  }
+  return result;
+}
+
+function propagatePairReferences(guides, geometry) {
+  const completed = [...guides];
+  const terrainNames = Object.keys(geometry?.terrainGeometry ?? {});
+
+  // A direct 180-degree counterpart is an Event Companion-established relationship,
+  // not a newly calculated measurement. Reuse the printed value and reverse the edge.
+  // This is intentionally conservative: values are only propagated from the paired
+  // terrain piece on the same official layout.
+  for (const terrain of terrainNames) {
+    let terrainGuides = completed.filter((guide) => guide.terrain === terrain);
+    if (uniqueAnchorKeys(terrainGuides).size >= 2) continue;
+
+    const pairTerrain = findRotationalPairTerrain(terrain, geometry);
+    if (!pairTerrain) continue;
+    const pairGuides = completed.filter((guide) => guide.terrain === pairTerrain);
+    if (!pairGuides.length) continue;
+
+    const targetShape = geometry.terrainGeometry[terrain];
+    for (const pairGuide of pairGuides) {
+      if (uniqueAnchorKeys(terrainGuides).size >= 2) break;
+      const mirroredAnchor = [60 - pairGuide.anchor[0], 44 - pairGuide.anchor[1]];
+      const targetAnchor = nearestShapeVertex(mirroredAnchor, targetShape);
+      if (!targetAnchor) continue;
+      if (uniqueAnchorKeys(terrainGuides).has(targetAnchor.join(","))) continue;
+
+      const copied = {
+        ...pairGuide,
+        terrain,
+        edge: MIRROR_EDGE[pairGuide.edge],
+        anchor: targetAnchor,
+        sourceAnchor: Array.isArray(pairGuide.sourceAnchor)
+          ? [60 - pairGuide.sourceAnchor[0], 44 - pairGuide.sourceAnchor[1]]
+          : mirroredAnchor,
+        mirrored: true,
+        emulatedFromTerrain: pairTerrain
+      };
+      completed.push(copied);
+      terrainGuides = [...terrainGuides, copied];
+    }
+  }
+
+  return dedupeGuides(completed);
 }
 
 function resolveGenericGuides(page, geometry) {
@@ -152,7 +252,7 @@ function resolveGenericGuides(page, geometry) {
 
   // Event Companion terrain layouts are rotationally paired across the battlefield.
   // Reuse each official printed value on its 180-degree counterpart so every
-  // terrain piece has a practical setup reference. No mirrored distance is calculated.
+  // terrain piece can receive the same style of battlefield-edge placement reference.
   for (const guide of sourceGuides) {
     const mirroredSourceAnchor = [60 - guide.sourceAnchor[0], 44 - guide.sourceAnchor[1]];
     const snapped = snapToTerrainBoundaryVertex(mirroredSourceAnchor, geometry);
@@ -168,7 +268,7 @@ function resolveGenericGuides(page, geometry) {
     });
   }
 
-  return resolved;
+  return propagatePairReferences(dedupeGuides(resolved), geometry);
 }
 
 function endpointFor(anchor, edge) {
@@ -222,4 +322,4 @@ export function getEventCompanionPlacementOverlay(page, geometry = null) {
   return { guides, lines, measurements, anchors };
 }
 
-export { PAGE_12_GUIDES, PAGE_12_COMPLETE_GUIDES, resolveGenericGuides, terrainVertices };
+export { PAGE_12_GUIDES, PAGE_12_COMPLETE_GUIDES, resolveGenericGuides, terrainVertices, uniqueAnchorKeys };
