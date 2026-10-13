@@ -63,7 +63,7 @@ test("unknown map mode is rejected", () => {
   assert.throws(() => renderBattlefieldMap({}, { mode: "terrain" }), /Unknown battlefield map mode/);
 });
 
-test("verified Event Companion layouts show terrain-corner-to-table-edge dimensions, not terrain edge lengths", () => {
+test("battlefield overview shows verified terrain footprints without invented measurement callouts", () => {
   const html = renderBattlefieldMap({
     units: [{ id: "unit-on-setup-map", ownerId: "p1", name: "Should not appear", status: "deployed", position: { x: 20, y: 20 } }],
     battlefieldMap: { missionSetup: {
@@ -73,13 +73,12 @@ test("verified Event Companion layouts show terrain-corner-to-table-edge dimensi
     }}
   }, { mode: "planning", perspectivePlayerId: "p1", showUnits: false });
 
-  assert.match(html, /data-table-edge-dimension="T1"/);
-  assert.match(html, /data-table-edge-measurement="T1"/);
-  assert.match(html, /data-distance-inches="\d+"/);
-  assert.match(html, /data-nearest-edge="(?:left|right|top|bottom)"/);
-  assert.doesNotMatch(html, /data-terrain-measurement/);
+  assert.match(html, /data-terrain="T1"/);
+  assert.match(html, /official Event Companion diagram for exact terrain placement/);
+  assert.doesNotMatch(html, /data-table-edge-dimension/);
+  assert.doesNotMatch(html, /data-table-edge-measurement/);
+  assert.doesNotMatch(html, /data-distance-inches/);
   assert.doesNotMatch(html, /data-map-unit-id="unit-on-setup-map"/);
-  assert.match(html, /distances from the nearest table edge/);
 });
 test("live map follows current model positions instead of stale deployment-level position", () => {
   const html = renderBattlefieldMap({
