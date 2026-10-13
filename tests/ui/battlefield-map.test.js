@@ -289,3 +289,28 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.doesNotMatch(html, /No positions recorded/);
   assert.doesNotMatch(html, /data-map-unit-id=/);
 });
+
+test("terrain measurement overlay renders only explicitly sourced dimension endpoints", () => {
+  const state = {
+    units: [],
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Take and Hold",
+      layout: "A"
+    }}
+  };
+  const html = renderBattlefieldMap(state, {
+    mode: "planning",
+    showUnits: false,
+    showTerrainEdgeMeasurements: true,
+    terrainMeasurements: [
+      { value: '12"', x: 20, y: 15, x1: 10, y1: 15, x2: 20, y2: 15 },
+      { value: '7"', x: 30, y: 20 }
+    ]
+  });
+  assert.match(html, /class="battlefield-map__dimension-line"[^>]*x1="16\.666666666666664"[^>]*y1="65\.9090909090909"[^>]*x2="33\.33333333333333"[^>]*y2="65\.9090909090909"/);
+  assert.match(html, /data-source-measurement="12&amp;quot;"/);
+  assert.equal((html.match(/class="battlefield-map__dimension-line"/g) ?? []).length, 1);
+  assert.equal((html.match(/class="battlefield-map__dimension-tick"/g) ?? []).length, 2);
+  assert.match(html, />7"<\/text>/);
+});
