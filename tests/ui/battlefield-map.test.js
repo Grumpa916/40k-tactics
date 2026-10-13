@@ -5,7 +5,6 @@ import {
   isValidBattlefieldPosition,
   renderBattlefieldMap
 } from "../../src/ui/battlefield-map.js";
-import { loadEventCompanionEdgeMeasurements } from "../../src/data/event-companion-edge-measurements.js";
 
 test("battlefield coordinates map to a 60 by 44 board with the player's edge at the bottom", () => {
   assert.deepEqual(battlefieldPositionToPercent({ x: 0, y: 0 }), { left: 0, top: 100 });
@@ -253,11 +252,7 @@ test("deployment map shows both armies while excluding declared reserves and des
 
 
 
-test("terrain setup restores edge-distance callouts and preserves verified source labels", async () => {
-  const measurementsByPage = await loadEventCompanionEdgeMeasurements();
-  assert.ok(Array.isArray(measurementsByPage["18"]));
-  assert.ok(measurementsByPage["18"].some((item) => item.value === '26"' && item.x === -3.45));
-
+test("terrain setup draws corner-anchored visual distances and ignores legacy callouts", () => {
   const html = renderBattlefieldMap({
     battlefieldMap: { missionSetup: {
       myDisposition: "Take and Hold",
@@ -270,18 +265,18 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
     showUnits: false,
     showMeasurements: false,
     showTerrainEdgeMeasurements: true,
-    terrainMeasurements: measurementsByPage["18"],
+    terrainMeasurements: [{ value: '26"', x: -3.45, y: 9.16 }],
     mapLabel: "Terrain placement reference"
   });
 
   assert.match(html, /Terrain placement reference/);
-  assert.match(html, /Verified Event Companion terrain to battlefield edge measurements/);
-  assert.doesNotMatch(html, /data-zone=/);
-  assert.match(html, /Event Companion layout A · p\. 18/);
-  assert.match(html, /aria-label="Verified Event Companion terrain to battlefield edge measurements"/);
+  assert.match(html, /Event Companion layout A · p\\. 18/);
+  assert.match(html, /aria-label="Approximate distances from terrain corners to nearest battlefield edges"/);
+  assert.match(html, /class="battlefield-map__dimension-line"[^>]*data-terrain-corner=/);
+  assert.match(html, /class="battlefield-map__dimension-anchor"/);
   assert.match(html, /class="battlefield-map__dimension-text"/);
-  assert.match(html, />26&quot;<\/text>/);
-  assert.match(html, /data-source-x="-3\.45" data-source-y="9\.16" x="-5\.75"/);
+  assert.doesNotMatch(html, />26&quot;<\\/text>/);
+  assert.doesNotMatch(html, /data-source-x=/);
   assert.doesNotMatch(html, /Opponent edge · Y=44″/);
   assert.doesNotMatch(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
@@ -290,7 +285,7 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.doesNotMatch(html, /data-map-unit-id=/);
 });
 
-test("terrain measurement overlay draws explicit endpoints and inferred corner-to-edge guides", () => {
+test("terrain measurement overlay anchors each guide at a real terrain corner", () => {
   const state = {
     units: [],
     battlefieldMap: { missionSetup: {
@@ -308,9 +303,11 @@ test("terrain measurement overlay draws explicit endpoints and inferred corner-t
       { value: '7"', x: 30, y: 20 }
     ]
   });
-  assert.match(html, /class="battlefield-map__dimension-line"[^>]*x1="16\.666666666666664"[^>]*y1="65\.9090909090909"[^>]*x2="33\.33333333333333"[^>]*y2="65\.9090909090909"/);
-  assert.match(html, /data-source-measurement="12&quot;"/);
-  assert.equal((html.match(/class="battlefield-map__dimension-line"/g) ?? []).length, 2);
-  assert.equal((html.match(/class="battlefield-map__dimension-tick"/g) ?? []).length, 4);
-  assert.match(html, />7&quot;<\/text>/);
+  const lines = html.match(/class="battlefield-map__dimension-line"[^>]*data-terrain-corner="[^"]+"[^>]*x1="[^"]+"[^>]*y1="[^"]+"[^>]*x2="[^"]+"[^>]*y2="[^"]+"/g) ?? [];
+  assert.ok(lines.length > 0);
+  assert.equal((html.match(/class="battlefield-map__dimension-anchor"/g) ?? []).length, lines.length);
+  assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, lines.length);
+  assert.doesNotMatch(html, /data-source-measurement=/);
+  assert.doesNotMatch(html, />12&quot;<\\/text>/);
+  assert.doesNotMatch(html, />7&quot;<\\/text>/);
 });
