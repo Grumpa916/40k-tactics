@@ -196,15 +196,15 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
 }
 
 function setupTabLabel(tab) {
-  return ({ saves: "Account & Saves", "army-builder": "Step 1 · Select Armies & Game Size",
-    "pre-game": "Step 2 · Pre-game", "mission-map": "Step 3 · Mission & Secondaries",
-    battlefield: "Step 4 · Create the Battlefield", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
+  return ({ saves: "Account & Saves", "army-builder": "Army Builder",
+    "pre-game": "Step 2 · Mission & Planning", battlefield: "Step 3 · Terrain Setup",
+    "mission-map": "Step 4 · Pre-First Turn", deployment: "Step 5 · Deploy and Begin" })[tab] ?? "Setup";
 }
 
 function setupContinueLabel(tab) {
-  return ({ saves: "Continue to Select Armies", "army-builder": "Back to Select Armies", "army-selection": "Continue to Pre-game",
-    "pre-game": "Continue to Mission &amp; Secondaries", "mission-map": "Continue to Create the Battlefield",
-    battlefield: "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
+  return ({ saves: "Continue to Select Armies", "army-builder": "Back to Select Armies", "army-selection": "Continue to Mission & Planning",
+    "pre-game": "Continue to Terrain Setup", battlefield: "Continue to Pre-First Turn",
+    "mission-map": "Continue to Deploy and Begin", deployment: "Deploy and Begin" })[tab] ?? "Continue";
 }
 
 function renderShell(container, state, viewedPhase, scoringReminder = null, showCloud = false, {
@@ -924,7 +924,7 @@ export function createBattleShell(container, {
       setSetupWorkspaceTab("army-selection");
       return;
     }
-    const order = ["saves", "army-selection", "pre-game", "mission-map", "battlefield"];
+    const order = ["saves", "army-selection", "pre-game", "battlefield", "mission-map"];
     const index = order.indexOf(setupWorkspaceTab);
     setSetupWorkspaceTab(order[index + 1] ?? "deployment");
   }
