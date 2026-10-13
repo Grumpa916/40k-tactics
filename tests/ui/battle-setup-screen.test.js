@@ -79,10 +79,13 @@ test("planning map can expand to full screen and return without changing setup s
 test("mission planning, secondary missions, and official terrain setup are separate stages", () => {
   const { root, session } = setup();
   const screen = createBattleSetupScreen(root, { session, perspectivePlayerId: "p1" });
-  assert.match(root.innerHTML, /data-setup-content="pre-game"/);
-  assert.match(root.innerHTML, /data-event-companion-disposition-choice="my"/);
-  assert.match(root.innerHTML, /data-setup-content="mission-map"/);
-  assert.match(root.innerHTML, /data-secondary-player-panel="p1"/);
+  const preGameStart = root.innerHTML.indexOf('data-setup-content="pre-game"');
+  const missionStart = root.innerHTML.indexOf('data-setup-content="mission-map"');
+  const battlefieldStart = root.innerHTML.indexOf('data-setup-content="battlefield"');
+  assert.ok(preGameStart >= 0 && missionStart > preGameStart && battlefieldStart > missionStart);
+  assert.doesNotMatch(root.innerHTML.slice(preGameStart, missionStart), /data-event-companion-disposition-choice/);
+  assert.match(root.innerHTML.slice(missionStart, battlefieldStart), /data-event-companion-disposition-choice="my"/);
+  assert.match(root.innerHTML.slice(missionStart, battlefieldStart), /data-secondary-player-panel="p1"/);
   screen.setTab("battlefield");
   assert.match(root.innerHTML, /data-setup-content="battlefield"/);
   assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
