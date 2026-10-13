@@ -1,4 +1,4 @@
-const BATTLEFIELD_MAP_STYLES = ".battlefield-map{color:inherit;min-width:0}.battlefield-map__meta,.battlefield-map__legend{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:#aeb9c7;font-size:12px;margin:8px 0}.battlefield-map__board{position:relative;width:100%;aspect-ratio:15/11;overflow:hidden;border:1px solid #596879;border-radius:10px;background-color:#17221f;background-image:linear-gradient(to right,rgba(220,235,230,.10) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.10) 1px,transparent 1px);background-size:10% 9.0909%;touch-action:pan-y;overscroll-behavior:contain}.battlefield-map__edge{position:absolute;left:0;right:0;z-index:1;text-align:center;padding:3px 4px;font-size:10px;letter-spacing:.03em;background:rgba(8,14,18,.72);color:#dbe5ee;pointer-events:none}.battlefield-map__edge--top{top:0}.battlefield-map__edge--bottom{bottom:0}.battlefield-map__geometry{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}.battlefield-map__zone{fill:rgba(84,150,196,.12);stroke:rgba(130,190,232,.85);stroke-width:.18;stroke-dasharray:.7 .45}.battlefield-map__terrain{fill:rgba(135,145,132,.8);stroke:#d0d7d0;stroke-width:.28;stroke-linejoin:round}.battlefield-map__measurement{fill:#fff;stroke:#17221f;stroke-width:.18;paint-order:stroke;font-size:1.05px;font-weight:800;pointer-events:none}.battlefield-map__unit{position:absolute;transform:translate(-50%,-50%);z-index:2;max-width:32%;padding:4px 6px;border:1px solid #a9d8ff;border-radius:6px;background:#17344a;color:#f4f8ff;font-size:10px;font-weight:700;line-height:1.2;text-align:center;overflow-wrap:anywhere;box-shadow:0 1px 4px #0008;cursor:default;user-select:none;-webkit-user-select:none}.battlefield-map--planning .battlefield-map__unit,.battlefield-map--deployment .battlefield-map__unit{cursor:grab;touch-action:none}.battlefield-map__unit.is-selected{outline:3px solid #d6a8ff;outline-offset:2px;z-index:5}.battlefield-map__unit.is-unplaced{border-style:dashed;opacity:.9}.battlefield-map__unit.is-dragging{cursor:grabbing;z-index:8}.battlefield-map--live .battlefield-map__unit[role=button]{cursor:grab;touch-action:none}.battlefield-map__unit.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__objective{position:absolute;z-index:2;transform:translate(-50%,-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #f6d783;border-radius:50%;background:#46391a;color:#fff6d8;font-size:8px;font-weight:800;box-shadow:0 1px 4px #0008;overflow:hidden}.battlefield-map__empty{position:absolute;inset:14% 8%;display:flex;align-items:center;justify-content:center;text-align:center;color:#d5e0df;font-size:13px;padding:12px;pointer-events:none}.battlefield-map__legend{justify-content:flex-start;gap:16px}.battlefield-map__legend span{display:inline-flex;align-items:center;gap:5px}.battlefield-map__legend i{width:10px;height:10px;display:inline-block;border:1px solid #a9d8ff;border-radius:3px;background:#17344a}.battlefield-map__legend i.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__legend i.objective{border:2px solid #f6d783;border-radius:50%;background:#46391a}.battlefield-map__notice{margin:8px 0 0;color:#9daab8;font-size:11px;line-height:1.4}.battlefield-map-section{min-width:0}.deployment-reserve-tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;padding:12px;border:1px solid #8d6bb1;border-radius:9px;background:#20182a;color:#f2eaff}.deployment-reserve-tray h3{flex:0 0 100%;margin:0;font-size:14px}.deployment-reserve-tray__unit{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border:1px solid #8d6bb1;border-radius:7px;background:#30213e;font-size:12px;font-weight:750;overflow-wrap:anywhere}.deployment-reserve-tray p{margin:0;font-size:12px;opacity:.8}@media(max-width:650px){.battlefield-map__unit{max-width:36%;padding:3px 4px;font-size:9px}.battlefield-map__edge{font-size:9px}}";
+const BATTLEFIELD_MAP_STYLES = ".battlefield-map{color:inherit;min-width:0}.battlefield-map__meta,.battlefield-map__legend{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:#aeb9c7;font-size:12px;margin:8px 0}.battlefield-map__board{position:relative;width:100%;aspect-ratio:15/11;overflow:hidden;border:1px solid #596879;border-radius:10px;background-color:#17221f;background-image:linear-gradient(to right,rgba(220,235,230,.10) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.10) 1px,transparent 1px);background-size:10% 9.0909%;touch-action:pan-y;overscroll-behavior:contain}.battlefield-map__edge{position:absolute;left:0;right:0;z-index:1;text-align:center;padding:3px 4px;font-size:10px;letter-spacing:.03em;background:rgba(8,14,18,.72);color:#dbe5ee;pointer-events:none}.battlefield-map__edge--top{top:0}.battlefield-map__edge--bottom{bottom:0}.battlefield-map__geometry{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}.battlefield-map__zone{fill:rgba(84,150,196,.12);stroke:rgba(130,190,232,.85);stroke-width:.18;stroke-dasharray:.7 .45}.battlefield-map__terrain{fill:rgba(135,145,132,.8);stroke:#d0d7d0;stroke-width:.28;stroke-linejoin:round}.battlefield-map__dimension-line{stroke:#fff;stroke-width:.12;stroke-dasharray:.35 .2;fill:none}.battlefield-map__dimension-label{fill:#fff;stroke:#17221f;stroke-width:.18;paint-order:stroke;font-size:1.35px;font-weight:800;pointer-events:none}.battlefield-map__unit{position:absolute;transform:translate(-50%,-50%);z-index:2;max-width:32%;padding:4px 6px;border:1px solid #a9d8ff;border-radius:6px;background:#17344a;color:#f4f8ff;font-size:10px;font-weight:700;line-height:1.2;text-align:center;overflow-wrap:anywhere;box-shadow:0 1px 4px #0008;cursor:default;user-select:none;-webkit-user-select:none}.battlefield-map--planning .battlefield-map__unit,.battlefield-map--deployment .battlefield-map__unit{cursor:grab;touch-action:none}.battlefield-map__unit.is-selected{outline:3px solid #d6a8ff;outline-offset:2px;z-index:5}.battlefield-map__unit.is-unplaced{border-style:dashed;opacity:.9}.battlefield-map__unit.is-dragging{cursor:grabbing;z-index:8}.battlefield-map--live .battlefield-map__unit[role=button]{cursor:grab;touch-action:none}.battlefield-map__unit.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__objective{position:absolute;z-index:2;transform:translate(-50%,-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #f6d783;border-radius:50%;background:#46391a;color:#fff6d8;font-size:8px;font-weight:800;box-shadow:0 1px 4px #0008;overflow:hidden}.battlefield-map__empty{position:absolute;inset:14% 8%;display:flex;align-items:center;justify-content:center;text-align:center;color:#d5e0df;font-size:13px;padding:12px;pointer-events:none}.battlefield-map__legend{justify-content:flex-start;gap:16px}.battlefield-map__legend span{display:inline-flex;align-items:center;gap:5px}.battlefield-map__legend i{width:10px;height:10px;display:inline-block;border:1px solid #a9d8ff;border-radius:3px;background:#17344a}.battlefield-map__legend i.opponent{border-color:#ffc0b5;background:#512c2d}.battlefield-map__legend i.objective{border:2px solid #f6d783;border-radius:50%;background:#46391a}.battlefield-map__notice{margin:8px 0 0;color:#9daab8;font-size:11px;line-height:1.4}.battlefield-map-section{min-width:0}.deployment-reserve-tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;padding:12px;border:1px solid #8d6bb1;border-radius:9px;background:#20182a;color:#f2eaff}.deployment-reserve-tray h3{flex:0 0 100%;margin:0;font-size:14px}.deployment-reserve-tray__unit{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border:1px solid #8d6bb1;border-radius:7px;background:#30213e;font-size:12px;font-weight:750;overflow-wrap:anywhere}.deployment-reserve-tray p{margin:0;font-size:12px;opacity:.8}@media(max-width:650px){.battlefield-map__unit{max-width:36%;padding:3px 4px;font-size:9px}.battlefield-map__edge{font-size:9px}}";
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
 
 const BATTLEFIELD_WIDTH_IN = 60;
@@ -66,6 +66,33 @@ function selectedLayoutGeometry(state) {
   return getEventCompanionMapLayout(missions.myMission, missions.opponentMission, setup.layout);
 }
 
+function terrainTableEdgeDimension(name, terrainPoints) {
+  if (!terrainPoints.length) return "";
+  const xs = terrainPoints.map((point) => point.x);
+  const ys = terrainPoints.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const candidates = [
+    { edge: "left", distance: minX, x1: 0, y1: 44 - (minY + maxY) / 2, x2: minX, y2: 44 - (minY + maxY) / 2 },
+    { edge: "right", distance: BATTLEFIELD_WIDTH_IN - maxX, x1: maxX, y1: 44 - (minY + maxY) / 2, x2: BATTLEFIELD_WIDTH_IN, y2: 44 - (minY + maxY) / 2 },
+    { edge: "bottom", distance: minY, x1: (minX + maxX) / 2, y1: 44, x2: (minX + maxX) / 2, y2: 44 - minY },
+    { edge: "top", distance: BATTLEFIELD_HEIGHT_IN - maxY, x1: (minX + maxX) / 2, y1: 44 - BATTLEFIELD_HEIGHT_IN, x2: (minX + maxX) / 2, y2: 44 - maxY }
+  ];
+  const nearest = candidates.reduce((best, candidate) => candidate.distance < best.distance ? candidate : best);
+  if (nearest.distance <= 0) return "";
+  const x = (nearest.x1 + nearest.x2) / 2;
+  const y = (nearest.y1 + nearest.y2) / 2;
+  const label = Number.isInteger(nearest.distance) ? String(nearest.distance) : String(Number(nearest.distance.toFixed(1)));
+  return '<line class="battlefield-map__dimension-line" data-table-edge-dimension="' + escapeHtml(name) +
+    '" data-nearest-edge="' + nearest.edge + '" x1="' + nearest.x1 + '" y1="' + nearest.y1 +
+    '" x2="' + nearest.x2 + '" y2="' + nearest.y2 + '"></line>' +
+    '<text class="battlefield-map__dimension-label" data-table-edge-measurement="' + escapeHtml(name) +
+    '" data-distance-inches="' + label + '" x="' + x + '" y="' + y +
+    '" text-anchor="middle" dominant-baseline="central">' + label + '″</text>';
+}
+
 function geometryOverlay(geometry) {
   if (!geometry?.verified) return "";
   const zones = Object.entries(geometry.deploymentZones ?? {}).map(([name, shape]) => {
@@ -76,20 +103,11 @@ function geometryOverlay(geometry) {
   const terrain = Object.entries(geometry.terrainGeometry ?? {}).map(([name, shape]) => {
     const terrainPoints = shape.points ?? [];
     const points = terrainPoints.map((point) => point.x + "," + (44 - point.y)).join(" ");
-    const measurements = terrainPoints.map((point, index) => {
-      const next = terrainPoints[(index + 1) % terrainPoints.length];
-      if (!next) return "";
-      const distance = Math.hypot(next.x - point.x, next.y - point.y);
-      const x = (point.x + next.x) / 2;
-      const y = 44 - (point.y + next.y) / 2;
-      return '<text class="battlefield-map__measurement" data-terrain-measurement="' + escapeHtml(name) +
-        '" x="' + x + '" y="' + y + '" text-anchor="middle" dominant-baseline="central">' +
-        distance.toFixed(1) + '″</text>';
-    }).join("");
+    const dimension = terrainTableEdgeDimension(name, terrainPoints);
     return '<polygon class="battlefield-map__terrain" data-terrain="' + escapeHtml(name) +
-      '" points="' + points + '" aria-label="Terrain footprint ' + escapeHtml(name) + '"></polygon>' + measurements;
+      '" points="' + points + '" aria-label="Terrain footprint ' + escapeHtml(name) + '"></polygon>' + dimension;
   }).join("");
-  return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Verified Event Companion battlefield geometry with terrain edge measurements">' +
+  return '<svg class="battlefield-map__geometry" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Verified Event Companion battlefield layout with terrain distances from the nearest table edge">' +
     zones + terrain + '</svg>';
 }
 
