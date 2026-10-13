@@ -889,7 +889,7 @@ export function createBattleShell(container, {
     if (tabButton && container.contains(tabButton)) {
       const requestedTab = tabButton.getAttribute("data-setup-workspace-tab");
       if (requestedTab === "deployment") {
-        setSetupWorkspaceTab("battlefield");
+        setSetupWorkspaceTab("mission-map");
         const continueButton = container.querySelector?.("[data-setup-workspace-continue]");
         if (continueButton) handleSetupWorkspaceNavigation({ target: continueButton });
       } else {
@@ -899,7 +899,7 @@ export function createBattleShell(container, {
     }
     const continueButton = event.target?.closest?.("[data-setup-workspace-continue]");
     if (!continueButton || !container.contains(continueButton)) return;
-    if (setupWorkspaceTab === "battlefield" || setupWorkspaceTab === "deployment") {
+    if (setupWorkspaceTab === "mission-map" || setupWorkspaceTab === "deployment") {
       const currentState = session.getState();
       const readiness = evaluatePreGameReadiness(currentState);
       const missing = readiness.missing.map((item) => item.label);
@@ -924,7 +924,7 @@ export function createBattleShell(container, {
       setSetupWorkspaceTab("army-selection");
       return;
     }
-    const order = ["saves", "army-selection", "pre-game", "mission-map", "battlefield"];
+    const order = ["saves", "army-selection", "pre-game", "battlefield", "mission-map"];
     const index = order.indexOf(setupWorkspaceTab);
     setSetupWorkspaceTab(order[index + 1] ?? "deployment");
   }
