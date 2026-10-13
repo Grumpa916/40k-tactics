@@ -3,33 +3,34 @@
 // Source of truth: official Warhammer 40,000 Event Companion, printed page 12,
 // Layout A (Immovable Object vs Unstoppable Force).
 //
-// `value` and `edge` are transcribed from the printed dimension line.
-// `sourceAnchor` records that dimension line's endpoint after rotating the printed
-// portrait battlefield into V2's 60 x 44 landscape orientation.
-// `anchor` is an existing V2 terrain corner selected only as the reproducible
-// on-screen attachment point. Values are never calculated from the V2 geometry.
+// `value` and `edge` are transcribed from the printed terrain-placement dimension.
+// `sourceAnchor` records that dimension line's terrain-side endpoint after rotating
+// the printed portrait battlefield into V2's 60 x 44 landscape orientation.
+// `anchor` is the matching existing V2 terrain corner. The rendered line always
+// uses that V2 corner and the corresponding battlefield edge; PDF artwork
+// coordinates are never rendered directly and distance values are never calculated.
 //
 // The six deployment-zone dimensions printed on the same diagram (8, 14 and 19
 // inch pairs) are intentionally excluded from Terrain Setup.
 const PAGE_12_GUIDES = Object.freeze([
-  { value: '9"',  edge: "bottom", terrain: "T12", anchor: [18.5, 9.9], sourceAnchor: [20.59, 9.06] },
-  { value: '5"',  edge: "bottom", terrain: "T11", anchor: [36.4, 6.0], sourceAnchor: [36.69, 4.95] },
-  { value: '10"', edge: "bottom", terrain: "T10/T11", anchor: [31.8, 10.1], sourceAnchor: [27.91, 10.06] },
-  { value: '4"',  edge: "bottom", terrain: "T8", anchor: [42.4, 5.0], sourceAnchor: [43.56, 3.90] },
-  { value: '5"',  edge: "bottom", terrain: "T12", anchor: [16.5, 3.8], sourceAnchor: [5.91, 4.95] },
-  { value: '6"',  edge: "left",   terrain: "T9", anchor: [4.9, 9.9], sourceAnchor: [5.92, 4.95] },
-  { value: '28"', edge: "left",   terrain: "T10/T11", anchor: [31.8, 10.1], sourceAnchor: [27.91, 10.04] },
-  { value: '17"', edge: "left",   terrain: "T9", anchor: [16.5, 16.9], sourceAnchor: [17.02, 15.90] },
-  { value: '16"', edge: "bottom", terrain: "T9", anchor: [16.5, 16.9], sourceAnchor: [16.98, 15.84] },
-  { value: '22"', edge: "left",   terrain: "T4", anchor: [25.1, 30.8], sourceAnchor: [21.99, 28.99] },
-  { value: '15"', edge: "top",    terrain: "T4", anchor: [25.1, 30.8], sourceAnchor: [22.04, 28.99] },
-  { value: '10"', edge: "bottom", terrain: "T8", anchor: [54.1, 12.1], sourceAnchor: [55.14, 9.99] },
-  { value: '5"',  edge: "right",  terrain: "T8", anchor: [54.1, 12.1], sourceAnchor: [55.14, 9.99] },
-  { value: '16"', edge: "left",   terrain: "T14", anchor: [15.7, 21.0], sourceAnchor: [15.81, 23.10] },
-  { value: '5"',  edge: "bottom", terrain: "T12", anchor: [18.5, 3.8], sourceAnchor: [17.42, 5.04] },
-  { value: '10"', edge: "left",   terrain: "T13", anchor: [9.9, 26.3], sourceAnchor: [9.99, 17.69] },
-  { value: '5"',  edge: "right",  terrain: "T15", anchor: [51.5, 19.1], sourceAnchor: [55.14, 16.94] },
-  { value: '21"', edge: "left",   terrain: "T6", anchor: [20.9, 23.0], sourceAnchor: [21.00, 21.10] }
+  { value: '9"',  edge: "top",    terrain: "T4",       anchor: [20.6, 34.8], sourceAnchor: [20.60, 34.88] },
+  { value: '5"',  edge: "top",    terrain: "T3",       anchor: [36.8, 39.0], sourceAnchor: [36.69, 38.97] },
+  { value: '10"', edge: "top",    terrain: "T3/T4",    anchor: [27.8, 33.8], sourceAnchor: [27.92, 33.89] },
+  { value: '4"',  edge: "top",    terrain: "T5",       anchor: [43.5, 40.1], sourceAnchor: [43.56, 40.01] },
+  { value: '5"',  edge: "top",    terrain: "T1",       anchor: [5.8, 39.0],  sourceAnchor: [5.93, 38.97] },
+  { value: '6"',  edge: "left",   terrain: "T1",       anchor: [5.8, 39.0],  sourceAnchor: [5.95, 38.97] },
+  { value: '28"', edge: "left",   terrain: "T3/T4",    anchor: [27.8, 33.8], sourceAnchor: [27.92, 33.91] },
+  { value: '17"', edge: "left",   terrain: "T14",      anchor: [17.0, 28.1], sourceAnchor: [17.03, 28.08] },
+  { value: '16"', edge: "top",    terrain: "T14",      anchor: [17.0, 28.1], sourceAnchor: [16.99, 28.14] },
+  { value: '22"', edge: "left",   terrain: "T6",       anchor: [22.1, 14.9], sourceAnchor: [22.00, 15.07] },
+  { value: '15"', edge: "bottom", terrain: "T6",       anchor: [22.1, 14.9], sourceAnchor: [22.05, 15.07] },
+  { value: '10"', edge: "top",    terrain: "T2",       anchor: [55.1, 34.1], sourceAnchor: [55.13, 33.96] },
+  { value: '5"',  edge: "right",  terrain: "T2",       anchor: [55.1, 34.1], sourceAnchor: [55.13, 33.96] },
+  { value: '16"', edge: "left",   terrain: "T14",      anchor: [15.7, 21.0], sourceAnchor: [15.82, 20.92] },
+  { value: '5"',  edge: "top",    terrain: "T1",       anchor: [17.4, 39.0], sourceAnchor: [17.43, 38.88] },
+  { value: '10"', edge: "left",   terrain: "T13",      anchor: [9.9, 26.3],  sourceAnchor: [10.01, 26.31] },
+  { value: '5"',  edge: "right",  terrain: "T2",       anchor: [55.1, 27.0], sourceAnchor: [55.13, 27.04] },
+  { value: '21"', edge: "left",   terrain: "T6",       anchor: [20.9, 23.0], sourceAnchor: [21.01, 22.91] }
 ]);
 
 const PAGE_GUIDES = Object.freeze({
