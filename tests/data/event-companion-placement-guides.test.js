@@ -7,6 +7,9 @@ import {
   PAGE_12_COMPLETE_GUIDES
 } from "../../src/data/event-companion-placement-guides.js";
 
+import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
+import { EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES } from "../../src/data/event-companion-placement-source-guides.js";
+
 test("page 12 terrain placement transcription keeps the 18 official terrain dimensions", () => {
   assert.equal(PAGE_12_GUIDES.length, 18);
   assert.deepEqual(PAGE_12_GUIDES.map((guide) => guide.value), [
@@ -28,7 +31,7 @@ test("page 12 display mirrors the 18 official terrain dimensions without creatin
   assert.ok(mirrors.every((guide) => guide.anchor[0] >= 0 && guide.anchor[0] <= 60 && guide.anchor[1] >= 0 && guide.anchor[1] <= 44));
 });
 
-test("page 12 guides use stored official values and V2 anchor relationships without derived distances", () => {
+test("page 12 guides keep the approved hand-verified V2 anchor relationships", () => {
   const overlay = getEventCompanionPlacementOverlay(12);
   assert.ok(overlay);
   assert.equal(overlay.lines.length, 36);
@@ -37,5 +40,34 @@ test("page 12 guides use stored official values and V2 anchor relationships with
   assert.ok(overlay.guides.every((guide) => ["left", "right", "top", "bottom"].includes(guide.edge)));
   assert.ok(overlay.guides.every((guide) => Array.isArray(guide.anchor) && guide.anchor.length === 2));
   assert.ok(overlay.guides.every((guide) => typeof guide.value === "string" && guide.value.endsWith('"')));
-  assert.equal(getEventCompanionPlacementOverlay(13), null);
+});
+
+test("all remaining Event Companion pages have source terrain placement transcriptions", () => {
+  for (let page = 9; page <= 53; page += 1) {
+    if (page === 12) continue;
+    const sourceGuides = EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES[String(page)];
+    assert.ok(Array.isArray(sourceGuides) && sourceGuides.length > 0, `page ${page} should have source guides`);
+    assert.ok(sourceGuides.every((guide) => typeof guide.value === "string" && guide.value.endsWith('"')), `page ${page} values should be official inch labels`);
+    assert.ok(sourceGuides.every((guide) => ["left", "right", "top", "bottom"].includes(guide.edge)), `page ${page} edges should be valid`);
+  }
+});
+
+test("all Event Companion terrain pages resolve onto existing V2 terrain vertices and mirror usable references", () => {
+  for (let page = 9; page <= 53; page += 1) {
+    const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
+    assert.ok(geometry?.verified, `page ${page} should have verified V2 geometry`);
+
+    const overlay = getEventCompanionPlacementOverlay(page);
+    assert.ok(overlay, `page ${page} should render placement references`);
+    assert.ok(overlay.lines.length > 0, `page ${page} should render guide lines`);
+    assert.equal(overlay.lines.length, overlay.measurements.length, `page ${page} should pair labels and guide lines`);
+
+    const vertices = new Set(Object.values(geometry.terrainGeometry ?? {}).flatMap((shape) =>
+      (shape.points ?? []).map((point) => `${Number(point.x)},${Number(point.y)}`)));
+    assert.ok(overlay.guides.every((guide) => vertices.has(`${Number(guide.anchor[0])},${Number(guide.anchor[1])}`)), `page ${page} guides should snap to exact V2 terrain vertices`);
+
+    if (page !== 12) {
+      assert.ok(overlay.guides.some((guide) => guide.mirrored), `page ${page} should include mirrored placement references`);
+    }
+  }
 });
