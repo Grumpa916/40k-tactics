@@ -85,49 +85,78 @@ function terrainEdgeMeasurementOverlay(geometry) {
   if (!geometry?.verified || !geometry.terrainGeometry) return "";
   const px = (x) => Number(x) / 60 * 100;
   const py = (y) => (44 - Number(y)) / 44 * 100;
-  const edgeCandidates = [
-    { edge: "left", distance: (point) => point.x, project: (point) => ({ x: 0, y: point.y }), horizontal: true },
-    { edge: "right", distance: (point) => 60 - point.x, project: (point) => ({ x: 60, y: point.y }), horizontal: true },
-    { edge: "bottom", distance: (point) => point.y, project: (point) => ({ x: point.x, y: 0 }), horizontal: false },
-    { edge: "top", distance: (point) => 44 - point.y, project: (point) => ({ x: point.x, y: 44 }), horizontal: false }
+  const edges = [
+    { edge: "left", distance: (p) => p.x, endpoint: (p) => ({ x: 0, y: p.y }), along: (p) => p.y, horizontal: true },
+    { edge: "right", distance: (p) => 60 - p.x, endpoint: (p) => ({ x: 60, y: p.y }), along: (p) => p.y, horizontal: true },
+    { edge: "bottom", distance: (p) => p.y, endpoint: (p) => ({ x: p.x, y: 0 }), along: (p) => p.x, horizontal: false },
+    { edge: "top", distance: (p) => 44 - p.y, endpoint: (p) => ({ x: p.x, y: 44 }), along: (p) => p.x, horizontal: false }
   ];
-  const guides = [];
+  const corners = [];
   Object.entries(geometry.terrainGeometry).forEach(([terrainId, shape]) => {
-    const corners = (shape.points ?? []).filter((point) =>
-      Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
-    ).map((point, index) => ({ x: Number(point.x), y: Number(point.y), index }));
-    corners.forEach((corner) => {
-      const distances = [
-        { edge: "left", distance: corner.x, endpoint: { x: 0, y: corner.y }, horizontal: true },
-        { edge: "right", distance: 60 - corner.x, endpoint: { x: 60, y: corner.y }, horizontal: true },
-        { edge: "bottom", distance: corner.y, endpoint: { x: corner.x, y: 0 }, horizontal: false },
-        { edge: "top", distance: 44 - corner.y, endpoint: { x: corner.x, y: 44 }, horizontal: false }
-      ];
-      const nearest = distances.reduce((best, candidate) => candidate.distance < best.distance ? candidate : best);
-      guides.push({
-        terrainId, corner, endpoint: nearest.endpoint, distance: nearest.distance,
-        edge: nearest.edge, label: Math.round(nearest.distance) + String.fromCharCode(34),
-        horizontal: nearest.horizontal, key: terrainId + ":" + corner.index
-      });
+    (shape.points ?? []).forEach((point, index) => {
+      if (Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))) {
+        corners.push({ terrainId, index, x: Number(point.x), y: Number(point.y) });
+      }
     });
   });
-  const filtered = guides;
-  const parts = filtered.map((guide) => {
-    const x1 = px(guide.corner.x), y1 = py(guide.corner.y);
-    const x2 = px(guide.endpoint.x), y2 = py(guide.endpoint.y);
-    const midpointX = (x1 + x2) / 2;
-    const midpointY = (y1 + y2) / 2;
-    const labelX = Math.max(2, Math.min(98, midpointX + (guide.horizontal ? 0 : (guide.edge === "left" ? 1.4 : -1.4))));
-    const labelY = Math.max(2, Math.min(98, midpointY + (guide.horizontal ? (guide.edge === "top" ? 1.4 : -1.4) : 0)));
-    return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
-      '" data-edge-distance="' + guide.distance.toFixed(2) + '" x1="' + x1 + '" y1="' + y1 +
-      '" x2="' + x2 + '" y2="' + y2 + '"></line>' +
+
+  // Pick an edge for each corner while spreading callouts across all four edges.
+  // When the nearest edge is crowded, a slightly farther edge is preferable to
+  // stacking several indistinguishable numbers on top of one another.
+  const assignments = [];
+  const counts = new Map(edges.map((edge) => [edge.edge, []]));
+  corners.forEach((corner) => {
+    const ranked = edges.map((edge) => ({
+      edge,
+      distance: edge.distance(corner),
+      along: edge.along(corner)
+    })).sort((a, b) => a.distance - b.distance);
+    const chosen = ranked.reduce((best, candidate) => {
+      const peers = counts.get(candidate.edge.edge);
+      const nearby = peers.filter((value) => Math.abs(value - candidate.along) < 4).length;
+      const score = candidate.distance + nearby * 7 + peers.length * 0.15;
+      return !best || score < best.score ? { ...candidate, score } : best;
+    }, null);
+    counts.get(chosen.edge.edge).push(chosen.along);
+    assignments.push({
+      ...corner,
+      edge: chosen.edge.edge,
+      endpoint: chosen.edge.endpoint(corner),
+      distance: chosen.distance,
+      horizontal: chosen.edge.horizontal,
+      along: chosen.along
+    });
+  });
+
+  const edgeGroups = new Map(edges.map((edge) => [edge.edge, []]));
+  assignments.forEach((item) => edgeGroups.get(item.edge).push(item));
+  edgeGroups.forEach((items) => {
+    items.sort((a, b) => a.along - b.along);
+    items.forEach((item, index) => {
+      item.stagger = (index % 2 === 0 ? 1 : -1) * (1.0 + Math.floor(index / 2) % 2 * 0.9);
+    });
+  });
+
+  const parts = assignments.map((item) => {
+    const x1 = px(item.x), y1 = py(item.y);
+    const x2 = px(item.endpoint.x), y2 = py(item.endpoint.y);
+    let labelX = x2, labelY = y2;
+    if (item.horizontal) {
+      labelX = Math.max(2, Math.min(98, x2 + (item.edge === "left" ? 2.0 : -2.0)));
+      labelY = Math.max(2, Math.min(98, y2 + item.stagger));
+    } else {
+      labelX = Math.max(2, Math.min(98, x2 + item.stagger));
+      labelY = Math.max(2, Math.min(98, y2 + (item.edge === "bottom" ? -2.0 : 2.0)));
+    }
+    return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(item.terrainId) +
+      '" data-edge="' + item.edge + '" data-edge-distance="' + item.distance.toFixed(2) +
+      '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>' +
       '<circle class="battlefield-map__dimension-anchor" cx="' + x1 + '" cy="' + y1 + '" r="0.65"></circle>' +
       '<text class="battlefield-map__dimension-text" x="' + labelX + '" y="' + labelY +
-      '" text-anchor="middle">' + escapeHtml(guide.label) + '</text>';
+      '" text-anchor="middle">' + escapeHtml(Math.round(item.distance) + String.fromCharCode(34)) + '</text>';
   });
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate distances from terrain corners to nearest battlefield edges">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate distances from terrain corners to selected battlefield edges">' + parts.join("") + '</svg>'
     : "";
 }
 
