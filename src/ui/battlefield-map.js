@@ -132,7 +132,7 @@ function terrainEdgeMeasurementOverlay(geometry) {
   });
   // Avoid nearly identical duplicate callouts where adjacent pieces touch or overlap.
   const filtered = guides.filter((guide, index) => !guides.slice(0, index).some((prior) =>
-    prior.terrainId === guide.terrainId &&
+    prior.terrainId === guide.terrainId && prior.axis === guide.axis &&
     Math.hypot(prior.corner.x - guide.corner.x, prior.corner.y - guide.corner.y) < 0.25
   ));
   const parts = filtered.map((guide) => {
