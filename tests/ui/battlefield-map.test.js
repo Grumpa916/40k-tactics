@@ -63,24 +63,24 @@ test("unknown map mode is rejected", () => {
   assert.throws(() => renderBattlefieldMap({}, { mode: "terrain" }), /Unknown battlefield map mode/);
 });
 
-test("verified Event Companion layouts show terrain-to-table-edge dimensions, not terrain edge lengths", () => {
+test("verified Event Companion layouts show terrain-corner-to-table-edge dimensions, not terrain edge lengths", () => {
   const html = renderBattlefieldMap({
-    units: [],
+    units: [{ id: "unit-on-setup-map", ownerId: "p1", name: "Should not appear", status: "deployed", position: { x: 20, y: 20 } }],
     battlefieldMap: { missionSetup: {
       myDisposition: "Take and Hold",
       opponentDisposition: "Take and Hold",
       layout: "A"
     }}
-  }, { mode: "planning", perspectivePlayerId: "p1" });
+  }, { mode: "planning", perspectivePlayerId: "p1", showUnits: false });
 
   assert.match(html, /data-table-edge-dimension="T1"/);
   assert.match(html, /data-table-edge-measurement="T1"/);
-  assert.match(html, /data-distance-inches="\d+(?:\.\d+)?"/);
+  assert.match(html, /data-distance-inches="\\d+(?:\\.\\d+)?"/);
   assert.match(html, /data-nearest-edge="(?:left|right|top|bottom)"/);
   assert.doesNotMatch(html, /data-terrain-measurement/);
+  assert.doesNotMatch(html, /data-map-unit-id="unit-on-setup-map"/);
   assert.match(html, /distances from the nearest table edge/);
 });
-
 test("live map follows current model positions instead of stale deployment-level position", () => {
   const html = renderBattlefieldMap({
     units: [{
