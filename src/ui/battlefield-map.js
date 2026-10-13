@@ -231,6 +231,7 @@ export function renderBattlefieldMap(state, {
     : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
 
   const liveStatus = mode === "live" ? liveStatusLabel(safeState) : "";
+  const showCoordinateMeasurements = mode === "live";
   const objectiveStatusSummary = objectives.filter((objective) =>
     objective && isValidBattlefieldPosition(objective.position)).length
     ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position))
@@ -240,7 +241,7 @@ export function renderBattlefieldMap(state, {
   return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode +
     '" data-battlefield-map data-map-mode="' + mode + '">' +
     '<div class="battlefield-map__meta"><span>' + modeDescription(mode) +
-    '</span><span>60″ × 44″ reference grid</span>' +
+    '</span>' + (showCoordinateMeasurements ? '<span>60″ × 44″ reference grid</span>' : '') +
     (liveStatus ? '<span data-map-game-status>' + escapeHtml(liveStatus) + '</span>' : '') +
     (layoutGeometry ? '<span data-map-layout-status>Event Companion layout ' + escapeHtml(layoutGeometry.layout) + ' · p. ' + layoutGeometry.page + '</span>' : '') + '</div>' +
     (objectiveStatusSummary && mode === "live"
