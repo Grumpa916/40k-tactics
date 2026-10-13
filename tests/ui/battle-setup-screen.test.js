@@ -291,7 +291,7 @@ test("terrain setup displays the selected official Event Companion PDF page with
     }}});
   }
   tapDisposition("my", "Take and Hold");
-  tapDisposition("opponent", "Disruption");
+  tapDisposition("opponent", "Take and Hold");
   const layoutButton = { getAttribute(name) {
     return name === "data-event-companion-layout" ? "A" : null;
   }};
