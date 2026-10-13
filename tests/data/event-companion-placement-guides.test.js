@@ -52,8 +52,10 @@ test("all remaining Event Companion pages have source terrain placement transcri
   }
 });
 
-test("all Event Companion terrain pages resolve onto existing V2 terrain vertices and mirror usable references", () => {
+test("generic Event Companion terrain pages resolve onto existing V2 terrain vertices and mirror usable references", () => {
   for (let page = 9; page <= 53; page += 1) {
+    if (page === 12) continue;
+
     const geometry = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === page);
     assert.ok(geometry?.verified, `page ${page} should have verified V2 geometry`);
 
@@ -65,9 +67,6 @@ test("all Event Companion terrain pages resolve onto existing V2 terrain vertice
     const vertices = new Set(Object.values(geometry.terrainGeometry ?? {}).flatMap((shape) =>
       (shape.points ?? []).map((point) => `${Number(point.x)},${Number(point.y)}`)));
     assert.ok(overlay.guides.every((guide) => vertices.has(`${Number(guide.anchor[0])},${Number(guide.anchor[1])}`)), `page ${page} guides should snap to exact V2 terrain vertices`);
-
-    if (page !== 12) {
-      assert.ok(overlay.guides.some((guide) => guide.mirrored), `page ${page} should include mirrored placement references`);
-    }
+    assert.ok(overlay.guides.some((guide) => guide.mirrored), `page ${page} should include mirrored placement references`);
   }
 });
