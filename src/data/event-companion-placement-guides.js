@@ -1,17 +1,14 @@
+import { EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES } from "./event-companion-placement-source-guides.js";
+
 // Terrain-placement transcription for the existing V2 battlefield geometry.
 //
-// Source of truth: official Warhammer 40,000 Event Companion, printed page 12,
-// Layout A (Immovable Object vs Unstoppable Force).
+// Source of truth: official Warhammer 40,000 Event Companion.
+// Printed values are never calculated. Source anchors identify the terrain-side
+// endpoint of the official dimension line after rotating the portrait battlefield
+// into V2's 60 x 44 landscape orientation. The generic path snaps those source
+// anchors to the already-verified V2 terrain geometry before rendering.
 //
-// `value` and `edge` are transcribed from the printed terrain-placement dimension.
-// `sourceAnchor` records that dimension line's terrain-side endpoint after rotating
-// the printed portrait battlefield into V2's 60 x 44 landscape orientation.
-// `anchor` is the matching existing V2 terrain corner. The rendered line always
-// uses that V2 corner and the corresponding battlefield edge; PDF artwork
-// coordinates are never rendered directly and distance values are never calculated.
-//
-// The six deployment-zone dimensions printed on the same diagram (8, 14 and 19
-// inch pairs) are intentionally excluded from Terrain Setup.
+// Page 12 remains the hand-verified baseline approved in browser testing.
 const PAGE_12_GUIDES = Object.freeze([
   { value: '9"',  edge: "top",    terrain: "T4",       anchor: [20.6, 34.8], sourceAnchor: [20.60, 34.88] },
   { value: '5"',  edge: "top",    terrain: "T3",       anchor: [36.8, 39.0], sourceAnchor: [36.69, 38.97] },
@@ -33,10 +30,6 @@ const PAGE_12_GUIDES = Object.freeze([
   { value: '21"', edge: "left",   terrain: "T6",       anchor: [20.9, 23.0], sourceAnchor: [21.01, 22.91] }
 ]);
 
-// Layout A is rotationally symmetric. These are the exact V2 counterpart corners
-// for the source-side anchors above. Mirrored guides reuse the official printed
-// value; no new distance is calculated. This is a display aid so the opposite
-// terrain pieces can be placed from the same official reference relationship.
 const PAGE_12_MIRROR_ANCHORS = Object.freeze({
   "20.6,34.8": [39.0, 9.0],
   "36.8,39": [22.9, 4.8],
@@ -58,13 +51,7 @@ const MIRROR_EDGE = Object.freeze({ left: "right", right: "left", top: "bottom",
 function page12MirroredGuide(guide) {
   const exactCounterpart = PAGE_12_MIRROR_ANCHORS[guide.anchor.join(",")];
   const anchor = exactCounterpart ?? [60 - guide.anchor[0], 44 - guide.anchor[1]];
-  return {
-    ...guide,
-    terrain: "mirror:" + guide.terrain,
-    edge: MIRROR_EDGE[guide.edge],
-    anchor,
-    mirrored: true
-  };
+  return { ...guide, terrain: "mirror:" + guide.terrain, edge: MIRROR_EDGE[guide.edge], anchor, mirrored: true };
 }
 
 const PAGE_12_COMPLETE_GUIDES = Object.freeze([
@@ -72,9 +59,76 @@ const PAGE_12_COMPLETE_GUIDES = Object.freeze([
   ...PAGE_12_GUIDES.map(page12MirroredGuide)
 ]);
 
-const PAGE_GUIDES = Object.freeze({
-  "12": PAGE_12_COMPLETE_GUIDES
-});
+function terrainVertices(geometry) {
+  const vertices = [];
+  for (const [terrain, shape] of Object.entries(geometry?.terrainGeometry ?? {})) {
+    for (const point of shape?.points ?? []) {
+      if (!Number.isFinite(Number(point?.x)) || !Number.isFinite(Number(point?.y))) continue;
+      vertices.push({ terrain, anchor: [Number(point.x), Number(point.y)] });
+    }
+  }
+  return vertices;
+}
+
+function distanceSquared(a, b) {
+  const dx = Number(a[0]) - Number(b[0]);
+  const dy = Number(a[1]) - Number(b[1]);
+  return dx * dx + dy * dy;
+}
+
+function snapToTerrainVertex(sourceAnchor, vertices, maxDistance = 0.75) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const vertex of vertices) {
+    const d2 = distanceSquared(sourceAnchor, vertex.anchor);
+    if (d2 < bestDistance) {
+      best = vertex;
+      bestDistance = d2;
+    }
+  }
+  return best && Math.sqrt(bestDistance) <= maxDistance ? best : null;
+}
+
+function resolveGenericGuides(page, geometry) {
+  const sourceGuides = EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES[String(page)] ?? [];
+  if (!sourceGuides.length || !geometry?.terrainGeometry) return [];
+
+  const vertices = terrainVertices(geometry);
+  const resolved = [];
+
+  for (const guide of sourceGuides) {
+    const snapped = snapToTerrainVertex(guide.sourceAnchor, vertices);
+    if (!snapped) continue;
+    resolved.push({ ...guide, terrain: snapped.terrain, anchor: snapped.anchor });
+  }
+
+  // Event Companion terrain layouts are rotationally paired across the battlefield.
+  // Reuse each official printed value on its 180-degree counterpart so every
+  // terrain piece has a practical setup reference. No mirrored distance is calculated.
+  for (const guide of sourceGuides) {
+    const mirroredSourceAnchor = [60 - guide.sourceAnchor[0], 44 - guide.sourceAnchor[1]];
+    const snapped = snapToTerrainVertex(mirroredSourceAnchor, vertices);
+    if (!snapped) continue;
+    resolved.push({
+      ...guide,
+      sourceAnchor: mirroredSourceAnchor,
+      terrain: snapped.terrain,
+      edge: MIRROR_EDGE[guide.edge],
+      anchor: snapped.anchor,
+      mirrored: true
+    });
+  }
+
+  const deduped = [];
+  const seen = new Set();
+  for (const guide of resolved) {
+    const key = [guide.value, guide.edge, guide.anchor[0], guide.anchor[1]].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(guide);
+  }
+  return deduped;
+}
 
 function endpointFor(anchor, edge) {
   const [x, y] = anchor;
@@ -92,8 +146,11 @@ function labelPosition(anchor, edge) {
   return [x + 0.8, Math.max(1.2, y - 1.2)];
 }
 
-export function getEventCompanionPlacementOverlay(page) {
-  const guides = PAGE_GUIDES[String(page)] ?? [];
+export function getEventCompanionPlacementOverlay(page, geometry = null) {
+  const guides = Number(page) === 12
+    ? PAGE_12_COMPLETE_GUIDES
+    : resolveGenericGuides(page, geometry);
+
   if (!guides.length) return null;
 
   const lines = guides.map((guide) => {
@@ -119,4 +176,4 @@ export function getEventCompanionPlacementOverlay(page) {
   return { guides, lines, measurements, anchors };
 }
 
-export { PAGE_12_GUIDES, PAGE_12_COMPLETE_GUIDES };
+export { PAGE_12_GUIDES, PAGE_12_COMPLETE_GUIDES, resolveGenericGuides };
