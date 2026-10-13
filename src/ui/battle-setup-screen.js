@@ -5,7 +5,6 @@ import { getPreGameAbilityRules, getPreGameProcedureSteps } from "../rules/pre-g
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
-import { loadEventCompanionEdgeMeasurements } from "../data/event-companion-edge-measurements.js";
 import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
 
@@ -41,8 +40,6 @@ export function createBattleSetupScreen(container, {
   let activeSetupTab = ["pre-game", "mission-map", "battlefield"].includes(setupTab) ? setupTab : "pre-game";
   let message = "";
   let battlefieldMapFullscreen = false;
-  let edgeMeasurementsByPage = {};
-  let screenDestroyed = false;
   const configuredSecondaryCatalog = secondaryMissionCatalog.length
     ? secondaryMissionCatalog
     : SECONDARY_MISSION_CATALOG;
@@ -440,8 +437,9 @@ export function createBattleSetupScreen(container, {
           mode: "planning",
           perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id,
           showUnits: false,
-          showMeasurements: true,
-          terrainMeasurements: edgeMeasurementsByPage[String(selectedLayoutOption.page)] ?? []
+          showMeasurements: false,
+          showTerrainEdgeMeasurements: true,
+          mapLabel: "Terrain placement reference"
         })
       : '<div class="terrain-reference-missing"><strong>Verified digital terrain layout unavailable.</strong>' +
         '<p>Select both Force Dispositions and a valid Layout A, B, or C.</p></div>';
@@ -482,11 +480,6 @@ export function createBattleSetupScreen(container, {
   container.addEventListener?.("pointercancel", handlePlanningPointerCancel);
   const unsubscribe = session.subscribe(render);
   render();
-  loadEventCompanionEdgeMeasurements().then((measurements) => {
-    if (screenDestroyed || !measurements || !Object.keys(measurements).length) return;
-    edgeMeasurementsByPage = measurements;
-    render();
-  });
   return {
     render,
     setTab(tab) {
@@ -494,7 +487,6 @@ export function createBattleSetupScreen(container, {
       render();
     },
     destroy() {
-      screenDestroyed = true;
       unsubscribe();
       container.removeEventListener?.("change", handleChange);
       container.removeEventListener?.("click", handleClick);
