@@ -83,9 +83,9 @@ test("mission planning, secondary missions, and official terrain setup are separ
   const missionStart = root.innerHTML.indexOf('data-setup-content="mission-map"');
   const battlefieldStart = root.innerHTML.indexOf('data-setup-content="battlefield"');
   assert.ok(preGameStart >= 0 && missionStart > preGameStart && battlefieldStart > missionStart);
-  assert.doesNotMatch(root.innerHTML.slice(preGameStart, missionStart), /data-event-companion-disposition-choice/);
-  assert.match(root.innerHTML.slice(missionStart, battlefieldStart), /data-event-companion-disposition-choice="my"/);
-  assert.match(root.innerHTML.slice(missionStart, battlefieldStart), /data-secondary-player-panel="p1"/);
+  assert.match(root.innerHTML.slice(preGameStart, missionStart), /data-event-companion-disposition-choice="my"/);
+  assert.match(root.innerHTML.slice(preGameStart, missionStart), /data-secondary-player-panel="p1"/);
+  assert.match(root.innerHTML.slice(missionStart, battlefieldStart), /Before the First Turn|pre-first-turn|Pre-First Turn/i);
   screen.setTab("battlefield");
   assert.match(root.innerHTML, /data-setup-content="battlefield"/);
   assert.match(root.innerHTML, /data-toggle-battlefield-fullscreen/);
