@@ -91,72 +91,54 @@ function terrainEdgeMeasurementOverlay(geometry) {
     { edge: "bottom", distance: (p) => p.y, endpoint: (p) => ({ x: p.x, y: 0 }), along: (p) => p.x, horizontal: false },
     { edge: "top", distance: (p) => 44 - p.y, endpoint: (p) => ({ x: p.x, y: 44 }), along: (p) => p.x, horizontal: false }
   ];
-  const corners = [];
+  const guides = [];
   Object.entries(geometry.terrainGeometry).forEach(([terrainId, shape]) => {
-    (shape.points ?? []).forEach((point, index) => {
-      if (Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))) {
-        corners.push({ terrainId, index, x: Number(point.x), y: Number(point.y) });
-      }
+    const points = (shape.points ?? []).filter((p) =>
+      Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y))
+    ).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
+    points.forEach((corner, index) => {
+      const distances = edges.map((edge) => ({ edge, distance: edge.distance(corner) }))
+        .sort((a, b) => a.distance - b.distance);
+      const chosen = distances[0];
+      guides.push({
+        terrainId, corner, index, edge: chosen.edge.edge,
+        endpoint: chosen.edge.endpoint(corner), distance: chosen.distance,
+        horizontal: chosen.edge.horizontal, along: chosen.edge.along(corner)
+      });
     });
   });
 
-  // Pick an edge for each corner while spreading callouts across all four edges.
-  // When the nearest edge is crowded, a slightly farther edge is preferable to
-  // stacking several indistinguishable numbers on top of one another.
-  const assignments = [];
-  const counts = new Map(edges.map((edge) => [edge.edge, []]));
-  corners.forEach((corner) => {
-    const ranked = edges.map((edge) => ({
-      edge,
-      distance: edge.distance(corner),
-      along: edge.along(corner)
-    })).sort((a, b) => a.distance - b.distance);
-    const chosen = ranked.reduce((best, candidate) => {
-      const peers = counts.get(candidate.edge.edge);
-      const nearby = peers.filter((value) => Math.abs(value - candidate.along) < 4).length;
-      const score = candidate.distance + nearby * 7 + peers.length * 0.15;
-      return !best || score < best.score ? { ...candidate, score } : best;
-    }, null);
-    counts.get(chosen.edge.edge).push(chosen.along);
-    assignments.push({
-      ...corner,
-      edge: chosen.edge.edge,
-      endpoint: chosen.edge.endpoint(corner),
-      distance: chosen.distance,
-      horizontal: chosen.edge.horizontal,
-      along: chosen.along
-    });
-  });
-
-  const edgeGroups = new Map(edges.map((edge) => [edge.edge, []]));
-  assignments.forEach((item) => edgeGroups.get(item.edge).push(item));
-  edgeGroups.forEach((items) => {
+  // Keep a single distance label per terrain vertex. Lines terminate at the
+  // selected board edge; labels are moved into a dedicated gutter on that edge
+  // so they do not stack along the board boundary.
+  const groups = new Map(edges.map((edge) => [edge.edge, []]));
+  guides.forEach((guide) => groups.get(guide.edge).push(guide));
+  groups.forEach((items) => {
     items.sort((a, b) => a.along - b.along);
-    items.forEach((item, index) => {
-      item.stagger = (index % 2 === 0 ? 1 : -1) * (1.0 + Math.floor(index / 2) % 2 * 0.9);
-    });
+    items.forEach((item, index) => { item.slot = index; item.total = items.length; });
   });
 
-  const parts = assignments.map((item) => {
-    const x1 = px(item.x), y1 = py(item.y);
-    const x2 = px(item.endpoint.x), y2 = py(item.endpoint.y);
+  const parts = guides.map((guide) => {
+    const x1 = px(guide.corner.x), y1 = py(guide.corner.y);
+    const x2 = px(guide.endpoint.x), y2 = py(guide.endpoint.y);
     let labelX = x2, labelY = y2;
-    if (item.horizontal) {
-      labelX = Math.max(2, Math.min(98, x2 + (item.edge === "left" ? 2.0 : -2.0)));
-      labelY = Math.max(2, Math.min(98, y2 + item.stagger));
+    if (guide.edge === "left" || guide.edge === "right") {
+      labelX = guide.edge === "left" ? 2.0 : 98.0;
+      labelY = 4 + (guide.slot + 0.5) * 92 / Math.max(1, guide.total);
     } else {
-      labelX = Math.max(2, Math.min(98, x2 + item.stagger));
-      labelY = Math.max(2, Math.min(98, y2 + (item.edge === "bottom" ? -2.0 : 2.0)));
+      labelX = 2 + (guide.slot + 0.5) * 96 / Math.max(1, guide.total);
+      labelY = guide.edge === "top" ? 3.2 : 96.8;
     }
-    return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(item.terrainId) +
-      '" data-edge="' + item.edge + '" data-edge-distance="' + item.distance.toFixed(2) +
+    return '<line class="battlefield-map__dimension-line" data-terrain-corner="' + escapeHtml(guide.terrainId) +
+      '" data-edge="' + guide.edge + '" data-edge-distance="' + guide.distance.toFixed(2) +
       '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"></line>' +
       '<circle class="battlefield-map__dimension-anchor" cx="' + x1 + '" cy="' + y1 + '" r="0.65"></circle>' +
       '<text class="battlefield-map__dimension-text" x="' + labelX + '" y="' + labelY +
-      '" text-anchor="middle">' + escapeHtml(Math.round(item.distance) + String.fromCharCode(34)) + '</text>';
+      '" text-anchor="middle" data-distance-label-edge="' + guide.edge + '">' +
+      escapeHtml(Math.round(guide.distance) + String.fromCharCode(34)) + '</text>';
   });
   return parts.length
-    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate distances from terrain corners to selected battlefield edges">' + parts.join("") + '</svg>'
+    ? '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate distances from terrain corners to nearest battlefield edges">' + parts.join("") + '</svg>'
     : "";
 }
 
