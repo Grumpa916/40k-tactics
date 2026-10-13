@@ -183,6 +183,36 @@ test("live game status is not invented when there is no active battle", () => {
   assert.doesNotMatch(html, /data-map-game-status/);
 });
 
+test("Layout A page 27 renders every stored Event Companion edge callout without changing its value", async () => {
+  const measurementsByPage = await loadEventCompanionEdgeMeasurements();
+  const sourceMeasurements = measurementsByPage["27"];
+  assert.ok(Array.isArray(sourceMeasurements));
+  assert.equal(sourceMeasurements.length, 10);
+
+  const html = renderBattlefieldMap({
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Purge the Foe",
+      opponentDisposition: "Disruption",
+      layout: "A"
+    }},
+    units: []
+  }, {
+    mode: "planning",
+    showUnits: false,
+    showMeasurements: false,
+    showTerrainEdgeMeasurements: true,
+    terrainMeasurements: sourceMeasurements,
+    mapLabel: "Terrain placement reference"
+  });
+
+  const renderedValues = Array.from(html.matchAll(
+    /<text class="battlefield-map__dimension-text"[^>]*>(.*?)<\\/text>/g
+  ), (match) => match[1].replaceAll("&quot;", '"'));
+  assert.deepEqual(renderedValues, sourceMeasurements.map((item) => item.value));
+  assert.equal((html.match(/class="battlefield-map__edge-dimension-line"/g) ?? []).length, sourceMeasurements.length);
+  assert.match(html, /Event Companion layout A · p\\. 27/);
+});
+
 test("planning and deployment maps stage unplaced units as selectable markers", () => {
   const state = {
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
