@@ -92,11 +92,19 @@ function terrainEdgeMeasurementOverlay(geometry, exactMeasurements = []) {
       return { x1: Number(item.x1), y1: Number(item.y1), x2: Number(item.x2), y2: Number(item.y2) };
     }
     // Older source records preserve the printed callout's approximate position, but
-    // not its vector endpoints. Use that point to draw a visual guide to the nearest
-    // board edge; this is deliberately an illustration, not a recalculated distance.
+    // not its vector endpoints. Anchor the visual guide to the nearest terrain corner,
+    // then connect that corner to its nearest board edge. This is an illustration, not
+    // a recalculated distance; explicit source endpoints always take precedence.
     if (!validPoint(item.x, item.y)) return null;
-    const x = Math.max(0, Math.min(60, Number(item.x)));
-    const y = Math.max(0, Math.min(44, Number(item.y)));
+    const corners = Object.values(geometry.terrainGeometry).flatMap((shape) =>
+      (shape.points ?? []).filter((point) => validPoint(point.x, point.y))
+    );
+    const anchor = corners.reduce((best, point) => {
+      const distance = (Number(point.x) - Number(item.x)) ** 2 + (Number(point.y) - Number(item.y)) ** 2;
+      return !best || distance < best.distance ? { point, distance } : best;
+    }, null)?.point;
+    const x = Math.max(0, Math.min(60, Number(anchor?.x ?? item.x)));
+    const y = Math.max(0, Math.min(44, Number(anchor?.y ?? item.y)));
     const distances = [
       { edge: "left", distance: x },
       { edge: "right", distance: 60 - x },
