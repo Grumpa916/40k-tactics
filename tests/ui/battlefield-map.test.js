@@ -5,6 +5,7 @@ import {
   isValidBattlefieldPosition,
   renderBattlefieldMap
 } from "../../src/ui/battlefield-map.js";
+import { loadEventCompanionEdgeMeasurements } from "../../src/data/event-companion-edge-measurements.js";
 
 test("battlefield coordinates map to a 60 by 44 board with the player's edge at the bottom", () => {
   assert.deepEqual(battlefieldPositionToPercent({ x: 0, y: 0 }), { left: 0, top: 100 });
@@ -222,11 +223,15 @@ test("deployment map shows both armies while excluding declared reserves and des
 
 
 
-test("terrain setup restores edge-distance callouts on the verified terrain layout only", () => {
+test("terrain setup restores edge-distance callouts and preserves verified source labels", async () => {
+  const measurementsByPage = await loadEventCompanionEdgeMeasurements();
+  assert.ok(Array.isArray(measurementsByPage["18"]));
+  assert.ok(measurementsByPage["18"].some((item) => item.value === '26"' && item.x === -3.45));
+
   const html = renderBattlefieldMap({
     battlefieldMap: { missionSetup: {
       myDisposition: "Take and Hold",
-      opponentDisposition: "Take and Hold",
+      opponentDisposition: "Reconnaissance",
       layout: "A"
     }},
     units: []
@@ -235,14 +240,17 @@ test("terrain setup restores edge-distance callouts on the verified terrain layo
     showUnits: false,
     showMeasurements: false,
     showTerrainEdgeMeasurements: true,
+    terrainMeasurements: measurementsByPage["18"],
     mapLabel: "Terrain placement reference"
   });
 
   assert.match(html, /Terrain placement reference/);
-  assert.match(html, /Event Companion layout A · p\. 9/);
+  assert.match(html, /Event Companion layout A · p\. 18/);
   assert.match(html, /aria-label="Battlefield edge to terrain placement dimensions"/);
   assert.match(html, /class="battlefield-map__edge-dimension-line"/);
   assert.match(html, /class="battlefield-map__dimension-text"/);
+  assert.match(html, />26&quot;<\/text>/);
+  assert.match(html, /x="-5\.75"/);
   assert.match(html, /Opponent edge · Y=44″/);
   assert.match(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
