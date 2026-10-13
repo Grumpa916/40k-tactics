@@ -182,12 +182,7 @@ test("live game status is not invented when there is no active battle", () => {
   assert.doesNotMatch(html, /data-map-game-status/);
 });
 
-test("Layout A page 27 renders every stored Event Companion edge callout without changing its value", async () => {
-  const measurementsByPage = await loadEventCompanionEdgeMeasurements();
-  const sourceMeasurements = measurementsByPage["27"];
-  assert.ok(Array.isArray(sourceMeasurements));
-  assert.equal(sourceMeasurements.length, 10);
-
+test("Layout A terrain setup derives edge guides from the selected terrain geometry", () => {
   const html = renderBattlefieldMap({
     battlefieldMap: { missionSetup: {
       myDisposition: "Purge the Foe",
@@ -200,15 +195,15 @@ test("Layout A page 27 renders every stored Event Companion edge callout without
     showUnits: false,
     showMeasurements: false,
     showTerrainEdgeMeasurements: true,
-    terrainMeasurements: sourceMeasurements,
+    terrainMeasurements: [{ value: '999"', x: 10, y: 10 }],
     mapLabel: "Terrain placement reference"
   });
 
-  const renderedValues = Array.from(html.matchAll(
-    /<text class="battlefield-map__dimension-text"[^>]*>(.*?)<\/text>/g
-  ), (match) => match[1].replaceAll("&quot;", '"'));
-  assert.deepEqual(renderedValues, sourceMeasurements.map((item) => item.value));
-  assert.match(html, /Event Companion layout A · p\. 27/);
+  assert.match(html, /Terrain placement reference/);
+  assert.match(html, /Event Companion layout A · p\\. 27/);
+  assert.match(html, /data-terrain-corner=/);
+  assert.match(html, /data-edge-distance=/);
+  assert.doesNotMatch(html, />999&quot;<\\/text>/);
 });
 
 test("planning and deployment maps stage unplaced units as selectable markers", () => {
