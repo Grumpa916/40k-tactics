@@ -141,10 +141,10 @@ function endpointFor(anchor, edge) {
 
 function labelPosition(anchor, edge) {
   const [x, y] = anchor;
-  if (edge === "left") return [Math.max(1.4, x - 1.4), y + 0.7];
-  if (edge === "right") return [Math.min(58.6, x + 1.4), y + 0.7];
-  if (edge === "top") return [x + 0.8, Math.min(42.8, y + 1.4)];
-  return [x + 0.8, Math.max(1.2, y - 1.2)];
+  if (edge === "left") return [1.6, Math.max(1.2, Math.min(42.8, y + 0.7))];
+  if (edge === "right") return [58.4, Math.max(1.2, Math.min(42.8, y + 0.7))];
+  if (edge === "top") return [Math.max(1.8, Math.min(58.2, x + 0.8)), 42.6];
+  return [Math.max(1.8, Math.min(58.2, x + 0.8)), 1.6];
 }
 
 function geometryForPage(page) {
