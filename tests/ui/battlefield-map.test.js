@@ -182,7 +182,7 @@ test("live game status is not invented when there is no active battle", () => {
   assert.doesNotMatch(html, /data-map-game-status/);
 });
 
-test("Layout A terrain setup derives edge guides from the selected terrain geometry", () => {
+test("Layout A terrain setup renders supplied Event Companion labels and source guide lines", () => {
   const html = renderBattlefieldMap({
     battlefieldMap: { missionSetup: {
       myDisposition: "Purge the Foe",
@@ -196,14 +196,16 @@ test("Layout A terrain setup derives edge guides from the selected terrain geome
     showMeasurements: false,
     showTerrainEdgeMeasurements: true,
     terrainMeasurements: [{ value: '999"', x: 10, y: 10 }],
+    terrainMeasurementLines: [[0, 10, 10, 10]],
     mapLabel: "Terrain placement reference"
   });
 
   assert.match(html, /Terrain placement reference/);
-  assert.match(html, /Event Companion layout A · p\\. 27/);
-  assert.match(html, /data-terrain-corner=/);
-  assert.match(html, /data-edge-distance=/);
-  assert.doesNotMatch(html, />999&quot;<\/text>/);
+  assert.match(html, /Event Companion layout A · p\. 27/);
+  assert.match(html, />999&quot;<\/text>/);
+  assert.match(html, /<line class="battlefield-map__dimension-line" data-source-line="true"/);
+  assert.doesNotMatch(html, /data-terrain-corner=/);
+  assert.doesNotMatch(html, /data-edge-distance=/);
 });
 
 test("planning and deployment maps stage unplaced units as selectable markers", () => {
@@ -308,5 +310,5 @@ test("terrain measurement labels retain source values and positions only", () =>
   assert.match(html, /data-source-x="30" data-source-y="20"/);
   assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
   assert.doesNotMatch(html, /data-edge-distance=/);
-  assert.doesNotMatch(html, /battlefield-map__dimension-line/);
+  assert.doesNotMatch(html, /<line class="battlefield-map__dimension-line"/);
 });
