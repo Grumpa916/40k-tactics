@@ -297,8 +297,10 @@ export function renderBattlefieldMap(state, {
     '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' +
     geometryOverlay(layoutGeometry) + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
     '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' +
-    '</div><div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span>' +
-    '<span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>' +
+    '</div>' + (showUnits
+      ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span>' +
+        '<span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>'
+      : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
     '<p class="battlefield-map__notice">Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.</p>' +
     '</div>';
 }
