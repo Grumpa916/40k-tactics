@@ -68,47 +68,42 @@ function selectedLayoutGeometry(state) {
 
 function terrainTableEdgeDimension(name, terrainPoints) {
   if (!terrainPoints.length) return "";
-  const xs = terrainPoints.map((point) => point.x);
-  const ys = terrainPoints.map((point) => point.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const centerX = (minX + maxX) / 2;
-  const centerY = (minY + maxY) / 2;
+  const leftPoint = terrainPoints.reduce((best, point) => point.x < best.x ? point : best);
+  const rightPoint = terrainPoints.reduce((best, point) => point.x > best.x ? point : best);
+  const bottomPoint = terrainPoints.reduce((best, point) => point.y < best.y ? point : best);
+  const topPoint = terrainPoints.reduce((best, point) => point.y > best.y ? point : best);
   const dimensions = [
     {
       axis: "horizontal",
-      edge: minX <= BATTLEFIELD_WIDTH_IN - maxX ? "left" : "right",
-      distance: Math.min(minX, BATTLEFIELD_WIDTH_IN - maxX),
-      x1: minX <= BATTLEFIELD_WIDTH_IN - maxX ? 0 : maxX,
-      x2: minX <= BATTLEFIELD_WIDTH_IN - maxX ? minX : BATTLEFIELD_WIDTH_IN,
-      y1: 44 - centerY,
-      y2: 44 - centerY,
-      labelX: (minX <= BATTLEFIELD_WIDTH_IN - maxX ? minX : maxX) / 2 +
-        (minX <= BATTLEFIELD_WIDTH_IN - maxX ? 0 : BATTLEFIELD_WIDTH_IN / 2),
-      labelY: 44 - centerY - 0.8
+      edge: leftPoint.x <= BATTLEFIELD_WIDTH_IN - rightPoint.x ? "left" : "right",
+      distance: leftPoint.x <= BATTLEFIELD_WIDTH_IN - rightPoint.x ? leftPoint.x : BATTLEFIELD_WIDTH_IN - rightPoint.x,
+      x1: leftPoint.x <= BATTLEFIELD_WIDTH_IN - rightPoint.x ? 0 : BATTLEFIELD_WIDTH_IN,
+      y1: 44 - (leftPoint.x <= BATTLEFIELD_WIDTH_IN - rightPoint.x ? leftPoint.y : rightPoint.y),
+      x2: leftPoint.x <= BATTLEFIELD_WIDTH_IN - rightPoint.x ? leftPoint.x : rightPoint.x,
+      y2: 44 - (leftPoint.x <= BATTLEFIELD_WIDTH_IN - rightPoint.x ? leftPoint.y : rightPoint.y)
     },
     {
       axis: "vertical",
-      edge: minY <= BATTLEFIELD_HEIGHT_IN - maxY ? "bottom" : "top",
-      distance: Math.min(minY, BATTLEFIELD_HEIGHT_IN - maxY),
-      x1: centerX,
-      x2: centerX,
-      y1: minY <= BATTLEFIELD_HEIGHT_IN - maxY ? 44 : 44 - maxY,
-      y2: minY <= BATTLEFIELD_HEIGHT_IN - maxY ? 44 - minY : 0,
-      labelX: centerX + 0.9,
-      labelY: (minY <= BATTLEFIELD_HEIGHT_IN - maxY ? 44 - minY : 44 - maxY) / 2
+      edge: bottomPoint.y <= BATTLEFIELD_HEIGHT_IN - topPoint.y ? "bottom" : "top",
+      distance: bottomPoint.y <= BATTLEFIELD_HEIGHT_IN - topPoint.y ? bottomPoint.y : BATTLEFIELD_HEIGHT_IN - topPoint.y,
+      x1: bottomPoint.y <= BATTLEFIELD_HEIGHT_IN - topPoint.y ? bottomPoint.x : topPoint.x,
+      y1: bottomPoint.y <= BATTLEFIELD_HEIGHT_IN - topPoint.y ? 44 : 0,
+      x2: bottomPoint.y <= BATTLEFIELD_HEIGHT_IN - topPoint.y ? bottomPoint.x : topPoint.x,
+      y2: bottomPoint.y <= BATTLEFIELD_HEIGHT_IN - topPoint.y ? 44 - bottomPoint.y : 44 - topPoint.y
     }
   ];
   return dimensions.filter((item) => item.distance > 0).map((item) => {
     const label = Number.isInteger(item.distance) ? String(item.distance) : String(Number(item.distance.toFixed(1)));
+    const x = (item.x1 + item.x2) / 2;
+    const y = (item.y1 + item.y2) / 2;
+    const labelX = item.axis === "vertical" ? x + 0.9 : x;
+    const labelY = item.axis === "horizontal" ? y - 0.8 : y;
     return '<line class="battlefield-map__dimension-line" data-table-edge-dimension="' + escapeHtml(name) +
       '" data-dimension-axis="' + item.axis + '" data-nearest-edge="' + item.edge +
       '" x1="' + item.x1 + '" y1="' + item.y1 + '" x2="' + item.x2 + '" y2="' + item.y2 + '"></line>' +
       '<text class="battlefield-map__dimension-label" data-table-edge-measurement="' + escapeHtml(name) +
-      '" data-dimension-axis="' + item.axis + '" data-distance-inches="' + label + '" x="' + item.labelX +
-      '" y="' + item.labelY + '" text-anchor="middle" dominant-baseline="central">' + label + '″</text>';
+      '" data-dimension-axis="' + item.axis + '" data-distance-inches="' + label + '" x="' + labelX +
+      '" y="' + labelY + '" text-anchor="middle" dominant-baseline="central">' + label + '″</text>';
   }).join("");
 }
 
@@ -173,7 +168,8 @@ function liveStatusLabel(state) {
 export function renderBattlefieldMap(state, {
   mode = "live",
   perspectivePlayerId = state?.activePlayer ?? null,
-  selectedUnitId = null
+  selectedUnitId = null,
+  showUnits = true
 } = {}) {
   if (!["planning", "deployment", "live"].includes(mode)) {
     throw new RangeError("Unknown battlefield map mode: " + mode);
@@ -185,12 +181,12 @@ export function renderBattlefieldMap(state, {
   const unitNodes = [];
   let positionedUnits = 0;
   const declaredReserves = safeState.battlefieldMap?.declaredReserves ?? {};
-  const visibleUnits = units.filter((unit) => {
+  const visibleUnits = showUnits ? units.filter((unit) => {
     if (!unit || !unit.id || unit.status === "destroyed") return false;
     if (mode === "planning") return unit.ownerId === perspectivePlayerId;
     if (mode === "deployment") return !declaredReserves[unit.id];
     return unit.status === "deployed";
-  });
+  }) : [];
   const stagedPosition = (index, total, friendly) => {
     const columns = Math.min(6, Math.max(1, total));
     const column = index % columns;
