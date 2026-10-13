@@ -1,4 +1,5 @@
 import { EVENT_COMPANION_SOURCE_PLACEMENT_GUIDES } from "./event-companion-placement-source-guides.js";
+import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 
 // Terrain-placement transcription for the existing V2 battlefield geometry.
 //
@@ -146,10 +147,15 @@ function labelPosition(anchor, edge) {
   return [x + 0.8, Math.max(1.2, y - 1.2)];
 }
 
+function geometryForPage(page) {
+  return (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((layout) => Number(layout?.page) === Number(page)) ?? null;
+}
+
 export function getEventCompanionPlacementOverlay(page, geometry = null) {
+  const activeGeometry = geometry ?? geometryForPage(page);
   const guides = Number(page) === 12
     ? PAGE_12_COMPLETE_GUIDES
-    : resolveGenericGuides(page, geometry);
+    : resolveGenericGuides(page, activeGeometry);
 
   if (!guides.length) return null;
 
