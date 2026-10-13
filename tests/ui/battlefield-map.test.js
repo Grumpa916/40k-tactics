@@ -5,6 +5,7 @@ import {
   isValidBattlefieldPosition,
   renderBattlefieldMap
 } from "../../src/ui/battlefield-map.js";
+import { loadEventCompanionEdgeMeasurements } from "../../src/data/event-companion-edge-measurements.js";
 
 test("battlefield coordinates map to a 60 by 44 board with the player's edge at the bottom", () => {
   assert.deepEqual(battlefieldPositionToPercent({ x: 0, y: 0 }), { left: 0, top: 100 });
@@ -220,3 +221,27 @@ test("deployment map shows both armies while excluding declared reserves and des
   assert.doesNotMatch(html,/data-map-unit-id="destroyed"/);
 });
 
+
+
+test("terrain setup renders exact verified Event Companion corner measurements without recomputing values", async () => {
+  const measurementsByPage = await loadEventCompanionEdgeMeasurements();
+  assert.ok(Array.isArray(measurementsByPage["18"]));
+  assert.ok(measurementsByPage["18"].some((item) => item.value === '26"' && item.x === -3.45));
+  const html = renderBattlefieldMap({
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Take and Hold",
+      layout: "A"
+    }},
+    units: []
+  }, {
+    mode: "planning",
+    showUnits: false,
+    showMeasurements: true,
+    terrainMeasurements: measurementsByPage["18"]
+  });
+  assert.match(html, /Verified Event Companion terrain corner measurements/);
+  assert.match(html, />26\"<\/text>/);
+  assert.match(html, /x="-3.45"/);
+  assert.doesNotMatch(html, /data-map-unit-id=/);
+});
