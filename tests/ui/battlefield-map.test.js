@@ -251,8 +251,8 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.match(html, /class="battlefield-map__dimension-text"/);
   assert.match(html, />26&quot;<\/text>/);
   assert.match(html, /x="-5\.75"/);
-  assert.match(html, /Opponent edge · Y=44″/);
-  assert.match(html, /Your edge · Y=0″/);
+  assert.doesNotMatch(html, /Opponent edge · Y=44″/);
+  assert.doesNotMatch(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
   assert.doesNotMatch(html, /60″ × 44″ reference grid/);
   assert.doesNotMatch(html, /No positions recorded/);
