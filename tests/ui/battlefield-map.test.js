@@ -249,10 +249,12 @@ test("terrain setup restores edge-distance callouts and preserves verified sourc
   assert.doesNotMatch(html, /data-zone=/);
   assert.match(html, /Event Companion layout A · p\. 18/);
   assert.match(html, /aria-label="Verified Event Companion terrain to battlefield edge measurements"/);
-  assert.doesNotMatch(html, /class="battlefield-map__edge-dimension-line"/);
+  assert.match(html, /class="battlefield-map__edge-dimension-line"/);
+  assert.match(html, /data-measurement-edge="left" data-measurement-value="26&amp;quot;|data-measurement-edge="left" data-measurement-value="26&quot;"/);
   assert.match(html, /class="battlefield-map__dimension-text"/);
   assert.match(html, />26&quot;<\/text>/);
-  assert.match(html, /x="-5\.75"/);
+  assert.match(html, /data-source-x="-3\.45" data-source-y="9\.16" x="2\.5"/);
+  assert.match(html, /data-measurement-edge="left" data-measurement-value="26&quot;"[^>]*x2="43\.333333333333336"/);
   assert.doesNotMatch(html, /Opponent edge · Y=44″/);
   assert.doesNotMatch(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
