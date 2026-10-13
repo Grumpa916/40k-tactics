@@ -375,7 +375,7 @@ export function createBattleSetupScreen(container, {
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout +
           ' · p. ' + item.page + (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>').join("") +
         '</div><p>Source pages refer to the official Event Companion. The map shows the verified terrain footprints, deployment zones, and objective locations for the selected layout.</p>' +
-        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId }) +
+        renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: false }) +
         '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
@@ -439,7 +439,7 @@ export function createBattleSetupScreen(container, {
       (state.units ?? []).filter((unit) => unit?.ownerId === (perspectivePlayerId ?? state.activePlayer ?? players[0]?.id) && unit.status !== "destroyed")
         .map((unit) => '<option value="' + escapeHtml(unit.id) + '"' + (unit.id === selectedPlanUnitId ? ' selected' : '') + '>' + escapeHtml(unit.name ?? unit.id) + '</option>').join("") +
       '</select></label><p>Select a unit, then tap the map to record or reposition its intended starting point. Planned positions remain separate from actual deployment and live movement.</p>' +
-      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId }) +
+      renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: selectedPlanUnitId, showUnits: false }) +
       '<button type="button" data-clear-deployment-plan>Clear my planned positions</button>' +
       '<p>No starting positions, objective locations, or terrain are assumed when they have not been recorded.</p>' +
       preGameRolesMarkup + '</section>';
