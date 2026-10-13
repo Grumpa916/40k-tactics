@@ -74,23 +74,42 @@ function terrainTableEdgeDimension(name, terrainPoints) {
   const maxX = Math.max(...xs);
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
-  const candidates = [
-    { edge: "left", distance: minX, x1: 0, y1: 44 - (minY + maxY) / 2, x2: minX, y2: 44 - (minY + maxY) / 2 },
-    { edge: "right", distance: BATTLEFIELD_WIDTH_IN - maxX, x1: maxX, y1: 44 - (minY + maxY) / 2, x2: BATTLEFIELD_WIDTH_IN, y2: 44 - (minY + maxY) / 2 },
-    { edge: "bottom", distance: minY, x1: (minX + maxX) / 2, y1: 44, x2: (minX + maxX) / 2, y2: 44 - minY },
-    { edge: "top", distance: BATTLEFIELD_HEIGHT_IN - maxY, x1: (minX + maxX) / 2, y1: 44 - BATTLEFIELD_HEIGHT_IN, x2: (minX + maxX) / 2, y2: 44 - maxY }
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  const dimensions = [
+    {
+      axis: "horizontal",
+      edge: minX <= BATTLEFIELD_WIDTH_IN - maxX ? "left" : "right",
+      distance: Math.min(minX, BATTLEFIELD_WIDTH_IN - maxX),
+      x1: minX <= BATTLEFIELD_WIDTH_IN - maxX ? 0 : maxX,
+      x2: minX <= BATTLEFIELD_WIDTH_IN - maxX ? minX : BATTLEFIELD_WIDTH_IN,
+      y1: 44 - centerY,
+      y2: 44 - centerY,
+      labelX: (minX <= BATTLEFIELD_WIDTH_IN - maxX ? minX : maxX) / 2 +
+        (minX <= BATTLEFIELD_WIDTH_IN - maxX ? 0 : BATTLEFIELD_WIDTH_IN / 2),
+      labelY: 44 - centerY - 0.8
+    },
+    {
+      axis: "vertical",
+      edge: minY <= BATTLEFIELD_HEIGHT_IN - maxY ? "bottom" : "top",
+      distance: Math.min(minY, BATTLEFIELD_HEIGHT_IN - maxY),
+      x1: centerX,
+      x2: centerX,
+      y1: minY <= BATTLEFIELD_HEIGHT_IN - maxY ? 44 : 44 - maxY,
+      y2: minY <= BATTLEFIELD_HEIGHT_IN - maxY ? 44 - minY : 0,
+      labelX: centerX + 0.9,
+      labelY: (minY <= BATTLEFIELD_HEIGHT_IN - maxY ? 44 - minY : 44 - maxY) / 2
+    }
   ];
-  const nearest = candidates.reduce((best, candidate) => candidate.distance < best.distance ? candidate : best);
-  if (nearest.distance <= 0) return "";
-  const x = (nearest.x1 + nearest.x2) / 2;
-  const y = (nearest.y1 + nearest.y2) / 2;
-  const label = Number.isInteger(nearest.distance) ? String(nearest.distance) : String(Number(nearest.distance.toFixed(1)));
-  return '<line class="battlefield-map__dimension-line" data-table-edge-dimension="' + escapeHtml(name) +
-    '" data-nearest-edge="' + nearest.edge + '" x1="' + nearest.x1 + '" y1="' + nearest.y1 +
-    '" x2="' + nearest.x2 + '" y2="' + nearest.y2 + '"></line>' +
-    '<text class="battlefield-map__dimension-label" data-table-edge-measurement="' + escapeHtml(name) +
-    '" data-distance-inches="' + label + '" x="' + x + '" y="' + y +
-    '" text-anchor="middle" dominant-baseline="central">' + label + '″</text>';
+  return dimensions.filter((item) => item.distance > 0).map((item) => {
+    const label = Number.isInteger(item.distance) ? String(item.distance) : String(Number(item.distance.toFixed(1)));
+    return '<line class="battlefield-map__dimension-line" data-table-edge-dimension="' + escapeHtml(name) +
+      '" data-dimension-axis="' + item.axis + '" data-nearest-edge="' + item.edge +
+      '" x1="' + item.x1 + '" y1="' + item.y1 + '" x2="' + item.x2 + '" y2="' + item.y2 + '"></line>' +
+      '<text class="battlefield-map__dimension-label" data-table-edge-measurement="' + escapeHtml(name) +
+      '" data-dimension-axis="' + item.axis + '" data-distance-inches="' + label + '" x="' + item.labelX +
+      '" y="' + item.labelY + '" text-anchor="middle" dominant-baseline="central">' + label + '″</text>';
+  }).join("");
 }
 
 function geometryOverlay(geometry) {
