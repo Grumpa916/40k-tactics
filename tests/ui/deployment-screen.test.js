@@ -64,7 +64,8 @@ test("deployment screen shows both armies and distinguishes deployed, declared r
   assert.match(root.innerHTML, /data-start-first-turn/);
   assert.doesNotMatch(root.innerHTML, /data-start-first-turn disabled/);
   assert.match(root.innerHTML, /Both armies/);
-  assert.match(root.innerHTML, /deployment-reserve-tray__unit[^>]*>Reserve Squad · You/);
+  assert.match(root.innerHTML, /deployment-reserve-tray__unit[^>]*data-reserve-select="reserve"[^>]*>Reserve Squad · You/);
+  assert.match(root.innerHTML, /Tap to select, then tap the map to deploy/);
   assert.doesNotMatch(root.innerHTML, /No units declared in reserves/);
 
   screen.destroy();
