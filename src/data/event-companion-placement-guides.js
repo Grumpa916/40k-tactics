@@ -1,17 +1,15 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
-import { getEventCompanionExtendedSourceGuides } from "./event-companion-placement-source-guides-extended.js";
 
 // Terrain-placement transcription for the existing V2 battlefield geometry.
+// Source of truth: the official Warhammer 40,000 Event Companion PDF used by
+// this project. Printed values are copied from visible source dimensions; they
+// are never calculated from V2 geometry. Source anchors are the terrain-side
+// endpoints of those source dimensions after rotating the portrait battlefield
+// into V2's 60 x 44 landscape orientation.
 //
-// Source of truth: official Warhammer 40,000 Event Companion.
-// Printed values are never calculated. Source anchors identify the terrain-side
-// endpoint of an official Event Companion dimension after rotating the portrait
-// battlefield into V2's 60 x 44 landscape orientation.
-//
-// Page 12 remains the hand-verified browser-approved baseline. Pages 13 and 14
-// use the same principles: official printed values only, V2 terrain corners for
-// rendered anchors, battlefield-edge endpoints only, and direct 180-degree
-// counterparts where the official layout establishes rotational symmetry.
+// Pages 12-14 retain their previously approved mappings. Pages 15-18 were
+// re-transcribed directly from the PDF vector layer. Deployment-zone dimensions
+// are deliberately excluded: this module is for terrain placement only.
 const PAGE_12_GUIDES = Object.freeze([
   { value: '9"',  edge: "top",    terrain: "T4",       anchor: [20.6, 34.8], sourceAnchor: [20.60, 34.88] },
   { value: '5"',  edge: "top",    terrain: "T3",       anchor: [36.8, 39.0], sourceAnchor: [36.69, 38.97] },
@@ -73,10 +71,6 @@ const PAGE_13_SOURCE_GUIDES = Object.freeze([
   { value: '9"',  edge: "right",  sourceAnchor: [50.91, 22.08] }
 ]);
 
-// Page 13 visual verification found official guides where the generic
-// nearest-boundary heuristic selected technically valid but unhelpful vertices.
-// Keep the printed values unchanged and attach them to the exact reproducible
-// V2 corners verified against the Event Companion diagram.
 const PAGE_13_ANCHOR_OVERRIDES = Object.freeze({
   '4"|top':     Object.freeze({ terrain: "T12", anchor: [25.9, 40.0], edge: "top" }),
   '4"|right':   Object.freeze({ terrain: "T8", anchor: [53.0, 40.1], edge: "top" }),
@@ -110,6 +104,94 @@ const PAGE_14_SOURCE_GUIDES = Object.freeze([
   { value: '12"', edge: "bottom", sourceAnchor: [48.03, 12.00] }
 ]);
 
+const PAGE_15_SOURCE_GUIDES = Object.freeze([
+  { value: '18"', edge: "bottom", sourceAnchor: [54.02, 17.90] },
+  { value: '5"', edge: "right", sourceAnchor: [55.20, 3.99] },
+  { value: '4"', edge: "bottom", sourceAnchor: [55.17, 4.01] },
+  { value: '22"', edge: "bottom", sourceAnchor: [45.87, 21.99] },
+  { value: '7"', edge: "bottom", sourceAnchor: [37.02, 7.00] },
+  { value: '5"', edge: "bottom", sourceAnchor: [25.85, 4.92] },
+  { value: '9"', edge: "bottom", sourceAnchor: [12.63, 9.16] },
+  { value: '24"', edge: "left", sourceAnchor: [24.17, 7.05] },
+  { value: '10"', edge: "bottom", sourceAnchor: [4.89, 10.03] },
+  { value: '5"', edge: "left", sourceAnchor: [4.89, 9.98] },
+  { value: '24.25"', edge: "right", sourceAnchor: [35.64, 27.03] },
+  { value: '3"', edge: "bottom", sourceAnchor: [16.78, 3.09] },
+  { value: '17"', edge: "top", sourceAnchor: [35.73, 26.99] },
+  { value: '6"', edge: "right", sourceAnchor: [54.02, 17.96] },
+  { value: '4"', edge: "bottom", sourceAnchor: [43.45, 4.08] },
+  { value: '7"', edge: "bottom", sourceAnchor: [24.14, 7.00] },
+  { value: '11"', edge: "left", sourceAnchor: [11.09, 5.37] },
+  { value: '5"', edge: "left", sourceAnchor: [4.91, 17.06] },
+  { value: '15"', edge: "right", sourceAnchor: [44.99, 14.92] },
+  { value: '15"', edge: "bottom", sourceAnchor: [44.99, 14.92] },
+  { value: '17"', edge: "top", sourceAnchor: [24.28, 27.04] }
+]);
+
+const PAGE_16_SOURCE_GUIDES = Object.freeze([
+  { value: '24.25"', edge: "right", sourceAnchor: [35.92, 17.03] },
+  { value: '17"', edge: "top", sourceAnchor: [35.83, 26.97] },
+  { value: '16"', edge: "bottom", sourceAnchor: [46.05, 16.03] },
+  { value: '14"', edge: "right", sourceAnchor: [46.01, 16.03] },
+  { value: '5"', edge: "bottom", sourceAnchor: [56.15, 5.02] },
+  { value: '4"', edge: "right", sourceAnchor: [56.15, 5.07] },
+  { value: '8"', edge: "top", sourceAnchor: [53.12, 36.00] },
+  { value: '7"', edge: "right", sourceAnchor: [53.08, 36.02] },
+  { value: '5"', edge: "bottom", sourceAnchor: [44.58, 5.05] },
+  { value: '17"', edge: "top", sourceAnchor: [51.28, 26.97] },
+  { value: '4"', edge: "top", sourceAnchor: [47.19, 40.00] },
+  { value: '4"', edge: "bottom", sourceAnchor: [23.94, 3.92] },
+  { value: '9"', edge: "bottom", sourceAnchor: [32.10, 8.92] },
+  { value: '24"', edge: "left", sourceAnchor: [24.00, 3.94] },
+  { value: '23"', edge: "right", sourceAnchor: [36.94, 4.01] },
+  { value: '4"', edge: "bottom", sourceAnchor: [36.94, 3.93] },
+  { value: '17"', edge: "top", sourceAnchor: [24.39, 27.05] },
+  { value: '14"', edge: "bottom", sourceAnchor: [40.15, 14.01] },
+  { value: '9"', edge: "right", sourceAnchor: [51.37, 26.93] }
+]);
+
+const PAGE_17_SOURCE_GUIDES = Object.freeze([
+  { value: '24.25"', edge: "right", sourceAnchor: [35.75, 27.05] },
+  { value: '11"', edge: "right", sourceAnchor: [49.10, 6.94] },
+  { value: '17"', edge: "top", sourceAnchor: [35.75, 27.04] },
+  { value: '4"', edge: "bottom", sourceAnchor: [48.97, 3.79] },
+  { value: '10"', edge: "right", sourceAnchor: [50.19, 15.98] },
+  { value: '11"', edge: "right", sourceAnchor: [49.02, 40.01] },
+  { value: '24"', edge: "right", sourceAnchor: [35.84, 5.01] },
+  { value: '5"', edge: "bottom", sourceAnchor: [35.89, 4.98] },
+  { value: '11"', edge: "bottom", sourceAnchor: [41.09, 11.09] },
+  { value: '17"', edge: "top", sourceAnchor: [24.19, 27.12] },
+  { value: '2"', edge: "top", sourceAnchor: [33.96, 41.95] },
+  { value: '2"', edge: "top", sourceAnchor: [41.04, 41.99] },
+  { value: '19"', edge: "right", sourceAnchor: [41.01, 41.99] },
+  { value: '16"', edge: "bottom", sourceAnchor: [43.04, 15.98] },
+  { value: '11"', edge: "right", sourceAnchor: [49.04, 29.96] },
+  { value: '10"', edge: "right", sourceAnchor: [50.05, 27.62] },
+  { value: '10"', edge: "bottom", sourceAnchor: [55.11, 9.81] },
+  { value: '19"', edge: "right", sourceAnchor: [41.13, 11.09] },
+  { value: '5"', edge: "bottom", sourceAnchor: [32.01, 4.98] },
+  { value: '4"', edge: "top", sourceAnchor: [46.33, 40.07] }
+]);
+
+const PAGE_18_SOURCE_GUIDES = Object.freeze([
+  { value: '24.25"', edge: "right", sourceAnchor: [35.89, 26.98] },
+  { value: '5"', edge: "right", sourceAnchor: [55.08, 18.51] },
+  { value: '9"', edge: "right", sourceAnchor: [51.20, 22.25] },
+  { value: '4"', edge: "bottom", sourceAnchor: [41.05, 4.00] },
+  { value: '19"', edge: "right", sourceAnchor: [41.09, 4.00] },
+  { value: '14"', edge: "bottom", sourceAnchor: [45.08, 13.98] },
+  { value: '17"', edge: "bottom", sourceAnchor: [35.75, 16.86] },
+  { value: '10"', edge: "top", sourceAnchor: [25.95, 34.14] },
+  { value: '26"', edge: "right", sourceAnchor: [34.01, 39.07] },
+  { value: '5"', edge: "top", sourceAnchor: [33.98, 39.07] },
+  { value: '17"', edge: "bottom", sourceAnchor: [24.23, 16.89] },
+  { value: '4"', edge: "top", sourceAnchor: [40.20, 39.96] },
+  { value: '4"', edge: "top", sourceAnchor: [47.10, 39.94] },
+  { value: '5"', edge: "right", sourceAnchor: [55.08, 6.96] },
+  { value: '7"', edge: "bottom", sourceAnchor: [55.11, 6.96] },
+  { value: '15"', edge: "right", sourceAnchor: [45.09, 13.98] }
+]);
+
 const MIRROR_EDGE = Object.freeze({ left: "right", right: "left", top: "bottom", bottom: "top" });
 
 function page12MirroredGuide(guide) {
@@ -129,9 +211,13 @@ const PAGE_12_COMPLETE_GUIDES = Object.freeze([
   ...PAGE_12_GUIDES.map(page12MirroredGuide)
 ]);
 
-const GENERIC_SOURCE_GUIDES = Object.freeze({
+const VERIFIED_SOURCE_GUIDES = Object.freeze({
   "13": PAGE_13_SOURCE_GUIDES,
-  "14": PAGE_14_SOURCE_GUIDES
+  "14": PAGE_14_SOURCE_GUIDES,
+  "15": PAGE_15_SOURCE_GUIDES,
+  "16": PAGE_16_SOURCE_GUIDES,
+  "17": PAGE_17_SOURCE_GUIDES,
+  "18": PAGE_18_SOURCE_GUIDES
 });
 
 function shapePoints(shape) {
@@ -183,11 +269,11 @@ function nearestShapeVertex(sourceAnchor, shape) {
   return bestAnchor;
 }
 
-function snapToTerrainVertex(sourceAnchor, geometry) {
+function snapToTerrainVertex(sourceAnchor, layout) {
   let bestTerrain = null;
   let bestShape = null;
   let bestBoundaryDistance = Infinity;
-  for (const [terrain, shape] of Object.entries(geometry?.terrainGeometry ?? {})) {
+  for (const [terrain, shape] of Object.entries(layout?.terrainGeometry ?? {})) {
     const boundaryDistance = shapeBoundaryDistanceSquared(sourceAnchor, shape);
     if (boundaryDistance < bestBoundaryDistance) {
       bestTerrain = terrain;
@@ -204,6 +290,14 @@ function geometryForPage(page) {
   return (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((layout) => Number(layout?.page) === Number(page)) ?? null;
 }
 
+function resolvedGuideForPage(page, guide, layout) {
+  if (Number(page) === 13) {
+    const override = PAGE_13_ANCHOR_OVERRIDES[guide.value + "|" + guide.edge];
+    if (override) return override;
+  }
+  return snapToTerrainVertex(guide.sourceAnchor, layout);
+}
+
 function dedupeGuides(guides) {
   const seen = new Set();
   return guides.filter((guide) => {
@@ -214,27 +308,15 @@ function dedupeGuides(guides) {
   });
 }
 
-function resolvedGuideForPage(page, guide, geometry) {
-  if (Number(page) === 13) {
-    const override = PAGE_13_ANCHOR_OVERRIDES[guide.value + "|" + guide.edge];
-    if (override) return override;
-  }
-  return snapToTerrainVertex(guide.sourceAnchor, geometry);
-}
-
-function resolveGenericGuides(page) {
-  const sourceGuides = GENERIC_SOURCE_GUIDES[String(page)] ?? getEventCompanionExtendedSourceGuides(page);
-  const geometry = geometryForPage(page);
-  if (!sourceGuides.length || !geometry?.terrainGeometry) return [];
+function resolveVerifiedGuides(page) {
+  const sourceGuides = VERIFIED_SOURCE_GUIDES[String(page)] ?? [];
+  const layout = geometryForPage(page);
+  if (!sourceGuides.length || !layout?.terrainGeometry) return [];
   const resolved = [];
-
   for (const guide of sourceGuides) {
-    const snapped = resolvedGuideForPage(page, guide, geometry);
+    const snapped = resolvedGuideForPage(page, guide, layout);
     if (snapped) resolved.push({ ...guide, ...snapped });
   }
-
-  // Pages 13+ already contain the complete set of dimensions printed on the
-  // Event Companion page. Do not synthesize, mirror, or infer extra guides.
   return dedupeGuides(resolved);
 }
 
@@ -246,16 +328,25 @@ function endpointFor(anchor, edge) {
   return [x, 0];
 }
 
-function labelPosition(anchor, edge) {
+function labelPosition(anchor, edge, page) {
   const [x, y] = anchor;
-  if (edge === "left") return [Math.max(1.4, x - 1.4), y + 0.7];
-  if (edge === "right") return [Math.min(58.6, x + 1.4), y + 0.7];
-  if (edge === "top") return [x + 0.8, Math.min(42.8, y + 1.4)];
-  return [x + 0.8, Math.max(1.2, y - 1.2)];
+  if (Number(page) <= 14) {
+    if (edge === "left") return [Math.max(1.4, x - 1.4), y + 0.7];
+    if (edge === "right") return [Math.min(58.6, x + 1.4), y + 0.7];
+    if (edge === "top") return [x + 0.8, Math.min(42.8, y + 1.4)];
+    return [x + 0.8, Math.max(1.2, y - 1.2)];
+  }
+
+  const [edgeX, edgeY] = endpointFor(anchor, edge);
+  const midX = (x + edgeX) / 2;
+  const midY = (y + edgeY) / 2;
+  if (edge === "left" || edge === "right") return [midX, midY + 0.7];
+  return [midX + 0.8, midY];
 }
 
 export function getEventCompanionPlacementOverlay(page) {
-  const guides = Number(page) === 12 ? PAGE_12_COMPLETE_GUIDES : resolveGenericGuides(page);
+  const numericPage = Number(page);
+  const guides = numericPage === 12 ? PAGE_12_COMPLETE_GUIDES : resolveVerifiedGuides(numericPage);
   if (!guides.length) return null;
 
   const lines = guides.map((guide) => {
@@ -265,14 +356,14 @@ export function getEventCompanionPlacementOverlay(page) {
   });
 
   const measurements = guides.map((guide) => {
-    const [x, y] = labelPosition(guide.anchor, guide.edge);
-    return { value: guide.value, x, y };
+    const [x, y] = labelPosition(guide.anchor, guide.edge, numericPage);
+    return { terrain: guide.terrain, value: guide.value, x, y };
   });
 
   const seen = new Set();
   const anchors = [];
   for (const guide of guides) {
-    const key = guide.anchor.join(",");
+    const key = guide.terrain + "|" + guide.anchor.join(",");
     if (seen.has(key)) continue;
     seen.add(key);
     anchors.push({ x: guide.anchor[0], y: guide.anchor[1], terrain: guide.terrain });
@@ -285,5 +376,9 @@ export {
   PAGE_12_GUIDES,
   PAGE_12_COMPLETE_GUIDES,
   PAGE_13_SOURCE_GUIDES,
-  PAGE_14_SOURCE_GUIDES
+  PAGE_14_SOURCE_GUIDES,
+  PAGE_15_SOURCE_GUIDES,
+  PAGE_16_SOURCE_GUIDES,
+  PAGE_17_SOURCE_GUIDES,
+  PAGE_18_SOURCE_GUIDES
 };
