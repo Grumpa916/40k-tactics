@@ -233,19 +233,8 @@ function resolveGenericGuides(page) {
     if (snapped) resolved.push({ ...guide, ...snapped });
   }
 
-  for (const guide of sourceGuides) {
-    const mirroredSourceAnchor = [60 - guide.sourceAnchor[0], 44 - guide.sourceAnchor[1]];
-    const snapped = snapToTerrainVertex(mirroredSourceAnchor, geometry);
-    if (!snapped) continue;
-    resolved.push({
-      ...guide,
-      sourceAnchor: mirroredSourceAnchor,
-      edge: MIRROR_EDGE[guide.edge],
-      ...snapped,
-      mirrored: true
-    });
-  }
-
+  // Pages 13+ already contain the complete set of dimensions printed on the
+  // Event Companion page. Do not synthesize, mirror, or infer extra guides.
   return dedupeGuides(resolved);
 }
 
