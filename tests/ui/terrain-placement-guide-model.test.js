@@ -51,10 +51,18 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
           assert.ok(callout, `${terrain} ${point.point} has one paired callout`);
           assert.match(callout.horizontalValue, /^\d+"$/);
           assert.match(callout.verticalValue, /^\d+"$/);
-          assert.ok(/[←→]/.test(callout.text), `${terrain} ${point.point} callout identifies the horizontal edge`);
-          assert.ok(/[↑↓]/.test(callout.text), `${terrain} ${point.point} callout identifies the vertical edge`);
+          assert.ok(/[←→]/.test(callout.horizontalText), `${terrain} ${point.point} callout identifies the horizontal edge`);
+          assert.ok(/[↑↓]/.test(callout.verticalText), `${terrain} ${point.point} callout identifies the vertical edge`);
           assert.ok(callout.x >= 0 && callout.x <= 60);
           assert.ok(callout.y >= 0 && callout.y <= 44);
+          assert.equal(callout.anchorX, point.anchor[0]);
+          assert.equal(callout.anchorY, point.anchor[1]);
+
+          const outwardX = point.anchor[0] - point.center[0];
+          const outwardY = point.anchor[1] - point.center[1];
+          const calloutX = callout.x - point.anchor[0];
+          const calloutY = callout.y - point.anchor[1];
+          assert.ok((outwardX * calloutX) + (outwardY * calloutY) >= 0, `${terrain} ${point.point} callout stays outside the terrain footprint`);
         }
       }
     }
