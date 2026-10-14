@@ -72,6 +72,16 @@ const PAGE_13_SOURCE_GUIDES = Object.freeze([
   { value: '20"', edge: "bottom", sourceAnchor: [20.02, 9.96] }
 ]);
 
+// Page 13 visual verification found three official guides where the generic
+// nearest-boundary heuristic selected technically valid but unhelpful vertices.
+// Keep the printed values unchanged and attach them to reproducible corners of
+// the same accepted V2 terrain geometry.
+const PAGE_13_ANCHOR_OVERRIDES = Object.freeze({
+  '9"|top':    Object.freeze({ terrain: "T12/T13", anchor: [25.9, 33.9] }),
+  '18"|left':  Object.freeze({ terrain: "T14", anchor: [24.4, 12.6] }),
+  '20"|bottom':Object.freeze({ terrain: "T14", anchor: [24.4, 12.6] })
+});
+
 const PAGE_14_SOURCE_GUIDES = Object.freeze([
   { value: '19"', edge: "left",   sourceAnchor: [19.06, 27.03] },
   { value: '4"',  edge: "top",    sourceAnchor: [43.08, 40.01] },
@@ -197,6 +207,14 @@ function dedupeGuides(guides) {
   });
 }
 
+function resolvedGuideForPage(page, guide, geometry) {
+  if (Number(page) === 13) {
+    const override = PAGE_13_ANCHOR_OVERRIDES[guide.value + "|" + guide.edge];
+    if (override) return override;
+  }
+  return snapToTerrainVertex(guide.sourceAnchor, geometry);
+}
+
 function resolveGenericGuides(page) {
   const sourceGuides = GENERIC_SOURCE_GUIDES[String(page)] ?? getEventCompanionExtendedSourceGuides(page);
   const geometry = geometryForPage(page);
@@ -204,7 +222,7 @@ function resolveGenericGuides(page) {
   const resolved = [];
 
   for (const guide of sourceGuides) {
-    const snapped = snapToTerrainVertex(guide.sourceAnchor, geometry);
+    const snapped = resolvedGuideForPage(page, guide, geometry);
     if (snapped) resolved.push({ ...guide, ...snapped });
   }
 
