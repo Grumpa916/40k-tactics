@@ -15,5 +15,20 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Run tests
+      - name: Placement guide data tests
+        run: node --test tests/data/event-companion-placement-guides.test.js
+      - name: Extended placement guide tests
+        if: always()
+        run: node --test tests/data/event-companion-placement-guides-extended.test.js
+      - name: Battlefield map tests
+        if: always()
+        run: node --test tests/ui/battlefield-map.test.js
+      - name: Display orientation tests
+        if: always()
+        run: node --test tests/ui/event-companion-display-orientation.test.js
+      - name: Terrain guide model tests
+        if: always()
+        run: node --test tests/ui/terrain-placement-guide-model.test.js
+      - name: Full suite
+        if: always()
         run: npm test
