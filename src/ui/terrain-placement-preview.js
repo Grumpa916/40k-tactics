@@ -38,9 +38,9 @@ function escapeXml(value) {
 }
 
 function addCompleteTerrainGuides(page, layout, mount) {
-  if (Number(page) < 14 || Number(page) > 53) return;
+  if (Number(page) < 14 || Number(page) > 53) return null;
   const board = mount.querySelector(".battlefield-map__board");
-  if (!board) return;
+  if (!board) return null;
 
   const overlay = buildCompleteTerrainPlacementOverlay(layout);
   board.querySelector(".battlefield-map__terrain-measurements")?.remove();
@@ -49,11 +49,16 @@ function addCompleteTerrainGuides(page, layout, mount) {
   const py = (y) => (TERRAIN_BOARD_HEIGHT - Number(y)) / TERRAIN_BOARD_HEIGHT * 100;
   const parts = [];
 
-  overlay.lines.forEach((line) => {
-    parts.push('<line class="battlefield-map__dimension-line" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"></line>');
+  overlay.lines.forEach((line, index) => {
+    const guide = overlay.guides[index] ?? {};
+    parts.push(
+      '<line class="battlefield-map__dimension-line" data-terrain="' + escapeXml(guide.terrain ?? "") + '" data-terrain-point="' + escapeXml((guide.terrain ?? "") + ':' + (guide.point ?? "")) + '" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"></line>'
+    );
   });
   overlay.anchors.forEach((anchor) => {
-    parts.push('<circle class="battlefield-map__dimension-anchor" data-placement-anchor="' + escapeXml(anchor.terrain + ':' + anchor.point) + '" cx="' + px(anchor.x) + '" cy="' + py(anchor.y) + '" r=".7"></circle>');
+    parts.push(
+      '<circle class="battlefield-map__dimension-anchor" data-terrain="' + escapeXml(anchor.terrain) + '" data-placement-anchor="' + escapeXml(anchor.terrain + ':' + anchor.point) + '" cx="' + px(anchor.x) + '" cy="' + py(anchor.y) + '" r=".7"></circle>'
+    );
   });
 
   if (Number(page) === 14) {
@@ -69,7 +74,7 @@ function addCompleteTerrainGuides(page, layout, mount) {
       const boxWidth = 11.5;
       const boxHeight = 6.5;
       parts.push(
-        '<g class="terrain-point-callout" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '">' +
+        '<g class="terrain-point-callout" data-terrain="' + escapeXml(callout.terrain) + '" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '">' +
           '<line x1="' + anchorX + '" y1="' + anchorY + '" x2="' + x + '" y2="' + y + '" stroke="#b8c5cf" stroke-width=".7" stroke-dasharray="2 1.5" vector-effect="non-scaling-stroke"></line>' +
           '<rect x="' + (x - boxWidth / 2) + '" y="' + (y - boxHeight / 2) + '" width="' + boxWidth + '" height="' + boxHeight + '" rx="1.1" fill="#101820" fill-opacity=".94" stroke="#f6d783" stroke-width=".7" vector-effect="non-scaling-stroke"></rect>' +
           '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y - 0.75) + '" text-anchor="middle">' + escapeXml(callout.horizontalText) + '</text>' +
@@ -83,6 +88,94 @@ function addCompleteTerrainGuides(page, layout, mount) {
     "beforeend",
     '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Complete terrain placement guides: two points and two perpendicular measurements per terrain shape">' + parts.join("") + '</svg>'
   );
+  return overlay;
+}
+
+function enableTerrainFocus(page, mount) {
+  if (Number(page) < 15 || Number(page) > 53) return;
+  const board = mount.querySelector(".battlefield-map__board");
+  const mapRoot = mount.querySelector(".battlefield-map");
+  if (!board || !mapRoot) return;
+
+  const terrainShapes = [...board.querySelectorAll(".battlefield-map__terrain[data-terrain]")];
+  const guideLines = [...board.querySelectorAll(".battlefield-map__dimension-line[data-terrain]")];
+  const anchors = [...board.querySelectorAll(".battlefield-map__dimension-anchor[data-terrain]")];
+  const callouts = [...board.querySelectorAll(".terrain-point-callout[data-terrain]")];
+  if (!terrainShapes.length) return;
+
+  const controls = document.createElement("div");
+  controls.className = "terrain-focus-controls";
+  controls.innerHTML = '<span data-terrain-focus-status>Tap a terrain footprint to show its four placement measurements.</span><button type="button" data-terrain-show-all>Show all</button>';
+  mapRoot.insertBefore(controls, board);
+
+  const focusStatus = controls.querySelector("[data-terrain-focus-status]");
+  const showAllButton = controls.querySelector("[data-terrain-show-all]");
+  let focusedTerrain = null;
+  let showAll = false;
+
+  function applyFocus() {
+    guideLines.forEach((element) => {
+      element.style.display = showAll || (focusedTerrain && element.dataset.terrain === focusedTerrain) ? "" : "none";
+    });
+    callouts.forEach((element) => {
+      element.style.display = showAll || (focusedTerrain && element.dataset.terrain === focusedTerrain) ? "" : "none";
+    });
+    anchors.forEach((element) => {
+      const active = showAll || (focusedTerrain && element.dataset.terrain === focusedTerrain);
+      element.style.display = "";
+      element.style.opacity = active ? "1" : ".38";
+    });
+    terrainShapes.forEach((shape) => {
+      shape.classList.toggle("is-measurement-focused", !showAll && focusedTerrain === shape.dataset.terrain);
+    });
+
+    if (showAll) {
+      focusStatus.textContent = "Showing all terrain measurements.";
+      showAllButton.textContent = "Hide all";
+    } else if (focusedTerrain) {
+      focusStatus.textContent = "Showing four placement measurements for " + focusedTerrain + ". Tap another terrain footprint to switch.";
+      showAllButton.textContent = "Show all";
+    } else {
+      focusStatus.textContent = "Tap a terrain footprint to show its four placement measurements.";
+      showAllButton.textContent = "Show all";
+    }
+  }
+
+  function focusTerrain(name) {
+    focusedTerrain = name;
+    showAll = false;
+    applyFocus();
+  }
+
+  terrainShapes.forEach((shape) => {
+    const terrainName = shape.dataset.terrain;
+    shape.setAttribute("role", "button");
+    shape.setAttribute("tabindex", "0");
+    shape.setAttribute("aria-label", "Show placement measurements for " + terrainName);
+    shape.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      focusTerrain(terrainName);
+    });
+    shape.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      focusTerrain(terrainName);
+    });
+  });
+
+  showAllButton.addEventListener("click", () => {
+    if (showAll) {
+      showAll = false;
+      focusedTerrain = null;
+    } else {
+      showAll = true;
+      focusedTerrain = null;
+    }
+    applyFocus();
+  });
+
+  applyFocus();
 }
 
 function renderPage(page, mount, status) {
@@ -114,6 +207,7 @@ function renderPage(page, mount, status) {
   });
 
   addCompleteTerrainGuides(page, layout, mount);
+  enableTerrainFocus(page, mount);
   status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page;
 }
 
