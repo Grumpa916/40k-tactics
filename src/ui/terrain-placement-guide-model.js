@@ -111,20 +111,24 @@ export function terrainGuideLabelPosition(anchor, edge, { page = 14, terrain = "
     return [x + 0.8, y];
   }
 
-  // Denser layouts need their labels spread along the guide instead of all
-  // sitting at the midpoint. A deterministic lane keeps the result stable.
+  // Pages 15-53 can contain many complete four-guide terrain measurements.
+  // Keep the battlefield interior readable by moving labels into narrow lanes
+  // just inside the perimeter while leaving every guide line and anchor intact.
   const laneKey = labelLaneKey(terrain, point, edge);
-  const fractions = [0.30, 0.43, 0.57, 0.70];
-  const offsets = [-1.05, -0.5, 0.5, 1.05];
-  const fraction = fractions[laneKey % fractions.length];
-  const offset = offsets[Math.floor(laneKey / fractions.length) % offsets.length];
-  let x = anchor[0] + (edgeX - anchor[0]) * fraction;
-  let y = anchor[1] + (edgeY - anchor[1]) * fraction;
+  const offsets = [-1.35, -0.65, 0.65, 1.35];
+  const offset = offsets[laneKey % offsets.length];
+  const inset = 1.8;
 
-  if (edge === "left" || edge === "right") y += offset;
-  else x += offset;
-
-  return [clamp(x, 1, TERRAIN_BOARD_WIDTH - 1), clamp(y, 1, TERRAIN_BOARD_HEIGHT - 1)];
+  if (edge === "left") {
+    return [inset, clamp(anchor[1] + offset, 1.2, TERRAIN_BOARD_HEIGHT - 1.2)];
+  }
+  if (edge === "right") {
+    return [TERRAIN_BOARD_WIDTH - inset, clamp(anchor[1] + offset, 1.2, TERRAIN_BOARD_HEIGHT - 1.2)];
+  }
+  if (edge === "bottom") {
+    return [clamp(anchor[0] + offset, 1.2, TERRAIN_BOARD_WIDTH - 1.2), inset];
+  }
+  return [clamp(anchor[0] + offset, 1.2, TERRAIN_BOARD_WIDTH - 1.2), TERRAIN_BOARD_HEIGHT - inset];
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
