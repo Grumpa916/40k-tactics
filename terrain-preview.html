@@ -18,8 +18,7 @@
     [data-terrain-preview-status] { margin: 8px 0 12px; color: #bac8d4; font-size: 14px; }
     [data-terrain-preview-map] { width: 100%; }
     [data-terrain-preview-map] .battlefield-map__board { max-height: calc(100vh - 230px); }
-    /* Verification override: make the official edge-to-anchor guides clearly
-       visible on iPad without altering terrain geometry or source values. */
+    /* Official Event Companion guides: prominent dashed gold. */
     [data-terrain-preview-map] .battlefield-map__dimension-line {
       stroke: #f6d783;
       stroke-width: 1.35;
@@ -33,6 +32,39 @@
     }
     [data-terrain-preview-map] .battlefield-map__dimension-text {
       stroke-width: .9px;
+    }
+    /* Approximate grid-derived guides: deliberately lighter and visually distinct. */
+    [data-terrain-preview-map] .terrain-preview__approx-guides {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 4;
+      pointer-events: none;
+      overflow: visible;
+    }
+    [data-terrain-preview-map] .terrain-preview__approx-line {
+      stroke: #9fb6c8;
+      stroke-width: 1;
+      stroke-dasharray: 2 3;
+      opacity: .9;
+      vector-effect: non-scaling-stroke;
+    }
+    [data-terrain-preview-map] .terrain-preview__approx-anchor {
+      fill: #c5d5e1;
+      stroke: #101820;
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    [data-terrain-preview-map] .terrain-preview__approx-text {
+      fill: #dbe7ef;
+      font-family: Arial, sans-serif;
+      font-size: 2.05px;
+      font-weight: 800;
+      paint-order: stroke;
+      stroke: #071019;
+      stroke-width: .85px;
+      stroke-linejoin: round;
     }
     .note { margin-top: 12px; padding: 10px 12px; border: 1px solid #465767; border-radius: 8px; background: #121c24; font-size: 13px; color: #c4d0da; }
     @media (orientation: landscape) and (min-width: 700px) {
@@ -54,7 +86,7 @@
     </div>
     <div data-terrain-preview-status aria-live="polite"></div>
     <div data-terrain-preview-map></div>
-    <p class="note">Verification target: every placement line should run from a reproducible terrain corner/anchor to a battlefield edge, use only official transcribed values, and remain readable without overlapping labels. The Event Companion remains the source of truth.</p>
+    <p class="note">Gold dashed guides are official printed Event Companion dimensions. Lighter guides marked ≈ are approximate distances derived from the Event Companion grid only where the official diagram leaves a terrain footprint under-defined.</p>
   </main>
   <script type="module" src="src/ui/terrain-placement-preview.js"></script>
 </body>
