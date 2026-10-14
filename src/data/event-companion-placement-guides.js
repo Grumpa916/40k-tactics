@@ -75,13 +75,18 @@ const PAGE_13_SOURCE_GUIDES = Object.freeze([
 
 // Page 13 visual verification found official guides where the generic
 // nearest-boundary heuristic selected technically valid but unhelpful vertices.
-// Keep the printed values unchanged and attach them to reproducible corners of
-// the same accepted V2 terrain geometry.
+// Keep the printed values unchanged and attach them to the exact reproducible
+// V2 corners verified against the Event Companion diagram.
 const PAGE_13_ANCHOR_OVERRIDES = Object.freeze({
-  '9"|top':     Object.freeze({ terrain: "T12/T13", anchor: [25.9, 33.9] }),
-  '9"|right':   Object.freeze({ terrain: "T15", anchor: [51.1, 22.1] }),
-  '18"|left':   Object.freeze({ terrain: "T14", anchor: [24.4, 12.6] }),
-  '20"|bottom': Object.freeze({ terrain: "T14", anchor: [24.4, 12.6] })
+  '4"|top':     Object.freeze({ terrain: "T12", anchor: [25.9, 40.0], edge: "top" }),
+  '4"|right':   Object.freeze({ terrain: "T8", anchor: [53.0, 40.1], edge: "top" }),
+  '7"|bottom':  Object.freeze({ terrain: "T8", anchor: [53.0, 40.1], edge: "right" }),
+  '9"|top':     Object.freeze({ terrain: "T12/T13", anchor: [25.9, 33.9], edge: "top" }),
+  '9"|right':   Object.freeze({ terrain: "T15", anchor: [51.1, 22.1], edge: "right" }),
+  '10"|bottom': Object.freeze({ terrain: "T13", anchor: [19.9, 33.9], edge: "top" }),
+  '18"|left':   Object.freeze({ terrain: "T14", anchor: [24.4, 12.6], edge: "left" }),
+  '20"|bottom': Object.freeze({ terrain: "T13", anchor: [19.9, 33.9], edge: "left" }),
+  '26"|right':  Object.freeze({ terrain: "T12", anchor: [25.9, 40.0], edge: "left" })
 });
 
 const PAGE_14_SOURCE_GUIDES = Object.freeze([
