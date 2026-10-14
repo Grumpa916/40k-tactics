@@ -6,7 +6,7 @@ export function orientEventCompanionPoint(point) {
   const y = Number(point?.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return {
-    x: EVENT_COMPANION_DISPLAY_WIDTH - y,
+    x: y,
     y: x
   };
 }
@@ -22,8 +22,8 @@ export function orientEventCompanionLine(line) {
 export function orientEventCompanionEdge(edge) {
   if (edge === "left") return "bottom";
   if (edge === "right") return "top";
-  if (edge === "top") return "left";
-  if (edge === "bottom") return "right";
+  if (edge === "top") return "right";
+  if (edge === "bottom") return "left";
   return edge;
 }
 
