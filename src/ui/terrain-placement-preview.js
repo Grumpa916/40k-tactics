@@ -106,12 +106,18 @@ for (const page of pages) {
   pageSelect.append(option);
 }
 
-function setPage(page) {
+function setPage(page, { updateUrl = true } = {}) {
   const safePage = pages.includes(Number(page)) ? Number(page) : pages[0];
   pageSelect.value = String(safePage);
   renderPage(safePage, mount, status);
   previous.disabled = safePage === pages[0];
   next.disabled = safePage === pages[pages.length - 1];
+
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("page", String(safePage));
+    window.history.replaceState(null, "", url);
+  }
 }
 
 pageSelect.addEventListener("change", () => setPage(Number(pageSelect.value)));
@@ -124,4 +130,5 @@ next.addEventListener("click", () => {
   if (index >= 0 && index < pages.length - 1) setPage(pages[index + 1]);
 });
 
-setPage(pages.includes(12) ? 12 : pages[0]);
+const requestedPage = Number(new URL(window.location.href).searchParams.get("page"));
+setPage(pages.includes(requestedPage) ? requestedPage : (pages.includes(12) ? 12 : pages[0]), { updateUrl: true });
