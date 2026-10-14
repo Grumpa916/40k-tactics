@@ -1,4 +1,9 @@
 import { EVENT_COMPANION_PAGE_MEASUREMENT_VALUES } from "../data/event-companion-page-measurement-values.js";
+import { getEventCompanionExtendedSourceGuides } from "../data/event-companion-placement-source-guides-extended.js";
+import {
+  outwardPerpendicularEdges,
+  terrainGuideCrossesPolygonInterior
+} from "./terrain-placement-path-safety.js";
 
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
@@ -59,7 +64,7 @@ function farthestPair(points) {
 }
 
 // Page 14 was visually approved with this edge-biased point selection.
-// Keep it stable while later pages use a less cluttered nearest-edge strategy.
+// Keep it stable while later pages use obstacle-safe routing.
 function approvedPage14MeasurementPoints(points, primaryEdge) {
   const minimum = Math.min(...points.map((point) => edgeDistance(point, primaryEdge)));
   const nearPrimaryEdge = points.filter((point) => edgeDistance(point, primaryEdge) <= minimum + 2.5);
@@ -77,14 +82,6 @@ function approvedPage14PerpendicularEdge(primaryEdge, anchor) {
   return x <= TERRAIN_BOARD_WIDTH / 2 ? "left" : "right";
 }
 
-function nearestHorizontalEdge(anchor) {
-  return anchor[0] <= TERRAIN_BOARD_WIDTH / 2 ? "left" : "right";
-}
-
-function nearestVerticalEdge(anchor) {
-  return anchor[1] <= TERRAIN_BOARD_HEIGHT / 2 ? "bottom" : "top";
-}
-
 function formatDistance(anchor, edge) {
   return Math.max(0, Math.round(edgeDistance(anchor, edge))) + '"';
 }
@@ -95,7 +92,11 @@ function measurementNumber(value) {
 }
 
 function officialDistanceValue(page, anchor, edge) {
-  const officialValues = EVENT_COMPANION_PAGE_MEASUREMENT_VALUES[Number(page)] ?? [];
+  const officialGuidesForEdge = getEventCompanionExtendedSourceGuides(page)
+    .filter((guide) => guide.edge === edge && measurementNumber(guide.value) != null);
+  const officialValues = officialGuidesForEdge.length
+    ? officialGuidesForEdge.map((guide) => guide.value)
+    : (EVENT_COMPANION_PAGE_MEASUREMENT_VALUES[Number(page)] ?? []);
   if (!officialValues.length) return formatDistance(anchor, edge);
 
   const target = edgeDistance(anchor, edge);
@@ -171,6 +172,22 @@ function calloutPosition(anchor, shapeCenter, point) {
   ];
 }
 
+function obstacleSafeMeasurementPoints(shapePoints) {
+  const candidates = shapePoints
+    .map((anchor) => ({
+      anchor,
+      edges: outwardPerpendicularEdges(anchor, shapePoints, {
+        width: TERRAIN_BOARD_WIDTH,
+        height: TERRAIN_BOARD_HEIGHT
+      })
+    }))
+    .filter((candidate) => Array.isArray(candidate.edges) && candidate.edges.length === 2);
+
+  if (candidates.length < 2) return [];
+  const selectedAnchors = farthestPair(candidates.map((candidate) => candidate.anchor));
+  return selectedAnchors.map((anchor) => candidates.find((candidate) => candidate.anchor === anchor));
+}
+
 export function buildCompleteTerrainPlacementGuides(layout) {
   const result = [];
   const page = Number(layout?.page);
@@ -195,16 +212,19 @@ export function buildCompleteTerrainPlacementGuides(layout) {
       continue;
     }
 
-    // Pages 15-53: use two well-separated reproducible corners, then send each
-    // corner to its nearest horizontal and nearest vertical battlefield edge.
-    const measurementPoints = farthestPair(shapePoints);
-    measurementPoints.forEach((anchor, index) => {
+    // Pages 15-53: choose two well-separated reproducible corners that each
+    // have a clear horizontal and vertical route to the battlefield edge.
+    // A displayed measurement must never travel through its own terrain shape.
+    const safePoints = obstacleSafeMeasurementPoints(shapePoints);
+    if (safePoints.length < 2) continue;
+
+    safePoints.forEach((measurementPoint, index) => {
       result.push({
         terrain,
         point: index === 0 ? "A" : "B",
-        anchor,
+        anchor: measurementPoint.anchor,
         center: shapeCenter,
-        edges: [nearestHorizontalEdge(anchor), nearestVerticalEdge(anchor)]
+        edges: measurementPoint.edges
       });
     });
   }
@@ -276,4 +296,13 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   }
 
   return { guides, lines, measurements, anchors, callouts };
+}
+
+export function terrainGuideCrossesOwnTerrain(layout, guide) {
+  const shapePoints = geometryPoints(layout?.terrainGeometry?.[guide?.terrain]);
+  if (shapePoints.length < 3) return false;
+  return terrainGuideCrossesPolygonInterior(guide.anchor, guide.edge, shapePoints, {
+    width: TERRAIN_BOARD_WIDTH,
+    height: TERRAIN_BOARD_HEIGHT
+  });
 }
