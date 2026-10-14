@@ -1,0 +1,51 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
+import {
+  buildCompleteTerrainPlacementGuides,
+  buildCompleteTerrainPlacementOverlay,
+  terrainGuideEndpoint
+} from "../../src/ui/terrain-placement-guide-model.js";
+
+function isHorizontal(edge) {
+  return edge === "left" || edge === "right";
+}
+
+function isVertical(edge) {
+  return edge === "top" || edge === "bottom";
+}
+
+for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) => Number(item.page) >= 14 && Number(item.page) <= 53)) {
+  test(`page ${layout.page} gives every terrain shape two complete placement points`, () => {
+    const terrainEntries = Object.entries(layout.terrainGeometry ?? {}).filter(([, shape]) => (shape?.points ?? []).length >= 2);
+    const points = buildCompleteTerrainPlacementGuides(layout);
+    const overlay = buildCompleteTerrainPlacementOverlay(layout);
+
+    assert.equal(points.length, terrainEntries.length * 2);
+    assert.equal(overlay.anchors.length, terrainEntries.length * 2);
+    assert.equal(overlay.guides.length, terrainEntries.length * 4);
+    assert.equal(overlay.lines.length, terrainEntries.length * 4);
+    assert.equal(overlay.measurements.length, terrainEntries.length * 4);
+
+    for (const [terrain, shape] of terrainEntries) {
+      const terrainPoints = points.filter((point) => point.terrain === terrain);
+      assert.equal(terrainPoints.length, 2, `${terrain} has points A and B`);
+      assert.deepEqual(terrainPoints.map((point) => point.point).sort(), ["A", "B"]);
+
+      const sourceVertices = (shape.points ?? []).map((point) => [Number(point.x), Number(point.y)]);
+      for (const point of terrainPoints) {
+        assert.ok(sourceVertices.some((vertex) => vertex[0] === point.anchor[0] && vertex[1] === point.anchor[1]), `${terrain} ${point.point} uses a reproducible terrain vertex`);
+        assert.equal(point.edges.length, 2);
+        assert.ok(point.edges.some(isHorizontal), `${terrain} ${point.point} has a horizontal edge measurement`);
+        assert.ok(point.edges.some(isVertical), `${terrain} ${point.point} has a vertical edge measurement`);
+      }
+    }
+
+    overlay.guides.forEach((guide, index) => {
+      const [x, y] = guide.anchor;
+      assert.deepEqual(overlay.lines[index], [x, y, ...terrainGuideEndpoint(guide.anchor, guide.edge)]);
+      assert.match(guide.value, /^\d+"$/);
+    });
+  });
+}
