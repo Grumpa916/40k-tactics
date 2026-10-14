@@ -19,6 +19,23 @@
     [data-terrain-preview-status] { margin: 8px 0 12px; color: #bac8d4; font-size: 14px; }
     [data-terrain-preview-map] { width: 100%; }
     [data-terrain-preview-map] .battlefield-map__board { max-height: calc(100vh - 230px); }
+    /* Verification override: the production renderer currently gives placement
+       lines a sub-pixel non-scaling stroke. Make the official edge-to-anchor
+       guides unambiguous on iPad without altering geometry or source values. */
+    [data-terrain-preview-map] .battlefield-map__dimension-line {
+      stroke: #f6d783;
+      stroke-width: 1.35;
+      stroke-dasharray: 5 3;
+      opacity: .98;
+      vector-effect: non-scaling-stroke;
+    }
+    [data-terrain-preview-map] .battlefield-map__dimension-anchor {
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    [data-terrain-preview-map] .battlefield-map__dimension-text {
+      stroke-width: .9px;
+    }
     .note { margin-top: 12px; padding: 10px 12px; border: 1px solid #465767; border-radius: 8px; background: #121c24; font-size: 13px; color: #c4d0da; }
     @media (orientation: landscape) and (min-width: 700px) {
       main { padding: 12px 18px; }
