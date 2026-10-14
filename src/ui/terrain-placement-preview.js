@@ -1,10 +1,16 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import {
-  buildCompleteTerrainPlacementOverlay,
-  TERRAIN_BOARD_WIDTH,
-  TERRAIN_BOARD_HEIGHT
+  buildCompleteTerrainPlacementOverlay
 } from "./terrain-placement-guide-model.js";
+import {
+  EVENT_COMPANION_DISPLAY_WIDTH,
+  EVENT_COMPANION_DISPLAY_HEIGHT,
+  orientEventCompanionPoint,
+  orientEventCompanionLine,
+  orientEventCompanionEdge,
+  eventCompanionDisplayPercent
+} from "./event-companion-display-orientation.js";
 
 function normalizePair(a, b) {
   return [String(a ?? ""), String(b ?? "")].sort((left, right) => left.localeCompare(right));
@@ -37,6 +43,78 @@ function escapeXml(value) {
     .replaceAll("'", "&apos;");
 }
 
+function arrowForEdge(edge, value) {
+  if (edge === "left") return "← " + value;
+  if (edge === "right") return value + " →";
+  if (edge === "top") return "↑ " + value;
+  return "↓ " + value;
+}
+
+function orientExistingPercentOverlay(board) {
+  const overlay = board.querySelector(".battlefield-map__terrain-measurements");
+  if (!overlay) return;
+
+  const rotatePercent = (x, y) => [Number(y), 100 - Number(x)];
+  overlay.querySelectorAll("line").forEach((line) => {
+    const start = rotatePercent(line.getAttribute("x1"), line.getAttribute("y1"));
+    const end = rotatePercent(line.getAttribute("x2"), line.getAttribute("y2"));
+    line.setAttribute("x1", start[0]);
+    line.setAttribute("y1", start[1]);
+    line.setAttribute("x2", end[0]);
+    line.setAttribute("y2", end[1]);
+  });
+  overlay.querySelectorAll("circle").forEach((circle) => {
+    const point = rotatePercent(circle.getAttribute("cx"), circle.getAttribute("cy"));
+    circle.setAttribute("cx", point[0]);
+    circle.setAttribute("cy", point[1]);
+  });
+  overlay.querySelectorAll("text").forEach((text) => {
+    const point = rotatePercent(text.getAttribute("x"), text.getAttribute("y"));
+    text.setAttribute("x", point[0]);
+    text.setAttribute("y", point[1]);
+  });
+}
+
+function orientRenderedMap(layout, mount) {
+  const board = mount.querySelector(".battlefield-map__board");
+  const geometry = board?.querySelector(".battlefield-map__geometry");
+  if (!board || !geometry) return;
+
+  board.classList.add("battlefield-map__board--event-companion-blue-bottom");
+  board.dataset.eventCompanionOrientation = "blue-bottom";
+  geometry.setAttribute("viewBox", "0 0 44 60");
+
+  geometry.querySelectorAll(".battlefield-map__terrain[data-terrain]").forEach((polygon) => {
+    const source = layout.terrainGeometry?.[polygon.dataset.terrain];
+    const points = (source?.points ?? [])
+      .map((point) => orientEventCompanionPoint(point))
+      .filter(Boolean)
+      .map((point) => point.x + "," + (EVENT_COMPANION_DISPLAY_HEIGHT - point.y))
+      .join(" ");
+    if (points) polygon.setAttribute("points", points);
+  });
+
+  geometry.querySelectorAll(".battlefield-map__zone[data-zone]").forEach((polygon) => {
+    const source = layout.deploymentZones?.[polygon.dataset.zone];
+    const points = (source?.points ?? [])
+      .map((point) => orientEventCompanionPoint(point))
+      .filter(Boolean)
+      .map((point) => point.x + "," + (EVENT_COMPANION_DISPLAY_HEIGHT - point.y))
+      .join(" ");
+    if (points) polygon.setAttribute("points", points);
+  });
+
+  mount.querySelectorAll(".battlefield-map__objective--layout[data-layout-objective]").forEach((objective) => {
+    const source = layout.objectivePositions?.[objective.dataset.layoutObjective];
+    const percent = eventCompanionDisplayPercent(source);
+    if (!percent) return;
+    objective.style.left = percent.left + "%";
+    objective.style.top = percent.top + "%";
+  });
+
+  orientExistingPercentOverlay(board);
+}
+
 function addCompleteTerrainGuides(page, layout, mount) {
   if (Number(page) < 14 || Number(page) > 53) return null;
   const board = mount.querySelector(".battlefield-map__board");
@@ -45,40 +123,53 @@ function addCompleteTerrainGuides(page, layout, mount) {
   const overlay = buildCompleteTerrainPlacementOverlay(layout);
   board.querySelector(".battlefield-map__terrain-measurements")?.remove();
 
-  const px = (x) => Number(x) / TERRAIN_BOARD_WIDTH * 100;
-  const py = (y) => (TERRAIN_BOARD_HEIGHT - Number(y)) / TERRAIN_BOARD_HEIGHT * 100;
+  const px = (x) => Number(x) / EVENT_COMPANION_DISPLAY_WIDTH * 100;
+  const py = (y) => (EVENT_COMPANION_DISPLAY_HEIGHT - Number(y)) / EVENT_COMPANION_DISPLAY_HEIGHT * 100;
   const parts = [];
 
   overlay.lines.forEach((line, index) => {
     const guide = overlay.guides[index] ?? {};
+    const oriented = orientEventCompanionLine(line);
+    if (!oriented) return;
     parts.push(
-      '<line class="battlefield-map__dimension-line" data-terrain="' + escapeXml(guide.terrain ?? "") + '" data-terrain-point="' + escapeXml((guide.terrain ?? "") + ':' + (guide.point ?? "")) + '" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"></line>'
+      '<line class="battlefield-map__dimension-line" data-terrain="' + escapeXml(guide.terrain ?? "") + '" data-terrain-point="' + escapeXml((guide.terrain ?? "") + ':' + (guide.point ?? "")) + '" x1="' + px(oriented[0]) + '" y1="' + py(oriented[1]) + '" x2="' + px(oriented[2]) + '" y2="' + py(oriented[3]) + '"></line>'
     );
   });
   overlay.anchors.forEach((anchor) => {
+    const oriented = orientEventCompanionPoint(anchor);
+    if (!oriented) return;
     parts.push(
-      '<circle class="battlefield-map__dimension-anchor" data-terrain="' + escapeXml(anchor.terrain) + '" data-placement-anchor="' + escapeXml(anchor.terrain + ':' + anchor.point) + '" cx="' + px(anchor.x) + '" cy="' + py(anchor.y) + '" r=".7"></circle>'
+      '<circle class="battlefield-map__dimension-anchor" data-terrain="' + escapeXml(anchor.terrain) + '" data-placement-anchor="' + escapeXml(anchor.terrain + ':' + anchor.point) + '" cx="' + px(oriented.x) + '" cy="' + py(oriented.y) + '" r=".7"></circle>'
     );
   });
 
   if (Number(page) === 14) {
     overlay.measurements.forEach((measurement) => {
-      parts.push('<text class="battlefield-map__dimension-text" x="' + px(measurement.x) + '" y="' + py(measurement.y) + '" text-anchor="middle">' + escapeXml(measurement.value) + '</text>');
+      const oriented = orientEventCompanionPoint(measurement);
+      if (!oriented) return;
+      parts.push('<text class="battlefield-map__dimension-text" x="' + px(oriented.x) + '" y="' + py(oriented.y) + '" text-anchor="middle">' + escapeXml(measurement.value) + '</text>');
     });
   } else {
     overlay.callouts.forEach((callout) => {
-      const x = px(callout.x);
-      const y = py(callout.y);
-      const anchorX = px(callout.anchorX);
-      const anchorY = py(callout.anchorY);
+      const orientedCallout = orientEventCompanionPoint(callout);
+      const orientedAnchor = orientEventCompanionPoint({ x: callout.anchorX, y: callout.anchorY });
+      if (!orientedCallout || !orientedAnchor) return;
+      const x = px(orientedCallout.x);
+      const y = py(orientedCallout.y);
+      const anchorX = px(orientedAnchor.x);
+      const anchorY = py(orientedAnchor.y);
       const boxWidth = 11.5;
       const boxHeight = 6.5;
+      const horizontalEdge = orientEventCompanionEdge(callout.verticalEdge);
+      const verticalEdge = orientEventCompanionEdge(callout.horizontalEdge);
+      const horizontalText = arrowForEdge(horizontalEdge, callout.verticalValue);
+      const verticalText = arrowForEdge(verticalEdge, callout.horizontalValue);
       parts.push(
         '<g class="terrain-point-callout" data-terrain="' + escapeXml(callout.terrain) + '" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '">' +
           '<line x1="' + anchorX + '" y1="' + anchorY + '" x2="' + x + '" y2="' + y + '" stroke="#b8c5cf" stroke-width=".7" stroke-dasharray="2 1.5" vector-effect="non-scaling-stroke"></line>' +
           '<rect x="' + (x - boxWidth / 2) + '" y="' + (y - boxHeight / 2) + '" width="' + boxWidth + '" height="' + boxHeight + '" rx="1.1" fill="#101820" fill-opacity=".94" stroke="#f6d783" stroke-width=".7" vector-effect="non-scaling-stroke"></rect>' +
-          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y - 0.75) + '" text-anchor="middle">' + escapeXml(callout.horizontalText) + '</text>' +
-          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y + 1.7) + '" text-anchor="middle">' + escapeXml(callout.verticalText) + '</text>' +
+          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y - 0.75) + '" text-anchor="middle">' + escapeXml(horizontalText) + '</text>' +
+          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y + 1.7) + '" text-anchor="middle">' + escapeXml(verticalText) + '</text>' +
         '</g>'
       );
     });
@@ -206,9 +297,10 @@ function renderPage(page, mount, status) {
     mapLabel: "Terrain placement reference · Event Companion page " + page
   });
 
+  orientRenderedMap(layout, mount);
   addCompleteTerrainGuides(page, layout, mount);
   enableTerrainFocus(page, mount);
-  status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page;
+  status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page + " · blue side at bottom";
 }
 
 const pageSelect = document.querySelector("[data-terrain-preview-page]");
