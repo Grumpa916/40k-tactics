@@ -10,6 +10,10 @@ import {
   terrainGuideCrossesOwnTerrain,
   terrainGuideEndpoint
 } from "../../src/ui/terrain-placement-guide-model.js";
+import {
+  outwardPerpendicularEdges,
+  terrainGuideCrossesPolygonInterior
+} from "../../src/ui/terrain-placement-path-safety.js";
 
 function isHorizontal(edge) {
   return edge === "left" || edge === "right";
@@ -20,6 +24,18 @@ function isVertical(edge) {
 }
 
 const INCH_VALUE = /^\d+(?:\.\d+)?"$/;
+
+test("terrain path safety rejects a guide that rides along the terrain boundary", () => {
+  const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
+  assert.equal(terrainGuideCrossesPolygonInterior([4, 2], "left", square), true);
+  assert.equal(terrainGuideCrossesPolygonInterior([2, 2], "left", square), false);
+});
+
+test("outward perpendicular routing chooses edges that leave the terrain cleanly", () => {
+  const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
+  assert.deepEqual(outwardPerpendicularEdges([4, 2], square), ["right", "bottom"]);
+  assert.deepEqual(outwardPerpendicularEdges([2, 2], square), ["left", "bottom"]);
+});
 
 for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) => Number(item.page) >= 14 && Number(item.page) <= 53)) {
   test(`page ${layout.page} gives every terrain shape two complete placement points`, () => {
