@@ -15,20 +15,23 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Placement guide data tests
-        run: node --test tests/data/event-companion-placement-guides.test.js
-      - name: Extended placement guide tests
+      - name: Terrain path safety tests
+        run: node --test --test-name-pattern="terrain path safety|outward perpendicular" tests/ui/terrain-placement-guide-model.test.js
+      - name: Page 15 terrain guide model
         if: always()
-        run: node --test tests/data/event-companion-placement-guides-extended.test.js
-      - name: Battlefield map tests
+        run: node --test --test-name-pattern="page 15" tests/ui/terrain-placement-guide-model.test.js
+      - name: Page 16 terrain guide model
         if: always()
-        run: node --test tests/ui/battlefield-map.test.js
-      - name: Display orientation tests
+        run: node --test --test-name-pattern="page 16" tests/ui/terrain-placement-guide-model.test.js
+      - name: Page 17 terrain guide model
         if: always()
-        run: node --test tests/ui/event-companion-display-orientation.test.js
-      - name: Terrain guide model tests
+        run: node --test --test-name-pattern="page 17" tests/ui/terrain-placement-guide-model.test.js
+      - name: Page 18 terrain guide model
         if: always()
-        run: node --test tests/ui/terrain-placement-guide-model.test.js
+        run: node --test --test-name-pattern="page 18" tests/ui/terrain-placement-guide-model.test.js
+      - name: Unverified-range terrain guide model
+        if: always()
+        run: node --test --test-name-pattern="pages beyond" tests/ui/terrain-placement-guide-model.test.js
       - name: Full suite
         if: always()
         run: npm test
