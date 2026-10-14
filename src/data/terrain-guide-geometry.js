@@ -71,6 +71,24 @@ function intersectionParameter(start, end, edgeStart, edgeEnd) {
   return Math.max(0, Math.min(1, t));
 }
 
+function segmentOverlapsBoundary(start, end, edgeStart, edgeEnd) {
+  const ray = [end[0] - start[0], end[1] - start[1]];
+  const lengthSquared = ray[0] * ray[0] + ray[1] * ray[1];
+  if (lengthSquared <= EPSILON) return false;
+
+  const startOffset = [edgeStart[0] - start[0], edgeStart[1] - start[1]];
+  const endOffset = [edgeEnd[0] - start[0], edgeEnd[1] - start[1]];
+  if (Math.abs(cross(ray, startOffset)) > EPSILON || Math.abs(cross(ray, endOffset)) > EPSILON) {
+    return false;
+  }
+
+  const startT = (startOffset[0] * ray[0] + startOffset[1] * ray[1]) / lengthSquared;
+  const endT = (endOffset[0] * ray[0] + endOffset[1] * ray[1]) / lengthSquared;
+  const overlapStart = Math.max(0, Math.min(startT, endT));
+  const overlapEnd = Math.min(1, Math.max(startT, endT));
+  return overlapEnd - overlapStart > 1e-7;
+}
+
 function uniqueSorted(values) {
   return [...values]
     .sort((a, b) => a - b)
@@ -85,7 +103,15 @@ export function segmentCrossesTerrainInterior(start, end, shapeOrPoints) {
 
   const tValues = [0, 1];
   for (let index = 0; index < polygon.length; index += 1) {
-    const t = intersectionParameter(start, end, polygon[index], polygon[(index + 1) % polygon.length]);
+    const edgeStart = polygon[index];
+    const edgeEnd = polygon[(index + 1) % polygon.length];
+
+    // A guide that runs along the terrain boundary is just as unusable as one
+    // that cuts through the interior: the measurement line is visually buried
+    // in the footprint instead of leaving cleanly from its chosen corner.
+    if (segmentOverlapsBoundary(start, end, edgeStart, edgeEnd)) return true;
+
+    const t = intersectionParameter(start, end, edgeStart, edgeEnd);
     if (t !== null) tValues.push(t);
   }
 
