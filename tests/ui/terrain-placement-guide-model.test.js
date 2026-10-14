@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
+import { EVENT_COMPANION_PAGE_MEASUREMENT_VALUES } from "../../src/data/event-companion-page-measurement-values.js";
 import {
   buildCompleteTerrainPlacementGuides,
   buildCompleteTerrainPlacementOverlay,
@@ -15,6 +16,8 @@ function isHorizontal(edge) {
 function isVertical(edge) {
   return edge === "top" || edge === "bottom";
 }
+
+const INCH_VALUE = /^\d+(?:\.\d+)?"$/;
 
 for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) => Number(item.page) >= 14 && Number(item.page) <= 53)) {
   test(`page ${layout.page} gives every terrain shape two complete placement points`, () => {
@@ -49,8 +52,8 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
 
           const callout = overlay.callouts.find((item) => item.terrain === terrain && item.point === point.point);
           assert.ok(callout, `${terrain} ${point.point} has one paired callout`);
-          assert.match(callout.horizontalValue, /^\d+"$/);
-          assert.match(callout.verticalValue, /^\d+"$/);
+          assert.match(callout.horizontalValue, INCH_VALUE);
+          assert.match(callout.verticalValue, INCH_VALUE);
           assert.ok(/[←→]/.test(callout.horizontalText), `${terrain} ${point.point} callout identifies the horizontal edge`);
           assert.ok(/[↑↓]/.test(callout.verticalText), `${terrain} ${point.point} callout identifies the vertical edge`);
           assert.ok(Number.isFinite(callout.x) && callout.x >= 0 && callout.x <= 60);
@@ -68,7 +71,13 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
     overlay.guides.forEach((guide, index) => {
       const [x, y] = guide.anchor;
       assert.deepEqual(overlay.lines[index], [x, y, ...terrainGuideEndpoint(guide.anchor, guide.edge)]);
-      assert.match(guide.value, /^\d+"$/);
+      assert.match(guide.value, INCH_VALUE);
+      if (Number(layout.page) >= 15) {
+        assert.ok(
+          (EVENT_COMPANION_PAGE_MEASUREMENT_VALUES[Number(layout.page)] ?? []).includes(guide.value),
+          `page ${layout.page} uses only values printed in the Event Companion`
+        );
+      }
     });
   });
 }
