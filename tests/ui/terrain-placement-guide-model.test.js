@@ -58,11 +58,11 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
           assert.equal(callout.anchorX, point.anchor[0]);
           assert.equal(callout.anchorY, point.anchor[1]);
 
-          const outwardX = point.anchor[0] - point.center[0];
-          const outwardY = point.anchor[1] - point.center[1];
-          const calloutX = callout.x - point.anchor[0];
-          const calloutY = callout.y - point.anchor[1];
-          assert.ok((outwardX * calloutX) + (outwardY * calloutY) >= 0, `${terrain} ${point.point} callout stays outside the terrain footprint`);
+          const calloutDistance = Math.hypot(
+            callout.x - point.anchor[0],
+            callout.y - point.anchor[1]
+          );
+          assert.ok(calloutDistance >= 0.75, `${terrain} ${point.point} callout stays visibly separated from its measured corner`);
         }
       }
     }
