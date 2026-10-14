@@ -77,3 +77,37 @@ jobs:
           cache: npm
       - name: Run grouped diagnostics
         run: ${{ matrix.command }}
+
+  ui-file-diagnostic:
+    name: ui ${{ matrix.file }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+          - army-roster-panel.test.js
+          - army-selection-panel.test.js
+          - battle-context-panels.test.js
+          - battle-persistence-panel.test.js
+          - battle-setup-screen.test.js
+          - battle-shell.test.js
+          - battlefield-map.test.js
+          - charge-screen.test.js
+          - command-screen.test.js
+          - deployment-screen.test.js
+          - fight-screen.test.js
+          - mission-summary-panel.test.js
+          - movement-screen.test.js
+          - shooting-screen.test.js
+          - supabase-auth-panel.test.js
+          - turn-clock-panel.test.js
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Run UI file diagnostic
+        run: node --test tests/ui/${{ matrix.file }}
