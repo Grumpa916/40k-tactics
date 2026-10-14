@@ -1,6 +1,13 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
+const PAGE_13_APPROXIMATE_GUIDES = Object.freeze([
+  { value: "≈20\"", edge: "left", anchor: [19.9, 31.9], terrain: "T13" },
+  { value: "≈4\"", edge: "top", anchor: [29.9, 40.0], terrain: "T12" },
+  { value: "≈7\"", edge: "right", anchor: [53.0, 40.1], terrain: "T8" },
+  { value: "≈4\"", edge: "top", anchor: [53.0, 40.1], terrain: "T8" }
+]);
+
 function normalizePair(a, b) {
   return [String(a ?? ""), String(b ?? "")].sort((left, right) => left.localeCompare(right));
 }
@@ -21,6 +28,43 @@ function dispositionSetupForLayout(target) {
     }
   }
   return null;
+}
+
+function approximateEndpoint(anchor, edge) {
+  const [x, y] = anchor;
+  if (edge === "left") return [0, y];
+  if (edge === "right") return [60, y];
+  if (edge === "top") return [x, 44];
+  return [x, 0];
+}
+
+function approximateLabelPosition(anchor, edge) {
+  const [x, y] = anchor;
+  if (edge === "left") return [Math.max(1.8, x - 1.8), y + 0.8];
+  if (edge === "right") return [Math.min(58.2, x + 1.8), y + 0.8];
+  if (edge === "top") return [x + 1.0, Math.min(42.4, y + 1.7)];
+  return [x + 1.0, Math.max(1.6, y - 1.6)];
+}
+
+function addApproximateGuides(page, mount) {
+  if (Number(page) !== 13) return;
+  const board = mount.querySelector(".battlefield-map__board");
+  if (!board) return;
+
+  const px = (x) => Number(x) / 60 * 100;
+  const py = (y) => (44 - Number(y)) / 44 * 100;
+  const parts = [];
+
+  for (const guide of PAGE_13_APPROXIMATE_GUIDES) {
+    const [x, y] = guide.anchor;
+    const [edgeX, edgeY] = approximateEndpoint(guide.anchor, guide.edge);
+    const [labelX, labelY] = approximateLabelPosition(guide.anchor, guide.edge);
+    parts.push('<line class="terrain-preview__approx-line" x1="' + px(x) + '" y1="' + py(y) + '" x2="' + px(edgeX) + '" y2="' + py(edgeY) + '"></line>');
+    parts.push('<circle class="terrain-preview__approx-anchor" cx="' + px(x) + '" cy="' + py(y) + '" r=".62"></circle>');
+    parts.push('<text class="terrain-preview__approx-text" x="' + px(labelX) + '" y="' + py(labelY) + '" text-anchor="middle">' + guide.value + '</text>');
+  }
+
+  board.insertAdjacentHTML("beforeend", '<svg class="terrain-preview__approx-guides" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Approximate placement guides derived from the Event Companion grid">' + parts.join("") + '</svg>');
 }
 
 function renderPage(page, mount, status) {
@@ -51,6 +95,7 @@ function renderPage(page, mount, status) {
     mapLabel: "Terrain placement reference · Event Companion page " + page
   });
 
+  addApproximateGuides(page, mount);
   status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page;
 }
 
