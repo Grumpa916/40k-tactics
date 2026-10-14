@@ -1,8 +1,6 @@
 import { getEventCompanionPlacementOverlay } from "../data/event-companion-placement-guides.js";
-import {
-  outwardPerpendicularEdges,
-  terrainGuideCrossesPolygonInterior
-} from "./terrain-placement-path-safety.js";
+import { getEventCompanionPlacementGuideCorrections } from "../data/event-companion-placement-guide-corrections.js";
+import { terrainGuideCrossesPolygonInterior } from "./terrain-placement-path-safety.js";
 
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
@@ -13,51 +11,12 @@ function geometryPoints(shape) {
     .map((point) => [Number(point.x), Number(point.y)]);
 }
 
-function edgeDistance(anchor, edge) {
-  const [x, y] = anchor;
-  if (edge === "left") return x;
-  if (edge === "right") return TERRAIN_BOARD_WIDTH - x;
-  if (edge === "top") return TERRAIN_BOARD_HEIGHT - y;
-  return y;
-}
-
 export function terrainGuideEndpoint(anchor, edge) {
   const [x, y] = anchor;
   if (edge === "left") return [0, y];
   if (edge === "right") return [TERRAIN_BOARD_WIDTH, y];
   if (edge === "top") return [x, TERRAIN_BOARD_HEIGHT];
   return [x, 0];
-}
-
-function centroid(points) {
-  const total = points.reduce((sum, point) => [sum[0] + point[0], sum[1] + point[1]], [0, 0]);
-  return [total[0] / points.length, total[1] / points.length];
-}
-
-function distanceSquared(a, b) {
-  const dx = a[0] - b[0];
-  const dy = a[1] - b[1];
-  return dx * dx + dy * dy;
-}
-
-function farthestPair(points) {
-  if (points.length <= 2) return points.slice(0, 2);
-  let best = [points[0], points[1]];
-  let bestDistance = distanceSquared(best[0], best[1]);
-  for (let i = 0; i < points.length; i += 1) {
-    for (let j = i + 1; j < points.length; j += 1) {
-      const candidate = distanceSquared(points[i], points[j]);
-      if (candidate > bestDistance) {
-        best = [points[i], points[j]];
-        bestDistance = candidate;
-      }
-    }
-  }
-  return best;
-}
-
-function clamp(value, minimum, maximum) {
-  return Math.max(minimum, Math.min(maximum, value));
 }
 
 export function terrainGuideLabelPosition(anchor, edge) {
@@ -68,19 +27,51 @@ export function terrainGuideLabelPosition(anchor, edge) {
   return [x + 0.8, y];
 }
 
+function centroid(points) {
+  if (!points.length) return [TERRAIN_BOARD_WIDTH / 2, TERRAIN_BOARD_HEIGHT / 2];
+  const total = points.reduce((sum, point) => [sum[0] + point[0], sum[1] + point[1]], [0, 0]);
+  return [total[0] / points.length, total[1] / points.length];
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
 function anchorKey(terrain, anchor) {
   return String(terrain ?? "") + "|" + Number(anchor?.[0]) + "|" + Number(anchor?.[1]);
+}
+
+function guideKey(guide) {
+  return [
+    String(guide?.terrain ?? ""),
+    Number(guide?.anchor?.[0]),
+    Number(guide?.anchor?.[1]),
+    String(guide?.edge ?? ""),
+    String(guide?.value ?? "")
+  ].join("|");
 }
 
 function pointName(index) {
   return String.fromCharCode("A".charCodeAt(0) + index);
 }
 
-function groupedMeasurementPoints(overlay) {
+function sourceGuidesForPage(page) {
+  const canonical = getEventCompanionPlacementOverlay(Number(page));
+  if (!canonical) return [];
+
+  const deduped = new Map();
+  for (const guide of canonical.guides ?? []) deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
+  for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
+    deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
+  }
+  return [...deduped.values()];
+}
+
+function groupedSourcePoints(guides) {
   const groups = new Map();
   const terrainCounts = new Map();
 
-  for (const guide of overlay?.guides ?? []) {
+  for (const guide of guides) {
     const key = anchorKey(guide.terrain, guide.anchor);
     if (!groups.has(key)) {
       const index = terrainCounts.get(guide.terrain) ?? 0;
@@ -89,55 +80,13 @@ function groupedMeasurementPoints(overlay) {
         terrain: guide.terrain,
         point: pointName(index),
         anchor: [...guide.anchor],
-        edges: []
+        guides: []
       });
     }
-    const group = groups.get(key);
-    if (!group.edges.includes(guide.edge)) group.edges.push(guide.edge);
+    groups.get(key).guides.push(guide);
   }
 
   return [...groups.values()];
-}
-
-function measurementNumber(value) {
-  const parsed = Number.parseFloat(String(value ?? "").replace(/"$/, ""));
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function sameAxis(left, right) {
-  const leftHorizontal = left === "left" || left === "right";
-  const rightHorizontal = right === "left" || right === "right";
-  return leftHorizontal === rightHorizontal;
-}
-
-// Complete placement guides use only values that are already present in the
-// PDF-backed terrain-only transcription for this page. The V2 geometry chooses
-// the reproducible corner/edge pairing; it never invents a displayed value.
-function verifiedDistanceValue(page, terrain, anchor, edge) {
-  const canonical = getEventCompanionPlacementOverlay(Number(page));
-  const sourceGuides = (canonical?.guides ?? [])
-    .filter((guide) => measurementNumber(guide.value) != null);
-  if (!sourceGuides.length) return null;
-
-  const sameTerrainAxis = sourceGuides.filter((guide) => guide.terrain === terrain && sameAxis(guide.edge, edge));
-  const sameAxisGuides = sourceGuides.filter((guide) => sameAxis(guide.edge, edge));
-  const candidates = sameTerrainAxis.length
-    ? sameTerrainAxis
-    : (sameAxisGuides.length ? sameAxisGuides : sourceGuides);
-
-  const target = edgeDistance(anchor, edge);
-  let bestGuide = candidates[0];
-  let bestDelta = Number.POSITIVE_INFINITY;
-  for (const guide of candidates) {
-    const numeric = measurementNumber(guide.value);
-    if (numeric == null) continue;
-    const delta = Math.abs(numeric - target);
-    if (delta < bestDelta) {
-      bestDelta = delta;
-      bestGuide = guide;
-    }
-  }
-  return bestGuide?.value ?? null;
 }
 
 function calloutArrow(edge, value) {
@@ -162,7 +111,8 @@ function calloutPosition(anchor, shapeCenter, point) {
   const uy = dy / length;
   const tangentX = -uy;
   const tangentY = ux;
-  const tangentSign = point === "B" ? 1 : -1;
+  const pointIndex = Math.max(0, String(point ?? "A").charCodeAt(0) - "A".charCodeAt(0));
+  const tangentSign = pointIndex % 2 === 0 ? -1 : 1;
   const outward = 4.0;
   const tangent = 1.1 * tangentSign;
 
@@ -172,65 +122,29 @@ function calloutPosition(anchor, shapeCenter, point) {
   ];
 }
 
-function obstacleSafeMeasurementPoints(shapePoints) {
-  const candidates = shapePoints
-    .map((anchor) => ({
-      anchor,
-      edges: outwardPerpendicularEdges(anchor, shapePoints, {
-        width: TERRAIN_BOARD_WIDTH,
-        height: TERRAIN_BOARD_HEIGHT
-      })
-    }))
-    .filter((candidate) => Array.isArray(candidate.edges) && candidate.edges.length === 2);
-
-  if (candidates.length < 2) return [];
-  const selectedAnchors = farthestPair(candidates.map((candidate) => candidate.anchor));
-  return selectedAnchors.map((anchor) => candidates.find((candidate) => candidate.anchor === anchor));
-}
-
 export function buildCompleteTerrainPlacementGuides(layout) {
-  const page = Number(layout?.page);
-  const canonical = getEventCompanionPlacementOverlay(page);
-  if (!canonical) return [];
-
-  // Pages 12-14 were already visually approved with their explicit source
-  // mappings. Do not regenerate or reformat them while restoring later pages.
-  if (page <= 14) return groupedMeasurementPoints(canonical);
-
-  const result = [];
-  for (const [terrain, shape] of Object.entries(layout?.terrainGeometry ?? {})) {
-    const shapePoints = geometryPoints(shape);
-    if (shapePoints.length < 2) continue;
-    const shapeCenter = centroid(shapePoints);
-    const safePoints = obstacleSafeMeasurementPoints(shapePoints);
-    if (safePoints.length < 2) continue;
-
-    safePoints.forEach((measurementPoint, index) => {
-      result.push({
-        terrain,
-        point: index === 0 ? "A" : "B",
-        anchor: measurementPoint.anchor,
-        center: shapeCenter,
-        edges: measurementPoint.edges
-      });
-    });
-  }
-
-  return result;
+  const guides = sourceGuidesForPage(Number(layout?.page));
+  return groupedSourcePoints(guides).map((group) => ({
+    terrain: group.terrain,
+    point: group.point,
+    anchor: [...group.anchor],
+    edges: group.guides.map((guide) => guide.edge),
+    values: group.guides.map((guide) => guide.value)
+  }));
 }
 
 function canonicalOverlayWithPointNames(canonical) {
-  const points = groupedMeasurementPoints(canonical);
-  const pointByAnchor = new Map(points.map((point) => [anchorKey(point.terrain, point.anchor), point.point]));
-  const guides = canonical.guides.map((guide) => ({
+  const groups = groupedSourcePoints(canonical.guides ?? []);
+  const pointByAnchor = new Map(groups.map((group) => [anchorKey(group.terrain, group.anchor), group.point]));
+  const guides = (canonical.guides ?? []).map((guide) => ({
     ...guide,
     point: pointByAnchor.get(anchorKey(guide.terrain, guide.anchor)) ?? "A"
   }));
-  const anchors = canonical.anchors.map((anchor) => ({
+  const anchors = (canonical.anchors ?? []).map((anchor) => ({
     ...anchor,
     point: pointByAnchor.get(anchorKey(anchor.terrain, [anchor.x, anchor.y])) ?? "A"
   }));
-  const measurements = canonical.measurements.map((measurement, index) => ({
+  const measurements = (canonical.measurements ?? []).map((measurement, index) => ({
     ...measurement,
     terrain: guides[index]?.terrain ?? measurement.terrain,
     point: guides[index]?.point ?? "A"
@@ -238,7 +152,7 @@ function canonicalOverlayWithPointNames(canonical) {
 
   return {
     guides,
-    lines: canonical.lines.map((line) => [...line]),
+    lines: (canonical.lines ?? []).map((line) => [...line]),
     measurements,
     anchors,
     callouts: []
@@ -252,71 +166,63 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
     return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
   }
 
+  // Pages 12-14 retain their previously approved exact overlay presentation.
   if (page <= 14) return canonicalOverlayWithPointNames(canonical);
 
-  const measurementPoints = buildCompleteTerrainPlacementGuides(layout);
-  const guides = [];
-  const lines = [];
-  const measurements = [];
-  const anchors = [];
-  const callouts = [];
+  // Pages 15+ are strictly source-defined. Never infer a missing guide, never
+  // calculate a replacement value, and never reuse a printed value at a
+  // different terrain point merely to make the overlay look complete.
+  const sourceGuides = sourceGuidesForPage(page);
+  const groups = groupedSourcePoints(sourceGuides);
+  const pointByAnchor = new Map(groups.map((group) => [anchorKey(group.terrain, group.anchor), group.point]));
 
-  for (const measurementPoint of measurementPoints) {
-    const [x, y] = measurementPoint.anchor;
-    anchors.push({ terrain: measurementPoint.terrain, point: measurementPoint.point, x, y });
+  const guides = sourceGuides.map((guide) => ({
+    ...guide,
+    point: pointByAnchor.get(anchorKey(guide.terrain, guide.anchor)) ?? "A"
+  }));
+  const lines = guides.map((guide) => [
+    guide.anchor[0],
+    guide.anchor[1],
+    ...terrainGuideEndpoint(guide.anchor, guide.edge)
+  ]);
+  const measurements = guides.map((guide) => {
+    const [x, y] = terrainGuideLabelPosition(guide.anchor, guide.edge);
+    return {
+      terrain: guide.terrain,
+      point: guide.point,
+      value: guide.value,
+      x,
+      y
+    };
+  });
+  const anchors = groups.map((group) => ({
+    terrain: group.terrain,
+    point: group.point,
+    x: group.anchor[0],
+    y: group.anchor[1]
+  }));
 
-    const pointGuides = [];
-    for (const edge of measurementPoint.edges) {
-      const value = verifiedDistanceValue(page, measurementPoint.terrain, measurementPoint.anchor, edge);
-      if (!value) continue;
-      const [edgeX, edgeY] = terrainGuideEndpoint(measurementPoint.anchor, edge);
-      const [labelX, labelY] = terrainGuideLabelPosition(measurementPoint.anchor, edge);
-      const guide = {
-        terrain: measurementPoint.terrain,
-        point: measurementPoint.point,
-        anchor: measurementPoint.anchor,
-        edge,
-        value
-      };
-      guides.push(guide);
-      pointGuides.push(guide);
-      lines.push([x, y, edgeX, edgeY]);
-      measurements.push({
-        terrain: measurementPoint.terrain,
-        point: measurementPoint.point,
-        value,
-        x: labelX,
-        y: labelY
-      });
-    }
-
-    const horizontal = pointGuides.find((guide) => guide.edge === "left" || guide.edge === "right");
-    const vertical = pointGuides.find((guide) => guide.edge === "top" || guide.edge === "bottom");
-    if (horizontal && vertical) {
-      const [calloutX, calloutY] = calloutPosition(
-        measurementPoint.anchor,
-        measurementPoint.center,
-        measurementPoint.point
-      );
-      callouts.push({
-        terrain: measurementPoint.terrain,
-        point: measurementPoint.point,
-        x: calloutX,
-        y: calloutY,
-        anchorX: x,
-        anchorY: y,
-        centerX: measurementPoint.center[0],
-        centerY: measurementPoint.center[1],
-        horizontalEdge: horizontal.edge,
-        verticalEdge: vertical.edge,
-        horizontalValue: horizontal.value,
-        verticalValue: vertical.value,
-        horizontalText: calloutArrow(horizontal.edge, horizontal.value),
-        verticalText: calloutArrow(vertical.edge, vertical.value),
-        text: calloutArrow(horizontal.edge, horizontal.value) + "  " + calloutArrow(vertical.edge, vertical.value)
-      });
-    }
-  }
+  const callouts = groups.map((group) => {
+    const shapeCenter = centroid(geometryPoints(layout?.terrainGeometry?.[group.terrain]));
+    const [x, y] = calloutPosition(group.anchor, shapeCenter, group.point);
+    const orderedGuides = [...group.guides].sort((left, right) => {
+      const leftHorizontal = left.edge === "left" || left.edge === "right";
+      const rightHorizontal = right.edge === "left" || right.edge === "right";
+      if (leftHorizontal === rightHorizontal) return 0;
+      return leftHorizontal ? -1 : 1;
+    });
+    return {
+      terrain: group.terrain,
+      point: group.point,
+      x,
+      y,
+      anchorX: group.anchor[0],
+      anchorY: group.anchor[1],
+      lines: orderedGuides.map((guide) => calloutArrow(guide.edge, guide.value)),
+      values: orderedGuides.map((guide) => guide.value),
+      edges: orderedGuides.map((guide) => guide.edge)
+    };
+  });
 
   return { guides, lines, measurements, anchors, callouts };
 }
