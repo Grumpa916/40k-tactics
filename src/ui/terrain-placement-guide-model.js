@@ -112,19 +112,34 @@ export function terrainGuideLabelPosition(anchor, edge, { page = 14 } = {}) {
 }
 
 function calloutArrow(edge, value) {
-  if (edge === "left") return "←" + value;
-  if (edge === "right") return value + "→";
-  if (edge === "top") return "↑" + value;
-  return "↓" + value;
+  if (edge === "left") return "← " + value;
+  if (edge === "right") return value + " →";
+  if (edge === "top") return "↑ " + value;
+  return "↓ " + value;
 }
 
-function calloutPosition(anchor, horizontalEdge, verticalEdge, point) {
-  const horizontalDirection = horizontalEdge === "left" ? 1 : -1;
-  const verticalDirection = verticalEdge === "bottom" ? 1 : -1;
-  const pointNudge = point === "B" ? 0.8 : -0.8;
+function calloutPosition(anchor, shapeCenter, point) {
+  let dx = anchor[0] - shapeCenter[0];
+  let dy = anchor[1] - shapeCenter[1];
+  let length = Math.hypot(dx, dy);
+
+  if (length < 0.001) {
+    dx = anchor[0] <= TERRAIN_BOARD_WIDTH / 2 ? -1 : 1;
+    dy = anchor[1] <= TERRAIN_BOARD_HEIGHT / 2 ? -1 : 1;
+    length = Math.hypot(dx, dy);
+  }
+
+  const ux = dx / length;
+  const uy = dy / length;
+  const tangentX = -uy;
+  const tangentY = ux;
+  const tangentSign = point === "B" ? 1 : -1;
+  const outward = 4.0;
+  const tangent = 1.1 * tangentSign;
+
   return [
-    clamp(anchor[0] + horizontalDirection * 2.7, 3.2, TERRAIN_BOARD_WIDTH - 3.2),
-    clamp(anchor[1] + verticalDirection * 2.1 + pointNudge, 2.4, TERRAIN_BOARD_HEIGHT - 2.4)
+    clamp(anchor[0] + ux * outward + tangentX * tangent, 4.6, TERRAIN_BOARD_WIDTH - 4.6),
+    clamp(anchor[1] + uy * outward + tangentY * tangent, 3.0, TERRAIN_BOARD_HEIGHT - 3.0)
   ];
 }
 
@@ -135,6 +150,7 @@ export function buildCompleteTerrainPlacementGuides(layout) {
   for (const [terrain, shape] of Object.entries(layout?.terrainGeometry ?? {})) {
     const shapePoints = geometryPoints(shape);
     if (shapePoints.length < 2) continue;
+    const shapeCenter = centroid(shapePoints);
 
     if (page === 14) {
       const primaryEdge = primaryEdgeFor(shapePoints);
@@ -144,6 +160,7 @@ export function buildCompleteTerrainPlacementGuides(layout) {
           terrain,
           point: index === 0 ? "A" : "B",
           anchor,
+          center: shapeCenter,
           edges: [primaryEdge, approvedPage14PerpendicularEdge(primaryEdge, anchor)]
         });
       });
@@ -158,6 +175,7 @@ export function buildCompleteTerrainPlacementGuides(layout) {
         terrain,
         point: index === 0 ? "A" : "B",
         anchor,
+        center: shapeCenter,
         edges: [nearestHorizontalEdge(anchor), nearestVerticalEdge(anchor)]
       });
     });
@@ -203,8 +221,7 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
       if (horizontal && vertical) {
         const [calloutX, calloutY] = calloutPosition(
           measurementPoint.anchor,
-          horizontal.edge,
-          vertical.edge,
+          measurementPoint.center,
           measurementPoint.point
         );
         callouts.push({
@@ -212,10 +229,16 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
           point: measurementPoint.point,
           x: calloutX,
           y: calloutY,
+          anchorX: x,
+          anchorY: y,
+          centerX: measurementPoint.center[0],
+          centerY: measurementPoint.center[1],
           horizontalEdge: horizontal.edge,
           verticalEdge: vertical.edge,
           horizontalValue: horizontal.value,
           verticalValue: vertical.value,
+          horizontalText: calloutArrow(horizontal.edge, horizontal.value),
+          verticalText: calloutArrow(vertical.edge, vertical.value),
           text: calloutArrow(horizontal.edge, horizontal.value) + "  " + calloutArrow(vertical.edge, vertical.value)
         });
       }
