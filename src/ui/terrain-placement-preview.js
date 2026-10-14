@@ -1,5 +1,4 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
-import { PAGE_14_SOURCE_GUIDES } from "../data/event-companion-placement-guides.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function normalizePair(a, b) {
@@ -22,49 +21,6 @@ function dispositionSetupForLayout(target) {
     }
   }
   return null;
-}
-
-function endpointFor(anchor, edge) {
-  const [x, y] = anchor;
-  if (edge === "left") return [0, y];
-  if (edge === "right") return [60, y];
-  if (edge === "top") return [x, 44];
-  return [x, 0];
-}
-
-function labelPosition(anchor, edge) {
-  const [x, y] = anchor;
-  if (edge === "left") return [Math.max(1.4, x - 1.4), y + 0.7];
-  if (edge === "right") return [Math.min(58.6, x + 1.4), y + 0.7];
-  if (edge === "top") return [x + 0.8, Math.min(42.8, y + 1.4)];
-  return [x + 0.8, Math.max(1.2, y - 1.2)];
-}
-
-function addLiteralPage14Guides(page, mount) {
-  if (Number(page) !== 14) return;
-  const board = mount.querySelector(".battlefield-map__board");
-  if (!board) return;
-
-  // Page 14 verification: draw the transcribed Event Companion guides exactly
-  // where their source anchors were captured, without snapping or mirroring.
-  board.querySelector(".battlefield-map__terrain-measurements")?.remove();
-
-  const px = (x) => Number(x) / 60 * 100;
-  const py = (y) => (44 - Number(y)) / 44 * 100;
-  const lines = [];
-  const anchors = [];
-  const labels = [];
-
-  for (const guide of PAGE_14_SOURCE_GUIDES) {
-    const anchor = guide.sourceAnchor;
-    const [edgeX, edgeY] = endpointFor(anchor, guide.edge);
-    const [labelX, labelY] = labelPosition(anchor, guide.edge);
-    lines.push('<line class="battlefield-map__dimension-line" x1="' + px(anchor[0]) + '" y1="' + py(anchor[1]) + '" x2="' + px(edgeX) + '" y2="' + py(edgeY) + '"></line>');
-    anchors.push('<circle class="battlefield-map__dimension-anchor" cx="' + px(anchor[0]) + '" cy="' + py(anchor[1]) + '" r=".7"></circle>');
-    labels.push('<text class="battlefield-map__dimension-text" x="' + px(labelX) + '" y="' + py(labelY) + '" text-anchor="middle">' + guide.value + '</text>');
-  }
-
-  board.insertAdjacentHTML("beforeend", '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Literal Event Companion Page 14 measurement overlay">' + lines.join("") + anchors.join("") + labels.join("") + '</svg>');
 }
 
 function renderPage(page, mount, status) {
@@ -95,7 +51,6 @@ function renderPage(page, mount, status) {
     mapLabel: "Terrain placement reference · Event Companion page " + page
   });
 
-  addLiteralPage14Guides(page, mount);
   status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page;
 }
 
