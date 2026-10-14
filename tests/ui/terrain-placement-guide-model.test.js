@@ -27,6 +27,7 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
     assert.equal(overlay.guides.length, terrainEntries.length * 4);
     assert.equal(overlay.lines.length, terrainEntries.length * 4);
     assert.equal(overlay.measurements.length, terrainEntries.length * 4);
+    assert.equal(overlay.callouts.length, Number(layout.page) >= 15 ? terrainEntries.length * 2 : 0);
 
     for (const [terrain, shape] of terrainEntries) {
       const terrainPoints = points.filter((point) => point.terrain === terrain);
@@ -45,6 +46,15 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
           const expectedVertical = point.anchor[1] <= 22 ? "bottom" : "top";
           assert.ok(point.edges.includes(expectedHorizontal), `${terrain} ${point.point} uses the nearest horizontal battlefield edge`);
           assert.ok(point.edges.includes(expectedVertical), `${terrain} ${point.point} uses the nearest vertical battlefield edge`);
+
+          const callout = overlay.callouts.find((item) => item.terrain === terrain && item.point === point.point);
+          assert.ok(callout, `${terrain} ${point.point} has one paired callout`);
+          assert.match(callout.horizontalValue, /^\d+"$/);
+          assert.match(callout.verticalValue, /^\d+"$/);
+          assert.ok(/[←→]/.test(callout.text), `${terrain} ${point.point} callout identifies the horizontal edge`);
+          assert.ok(/[↑↓]/.test(callout.text), `${terrain} ${point.point} callout identifies the vertical edge`);
+          assert.ok(callout.x >= 0 && callout.x <= 60);
+          assert.ok(callout.y >= 0 && callout.y <= 44);
         }
       }
     }
@@ -53,14 +63,6 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
       const [x, y] = guide.anchor;
       assert.deepEqual(overlay.lines[index], [x, y, ...terrainGuideEndpoint(guide.anchor, guide.edge)]);
       assert.match(guide.value, /^\d+"$/);
-
-      if (Number(layout.page) >= 15) {
-        const label = overlay.measurements[index];
-        if (guide.edge === "left") assert.ok(label.x <= 2.2, `${guide.terrain} left label stays in left edge lane`);
-        if (guide.edge === "right") assert.ok(label.x >= 57.8, `${guide.terrain} right label stays in right edge lane`);
-        if (guide.edge === "bottom") assert.ok(label.y <= 2.2, `${guide.terrain} bottom label stays in bottom edge lane`);
-        if (guide.edge === "top") assert.ok(label.y >= 41.8, `${guide.terrain} top label stays in top edge lane`);
-      }
     });
   });
 }
