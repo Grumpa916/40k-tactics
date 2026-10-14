@@ -44,12 +44,16 @@ test("page 12 guides use stored official values and V2 anchor relationships with
 test("pages 13 and 14 preserve their official source values and render only edge-to-corner guides", () => {
   assert.deepEqual(PAGE_13_SOURCE_GUIDES.map((guide) => guide.value), [
     '4"', '4"', '5"', '5"', '9"', '22"', '7"', '16"', '4"', '26"',
-    '5"', '18"', '21"', '15"', '10"', '11"', '5"', '15"', '18"', '20"'
+    '5"', '18"', '21"', '15"', '10"', '11"', '5"', '15"', '18"', '20"', '9"'
   ]);
   assert.deepEqual(PAGE_14_SOURCE_GUIDES.map((guide) => guide.value), [
     '19"', '4"', '27"', '15"', '24"', '8"', '7"', '5"', '8"', '28"',
     '2"', '2"', '7"', '17"', '16"', '15"', '5"', '12"'
   ]);
+
+  const page13SecondNine = PAGE_13_SOURCE_GUIDES.find((guide) =>
+    guide.value === '9"' && guide.edge === "right" && guide.sourceAnchor[0] > 50);
+  assert.ok(page13SecondNine, "page 13 retains the lower official 9-inch reference");
 
   for (const page of [13, 14]) {
     const overlay = getEventCompanionPlacementOverlay(page);
