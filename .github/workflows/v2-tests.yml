@@ -45,3 +45,35 @@ jobs:
           cache: npm
       - name: Run terrain rollout diagnostics
         run: node --test --test-name-pattern="${{ matrix.pattern }}" tests/data/event-companion-placement-guides-extended.test.js
+
+  suite-diagnostic:
+    name: suite ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: data
+            command: node --test tests/data/*.test.js
+          - label: ui
+            command: node --test tests/ui/*.test.js
+          - label: engine
+            command: node --test tests/engine/*.test.js
+          - label: rules
+            command: node --test tests/rules/*.test.js
+          - label: application-state-other
+            command: node --test tests/application/*.test.js tests/state/*.test.js tests/persistence/*.test.js tests/events/*.test.js tests/scenarios/*.test.js tests/commands/*.test.js
+          - label: legacy-top-level
+            command: node --test test/*.test.js
+          - label: src-tests
+            command: find src -name '*.test.js' -print0 | xargs -0 node --test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Run grouped diagnostics
+        run: ${{ matrix.command }}
