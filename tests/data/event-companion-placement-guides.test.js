@@ -79,6 +79,20 @@ test("pages 13 and 14 preserve their official source values and render only edge
   }
 });
 
+test("page 13 keeps the browser-verified official corner pairs", () => {
+  const originals = getEventCompanionPlacementOverlay(13).guides.filter((guide) => !guide.mirrored);
+  const hasGuide = (value, edge, anchor) => originals.some((guide) =>
+    guide.value === value && guide.edge === edge &&
+    guide.anchor[0] === anchor[0] && guide.anchor[1] === anchor[1]);
+
+  assert.ok(hasGuide('26"', "left", [25.9, 40.0]));
+  assert.ok(hasGuide('4"', "top", [25.9, 40.0]));
+  assert.ok(hasGuide('20"', "left", [19.9, 33.9]));
+  assert.ok(hasGuide('10"', "top", [19.9, 33.9]));
+  assert.ok(hasGuide('7"', "right", [53.0, 40.1]));
+  assert.ok(hasGuide('4"', "top", [53.0, 40.1]));
+});
+
 test("pages outside the converted terrain-placement range remain untouched", () => {
   assert.equal(getEventCompanionPlacementOverlay(11), null);
   assert.equal(getEventCompanionPlacementOverlay(54), null);
