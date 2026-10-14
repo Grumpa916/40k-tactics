@@ -87,12 +87,44 @@ function formatDistance(anchor, edge) {
   return Math.max(0, Math.round(edgeDistance(anchor, edge))) + '"';
 }
 
-export function terrainGuideLabelPosition(anchor, edge) {
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
+function labelLaneKey(terrain, point, edge) {
+  const text = String(terrain ?? "terrain") + "|" + String(point ?? "A") + "|" + String(edge ?? "left");
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = ((hash * 31) + text.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+export function terrainGuideLabelPosition(anchor, edge, { page = 14, terrain = "terrain", point = "A" } = {}) {
   const [edgeX, edgeY] = terrainGuideEndpoint(anchor, edge);
-  const x = (anchor[0] + edgeX) / 2;
-  const y = (anchor[1] + edgeY) / 2;
-  if (edge === "left" || edge === "right") return [x, y + 0.7];
-  return [x + 0.8, y];
+
+  // Preserve the browser-approved Page 14 presentation exactly.
+  if (Number(page) === 14) {
+    const x = (anchor[0] + edgeX) / 2;
+    const y = (anchor[1] + edgeY) / 2;
+    if (edge === "left" || edge === "right") return [x, y + 0.7];
+    return [x + 0.8, y];
+  }
+
+  // Denser layouts need their labels spread along the guide instead of all
+  // sitting at the midpoint. A deterministic lane keeps the result stable.
+  const laneKey = labelLaneKey(terrain, point, edge);
+  const fractions = [0.30, 0.43, 0.57, 0.70];
+  const offsets = [-1.05, -0.5, 0.5, 1.05];
+  const fraction = fractions[laneKey % fractions.length];
+  const offset = offsets[Math.floor(laneKey / fractions.length) % offsets.length];
+  let x = anchor[0] + (edgeX - anchor[0]) * fraction;
+  let y = anchor[1] + (edgeY - anchor[1]) * fraction;
+
+  if (edge === "left" || edge === "right") y += offset;
+  else x += offset;
+
+  return [clamp(x, 1, TERRAIN_BOARD_WIDTH - 1), clamp(y, 1, TERRAIN_BOARD_HEIGHT - 1)];
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
@@ -141,13 +173,18 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   const lines = [];
   const measurements = [];
   const anchors = [];
+  const page = Number(layout?.page);
 
   for (const measurementPoint of measurementPoints) {
     const [x, y] = measurementPoint.anchor;
     anchors.push({ terrain: measurementPoint.terrain, point: measurementPoint.point, x, y });
     for (const edge of measurementPoint.edges) {
       const [edgeX, edgeY] = terrainGuideEndpoint(measurementPoint.anchor, edge);
-      const [labelX, labelY] = terrainGuideLabelPosition(measurementPoint.anchor, edge);
+      const [labelX, labelY] = terrainGuideLabelPosition(measurementPoint.anchor, edge, {
+        page,
+        terrain: measurementPoint.terrain,
+        point: measurementPoint.point
+      });
       const value = formatDistance(measurementPoint.anchor, edge);
       guides.push({
         terrain: measurementPoint.terrain,
