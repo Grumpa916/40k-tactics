@@ -56,7 +56,9 @@ function farthestPair(points) {
   return best;
 }
 
-function measurementPointsFor(points, primaryEdge) {
+// Page 14 was visually approved with this edge-biased point selection.
+// Keep it stable while later pages use a less cluttered nearest-edge strategy.
+function approvedPage14MeasurementPoints(points, primaryEdge) {
   const minimum = Math.min(...points.map((point) => edgeDistance(point, primaryEdge)));
   const nearPrimaryEdge = points.filter((point) => edgeDistance(point, primaryEdge) <= minimum + 2.5);
   if (nearPrimaryEdge.length >= 2) return farthestPair(nearPrimaryEdge);
@@ -65,12 +67,20 @@ function measurementPointsFor(points, primaryEdge) {
     .slice(0, 2);
 }
 
-function perpendicularEdgeFor(primaryEdge, anchor) {
+function approvedPage14PerpendicularEdge(primaryEdge, anchor) {
   const [x, y] = anchor;
   if (primaryEdge === "left" || primaryEdge === "right") {
     return y <= TERRAIN_BOARD_HEIGHT / 2 ? "bottom" : "top";
   }
   return x <= TERRAIN_BOARD_WIDTH / 2 ? "left" : "right";
+}
+
+function nearestHorizontalEdge(anchor) {
+  return anchor[0] <= TERRAIN_BOARD_WIDTH / 2 ? "left" : "right";
+}
+
+function nearestVerticalEdge(anchor) {
+  return anchor[1] <= TERRAIN_BOARD_HEIGHT / 2 ? "bottom" : "top";
 }
 
 function formatDistance(anchor, edge) {
@@ -86,23 +96,43 @@ export function terrainGuideLabelPosition(anchor, edge) {
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
-  const points = [];
+  const result = [];
+  const page = Number(layout?.page);
+
   for (const [terrain, shape] of Object.entries(layout?.terrainGeometry ?? {})) {
     const shapePoints = geometryPoints(shape);
     if (shapePoints.length < 2) continue;
-    const primaryEdge = primaryEdgeFor(shapePoints);
-    const measurementPoints = measurementPointsFor(shapePoints, primaryEdge);
+
+    if (page === 14) {
+      const primaryEdge = primaryEdgeFor(shapePoints);
+      const measurementPoints = approvedPage14MeasurementPoints(shapePoints, primaryEdge);
+      measurementPoints.forEach((anchor, index) => {
+        result.push({
+          terrain,
+          point: index === 0 ? "A" : "B",
+          anchor,
+          edges: [primaryEdge, approvedPage14PerpendicularEdge(primaryEdge, anchor)]
+        });
+      });
+      continue;
+    }
+
+    // Pages 15-53: use two well-separated reproducible corners, then send each
+    // corner to its nearest horizontal and nearest vertical battlefield edge.
+    // This preserves the approved 2-points x 2-perpendicular-guides structure
+    // while minimizing long crossings and label collisions on denser layouts.
+    const measurementPoints = farthestPair(shapePoints);
     measurementPoints.forEach((anchor, index) => {
-      const perpendicularEdge = perpendicularEdgeFor(primaryEdge, anchor);
-      points.push({
+      result.push({
         terrain,
         point: index === 0 ? "A" : "B",
         anchor,
-        edges: [primaryEdge, perpendicularEdge]
+        edges: [nearestHorizontalEdge(anchor), nearestVerticalEdge(anchor)]
       });
     });
   }
-  return points;
+
+  return result;
 }
 
 export function buildCompleteTerrainPlacementOverlay(layout) {
