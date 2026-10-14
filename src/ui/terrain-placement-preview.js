@@ -28,6 +28,15 @@ function dispositionSetupForLayout(target) {
   return null;
 }
 
+function escapeXml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
 function addCompleteTerrainGuides(page, layout, mount) {
   if (Number(page) < 14 || Number(page) > 53) return;
   const board = mount.querySelector(".battlefield-map__board");
@@ -44,11 +53,20 @@ function addCompleteTerrainGuides(page, layout, mount) {
     parts.push('<line class="battlefield-map__dimension-line" x1="' + px(line[0]) + '" y1="' + py(line[1]) + '" x2="' + px(line[2]) + '" y2="' + py(line[3]) + '"></line>');
   });
   overlay.anchors.forEach((anchor) => {
-    parts.push('<circle class="battlefield-map__dimension-anchor" data-placement-anchor="' + anchor.terrain + ':' + anchor.point + '" cx="' + px(anchor.x) + '" cy="' + py(anchor.y) + '" r=".7"></circle>');
+    parts.push('<circle class="battlefield-map__dimension-anchor" data-placement-anchor="' + escapeXml(anchor.terrain + ':' + anchor.point) + '" cx="' + px(anchor.x) + '" cy="' + py(anchor.y) + '" r=".7"></circle>');
   });
-  overlay.measurements.forEach((measurement) => {
-    parts.push('<text class="battlefield-map__dimension-text" x="' + px(measurement.x) + '" y="' + py(measurement.y) + '" text-anchor="middle">' + measurement.value + '</text>');
-  });
+
+  if (Number(page) === 14) {
+    overlay.measurements.forEach((measurement) => {
+      parts.push('<text class="battlefield-map__dimension-text" x="' + px(measurement.x) + '" y="' + py(measurement.y) + '" text-anchor="middle">' + escapeXml(measurement.value) + '</text>');
+    });
+  } else {
+    overlay.callouts.forEach((callout) => {
+      parts.push(
+        '<text class="battlefield-map__dimension-text terrain-point-callout" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '" x="' + px(callout.x) + '" y="' + py(callout.y) + '" text-anchor="middle">' + escapeXml(callout.text) + '</text>'
+      );
+    });
+  }
 
   board.insertAdjacentHTML(
     "beforeend",
