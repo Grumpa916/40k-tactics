@@ -39,6 +39,13 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
         assert.equal(point.edges.length, 2);
         assert.ok(point.edges.some(isHorizontal), `${terrain} ${point.point} has a horizontal edge measurement`);
         assert.ok(point.edges.some(isVertical), `${terrain} ${point.point} has a vertical edge measurement`);
+
+        if (Number(layout.page) >= 15) {
+          const expectedHorizontal = point.anchor[0] <= 30 ? "left" : "right";
+          const expectedVertical = point.anchor[1] <= 22 ? "bottom" : "top";
+          assert.ok(point.edges.includes(expectedHorizontal), `${terrain} ${point.point} uses the nearest horizontal battlefield edge`);
+          assert.ok(point.edges.includes(expectedVertical), `${terrain} ${point.point} uses the nearest vertical battlefield edge`);
+        }
       }
     }
 
