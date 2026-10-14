@@ -53,6 +53,14 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
       const [x, y] = guide.anchor;
       assert.deepEqual(overlay.lines[index], [x, y, ...terrainGuideEndpoint(guide.anchor, guide.edge)]);
       assert.match(guide.value, /^\d+"$/);
+
+      if (Number(layout.page) >= 15) {
+        const label = overlay.measurements[index];
+        if (guide.edge === "left") assert.ok(label.x <= 2.2, `${guide.terrain} left label stays in left edge lane`);
+        if (guide.edge === "right") assert.ok(label.x >= 57.8, `${guide.terrain} right label stays in right edge lane`);
+        if (guide.edge === "bottom") assert.ok(label.y <= 2.2, `${guide.terrain} bottom label stays in bottom edge lane`);
+        if (guide.edge === "top") assert.ok(label.y >= 41.8, `${guide.terrain} top label stays in top edge lane`);
+      }
     });
   });
 }
