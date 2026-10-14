@@ -1,3 +1,5 @@
+import { EVENT_COMPANION_PAGE_MEASUREMENT_VALUES } from "../data/event-companion-page-measurement-values.js";
+
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
 
@@ -85,6 +87,32 @@ function nearestVerticalEdge(anchor) {
 
 function formatDistance(anchor, edge) {
   return Math.max(0, Math.round(edgeDistance(anchor, edge))) + '"';
+}
+
+function measurementNumber(value) {
+  const parsed = Number.parseFloat(String(value ?? "").replace(/"$/, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function officialDistanceValue(page, anchor, edge) {
+  const officialValues = EVENT_COMPANION_PAGE_MEASUREMENT_VALUES[Number(page)] ?? [];
+  if (!officialValues.length) return formatDistance(anchor, edge);
+
+  const target = edgeDistance(anchor, edge);
+  let bestValue = officialValues[0];
+  let bestDelta = Number.POSITIVE_INFINITY;
+
+  for (const value of officialValues) {
+    const numeric = measurementNumber(value);
+    if (numeric == null) continue;
+    const delta = Math.abs(numeric - target);
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      bestValue = value;
+    }
+  }
+
+  return bestValue;
 }
 
 function clamp(value, minimum, maximum) {
@@ -201,7 +229,9 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
     for (const edge of measurementPoint.edges) {
       const [edgeX, edgeY] = terrainGuideEndpoint(measurementPoint.anchor, edge);
       const [labelX, labelY] = terrainGuideLabelPosition(measurementPoint.anchor, edge, { page });
-      const value = formatDistance(measurementPoint.anchor, edge);
+      const value = page >= 15
+        ? officialDistanceValue(page, measurementPoint.anchor, edge)
+        : formatDistance(measurementPoint.anchor, edge);
       const guide = {
         terrain: measurementPoint.terrain,
         point: measurementPoint.point,
