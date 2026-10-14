@@ -91,16 +91,7 @@ function clamp(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, value));
 }
 
-function labelLaneKey(terrain, point, edge) {
-  const text = String(terrain ?? "terrain") + "|" + String(point ?? "A") + "|" + String(edge ?? "left");
-  let hash = 0;
-  for (let index = 0; index < text.length; index += 1) {
-    hash = ((hash * 31) + text.charCodeAt(index)) >>> 0;
-  }
-  return hash;
-}
-
-export function terrainGuideLabelPosition(anchor, edge, { page = 14, terrain = "terrain", point = "A" } = {}) {
+export function terrainGuideLabelPosition(anchor, edge, { page = 14 } = {}) {
   const [edgeX, edgeY] = terrainGuideEndpoint(anchor, edge);
 
   // Preserve the browser-approved Page 14 presentation exactly.
@@ -111,24 +102,30 @@ export function terrainGuideLabelPosition(anchor, edge, { page = 14, terrain = "
     return [x + 0.8, y];
   }
 
-  // Pages 15-53 can contain many complete four-guide terrain measurements.
-  // Keep the battlefield interior readable by moving labels into narrow lanes
-  // just inside the perimeter while leaving every guide line and anchor intact.
-  const laneKey = labelLaneKey(terrain, point, edge);
-  const offsets = [-1.35, -0.65, 0.65, 1.35];
-  const offset = offsets[laneKey % offsets.length];
+  // Pages 15-53 render paired point callouts instead of individual labels.
+  // Keep this fallback close to the edge for non-preview consumers.
   const inset = 1.8;
+  if (edge === "left") return [inset, clamp(anchor[1], 1.2, TERRAIN_BOARD_HEIGHT - 1.2)];
+  if (edge === "right") return [TERRAIN_BOARD_WIDTH - inset, clamp(anchor[1], 1.2, TERRAIN_BOARD_HEIGHT - 1.2)];
+  if (edge === "bottom") return [clamp(anchor[0], 1.2, TERRAIN_BOARD_WIDTH - 1.2), inset];
+  return [clamp(anchor[0], 1.2, TERRAIN_BOARD_WIDTH - 1.2), TERRAIN_BOARD_HEIGHT - inset];
+}
 
-  if (edge === "left") {
-    return [inset, clamp(anchor[1] + offset, 1.2, TERRAIN_BOARD_HEIGHT - 1.2)];
-  }
-  if (edge === "right") {
-    return [TERRAIN_BOARD_WIDTH - inset, clamp(anchor[1] + offset, 1.2, TERRAIN_BOARD_HEIGHT - 1.2)];
-  }
-  if (edge === "bottom") {
-    return [clamp(anchor[0] + offset, 1.2, TERRAIN_BOARD_WIDTH - 1.2), inset];
-  }
-  return [clamp(anchor[0] + offset, 1.2, TERRAIN_BOARD_WIDTH - 1.2), TERRAIN_BOARD_HEIGHT - inset];
+function calloutArrow(edge, value) {
+  if (edge === "left") return "←" + value;
+  if (edge === "right") return value + "→";
+  if (edge === "top") return "↑" + value;
+  return "↓" + value;
+}
+
+function calloutPosition(anchor, horizontalEdge, verticalEdge, point) {
+  const horizontalDirection = horizontalEdge === "left" ? 1 : -1;
+  const verticalDirection = verticalEdge === "bottom" ? 1 : -1;
+  const pointNudge = point === "B" ? 0.8 : -0.8;
+  return [
+    clamp(anchor[0] + horizontalDirection * 2.7, 3.2, TERRAIN_BOARD_WIDTH - 3.2),
+    clamp(anchor[1] + verticalDirection * 2.1 + pointNudge, 2.4, TERRAIN_BOARD_HEIGHT - 2.4)
+  ];
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
@@ -155,8 +152,6 @@ export function buildCompleteTerrainPlacementGuides(layout) {
 
     // Pages 15-53: use two well-separated reproducible corners, then send each
     // corner to its nearest horizontal and nearest vertical battlefield edge.
-    // This preserves the approved 2-points x 2-perpendicular-guides structure
-    // while minimizing long crossings and label collisions on denser layouts.
     const measurementPoints = farthestPair(shapePoints);
     measurementPoints.forEach((anchor, index) => {
       result.push({
@@ -177,30 +172,55 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   const lines = [];
   const measurements = [];
   const anchors = [];
+  const callouts = [];
   const page = Number(layout?.page);
 
   for (const measurementPoint of measurementPoints) {
     const [x, y] = measurementPoint.anchor;
     anchors.push({ terrain: measurementPoint.terrain, point: measurementPoint.point, x, y });
+
+    const pointGuides = [];
     for (const edge of measurementPoint.edges) {
       const [edgeX, edgeY] = terrainGuideEndpoint(measurementPoint.anchor, edge);
-      const [labelX, labelY] = terrainGuideLabelPosition(measurementPoint.anchor, edge, {
-        page,
-        terrain: measurementPoint.terrain,
-        point: measurementPoint.point
-      });
+      const [labelX, labelY] = terrainGuideLabelPosition(measurementPoint.anchor, edge, { page });
       const value = formatDistance(measurementPoint.anchor, edge);
-      guides.push({
+      const guide = {
         terrain: measurementPoint.terrain,
         point: measurementPoint.point,
         anchor: measurementPoint.anchor,
         edge,
         value
-      });
+      };
+      guides.push(guide);
+      pointGuides.push(guide);
       lines.push([x, y, edgeX, edgeY]);
       measurements.push({ terrain: measurementPoint.terrain, point: measurementPoint.point, value, x: labelX, y: labelY });
     }
+
+    if (page >= 15) {
+      const horizontal = pointGuides.find((guide) => guide.edge === "left" || guide.edge === "right");
+      const vertical = pointGuides.find((guide) => guide.edge === "top" || guide.edge === "bottom");
+      if (horizontal && vertical) {
+        const [calloutX, calloutY] = calloutPosition(
+          measurementPoint.anchor,
+          horizontal.edge,
+          vertical.edge,
+          measurementPoint.point
+        );
+        callouts.push({
+          terrain: measurementPoint.terrain,
+          point: measurementPoint.point,
+          x: calloutX,
+          y: calloutY,
+          horizontalEdge: horizontal.edge,
+          verticalEdge: vertical.edge,
+          horizontalValue: horizontal.value,
+          verticalValue: vertical.value,
+          text: calloutArrow(horizontal.edge, horizontal.value) + "  " + calloutArrow(vertical.edge, vertical.value)
+        });
+      }
+    }
   }
 
-  return { guides, lines, measurements, anchors };
+  return { guides, lines, measurements, anchors, callouts };
 }
