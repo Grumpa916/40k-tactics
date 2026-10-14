@@ -19,22 +19,33 @@
     [data-terrain-preview-map] { width: 100%; }
     [data-terrain-preview-map] .battlefield-map__board { max-height: calc(100vh - 230px); }
     /* Official Event Companion guides: prominent dashed gold. */
-    [data-terrain-preview-map] .battlefield-map__dimension-line {
+    [data-terrain-preview-map] .battlefield-map__dimension-line,
+    [data-terrain-preview-map] .terrain-preview__verified-line {
       stroke: #f6d783;
       stroke-width: 1.35;
       stroke-dasharray: 5 3;
       opacity: .98;
       vector-effect: non-scaling-stroke;
     }
-    [data-terrain-preview-map] .battlefield-map__dimension-anchor {
+    [data-terrain-preview-map] .battlefield-map__dimension-anchor,
+    [data-terrain-preview-map] .terrain-preview__verified-anchor {
+      fill: #f6d783;
+      stroke: #101820;
       stroke-width: 1;
       vector-effect: non-scaling-stroke;
     }
-    [data-terrain-preview-map] .battlefield-map__dimension-text {
+    [data-terrain-preview-map] .battlefield-map__dimension-text,
+    [data-terrain-preview-map] .terrain-preview__verified-text {
+      fill: #f4f8fb;
+      font-family: Arial, sans-serif;
+      font-size: 2.15px;
+      font-weight: 900;
+      paint-order: stroke;
+      stroke: #071019;
       stroke-width: .9px;
+      stroke-linejoin: round;
     }
-    /* Approximate grid-derived guides: deliberately lighter and visually distinct. */
-    [data-terrain-preview-map] .terrain-preview__approx-guides {
+    [data-terrain-preview-map] .terrain-preview__verified-guides {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -42,29 +53,6 @@
       z-index: 4;
       pointer-events: none;
       overflow: visible;
-    }
-    [data-terrain-preview-map] .terrain-preview__approx-line {
-      stroke: #9fb6c8;
-      stroke-width: 1;
-      stroke-dasharray: 2 3;
-      opacity: .9;
-      vector-effect: non-scaling-stroke;
-    }
-    [data-terrain-preview-map] .terrain-preview__approx-anchor {
-      fill: #c5d5e1;
-      stroke: #101820;
-      stroke-width: 1;
-      vector-effect: non-scaling-stroke;
-    }
-    [data-terrain-preview-map] .terrain-preview__approx-text {
-      fill: #dbe7ef;
-      font-family: Arial, sans-serif;
-      font-size: 2.05px;
-      font-weight: 800;
-      paint-order: stroke;
-      stroke: #071019;
-      stroke-width: .85px;
-      stroke-linejoin: round;
     }
     .note { margin-top: 12px; padding: 10px 12px; border: 1px solid #465767; border-radius: 8px; background: #121c24; font-size: 13px; color: #c4d0da; }
     @media (orientation: landscape) and (min-width: 700px) {
@@ -86,7 +74,7 @@
     </div>
     <div data-terrain-preview-status aria-live="polite"></div>
     <div data-terrain-preview-map></div>
-    <p class="note">Gold dashed guides are official printed Event Companion dimensions. Lighter guides marked ≈ are approximate distances derived from the Event Companion grid only where the official diagram leaves a terrain footprint under-defined.</p>
+    <p class="note">All gold dashed guides are official printed Event Companion dimensions. Page 13 includes explicit verified corner pairs where the generic snapping heuristic previously attached printed values to the wrong terrain points.</p>
   </main>
   <script type="module" src="src/ui/terrain-placement-preview.js"></script>
 </body>
