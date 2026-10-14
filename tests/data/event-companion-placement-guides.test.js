@@ -75,6 +75,7 @@ test("pages 13 and 14 preserve their official source values and render only edge
   }
 });
 
-test("unconverted terrain pages remain untouched", () => {
-  assert.equal(getEventCompanionPlacementOverlay(15), null);
+test("pages outside the converted terrain-placement range remain untouched", () => {
+  assert.equal(getEventCompanionPlacementOverlay(11), null);
+  assert.equal(getEventCompanionPlacementOverlay(54), null);
 });
