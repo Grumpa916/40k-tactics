@@ -41,10 +41,40 @@
       stroke-width: .9px;
       stroke-linejoin: round;
     }
+    [data-terrain-preview-map] .battlefield-map__geometry { pointer-events: auto; }
+    [data-terrain-preview-map] .battlefield-map__terrain {
+      pointer-events: all;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: fill .12s ease, stroke .12s ease, stroke-width .12s ease;
+    }
+    [data-terrain-preview-map] .battlefield-map__terrain.is-measurement-focused {
+      fill: rgba(154, 145, 98, .86);
+      stroke: #f6d783;
+      stroke-width: .8;
+    }
+    .terrain-focus-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 6px 0 10px;
+      padding: 8px 10px;
+      border: 1px solid #465767;
+      border-radius: 8px;
+      background: #121c24;
+      color: #cbd6df;
+      font-size: 13px;
+    }
+    .terrain-focus-controls button { flex: 0 0 auto; min-height: 38px; padding: 6px 10px; }
     .note { margin-top: 12px; padding: 10px 12px; border: 1px solid #465767; border-radius: 8px; background: #121c24; font-size: 13px; color: #c4d0da; }
     @media (orientation: landscape) and (min-width: 700px) {
       main { padding: 12px 18px; }
       [data-terrain-preview-map] .battlefield-map__board { max-height: calc(100vh - 190px); }
+    }
+    @media (max-width: 650px) {
+      .terrain-focus-controls { align-items: stretch; flex-direction: column; }
+      .terrain-focus-controls button { width: 100%; }
     }
   </style>
 </head>
@@ -61,7 +91,7 @@
     </div>
     <div data-terrain-preview-status aria-live="polite"></div>
     <div data-terrain-preview-map></div>
-    <p class="note">Approved placement standard for pages 14–53: every rendered terrain shape has two reproducible measurement points. Each point has one horizontal and one vertical guide to perpendicular battlefield edges. Pages 12–13 retain their previously verified overlays.</p>
+    <p class="note">Approved placement standard: every rendered terrain shape has two reproducible measurement points, and each point has one horizontal and one vertical guide to perpendicular battlefield edges. On dense pages 15–53, tap a terrain footprint to show only its four measurements; Show all remains available as an overview. Pages 12–14 retain their verified presentation.</p>
   </main>
   <script type="module" src="src/ui/terrain-placement-preview.js"></script>
 </body>
