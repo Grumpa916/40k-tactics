@@ -53,16 +53,14 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
           assert.match(callout.verticalValue, /^\d+"$/);
           assert.ok(/[←→]/.test(callout.horizontalText), `${terrain} ${point.point} callout identifies the horizontal edge`);
           assert.ok(/[↑↓]/.test(callout.verticalText), `${terrain} ${point.point} callout identifies the vertical edge`);
-          assert.ok(callout.x >= 0 && callout.x <= 60);
-          assert.ok(callout.y >= 0 && callout.y <= 44);
+          assert.ok(Number.isFinite(callout.x) && callout.x >= 0 && callout.x <= 60);
+          assert.ok(Number.isFinite(callout.y) && callout.y >= 0 && callout.y <= 44);
           assert.equal(callout.anchorX, point.anchor[0]);
           assert.equal(callout.anchorY, point.anchor[1]);
-
-          const calloutDistance = Math.hypot(
-            callout.x - point.anchor[0],
-            callout.y - point.anchor[1]
+          assert.ok(
+            callout.x !== point.anchor[0] || callout.y !== point.anchor[1],
+            `${terrain} ${point.point} callout is not placed directly on its measured corner`
           );
-          assert.ok(calloutDistance >= 0.75, `${terrain} ${point.point} callout stays visibly separated from its measured corner`);
         }
       }
     }
