@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
 import { getEventCompanionPlacementOverlay } from "../../src/data/event-companion-placement-guides.js";
 import { getEventCompanionExtendedSourceGuides } from "../../src/data/event-companion-placement-source-guides-extended.js";
+import { segmentCrossesTerrainInterior } from "../../src/data/terrain-guide-geometry.js";
 
 function expectedEndpoint(guide) {
   const [x, y] = guide.anchor;
@@ -10,6 +12,10 @@ function expectedEndpoint(guide) {
   if (guide.edge === "right") return [60, y];
   if (guide.edge === "top") return [x, 44];
   return [x, 0];
+}
+
+function geometryForPage(page) {
+  return (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((layout) => Number(layout?.page) === Number(page)) ?? null;
 }
 
 test("extended Event Companion source patterns remain scoped to pages 15 through 53", () => {
@@ -28,7 +34,9 @@ for (let page = 15; page <= 53; page += 1) {
 
   test(`page ${page} renders terrain-corner to battlefield-edge guides`, () => {
     const overlay = getEventCompanionPlacementOverlay(page);
+    const geometry = geometryForPage(page);
     assert.ok(overlay, `page ${page} should render an overlay`);
+    assert.ok(geometry?.terrainGeometry, `page ${page} should have terrain geometry`);
     assert.equal(overlay.lines.length, overlay.guides.length, `page ${page} line count should match guide count`);
     assert.equal(overlay.measurements.length, overlay.guides.length, `page ${page} measurement count should match guide count`);
     assert.ok(overlay.guides.length > 0, `page ${page} should render at least one guide`);
@@ -36,11 +44,18 @@ for (let page = 15; page <= 53; page += 1) {
     for (let index = 0; index < overlay.guides.length; index += 1) {
       const guide = overlay.guides[index];
       const line = overlay.lines[index];
+      const terrainShape = geometry.terrainGeometry[guide.terrain];
       assert.ok(["left", "right", "top", "bottom"].includes(guide.edge), `page ${page} guide ${index} should use a battlefield edge`);
       assert.ok(Array.isArray(guide.anchor) && guide.anchor.length === 2, `page ${page} guide ${index} should resolve a terrain corner`);
       assert.ok(guide.anchor[0] >= 0 && guide.anchor[0] <= 60, `page ${page} guide ${index} x anchor should stay on the board`);
       assert.ok(guide.anchor[1] >= 0 && guide.anchor[1] <= 44, `page ${page} guide ${index} y anchor should stay on the board`);
       assert.deepEqual(line, [...guide.anchor, ...expectedEndpoint(guide)], `page ${page} guide ${index} line should terminate at its battlefield edge`);
+      assert.ok(terrainShape, `page ${page} guide ${index} should retain a terrain identity`);
+      assert.equal(
+        segmentCrossesTerrainInterior(guide.anchor, expectedEndpoint(guide), terrainShape),
+        false,
+        `page ${page} guide ${index} should not cross terrain ${guide.terrain}`
+      );
     }
   });
 }
