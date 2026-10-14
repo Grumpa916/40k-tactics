@@ -3,13 +3,14 @@ import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 // Terrain-placement transcription for the existing V2 battlefield geometry.
 // Source of truth: the official Warhammer 40,000 Event Companion PDF used by
 // this project. Printed values are copied from visible source dimensions; they
-// are never calculated from V2 geometry. Source anchors are the terrain-side
-// endpoints of those source dimensions after rotating the portrait battlefield
-// into V2's 60 x 44 landscape orientation.
+// are never calculated from V2 geometry.
 //
 // Pages 12-14 retain their previously approved mappings. Pages 15-18 were
-// re-transcribed directly from the PDF vector layer. Deployment-zone dimensions
-// are deliberately excluded: this module is for terrain placement only.
+// re-transcribed directly from the PDF vector layer. The PDF vector extraction
+// uses the opposite Y direction from V2's 60 x 44 battlefield coordinates, so
+// those guides are normalized once here by reflecting Y across the 44-inch
+// axis and swapping top/bottom edge references. Deployment-zone dimensions are
+// deliberately excluded: this module is for terrain placement only.
 const PAGE_12_GUIDES = Object.freeze([
   { value: '9"',  edge: "top",    terrain: "T4",       anchor: [20.6, 34.8], sourceAnchor: [20.60, 34.88] },
   { value: '5"',  edge: "top",    terrain: "T3",       anchor: [36.8, 39.0], sourceAnchor: [36.69, 38.97] },
@@ -104,6 +105,12 @@ const PAGE_14_SOURCE_GUIDES = Object.freeze([
   { value: '12"', edge: "bottom", sourceAnchor: [48.03, 12.00] }
 ]);
 
+function normalizePdfVectorGuide(guide) {
+  const [x, y] = guide.sourceAnchor;
+  const edge = guide.edge === "top" ? "bottom" : guide.edge === "bottom" ? "top" : guide.edge;
+  return Object.freeze({ ...guide, edge, sourceAnchor: [x, 44 - y] });
+}
+
 const PAGE_15_SOURCE_GUIDES = Object.freeze([
   { value: '18"', edge: "bottom", sourceAnchor: [54.02, 17.90] },
   { value: '5"', edge: "right", sourceAnchor: [55.20, 3.99] },
@@ -126,7 +133,7 @@ const PAGE_15_SOURCE_GUIDES = Object.freeze([
   { value: '15"', edge: "right", sourceAnchor: [44.99, 14.92] },
   { value: '15"', edge: "bottom", sourceAnchor: [44.99, 14.92] },
   { value: '17"', edge: "top", sourceAnchor: [24.28, 27.04] }
-]);
+].map(normalizePdfVectorGuide));
 
 const PAGE_16_SOURCE_GUIDES = Object.freeze([
   { value: '24.25"', edge: "right", sourceAnchor: [35.92, 17.03] },
@@ -148,7 +155,7 @@ const PAGE_16_SOURCE_GUIDES = Object.freeze([
   { value: '17"', edge: "top", sourceAnchor: [24.39, 27.05] },
   { value: '14"', edge: "bottom", sourceAnchor: [40.15, 14.01] },
   { value: '9"', edge: "right", sourceAnchor: [51.37, 26.93] }
-]);
+].map(normalizePdfVectorGuide));
 
 const PAGE_17_SOURCE_GUIDES = Object.freeze([
   { value: '24.25"', edge: "right", sourceAnchor: [35.75, 27.05] },
@@ -171,7 +178,7 @@ const PAGE_17_SOURCE_GUIDES = Object.freeze([
   { value: '19"', edge: "right", sourceAnchor: [41.13, 11.09] },
   { value: '5"', edge: "bottom", sourceAnchor: [32.01, 4.98] },
   { value: '4"', edge: "top", sourceAnchor: [46.33, 40.07] }
-]);
+].map(normalizePdfVectorGuide));
 
 const PAGE_18_SOURCE_GUIDES = Object.freeze([
   { value: '24.25"', edge: "right", sourceAnchor: [35.89, 26.98] },
@@ -190,7 +197,7 @@ const PAGE_18_SOURCE_GUIDES = Object.freeze([
   { value: '5"', edge: "right", sourceAnchor: [55.08, 6.96] },
   { value: '7"', edge: "bottom", sourceAnchor: [55.11, 6.96] },
   { value: '15"', edge: "right", sourceAnchor: [45.09, 13.98] }
-]);
+].map(normalizePdfVectorGuide));
 
 const MIRROR_EDGE = Object.freeze({ left: "right", right: "left", top: "bottom", bottom: "top" });
 
