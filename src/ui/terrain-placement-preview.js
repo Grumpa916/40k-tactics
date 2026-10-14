@@ -134,17 +134,40 @@ function addVerifiedTerrainGuides(page, layout, mount) {
     );
   });
 
-  overlay.measurements.forEach((measurement) => {
-    const oriented = orientEventCompanionPoint(measurement);
-    if (!oriented) return;
-    parts.push(
-      '<text class="battlefield-map__dimension-text" data-terrain="' + escapeXml(measurement.terrain ?? "") + '" data-terrain-point="' + escapeXml((measurement.terrain ?? "") + ':' + (measurement.point ?? "")) + '" x="' + px(oriented.x) + '" y="' + py(oriented.y) + '" text-anchor="middle">' + escapeXml(measurement.value) + '</text>'
-    );
-  });
+  if (Number(page) <= 14) {
+    overlay.measurements.forEach((measurement) => {
+      const oriented = orientEventCompanionPoint(measurement);
+      if (!oriented) return;
+      parts.push(
+        '<text class="battlefield-map__dimension-text" data-terrain="' + escapeXml(measurement.terrain ?? "") + '" data-terrain-point="' + escapeXml((measurement.terrain ?? "") + ':' + (measurement.point ?? "")) + '" x="' + px(oriented.x) + '" y="' + py(oriented.y) + '" text-anchor="middle">' + escapeXml(measurement.value) + '</text>'
+      );
+    });
+  } else {
+    overlay.callouts.forEach((callout) => {
+      const orientedCallout = orientEventCompanionPoint({ x: callout.x, y: callout.y });
+      const orientedAnchor = orientEventCompanionPoint({ x: callout.anchorX, y: callout.anchorY });
+      if (!orientedCallout || !orientedAnchor) return;
+
+      const x = px(orientedCallout.x);
+      const y = py(orientedCallout.y);
+      const anchorX = px(orientedAnchor.x);
+      const anchorY = py(orientedAnchor.y);
+      const boxWidth = 11.5;
+      const boxHeight = 6.5;
+      parts.push(
+        '<g class="terrain-point-callout" data-terrain="' + escapeXml(callout.terrain) + '" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '">' +
+          '<line x1="' + anchorX + '" y1="' + anchorY + '" x2="' + x + '" y2="' + y + '" stroke="#b8c5cf" stroke-width=".7" stroke-dasharray="2 1.5" vector-effect="non-scaling-stroke"></line>' +
+          '<rect x="' + (x - boxWidth / 2) + '" y="' + (y - boxHeight / 2) + '" width="' + boxWidth + '" height="' + boxHeight + '" rx="1.1" fill="#101820" fill-opacity=".94" stroke="#f6d783" stroke-width=".7" vector-effect="non-scaling-stroke"></rect>' +
+          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y - 0.75) + '" text-anchor="middle">' + escapeXml(callout.horizontalText) + '</text>' +
+          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y + 1.7) + '" text-anchor="middle">' + escapeXml(callout.verticalText) + '</text>' +
+        '</g>'
+      );
+    });
+  }
 
   board.insertAdjacentHTML(
     "beforeend",
-    '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Verified Event Companion terrain placement guides">' + parts.join("") + '</svg>'
+    '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Complete terrain placement guides: two points and two perpendicular measurements per terrain shape">' + parts.join("") + '</svg>'
   );
   return overlay;
 }
@@ -159,11 +182,12 @@ function enableTerrainFocus(page, mount, overlay) {
   const guideLines = [...board.querySelectorAll(".battlefield-map__dimension-line[data-terrain]")];
   const anchors = [...board.querySelectorAll(".battlefield-map__dimension-anchor[data-terrain]")];
   const labels = [...board.querySelectorAll(".battlefield-map__dimension-text[data-terrain]")];
+  const callouts = [...board.querySelectorAll(".terrain-point-callout[data-terrain]")];
   if (!terrainShapes.length) return;
 
   const controls = document.createElement("div");
   controls.className = "terrain-focus-controls";
-  controls.innerHTML = '<span data-terrain-focus-status>Tap a terrain footprint to show its official placement guides.</span><button type="button" data-terrain-show-all>Show all</button>';
+  controls.innerHTML = '<span data-terrain-focus-status>Tap a terrain footprint to show its four placement measurements.</span><button type="button" data-terrain-show-all>Show all</button>';
   mapRoot.insertBefore(controls, board);
 
   const focusStatus = controls.querySelector("[data-terrain-focus-status]");
@@ -176,7 +200,7 @@ function enableTerrainFocus(page, mount, overlay) {
   }
 
   function applyFocus() {
-    [...guideLines, ...labels].forEach((element) => {
+    [...guideLines, ...labels, ...callouts].forEach((element) => {
       element.style.display = visibleFor(element) ? "" : "none";
     });
     anchors.forEach((element) => {
@@ -189,13 +213,13 @@ function enableTerrainFocus(page, mount, overlay) {
     });
 
     if (showAll) {
-      focusStatus.textContent = "Showing all verified terrain placement guides.";
+      focusStatus.textContent = "Showing all terrain placement measurements.";
       showAllButton.textContent = "Hide all";
     } else if (focusedTerrain) {
-      focusStatus.textContent = "Showing official placement guides for " + focusedTerrain + ". Tap another terrain footprint to switch.";
+      focusStatus.textContent = "Showing four placement measurements for " + focusedTerrain + ". Tap another terrain footprint to switch.";
       showAllButton.textContent = "Show all";
     } else {
-      focusStatus.textContent = "Tap a terrain footprint to show its official placement guides.";
+      focusStatus.textContent = "Tap a terrain footprint to show its four placement measurements.";
       showAllButton.textContent = "Show all";
     }
   }
@@ -210,7 +234,7 @@ function enableTerrainFocus(page, mount, overlay) {
     const terrainName = shape.dataset.terrain;
     shape.setAttribute("role", "button");
     shape.setAttribute("tabindex", "0");
-    shape.setAttribute("aria-label", "Show placement guides for " + terrainName);
+    shape.setAttribute("aria-label", "Show four placement measurements for " + terrainName);
     shape.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -266,7 +290,7 @@ function renderPage(page, mount, status) {
   enableTerrainFocus(page, mount, overlay);
 
   const guideStatus = overlay?.lines?.length
-    ? " · PDF-backed terrain guides verified"
+    ? " · complete terrain placement reference"
     : " · terrain guides not yet source-verified";
   status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page + " · blue side at bottom" + guideStatus;
 }
