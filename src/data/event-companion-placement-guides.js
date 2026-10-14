@@ -1,4 +1,5 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
+import { getEventCompanionExtendedSourceGuides } from "./event-companion-placement-source-guides-extended.js";
 
 // Terrain-placement transcription for the existing V2 battlefield geometry.
 //
@@ -197,7 +198,7 @@ function dedupeGuides(guides) {
 }
 
 function resolveGenericGuides(page) {
-  const sourceGuides = GENERIC_SOURCE_GUIDES[String(page)] ?? [];
+  const sourceGuides = GENERIC_SOURCE_GUIDES[String(page)] ?? getEventCompanionExtendedSourceGuides(page);
   const geometry = geometryForPage(page);
   if (!sourceGuides.length || !geometry?.terrainGeometry) return [];
   const resolved = [];
