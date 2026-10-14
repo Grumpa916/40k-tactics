@@ -15,23 +15,5 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Terrain path safety tests
-        run: node --test --test-name-pattern="terrain path safety|outward perpendicular" tests/ui/terrain-placement-guide-model.test.js
-      - name: Page 15 terrain guide model
-        if: always()
-        run: node --test --test-name-pattern="page 15" tests/ui/terrain-placement-guide-model.test.js
-      - name: Page 16 terrain guide model
-        if: always()
-        run: node --test --test-name-pattern="page 16" tests/ui/terrain-placement-guide-model.test.js
-      - name: Page 17 terrain guide model
-        if: always()
-        run: node --test --test-name-pattern="page 17" tests/ui/terrain-placement-guide-model.test.js
-      - name: Page 18 terrain guide model
-        if: always()
-        run: node --test --test-name-pattern="page 18" tests/ui/terrain-placement-guide-model.test.js
-      - name: Unverified-range terrain guide model
-        if: always()
-        run: node --test --test-name-pattern="pages beyond" tests/ui/terrain-placement-guide-model.test.js
-      - name: Full suite
-        if: always()
+      - name: Run tests
         run: npm test
