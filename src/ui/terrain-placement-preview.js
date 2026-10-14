@@ -62,8 +62,19 @@ function addCompleteTerrainGuides(page, layout, mount) {
     });
   } else {
     overlay.callouts.forEach((callout) => {
+      const x = px(callout.x);
+      const y = py(callout.y);
+      const anchorX = px(callout.anchorX);
+      const anchorY = py(callout.anchorY);
+      const boxWidth = 11.5;
+      const boxHeight = 6.5;
       parts.push(
-        '<text class="battlefield-map__dimension-text terrain-point-callout" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '" x="' + px(callout.x) + '" y="' + py(callout.y) + '" text-anchor="middle">' + escapeXml(callout.text) + '</text>'
+        '<g class="terrain-point-callout" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '">' +
+          '<line x1="' + anchorX + '" y1="' + anchorY + '" x2="' + x + '" y2="' + y + '" stroke="#b8c5cf" stroke-width=".7" stroke-dasharray="2 1.5" vector-effect="non-scaling-stroke"></line>' +
+          '<rect x="' + (x - boxWidth / 2) + '" y="' + (y - boxHeight / 2) + '" width="' + boxWidth + '" height="' + boxHeight + '" rx="1.1" fill="#101820" fill-opacity=".94" stroke="#f6d783" stroke-width=".7" vector-effect="non-scaling-stroke"></rect>' +
+          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y - 0.75) + '" text-anchor="middle">' + escapeXml(callout.horizontalText) + '</text>' +
+          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y + 1.7) + '" text-anchor="middle">' + escapeXml(callout.verticalText) + '</text>' +
+        '</g>'
       );
     });
   }
