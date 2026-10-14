@@ -1,5 +1,6 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 import { getEventCompanionExtendedSourceGuides } from "./event-companion-placement-source-guides-extended.js";
+import { nearestClearTerrainVertex } from "./terrain-guide-geometry.js";
 
 // Terrain-placement transcription for the existing V2 battlefield geometry.
 //
@@ -166,7 +167,7 @@ function nearestShapeVertex(sourceAnchor, shape) {
   return bestAnchor;
 }
 
-function snapToTerrainVertex(sourceAnchor, geometry) {
+function snapToTerrainVertex(sourceAnchor, geometry, edge, requireClearEdge = false) {
   let bestTerrain = null;
   let bestShape = null;
   let bestBoundaryDistance = Infinity;
@@ -179,7 +180,9 @@ function snapToTerrainVertex(sourceAnchor, geometry) {
     }
   }
   if (!bestShape) return null;
-  const anchor = nearestShapeVertex(sourceAnchor, bestShape);
+  const anchor = requireClearEdge
+    ? nearestClearTerrainVertex(sourceAnchor, bestShape, edge)
+    : nearestShapeVertex(sourceAnchor, bestShape);
   return anchor ? { terrain: bestTerrain, anchor } : null;
 }
 
@@ -202,20 +205,22 @@ function resolveGenericGuides(page) {
   const geometry = geometryForPage(page);
   if (!sourceGuides.length || !geometry?.terrainGeometry) return [];
   const resolved = [];
+  const requireClearEdge = Number(page) >= 15;
 
   for (const guide of sourceGuides) {
-    const snapped = snapToTerrainVertex(guide.sourceAnchor, geometry);
+    const snapped = snapToTerrainVertex(guide.sourceAnchor, geometry, guide.edge, requireClearEdge);
     if (snapped) resolved.push({ ...guide, ...snapped });
   }
 
   for (const guide of sourceGuides) {
     const mirroredSourceAnchor = [60 - guide.sourceAnchor[0], 44 - guide.sourceAnchor[1]];
-    const snapped = snapToTerrainVertex(mirroredSourceAnchor, geometry);
+    const mirroredEdge = MIRROR_EDGE[guide.edge];
+    const snapped = snapToTerrainVertex(mirroredSourceAnchor, geometry, mirroredEdge, requireClearEdge);
     if (!snapped) continue;
     resolved.push({
       ...guide,
       sourceAnchor: mirroredSourceAnchor,
-      edge: MIRROR_EDGE[guide.edge],
+      edge: mirroredEdge,
       ...snapped,
       mirrored: true
     });
