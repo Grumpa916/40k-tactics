@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
 import {
   getEventCompanionPlacementOverlay,
   PAGE_12_GUIDES,
@@ -8,6 +9,10 @@ import {
   PAGE_13_SOURCE_GUIDES,
   PAGE_14_SOURCE_GUIDES
 } from "../../src/data/event-companion-placement-guides.js";
+import {
+  battlefieldEdgeEndpoint,
+  segmentCrossesTerrainInterior
+} from "../../src/data/terrain-guide-geometry.js";
 
 test("page 12 terrain placement transcription keeps the 18 official terrain dimensions", () => {
   assert.equal(PAGE_12_GUIDES.length, 18);
@@ -71,6 +76,26 @@ test("pages 13 and 14 preserve their official source values and render only edge
           : guide.edge === "top" ? [x, 44]
             : [x, 0];
       assert.deepEqual(line, [x, y, ...endpoint]);
+    }
+  }
+});
+
+test("pages 15 through 53 route every official guide away from its terrain footprint", () => {
+  for (let page = 15; page <= 53; page += 1) {
+    const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((candidate) => Number(candidate?.page) === page);
+    const overlay = getEventCompanionPlacementOverlay(page);
+    assert.ok(layout?.terrainGeometry, `page ${page} must have terrain geometry`);
+    assert.ok(overlay?.guides?.length, `page ${page} must have placement guides`);
+
+    for (const guide of overlay.guides) {
+      const shape = layout.terrainGeometry[guide.terrain];
+      assert.ok(shape, `page ${page} guide ${guide.value} must resolve to terrain ${guide.terrain}`);
+      const endpoint = battlefieldEdgeEndpoint(guide.anchor, guide.edge);
+      assert.equal(
+        segmentCrossesTerrainInterior(guide.anchor, endpoint, shape),
+        false,
+        `page ${page} ${guide.terrain} ${guide.value} ${guide.edge} must leave the terrain cleanly`
+      );
     }
   }
 });
