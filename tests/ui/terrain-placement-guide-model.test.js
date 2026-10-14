@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 
 import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
 import { EVENT_COMPANION_PAGE_MEASUREMENT_VALUES } from "../../src/data/event-companion-page-measurement-values.js";
+import { getEventCompanionExtendedSourceGuides } from "../../src/data/event-companion-placement-source-guides-extended.js";
 import {
   buildCompleteTerrainPlacementGuides,
   buildCompleteTerrainPlacementOverlay,
+  terrainGuideCrossesOwnTerrain,
   terrainGuideEndpoint
 } from "../../src/ui/terrain-placement-guide-model.js";
 
@@ -45,10 +47,13 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
         assert.ok(point.edges.some(isVertical), `${terrain} ${point.point} has a vertical edge measurement`);
 
         if (Number(layout.page) >= 15) {
-          const expectedHorizontal = point.anchor[0] <= 30 ? "left" : "right";
-          const expectedVertical = point.anchor[1] <= 22 ? "bottom" : "top";
-          assert.ok(point.edges.includes(expectedHorizontal), `${terrain} ${point.point} uses the nearest horizontal battlefield edge`);
-          assert.ok(point.edges.includes(expectedVertical), `${terrain} ${point.point} uses the nearest vertical battlefield edge`);
+          for (const edge of point.edges) {
+            assert.equal(
+              terrainGuideCrossesOwnTerrain(layout, { terrain, anchor: point.anchor, edge }),
+              false,
+              `${terrain} ${point.point} ${edge} guide does not pass through its own terrain footprint`
+            );
+          }
 
           const callout = overlay.callouts.find((item) => item.terrain === terrain && item.point === point.point);
           assert.ok(callout, `${terrain} ${point.point} has one paired callout`);
@@ -73,10 +78,25 @@ for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) =
       assert.deepEqual(overlay.lines[index], [x, y, ...terrainGuideEndpoint(guide.anchor, guide.edge)]);
       assert.match(guide.value, INCH_VALUE);
       if (Number(layout.page) >= 15) {
+        assert.equal(
+          terrainGuideCrossesOwnTerrain(layout, guide),
+          false,
+          `page ${layout.page} ${guide.terrain} ${guide.point} ${guide.edge} guide is obstacle-safe`
+        );
         assert.ok(
           (EVENT_COMPANION_PAGE_MEASUREMENT_VALUES[Number(layout.page)] ?? []).includes(guide.value),
           `page ${layout.page} uses only values printed in the Event Companion`
         );
+
+        const edgeValues = getEventCompanionExtendedSourceGuides(layout.page)
+          .filter((sourceGuide) => sourceGuide.edge === guide.edge)
+          .map((sourceGuide) => sourceGuide.value);
+        if (edgeValues.length) {
+          assert.ok(
+            edgeValues.includes(guide.value),
+            `page ${layout.page} ${guide.edge} guide uses a value printed for that battlefield edge`
+          );
+        }
       }
     });
   });
