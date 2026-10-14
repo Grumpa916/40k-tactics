@@ -182,7 +182,7 @@ test("live game status is not invented when there is no active battle", () => {
   assert.doesNotMatch(html, /data-map-game-status/);
 });
 
-test("Layout A terrain setup renders supplied Event Companion labels and source guide lines", () => {
+test("official terrain overlay overrides caller fallback labels and lines when page data exists", () => {
   const html = renderBattlefieldMap({
     battlefieldMap: { missionSetup: {
       myDisposition: "Purge the Foe",
@@ -202,8 +202,10 @@ test("Layout A terrain setup renders supplied Event Companion labels and source 
 
   assert.match(html, /Terrain placement reference/);
   assert.match(html, /Event Companion layout A · p\. 27/);
-  assert.match(html, />999&quot;<\/text>/);
+  assert.match(html, /aria-label="Event Companion terrain placement references"/);
   assert.match(html, /<line class="battlefield-map__dimension-line" data-source-line="true"/);
+  assert.match(html, /data-placement-anchor=/);
+  assert.doesNotMatch(html, />999&quot;<\/text>/);
   assert.doesNotMatch(html, /data-terrain-corner=/);
   assert.doesNotMatch(html, /data-edge-distance=/);
 });
@@ -249,7 +251,7 @@ test("deployment map shows both armies while excluding declared reserves and des
 
 
 
-test("terrain setup displays stored Event Companion labels without recalculating distances", () => {
+test("official terrain overlay takes precedence over stored fallback measurements", () => {
   const state = {
     units: [],
     battlefieldMap: { missionSetup: {
@@ -272,14 +274,12 @@ test("terrain setup displays stored Event Companion labels without recalculating
   });
 
   assert.match(html, /Terrain placement reference/);
-  assert.match(html, /aria-label="Original Event Companion terrain measurements"/);
-  assert.match(html, /data-source-x="-3.45" data-source-y="9.16"/);
-  assert.match(html, />26&quot;<\/text>/);
-  assert.match(html, />5&quot;<\/text>/);
-  assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
+  assert.match(html, /aria-label="Event Companion terrain placement references"/);
+  assert.match(html, /data-placement-anchor=/);
+  assert.doesNotMatch(html, /data-source-x="-3.45" data-source-y="9.16"/);
+  assert.match(html, /class="battlefield-map__dimension-line" data-source-line="true"/);
   assert.doesNotMatch(html, /data-edge-distance=/);
   assert.doesNotMatch(html, /data-terrain-corner=/);
-  assert.match(html, /class="battlefield-map__dimension-line" data-source-line="true"/);
   assert.doesNotMatch(html, /Opponent edge · Y=44″/);
   assert.doesNotMatch(html, /Your edge · Y=0″/);
   assert.doesNotMatch(html, /class="battlefield-map__ruler/);
