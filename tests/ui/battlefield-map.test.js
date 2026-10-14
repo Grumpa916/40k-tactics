@@ -59,10 +59,49 @@ test("missing positions remain visibly unrecorded and objectives require explici
   assert.match(html, /not inferred by this reference grid/);
 });
 
+
+test("planning and deployment maps omit coordinate measurements", () => {
+  const state = {
+    units: [{ id: "u1", ownerId: "p1", name: "Unit", status: "deployed" }],
+    battlefieldMap: { deploymentPlan: {}, actualDeployment: {} }
+  };
+  for (const mode of ["planning", "deployment"]) {
+    const html = renderBattlefieldMap(state, { mode, perspectivePlayerId: "p1" });
+    assert.doesNotMatch(html, /60″ × 44″ reference grid/);
+    assert.doesNotMatch(html, /class="battlefield-map__edge-dimension-line"/);
+    assert.doesNotMatch(html, /Y=44″|Y=0″/);
+    assert.doesNotMatch(html, /60 by 44 inch reference board/);
+  }
+});
+
+test("live map retains coordinate reference labels", () => {
+  const html = renderBattlefieldMap({ units: [] }, { mode: "live" });
+  assert.match(html, /60″ × 44″ reference grid/);
+  assert.match(html, /Y=44″/);
+  assert.match(html, /Y=0″/);
+});
+
 test("unknown map mode is rejected", () => {
   assert.throws(() => renderBattlefieldMap({}, { mode: "terrain" }), /Unknown battlefield map mode/);
 });
 
+test("battlefield overview shows verified terrain footprints without invented measurement callouts", () => {
+  const html = renderBattlefieldMap({
+    units: [{ id: "unit-on-setup-map", ownerId: "p1", name: "Should not appear", status: "deployed", position: { x: 20, y: 20 } }],
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Take and Hold",
+      layout: "A"
+    }}
+  }, { mode: "planning", perspectivePlayerId: "p1", showUnits: false });
+
+  assert.match(html, /data-terrain="T1"/);
+  assert.match(html, /official Event Companion diagram for exact terrain placement/);
+  assert.doesNotMatch(html, /data-table-edge-dimension/);
+  assert.doesNotMatch(html, /data-table-edge-measurement/);
+  assert.doesNotMatch(html, /data-distance-inches/);
+  assert.doesNotMatch(html, /data-map-unit-id="unit-on-setup-map"/);
+});
 test("live map follows current model positions instead of stale deployment-level position", () => {
   const html = renderBattlefieldMap({
     units: [{
@@ -141,4 +180,135 @@ test("live map displays recorded objective control and current game status", () 
 test("live game status is not invented when there is no active battle", () => {
   const html = renderBattlefieldMap({ units: [] }, { mode: "live" });
   assert.doesNotMatch(html, /data-map-game-status/);
+});
+
+test("official terrain overlay overrides caller fallback labels and lines when page data exists", () => {
+  const html = renderBattlefieldMap({
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Purge the Foe",
+      opponentDisposition: "Disruption",
+      layout: "A"
+    }},
+    units: []
+  }, {
+    mode: "planning",
+    showUnits: false,
+    showMeasurements: false,
+    showTerrainEdgeMeasurements: true,
+    terrainMeasurements: [{ value: '999"', x: 10, y: 10 }],
+    terrainMeasurementLines: [[0, 10, 10, 10]],
+    mapLabel: "Terrain placement reference"
+  });
+
+  assert.match(html, /Terrain placement reference/);
+  assert.match(html, /Event Companion layout A · p\. 27/);
+  assert.match(html, /aria-label="Event Companion terrain placement references"/);
+  assert.match(html, /<line class="battlefield-map__dimension-line" data-source-line="true"/);
+  assert.match(html, /data-placement-anchor=/);
+  assert.doesNotMatch(html, />999&quot;<\/text>/);
+  assert.doesNotMatch(html, /data-terrain-corner=/);
+  assert.doesNotMatch(html, /data-edge-distance=/);
+});
+
+test("planning and deployment maps stage unplaced units as selectable markers", () => {
+  const state = {
+    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
+    units: [
+      { id: "friendly", ownerId: "p1", name: "Friendly Unit", status: "reserves" },
+      { id: "enemy", ownerId: "p2", name: "Opponent Unit", status: "reserves" },
+      { id: "reserve", ownerId: "p1", name: "Declared Reserve", status: "reserves" }
+    ],
+    battlefieldMap: { deploymentPlan: {}, actualDeployment: {}, declaredReserves: { reserve: true } }
+  };
+  const planning = renderBattlefieldMap(state, { mode: "planning", perspectivePlayerId: "p1", selectedUnitId: "friendly" });
+  assert.match(planning, /data-map-unit-id="friendly"/);
+  assert.match(planning, /data-map-unit-unplaced="true"/);
+  assert.match(planning, /is-selected/);
+  assert.doesNotMatch(planning, /data-map-unit-id="enemy"/);
+
+  const deployment = renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: "p1" });
+  assert.match(deployment, /data-map-unit-id="friendly"/);
+  assert.match(deployment, /data-map-unit-id="enemy"/);
+  assert.doesNotMatch(deployment, /data-map-unit-id="reserve"/);
+});
+
+test("deployment map shows both armies while excluding declared reserves and destroyed units", () => {
+  const html=renderBattlefieldMap({
+    players:[{id:"p1",name:"You"},{id:"p2",name:"Opponent"}],
+    units:[
+      {id:"friendly",ownerId:"p1",name:"Friendly",status:"deployed",position:{x:9,y:8}},
+      {id:"opponent",ownerId:"p2",name:"Opponent",status:"deployed",position:{x:46,y:30}},
+      {id:"reserve",ownerId:"p1",name:"Reserve",status:"reserves"},
+      {id:"destroyed",ownerId:"p2",name:"Destroyed",status:"destroyed"}
+    ],
+    battlefieldMap:{actualDeployment:{},declaredReserves:{reserve:true}}
+  },{mode:"deployment",perspectivePlayerId:"p1"});
+  assert.match(html,/data-map-unit-id="friendly"/);
+  assert.match(html,/data-map-unit-id="opponent"/);
+  assert.doesNotMatch(html,/data-map-unit-id="reserve"/);
+  assert.doesNotMatch(html,/data-map-unit-id="destroyed"/);
+});
+
+
+
+test("official terrain overlay takes precedence over stored fallback measurements", () => {
+  const state = {
+    units: [],
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Reconnaissance",
+      layout: "A"
+    }}
+  };
+  const html = renderBattlefieldMap(state, {
+    mode: "planning",
+    showUnits: false,
+    showMeasurements: false,
+    showTerrainEdgeMeasurements: true,
+    terrainMeasurements: [
+      { value: '26"', x: -3.45, y: 9.16 },
+      { value: '5"', x: 12, y: 3 }
+    ],
+    terrainMeasurementLines: [[0, 5, 0, 20], [12, 3, 25, 3]],
+    mapLabel: "Terrain placement reference"
+  });
+
+  assert.match(html, /Terrain placement reference/);
+  assert.match(html, /aria-label="Event Companion terrain placement references"/);
+  assert.match(html, /data-placement-anchor=/);
+  assert.doesNotMatch(html, /data-source-x="-3.45" data-source-y="9.16"/);
+  assert.match(html, /class="battlefield-map__dimension-line" data-source-line="true"/);
+  assert.doesNotMatch(html, /data-edge-distance=/);
+  assert.doesNotMatch(html, /data-terrain-corner=/);
+  assert.doesNotMatch(html, /Opponent edge · Y=44″/);
+  assert.doesNotMatch(html, /Your edge · Y=0″/);
+  assert.doesNotMatch(html, /class="battlefield-map__ruler/);
+  assert.doesNotMatch(html, /60″ × 44″ reference grid/);
+});
+
+test("terrain measurement labels retain source values and positions only", () => {
+  const state = {
+    units: [],
+    battlefieldMap: { missionSetup: {
+      myDisposition: "Take and Hold",
+      opponentDisposition: "Take and Hold",
+      layout: "A"
+    }}
+  };
+  const html = renderBattlefieldMap(state, {
+    mode: "planning",
+    showUnits: false,
+    showTerrainEdgeMeasurements: true,
+    terrainMeasurements: [
+      { value: '12"', x: 20, y: 15 },
+      { value: '7"', x: 30, y: 20 }
+    ]
+  });
+  assert.match(html, />12&quot;<\/text>/);
+  assert.match(html, />7&quot;<\/text>/);
+  assert.match(html, /data-source-x="20" data-source-y="15"/);
+  assert.match(html, /data-source-x="30" data-source-y="20"/);
+  assert.equal((html.match(/class="battlefield-map__dimension-text"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /data-edge-distance=/);
+  assert.doesNotMatch(html, /<line class="battlefield-map__dimension-line"/);
 });
