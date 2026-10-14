@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 import {
   getEventCompanionPlacementOverlay,
   PAGE_12_GUIDES,
-  PAGE_12_COMPLETE_GUIDES
+  PAGE_12_COMPLETE_GUIDES,
+  PAGE_13_SOURCE_GUIDES,
+  PAGE_14_SOURCE_GUIDES
 } from "../../src/data/event-companion-placement-guides.js";
 
 test("page 12 terrain placement transcription keeps the 18 official terrain dimensions", () => {
@@ -37,5 +39,42 @@ test("page 12 guides use stored official values and V2 anchor relationships with
   assert.ok(overlay.guides.every((guide) => ["left", "right", "top", "bottom"].includes(guide.edge)));
   assert.ok(overlay.guides.every((guide) => Array.isArray(guide.anchor) && guide.anchor.length === 2));
   assert.ok(overlay.guides.every((guide) => typeof guide.value === "string" && guide.value.endsWith('"')));
-  assert.equal(getEventCompanionPlacementOverlay(13), null);
+});
+
+test("pages 13 and 14 preserve their official source values and render only edge-to-corner guides", () => {
+  assert.deepEqual(PAGE_13_SOURCE_GUIDES.map((guide) => guide.value), [
+    '4"', '4"', '5"', '5"', '9"', '22"', '7"', '16"', '4"', '26"',
+    '5"', '18"', '21"', '15"', '10"', '11"', '5"', '15"', '18"', '20"'
+  ]);
+  assert.deepEqual(PAGE_14_SOURCE_GUIDES.map((guide) => guide.value), [
+    '19"', '4"', '27"', '15"', '24"', '8"', '7"', '5"', '8"', '28"',
+    '2"', '2"', '7"', '17"', '16"', '15"', '5"', '12"'
+  ]);
+
+  for (const page of [13, 14]) {
+    const overlay = getEventCompanionPlacementOverlay(page);
+    assert.ok(overlay);
+    assert.ok(overlay.guides.length > 0);
+    assert.equal(overlay.lines.length, overlay.guides.length);
+    assert.equal(overlay.measurements.length, overlay.guides.length);
+    assert.ok(overlay.guides.every((guide) => ["left", "right", "top", "bottom"].includes(guide.edge)));
+    assert.ok(overlay.guides.every((guide) => Array.isArray(guide.anchor) && guide.anchor.length === 2));
+    assert.ok(overlay.guides.every((guide) => guide.anchor[0] >= 0 && guide.anchor[0] <= 60 && guide.anchor[1] >= 0 && guide.anchor[1] <= 44));
+    assert.ok(overlay.guides.every((guide) => typeof guide.value === "string" && guide.value.endsWith('"')));
+
+    for (let index = 0; index < overlay.guides.length; index += 1) {
+      const guide = overlay.guides[index];
+      const line = overlay.lines[index];
+      const [x, y] = guide.anchor;
+      const endpoint = guide.edge === "left" ? [0, y]
+        : guide.edge === "right" ? [60, y]
+          : guide.edge === "top" ? [x, 44]
+            : [x, 0];
+      assert.deepEqual(line, [x, y, ...endpoint]);
+    }
+  }
+});
+
+test("unconverted terrain pages remain untouched", () => {
+  assert.equal(getEventCompanionPlacementOverlay(15), null);
 });
