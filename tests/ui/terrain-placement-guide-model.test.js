@@ -5,6 +5,7 @@ import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-
 import { getEventCompanionPlacementOverlay } from "../../src/data/event-companion-placement-guides.js";
 import { getEventCompanionPlacementGuideCorrections } from "../../src/data/event-companion-placement-guide-corrections.js";
 import {
+  buildCanonicalTerrainPlacementOverlay,
   buildCompleteTerrainPlacementOverlay,
   terrainGuideEndpoint
 } from "../../src/ui/terrain-placement-guide-model.js";
@@ -124,12 +125,16 @@ for (const page of VERIFIED_SOURCE_PAGES) {
         "Page 18 preserves every official printed value and PDF source anchor while rotating its V2 terrain attachment and battlefield edge together"
       );
     } else if (page === 19) {
-      assert.equal(overlay.guides.length, expected.length, "Page 19 canonical pass adds no mirror or synthetic guides");
-      assert.equal(overlay.guides.some((guide) => guide.mirrored), false, "Page 19 mirroring remains disabled until source verification");
+      const official = overlay.guides.filter((guide) => !guide.mirrored);
+      const mirrored = overlay.guides.filter((guide) => guide.mirrored);
+      assert.equal(official.length, expected.length, "Page 19 retains all 20 approved canonical source guides");
+      assert.equal(mirrored.length, expected.length, "Page 19 mirrors each approved source guide once onto its clear counterpart");
+      assert.equal(overlay.lines.length, overlay.guides.length, "one rendered line per canonical or mirrored Page 19 guide");
+      assert.equal(overlay.measurements.length, overlay.guides.length, "one displayed value per canonical or mirrored Page 19 guide");
       assert.deepEqual(
-        overlay.guides.map(sourceIdentity).sort(),
+        official.map(sourceIdentity).sort(),
         canonical.guides.map(sourceIdentity).sort(),
-        "Page 19 preserves every PDF-transcribed value and source anchor while rotating its V2 terrain attachment and battlefield edge together"
+        "Page 19 mirroring does not alter any PDF-transcribed value or source anchor in the canonical layer"
       );
     } else {
       assert.equal(overlay.guides.length, expected.length, "no synthetic guides are added");
@@ -222,9 +227,9 @@ test("page 18 keeps the official values intact while mirror copies reuse them un
   mirroredValues.forEach((value) => assert.ok(officialValues.includes(value), `${value} mirror value already exists in the approved layer`));
 });
 
-test("page 19 source layer contains 20 terrain measurements and excludes both 12-inch deployment-zone dimensions", () => {
+test("page 19 canonical source layer contains 20 terrain measurements and excludes both 12-inch deployment-zone dimensions", () => {
   const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 19);
-  const overlay = buildCompleteTerrainPlacementOverlay(layout);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
   assert.equal(overlay.guides.length, 20);
   assert.equal(overlay.guides.filter((guide) => guide.value === '12"').length, 0);
   assert.equal(overlay.guides.some((guide) => guide.mirrored), false);
@@ -232,7 +237,7 @@ test("page 19 source layer contains 20 terrain measurements and excludes both 12
 
 test("page 19 rotates representative PDF source anchors and arrows together onto V2 terrain corners", () => {
   const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 19);
-  const overlay = buildCompleteTerrainPlacementOverlay(layout);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
   const findBySource = (value, sourceAnchor) => overlay.guides.find((guide) => (
     guide.value === value
     && guide.sourceAnchor?.[0] === sourceAnchor[0]
@@ -255,6 +260,36 @@ test("page 19 rotates representative PDF source anchors and arrows together onto
     ((guide) => ({ terrain: guide?.terrain, anchor: guide?.anchor, edge: guide?.edge }))(findBySource('7"', [7.02, 39.35])),
     { terrain: "T7", anchor: [53, 4.5], edge: "right" }
   );
+});
+
+test("page 19 mirror pass reuses every canonical value on the eight unmeasured rotational counterparts", () => {
+  const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 19);
+  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
+  const complete = buildCompleteTerrainPlacementOverlay(layout);
+  const mirrored = complete.guides.filter((guide) => guide.mirrored);
+  const opposite = { left: "right", right: "left", top: "bottom", bottom: "top" };
+
+  assert.equal(canonical.guides.length, 20);
+  assert.equal(mirrored.length, 20);
+  assert.equal(complete.guides.length, 40);
+  assert.equal(complete.guides.filter((guide) => guide.value === '12"').length, 0, "deployment-zone depth remains excluded from both layers");
+
+  const coveredTerrain = new Set(complete.guides.map((guide) => guide.terrain));
+  for (let index = 1; index <= 16; index += 1) {
+    assert.ok(coveredTerrain.has(`T${index}`), `T${index} receives at least one canonical or mirrored placement guide`);
+  }
+
+  for (const copy of mirrored) {
+    const source = canonical.guides.find((guide) => (
+      guide.terrain === copy.mirroredFromTerrain
+      && guide.value === copy.value
+      && guide.anchor[0] === copy.mirroredFromAnchor?.[0]
+      && guide.anchor[1] === copy.mirroredFromAnchor?.[1]
+    ));
+    assert.ok(source, `${copy.terrain} ${copy.value} maps back to an approved canonical Page 19 guide`);
+    assert.equal(copy.value, source.value, "mirror augmentation never changes the approved distance value");
+    assert.equal(copy.edge, opposite[source.edge], "mirror arrow reverses with the 180-degree terrain counterpart");
+  }
 });
 
 test("pages beyond the verified range do not masquerade as canonical terrain guides", () => {
