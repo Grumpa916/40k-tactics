@@ -70,13 +70,15 @@ export const PAGE_22_SOURCE_GUIDES = Object.freeze([
   { value: '12"', edge: "top", sourceAnchor: [33.01, 31.93] },
   { value: '12"', edge: "bottom", sourceAnchor: [40.08, 12.01] },
   { value: '6"', edge: "top", sourceAnchor: [53.07, 37.99] },
-  { value: '23"', edge: "right", sourceAnchor: [36.96, 40.06] }
+  { value: '23"', edge: "right", sourceAnchor: [36.96, 40.06] },
+  { value: '15"', edge: "right", sourceAnchor: [45.10, 11.93] },
+  { value: '15"', edge: "right", sourceAnchor: [45.10, 22.00] }
 ]);
 
-// Page 22 prints five deployment-zone dimensions that are not terrain-placement
-// measurements: the two 18-inch deployment depths, two 15-inch dimensions for
-// the lower central deployment shape, and its separate 12-inch horizontal
-// offset. Those five values are deliberately excluded from this source layer.
+// Page 22's two printed 15-inch lines begin at the lower central terrain
+// footprint and run toward the battlefield edge, so they are terrain-placement
+// guides and are retained above. The two printed 18-inch deployment depths and
+// the separate 12-inch deployment-zone offset remain excluded.
 
 const SUPPLEMENTAL_GUIDES_BY_PAGE = Object.freeze({
   20: PAGE_20_SOURCE_GUIDES,
