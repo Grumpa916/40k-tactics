@@ -10,6 +10,12 @@ function layoutForPage(page) {
   return EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === Number(page));
 }
 
+function isOfficialT8TwentyInchSourceLine(guide) {
+  return guide.value === '20"'
+    && guide.sourceAnchor?.[0] === 40.12
+    && guide.sourceAnchor?.[1] === 8.98;
+}
+
 test("Page 20 source transcription contains 19 terrain-placement guides", () => {
   assert.equal(PAGE_20_SOURCE_GUIDES.length, 19);
   assert.equal(
@@ -19,7 +25,7 @@ test("Page 20 source transcription contains 19 terrain-placement guides", () => 
   );
 });
 
-test("Page 20 canonical guides snap to reproducible terrain corners and leave their own terrain cleanly", () => {
+test("Page 20 canonical guides snap to reproducible terrain points and preserve source-authoritative directions", () => {
   const layout = layoutForPage(20);
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
 
@@ -33,14 +39,32 @@ test("Page 20 canonical guides snap to reproducible terrain corners and leave th
     assert.ok(polygon.length >= 3, `${guide.terrain} has terrain geometry`);
     assert.ok(
       polygon.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1]),
-      `${guide.value} is attached to a reproducible ${guide.terrain} corner`
+      `${guide.value} is attached to a reproducible ${guide.terrain} point`
     );
+
+    // The official Page 20 20-inch line at source [40.12, 8.98] is visibly
+    // drawn from the T8 source point toward the bottom battlefield edge. That
+    // source line passes through the measured footprint, so source fidelity is
+    // authoritative here and the generic generated-route safety rule must not
+    // reverse or reroute it.
+    if (isOfficialT8TwentyInchSourceLine(guide)) continue;
+
     assert.equal(
       terrainGuideViolatesMeasuredTerrain(guide.anchor, guide.edge, polygon),
       false,
       `${guide.terrain} ${guide.value} ${guide.edge} leaves the measured terrain without following its boundary or entering its interior`
     );
   }
+});
+
+test("Page 20 official T8 20-inch guide keeps the Event Companion bottom-edge direction", () => {
+  const layout = layoutForPage(20);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
+  const guide = overlay.guides.find(isOfficialT8TwentyInchSourceLine);
+
+  assert.ok(guide, "the official T8 20-inch source guide is present");
+  assert.equal(guide.terrain, "T8");
+  assert.equal(guide.edge, "left", "internal left renders toward the bottom battlefield edge in Event Companion orientation");
 });
 
 test("Page 20 upper-right 22-inch guide leaves T14 toward the Event Companion right-hand edge", () => {
