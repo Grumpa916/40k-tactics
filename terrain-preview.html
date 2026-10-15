@@ -15,7 +15,7 @@
     .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
     button, select { min-height: 44px; padding: 8px 12px; border: 1px solid #68798a; border-radius: 8px; background: #17222c; color: inherit; font: inherit; }
     button:disabled { opacity: .45; }
-    [data-terrain-preview-status] { margin: 8px 0 12px; color: #bac8d4; font-size: 14px; }
+    [data-terrain-preview-status] { margin: 8px 0 12px; color: #bac8d4; font-size: 14px; font-weight: 700; }
     [data-terrain-preview-map] { width: 100%; }
     [data-terrain-preview-map] .battlefield-map__board { max-height: calc(100vh - 230px); }
     [data-terrain-preview-map] .battlefield-map__board--event-companion-blue-bottom { width: min(100%, 720px); max-height: none; margin-inline: auto; aspect-ratio: 11 / 15; }
@@ -36,7 +36,7 @@
   <main>
     <header>
       <h1>Terrain Placement Verification</h1>
-      <p>Development preview of the actual V2 battlefield-map renderer using canonical Event Companion terrain geometry. Maps are shown in Event Companion orientation with the blue side at the bottom. No units are shown.</p>
+      <p>Development preview of the actual V2 battlefield-map renderer using Event Companion terrain geometry. Maps are shown with the blue side at the bottom. No units are shown.</p>
     </header>
     <div class="controls">
       <button type="button" data-terrain-preview-prev>Previous</button>
@@ -45,7 +45,7 @@
     </div>
     <div data-terrain-preview-status aria-live="polite"></div>
     <div data-terrain-preview-map></div>
-    <p class="note"><strong>Locked source policy:</strong> The official Event Companion is authoritative for terrain-placement values, source points, referenced battlefield edges, and the general measurement-line path. The app does not calculate missing distances or reroute source lines for aesthetics. Normally a guide must leave the terrain object it measures immediately and must not enter or follow that object's footprint; when the Event Companion itself visibly draws a source line through the measured footprint, that source line is preserved as an explicit source-audited exception rather than reversed or rerouted. A guide may cross unrelated terrain when the Event Companion does. Mirror augmentation is a separate app-only pass that reuses already-approved values on declared 180-degree terrain counterparts, transforming anchor and arrow together while leaving the distance unchanged. Deployment-zone-only dimensions remain excluded. Tap a terrain footprint to focus its guides; Show all reveals the full verified overlay. Pages 12–23 canonical layers are locked. Pages 18–22 mirror layers are locked. Page 23 contains 18 approved canonical terrain-placement guides; its two printed 12-inch deployment-zone depths are excluded. Page 23 mirror augmentation now adds 18 app-only rotational counterpart guides for visual verification without changing the canonical layer. Pages 24–53 remain without canonical terrain-placement guides until verified sequentially.</p>
+    <p class="note"><strong>Candidate / approved workflow:</strong> The official Event Companion remains authoritative for terrain-placement values, source points, referenced battlefield edges, and the general measurement-line path. New maps are prepared in an isolated <strong>CANDIDATE</strong> layer and cannot appear in the production terrain overlay. Confirmation 1 verifies the canonical source transcription and placement. Confirmation 2 verifies the app-only mirror augmentation. Only after both confirmations does a map become <strong>APPROVED</strong>. The app never calculates missing terrain distances from V2 geometry, deployment-zone-only dimensions remain excluded, and ambiguous source material must be flagged rather than guessed. Pages 12–23 are approved and locked; Page 23 mirror accuracy was visually confirmed on iPad/Safari. Page 24 is the first candidate under the new workflow. Pages 25–53 remain unprepared until the batch candidate pass populates them. Tap a terrain footprint to focus its guides; Show all reveals the current verification layer.</p>
   </main>
   <script type="module" src="src/ui/terrain-placement-preview.js"></script>
 </body>
