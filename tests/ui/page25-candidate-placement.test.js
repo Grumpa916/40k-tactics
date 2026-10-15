@@ -113,7 +113,7 @@ test("Page 25 preserves the two official 10-inch source paths as audited excepti
   );
 });
 
-test("Page 25 canonical approval enables a 20-guide mirror candidate without promoting production", () => {
+test("Page 25 approved production keeps the 20-guide canonical layer and 20-guide mirror augmentation", () => {
   const layout = layoutForPage(25);
   const canonicalCandidate = buildCandidateTerrainPlacementOverlay(layout);
   const mirrorCandidate = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
@@ -127,10 +127,16 @@ test("Page 25 canonical approval enables a 20-guide mirror candidate without pro
   assert.equal(mirrorPolicy.transform, "rotate180");
   assert.equal(mirrored.length, 20);
   assert.equal(mirrorCandidate.guides.length, 40);
-  assert.equal(productionCanonical.guides.length, 0);
-  assert.equal(productionComplete.guides.length, 0);
+  assert.equal(productionCanonical.guides.length, 20);
+  assert.equal(productionComplete.guides.length, 40);
 
-  const coveredTerrain = new Set(mirrorCandidate.guides.map((guide) => guide.terrain));
+  assert.deepEqual(
+    productionCanonical.guides.map(sourceIdentity).sort(),
+    canonicalCandidate.guides.map(sourceIdentity).sort(),
+    "Page 25 production canonical data is the exact source transcription that passed confirmation 1"
+  );
+
+  const coveredTerrain = new Set(productionComplete.guides.map((guide) => guide.terrain));
   for (let index = 1; index <= 16; index += 1) {
     assert.ok(coveredTerrain.has(`T${index}`), `T${index} receives at least one canonical or mirrored Page 25 guide`);
   }
