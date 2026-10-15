@@ -11,8 +11,12 @@ function page18Overlay() {
   return buildCompleteTerrainPlacementOverlay(layout);
 }
 
+function officialGuides(overlay) {
+  return overlay.guides.filter((guide) => !guide.mirrored);
+}
+
 function guideByValueAndSource(overlay, value, x, y) {
-  return overlay.guides.find((guide) => (
+  return officialGuides(overlay).find((guide) => (
     guide.value === value &&
     Number(guide.sourceAnchor?.[0]) === Number(x) &&
     Number(guide.sourceAnchor?.[1]) === Number(y)
@@ -21,9 +25,10 @@ function guideByValueAndSource(overlay, value, x, y) {
 
 test("Page 18 user-verified official guide directions match the Event Companion", () => {
   const overlay = page18Overlay();
-  const seventeen = overlay.guides.filter((guide) => guide.value === '17"');
-  const ten = overlay.guides.find((guide) => guide.value === '10"');
-  const nine = overlay.guides.find((guide) => guide.value === '9"');
+  const official = officialGuides(overlay);
+  const seventeen = official.filter((guide) => guide.value === '17"');
+  const ten = official.find((guide) => guide.value === '10"');
+  const nine = official.find((guide) => guide.value === '9"');
 
   assert.equal(seventeen.length, 2, "Page 18 has two official 17-inch guides");
   seventeen.forEach((guide) => assert.equal(orientEventCompanionEdge(guide.edge), "right"));
@@ -51,11 +56,37 @@ test("Page 18 source anchor and battlefield edge rotate together", () => {
   assert.equal(orientEventCompanionEdge(nineteenFour?.edge), "right", '4" in the 19/4 pair reverses right');
 });
 
-test("Page 18 9-inch guide stays on the small lower-middle terrain object", () => {
+test("Page 18 9-inch official guide stays on the small lower-middle terrain object", () => {
   const overlay = page18Overlay();
-  const nine = overlay.guides.find((guide) => guide.value === '9"');
+  const nine = officialGuides(overlay).find((guide) => guide.value === '9"');
 
   assert.ok(nine, "9-inch guide exists");
   assert.equal(nine.terrain, "T3");
   assert.deepEqual(nine.anchor, [8.8, 21.8]);
+});
+
+test("Page 18 mirror copies reuse values and reverse arrows under 180-degree rotation", () => {
+  const overlay = page18Overlay();
+  const official = officialGuides(overlay);
+  const mirrored = overlay.guides.filter((guide) => guide.mirrored);
+  const opposite = { left: "right", right: "left", top: "bottom", bottom: "top" };
+
+  assert.ok(mirrored.length > 0, "Page 18 adds mirror copies for blank top-half counterparts");
+
+  for (const copy of mirrored) {
+    const source = official.find((guide) => (
+      guide.terrain === copy.mirroredFromTerrain &&
+      guide.value === copy.value &&
+      guide.anchor?.[0] === copy.mirroredFromAnchor?.[0] &&
+      guide.anchor?.[1] === copy.mirroredFromAnchor?.[1]
+    ));
+    assert.ok(source, `${copy.value} mirror has an approved source guide`);
+    assert.equal(copy.value, source.value, "mirroring never changes the measurement value");
+    assert.equal(copy.edge, opposite[source.edge], `${copy.value} mirror reverses the internal battlefield edge`);
+    assert.equal(
+      orientEventCompanionEdge(copy.edge),
+      opposite[orientEventCompanionEdge(source.edge)],
+      `${copy.value} mirror arrow points to the opposite displayed battlefield edge`
+    );
+  }
 });
