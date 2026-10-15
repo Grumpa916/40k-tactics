@@ -142,4 +142,12 @@ test("Page 23 mirror augmentation reuses every approved canonical value on the e
     { anchor: sixteenMirror?.anchor, edge: sixteenMirror?.edge },
     { anchor: [44, 2.9], edge: "right" }
   );
+
+  // Regression lock: the approved T3 7-inch source anchor rotates to T7
+  // [12.1,7.1], and its top edge rotates to the bottom edge.
+  const sevenMirror = mirrored.find((guide) => guide.value === '7"' && guide.terrain === "T7");
+  assert.deepEqual(
+    { anchor: sevenMirror?.anchor, edge: sevenMirror?.edge },
+    { anchor: [12.1, 7.1], edge: "bottom" }
+  );
 });
