@@ -82,3 +82,23 @@ test("Page 20 uses a one-axis source flip for the lower bridge dimensions", () =
   assert.deepEqual(fifteen, { point: [15.02, 28.09], edge: "left" });
   assert.deepEqual(sixteen, { point: [14.97, 27.98], edge: "top" });
 });
+
+test("Page 21 uses the Page 20 x-axis source flip without per-guide overrides", () => {
+  const policy = getEventCompanionTerrainPlacementPolicy(21);
+  assert.equal(policy.sourceTransform, "flipX");
+  assert.equal(policy.alignSourceToGeometry, true);
+  assert.deepEqual(policy.sourceEdgeOverrides, {});
+
+  assert.deepEqual(
+    transformEventCompanionSourceGuide(21, {
+      value: '3"', edge: "bottom", sourceAnchor: [45.44, 3.08]
+    }),
+    { point: [14.56, 3.08], edge: "bottom" }
+  );
+  assert.deepEqual(
+    transformEventCompanionSourceGuide(21, {
+      value: '9"', edge: "left", sourceAnchor: [51.13, 6.97]
+    }),
+    { point: [8.87, 6.97], edge: "right" }
+  );
+});
