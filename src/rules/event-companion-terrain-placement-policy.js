@@ -24,10 +24,6 @@ const PAGE_POLICIES = Object.freeze({
   18: Object.freeze({
     sourceTransform: "rotate180",
     alignSourceToGeometry: true,
-    // These four rows were edited during visual correction before the source
-    // transform rule was understood. Preserve their original PDF-frame edge
-    // here as source transcription metadata; the shared transform then rotates
-    // point and edge together like every other guide.
     sourceEdgeOverrides: Object.freeze({
       '9"|51.2|22.25': "right",
       '10"|25.95|34.14': "top",
@@ -36,26 +32,13 @@ const PAGE_POLICIES = Object.freeze({
     })
   }),
   19: Object.freeze({
-    // Page 19 uses the same PDF source-frame orientation as Page 18. The
-    // canonical pass rotates source anchor and battlefield edge together before
-    // snapping to the already-verified V2 geometry.
     sourceTransform: "rotate180",
     alignSourceToGeometry: true,
-    // The PDF line at source anchor 40.91,37 leaves the measured terrain toward
-    // the opposite battlefield edge. Preserve that source-frame direction here
-    // so the shared 180-degree transform produces the outward T10 guide rather
-    // than sending the 19-inch line back through the measured terrain.
     sourceEdgeOverrides: Object.freeze({
       '19"|40.91|37': "left"
     })
   }),
   20: Object.freeze({
-    // Page 20's PDF source frame differs from Pages 18-19: the 60-inch axis is
-    // reversed while the 44-inch axis is already aligned to the verified V2
-    // geometry. Flip x only, transforming left/right edges with that same axis
-    // operation while preserving top/bottom. This maps the official lower
-    // bridge 15/16-inch origin and the central 24.25-inch origin onto their
-    // actual V2 counterparts without per-guide repair rules.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
@@ -76,19 +59,19 @@ const PAGE_POLICIES = Object.freeze({
     sourceEdgeOverrides: Object.freeze({})
   }),
   24: Object.freeze({
-    // Page 24 continues the same official-PDF source-frame relationship as
-    // Pages 20-23. Reverse only the 60-inch source axis, moving left/right edge
-    // direction with that transform, then snap to existing V2 terrain vertices.
-    // Printed measurement values remain untouched.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
   }),
   25: Object.freeze({
-    // Page 25's audited terrain dimensions use the same source frame as Page 24:
-    // the official PDF 60-inch axis is reversed relative to the V2 geometry,
-    // while the 44-inch axis is already aligned. Transform each source anchor
-    // and left/right edge together, then snap only to an existing terrain vertex.
+    sourceTransform: "flipX",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
+  }),
+  26: Object.freeze({
+    // Layout C continues the same PDF source frame as Pages 20-25. Direct
+    // source-page audit confirms the 60-inch axis is reversed relative to the
+    // existing V2 geometry while the 44-inch axis is already aligned.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
@@ -101,10 +84,6 @@ function normalizedSourceKey(guide) {
 }
 
 function normalizeCoordinate(value) {
-  // Coordinate transforms use subtraction on decimal source positions. Trim
-  // binary floating-point noise so a source 51.2" point rotated across a 60"
-  // board is represented as 8.8 rather than 8.799999999999997. This does not
-  // calculate or alter Event Companion measurement values.
   return Number(Number(value).toFixed(6));
 }
 
