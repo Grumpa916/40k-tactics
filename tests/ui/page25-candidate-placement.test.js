@@ -113,15 +113,47 @@ test("Page 25 preserves the two official 10-inch source paths as audited excepti
   );
 });
 
-test("Page 25 stays canonical-only until confirmation 1 passes", () => {
+test("Page 25 canonical approval enables a 20-guide mirror candidate without promoting production", () => {
   const layout = layoutForPage(25);
-  const candidate = buildCandidateTerrainPlacementOverlay(layout);
+  const canonicalCandidate = buildCandidateTerrainPlacementOverlay(layout);
+  const mirrorCandidate = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
+  const mirrored = mirrorCandidate.guides.filter((guide) => guide.mirrored);
   const productionCanonical = buildCanonicalTerrainPlacementOverlay(layout);
   const productionComplete = buildCompleteTerrainPlacementOverlay(layout);
   const mirrorPolicy = getEventCompanionTerrainMirrorPolicy(25);
 
-  assert.equal(candidate.guides.length, 20);
-  assert.equal(mirrorPolicy.enabled, false);
+  assert.equal(canonicalCandidate.guides.length, 20);
+  assert.equal(mirrorPolicy.enabled, true);
+  assert.equal(mirrorPolicy.transform, "rotate180");
+  assert.equal(mirrored.length, 20);
+  assert.equal(mirrorCandidate.guides.length, 40);
   assert.equal(productionCanonical.guides.length, 0);
   assert.equal(productionComplete.guides.length, 0);
+
+  const coveredTerrain = new Set(mirrorCandidate.guides.map((guide) => guide.terrain));
+  for (let index = 1; index <= 16; index += 1) {
+    assert.ok(coveredTerrain.has(`T${index}`), `T${index} receives at least one canonical or mirrored Page 25 guide`);
+  }
+
+  for (const copy of mirrored) {
+    const source = canonicalCandidate.guides.find((guide) => (
+      guide.terrain === copy.mirroredFromTerrain
+      && guide.value === copy.value
+      && guide.anchor[0] === copy.mirroredFromAnchor?.[0]
+      && guide.anchor[1] === copy.mirroredFromAnchor?.[1]
+    ));
+    assert.ok(source, `${copy.terrain} ${copy.value} maps back to an approved canonical Page 25 guide`);
+    assert.equal(copy.value, source.value, "mirror augmentation preserves the approved distance value unchanged");
+  }
+
+  const mirroredUpperTwentySix = mirrored.find((guide) => (
+    guide.value === '26"'
+    && guide.mirroredFromTerrain === "T3"
+    && guide.mirroredFromAnchor?.[0] === 34.1
+    && guide.mirroredFromAnchor?.[1] === 38
+  ));
+  assert.deepEqual(
+    { terrain: mirroredUpperTwentySix?.terrain, anchor: mirroredUpperTwentySix?.anchor, edge: mirroredUpperTwentySix?.edge },
+    { terrain: "T1", anchor: [26, 6], edge: "left" }
+  );
 });
