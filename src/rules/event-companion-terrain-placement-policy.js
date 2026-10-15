@@ -7,6 +7,13 @@ const OPPOSITE_EDGE = Object.freeze({
   bottom: "top"
 });
 
+const HORIZONTAL_OPPOSITE_EDGE = Object.freeze({
+  left: "right",
+  right: "left",
+  top: "top",
+  bottom: "bottom"
+});
+
 const DEFAULT_POLICY = Object.freeze({
   sourceTransform: "identity",
   alignSourceToGeometry: false,
@@ -43,19 +50,15 @@ const PAGE_POLICIES = Object.freeze({
     })
   }),
   20: Object.freeze({
-    // Page 20 Layout C uses the same PDF source-frame orientation as Pages 18
-    // and 19. The canonical pass rotates source anchor and battlefield edge
-    // together before snapping to verified V2 terrain geometry. Mirror
-    // augmentation remains disabled until the canonical view is accepted.
-    sourceTransform: "rotate180",
+    // Page 20's PDF source frame differs from Pages 18-19: the 60-inch axis is
+    // reversed while the 44-inch axis is already aligned to the verified V2
+    // geometry. Flip x only, transforming left/right edges with that same axis
+    // operation while preserving top/bottom. This maps the official lower
+    // bridge 15/16-inch origin and the central 24.25-inch origin onto their
+    // actual V2 counterparts without per-guide repair rules.
+    sourceTransform: "flipX",
     alignSourceToGeometry: true,
-    // The upper-right 22-inch source line visibly leaves the small terrain piece
-    // toward the right-hand battlefield edge in the Event Companion. Preserve
-    // that PDF-frame direction here so the 180-degree transform yields the
-    // outward T14 guide instead of sending it back through the measured terrain.
-    sourceEdgeOverrides: Object.freeze({
-      '22"|51.11|22': "bottom"
-    })
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
@@ -89,6 +92,16 @@ export function transformEventCompanionPlacement(point, edge, transform = "ident
         normalizeCoordinate(TERRAIN_PLACEMENT_BOARD.height - sourcePoint[1])
       ]),
       edge: OPPOSITE_EDGE[edge] ?? edge
+    });
+  }
+
+  if (transform === "flipX") {
+    return Object.freeze({
+      point: Object.freeze([
+        normalizeCoordinate(TERRAIN_PLACEMENT_BOARD.width - sourcePoint[0]),
+        normalizeCoordinate(sourcePoint[1])
+      ]),
+      edge: HORIZONTAL_OPPOSITE_EDGE[edge] ?? edge
     });
   }
 
