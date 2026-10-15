@@ -76,25 +76,40 @@ function guideOverlapsPolygonBoundary(anchor, endpoint, polygon) {
   return false;
 }
 
-export function terrainGuideCrossesPolygonInterior(anchor, edge, polygon, {
-  width = DEFAULT_WIDTH,
-  height = DEFAULT_HEIGHT
-} = {}) {
-  const endpoint = endpointFor(anchor, edge, width, height);
+function guideEntersStrictPolygonInterior(anchor, endpoint, polygon) {
   const dx = endpoint[0] - anchor[0];
   const dy = endpoint[1] - anchor[1];
-
-  // A measurement path that rides along the terrain outline is visually buried
-  // in the footprint and is not a usable outward guide, even though it does not
-  // enter the strict polygon interior.
-  if (guideOverlapsPolygonBoundary(anchor, endpoint, polygon)) return true;
-
   for (let index = 1; index < SAMPLE_COUNT; index += 1) {
     const t = index / SAMPLE_COUNT;
     const point = [anchor[0] + dx * t, anchor[1] + dy * t];
     if (pointInsidePolygon(point, polygon)) return true;
   }
   return false;
+}
+
+// Source-defined Event Companion guides are allowed to touch or follow a
+// terrain outline. They are invalid only if the guide actually enters the
+// strict terrain interior. This keeps source fidelity separate from the
+// stricter routing rule used when choosing a visually clean inferred path.
+export function terrainGuideEntersPolygonInterior(anchor, edge, polygon, {
+  width = DEFAULT_WIDTH,
+  height = DEFAULT_HEIGHT
+} = {}) {
+  const endpoint = endpointFor(anchor, edge, width, height);
+  return guideEntersStrictPolygonInterior(anchor, endpoint, polygon);
+}
+
+export function terrainGuideCrossesPolygonInterior(anchor, edge, polygon, {
+  width = DEFAULT_WIDTH,
+  height = DEFAULT_HEIGHT
+} = {}) {
+  const endpoint = endpointFor(anchor, edge, width, height);
+
+  // A generated measurement path that rides along the terrain outline is
+  // visually buried in the footprint and is not a usable outward route, even
+  // though it does not enter the strict polygon interior.
+  if (guideOverlapsPolygonBoundary(anchor, endpoint, polygon)) return true;
+  return guideEntersStrictPolygonInterior(anchor, endpoint, polygon);
 }
 
 function safestEdge(anchor, polygon, candidates, width, height) {
