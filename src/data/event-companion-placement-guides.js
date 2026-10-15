@@ -6,7 +6,7 @@ import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 // are never calculated from V2 geometry. Source anchors are expressed in the
 // existing V2 battlefield coordinate convention used by the map catalog.
 //
-// Pages 12-14 retain their previously approved mappings. Pages 15-18 were
+// Pages 12-14 retain their previously approved mappings. Pages 15-19 were
 // re-transcribed directly from the PDF vector layer. Deployment-zone dimensions
 // are deliberately excluded: this module is for terrain placement only.
 const PAGE_12_GUIDES = Object.freeze([
@@ -191,6 +191,32 @@ const PAGE_18_SOURCE_GUIDES = Object.freeze([
   { value: '15"', edge: "right", sourceAnchor: [45.09, 13.98] }
 ]);
 
+// Page 19 Layout B. These 20 source guides were transcribed from the PDF vector
+// dimension layer. The two printed 12" dimensions on the page are deployment-
+// zone depths, not terrain-placement measurements, and are intentionally omitted.
+const PAGE_19_SOURCE_GUIDES = Object.freeze([
+  { value: '5"', edge: "right", sourceAnchor: [55.00, 24.04] },
+  { value: '5"', edge: "right", sourceAnchor: [55.05, 30.92] },
+  { value: '13"', edge: "top", sourceAnchor: [55.00, 30.98] },
+  { value: '4"', edge: "top", sourceAnchor: [52.28, 39.75] },
+  { value: '4"', edge: "top", sourceAnchor: [43.73, 39.83] },
+  { value: '19"', edge: "right", sourceAnchor: [40.91, 37.00] },
+  { value: '7"', edge: "top", sourceAnchor: [40.88, 37.00] },
+  { value: '24"', edge: "right", sourceAnchor: [36.08, 36.23] },
+  { value: '11"', edge: "top", sourceAnchor: [30.57, 32.96] },
+  { value: '7"', edge: "top", sourceAnchor: [25.98, 36.84] },
+  { value: '26"', edge: "left", sourceAnchor: [25.91, 36.90] },
+  { value: '17"', edge: "bottom", sourceAnchor: [35.61, 16.96] },
+  { value: '17"', edge: "bottom", sourceAnchor: [24.15, 16.96] },
+  { value: '24.25"', edge: "left", sourceAnchor: [24.14, 16.96] },
+  { value: '14"', edge: "top", sourceAnchor: [16.86, 29.86] },
+  { value: '17"', edge: "left", sourceAnchor: [16.89, 29.88] },
+  { value: '8"', edge: "left", sourceAnchor: [7.89, 25.54] },
+  { value: '4.5"', edge: "top", sourceAnchor: [18.54, 39.40] },
+  { value: '4.5"', edge: "top", sourceAnchor: [6.99, 39.40] },
+  { value: '7"', edge: "left", sourceAnchor: [7.02, 39.35] }
+]);
+
 const MIRROR_EDGE = Object.freeze({ left: "right", right: "left", top: "bottom", bottom: "top" });
 
 function page12MirroredGuide(guide) {
@@ -216,7 +242,8 @@ const VERIFIED_SOURCE_GUIDES = Object.freeze({
   "15": PAGE_15_SOURCE_GUIDES,
   "16": PAGE_16_SOURCE_GUIDES,
   "17": PAGE_17_SOURCE_GUIDES,
-  "18": PAGE_18_SOURCE_GUIDES
+  "18": PAGE_18_SOURCE_GUIDES,
+  "19": PAGE_19_SOURCE_GUIDES
 });
 
 function shapePoints(shape) {
@@ -379,5 +406,6 @@ export {
   PAGE_15_SOURCE_GUIDES,
   PAGE_16_SOURCE_GUIDES,
   PAGE_17_SOURCE_GUIDES,
-  PAGE_18_SOURCE_GUIDES
+  PAGE_18_SOURCE_GUIDES,
+  PAGE_19_SOURCE_GUIDES
 };
