@@ -59,8 +59,18 @@ export function getEventCompanionMapLayout(missionA, missionB, layout) {
       geometryPair?.[1] === selected.missionB &&
       item.layout === layout;
   });
-  if (!geometry?.verified) return null;
+  if (!geometry?.verified || Number(geometry.page) !== Number(selected.page)) return null;
   return geometry;
+}
+
+// Single public resolver for the complete app selection path. Force Disposition
+// order remains directional when the two Primary Missions are determined; only
+// the resulting mission pair is order-independent when selecting its A/B/C map.
+export function getEventCompanionMapForForceDispositions(myDisposition, opponentDisposition, layout) {
+  if (!LAYOUTS.includes(layout)) return null;
+  const setup = getLayoutOptionsForForceDispositions(myDisposition, opponentDisposition);
+  if (!setup) return null;
+  return getEventCompanionMapLayout(setup.myMission, setup.opponentMission, layout);
 }
 
 export function listEventCompanionMissionPairs() {
@@ -74,20 +84,52 @@ export function listEventCompanionMissionPairs() {
 
 export function validateEventCompanionMapCatalog(catalog = EVENT_COMPANION_MAP_CATALOG) {
   const errors = [];
-  const expectedLayouts = new Set();
+  const expectedLayouts = new Map();
+  const expectedPages = new Set();
+  const indexedMissionPairs = new Set();
+
   for (const entry of catalog.layoutIndex ?? []) {
     if (!entry.missionA || !entry.missionB) errors.push("Mission pair is missing a mission name.");
     if (entry.layouts?.length !== 3 || entry.pages?.length !== 3 ||
         !["A", "B", "C"].every((layout) => entry.layouts.includes(layout))) {
       errors.push("Each mission pair must index A, B, and C layouts with source pages.");
     }
-    for (const layout of entry.layouts ?? []) {
+
+    const normalizedPair = normalizePrimaryMissionPair(entry.missionA, entry.missionB);
+    if (normalizedPair) indexedMissionPairs.add(normalizedPair.join(" ↔ "));
+
+    for (let index = 0; index < (entry.layouts ?? []).length; index += 1) {
+      const layout = entry.layouts[index];
+      const page = Number(entry.pages?.[index]);
       const key = [entry.missionA, entry.missionB].sort((a, b) => a.localeCompare(b)).join(" ↔ ") + "|" + layout;
       if (expectedLayouts.has(key)) errors.push("Duplicate mission/layout key: " + key);
-      expectedLayouts.add(key);
+      if (!Number.isInteger(page)) errors.push("Missing source page for layout index: " + key);
+      expectedLayouts.set(key, page);
+      if (Number.isInteger(page)) {
+        if (expectedPages.has(page)) errors.push("Duplicate source page in layout index: " + page);
+        expectedPages.add(page);
+      }
     }
   }
+
+  const dispositions = catalog.forceDispositions ?? [];
+  for (const ownDisposition of dispositions) {
+    for (const opponentDisposition of dispositions) {
+      const ownMission = catalog.forceDispositionMissionMatrix?.[ownDisposition]?.[opponentDisposition];
+      const opponentMission = catalog.forceDispositionMissionMatrix?.[opponentDisposition]?.[ownDisposition];
+      if (!ownMission || !opponentMission) {
+        errors.push("Missing Force Disposition matrix cell: " + ownDisposition + " vs " + opponentDisposition);
+        continue;
+      }
+      const pair = normalizePrimaryMissionPair(ownMission, opponentMission);
+      if (!pair || !indexedMissionPairs.has(pair.join(" ↔ "))) {
+        errors.push("Force Disposition pair has no indexed battlefield maps: " + ownDisposition + " vs " + opponentDisposition);
+      }
+    }
+  }
+
   const geometryKeys = new Set();
+  const geometryPages = new Set();
   for (const geometry of catalog.layouts ?? []) {
     const [missionA, missionB] = (geometry.missionKey ?? "").split(" ↔ ");
     const normalizedPair = normalizePrimaryMissionPair(missionA, missionB);
@@ -96,6 +138,13 @@ export function validateEventCompanionMapCatalog(catalog = EVENT_COMPANION_MAP_C
     geometryKeys.add(key);
     if (geometry.verified !== true) errors.push("Unverified geometry included: " + key);
     if (!Number.isInteger(geometry.page)) errors.push("Missing source page: " + key);
+    if (Number.isInteger(geometry.page)) {
+      if (geometryPages.has(geometry.page)) errors.push("Duplicate geometry source page: " + geometry.page);
+      geometryPages.add(geometry.page);
+    }
+    if (expectedLayouts.has(key) && Number(geometry.page) !== Number(expectedLayouts.get(key))) {
+      errors.push("Layout index page does not match geometry page: " + key + " expected " + expectedLayouts.get(key) + " got " + geometry.page);
+    }
     for (const [label, point] of Object.entries(geometry.objectivePositions ?? {})) {
       if (!Number.isFinite(point.x) || !Number.isFinite(point.y) ||
           point.x < 0 || point.x > 60 || point.y < 0 || point.y > 44) {
@@ -110,7 +159,7 @@ export function validateEventCompanionMapCatalog(catalog = EVENT_COMPANION_MAP_C
       }
     }
   }
-  for (const key of expectedLayouts) {
+  for (const key of expectedLayouts.keys()) {
     if (!geometryKeys.has(key)) errors.push("Missing verified geometry: " + key);
   }
   for (const key of geometryKeys) {
