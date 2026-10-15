@@ -27,6 +27,15 @@ const PAGE_POLICIES = Object.freeze({
       '17"|35.75|16.86': "bottom",
       '17"|24.23|16.89': "bottom"
     })
+  }),
+  19: Object.freeze({
+    // Page 19 uses the same PDF source-frame orientation as Page 18. The
+    // canonical pass rotates source anchor and battlefield edge together before
+    // snapping to the already-verified V2 geometry. No mirror augmentation is
+    // enabled until this source-only layer is visually accepted.
+    sourceTransform: "rotate180",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
