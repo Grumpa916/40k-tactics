@@ -36,7 +36,7 @@ export const PAGE_21_SOURCE_GUIDES = Object.freeze([
   { value: '19"', edge: "top", sourceAnchor: [47.25, 25.12] },
   { value: '18"', edge: "bottom", sourceAnchor: [41.06, 17.92] },
   { value: '24"', edge: "right", sourceAnchor: [35.96, 4.01] },
-  { value: '9"', edge: "left", sourceAnchor: [51.13, 6.97] },
+  { value: '9"', edge: "right", sourceAnchor: [51.13, 6.97] },
   { value: '22"', edge: "left", sourceAnchor: [37.93, 40.02] },
   { value: '16"', edge: "top", sourceAnchor: [42.17, 28.07] },
   { value: '7"', edge: "left", sourceAnchor: [53.10, 17.04] },
