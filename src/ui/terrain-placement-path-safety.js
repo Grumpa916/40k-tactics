@@ -87,10 +87,9 @@ function guideEntersStrictPolygonInterior(anchor, endpoint, polygon) {
   return false;
 }
 
-// Source-defined Event Companion guides are allowed to touch or follow a
-// terrain outline. They are invalid only if the guide actually enters the
-// strict terrain interior. This keeps source fidelity separate from the
-// stricter routing rule used when choosing a visually clean inferred path.
+// Low-level strict-interior check retained for diagnostics. It deliberately
+// ignores boundary overlap and must not be used by itself to approve an Event
+// Companion placement guide.
 export function terrainGuideEntersPolygonInterior(anchor, edge, polygon, {
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT
@@ -99,22 +98,31 @@ export function terrainGuideEntersPolygonInterior(anchor, edge, polygon, {
   return guideEntersStrictPolygonInterior(anchor, endpoint, polygon);
 }
 
-export function terrainGuideCrossesPolygonInterior(anchor, edge, polygon, {
+// Universal Event Companion rule for the terrain object being measured:
+// a guide may touch that object only at its intended anchor. It must leave the
+// footprint immediately, may not run along its boundary, and may not enter its
+// interior. This function intentionally knows about ONE polygon only. A guide
+// crossing some other terrain object is therefore not a violation; the Event
+// Companion source line remains authoritative for unrelated-terrain crossings.
+export function terrainGuideViolatesMeasuredTerrain(anchor, edge, polygon, {
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT
 } = {}) {
   const endpoint = endpointFor(anchor, edge, width, height);
-
-  // A generated measurement path that rides along the terrain outline is
-  // visually buried in the footprint and is not a usable outward route, even
-  // though it does not enter the strict polygon interior.
   if (guideOverlapsPolygonBoundary(anchor, endpoint, polygon)) return true;
   return guideEntersStrictPolygonInterior(anchor, endpoint, polygon);
 }
 
+// Backward-compatible name used by older generated-route code. Its behavior is
+// now the same measured-terrain rule: boundary-following and own-interior paths
+// are both invalid.
+export function terrainGuideCrossesPolygonInterior(anchor, edge, polygon, options = {}) {
+  return terrainGuideViolatesMeasuredTerrain(anchor, edge, polygon, options);
+}
+
 function safestEdge(anchor, polygon, candidates, width, height) {
   const safe = candidates
-    .filter((edge) => !terrainGuideCrossesPolygonInterior(anchor, edge, polygon, { width, height }))
+    .filter((edge) => !terrainGuideViolatesMeasuredTerrain(anchor, edge, polygon, { width, height }))
     .sort((left, right) => distanceToEdge(anchor, left, width, height) - distanceToEdge(anchor, right, width, height));
   return safe[0] ?? null;
 }
