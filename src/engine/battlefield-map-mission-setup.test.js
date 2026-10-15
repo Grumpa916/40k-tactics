@@ -1,7 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
 import { createGameState } from "../state/game-state.js";
 import { setEventCompanionMissionSetup } from "./battlefield-map-transitions.js";
+
+function assertObjectivesMatchPage(state, page) {
+  const expected = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === Number(page));
+  assert.ok(expected, `Event Companion page ${page} exists in the verified map catalog`);
+  for (const [name, position] of Object.entries(expected.objectivePositions ?? {})) {
+    const objective = (state.objectives ?? []).find((item) => item?.layoutObjective === name);
+    assert.ok(objective, `${name} is synchronized from page ${page}`);
+    assert.deepEqual(objective.position, position, `${name} uses page ${page}'s verified position`);
+  }
+}
 
 test("Event Companion mission setup is saved in battlefield map state and history", () => {
   const initial = createGameState();
@@ -17,6 +28,24 @@ test("Event Companion mission setup is saved in battlefield map state and histor
   });
   assert.equal(next.history.at(-1).type, "battlefield_map.event_companion_mission_setup_set");
   assert.equal(initial.battlefieldMap, undefined);
+});
+
+test("setup uses the Page 18 map for Take and Hold vs Reconnaissance layout A", () => {
+  const next = setEventCompanionMissionSetup(createGameState(), {
+    myDisposition: "Take and Hold",
+    opponentDisposition: "Reconnaissance",
+    layout: "A"
+  });
+  assertObjectivesMatchPage(next, 18);
+});
+
+test("reversing those dispositions still resolves the same mission-pair map block", () => {
+  const next = setEventCompanionMissionSetup(createGameState(), {
+    myDisposition: "Reconnaissance",
+    opponentDisposition: "Take and Hold",
+    layout: "C"
+  });
+  assertObjectivesMatchPage(next, 20);
 });
 
 test("Event Companion mission setup can save one disposition before the other", () => {
