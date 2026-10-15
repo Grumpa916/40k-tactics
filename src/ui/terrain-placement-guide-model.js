@@ -2,9 +2,12 @@ import { getEventCompanionPlacementOverlay } from "../data/event-companion-place
 import { getEventCompanionPlacementGuideCorrections } from "../data/event-companion-placement-guide-corrections.js";
 import {
   getEventCompanionTerrainPlacementPolicy,
-  transformEventCompanionMirrorGuide,
   transformEventCompanionSourceGuide
 } from "../rules/event-companion-terrain-placement-policy.js";
+import {
+  getEventCompanionTerrainMirrorPolicy,
+  transformEventCompanionMirrorGuide
+} from "../rules/event-companion-terrain-mirror-policy.js";
 import { terrainGuideViolatesMeasuredTerrain } from "./terrain-placement-path-safety.js";
 
 export const TERRAIN_BOARD_WIDTH = 60;
@@ -104,14 +107,14 @@ function targetTerrainIsAllowed(layout, terrain, targetInternalHalf) {
   return true;
 }
 
-function mirroredCounterpartGuides(page, sourceGuides, layout) {
-  const mirrorPolicy = getEventCompanionTerrainPlacementPolicy(page).mirrorCounterparts;
-  if (!mirrorPolicy?.terrainMap) return [];
+function mirroredCounterpartGuides(page, canonicalGuides, layout) {
+  const mirrorPolicy = getEventCompanionTerrainMirrorPolicy(page);
+  if (!mirrorPolicy.enabled || !mirrorPolicy.terrainMap) return [];
 
-  const originallyMeasured = new Set(sourceGuides.map((guide) => guide.terrain));
+  const originallyMeasured = new Set(canonicalGuides.map((guide) => guide.terrain));
   const mirrored = [];
 
-  for (const guide of sourceGuides) {
+  for (const guide of canonicalGuides) {
     const targetTerrain = mirrorPolicy.terrainMap[guide.terrain];
     if (!targetTerrain || originallyMeasured.has(targetTerrain)) continue;
     if (!targetTerrainIsAllowed(layout, targetTerrain, mirrorPolicy.targetInternalHalf)) continue;
@@ -154,7 +157,7 @@ function pointName(index) {
   return String.fromCharCode("A".charCodeAt(0) + index);
 }
 
-function sourceGuidesForPage(page, layout) {
+function canonicalGuidesForPage(page, layout) {
   const canonical = getEventCompanionPlacementOverlay(Number(page));
   if (!canonical) return [];
 
@@ -166,9 +169,15 @@ function sourceGuidesForPage(page, layout) {
   for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
     deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
   }
+  return [...deduped.values()];
+}
 
-  const officialGuides = [...deduped.values()];
-  for (const guide of mirroredCounterpartGuides(page, officialGuides, layout)) {
+function guidesForPage(page, layout, { includeMirrors = true } = {}) {
+  const canonicalGuides = canonicalGuidesForPage(page, layout);
+  if (!includeMirrors || !canonicalGuides.length) return canonicalGuides;
+
+  const deduped = new Map(canonicalGuides.map((guide) => [guideKey(guide), guide]));
+  for (const guide of mirroredCounterpartGuides(page, canonicalGuides, layout)) {
     deduped.set(guideKey(guide), guide);
   }
   return [...deduped.values()];
@@ -230,7 +239,7 @@ function calloutPosition(anchor, shapeCenter, point) {
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
-  const guides = sourceGuidesForPage(Number(layout?.page), layout);
+  const guides = guidesForPage(Number(layout?.page), layout, { includeMirrors: true });
   return groupedSourcePoints(guides).map((group) => ({
     terrain: group.terrain,
     point: group.point,
@@ -266,33 +275,20 @@ function canonicalOverlayWithPointNames(canonical) {
   };
 }
 
-export function buildCompleteTerrainPlacementOverlay(layout) {
-  const page = Number(layout?.page);
-  const canonical = getEventCompanionPlacementOverlay(page);
-  if (!canonical) {
-    return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
-  }
-
-  // Pages 12-14 retain their previously approved exact overlay presentation.
-  if (page <= 14) return canonicalOverlayWithPointNames(canonical);
-
-  // Pages 15+ use only source-defined values plus any explicit counterpart
-  // policy attached to that page. Transform policy may reposition an approved
-  // source guide, but it never calculates or changes its printed distance.
-  const sourceGuides = sourceGuidesForPage(page, layout);
-  const groups = groupedSourcePoints(sourceGuides);
+function generatedOverlay(layout, guides) {
+  const groups = groupedSourcePoints(guides);
   const pointByAnchor = new Map(groups.map((group) => [anchorKey(group.terrain, group.anchor), group.point]));
 
-  const guides = sourceGuides.map((guide) => ({
+  const namedGuides = guides.map((guide) => ({
     ...guide,
     point: pointByAnchor.get(anchorKey(guide.terrain, guide.anchor)) ?? "A"
   }));
-  const lines = guides.map((guide) => [
+  const lines = namedGuides.map((guide) => [
     guide.anchor[0],
     guide.anchor[1],
     ...terrainGuideEndpoint(guide.anchor, guide.edge)
   ]);
-  const measurements = guides.map((guide) => {
+  const measurements = namedGuides.map((guide) => {
     const [x, y] = terrainGuideLabelPosition(guide.anchor, guide.edge);
     return {
       terrain: guide.terrain,
@@ -331,7 +327,35 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
     };
   });
 
-  return { guides, lines, measurements, anchors, callouts };
+  return { guides: namedGuides, lines, measurements, anchors, callouts };
+}
+
+export function buildCanonicalTerrainPlacementOverlay(layout) {
+  const page = Number(layout?.page);
+  const canonical = getEventCompanionPlacementOverlay(page);
+  if (!canonical) {
+    return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
+  }
+
+  // Pages 12-14 retain their previously approved exact canonical presentation.
+  if (page <= 14) return canonicalOverlayWithPointNames(canonical);
+  return generatedOverlay(layout, guidesForPage(page, layout, { includeMirrors: false }));
+}
+
+export function buildCompleteTerrainPlacementOverlay(layout) {
+  const page = Number(layout?.page);
+  const canonical = getEventCompanionPlacementOverlay(page);
+  if (!canonical) {
+    return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
+  }
+
+  // Pages 12-14 currently have no mirror augmentation policy, so preserve their
+  // exact accepted source overlay until a separate mirror pass is explicitly
+  // approved for those layouts.
+  if (page <= 14 && !getEventCompanionTerrainMirrorPolicy(page).enabled) {
+    return canonicalOverlayWithPointNames(canonical);
+  }
+  return generatedOverlay(layout, guidesForPage(page, layout, { includeMirrors: true }));
 }
 
 export function terrainGuideViolatesOwnTerrain(layout, guide) {
