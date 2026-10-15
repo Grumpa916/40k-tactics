@@ -132,12 +132,41 @@ export const PAGE_24_SOURCE_GUIDES = Object.freeze([
 // iPad/Safari. The official page's 7-inch and 9-inch deployment-only dimensions
 // remain excluded; the 19 source guides above are the locked production layer.
 
+export const PAGE_25_SOURCE_GUIDES = Object.freeze([
+  { value: '26"', edge: "left", sourceAnchor: [25.97, 26.50] },
+  { value: '26"', edge: "left", sourceAnchor: [25.97, 37.92] },
+  { value: '6"', edge: "top", sourceAnchor: [32.97, 38.03] },
+  { value: '4"', edge: "top", sourceAnchor: [37.12, 40.03] },
+  { value: '15"', edge: "top", sourceAnchor: [38.08, 29.03] },
+  { value: '2"', edge: "bottom", sourceAnchor: [39.01, 2.11] },
+  { value: '22"', edge: "right", sourceAnchor: [38.08, 29.07] },
+  { value: '20"', edge: "right", sourceAnchor: [40.15, 16.50] },
+  { value: '20"', edge: "bottom", sourceAnchor: [41.96, 19.95] },
+  { value: '19"', edge: "right", sourceAnchor: [40.98, 34.12] },
+  { value: '4"', edge: "top", sourceAnchor: [40.89, 40.11] },
+  { value: '18"', edge: "right", sourceAnchor: [41.94, 19.95] },
+  { value: '2"', edge: "bottom", sourceAnchor: [45.98, 2.04] },
+  { value: '14"', edge: "right", sourceAnchor: [45.98, 2.08] },
+  { value: '7"', edge: "bottom", sourceAnchor: [50.07, 7.04] },
+  { value: '11"', edge: "right", sourceAnchor: [48.90, 38.85] },
+  { value: '10"', edge: "right", sourceAnchor: [50.03, 13.04] },
+  { value: '10"', edge: "right", sourceAnchor: [50.02, 22.95] },
+  { value: '18"', edge: "top", sourceAnchor: [52.04, 26.09] },
+  { value: '8"', edge: "right", sourceAnchor: [52.00, 26.08] }
+]);
+
+// Page 25 canonical and mirror layers were visually confirmed on iPad/Safari.
+// The six deployment-zone dimensions stay excluded; the two official 10-inch
+// boundary-overlap source paths remain the same audited exceptions used during
+// candidate verification.
+
 const SUPPLEMENTAL_GUIDES_BY_PAGE = Object.freeze({
   20: PAGE_20_SOURCE_GUIDES,
   21: PAGE_21_SOURCE_GUIDES,
   22: PAGE_22_SOURCE_GUIDES,
   23: PAGE_23_SOURCE_GUIDES,
-  24: PAGE_24_SOURCE_GUIDES
+  24: PAGE_24_SOURCE_GUIDES,
+  25: PAGE_25_SOURCE_GUIDES
 });
 
 export function getSupplementalEventCompanionPlacementOverlay(page) {
