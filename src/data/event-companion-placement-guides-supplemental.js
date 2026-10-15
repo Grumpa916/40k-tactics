@@ -29,7 +29,37 @@ export const PAGE_20_SOURCE_GUIDES = Object.freeze([
 // the curved deployment-zone boundary, not a terrain footprint, so it is
 // deliberately excluded from the Terrain Setup overlay.
 
+export const PAGE_21_SOURCE_GUIDES = Object.freeze([
+  { value: '3"', edge: "bottom", sourceAnchor: [45.44, 3.08] },
+  { value: '5"', edge: "left", sourceAnchor: [54.99, 38.98] },
+  { value: '7"', edge: "bottom", sourceAnchor: [51.13, 6.97] },
+  { value: '19"', edge: "top", sourceAnchor: [47.25, 25.12] },
+  { value: '18"', edge: "bottom", sourceAnchor: [41.06, 17.92] },
+  { value: '24"', edge: "left", sourceAnchor: [35.96, 4.01] },
+  { value: '9"', edge: "left", sourceAnchor: [51.13, 6.97] },
+  { value: '22"', edge: "left", sourceAnchor: [37.93, 40.02] },
+  { value: '16"', edge: "top", sourceAnchor: [42.17, 28.07] },
+  { value: '7"', edge: "left", sourceAnchor: [53.10, 17.04] },
+  { value: '4"', edge: "bottom", sourceAnchor: [36.01, 4.01] },
+  { value: '17"', edge: "bottom", sourceAnchor: [53.16, 17.09] },
+  { value: '19"', edge: "left", sourceAnchor: [41.01, 17.89] },
+  { value: '25"', edge: "left", sourceAnchor: [35.02, 29.47] },
+  { value: '4"', edge: "top", sourceAnchor: [37.97, 40.00] },
+  { value: '5"', edge: "left", sourceAnchor: [55.08, 27.47] },
+  { value: '5"', edge: "top", sourceAnchor: [54.99, 39.00] },
+  { value: '8"', edge: "bottom", sourceAnchor: [33.05, 7.96] }
+]);
+
+// Page 21 also prints two 15-inch deployment-zone dimensions. They describe
+// deployment boundaries rather than terrain placement and are deliberately
+// excluded from this source layer.
+
+const SUPPLEMENTAL_GUIDES_BY_PAGE = Object.freeze({
+  20: PAGE_20_SOURCE_GUIDES,
+  21: PAGE_21_SOURCE_GUIDES
+});
+
 export function getSupplementalEventCompanionPlacementOverlay(page) {
-  if (Number(page) !== 20) return null;
-  return { guides: PAGE_20_SOURCE_GUIDES };
+  const guides = SUPPLEMENTAL_GUIDES_BY_PAGE[Number(page)];
+  return guides ? { guides } : null;
 }
