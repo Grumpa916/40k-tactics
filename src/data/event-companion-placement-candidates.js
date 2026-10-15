@@ -52,3 +52,7 @@ const CANDIDATES_BY_PAGE = Object.freeze({
 export function getEventCompanionPlacementCandidate(page) {
   return CANDIDATES_BY_PAGE[Number(page)] ?? null;
 }
+
+export function listEventCompanionPlacementCandidatePages() {
+  return Object.keys(CANDIDATES_BY_PAGE).map(Number).sort((a, b) => a - b);
+}
