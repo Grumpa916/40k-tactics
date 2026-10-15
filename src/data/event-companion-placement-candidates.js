@@ -55,19 +55,49 @@ export const PAGE_25_CANDIDATE_SOURCE_GUIDES = Object.freeze([
   { value: '8"', edge: "right", sourceAnchor: [52.00, 26.08] }
 ]);
 
+export const PAGE_26_CANDIDATE_SOURCE_GUIDES = Object.freeze([
+  { value: '17"', edge: "left", sourceAnchor: [17.02, 32.05] },
+  { value: '21"', edge: "left", sourceAnchor: [21.01, 38.97] },
+  { value: '5"', edge: "top", sourceAnchor: [21.06, 38.98] },
+  { value: '26"', edge: "left", sourceAnchor: [26.04, 37.10] },
+  { value: '7"', edge: "top", sourceAnchor: [26.04, 37.15] },
+  { value: '5"', edge: "top", sourceAnchor: [27.52, 38.92] },
+  { value: '26"', edge: "top", sourceAnchor: [33.02, 26.05] },
+  { value: '13"', edge: "top", sourceAnchor: [33.97, 30.94] },
+  { value: '6"', edge: "top", sourceAnchor: [39.15, 38.02] },
+  { value: '21"', edge: "right", sourceAnchor: [39.21, 38.06] },
+  { value: '26"', edge: "top", sourceAnchor: [39.99, 26.09] },
+  { value: '20"', edge: "right", sourceAnchor: [40.08, 14.57] },
+  { value: '5"', edge: "top", sourceAnchor: [44.59, 38.89] },
+  { value: '15"', edge: "top", sourceAnchor: [46.06, 29.01] },
+  { value: '14"', edge: "right", sourceAnchor: [46.10, 28.97] },
+  { value: '12"', edge: "bottom", sourceAnchor: [50.06, 12.07] },
+  { value: '17"', edge: "top", sourceAnchor: [53.13, 26.98] },
+  { value: '7"', edge: "right", sourceAnchor: [53.17, 27.02] },
+  { value: '12"', edge: "bottom", sourceAnchor: [55.94, 11.97] },
+  { value: '5"', edge: "top", sourceAnchor: [56.07, 38.94] },
+  { value: '4"', edge: "right", sourceAnchor: [55.94, 11.98] },
+  { value: '4"', edge: "right", sourceAnchor: [56.07, 31.97] }
+]);
+
 // Page 24 also prints a 7-inch horizontal offset to the diagonal deployment
 // boundary and a 9-inch diagonal dimension between deployment-boundary points.
 // Neither terminates on a terrain footprint, so both are excluded from this
 // terrain-placement candidate.
 //
 // Page 25 prints six deployment-zone dimensions around the outer red/blue zone
-// boundaries: 12 inches at source [12.03,42.97], 20 inches at [19.93,1.06],
-// 26 inches at [25.97,45.07], 26 inches at [34.05,-1], 20 inches at
-// [40.05,42.97], and 12 inches at [48.07,1.06]. The official page shows these
-// terminating on deployment boundaries rather than terrain, so they are excluded.
-// The two retained 10-inch official source lines visibly run along the edge of
-// their measured footprint in the source artwork; they are recorded as explicit
-// source-authoritative path exceptions rather than being rerouted.
+// boundaries. They terminate on deployment boundaries rather than terrain and
+// remain excluded. Its two retained 10-inch official source lines visibly run
+// along their measured footprints and remain explicit source-authoritative path
+// exceptions.
+//
+// Page 26 prints six deployment-only outer-zone dimensions: left-side 19, 14,
+// and 8 inches plus the mirrored right-side 8, 14, and 19 inches. They do not
+// terminate on terrain and are excluded. Two 26-inch vector observations were
+// initially extraction-ambiguous; direct visual audit of the official page
+// confirms both terminate on the two central terrain footprints, so both are
+// retained. The official 21-inch path at source [21.01,38.97] and 13-inch path
+// at [33.97,30.94] are preserved as source-audited path exceptions.
 
 const CANDIDATES_BY_PAGE = Object.freeze({
   24: Object.freeze({
@@ -97,6 +127,30 @@ const CANDIDATES_BY_PAGE = Object.freeze({
       sourcePathExceptions: Object.freeze([
         '10"|50.03|13.04',
         '10"|50.02|22.95'
+      ])
+    })
+  }),
+  26: Object.freeze({
+    guides: PAGE_26_CANDIDATE_SOURCE_GUIDES,
+    sourceAudit: Object.freeze({
+      printedDimensionCount: 28,
+      terrainGuideCount: 22,
+      excludedDeploymentDimensions: Object.freeze([
+        '19"|top|-1.03|25.04',
+        '14"|bottom|1|14.02',
+        '8"|top|1|36',
+        '8"|bottom|59.1|8.04',
+        '14"|top|59.1|30.02',
+        '19"|bottom|61.02|19'
+      ]),
+      ambiguousCount: 0,
+      resolvedAmbiguousSourceDimensions: Object.freeze([
+        '26"|top|33.02|26.05',
+        '26"|top|39.99|26.09'
+      ]),
+      sourcePathExceptions: Object.freeze([
+        '21"|21.01|38.97',
+        '13"|33.97|30.94'
       ])
     })
   })
