@@ -12,6 +12,25 @@ const PAGE_18_OPPOSITE_EDGE = Object.freeze({
   bottom: "top"
 });
 
+const PAGE_18_TERRAIN_MIRRORS = Object.freeze({
+  T1: "T6",
+  T2: "T12",
+  T3: "T15",
+  T4: "T11",
+  T5: "T7",
+  T6: "T1",
+  T7: "T5",
+  T8: "T13",
+  T9: "T14",
+  T10: "T16",
+  T11: "T4",
+  T12: "T2",
+  T13: "T8",
+  T14: "T9",
+  T15: "T3",
+  T16: "T10"
+});
+
 const PAGE_18_SOURCE_EDGE_RESTORES = Object.freeze({
   '9"|51.2|22.25': "right",
   '10"|25.95|34.14': "top",
@@ -76,6 +95,23 @@ function nearestTerrainVertex(layout, target) {
   return bestTerrain && bestAnchor ? { terrain: bestTerrain, anchor: [...bestAnchor] } : null;
 }
 
+function nearestShapeVertex(shape, target) {
+  let bestAnchor = null;
+  let bestDistance = Infinity;
+  for (const anchor of geometryPoints(shape)) {
+    const candidateDistance = distanceSquared(target, anchor);
+    if (candidateDistance < bestDistance) {
+      bestAnchor = anchor;
+      bestDistance = candidateDistance;
+    }
+  }
+  return bestAnchor ? [...bestAnchor] : null;
+}
+
+function terrainCenterX(layout, terrain) {
+  return centroid(geometryPoints(layout?.terrainGeometry?.[terrain]))[0];
+}
+
 function page18OriginalSourceEdge(guide) {
   const sourceAnchor = guide?.sourceAnchor ?? [];
   const key = String(guide?.value ?? "") + "|" + Number(sourceAnchor[0]) + "|" + Number(sourceAnchor[1]);
@@ -99,6 +135,41 @@ function page18SourceAlignedGuide(guide, layout) {
   const correctedEdge = PAGE_18_OPPOSITE_EDGE[originalSourceEdge] ?? originalSourceEdge;
   const snapped = nearestTerrainVertex(layout, correctedSourcePoint);
   return snapped ? { ...guide, edge: correctedEdge, ...snapped } : { ...guide, edge: correctedEdge };
+}
+
+function page18MirroredCounterpartGuides(sourceGuides, layout) {
+  const originallyMeasured = new Set(sourceGuides.map((guide) => guide.terrain));
+  const mirrored = [];
+
+  for (const guide of sourceGuides) {
+    const targetTerrain = PAGE_18_TERRAIN_MIRRORS[guide.terrain];
+    if (!targetTerrain || originallyMeasured.has(targetTerrain)) continue;
+
+    // The requested counterparts are the currently blank terrain shapes on
+    // the top half of the portrait Event Companion view. In V2's 60x44 source
+    // coordinate frame those counterparts have centers on the x > 30 side.
+    if (terrainCenterX(layout, targetTerrain) <= TERRAIN_BOARD_WIDTH / 2) continue;
+
+    const targetShape = layout?.terrainGeometry?.[targetTerrain];
+    const rotatedPoint = [
+      TERRAIN_BOARD_WIDTH - Number(guide.anchor[0]),
+      TERRAIN_BOARD_HEIGHT - Number(guide.anchor[1])
+    ];
+    const targetAnchor = nearestShapeVertex(targetShape, rotatedPoint);
+    if (!targetAnchor) continue;
+
+    mirrored.push({
+      ...guide,
+      terrain: targetTerrain,
+      anchor: targetAnchor,
+      edge: PAGE_18_OPPOSITE_EDGE[guide.edge] ?? guide.edge,
+      mirrored: true,
+      mirroredFromTerrain: guide.terrain,
+      mirroredFromAnchor: [...guide.anchor]
+    });
+  }
+
+  return mirrored;
 }
 
 function anchorKey(terrain, anchor) {
@@ -130,6 +201,17 @@ function sourceGuidesForPage(page, layout) {
   }
   for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
     deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
+  }
+
+  const officialGuides = [...deduped.values()];
+  if (Number(page) !== 18) return officialGuides;
+
+  // Page 18 user-approved usability rule: reuse the existing approved values
+  // on clear 180-degree counterpart terrain shapes that currently have no
+  // measurements. No value is calculated or altered, and mirrored copies use
+  // the same visual treatment as their source guides.
+  for (const guide of page18MirroredCounterpartGuides(officialGuides, layout)) {
+    deduped.set(guideKey(guide), guide);
   }
   return [...deduped.values()];
 }
@@ -236,9 +318,9 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   // Pages 12-14 retain their previously approved exact overlay presentation.
   if (page <= 14) return canonicalOverlayWithPointNames(canonical);
 
-  // Pages 15+ are strictly source-defined. Never infer a missing guide, never
-  // calculate a replacement value, and never reuse a printed value at a
-  // different terrain point merely to make the overlay look complete.
+  // Pages 15+ begin with strictly source-defined values. Page 18 additionally
+  // reuses those approved values on clear blank rotational counterparts by the
+  // explicit user-approved mirror rule above; the copied values are unchanged.
   const sourceGuides = sourceGuidesForPage(page, layout);
   const groups = groupedSourcePoints(sourceGuides);
   const pointByAnchor = new Map(groups.map((group) => [anchorKey(group.terrain, group.anchor), group.point]));
