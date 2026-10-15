@@ -7,13 +7,13 @@ import {
 } from "../../src/rules/event-companion-terrain-mirror-policy.js";
 
 test("mirroring is disabled by default until a canonical page receives an approved mirror pass", () => {
-  const policy = getEventCompanionTerrainMirrorPolicy(25);
+  const policy = getEventCompanionTerrainMirrorPolicy(26);
   assert.equal(policy.enabled, false);
   assert.deepEqual(policy.terrainMap, {});
   assert.equal(policy.targetInternalHalf, null);
 
   assert.deepEqual(
-    transformEventCompanionMirrorGuide(25, { anchor: [8, 7], edge: "left" }),
+    transformEventCompanionMirrorGuide(26, { anchor: [8, 7], edge: "left" }),
     { point: null, edge: "left" }
   );
 });
@@ -191,7 +191,7 @@ test("Page 23 mirror augmentation declares all eight rotational terrain pairs", 
   );
 });
 
-test("Page 24 candidate mirror augmentation declares all eight rotational terrain pairs", () => {
+test("Page 24 mirror augmentation declares all eight rotational terrain pairs", () => {
   const policy = getEventCompanionTerrainMirrorPolicy(24);
   assert.equal(policy.enabled, true);
   assert.equal(policy.transform, "rotate180");
@@ -220,5 +220,37 @@ test("Page 24 candidate mirror augmentation declares all eight rotational terrai
   assert.deepEqual(
     transformEventCompanionMirrorGuide(24, { anchor: [15.4, 39], edge: "top" }),
     { point: [44.6, 5], edge: "bottom" }
+  );
+});
+
+test("Page 25 candidate mirror augmentation declares all eight rotational terrain pairs", () => {
+  const policy = getEventCompanionTerrainMirrorPolicy(25);
+  assert.equal(policy.enabled, true);
+  assert.equal(policy.transform, "rotate180");
+  assert.equal(policy.targetInternalHalf, null);
+
+  const expectedPairs = {
+    T1: "T3",
+    T2: "T10",
+    T3: "T1",
+    T4: "T11",
+    T5: "T12",
+    T6: "T15",
+    T7: "T13",
+    T8: "T14",
+    T9: "T16",
+    T10: "T2",
+    T11: "T4",
+    T12: "T5",
+    T13: "T7",
+    T14: "T8",
+    T15: "T6",
+    T16: "T9"
+  };
+  assert.deepEqual(policy.terrainMap, expectedPairs);
+
+  assert.deepEqual(
+    transformEventCompanionMirrorGuide(25, { anchor: [34.1, 38], edge: "right" }),
+    { point: [25.9, 6], edge: "left" }
   );
 });
