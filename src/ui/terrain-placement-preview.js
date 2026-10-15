@@ -6,6 +6,7 @@ import {
   EVENT_COMPANION_DISPLAY_HEIGHT,
   orientEventCompanionPoint,
   orientEventCompanionLine,
+  orientEventCompanionEdge,
   eventCompanionDisplayPercent
 } from "./event-companion-display-orientation.js";
 
@@ -38,6 +39,15 @@ function escapeXml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
+}
+
+function displayCalloutText(edge, value) {
+  const orientedEdge = orientEventCompanionEdge(edge);
+  if (orientedEdge === "left") return "← " + value;
+  if (orientedEdge === "right") return value + " →";
+  if (orientedEdge === "top") return "↑ " + value;
+  if (orientedEdge === "bottom") return "↓ " + value;
+  return String(value ?? "");
 }
 
 function orientExistingPercentOverlay(board) {
@@ -148,7 +158,9 @@ function addVerifiedTerrainGuides(page, layout, mount) {
       const orientedAnchor = orientEventCompanionPoint({ x: callout.anchorX, y: callout.anchorY });
       if (!orientedCallout || !orientedAnchor) return;
 
-      const calloutLines = Array.isArray(callout.lines) ? callout.lines.filter(Boolean) : [];
+      const calloutLines = Array.isArray(callout.edges) && Array.isArray(callout.values)
+        ? callout.edges.map((edge, index) => displayCalloutText(edge, callout.values[index])).filter(Boolean)
+        : (Array.isArray(callout.lines) ? callout.lines.filter(Boolean) : []);
       if (!calloutLines.length) return;
 
       const x = px(orientedCallout.x);
