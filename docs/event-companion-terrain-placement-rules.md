@@ -77,7 +77,7 @@ For each page:
 
 If neither member of a terrain pair has an approved canonical measurement, mirroring does not create one. If a counterpart is ambiguous, leave it unlabeled.
 
-Pages 18 and 19 have approved mirror layers. Page 20's canonical layer is approved and its mirror layer is the current verification target.
+Pages 18 and 19 have approved mirror layers. Page 20's canonical layer is approved and locked; its mirror layer is the current verification target.
 
 ## Presentation
 
