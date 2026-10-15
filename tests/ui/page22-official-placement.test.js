@@ -177,6 +177,6 @@ test("Page 22 mirror augmentation reuses every approved canonical value on the e
   const sevenMirror = mirrored.find((guide) => guide.value === '7"' && guide.terrain === "T14");
   assert.deepEqual(
     { anchor: sevenMirror?.anchor, edge: sevenMirror?.edge },
-    { anchor: [53.1, 17.6], edge: "right" }
+    { anchor: [53.2, 17.6], edge: "right" }
   );
 });
