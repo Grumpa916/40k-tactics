@@ -83,14 +83,8 @@ test("Page 22 keeps its approved 18-guide canonical source layer separate from m
   expectCanonicalPlusMirrors(22, 18);
 });
 
-test("Page 23 canonical source pass remains separate from still-disabled mirror augmentation", () => {
-  const layout = layoutForPage(23);
-  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
-  const complete = buildCompleteTerrainPlacementOverlay(layout);
-
-  assert.equal(canonical.guides.length, 18);
-  assert.equal(canonical.guides.some((guide) => guide.mirrored), false);
-  assert.deepEqual(complete.guides, canonical.guides);
+test("Page 23 keeps its approved 18-guide canonical source layer separate from mirror augmentation", () => {
+  expectCanonicalPlusMirrors(23, 18);
 });
 
 test("a later unverified page cannot gain measurements before its canonical source pass", () => {
