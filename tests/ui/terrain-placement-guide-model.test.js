@@ -79,7 +79,7 @@ test("pages 12-14 retain their explicit approved source overlays", () => {
 });
 
 for (const page of VERIFIED_SOURCE_PAGES) {
-  test(`page ${page} renders exactly its source-defined terrain placement guides`, () => {
+  test(`page ${page} preserves its source-defined terrain placement guides`, () => {
     const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === page);
     const canonical = getEventCompanionPlacementOverlay(page);
     assert.ok(layout, `page ${page} layout exists`);
@@ -88,12 +88,15 @@ for (const page of VERIFIED_SOURCE_PAGES) {
     const expected = expectedSourceGuides(page);
     const overlay = buildCompleteTerrainPlacementOverlay(layout);
 
-    assert.equal(overlay.guides.length, expected.length, "no synthetic guides are added");
-    assert.equal(overlay.lines.length, expected.length, "one rendered line per source-defined guide");
-    assert.equal(overlay.measurements.length, expected.length, "one displayed value per source-defined guide");
-
     if (page === 18) {
-      const renderedOfficial = overlay.guides
+      const official = overlay.guides.filter((guide) => !guide.mirrored);
+      const mirrored = overlay.guides.filter((guide) => guide.mirrored);
+      assert.equal(official.length, expected.length, "Page 18 retains all official/corrected source guides");
+      assert.ok(mirrored.length > 0, "Page 18 may additionally reuse approved values on blank mirror counterparts");
+      assert.equal(overlay.lines.length, overlay.guides.length, "one rendered line per official or mirrored guide");
+      assert.equal(overlay.measurements.length, overlay.guides.length, "one displayed value per official or mirrored guide");
+
+      const renderedOfficial = official
         .filter((guide) => guide.value !== '13"')
         .map(sourceIdentity)
         .sort();
@@ -104,6 +107,9 @@ for (const page of VERIFIED_SOURCE_PAGES) {
         "Page 18 preserves every official printed value and PDF source anchor while rotating its V2 terrain attachment and battlefield edge together"
       );
     } else {
+      assert.equal(overlay.guides.length, expected.length, "no synthetic guides are added");
+      assert.equal(overlay.lines.length, expected.length, "one rendered line per source-defined guide");
+      assert.equal(overlay.measurements.length, expected.length, "one displayed value per source-defined guide");
       assert.deepEqual(
         overlay.guides.map(guideKey).sort(),
         expected.map(guideKey).sort(),
@@ -136,9 +142,9 @@ for (const page of VERIFIED_SOURCE_PAGES) {
       (total, callout) => total + (Array.isArray(callout.lines) ? callout.lines.length : 0),
       0
     );
-    assert.equal(calloutGuideCount, overlay.guides.length, "boxed callouts cover source guides without inventing extra values");
+    assert.equal(calloutGuideCount, overlay.guides.length, "boxed callouts cover guides without inventing extra values");
     overlay.callouts.forEach((callout) => {
-      assert.ok(callout.lines.length >= 1 && callout.lines.length <= 2, "a source point shows only its actual one or two measurements");
+      assert.ok(callout.lines.length >= 1 && callout.lines.length <= 2, "a placement point shows only its actual one or two measurements");
       callout.values.forEach((value) => assert.match(value, INCH_VALUE));
     });
   });
@@ -147,8 +153,9 @@ for (const page of VERIFIED_SOURCE_PAGES) {
 test("page 18 rotates official PDF source anchors and battlefield edges together onto the intended V2 terrain corners", () => {
   const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 18);
   const overlay = buildCompleteTerrainPlacementOverlay(layout);
+  const official = overlay.guides.filter((guide) => !guide.mirrored);
 
-  const findBySource = (value, sourceAnchor) => overlay.guides.find((guide) => (
+  const findBySource = (value, sourceAnchor) => official.find((guide) => (
     guide.value === value
     && guide.sourceAnchor?.[0] === sourceAnchor[0]
     && guide.sourceAnchor?.[1] === sourceAnchor[1]
@@ -177,14 +184,17 @@ test("page 18 rotates official PDF source anchors and battlefield edges together
   );
 });
 
-test("page 18 keeps the official 26-inch value unique and includes the missing 13-inch source guide", () => {
+test("page 18 keeps the official values intact while mirror copies reuse them unchanged", () => {
   const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 18);
   const overlay = buildCompleteTerrainPlacementOverlay(layout);
-  const values = overlay.guides.map((guide) => guide.value);
+  const officialValues = overlay.guides.filter((guide) => !guide.mirrored).map((guide) => guide.value);
+  const mirroredValues = overlay.guides.filter((guide) => guide.mirrored).map((guide) => guide.value);
 
-  assert.equal(values.filter((value) => value === '26"').length, 1, "26 inches appears only at its official Page 18 source location");
-  assert.equal(values.filter((value) => value === '13"').length, 1, "the official Page 18 13-inch terrain guide is present");
-  assert.equal(values.length, 17, "Page 18 displays the 17 verified terrain-placement dimensions, excluding deployment-zone dimensions");
+  assert.equal(officialValues.filter((value) => value === '26"').length, 1, "the official 26-inch guide remains unique");
+  assert.equal(officialValues.filter((value) => value === '13"').length, 1, "the official Page 18 13-inch guide remains present");
+  assert.equal(officialValues.length, 17, "Page 18 retains the 17 verified terrain-placement dimensions");
+  assert.ok(mirroredValues.length > 0, "mirror counterparts reuse approved values without changing the official source layer");
+  mirroredValues.forEach((value) => assert.ok(officialValues.includes(value), `${value} mirror value already exists in the approved layer`));
 });
 
 test("pages beyond the verified range do not masquerade as canonical terrain guides", () => {
