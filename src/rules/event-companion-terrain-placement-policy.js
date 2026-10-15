@@ -49,7 +49,13 @@ const PAGE_POLICIES = Object.freeze({
     // augmentation remains disabled until the canonical view is accepted.
     sourceTransform: "rotate180",
     alignSourceToGeometry: true,
-    sourceEdgeOverrides: Object.freeze({})
+    // The upper-right 22-inch source line visibly leaves the small terrain piece
+    // toward the right-hand battlefield edge in the Event Companion. Preserve
+    // that PDF-frame direction here so the 180-degree transform yields the
+    // outward T14 guide instead of sending it back through the measured terrain.
+    sourceEdgeOverrides: Object.freeze({
+      '22"|51.11|22': "bottom"
+    })
   })
 });
 
