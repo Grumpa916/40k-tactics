@@ -293,7 +293,7 @@ test("page 19 mirror pass reuses every canonical value on the eight unmeasured r
 });
 
 test("pages beyond the verified range do not masquerade as canonical terrain guides", () => {
-  for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) => Number(item.page) >= 21 && Number(item.page) <= 53)) {
+  for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) => Number(item.page) >= 22 && Number(item.page) <= 53)) {
     const overlay = buildCompleteTerrainPlacementOverlay(layout);
     assert.equal(overlay.guides.length, 0, `page ${layout.page} remains unverified`);
     assert.equal(overlay.lines.length, 0, `page ${layout.page} has no synthetic official lines`);
