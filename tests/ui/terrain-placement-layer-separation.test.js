@@ -36,20 +36,29 @@ test("Page 18 canonical layer remains source-only and mirror augmentation is a s
   }
 });
 
-test("Page 19 canonical source pass remains mirror-free until separately approved", () => {
+test("Page 19 keeps its 20-guide canonical source layer separate from the mirror augmentation", () => {
   const layout = layoutForPage(19);
   const canonical = buildCanonicalTerrainPlacementOverlay(layout);
   const complete = buildCompleteTerrainPlacementOverlay(layout);
+  const mirrored = complete.guides.filter((guide) => guide.mirrored);
+  const official = complete.guides.filter((guide) => !guide.mirrored);
 
-  assert.equal(canonical.guides.length, 20, "Page 19 has its 20 official terrain-placement measurements");
-  assert.equal(complete.guides.length, 20, "mirror augmentation is still disabled for Page 19");
-  assert.equal(canonical.guides.some((guide) => guide.mirrored), false);
-  assert.equal(complete.guides.some((guide) => guide.mirrored), false);
+  assert.equal(canonical.guides.length, 20, "Page 19 canonical layer remains exactly the 20 official terrain-placement measurements");
+  assert.equal(canonical.guides.some((guide) => guide.mirrored), false, "canonical layer remains mirror-free");
+  assert.equal(official.length, 20, "complete output preserves all 20 canonical guides unchanged");
+  assert.equal(mirrored.length, 20, "each canonical Page 19 guide is reused once on its clear 180-degree counterpart");
+  assert.equal(complete.guides.length, 40, "Page 19 complete output is canonical plus mirror augmentation");
+
   assert.deepEqual(
-    complete.guides.map(sourceIdentity).sort(),
+    official.map(sourceIdentity).sort(),
     canonical.guides.map(sourceIdentity).sort(),
-    "complete output equals the canonical source layer until the mirror pass is explicitly enabled"
+    "enabling mirroring does not alter the approved canonical source layer"
   );
+
+  const canonicalValues = canonical.guides.map((guide) => guide.value);
+  mirrored.forEach((guide) => {
+    assert.ok(canonicalValues.includes(guide.value), `${guide.value} mirror copy reuses an approved canonical value`);
+  });
 });
 
 test("a later unverified page cannot gain mirror measurements before its canonical source pass", () => {
