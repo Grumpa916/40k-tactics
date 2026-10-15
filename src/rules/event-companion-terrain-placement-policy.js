@@ -61,6 +61,14 @@ function normalizedSourceKey(guide) {
   return String(guide?.value ?? "") + "|" + Number(sourceAnchor[0]) + "|" + Number(sourceAnchor[1]);
 }
 
+function normalizeCoordinate(value) {
+  // Coordinate transforms use subtraction on decimal source positions. Trim
+  // binary floating-point noise so a source 51.2" point rotated across a 60"
+  // board is represented as 8.8 rather than 8.799999999999997. This does not
+  // calculate or alter Event Companion measurement values.
+  return Number(Number(value).toFixed(6));
+}
+
 export function getEventCompanionTerrainPlacementPolicy(page) {
   return PAGE_POLICIES[Number(page)] ?? DEFAULT_POLICY;
 }
@@ -74,14 +82,14 @@ export function transformEventCompanionPlacement(point, edge, transform = "ident
   if (transform === "rotate180") {
     return Object.freeze({
       point: Object.freeze([
-        TERRAIN_PLACEMENT_BOARD.width - sourcePoint[0],
-        TERRAIN_PLACEMENT_BOARD.height - sourcePoint[1]
+        normalizeCoordinate(TERRAIN_PLACEMENT_BOARD.width - sourcePoint[0]),
+        normalizeCoordinate(TERRAIN_PLACEMENT_BOARD.height - sourcePoint[1])
       ]),
       edge: OPPOSITE_EDGE[edge] ?? edge
     });
   }
 
-  return Object.freeze({ point: Object.freeze(sourcePoint), edge });
+  return Object.freeze({ point: Object.freeze(sourcePoint.map(normalizeCoordinate)), edge });
 }
 
 export function transformEventCompanionSourceGuide(page, guide) {
