@@ -67,6 +67,16 @@ const PAGE_POLICIES = Object.freeze({
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
+  }),
+  22: Object.freeze({
+    // Page 22 retains the same PDF source-frame relationship as Pages 20-21:
+    // the 60-inch axis is reversed while the 44-inch axis is already aligned.
+    // Keep the raw PDF source anchors intact, flip x and its left/right edge
+    // direction together, then snap only to the existing verified V2 terrain
+    // vertices. No terrain-placement distance is calculated or changed.
+    sourceTransform: "flipX",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
