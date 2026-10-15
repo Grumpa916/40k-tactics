@@ -78,12 +78,39 @@ export const PAGE_22_SOURCE_GUIDES = Object.freeze([
 // Page 22's two printed 15-inch lines begin at the lower central terrain
 // footprint and run toward the battlefield edge, so they are terrain-placement
 // guides and are retained above. The two printed 18-inch deployment depths and
-// the separate 12-inch deployment-zone offset remain excluded.
+// the separate printed 12-inch deployment-zone offset remain excluded.
+
+export const PAGE_23_SOURCE_GUIDES = Object.freeze([
+  { value: '7"', edge: "top", sourceAnchor: [12.14, 37.05] },
+  { value: '14"', edge: "top", sourceAnchor: [4.03, 30.03] },
+  { value: '3"', edge: "top", sourceAnchor: [7.54, 41.00] },
+  { value: '5"', edge: "top", sourceAnchor: [17.75, 39.14] },
+  { value: '7"', edge: "top", sourceAnchor: [23.02, 37.05] },
+  { value: '16"', edge: "right", sourceAnchor: [44.05, 41.04] },
+  { value: '3"', edge: "top", sourceAnchor: [44.11, 41.04] },
+  { value: '13"', edge: "top", sourceAnchor: [53.20, 30.96] },
+  { value: '7"', edge: "right", sourceAnchor: [53.20, 30.96] },
+  { value: '11"', edge: "top", sourceAnchor: [46.05, 33.02] },
+  { value: '15"', edge: "top", sourceAnchor: [28.12, 29.00] },
+  { value: '3"', edge: "top", sourceAnchor: [32.61, 41.04] },
+  { value: '4"', edge: "left", sourceAnchor: [3.99, 30.03] },
+  { value: '4"', edge: "left", sourceAnchor: [3.89, 23.13] },
+  { value: '15"', edge: "bottom", sourceAnchor: [24.98, 15.10] },
+  { value: '25"', edge: "left", sourceAnchor: [24.92, 15.11] },
+  { value: '5"', edge: "left", sourceAnchor: [4.93, 38.05] },
+  { value: '14"', edge: "right", sourceAnchor: [46.08, 33.02] }
+]);
+
+// Page 23 prints two 12-inch deployment-zone depths, one for each player. They
+// define the red and blue deployment zones and are deliberately excluded from
+// the Terrain Setup placement overlay. All 18 entries above are terrain-to-edge
+// placement dimensions taken directly from the official PDF vector layer.
 
 const SUPPLEMENTAL_GUIDES_BY_PAGE = Object.freeze({
   20: PAGE_20_SOURCE_GUIDES,
   21: PAGE_21_SOURCE_GUIDES,
-  22: PAGE_22_SOURCE_GUIDES
+  22: PAGE_22_SOURCE_GUIDES,
+  23: PAGE_23_SOURCE_GUIDES
 });
 
 export function getSupplementalEventCompanionPlacementOverlay(page) {
