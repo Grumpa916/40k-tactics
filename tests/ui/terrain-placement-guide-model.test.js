@@ -6,12 +6,12 @@ import { getEventCompanionPlacementOverlay } from "../../src/data/event-companio
 import { getEventCompanionPlacementGuideCorrections } from "../../src/data/event-companion-placement-guide-corrections.js";
 import {
   buildCompleteTerrainPlacementOverlay,
-  terrainGuideCrossesOwnTerrain,
   terrainGuideEndpoint
 } from "../../src/ui/terrain-placement-guide-model.js";
 import {
   outwardPerpendicularEdges,
-  terrainGuideCrossesPolygonInterior
+  terrainGuideCrossesPolygonInterior,
+  terrainGuideEntersPolygonInterior
 } from "../../src/ui/terrain-placement-path-safety.js";
 
 const INCH_VALUE = /^\d+(?:\.\d+)?"$/;
@@ -44,18 +44,16 @@ function expectedSourceGuides(page) {
   return [...result.values()];
 }
 
-function isOfficialPage18BoundaryGuide(page, guide) {
-  return Number(page) === 18
-    && guide?.value === '24.25"'
-    && guide?.edge === "right"
-    && guide?.sourceAnchor?.[0] === 35.89
-    && guide?.sourceAnchor?.[1] === 26.98;
-}
-
-test("terrain path safety rejects a guide that rides along the terrain boundary", () => {
+test("terrain path safety rejects a generated guide that rides along the terrain boundary", () => {
   const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
   assert.equal(terrainGuideCrossesPolygonInterior([4, 2], "left", square), true);
   assert.equal(terrainGuideCrossesPolygonInterior([2, 2], "left", square), false);
+});
+
+test("source-guide interior validation allows boundary contact but rejects actual terrain penetration", () => {
+  const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
+  assert.equal(terrainGuideEntersPolygonInterior([4, 2], "left", square), false);
+  assert.equal(terrainGuideEntersPolygonInterior([4, 3], "left", square), true);
 });
 
 test("outward perpendicular routing chooses edges that leave the terrain cleanly", () => {
@@ -128,20 +126,11 @@ for (const page of VERIFIED_SOURCE_PAGES) {
         sourceVertices.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1]),
         `${guide.terrain} ${guide.value} snaps to a reproducible terrain corner`
       );
-
-      if (isOfficialPage18BoundaryGuide(page, guide)) {
-        assert.equal(
-          terrainGuideCrossesOwnTerrain(layout, guide),
-          true,
-          "the official Page 18 24.25-inch guide intentionally follows the terrain boundary instead of being rerouted"
-        );
-      } else {
-        assert.equal(
-          terrainGuideCrossesOwnTerrain(layout, guide),
-          false,
-          `${guide.terrain} ${guide.value} ${guide.edge} does not pass through its own terrain footprint`
-        );
-      }
+      assert.equal(
+        terrainGuideEntersPolygonInterior(guide.anchor, guide.edge, sourceVertices),
+        false,
+        `${guide.terrain} ${guide.value} ${guide.edge} does not enter its own terrain interior`
+      );
     });
 
     const calloutGuideCount = overlay.callouts.reduce(
