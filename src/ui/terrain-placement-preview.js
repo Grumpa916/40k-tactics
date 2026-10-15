@@ -148,18 +148,27 @@ function addVerifiedTerrainGuides(page, layout, mount) {
       const orientedAnchor = orientEventCompanionPoint({ x: callout.anchorX, y: callout.anchorY });
       if (!orientedCallout || !orientedAnchor) return;
 
+      const calloutLines = Array.isArray(callout.lines) ? callout.lines.filter(Boolean) : [];
+      if (!calloutLines.length) return;
+
       const x = px(orientedCallout.x);
       const y = py(orientedCallout.y);
       const anchorX = px(orientedAnchor.x);
       const anchorY = py(orientedAnchor.y);
       const boxWidth = 11.5;
-      const boxHeight = 6.5;
+      const boxHeight = calloutLines.length === 1 ? 4.4 : 6.5;
+      const rowMarkup = calloutLines.map((text, index) => {
+        const rowY = calloutLines.length === 1
+          ? y + 0.7
+          : y - 0.75 + index * 2.45;
+        return '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + rowY + '" text-anchor="middle">' + escapeXml(text) + '</text>';
+      }).join("");
+
       parts.push(
         '<g class="terrain-point-callout" data-terrain="' + escapeXml(callout.terrain) + '" data-terrain-point="' + escapeXml(callout.terrain + ':' + callout.point) + '">' +
           '<line x1="' + anchorX + '" y1="' + anchorY + '" x2="' + x + '" y2="' + y + '" stroke="#b8c5cf" stroke-width=".7" stroke-dasharray="2 1.5" vector-effect="non-scaling-stroke"></line>' +
           '<rect x="' + (x - boxWidth / 2) + '" y="' + (y - boxHeight / 2) + '" width="' + boxWidth + '" height="' + boxHeight + '" rx="1.1" fill="#101820" fill-opacity=".94" stroke="#f6d783" stroke-width=".7" vector-effect="non-scaling-stroke"></rect>' +
-          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y - 0.75) + '" text-anchor="middle">' + escapeXml(callout.horizontalText) + '</text>' +
-          '<text class="battlefield-map__dimension-text" x="' + x + '" y="' + (y + 1.7) + '" text-anchor="middle">' + escapeXml(callout.verticalText) + '</text>' +
+          rowMarkup +
         '</g>'
       );
     });
@@ -167,7 +176,7 @@ function addVerifiedTerrainGuides(page, layout, mount) {
 
   board.insertAdjacentHTML(
     "beforeend",
-    '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Complete terrain placement guides: two points and two perpendicular measurements per terrain shape">' + parts.join("") + '</svg>'
+    '<svg class="battlefield-map__terrain-measurements" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Official Event Companion terrain placement guides; no inferred values">' + parts.join("") + '</svg>'
   );
   return overlay;
 }
@@ -187,7 +196,7 @@ function enableTerrainFocus(page, mount, overlay) {
 
   const controls = document.createElement("div");
   controls.className = "terrain-focus-controls";
-  controls.innerHTML = '<span data-terrain-focus-status>Tap a terrain footprint to show its four placement measurements.</span><button type="button" data-terrain-show-all>Show all</button>';
+  controls.innerHTML = '<span data-terrain-focus-status>Tap a terrain footprint to show its official placement measurements.</span><button type="button" data-terrain-show-all>Show all</button>';
   mapRoot.insertBefore(controls, board);
 
   const focusStatus = controls.querySelector("[data-terrain-focus-status]");
@@ -197,6 +206,10 @@ function enableTerrainFocus(page, mount, overlay) {
 
   function visibleFor(element) {
     return showAll || (focusedTerrain && element.dataset.terrain === focusedTerrain);
+  }
+
+  function measurementCountFor(terrain) {
+    return guideLines.filter((element) => element.dataset.terrain === terrain).length;
   }
 
   function applyFocus() {
@@ -213,13 +226,14 @@ function enableTerrainFocus(page, mount, overlay) {
     });
 
     if (showAll) {
-      focusStatus.textContent = "Showing all terrain placement measurements.";
+      focusStatus.textContent = "Showing all source-defined terrain placement measurements.";
       showAllButton.textContent = "Hide all";
     } else if (focusedTerrain) {
-      focusStatus.textContent = "Showing four placement measurements for " + focusedTerrain + ". Tap another terrain footprint to switch.";
+      const count = measurementCountFor(focusedTerrain);
+      focusStatus.textContent = "Showing " + count + " official placement measurement" + (count === 1 ? "" : "s") + " for " + focusedTerrain + ". Tap another terrain footprint to switch.";
       showAllButton.textContent = "Show all";
     } else {
-      focusStatus.textContent = "Tap a terrain footprint to show its four placement measurements.";
+      focusStatus.textContent = "Tap a terrain footprint to show its official placement measurements.";
       showAllButton.textContent = "Show all";
     }
   }
@@ -234,7 +248,7 @@ function enableTerrainFocus(page, mount, overlay) {
     const terrainName = shape.dataset.terrain;
     shape.setAttribute("role", "button");
     shape.setAttribute("tabindex", "0");
-    shape.setAttribute("aria-label", "Show four placement measurements for " + terrainName);
+    shape.setAttribute("aria-label", "Show official placement measurements for " + terrainName);
     shape.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -290,7 +304,7 @@ function renderPage(page, mount, status) {
   enableTerrainFocus(page, mount, overlay);
 
   const guideStatus = overlay?.lines?.length
-    ? " · complete terrain placement reference"
+    ? " · source-defined terrain placement reference"
     : " · terrain guides not yet source-verified";
   status.textContent = layout.missionA + " ↔ " + layout.missionB + " · Layout " + layout.layout + " · page " + layout.page + " · blue side at bottom" + guideStatus;
 }
