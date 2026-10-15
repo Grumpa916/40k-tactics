@@ -3,7 +3,11 @@ import assert from "node:assert/strict";
 
 import { EVENT_COMPANION_MAP_CATALOG } from "../../src/data/event-companion-map-catalog.js";
 import { PAGE_20_SOURCE_GUIDES } from "../../src/data/event-companion-placement-guides-supplemental.js";
-import { buildCanonicalTerrainPlacementOverlay } from "../../src/ui/terrain-placement-guide-model.js";
+import { getEventCompanionTerrainMirrorPolicy } from "../../src/rules/event-companion-terrain-mirror-policy.js";
+import {
+  buildCanonicalTerrainPlacementOverlay,
+  buildCompleteTerrainPlacementOverlay
+} from "../../src/ui/terrain-placement-guide-model.js";
 import { terrainGuideViolatesMeasuredTerrain } from "../../src/ui/terrain-placement-path-safety.js";
 
 function layoutForPage(page) {
@@ -14,6 +18,12 @@ function isOfficialT8TwentyInchSourceLine(guide) {
   return guide.value === '20"'
     && guide.sourceAnchor?.[0] === 40.12
     && guide.sourceAnchor?.[1] === 8.98;
+}
+
+const OPPOSITE_EDGE = Object.freeze({ left: "right", right: "left", top: "bottom", bottom: "top" });
+
+function sourceIdentity(guide) {
+  return [guide.value, Number(guide.sourceAnchor?.[0]), Number(guide.sourceAnchor?.[1])].join("|");
 }
 
 test("Page 20 source transcription contains 19 terrain-placement guides", () => {
@@ -88,5 +98,32 @@ test("Page 20 retains the distinctive official terrain-placement values", () => 
 
   for (const value of ['24.25"', '25"', '22"', '20"', '17"', '16"', '15"', '13"', '10"', '9"', '7"', '5"']) {
     assert.ok(values.includes(value), `${value} remains present in the Page 20 canonical source layer`);
+  }
+});
+
+test("Page 20 mirror copies preserve source value and rotate terrain/arrow exactly once", () => {
+  const layout = layoutForPage(20);
+  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
+  const complete = buildCompleteTerrainPlacementOverlay(layout);
+  const policy = getEventCompanionTerrainMirrorPolicy(20);
+  const mirrored = complete.guides.filter((guide) => guide.mirrored);
+
+  assert.equal(mirrored.length, canonical.guides.length);
+
+  const canonicalBySource = new Map(canonical.guides.map((guide) => [sourceIdentity(guide), guide]));
+  for (const mirror of mirrored) {
+    const source = canonicalBySource.get(sourceIdentity(mirror));
+    assert.ok(source, `${mirror.value} mirror retains canonical source identity`);
+    assert.equal(mirror.value, source.value, "mirror value is copied unchanged");
+    assert.equal(mirror.mirroredFromTerrain, source.terrain, "mirror records its canonical terrain source");
+    assert.equal(mirror.terrain, policy.terrainMap[source.terrain], "mirror lands on the declared 180-degree terrain counterpart");
+    assert.equal(mirror.edge, OPPOSITE_EDGE[source.edge], "mirror arrow rotates 180 degrees with its anchor");
+
+    const polygon = (layout.terrainGeometry?.[mirror.terrain]?.points ?? [])
+      .map((point) => [Number(point.x), Number(point.y)]);
+    assert.ok(
+      polygon.some((vertex) => vertex[0] === mirror.anchor[0] && vertex[1] === mirror.anchor[1]),
+      `${mirror.value} mirror snaps to a reproducible ${mirror.terrain} corner`
+    );
   }
 });
