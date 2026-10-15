@@ -61,29 +61,16 @@ const PAGE_POLICIES = Object.freeze({
     sourceEdgeOverrides: Object.freeze({})
   }),
   21: Object.freeze({
-    // Page 21 uses the same source frame as Page 20: the 60-inch axis is
-    // reversed and the 44-inch axis is already aligned. Transform the source
-    // point and its battlefield edge together before snapping to V2 geometry.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
   }),
   22: Object.freeze({
-    // Page 22 retains the same PDF source-frame relationship as Pages 20-21:
-    // the 60-inch axis is reversed while the 44-inch axis is already aligned.
-    // Keep the raw PDF source anchors intact, flip x and its left/right edge
-    // direction together, then snap only to the existing verified V2 terrain
-    // vertices. No terrain-placement distance is calculated or changed.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
   }),
   23: Object.freeze({
-    // Page 23 continues the same PDF source-frame relationship as Pages 20-22.
-    // The 60-inch source axis is reversed relative to the current V2 geometry,
-    // while the 44-inch axis is already aligned. Transform the raw source point
-    // and its left/right edge direction together, then snap to the existing V2
-    // terrain vertices without deriving or changing any printed distance.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
@@ -93,6 +80,15 @@ const PAGE_POLICIES = Object.freeze({
     // Pages 20-23. Reverse only the 60-inch source axis, moving left/right edge
     // direction with that transform, then snap to existing V2 terrain vertices.
     // Printed measurement values remain untouched.
+    sourceTransform: "flipX",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
+  }),
+  25: Object.freeze({
+    // Page 25's audited terrain dimensions use the same source frame as Page 24:
+    // the official PDF 60-inch axis is reversed relative to the V2 geometry,
+    // while the 44-inch axis is already aligned. Transform each source anchor
+    // and left/right edge together, then snap only to an existing terrain vertex.
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
