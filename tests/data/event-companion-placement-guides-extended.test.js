@@ -6,7 +6,8 @@ import {
   PAGE_15_SOURCE_GUIDES,
   PAGE_16_SOURCE_GUIDES,
   PAGE_17_SOURCE_GUIDES,
-  PAGE_18_SOURCE_GUIDES
+  PAGE_18_SOURCE_GUIDES,
+  PAGE_19_SOURCE_GUIDES
 } from "../../src/data/event-companion-placement-guides.js";
 
 function expectedEndpoint(guide) {
@@ -21,7 +22,8 @@ const VERIFIED_PAGES = new Map([
   [15, PAGE_15_SOURCE_GUIDES.length],
   [16, PAGE_16_SOURCE_GUIDES.length],
   [17, PAGE_17_SOURCE_GUIDES.length],
-  [18, PAGE_18_SOURCE_GUIDES.length]
+  [18, PAGE_18_SOURCE_GUIDES.length],
+  [19, PAGE_19_SOURCE_GUIDES.length]
 ]);
 
 for (const [page, expectedCount] of VERIFIED_PAGES) {
@@ -45,7 +47,7 @@ for (const [page, expectedCount] of VERIFIED_PAGES) {
 }
 
 test("unverified pages do not expose inferred terrain placement overlays", () => {
-  for (let page = 19; page <= 53; page += 1) {
+  for (let page = 20; page <= 53; page += 1) {
     assert.equal(getEventCompanionPlacementOverlay(page), null, `page ${page} remains source-unverified`);
   }
 });
