@@ -5,6 +5,20 @@ import { terrainGuideCrossesPolygonInterior } from "./terrain-placement-path-saf
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
 
+const PAGE_18_OPPOSITE_EDGE = Object.freeze({
+  left: "right",
+  right: "left",
+  top: "bottom",
+  bottom: "top"
+});
+
+const PAGE_18_SOURCE_EDGE_RESTORES = Object.freeze({
+  '9"|51.2|22.25': "right",
+  '10"|25.95|34.14': "top",
+  '17"|35.75|16.86': "bottom",
+  '17"|24.23|16.89': "bottom"
+});
+
 function geometryPoints(shape) {
   return (shape?.points ?? [])
     .filter((point) => Number.isFinite(Number(point?.x)) && Number.isFinite(Number(point?.y)))
@@ -62,21 +76,29 @@ function nearestTerrainVertex(layout, target) {
   return bestTerrain && bestAnchor ? { terrain: bestTerrain, anchor: [...bestAnchor] } : null;
 }
 
+function page18OriginalSourceEdge(guide) {
+  const sourceAnchor = guide?.sourceAnchor ?? [];
+  const key = String(guide?.value ?? "") + "|" + Number(sourceAnchor[0]) + "|" + Number(sourceAnchor[1]);
+  return PAGE_18_SOURCE_EDGE_RESTORES[key] ?? guide?.edge;
+}
+
 function page18SourceAlignedGuide(guide, layout) {
   const sourceAnchor = guide?.sourceAnchor;
   if (!Array.isArray(sourceAnchor) || sourceAnchor.length !== 2) return guide;
   if (!Number.isFinite(Number(sourceAnchor[0])) || !Number.isFinite(Number(sourceAnchor[1]))) return guide;
 
-  // Page 18's PDF-extracted source anchors are 180 degrees opposite the
-  // already-verified V2 terrain geometry. Rotate only the placement point,
-  // then snap it to the nearest reproducible V2 terrain vertex. The official
-  // printed measurement value and battlefield-edge direction are unchanged.
+  // Page 18's PDF-extracted source coordinate frame is 180 degrees opposite
+  // the already-verified V2 terrain geometry. Rotate the placement point AND
+  // its battlefield-edge direction together, then snap the point to the
+  // nearest reproducible V2 terrain vertex. Never rotate one without the other.
   const correctedSourcePoint = [
     TERRAIN_BOARD_WIDTH - Number(sourceAnchor[0]),
     TERRAIN_BOARD_HEIGHT - Number(sourceAnchor[1])
   ];
+  const originalSourceEdge = page18OriginalSourceEdge(guide);
+  const correctedEdge = PAGE_18_OPPOSITE_EDGE[originalSourceEdge] ?? originalSourceEdge;
   const snapped = nearestTerrainVertex(layout, correctedSourcePoint);
-  return snapped ? { ...guide, ...snapped } : guide;
+  return snapped ? { ...guide, edge: correctedEdge, ...snapped } : { ...guide, edge: correctedEdge };
 }
 
 function anchorKey(terrain, anchor) {
