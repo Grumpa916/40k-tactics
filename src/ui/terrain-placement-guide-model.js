@@ -1,5 +1,7 @@
 import { getEventCompanionPlacementOverlay } from "../data/event-companion-placement-guides.js";
 import { getSupplementalEventCompanionPlacementOverlay } from "../data/event-companion-placement-guides-supplemental.js";
+import { getEventCompanionPlacementCandidate } from "../data/event-companion-placement-candidates.js";
+import { isEventCompanionTerrainPlacementApproved } from "../data/event-companion-placement-review-status.js";
 import { getEventCompanionPlacementGuideCorrections } from "../data/event-companion-placement-guide-corrections.js";
 import {
   getEventCompanionTerrainPlacementPolicy,
@@ -14,9 +16,18 @@ import { terrainGuideViolatesMeasuredTerrain } from "./terrain-placement-path-sa
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
 
+function emptyOverlay() {
+  return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
+}
+
 function canonicalSourceOverlayForPage(page) {
+  if (!isEventCompanionTerrainPlacementApproved(page)) return null;
   return getEventCompanionPlacementOverlay(Number(page))
     ?? getSupplementalEventCompanionPlacementOverlay(Number(page));
+}
+
+function candidateSourceOverlayForPage(page) {
+  return getEventCompanionPlacementCandidate(Number(page));
 }
 
 function geometryPoints(shape) {
@@ -163,17 +174,37 @@ function pointName(index) {
   return String.fromCharCode("A".charCodeAt(0) + index);
 }
 
-function canonicalGuidesForPage(page, layout) {
-  const canonical = canonicalSourceOverlayForPage(page);
-  if (!canonical) return [];
+function alignedGuidesForSourceOverlay(page, layout, sourceOverlay, { includeCorrections = false } = {}) {
+  if (!sourceOverlay) return [];
 
   const deduped = new Map();
-  for (const guide of canonical.guides ?? []) {
+  for (const guide of sourceOverlay.guides ?? []) {
     const sourceAligned = sourceAlignedGuide(page, guide, layout);
     deduped.set(guideKey(sourceAligned), { ...sourceAligned, anchor: [...sourceAligned.anchor] });
   }
-  for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
-    deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
+
+  if (includeCorrections) {
+    for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
+      deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
+    }
+  }
+
+  return [...deduped.values()];
+}
+
+function canonicalGuidesForPage(page, layout) {
+  return alignedGuidesForSourceOverlay(page, layout, canonicalSourceOverlayForPage(page), {
+    includeCorrections: true
+  });
+}
+
+function candidateGuidesForPage(page, layout, { includeMirrors = false } = {}) {
+  const candidateGuides = alignedGuidesForSourceOverlay(page, layout, candidateSourceOverlayForPage(page));
+  if (!includeMirrors || !candidateGuides.length) return candidateGuides;
+
+  const deduped = new Map(candidateGuides.map((guide) => [guideKey(guide), guide]));
+  for (const guide of mirroredCounterpartGuides(page, candidateGuides, layout)) {
+    deduped.set(guideKey(guide), guide);
   }
   return [...deduped.values()];
 }
@@ -336,12 +367,17 @@ function generatedOverlay(layout, guides) {
   return { guides: namedGuides, lines, measurements, anchors, callouts };
 }
 
+export function buildCandidateTerrainPlacementOverlay(layout, { includeMirrors = false } = {}) {
+  const page = Number(layout?.page);
+  const candidate = candidateSourceOverlayForPage(page);
+  if (!candidate) return emptyOverlay();
+  return generatedOverlay(layout, candidateGuidesForPage(page, layout, { includeMirrors }));
+}
+
 export function buildCanonicalTerrainPlacementOverlay(layout) {
   const page = Number(layout?.page);
   const canonical = canonicalSourceOverlayForPage(page);
-  if (!canonical) {
-    return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
-  }
+  if (!canonical) return emptyOverlay();
 
   // Pages 12-14 retain their previously approved exact canonical presentation.
   if (page <= 14) return canonicalOverlayWithPointNames(canonical);
@@ -351,9 +387,7 @@ export function buildCanonicalTerrainPlacementOverlay(layout) {
 export function buildCompleteTerrainPlacementOverlay(layout) {
   const page = Number(layout?.page);
   const canonical = canonicalSourceOverlayForPage(page);
-  if (!canonical) {
-    return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
-  }
+  if (!canonical) return emptyOverlay();
 
   // Pages 12-14 currently have no mirror augmentation policy, so preserve their
   // exact accepted source overlay until a separate mirror pass is explicitly
