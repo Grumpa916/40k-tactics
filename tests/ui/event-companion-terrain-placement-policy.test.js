@@ -42,3 +42,16 @@ test("Page 18 canonical source policy preserves original PDF-frame edge metadata
     edge: "left"
   });
 });
+
+test("Page 19 19-inch source guide rotates outward instead of through its measured terrain", () => {
+  const transformed = transformEventCompanionSourceGuide(19, {
+    value: '19"',
+    edge: "right",
+    sourceAnchor: [40.91, 37]
+  });
+
+  assert.deepEqual(transformed, {
+    point: [19.09, 7],
+    edge: "right"
+  });
+});
