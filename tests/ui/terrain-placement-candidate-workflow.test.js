@@ -22,7 +22,7 @@ function sourceIdentity(guide) {
   return [String(guide?.value ?? ""), Number(guide?.sourceAnchor?.[0]), Number(guide?.sourceAnchor?.[1])].join("|");
 }
 
-test("Page 24 is fully approved and Page 25 starts confirmation 1", () => {
+test("Page 24 is fully approved and Page 25 is awaiting confirmation 2", () => {
   const page24 = getEventCompanionTerrainPlacementReviewStatus(24);
   const page25 = getEventCompanionTerrainPlacementReviewStatus(25);
   const page26 = getEventCompanionTerrainPlacementReviewStatus(26);
@@ -32,8 +32,8 @@ test("Page 24 is fully approved and Page 25 starts confirmation 1", () => {
   assert.equal(page24.mirrorConfirmed, true);
   assert.equal(isEventCompanionTerrainPlacementApproved(24), true);
 
-  assert.equal(page25.state, TERRAIN_PLACEMENT_REVIEW_STATE.CANDIDATE);
-  assert.equal(page25.canonicalConfirmed, false);
+  assert.equal(page25.state, TERRAIN_PLACEMENT_REVIEW_STATE.CANONICAL_APPROVED);
+  assert.equal(page25.canonicalConfirmed, true);
   assert.equal(page25.mirrorRequired, true);
   assert.equal(page25.mirrorConfirmed, false);
   assert.equal(isEventCompanionTerrainPlacementApproved(25), false);
@@ -59,10 +59,11 @@ test("Page 24 approved source is promoted unchanged and renders with its approve
   );
 });
 
-test("Page 25 candidate source data is isolated from production while confirmation 1 is pending", () => {
+test("Page 25 confirmation-2 preview adds mirrors while production remains blocked", () => {
   const layout = layoutForPage(25);
   const candidate = getEventCompanionPlacementCandidate(25);
-  const candidateOverlay = buildCandidateTerrainPlacementOverlay(layout);
+  const canonicalCandidate = buildCandidateTerrainPlacementOverlay(layout);
+  const confirmationTwoPreview = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
   const productionCanonical = buildCanonicalTerrainPlacementOverlay(layout);
   const productionComplete = buildCompleteTerrainPlacementOverlay(layout);
 
@@ -75,9 +76,11 @@ test("Page 25 candidate source data is isolated from production while confirmati
   assert.equal(candidate.sourceAudit.ambiguousCount, 0);
   assert.equal(candidate.sourceAudit.sourcePathExceptions.length, 2);
 
-  assert.equal(candidateOverlay.guides.length, 20, "verification preview renders only the candidate canonical guides");
-  assert.equal(candidateOverlay.guides.some((guide) => guide.mirrored), false, "confirmation 1 remains mirror-free");
-  assert.equal(productionCanonical.guides.length, 0, "Page 25 is not production canonical data yet");
+  assert.equal(canonicalCandidate.guides.length, 20, "confirmation 1 canonical layer remains unchanged");
+  assert.equal(canonicalCandidate.guides.some((guide) => guide.mirrored), false, "canonical candidate stays mirror-free");
+  assert.equal(confirmationTwoPreview.guides.length, 40, "confirmation 2 adds one mirror copy for each approved canonical guide");
+  assert.equal(confirmationTwoPreview.guides.filter((guide) => guide.mirrored).length, 20);
+  assert.equal(productionCanonical.guides.length, 0, "Page 25 is not production canonical data until mirror confirmation passes");
   assert.equal(productionComplete.guides.length, 0, "Page 25 candidate cannot leak into the production complete overlay");
 });
 
