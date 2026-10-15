@@ -64,6 +64,25 @@ const PAGE_20_TERRAIN_COUNTERPARTS = Object.freeze({
   T16: "T6"
 });
 
+const PAGE_21_TERRAIN_COUNTERPARTS = Object.freeze({
+  T1: "T6",
+  T2: "T7",
+  T3: "T12",
+  T4: "T11",
+  T5: "T15",
+  T6: "T1",
+  T7: "T2",
+  T8: "T13",
+  T9: "T14",
+  T10: "T16",
+  T11: "T4",
+  T12: "T3",
+  T13: "T8",
+  T14: "T9",
+  T15: "T5",
+  T16: "T10"
+});
+
 // Mirror augmentation is intentionally separate from the canonical Event
 // Companion source policy. A page is first transcribed and verified exactly as
 // the official source presents it. Only after that canonical layer is accepted
@@ -95,6 +114,15 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
     // Page 20's approved canonical layer likewise measures exactly one member
     // of each clear 180-degree terrain pair. Copy only those approved values to
     // the eight blank counterparts; no new distances are derived.
+    targetInternalHalf: null
+  }),
+  21: Object.freeze({
+    enabled: true,
+    transform: "rotate180",
+    terrainMap: PAGE_21_TERRAIN_COUNTERPARTS,
+    // Page 21's visually approved canonical layer measures exactly one member
+    // of each clear rotational pair. Reuse those approved values unchanged on
+    // the eight opposite terrain objects after canonical acceptance.
     targetInternalHalf: null
   })
 });
