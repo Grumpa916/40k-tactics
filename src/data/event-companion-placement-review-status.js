@@ -56,9 +56,10 @@ const PAGE_REVIEW_STATUS = Object.freeze({
   // iPad/Safari. It is fully approved and may render through the production
   // source + mirror layers.
   24: approved(),
-  // Page 25 is the next isolated candidate. Confirmation 1 must verify the
-  // official canonical source transcription before any mirror policy is added.
-  25: candidate()
+  // Page 25 canonical source transcription was visually confirmed on
+  // iPad/Safari. Confirmation 2 now verifies the separate app-only mirror
+  // augmentation before Page 25 may be promoted to production.
+  25: canonicalApproved()
 });
 
 const UNPREPARED_STATUS = Object.freeze({
