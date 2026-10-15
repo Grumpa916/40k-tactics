@@ -7,13 +7,13 @@ import {
 } from "../../src/rules/event-companion-terrain-mirror-policy.js";
 
 test("mirroring is disabled by default until a canonical page receives an approved mirror pass", () => {
-  const policy = getEventCompanionTerrainMirrorPolicy(21);
+  const policy = getEventCompanionTerrainMirrorPolicy(22);
   assert.equal(policy.enabled, false);
   assert.deepEqual(policy.terrainMap, {});
   assert.equal(policy.targetInternalHalf, null);
 
   assert.deepEqual(
-    transformEventCompanionMirrorGuide(21, { anchor: [8, 7], edge: "left" }),
+    transformEventCompanionMirrorGuide(22, { anchor: [8, 7], edge: "left" }),
     { point: null, edge: "left" }
   );
 });
@@ -92,5 +92,37 @@ test("Page 20 mirror augmentation declares all eight rotational terrain pairs", 
   assert.deepEqual(
     transformEventCompanionMirrorGuide(20, { anchor: [24.2, 17], edge: "bottom" }),
     { point: [35.8, 27], edge: "top" }
+  );
+});
+
+test("Page 21 mirror augmentation declares all eight rotational terrain pairs", () => {
+  const policy = getEventCompanionTerrainMirrorPolicy(21);
+  assert.equal(policy.enabled, true);
+  assert.equal(policy.transform, "rotate180");
+  assert.equal(policy.targetInternalHalf, null);
+
+  const expectedPairs = {
+    T1: "T6",
+    T2: "T7",
+    T3: "T12",
+    T4: "T11",
+    T5: "T15",
+    T6: "T1",
+    T7: "T2",
+    T8: "T13",
+    T9: "T14",
+    T10: "T16",
+    T11: "T4",
+    T12: "T3",
+    T13: "T8",
+    T14: "T9",
+    T15: "T5",
+    T16: "T10"
+  };
+  assert.deepEqual(policy.terrainMap, expectedPairs);
+
+  assert.deepEqual(
+    transformEventCompanionMirrorGuide(21, { anchor: [14.6, 3], edge: "bottom" }),
+    { point: [45.4, 41], edge: "top" }
   );
 });
