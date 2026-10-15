@@ -84,7 +84,7 @@ test("Page 22 canonical source pass remains separate from still-disabled mirror 
   const canonical = buildCanonicalTerrainPlacementOverlay(layout);
   const complete = buildCompleteTerrainPlacementOverlay(layout);
 
-  assert.equal(canonical.guides.length, 16);
+  assert.equal(canonical.guides.length, 18, "Page 22 retains both restored 15-inch terrain guides in its canonical source layer");
   assert.equal(canonical.guides.some((guide) => guide.mirrored), false);
   assert.deepEqual(complete.guides, canonical.guides);
 });
