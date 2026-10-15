@@ -8,155 +8,66 @@ const DEFAULT_MIRROR_POLICY = Object.freeze({
 });
 
 const PAGE_18_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T6",
-  T2: "T12",
-  T3: "T15",
-  T4: "T11",
-  T5: "T7",
-  T6: "T1",
-  T7: "T5",
-  T8: "T13",
-  T9: "T14",
-  T10: "T16",
-  T11: "T4",
-  T12: "T2",
-  T13: "T8",
-  T14: "T9",
-  T15: "T3",
-  T16: "T10"
+  T1: "T6", T2: "T12", T3: "T15", T4: "T11",
+  T5: "T7", T6: "T1", T7: "T5", T8: "T13",
+  T9: "T14", T10: "T16", T11: "T4", T12: "T2",
+  T13: "T8", T14: "T9", T15: "T3", T16: "T10"
 });
 
 const PAGE_19_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T6",
-  T2: "T7",
-  T3: "T13",
-  T4: "T11",
-  T5: "T14",
-  T6: "T1",
-  T7: "T2",
-  T8: "T15",
-  T9: "T12",
-  T10: "T16",
-  T11: "T4",
-  T12: "T9",
-  T13: "T3",
-  T14: "T5",
-  T15: "T8",
-  T16: "T10"
+  T1: "T6", T2: "T7", T3: "T13", T4: "T11",
+  T5: "T14", T6: "T1", T7: "T2", T8: "T15",
+  T9: "T12", T10: "T16", T11: "T4", T12: "T9",
+  T13: "T3", T14: "T5", T15: "T8", T16: "T10"
 });
 
 const PAGE_20_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T12",
-  T2: "T11",
-  T3: "T7",
-  T4: "T15",
-  T5: "T13",
-  T6: "T16",
-  T7: "T3",
-  T8: "T9",
-  T9: "T8",
-  T10: "T14",
-  T11: "T2",
-  T12: "T1",
-  T13: "T5",
-  T14: "T10",
-  T15: "T4",
-  T16: "T6"
+  T1: "T12", T2: "T11", T3: "T7", T4: "T15",
+  T5: "T13", T6: "T16", T7: "T3", T8: "T9",
+  T9: "T8", T10: "T14", T11: "T2", T12: "T1",
+  T13: "T5", T14: "T10", T15: "T4", T16: "T6"
 });
 
 const PAGE_21_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T6",
-  T2: "T7",
-  T3: "T12",
-  T4: "T11",
-  T5: "T15",
-  T6: "T1",
-  T7: "T2",
-  T8: "T13",
-  T9: "T14",
-  T10: "T16",
-  T11: "T4",
-  T12: "T3",
-  T13: "T8",
-  T14: "T9",
-  T15: "T5",
-  T16: "T10"
+  T1: "T6", T2: "T7", T3: "T12", T4: "T11",
+  T5: "T15", T6: "T1", T7: "T2", T8: "T13",
+  T9: "T14", T10: "T16", T11: "T4", T12: "T3",
+  T13: "T8", T14: "T9", T15: "T5", T16: "T10"
 });
 
 const PAGE_22_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T14",
-  T2: "T15",
-  T3: "T9",
-  T4: "T12",
-  T5: "T11",
-  T6: "T13",
-  T7: "T16",
-  T8: "T10",
-  T9: "T3",
-  T10: "T8",
-  T11: "T5",
-  T12: "T4",
-  T13: "T6",
-  T14: "T1",
-  T15: "T2",
-  T16: "T7"
+  T1: "T14", T2: "T15", T3: "T9", T4: "T12",
+  T5: "T11", T6: "T13", T7: "T16", T8: "T10",
+  T9: "T3", T10: "T8", T11: "T5", T12: "T4",
+  T13: "T6", T14: "T1", T15: "T2", T16: "T7"
 });
 
 const PAGE_23_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T5",
-  T2: "T6",
-  T3: "T7",
-  T4: "T9",
-  T5: "T1",
-  T6: "T2",
-  T7: "T3",
-  T8: "T13",
-  T9: "T4",
-  T10: "T16",
-  T11: "T14",
-  T12: "T15",
-  T13: "T8",
-  T14: "T11",
-  T15: "T12",
-  T16: "T10"
+  T1: "T5", T2: "T6", T3: "T7", T4: "T9",
+  T5: "T1", T6: "T2", T7: "T3", T8: "T13",
+  T9: "T4", T10: "T16", T11: "T14", T12: "T15",
+  T13: "T8", T14: "T11", T15: "T12", T16: "T10"
 });
 
 const PAGE_24_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T9",
-  T2: "T6",
-  T3: "T12",
-  T4: "T8",
-  T5: "T7",
-  T6: "T2",
-  T7: "T5",
-  T8: "T4",
-  T9: "T1",
-  T10: "T16",
-  T11: "T14",
-  T12: "T3",
-  T13: "T15",
-  T14: "T11",
-  T15: "T13",
-  T16: "T10"
+  T1: "T9", T2: "T6", T3: "T12", T4: "T8",
+  T5: "T7", T6: "T2", T7: "T5", T8: "T4",
+  T9: "T1", T10: "T16", T11: "T14", T12: "T3",
+  T13: "T15", T14: "T11", T15: "T13", T16: "T10"
 });
 
 const PAGE_25_TERRAIN_COUNTERPARTS = Object.freeze({
-  T1: "T3",
-  T2: "T10",
-  T3: "T1",
-  T4: "T11",
-  T5: "T12",
-  T6: "T15",
-  T7: "T13",
-  T8: "T14",
-  T9: "T16",
-  T10: "T2",
-  T11: "T4",
-  T12: "T5",
-  T13: "T7",
-  T14: "T8",
-  T15: "T6",
-  T16: "T9"
+  T1: "T3", T2: "T10", T3: "T1", T4: "T11",
+  T5: "T12", T6: "T15", T7: "T13", T8: "T14",
+  T9: "T16", T10: "T2", T11: "T4", T12: "T5",
+  T13: "T7", T14: "T8", T15: "T6", T16: "T9"
+});
+
+const PAGE_26_TERRAIN_COUNTERPARTS = Object.freeze({
+  T1: "T8", T2: "T3", T3: "T2", T4: "T12",
+  T5: "T13", T6: "T7", T7: "T6", T8: "T1",
+  T9: "T14", T10: "T15", T11: "T16", T12: "T4",
+  T13: "T5", T14: "T9", T15: "T10", T16: "T11"
 });
 
 // Mirror augmentation is intentionally separate from the canonical Event
@@ -169,72 +80,57 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_18_TERRAIN_COUNTERPARTS,
-    // Page 18's accepted pass populated only the previously blank portrait top
-    // half. Preserve that exact approved behavior rather than broadening it.
     targetInternalHalf: "right"
   }),
   19: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_19_TERRAIN_COUNTERPARTS,
-    // Page 19's canonical layer contains one measured member of every clear
-    // 180-degree terrain pair, so all eight previously blank counterparts can
-    // receive the unchanged approved measurements. No half-board filter is
-    // required because the declared counterpart map itself is unambiguous.
     targetInternalHalf: null
   }),
   20: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_20_TERRAIN_COUNTERPARTS,
-    // Page 20's approved canonical layer likewise measures exactly one member
-    // of each clear 180-degree terrain pair. Copy only those approved values to
-    // the eight blank counterparts; no new distances are derived.
     targetInternalHalf: null
   }),
   21: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_21_TERRAIN_COUNTERPARTS,
-    // Page 21's visually approved canonical layer measures exactly one member
-    // of each clear rotational pair. Reuse those approved values unchanged on
-    // the eight opposite terrain objects after canonical acceptance.
     targetInternalHalf: null
   }),
   22: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_22_TERRAIN_COUNTERPARTS,
-    // Page 22's canonical source layer was visually verified on iPad/Safari.
-    // Each measured terrain object has one clear 180-degree counterpart, so the
-    // app-only pass reuses every approved value unchanged on that counterpart.
     targetInternalHalf: null
   }),
   23: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_23_TERRAIN_COUNTERPARTS,
-    // Page 23's canonical source layer was visually verified on iPad/Safari.
-    // Reuse each approved value unchanged on its declared rotational terrain
-    // counterpart; no distance is calculated or inferred by this app-only pass.
     targetInternalHalf: null
   }),
   24: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_24_TERRAIN_COUNTERPARTS,
-    // Page 24's canonical and mirror layers are visually approved and locked.
-    // Keep the app-only copies data-driven and unchanged from the approved
-    // canonical values.
     targetInternalHalf: null
   }),
   25: Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_25_TERRAIN_COUNTERPARTS,
-    // Page 25's 20 canonical source guides were visually approved on
-    // iPad/Safari. Confirmation 2 reuses those exact values on the eight clear
-    // 180-degree counterpart terrain objects; no terrain distance is derived.
+    targetInternalHalf: null
+  }),
+  26: Object.freeze({
+    enabled: true,
+    transform: "rotate180",
+    terrainMap: PAGE_26_TERRAIN_COUNTERPARTS,
+    // Confirmation 1 accepted the canonical Page 26 source layer. The second
+    // review pass copies those exact values onto the eight declared 180-degree
+    // terrain counterparts. No distance is calculated or inferred here.
     targetInternalHalf: null
   })
 });
