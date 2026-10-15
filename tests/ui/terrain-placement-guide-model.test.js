@@ -27,10 +27,9 @@ function guideKey(guide) {
   ].join("|");
 }
 
-function sourceSignature(guide) {
+function sourceIdentity(guide) {
   return [
     String(guide?.value ?? ""),
-    String(guide?.edge ?? ""),
     Number(guide?.sourceAnchor?.[0]),
     Number(guide?.sourceAnchor?.[1])
   ].join("|");
@@ -96,13 +95,13 @@ for (const page of VERIFIED_SOURCE_PAGES) {
     if (page === 18) {
       const renderedOfficial = overlay.guides
         .filter((guide) => guide.value !== '13"')
-        .map(sourceSignature)
+        .map(sourceIdentity)
         .sort();
-      const canonicalOfficial = canonical.guides.map(sourceSignature).sort();
+      const canonicalOfficial = canonical.guides.map(sourceIdentity).sort();
       assert.deepEqual(
         renderedOfficial,
         canonicalOfficial,
-        "Page 18 preserves every official printed value, edge, and PDF source anchor while remapping only its V2 terrain attachment"
+        "Page 18 preserves every official printed value and PDF source anchor while rotating its V2 terrain attachment and battlefield edge together"
       );
     } else {
       assert.deepEqual(
@@ -145,32 +144,36 @@ for (const page of VERIFIED_SOURCE_PAGES) {
   });
 }
 
-test("page 18 remaps official PDF source anchors to the intended V2 terrain corners without changing values or edge directions", () => {
+test("page 18 rotates official PDF source anchors and battlefield edges together onto the intended V2 terrain corners", () => {
   const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 18);
   const overlay = buildCompleteTerrainPlacementOverlay(layout);
 
-  const findBySource = (value, edge, sourceAnchor) => overlay.guides.find((guide) => (
+  const findBySource = (value, sourceAnchor) => overlay.guides.find((guide) => (
     guide.value === value
-    && guide.edge === edge
     && guide.sourceAnchor?.[0] === sourceAnchor[0]
     && guide.sourceAnchor?.[1] === sourceAnchor[1]
   ));
 
+  const twentyFourQuarter = findBySource('24.25"', [35.89, 26.98]);
+  const five = findBySource('5"', [55.08, 18.51]);
+  const seven = findBySource('7"', [55.11, 6.96]);
+  const twentySix = findBySource('26"', [34.01, 39.07]);
+
   assert.deepEqual(
-    { terrain: findBySource('24.25"', "right", [35.89, 26.98])?.terrain, anchor: findBySource('24.25"', "right", [35.89, 26.98])?.anchor },
-    { terrain: "T4", anchor: [24.2, 17] }
+    { terrain: twentyFourQuarter?.terrain, anchor: twentyFourQuarter?.anchor, edge: twentyFourQuarter?.edge },
+    { terrain: "T4", anchor: [24.2, 17], edge: "left" }
   );
   assert.deepEqual(
-    { terrain: findBySource('5"', "right", [55.08, 18.51])?.terrain, anchor: findBySource('5"', "right", [55.08, 18.51])?.anchor },
-    { terrain: "T9", anchor: [4.8, 25.4] }
+    { terrain: five?.terrain, anchor: five?.anchor, edge: five?.edge },
+    { terrain: "T9", anchor: [4.8, 25.4], edge: "left" }
   );
   assert.deepEqual(
-    { terrain: findBySource('7"', "bottom", [55.11, 6.96])?.terrain, anchor: findBySource('7"', "bottom", [55.11, 6.96])?.anchor },
-    { terrain: "T9", anchor: [4.8, 37] }
+    { terrain: seven?.terrain, anchor: seven?.anchor, edge: seven?.edge },
+    { terrain: "T9", anchor: [4.8, 37], edge: "top" }
   );
   assert.deepEqual(
-    { terrain: findBySource('26"', "right", [34.01, 39.07])?.terrain, anchor: findBySource('26"', "right", [34.01, 39.07])?.anchor },
-    { terrain: "T6", anchor: [25.9, 5] }
+    { terrain: twentySix?.terrain, anchor: twentySix?.anchor, edge: twentySix?.edge },
+    { terrain: "T6", anchor: [25.9, 5], edge: "left" }
   );
 });
 
