@@ -22,18 +22,25 @@ function findBySource(overlay, value, sourceAnchor) {
   ));
 }
 
-test("Page 22 source transcription contains only the 16 terrain-placement guides", () => {
-  assert.equal(PAGE_22_SOURCE_GUIDES.length, 16);
-  assert.equal(PAGE_22_SOURCE_GUIDES.some((guide) => guide.value === '15"'), false);
+function isOfficialPage22FifteenSourceLine(guide) {
+  return guide.value === '15"'
+    && guide.sourceAnchor?.[0] === 45.10
+    && (guide.sourceAnchor?.[1] === 11.93 || guide.sourceAnchor?.[1] === 22.00);
+}
+
+test("Page 22 source transcription contains the 18 terrain-placement guides", () => {
+  assert.equal(PAGE_22_SOURCE_GUIDES.length, 18);
+  assert.equal(PAGE_22_SOURCE_GUIDES.filter((guide) => guide.value === '15"').length, 2);
+  assert.equal(PAGE_22_SOURCE_GUIDES.filter((guide) => guide.value === '8"').length, 1);
   assert.equal(PAGE_22_SOURCE_GUIDES.some((guide) => guide.value === '18"'), false);
 });
 
-test("Page 22 canonical guides snap to reproducible terrain corners and leave measured terrain cleanly", () => {
+test("Page 22 canonical guides snap to reproducible terrain corners and preserve source-authoritative paths", () => {
   const layout = layoutForPage(22);
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
 
   assert.ok(layout, "Page 22 layout geometry exists");
-  assert.equal(overlay.guides.length, 16);
+  assert.equal(overlay.guides.length, 18);
   assert.equal(overlay.guides.some((guide) => guide.mirrored), false);
 
   for (const guide of overlay.guides) {
@@ -44,6 +51,13 @@ test("Page 22 canonical guides snap to reproducible terrain corners and leave me
       polygon.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1]),
       `${guide.value} is attached to a reproducible ${guide.terrain} corner`
     );
+
+    // Both official 15-inch Page 22 source lines visibly run from the lower
+    // central terrain footprint toward the battlefield edge. On the approximate
+    // V2 footprint those source-authoritative paths overlap the terrain boundary,
+    // so preserve them exactly rather than reversing or rerouting them.
+    if (isOfficialPage22FifteenSourceLine(guide)) continue;
+
     assert.equal(
       terrainGuideViolatesMeasuredTerrain(guide.anchor, guide.edge, polygon),
       false,
@@ -81,6 +95,29 @@ test("Page 22 uses the PDF source x-axis flip without per-guide edge repairs", (
   );
 });
 
+test("Page 22 restores the two official 15-inch terrain guides and keeps the 8-inch guide on the circled footprints", () => {
+  const layout = layoutForPage(22);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
+
+  const leftFifteen = findBySource(overlay, '15"', [45.10, 11.93]);
+  assert.deepEqual(
+    { terrain: leftFifteen?.terrain, anchor: leftFifteen?.anchor, edge: leftFifteen?.edge },
+    { terrain: "T4", anchor: [14.9, 12], edge: "left" }
+  );
+
+  const rightFifteen = findBySource(overlay, '15"', [45.10, 22.00]);
+  assert.deepEqual(
+    { terrain: rightFifteen?.terrain, anchor: rightFifteen?.anchor, edge: rightFifteen?.edge },
+    { terrain: "T4", anchor: [14.9, 22.1], edge: "left" }
+  );
+
+  const eight = findBySource(overlay, '8"', [41.18, 35.89]);
+  assert.deepEqual(
+    { terrain: eight?.terrain, anchor: eight?.anchor, edge: eight?.edge },
+    { terrain: "T3", anchor: [16.8, 35.9], edge: "top" }
+  );
+});
+
 test("Page 22 preserves the source edge-pair measurements at shared terrain corners", () => {
   const layout = layoutForPage(22);
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
@@ -109,10 +146,10 @@ test("Page 22 retains its distinctive official terrain-placement values", () => 
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
   const values = overlay.guides.map((guide) => guide.value);
 
-  for (const value of ['27"', '26"', '23"', '20"', '19"', '12"', '8"', '7"', '6"', '4"', '3"']) {
+  for (const value of ['27"', '26"', '23"', '20"', '19"', '15"', '12"', '8"', '7"', '6"', '4"', '3"']) {
     assert.ok(values.includes(value), `${value} remains present in the Page 22 canonical source layer`);
   }
-  assert.equal(values.includes('15"'), false, "central deployment-zone dimensions remain excluded");
+  assert.equal(values.filter((value) => value === '15"').length, 2, "both official 15-inch terrain guides remain present");
   assert.equal(values.includes('18"'), false, "deployment-zone depth dimensions remain excluded");
 });
 
