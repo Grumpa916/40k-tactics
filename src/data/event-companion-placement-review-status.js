@@ -56,9 +56,9 @@ const PAGE_REVIEW_STATUS = Object.freeze({
   // Page 25 canonical and mirror measurements were both visually confirmed on
   // iPad/Safari. It is now fully approved for production rendering.
   25: approved(),
-  // Page 26 is isolated candidate data until its canonical and mirror reviews
-  // both pass.
-  26: candidate()
+  // Page 26 canonical measurements were visually confirmed on iPad/Safari.
+  // Mirror augmentation is now the second and final confirmation gate.
+  26: canonicalApproved()
 });
 
 const UNPREPARED_STATUS = Object.freeze({
