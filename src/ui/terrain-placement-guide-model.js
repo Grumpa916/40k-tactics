@@ -1,42 +1,14 @@
 import { getEventCompanionPlacementOverlay } from "../data/event-companion-placement-guides.js";
 import { getEventCompanionPlacementGuideCorrections } from "../data/event-companion-placement-guide-corrections.js";
-import { terrainGuideCrossesPolygonInterior } from "./terrain-placement-path-safety.js";
+import {
+  getEventCompanionTerrainPlacementPolicy,
+  transformEventCompanionMirrorGuide,
+  transformEventCompanionSourceGuide
+} from "../rules/event-companion-terrain-placement-policy.js";
+import { terrainGuideViolatesMeasuredTerrain } from "./terrain-placement-path-safety.js";
 
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
-
-const PAGE_18_OPPOSITE_EDGE = Object.freeze({
-  left: "right",
-  right: "left",
-  top: "bottom",
-  bottom: "top"
-});
-
-const PAGE_18_TERRAIN_MIRRORS = Object.freeze({
-  T1: "T6",
-  T2: "T12",
-  T3: "T15",
-  T4: "T11",
-  T5: "T7",
-  T6: "T1",
-  T7: "T5",
-  T8: "T13",
-  T9: "T14",
-  T10: "T16",
-  T11: "T4",
-  T12: "T2",
-  T13: "T8",
-  T14: "T9",
-  T15: "T3",
-  T16: "T10"
-});
-
-const PAGE_18_SOURCE_EDGE_RESTORES = Object.freeze({
-  '9"|51.2|22.25': "right",
-  '10"|25.95|34.14': "top",
-  '17"|35.75|16.86': "bottom",
-  '17"|24.23|16.89': "bottom"
-});
 
 function geometryPoints(shape) {
   return (shape?.points ?? [])
@@ -112,57 +84,49 @@ function terrainCenterX(layout, terrain) {
   return centroid(geometryPoints(layout?.terrainGeometry?.[terrain]))[0];
 }
 
-function page18OriginalSourceEdge(guide) {
-  const sourceAnchor = guide?.sourceAnchor ?? [];
-  const key = String(guide?.value ?? "") + "|" + Number(sourceAnchor[0]) + "|" + Number(sourceAnchor[1]);
-  return PAGE_18_SOURCE_EDGE_RESTORES[key] ?? guide?.edge;
+function sourceAlignedGuide(page, guide, layout) {
+  const policy = getEventCompanionTerrainPlacementPolicy(page);
+  if (!policy.alignSourceToGeometry) return guide;
+
+  const transformed = transformEventCompanionSourceGuide(page, guide);
+  if (!transformed.point) return guide;
+  const snapped = nearestTerrainVertex(layout, transformed.point);
+  return snapped
+    ? { ...guide, edge: transformed.edge, ...snapped }
+    : { ...guide, edge: transformed.edge };
 }
 
-function page18SourceAlignedGuide(guide, layout) {
-  const sourceAnchor = guide?.sourceAnchor;
-  if (!Array.isArray(sourceAnchor) || sourceAnchor.length !== 2) return guide;
-  if (!Number.isFinite(Number(sourceAnchor[0])) || !Number.isFinite(Number(sourceAnchor[1]))) return guide;
-
-  // Page 18's PDF-extracted source coordinate frame is 180 degrees opposite
-  // the already-verified V2 terrain geometry. Rotate the placement point AND
-  // its battlefield-edge direction together, then snap the point to the
-  // nearest reproducible V2 terrain vertex. Never rotate one without the other.
-  const correctedSourcePoint = [
-    TERRAIN_BOARD_WIDTH - Number(sourceAnchor[0]),
-    TERRAIN_BOARD_HEIGHT - Number(sourceAnchor[1])
-  ];
-  const originalSourceEdge = page18OriginalSourceEdge(guide);
-  const correctedEdge = PAGE_18_OPPOSITE_EDGE[originalSourceEdge] ?? originalSourceEdge;
-  const snapped = nearestTerrainVertex(layout, correctedSourcePoint);
-  return snapped ? { ...guide, edge: correctedEdge, ...snapped } : { ...guide, edge: correctedEdge };
+function targetTerrainIsAllowed(layout, terrain, targetInternalHalf) {
+  if (!targetInternalHalf) return true;
+  const centerX = terrainCenterX(layout, terrain);
+  if (targetInternalHalf === "right") return centerX > TERRAIN_BOARD_WIDTH / 2;
+  if (targetInternalHalf === "left") return centerX < TERRAIN_BOARD_WIDTH / 2;
+  return true;
 }
 
-function page18MirroredCounterpartGuides(sourceGuides, layout) {
+function mirroredCounterpartGuides(page, sourceGuides, layout) {
+  const mirrorPolicy = getEventCompanionTerrainPlacementPolicy(page).mirrorCounterparts;
+  if (!mirrorPolicy?.terrainMap) return [];
+
   const originallyMeasured = new Set(sourceGuides.map((guide) => guide.terrain));
   const mirrored = [];
 
   for (const guide of sourceGuides) {
-    const targetTerrain = PAGE_18_TERRAIN_MIRRORS[guide.terrain];
+    const targetTerrain = mirrorPolicy.terrainMap[guide.terrain];
     if (!targetTerrain || originallyMeasured.has(targetTerrain)) continue;
-
-    // The requested counterparts are the currently blank terrain shapes on
-    // the top half of the portrait Event Companion view. In V2's 60x44 source
-    // coordinate frame those counterparts have centers on the x > 30 side.
-    if (terrainCenterX(layout, targetTerrain) <= TERRAIN_BOARD_WIDTH / 2) continue;
+    if (!targetTerrainIsAllowed(layout, targetTerrain, mirrorPolicy.targetInternalHalf)) continue;
 
     const targetShape = layout?.terrainGeometry?.[targetTerrain];
-    const rotatedPoint = [
-      TERRAIN_BOARD_WIDTH - Number(guide.anchor[0]),
-      TERRAIN_BOARD_HEIGHT - Number(guide.anchor[1])
-    ];
-    const targetAnchor = nearestShapeVertex(targetShape, rotatedPoint);
+    const transformed = transformEventCompanionMirrorGuide(page, guide);
+    if (!transformed.point) continue;
+    const targetAnchor = nearestShapeVertex(targetShape, transformed.point);
     if (!targetAnchor) continue;
 
     mirrored.push({
       ...guide,
       terrain: targetTerrain,
       anchor: targetAnchor,
-      edge: PAGE_18_OPPOSITE_EDGE[guide.edge] ?? guide.edge,
+      edge: transformed.edge,
       mirrored: true,
       mirroredFromTerrain: guide.terrain,
       mirroredFromAnchor: [...guide.anchor]
@@ -196,7 +160,7 @@ function sourceGuidesForPage(page, layout) {
 
   const deduped = new Map();
   for (const guide of canonical.guides ?? []) {
-    const sourceAligned = Number(page) === 18 ? page18SourceAlignedGuide(guide, layout) : guide;
+    const sourceAligned = sourceAlignedGuide(page, guide, layout);
     deduped.set(guideKey(sourceAligned), { ...sourceAligned, anchor: [...sourceAligned.anchor] });
   }
   for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
@@ -204,13 +168,7 @@ function sourceGuidesForPage(page, layout) {
   }
 
   const officialGuides = [...deduped.values()];
-  if (Number(page) !== 18) return officialGuides;
-
-  // Page 18 user-approved usability rule: reuse the existing approved values
-  // on clear 180-degree counterpart terrain shapes that currently have no
-  // measurements. No value is calculated or altered, and mirrored copies use
-  // the same visual treatment as their source guides.
-  for (const guide of page18MirroredCounterpartGuides(officialGuides, layout)) {
+  for (const guide of mirroredCounterpartGuides(page, officialGuides, layout)) {
     deduped.set(guideKey(guide), guide);
   }
   return [...deduped.values()];
@@ -318,9 +276,9 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   // Pages 12-14 retain their previously approved exact overlay presentation.
   if (page <= 14) return canonicalOverlayWithPointNames(canonical);
 
-  // Pages 15+ begin with strictly source-defined values. Page 18 additionally
-  // reuses those approved values on clear blank rotational counterparts by the
-  // explicit user-approved mirror rule above; the copied values are unchanged.
+  // Pages 15+ use only source-defined values plus any explicit counterpart
+  // policy attached to that page. Transform policy may reposition an approved
+  // source guide, but it never calculates or changes its printed distance.
   const sourceGuides = sourceGuidesForPage(page, layout);
   const groups = groupedSourcePoints(sourceGuides);
   const pointByAnchor = new Map(groups.map((group) => [anchorKey(group.terrain, group.anchor), group.point]));
@@ -376,11 +334,16 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   return { guides, lines, measurements, anchors, callouts };
 }
 
-export function terrainGuideCrossesOwnTerrain(layout, guide) {
-  const shapePoints = geometryPoints(layout?.terrainGeometry?.[guide?.terrain]);
-  if (shapePoints.length < 3) return false;
-  return terrainGuideCrossesPolygonInterior(guide.anchor, guide.edge, shapePoints, {
+export function terrainGuideViolatesOwnTerrain(layout, guide) {
+  const measuredTerrainPoints = geometryPoints(layout?.terrainGeometry?.[guide?.terrain]);
+  if (measuredTerrainPoints.length < 3) return false;
+  return terrainGuideViolatesMeasuredTerrain(guide.anchor, guide.edge, measuredTerrainPoints, {
     width: TERRAIN_BOARD_WIDTH,
     height: TERRAIN_BOARD_HEIGHT
   });
+}
+
+// Backward-compatible export retained for existing callers/tests.
+export function terrainGuideCrossesOwnTerrain(layout, guide) {
+  return terrainGuideViolatesOwnTerrain(layout, guide);
 }
