@@ -19,6 +19,14 @@ function geometryPoints(shape) {
   return (shape?.points ?? []).map((point) => [Number(point.x), Number(point.y)]);
 }
 
+function sourceIdentity(guide) {
+  return [
+    String(guide?.value ?? ""),
+    Number(guide?.sourceAnchor?.[0]),
+    Number(guide?.sourceAnchor?.[1])
+  ].join("|");
+}
+
 const rows = [];
 let failed = false;
 
@@ -28,9 +36,11 @@ for (const page of listEventCompanionPlacementCandidatePages()) {
   const review = getEventCompanionTerrainPlacementReviewStatus(page);
   const policy = getEventCompanionTerrainPlacementPolicy(page);
   const overlay = layout ? buildCandidateTerrainPlacementOverlay(layout) : null;
+  const sourcePathExceptions = new Set(candidate?.sourceAudit?.sourcePathExceptions ?? []);
 
   let reproducibleCorners = 0;
   let pathSafe = 0;
+  let auditedPathExceptions = 0;
   const issues = [];
 
   if (!layout) issues.push("missing-layout");
@@ -47,6 +57,9 @@ for (const page of listEventCompanionPlacementCandidatePages()) {
 
     if (!terrainGuideViolatesMeasuredTerrain(guide.anchor, guide.edge, polygon)) {
       pathSafe += 1;
+    } else if (sourcePathExceptions.has(sourceIdentity(guide))) {
+      pathSafe += 1;
+      auditedPathExceptions += 1;
     } else {
       issues.push(`${guide.terrain}:${guide.value}:path`);
     }
@@ -71,6 +84,7 @@ for (const page of listEventCompanionPlacementCandidatePages()) {
     transform: policy.sourceTransform,
     corners: `${reproducibleCorners}/${guideCount}`,
     paths: `${pathSafe}/${guideCount}`,
+    sourceExceptions: auditedPathExceptions,
     issues: issues.length ? issues.join(",") : "none"
   });
 }
