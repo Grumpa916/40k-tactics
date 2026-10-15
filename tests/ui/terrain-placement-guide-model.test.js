@@ -27,6 +27,15 @@ function guideKey(guide) {
   ].join("|");
 }
 
+function sourceSignature(guide) {
+  return [
+    String(guide?.value ?? ""),
+    String(guide?.edge ?? ""),
+    Number(guide?.sourceAnchor?.[0]),
+    Number(guide?.sourceAnchor?.[1])
+  ].join("|");
+}
+
 function expectedSourceGuides(page) {
   const canonical = getEventCompanionPlacementOverlay(page);
   const result = new Map();
@@ -77,11 +86,25 @@ for (const page of VERIFIED_SOURCE_PAGES) {
     assert.equal(overlay.guides.length, expected.length, "no synthetic guides are added");
     assert.equal(overlay.lines.length, expected.length, "one rendered line per source-defined guide");
     assert.equal(overlay.measurements.length, expected.length, "one displayed value per source-defined guide");
-    assert.deepEqual(
-      overlay.guides.map(guideKey).sort(),
-      expected.map(guideKey).sort(),
-      "every rendered guide maps to a specific source value, terrain point, and edge"
-    );
+
+    if (page === 18) {
+      const renderedOfficial = overlay.guides
+        .filter((guide) => guide.value !== '13"')
+        .map(sourceSignature)
+        .sort();
+      const canonicalOfficial = canonical.guides.map(sourceSignature).sort();
+      assert.deepEqual(
+        renderedOfficial,
+        canonicalOfficial,
+        "Page 18 preserves every official printed value, edge, and PDF source anchor while remapping only its V2 terrain attachment"
+      );
+    } else {
+      assert.deepEqual(
+        overlay.guides.map(guideKey).sort(),
+        expected.map(guideKey).sort(),
+        "every rendered guide maps to a specific source value, terrain point, and edge"
+      );
+    }
 
     overlay.guides.forEach((guide, index) => {
       assert.match(guide.value, INCH_VALUE);
@@ -115,6 +138,35 @@ for (const page of VERIFIED_SOURCE_PAGES) {
     });
   });
 }
+
+test("page 18 remaps official PDF source anchors to the intended V2 terrain corners without changing values or edge directions", () => {
+  const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 18);
+  const overlay = buildCompleteTerrainPlacementOverlay(layout);
+
+  const findBySource = (value, edge, sourceAnchor) => overlay.guides.find((guide) => (
+    guide.value === value
+    && guide.edge === edge
+    && guide.sourceAnchor?.[0] === sourceAnchor[0]
+    && guide.sourceAnchor?.[1] === sourceAnchor[1]
+  ));
+
+  assert.deepEqual(
+    { terrain: findBySource('24.25"', "right", [35.89, 26.98])?.terrain, anchor: findBySource('24.25"', "right", [35.89, 26.98])?.anchor },
+    { terrain: "T4", anchor: [24.2, 17] }
+  );
+  assert.deepEqual(
+    { terrain: findBySource('5"', "right", [55.08, 18.51])?.terrain, anchor: findBySource('5"', "right", [55.08, 18.51])?.anchor },
+    { terrain: "T9", anchor: [4.8, 25.4] }
+  );
+  assert.deepEqual(
+    { terrain: findBySource('7"', "bottom", [55.11, 6.96])?.terrain, anchor: findBySource('7"', "bottom", [55.11, 6.96])?.anchor },
+    { terrain: "T9", anchor: [4.8, 37] }
+  );
+  assert.deepEqual(
+    { terrain: findBySource('26"', "right", [34.01, 39.07])?.terrain, anchor: findBySource('26"', "right", [34.01, 39.07])?.anchor },
+    { terrain: "T6", anchor: [25.9, 5] }
+  );
+});
 
 test("page 18 keeps the official 26-inch value unique and includes the missing 13-inch source guide", () => {
   const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === 18);
