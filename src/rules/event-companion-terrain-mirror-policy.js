@@ -26,6 +26,25 @@ const PAGE_18_TERRAIN_COUNTERPARTS = Object.freeze({
   T16: "T10"
 });
 
+const PAGE_19_TERRAIN_COUNTERPARTS = Object.freeze({
+  T1: "T6",
+  T2: "T7",
+  T3: "T13",
+  T4: "T11",
+  T5: "T14",
+  T6: "T1",
+  T7: "T2",
+  T8: "T15",
+  T9: "T12",
+  T10: "T16",
+  T11: "T4",
+  T12: "T9",
+  T13: "T3",
+  T14: "T5",
+  T15: "T8",
+  T16: "T10"
+});
+
 // Mirror augmentation is intentionally separate from the canonical Event
 // Companion source policy. A page is first transcribed and verified exactly as
 // the official source presents it. Only after that canonical layer is accepted
@@ -36,8 +55,19 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_18_TERRAIN_COUNTERPARTS,
-    // Portrait top half corresponds to x > 30 in the internal 60x44 frame.
+    // Page 18's accepted pass populated only the previously blank portrait top
+    // half. Preserve that exact approved behavior rather than broadening it.
     targetInternalHalf: "right"
+  }),
+  19: Object.freeze({
+    enabled: true,
+    transform: "rotate180",
+    terrainMap: PAGE_19_TERRAIN_COUNTERPARTS,
+    // Page 19's canonical layer contains one measured member of every clear
+    // 180-degree terrain pair, so all eight previously blank counterparts can
+    // receive the unchanged approved measurements. No half-board filter is
+    // required because the declared counterpart map itself is unambiguous.
+    targetInternalHalf: null
   })
 });
 
