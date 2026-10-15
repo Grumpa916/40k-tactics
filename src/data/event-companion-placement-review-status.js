@@ -30,6 +30,15 @@ function candidate({ mirrorRequired = true } = {}) {
   });
 }
 
+function canonicalApproved({ mirrorRequired = true } = {}) {
+  return Object.freeze({
+    state: TERRAIN_PLACEMENT_REVIEW_STATE.CANONICAL_APPROVED,
+    canonicalConfirmed: true,
+    mirrorRequired,
+    mirrorConfirmed: mirrorRequired ? false : null
+  });
+}
+
 const PAGE_REVIEW_STATUS = Object.freeze({
   12: approved({ mirrorRequired: false }),
   13: approved({ mirrorRequired: false }),
@@ -45,9 +54,10 @@ const PAGE_REVIEW_STATUS = Object.freeze({
   // Page 23 canonical and mirror measurements were both visually confirmed on
   // iPad/Safari. It is locked before the candidate workflow starts at Page 24.
   23: approved(),
-  // Page 24 is the first page using the new candidate -> two confirmations ->
-  // approved lifecycle. Candidate data must never leak into production output.
-  24: candidate()
+  // Page 24 canonical measurements were visually confirmed on iPad/Safari.
+  // Keep the page behind the candidate gate while confirmation 2 verifies the
+  // app-only mirror augmentation.
+  24: canonicalApproved()
 });
 
 const UNPREPARED_STATUS = Object.freeze({
