@@ -18,12 +18,18 @@ function findBySource(overlay, value, sourceAnchor) {
   ));
 }
 
+function isOfficialSixteenInchSourceLine(guide) {
+  return guide.value === '16"'
+    && guide.sourceAnchor?.[0] === 42.17
+    && guide.sourceAnchor?.[1] === 28.07;
+}
+
 test("Page 21 source transcription contains 18 terrain-placement guides and excludes deployment depths", () => {
   assert.equal(PAGE_21_SOURCE_GUIDES.length, 18);
   assert.equal(PAGE_21_SOURCE_GUIDES.some((guide) => guide.value === '15"'), false);
 });
 
-test("Page 21 canonical guides snap to reproducible terrain corners and leave their measured terrain cleanly", () => {
+test("Page 21 canonical guides snap to reproducible terrain corners and preserve source-authoritative paths", () => {
   const layout = layoutForPage(21);
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
 
@@ -39,6 +45,14 @@ test("Page 21 canonical guides snap to reproducible terrain corners and leave th
       polygon.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1]),
       `${guide.value} is attached to a reproducible ${guide.terrain} corner`
     );
+
+    // The official Page 21 16-inch line at source [42.17, 28.07] is visibly
+    // drawn toward the Event Companion right-hand battlefield edge. In the V2
+    // geometry that source-authoritative path leaves the selected T8 corner
+    // through the footprint, so it is intentionally retained as the same kind
+    // of explicit source-audited exception used by Page 20.
+    if (isOfficialSixteenInchSourceLine(guide)) continue;
+
     assert.equal(
       terrainGuideViolatesMeasuredTerrain(guide.anchor, guide.edge, polygon),
       false,
@@ -79,6 +93,37 @@ test("Page 21 x-axis source flip maps representative official anchors onto the i
     { terrain: twentyFour?.terrain, anchor: twentyFour?.anchor, edge: twentyFour?.edge },
     { terrain: "T15", anchor: [24, 4], edge: "left" }
   );
+});
+
+test("Page 21 remaining left-edge dimensions keep the corrected official source directions", () => {
+  const layout = layoutForPage(21);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
+  const expected = [
+    { value: '22"', sourceAnchor: [37.93, 40.02], terrain: "T9", anchor: [22, 40] },
+    { value: '7"', sourceAnchor: [53.10, 17.04], terrain: "T3", anchor: [6.8, 17] },
+    { value: '19"', sourceAnchor: [41.01, 17.89], terrain: "T4", anchor: [18.9, 17.9] },
+    { value: '25"', sourceAnchor: [35.02, 29.47], terrain: "T4", anchor: [25, 29.5] },
+    { value: '5"', sourceAnchor: [55.08, 27.47], terrain: "T2", anchor: [4.8, 27.4] }
+  ];
+
+  for (const item of expected) {
+    const guide = findBySource(overlay, item.value, item.sourceAnchor);
+    assert.deepEqual(
+      { terrain: guide?.terrain, anchor: guide?.anchor, edge: guide?.edge },
+      { terrain: item.terrain, anchor: item.anchor, edge: "left" }
+    );
+  }
+});
+
+test("Page 21 official 16-inch guide preserves the Event Companion right-hand source direction", () => {
+  const layout = layoutForPage(21);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
+  const guide = overlay.guides.find(isOfficialSixteenInchSourceLine);
+
+  assert.ok(guide, "the official Page 21 16-inch source guide is present");
+  assert.equal(guide.terrain, "T8");
+  assert.deepEqual(guide.anchor, [17.8, 27.8]);
+  assert.equal(guide.edge, "top", "internal top renders toward the Event Companion right-hand battlefield edge");
 });
 
 test("Page 21 retains the distinctive official terrain-placement values", () => {
