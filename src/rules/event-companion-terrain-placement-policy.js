@@ -35,7 +35,13 @@ const PAGE_POLICIES = Object.freeze({
     // enabled until this source-only layer is visually accepted.
     sourceTransform: "rotate180",
     alignSourceToGeometry: true,
-    sourceEdgeOverrides: Object.freeze({})
+    // The PDF line at source anchor 40.91,37 leaves the measured terrain toward
+    // the opposite battlefield edge. Preserve that source-frame direction here
+    // so the shared 180-degree transform produces the outward T10 guide rather
+    // than sending the 19-inch line back through the measured terrain.
+    sourceEdgeOverrides: Object.freeze({
+      '19"|40.91|37': "left"
+    })
   })
 });
 
