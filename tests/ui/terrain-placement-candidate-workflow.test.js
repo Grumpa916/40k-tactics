@@ -18,62 +18,72 @@ function layoutForPage(page) {
   return EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === Number(page));
 }
 
-test("Page 23 is locked approved and Page 24 advances to confirmation 2", () => {
-  const page23 = getEventCompanionTerrainPlacementReviewStatus(23);
+function sourceIdentity(guide) {
+  return [String(guide?.value ?? ""), Number(guide?.sourceAnchor?.[0]), Number(guide?.sourceAnchor?.[1])].join("|");
+}
+
+test("Page 24 is fully approved and Page 25 starts confirmation 1", () => {
   const page24 = getEventCompanionTerrainPlacementReviewStatus(24);
   const page25 = getEventCompanionTerrainPlacementReviewStatus(25);
+  const page26 = getEventCompanionTerrainPlacementReviewStatus(26);
 
-  assert.equal(page23.state, TERRAIN_PLACEMENT_REVIEW_STATE.APPROVED);
-  assert.equal(page23.canonicalConfirmed, true);
-  assert.equal(page23.mirrorConfirmed, true);
-  assert.equal(isEventCompanionTerrainPlacementApproved(23), true);
-
-  assert.equal(page24.state, TERRAIN_PLACEMENT_REVIEW_STATE.CANONICAL_APPROVED);
+  assert.equal(page24.state, TERRAIN_PLACEMENT_REVIEW_STATE.APPROVED);
   assert.equal(page24.canonicalConfirmed, true);
-  assert.equal(page24.mirrorRequired, true);
-  assert.equal(page24.mirrorConfirmed, false);
-  assert.equal(isEventCompanionTerrainPlacementApproved(24), false);
+  assert.equal(page24.mirrorConfirmed, true);
+  assert.equal(isEventCompanionTerrainPlacementApproved(24), true);
 
-  assert.equal(page25.state, "unprepared");
+  assert.equal(page25.state, TERRAIN_PLACEMENT_REVIEW_STATE.CANDIDATE);
+  assert.equal(page25.canonicalConfirmed, false);
+  assert.equal(page25.mirrorRequired, true);
+  assert.equal(page25.mirrorConfirmed, false);
   assert.equal(isEventCompanionTerrainPlacementApproved(25), false);
+
+  assert.equal(page26.state, "unprepared");
+  assert.equal(isEventCompanionTerrainPlacementApproved(26), false);
 });
 
-test("Page 24 approved canonical data remains isolated from production until mirror confirmation", () => {
+test("Page 24 approved source is promoted unchanged and renders with its approved mirrors", () => {
   const layout = layoutForPage(24);
-  const candidate = getEventCompanionPlacementCandidate(24);
-  const candidateCanonical = buildCandidateTerrainPlacementOverlay(layout);
-  const candidateWithMirrors = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
+  const candidate = buildCandidateTerrainPlacementOverlay(layout);
+  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
+  const complete = buildCompleteTerrainPlacementOverlay(layout);
+
+  assert.equal(candidate.guides.length, 19);
+  assert.equal(canonical.guides.length, 19);
+  assert.equal(complete.guides.length, 38);
+  assert.equal(complete.guides.filter((guide) => guide.mirrored).length, 19);
+  assert.deepEqual(
+    canonical.guides.map(sourceIdentity).sort(),
+    candidate.guides.map(sourceIdentity).sort(),
+    "Page 24 production canonical layer is the same source transcription that passed confirmation 1"
+  );
+});
+
+test("Page 25 candidate source data is isolated from production while confirmation 1 is pending", () => {
+  const layout = layoutForPage(25);
+  const candidate = getEventCompanionPlacementCandidate(25);
+  const candidateOverlay = buildCandidateTerrainPlacementOverlay(layout);
   const productionCanonical = buildCanonicalTerrainPlacementOverlay(layout);
   const productionComplete = buildCompleteTerrainPlacementOverlay(layout);
 
-  assert.ok(layout, "Page 24 layout exists");
-  assert.ok(candidate, "Page 24 candidate data exists");
-  assert.equal(candidate.guides.length, 19);
-  assert.equal(candidate.sourceAudit.printedDimensionCount, 21);
-  assert.equal(candidate.sourceAudit.terrainGuideCount, 19);
-  assert.deepEqual(candidate.sourceAudit.excludedDeploymentDimensions, ['7"', '9"']);
+  assert.ok(layout, "Page 25 layout exists");
+  assert.ok(candidate, "Page 25 candidate data exists");
+  assert.equal(candidate.guides.length, 20);
+  assert.equal(candidate.sourceAudit.printedDimensionCount, 26);
+  assert.equal(candidate.sourceAudit.terrainGuideCount, 20);
+  assert.equal(candidate.sourceAudit.excludedDeploymentDimensions.length, 6);
   assert.equal(candidate.sourceAudit.ambiguousCount, 0);
+  assert.equal(candidate.sourceAudit.sourcePathExceptions.length, 2);
 
-  assert.equal(candidateCanonical.guides.length, 19, "confirmation 1 canonical layer remains unchanged");
-  assert.equal(candidateCanonical.guides.some((guide) => guide.mirrored), false);
-
-  const mirrored = candidateWithMirrors.guides.filter((guide) => guide.mirrored);
-  assert.equal(candidateWithMirrors.guides.length, 38, "confirmation 2 preview contains 19 canonical plus 19 mirrors");
-  assert.equal(mirrored.length, 19);
-  assert.deepEqual(
-    mirrored.map((guide) => guide.value).sort(),
-    candidateCanonical.guides.map((guide) => guide.value).sort(),
-    "mirror augmentation reuses every approved canonical value unchanged"
-  );
-  assert.equal(new Set(candidateWithMirrors.guides.map((guide) => guide.terrain)).size, 16, "all 16 terrain objects are represented");
-
-  assert.equal(productionCanonical.guides.length, 0, "candidate data is not canonical production data");
-  assert.equal(productionComplete.guides.length, 0, "candidate data cannot leak into the production complete overlay");
+  assert.equal(candidateOverlay.guides.length, 20, "verification preview renders only the candidate canonical guides");
+  assert.equal(candidateOverlay.guides.some((guide) => guide.mirrored), false, "confirmation 1 remains mirror-free");
+  assert.equal(productionCanonical.guides.length, 0, "Page 25 is not production canonical data yet");
+  assert.equal(productionComplete.guides.length, 0, "Page 25 candidate cannot leak into the production complete overlay");
 });
 
-test("Page 24 candidate alignment snaps source points only to existing V2 terrain vertices", () => {
-  const layout = layoutForPage(24);
-  const overlay = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
+test("Page 25 candidate alignment snaps every retained source point to an existing V2 terrain vertex", () => {
+  const layout = layoutForPage(25);
+  const overlay = buildCandidateTerrainPlacementOverlay(layout);
 
   for (const guide of overlay.guides) {
     const vertices = (layout.terrainGeometry?.[guide.terrain]?.points ?? [])
@@ -85,12 +95,12 @@ test("Page 24 candidate alignment snaps source points only to existing V2 terrai
   }
 });
 
-test("approved Page 23 remains available while the candidate gate blocks Page 24 and later pages", () => {
-  const page23 = buildCompleteTerrainPlacementOverlay(layoutForPage(23));
+test("approved Page 24 remains available while the candidate gate blocks Page 25 and later pages", () => {
   const page24 = buildCompleteTerrainPlacementOverlay(layoutForPage(24));
   const page25 = buildCompleteTerrainPlacementOverlay(layoutForPage(25));
+  const page26 = buildCompleteTerrainPlacementOverlay(layoutForPage(26));
 
-  assert.equal(page23.guides.length, 36, "Page 23 retains 18 canonical plus 18 approved mirrors");
-  assert.equal(page24.guides.length, 0);
+  assert.equal(page24.guides.length, 38, "Page 24 retains 19 canonical plus 19 approved mirrors");
   assert.equal(page25.guides.length, 0);
+  assert.equal(page26.guides.length, 0);
 });
