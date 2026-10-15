@@ -29,14 +29,14 @@ When the app and an interpretation of the V2 geometry disagree, source fidelity 
 
 ## Measurement anchors and lines
 
-For the terrain object a guide is measuring:
+For the terrain object a guide is measuring, the normal validation rule is:
 
 - the guide begins at the intended reproducible source point, normally a terrain corner;
 - the guide leaves that terrain footprint immediately;
 - the guide must not enter the interior of the terrain object it measures;
 - the guide must not run along or follow the boundary of the terrain object it measures.
 
-These restrictions apply to the **measured terrain object only**.
+These restrictions apply to the **measured terrain object only**, but they are validation rules rather than permission to rewrite the official source. If the Event Companion itself visibly draws a terrain-placement line through or along the measured footprint, the source line remains authoritative and must be preserved as an explicit source-audited exception rather than reversed or rerouted.
 
 A source-defined measurement line may cross another, unrelated terrain object if that is how the Event Companion presents the measurement. The app must not reroute a source line merely to avoid unrelated terrain or to improve its appearance.
 
@@ -114,6 +114,6 @@ For each new Event Companion map:
 2. transcribe only the official terrain-placement information;
 3. declare any required source-coordinate transform as policy;
 4. apply an already-approved counterpart policy only when it clearly applies;
-5. validate that each guide leaves its measured terrain correctly;
+5. validate each guide against the measured terrain and explicitly source-audit any official exception rather than rerouting it;
 6. visually verify readability and arrow direction on the target iPad/Safari layout;
 7. lock the accepted page with regression tests before moving on.
