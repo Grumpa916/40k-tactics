@@ -61,8 +61,24 @@ test("Page 19 keeps its 20-guide canonical source layer separate from the mirror
   });
 });
 
-test("a later unverified page cannot gain mirror measurements before its canonical source pass", () => {
+test("Page 20 canonical source pass is available while mirror augmentation remains disabled", () => {
   const layout = layoutForPage(20);
+  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
+  const complete = buildCompleteTerrainPlacementOverlay(layout);
+
+  assert.equal(canonical.guides.length, 19, "Page 20 exposes only the 19 terrain-placement dimensions transcribed from the Event Companion");
+  assert.equal(canonical.guides.some((guide) => guide.mirrored), false);
+  assert.equal(complete.guides.length, 19, "Page 20 mirror augmentation remains disabled until canonical visual approval");
+  assert.equal(complete.guides.some((guide) => guide.mirrored), false);
+  assert.deepEqual(
+    complete.guides.map(sourceIdentity).sort(),
+    canonical.guides.map(sourceIdentity).sort(),
+    "Page 20 complete output equals its source-only layer until mirroring is explicitly enabled"
+  );
+});
+
+test("a later unverified page cannot gain measurements before its canonical source pass", () => {
+  const layout = layoutForPage(21);
   const canonical = buildCanonicalTerrainPlacementOverlay(layout);
   const complete = buildCompleteTerrainPlacementOverlay(layout);
 

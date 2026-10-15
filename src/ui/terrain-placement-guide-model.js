@@ -1,4 +1,5 @@
 import { getEventCompanionPlacementOverlay } from "../data/event-companion-placement-guides.js";
+import { getSupplementalEventCompanionPlacementOverlay } from "../data/event-companion-placement-guides-supplemental.js";
 import { getEventCompanionPlacementGuideCorrections } from "../data/event-companion-placement-guide-corrections.js";
 import {
   getEventCompanionTerrainPlacementPolicy,
@@ -12,6 +13,11 @@ import { terrainGuideViolatesMeasuredTerrain } from "./terrain-placement-path-sa
 
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
+
+function canonicalSourceOverlayForPage(page) {
+  return getEventCompanionPlacementOverlay(Number(page))
+    ?? getSupplementalEventCompanionPlacementOverlay(Number(page));
+}
 
 function geometryPoints(shape) {
   return (shape?.points ?? [])
@@ -158,7 +164,7 @@ function pointName(index) {
 }
 
 function canonicalGuidesForPage(page, layout) {
-  const canonical = getEventCompanionPlacementOverlay(Number(page));
+  const canonical = canonicalSourceOverlayForPage(page);
   if (!canonical) return [];
 
   const deduped = new Map();
@@ -332,7 +338,7 @@ function generatedOverlay(layout, guides) {
 
 export function buildCanonicalTerrainPlacementOverlay(layout) {
   const page = Number(layout?.page);
-  const canonical = getEventCompanionPlacementOverlay(page);
+  const canonical = canonicalSourceOverlayForPage(page);
   if (!canonical) {
     return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
   }
@@ -344,7 +350,7 @@ export function buildCanonicalTerrainPlacementOverlay(layout) {
 
 export function buildCompleteTerrainPlacementOverlay(layout) {
   const page = Number(layout?.page);
-  const canonical = getEventCompanionPlacementOverlay(page);
+  const canonical = canonicalSourceOverlayForPage(page);
   if (!canonical) {
     return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
   }

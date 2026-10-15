@@ -31,8 +31,7 @@ const PAGE_POLICIES = Object.freeze({
   19: Object.freeze({
     // Page 19 uses the same PDF source-frame orientation as Page 18. The
     // canonical pass rotates source anchor and battlefield edge together before
-    // snapping to the already-verified V2 geometry. No mirror augmentation is
-    // enabled until this source-only layer is visually accepted.
+    // snapping to the already-verified V2 geometry.
     sourceTransform: "rotate180",
     alignSourceToGeometry: true,
     // The PDF line at source anchor 40.91,37 leaves the measured terrain toward
@@ -42,6 +41,15 @@ const PAGE_POLICIES = Object.freeze({
     sourceEdgeOverrides: Object.freeze({
       '19"|40.91|37': "left"
     })
+  }),
+  20: Object.freeze({
+    // Page 20 Layout C uses the same PDF source-frame orientation as Pages 18
+    // and 19. The canonical pass rotates source anchor and battlefield edge
+    // together before snapping to verified V2 terrain geometry. Mirror
+    // augmentation remains disabled until the canonical view is accepted.
+    sourceTransform: "rotate180",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
