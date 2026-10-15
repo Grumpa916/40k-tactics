@@ -26,6 +26,7 @@ When the app and an interpretation of the V2 geometry disagree, source fidelity 
 - Never move an unrelated printed value merely to fill an unlabeled terrain object.
 - Deployment-zone-only dimensions are not terrain-placement measurements and remain excluded from this overlay.
 - The app-only mirror layer may copy an existing approved value unchanged to its explicit counterpart. This is reuse of approved source information, not a derived distance.
+- Ambiguous source material must be flagged for review rather than guessed.
 
 ## Measurement anchors and lines
 
@@ -40,7 +41,7 @@ These restrictions apply to the **measured terrain object only**.
 
 A source-defined measurement line may cross another, unrelated terrain object if that is how the Event Companion presents the measurement. The app must not reroute a source line merely to avoid unrelated terrain or to improve its appearance.
 
-If the Event Companion itself visibly draws a source line through or along the measured footprint, source authority wins. Preserve that exact direction/general path as a specifically audited source exception rather than reversing or rerouting the line. Page 20's approved T8 `20"` guide is the first locked example of this case.
+If the Event Companion itself visibly draws a source line through or along the measured footprint, source authority wins. Preserve that exact direction/general path as a specifically audited source exception rather than reversing or rerouting the line.
 
 ## Coordinate and arrow transforms
 
@@ -58,26 +59,65 @@ For a 180-degree transform:
 - `top` and `bottom` exchange;
 - the printed measurement value does not change.
 
-Page-specific differences are expressed as data/policy. Do not add a new renderer code path such as `PAGE_19_*` for each page.
+Page-specific differences are expressed as data/policy. Do not add a new renderer code path for each page.
+
+## Candidate / approved data separation
+
+New terrain pages must not become production data simply because their source transcription has been prepared.
+
+The workflow has four practical states:
+
+1. **UNPREPARED** — no candidate has been generated yet.
+2. **CANDIDATE · confirmation 1/2 pending** — canonical source transcription has been prepared for visual review, but production rendering remains blocked.
+3. **CANDIDATE · confirmation 2/2 pending** — canonical placement has been explicitly confirmed; the mirror augmentation is now the review target, but production rendering remains blocked.
+4. **APPROVED** — both required confirmations are complete and the page may be promoted to the production overlay.
+
+Candidate source data lives separately from approved source data. Production overlay builders must fail closed for any page whose review status is not `APPROVED`, even if candidate data or transform policy already exists.
+
+Pages 12–23 are approved and locked. Page 23 canonical and mirror measurements were visually confirmed on iPad/Safari. Page 24 is the first page using the new candidate workflow.
+
+## Batch candidate preparation
+
+The remaining Event Companion pages should be prepared in batches rather than rediscovered manually one page at a time.
+
+The preparation process may automate:
+
+- reading printed measurement values and vector measurement lines from the official PDF;
+- identifying likely source anchors and referenced battlefield edges;
+- testing the supported source-coordinate transforms;
+- snapping transformed anchors to existing V2 terrain vertices;
+- validating measured-terrain path safety;
+- identifying deployment-zone-only dimensions for exclusion;
+- generating candidate data, audit metadata, preview output, and regression coverage.
+
+Automation must never infer a missing printed terrain distance from V2 geometry. Any uncertain association, transform, exclusion, or endpoint must be marked for review instead of being silently accepted.
+
+Each candidate should retain audit metadata including, where available:
+
+- total printed dimension count reviewed;
+- terrain-placement guide count retained;
+- deployment-only dimensions excluded;
+- ambiguous-item count;
+- declared source transform;
+- candidate mirror coverage once prepared.
 
 ## App-only mirror augmentation
 
-The canonical Event Companion transcription and the mirror augmentation are separate layers.
+The canonical Event Companion transcription and mirror augmentation remain separate verification layers even though both may be prepared in the same batch.
 
 For each page:
 
-1. transcribe, validate, visually approve, and lock the canonical Event Companion source layer first;
-2. only then enable the app-only mirror augmentation for that page;
-3. mirror only to explicit, unambiguous 180-degree terrain counterparts;
-4. reuse the approved source value unchanged;
-5. transform the approved anchor and edge together;
-6. never calculate a new distance for a counterpart;
-7. never alter the locked canonical guides when mirroring is enabled;
-8. visually verify the augmented page before moving to the next canonical page.
+1. prepare the canonical candidate;
+2. complete confirmation 1 for source values, anchors, edge directions, exclusions, and readability;
+3. only then review the app-only mirror layer as confirmation 2;
+4. mirror only to explicit, unambiguous 180-degree terrain counterparts;
+5. reuse the confirmed source value unchanged;
+6. transform the confirmed anchor and edge together;
+7. never calculate a new distance for a counterpart;
+8. never alter the confirmed canonical guides when mirroring is enabled;
+9. promote the page to `APPROVED` only after confirmation 2 passes.
 
-If neither member of a terrain pair has an approved canonical measurement, mirroring does not create one. If a counterpart is ambiguous, leave it unlabeled.
-
-Pages 18 and 19 have approved mirror layers. Page 20's canonical layer is approved and locked; its mirror layer is the current verification target.
+If neither member of a terrain pair has a confirmed canonical measurement, mirroring does not create one. If a counterpart is ambiguous, leave it unlabeled and flag it for review.
 
 ## Presentation
 
@@ -88,7 +128,8 @@ Presentation may be improved without altering source information. Approved reada
 - boxed distance callouts with direction arrows;
 - tap a terrain footprint to focus its measurements;
 - Show All / Hide All controls;
-- full-screen setup view.
+- full-screen setup view;
+- explicit `CANDIDATE` / `APPROVED` status in the verification preview.
 
 Readability changes must not change measurement values, source associations, edge direction, or the general source line path.
 
@@ -110,19 +151,35 @@ Regression coverage must verify:
 - all 15 Primary Mission map blocks;
 - all 45 A/B/C source-page mappings;
 - the actual setup-state objective synchronization for representative pairings;
-- approved terrain pages remain unchanged while later pages are developed.
+- approved terrain pages remain unchanged while later pages are developed;
+- candidate pages cannot appear in production overlays before approval;
+- candidate and approved data layers remain distinct.
 
-## Verification workflow
+## Two-step confirmation workflow
 
-For each new Event Companion map:
+After candidate maps are prepared, human review is deliberately short and explicit.
 
-1. identify the correct disposition/mission/layout source page;
-2. transcribe only the official terrain-placement information;
-3. declare any required source-coordinate transform as policy;
-4. validate the canonical source layer against the Event Companion;
-5. visually verify canonical readability, source association, and arrow direction on the target iPad/Safari layout;
-6. lock the accepted canonical page with regression tests;
-7. enable the explicit app-only mirror counterpart policy for that page;
-8. verify copied values, transformed arrows/anchors, terrain coverage, and individual-piece readability;
-9. visually approve and lock the augmented page;
-10. move to the next Event Companion page.
+### Confirmation 1 — canonical
+
+Verify:
+
+- every retained printed terrain-placement value;
+- each measurement's terrain corner/source point;
+- battlefield-edge direction;
+- deployment-only exclusions;
+- obvious missing or duplicate guides;
+- readability on the target iPad/Safari layout.
+
+A pass moves the page to `CANONICAL_APPROVED`, but it is still not production-approved.
+
+### Confirmation 2 — mirror
+
+Verify:
+
+- counterpart terrain selection;
+- unchanged copied value;
+- rotated/mirrored anchor and arrow direction;
+- terrain coverage and readability;
+- canonical layer remains unchanged.
+
+A pass moves the page to `APPROVED`. Only then may candidate data be promoted into the production source layer.
