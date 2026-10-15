@@ -77,6 +77,16 @@ const PAGE_POLICIES = Object.freeze({
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
+  }),
+  23: Object.freeze({
+    // Page 23 continues the same PDF source-frame relationship as Pages 20-22.
+    // The 60-inch source axis is reversed relative to the current V2 geometry,
+    // while the 44-inch axis is already aligned. Transform the raw source point
+    // and its left/right edge direction together, then snap to the existing V2
+    // terrain vertices without deriving or changing any printed distance.
+    sourceTransform: "flipX",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
