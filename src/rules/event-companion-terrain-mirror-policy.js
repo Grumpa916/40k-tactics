@@ -140,6 +140,25 @@ const PAGE_24_TERRAIN_COUNTERPARTS = Object.freeze({
   T16: "T10"
 });
 
+const PAGE_25_TERRAIN_COUNTERPARTS = Object.freeze({
+  T1: "T3",
+  T2: "T10",
+  T3: "T1",
+  T4: "T11",
+  T5: "T12",
+  T6: "T15",
+  T7: "T13",
+  T8: "T14",
+  T9: "T16",
+  T10: "T2",
+  T11: "T4",
+  T12: "T5",
+  T13: "T7",
+  T14: "T8",
+  T15: "T6",
+  T16: "T9"
+});
+
 // Mirror augmentation is intentionally separate from the canonical Event
 // Companion source policy. A page is first transcribed and verified exactly as
 // the official source presents it. Only after that canonical layer is accepted
@@ -204,10 +223,18 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_24_TERRAIN_COUNTERPARTS,
-    // Page 24's 19 canonical source guides were visually approved before this
-    // candidate mirror pass. Each of the eight measured terrain objects has one
-    // clear 180-degree counterpart. Reuse the approved values unchanged while
-    // confirmation 2 remains pending; no terrain distance is derived here.
+    // Page 24's canonical and mirror layers are visually approved and locked.
+    // Keep the app-only copies data-driven and unchanged from the approved
+    // canonical values.
+    targetInternalHalf: null
+  }),
+  25: Object.freeze({
+    enabled: true,
+    transform: "rotate180",
+    terrainMap: PAGE_25_TERRAIN_COUNTERPARTS,
+    // Page 25's 20 canonical source guides were visually approved on
+    // iPad/Safari. Confirmation 2 reuses those exact values on the eight clear
+    // 180-degree counterpart terrain objects; no terrain distance is derived.
     targetInternalHalf: null
   })
 });
