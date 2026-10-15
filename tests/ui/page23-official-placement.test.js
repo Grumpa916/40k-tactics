@@ -115,13 +115,31 @@ test("Page 23 retains the distinctive official terrain-placement values", () => 
   assert.equal(values.includes('12"'), false, "the two printed 12-inch deployment-zone depths remain excluded");
 });
 
-test("Page 23 mirror augmentation remains disabled during canonical visual review", () => {
+test("Page 23 mirror augmentation reuses every approved canonical value on the eight clear rotational counterparts", () => {
   const layout = layoutForPage(23);
   const canonical = buildCanonicalTerrainPlacementOverlay(layout);
   const complete = buildCompleteTerrainPlacementOverlay(layout);
   const policy = getEventCompanionTerrainMirrorPolicy(23);
+  const mirrored = complete.guides.filter((guide) => guide.mirrored);
+  const official = complete.guides.filter((guide) => !guide.mirrored);
 
-  assert.equal(policy.enabled, false);
-  assert.deepEqual(complete.guides, canonical.guides);
-  assert.equal(complete.guides.some((guide) => guide.mirrored), false);
+  assert.equal(policy.enabled, true);
+  assert.equal(policy.transform, "rotate180");
+  assert.equal(canonical.guides.length, 18);
+  assert.equal(official.length, 18);
+  assert.equal(mirrored.length, 18);
+  assert.equal(complete.guides.length, 36);
+  assert.deepEqual(
+    official.map((guide) => [guide.value, guide.terrain, guide.anchor, guide.edge]),
+    canonical.guides.map((guide) => [guide.value, guide.terrain, guide.anchor, guide.edge]),
+    "mirror augmentation leaves the accepted canonical layer unchanged"
+  );
+  assert.equal(new Set(complete.guides.map((guide) => guide.terrain)).size, 16);
+  assert.equal(complete.guides.some((guide) => guide.value === '12"'), false, "deployment-zone depths remain excluded from both layers");
+
+  const sixteenMirror = mirrored.find((guide) => guide.value === '16"' && guide.terrain === "T5");
+  assert.deepEqual(
+    { anchor: sixteenMirror?.anchor, edge: sixteenMirror?.edge },
+    { anchor: [44, 2.9], edge: "right" }
+  );
 });
