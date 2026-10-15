@@ -25,20 +25,22 @@ When the app and an interpretation of the V2 geometry disagree, source fidelity 
 - Never interpolate, round, approximate, or infer a replacement value.
 - Never move an unrelated printed value merely to fill an unlabeled terrain object.
 - Deployment-zone-only dimensions are not terrain-placement measurements and remain excluded from this overlay.
-- An explicitly approved exact symmetry/counterpart rule may copy an existing approved value unchanged to its clear counterpart. This is reuse of source information, not a derived distance.
+- The app-only mirror layer may copy an existing approved value unchanged to its explicit counterpart. This is reuse of approved source information, not a derived distance.
 
 ## Measurement anchors and lines
 
-For the terrain object a guide is measuring, the normal validation rule is:
+For the terrain object a guide is measuring, normal validation expects:
 
 - the guide begins at the intended reproducible source point, normally a terrain corner;
 - the guide leaves that terrain footprint immediately;
-- the guide must not enter the interior of the terrain object it measures;
-- the guide must not run along or follow the boundary of the terrain object it measures.
+- the guide does not enter the interior of the terrain object it measures;
+- the guide does not run along or follow the boundary of the terrain object it measures.
 
-These restrictions apply to the **measured terrain object only**, but they are validation rules rather than permission to rewrite the official source. If the Event Companion itself visibly draws a terrain-placement line through or along the measured footprint, the source line remains authoritative and must be preserved as an explicit source-audited exception rather than reversed or rerouted.
+These restrictions apply to the **measured terrain object only**.
 
 A source-defined measurement line may cross another, unrelated terrain object if that is how the Event Companion presents the measurement. The app must not reroute a source line merely to avoid unrelated terrain or to improve its appearance.
+
+If the Event Companion itself visibly draws a source line through or along the measured footprint, source authority wins. Preserve that exact direction/general path as a specifically audited source exception rather than reversing or rerouting the line. Page 20's approved T8 `20"` guide is the first locked example of this case.
 
 ## Coordinate and arrow transforms
 
@@ -58,20 +60,24 @@ For a 180-degree transform:
 
 Page-specific differences are expressed as data/policy. Do not add a new renderer code path such as `PAGE_19_*` for each page.
 
-## Counterpart reuse
+## App-only mirror augmentation
 
-Counterpart reuse is allowed only when explicitly established for a layout and the counterpart is unambiguous.
+The canonical Event Companion transcription and the mirror augmentation are separate layers.
 
-When enabled:
+For each page:
 
-- use the same approved source value;
-- place it on the declared counterpart terrain object;
-- transform anchor and edge together;
-- use the same visual treatment as the source measurement;
-- do not create a calculated or secondary measurement layer;
-- leave ambiguous objects unlabeled.
+1. transcribe, validate, visually approve, and lock the canonical Event Companion source layer first;
+2. only then enable the app-only mirror augmentation for that page;
+3. mirror only to explicit, unambiguous 180-degree terrain counterparts;
+4. reuse the approved source value unchanged;
+5. transform the approved anchor and edge together;
+6. never calculate a new distance for a counterpart;
+7. never alter the locked canonical guides when mirroring is enabled;
+8. visually verify the augmented page before moving to the next canonical page.
 
-Page 18 currently uses an approved 180-degree counterpart policy.
+If neither member of a terrain pair has an approved canonical measurement, mirroring does not create one. If a counterpart is ambiguous, leave it unlabeled.
+
+Pages 18 and 19 have approved mirror layers. Page 20's canonical layer is approved and its mirror layer is the current verification target.
 
 ## Presentation
 
@@ -113,7 +119,10 @@ For each new Event Companion map:
 1. identify the correct disposition/mission/layout source page;
 2. transcribe only the official terrain-placement information;
 3. declare any required source-coordinate transform as policy;
-4. apply an already-approved counterpart policy only when it clearly applies;
-5. validate each guide against the measured terrain and explicitly source-audit any official exception rather than rerouting it;
-6. visually verify readability and arrow direction on the target iPad/Safari layout;
-7. lock the accepted page with regression tests before moving on.
+4. validate the canonical source layer against the Event Companion;
+5. visually verify canonical readability, source association, and arrow direction on the target iPad/Safari layout;
+6. lock the accepted canonical page with regression tests;
+7. enable the explicit app-only mirror counterpart policy for that page;
+8. verify copied values, transformed arrows/anchors, terrain coverage, and individual-piece readability;
+9. visually approve and lock the augmented page;
+10. move to the next Event Companion page.
