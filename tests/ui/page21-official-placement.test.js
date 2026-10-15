@@ -71,7 +71,13 @@ test("Page 21 x-axis source flip maps representative official anchors onto the i
   const five = findBySource(overlay, '5"', [54.99, 38.98]);
   assert.deepEqual(
     { terrain: five?.terrain, anchor: five?.anchor, edge: five?.edge },
-    { terrain: "T2", anchor: [4.8, 39], edge: "right" }
+    { terrain: "T2", anchor: [4.8, 39], edge: "left" }
+  );
+
+  const twentyFour = findBySource(overlay, '24"', [35.96, 4.01]);
+  assert.deepEqual(
+    { terrain: twentyFour?.terrain, anchor: twentyFour?.anchor, edge: twentyFour?.edge },
+    { terrain: "T15", anchor: [24, 4], edge: "left" }
   );
 });
 
