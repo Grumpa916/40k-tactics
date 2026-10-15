@@ -37,6 +37,48 @@ function clamp(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, value));
 }
 
+function distanceSquared(a, b) {
+  const dx = Number(a?.[0]) - Number(b?.[0]);
+  const dy = Number(a?.[1]) - Number(b?.[1]);
+  return dx * dx + dy * dy;
+}
+
+function nearestTerrainVertex(layout, target) {
+  let bestTerrain = null;
+  let bestAnchor = null;
+  let bestDistance = Infinity;
+
+  for (const [terrain, shape] of Object.entries(layout?.terrainGeometry ?? {})) {
+    for (const anchor of geometryPoints(shape)) {
+      const candidateDistance = distanceSquared(target, anchor);
+      if (candidateDistance < bestDistance) {
+        bestTerrain = terrain;
+        bestAnchor = anchor;
+        bestDistance = candidateDistance;
+      }
+    }
+  }
+
+  return bestTerrain && bestAnchor ? { terrain: bestTerrain, anchor: [...bestAnchor] } : null;
+}
+
+function page18SourceAlignedGuide(guide, layout) {
+  const sourceAnchor = guide?.sourceAnchor;
+  if (!Array.isArray(sourceAnchor) || sourceAnchor.length !== 2) return guide;
+  if (!Number.isFinite(Number(sourceAnchor[0])) || !Number.isFinite(Number(sourceAnchor[1]))) return guide;
+
+  // Page 18's PDF-extracted source anchors are 180 degrees opposite the
+  // already-verified V2 terrain geometry. Rotate only the placement point,
+  // then snap it to the nearest reproducible V2 terrain vertex. The official
+  // printed measurement value and battlefield-edge direction are unchanged.
+  const correctedSourcePoint = [
+    TERRAIN_BOARD_WIDTH - Number(sourceAnchor[0]),
+    TERRAIN_BOARD_HEIGHT - Number(sourceAnchor[1])
+  ];
+  const snapped = nearestTerrainVertex(layout, correctedSourcePoint);
+  return snapped ? { ...guide, ...snapped } : guide;
+}
+
 function anchorKey(terrain, anchor) {
   return String(terrain ?? "") + "|" + Number(anchor?.[0]) + "|" + Number(anchor?.[1]);
 }
@@ -55,12 +97,15 @@ function pointName(index) {
   return String.fromCharCode("A".charCodeAt(0) + index);
 }
 
-function sourceGuidesForPage(page) {
+function sourceGuidesForPage(page, layout) {
   const canonical = getEventCompanionPlacementOverlay(Number(page));
   if (!canonical) return [];
 
   const deduped = new Map();
-  for (const guide of canonical.guides ?? []) deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
+  for (const guide of canonical.guides ?? []) {
+    const sourceAligned = Number(page) === 18 ? page18SourceAlignedGuide(guide, layout) : guide;
+    deduped.set(guideKey(sourceAligned), { ...sourceAligned, anchor: [...sourceAligned.anchor] });
+  }
   for (const guide of getEventCompanionPlacementGuideCorrections(page)) {
     deduped.set(guideKey(guide), { ...guide, anchor: [...guide.anchor] });
   }
@@ -123,7 +168,7 @@ function calloutPosition(anchor, shapeCenter, point) {
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
-  const guides = sourceGuidesForPage(Number(layout?.page));
+  const guides = sourceGuidesForPage(Number(layout?.page), layout);
   return groupedSourcePoints(guides).map((group) => ({
     terrain: group.terrain,
     point: group.point,
@@ -172,7 +217,7 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   // Pages 15+ are strictly source-defined. Never infer a missing guide, never
   // calculate a replacement value, and never reuse a printed value at a
   // different terrain point merely to make the overlay look complete.
-  const sourceGuides = sourceGuidesForPage(page);
+  const sourceGuides = sourceGuidesForPage(page, layout);
   const groups = groupedSourcePoints(sourceGuides);
   const pointByAnchor = new Map(groups.map((group) => [anchorKey(group.terrain, group.anchor), group.point]));
 
