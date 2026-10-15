@@ -59,10 +59,13 @@ test("Page 23 uses the same PDF x-axis flip as Pages 20-22 without per-guide edg
   const layout = layoutForPage(23);
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
 
+  // The source point lies at the near-shared V2 corner between the two upper
+  // right footprints. Nearest-corner snapping resolves it to T3 [47.9,37.0],
+  // preserving the official source location and top-edge direction unchanged.
   const upperRightSeven = findBySource(overlay, '7"', [12.14, 37.05]);
   assert.deepEqual(
     { terrain: upperRightSeven?.terrain, anchor: upperRightSeven?.anchor, edge: upperRightSeven?.edge },
-    { terrain: "T4", anchor: [47.9, 37.1], edge: "top" }
+    { terrain: "T3", anchor: [47.9, 37], edge: "top" }
   );
 
   const upperFourteen = findBySource(overlay, '14"', [4.03, 30.03]);
