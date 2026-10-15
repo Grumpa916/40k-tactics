@@ -19,6 +19,37 @@ function sourceIdentity(guide) {
   ].join("|");
 }
 
+function expectCanonicalPlusMirrors(page, canonicalCount) {
+  const layout = layoutForPage(page);
+  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
+  const complete = buildCompleteTerrainPlacementOverlay(layout);
+  const mirrored = complete.guides.filter((guide) => guide.mirrored);
+  const official = complete.guides.filter((guide) => !guide.mirrored);
+
+  assert.equal(canonical.guides.length, canonicalCount, `Page ${page} canonical guide count remains locked`);
+  assert.equal(canonical.guides.some((guide) => guide.mirrored), false, "canonical layer remains mirror-free");
+  assert.equal(official.length, canonicalCount, "complete output preserves every canonical guide unchanged");
+  assert.equal(mirrored.length, canonicalCount, "each canonical guide is reused once on its clear 180-degree counterpart");
+  assert.equal(complete.guides.length, canonicalCount * 2, "complete output is canonical plus mirror augmentation");
+
+  assert.deepEqual(
+    official.map(sourceIdentity).sort(),
+    canonical.guides.map(sourceIdentity).sort(),
+    "enabling mirroring does not alter the approved canonical source layer"
+  );
+
+  const canonicalValues = canonical.guides.map((guide) => guide.value);
+  mirrored.forEach((guide) => {
+    assert.ok(canonicalValues.includes(guide.value), `${guide.value} mirror copy reuses an approved canonical value`);
+  });
+
+  assert.equal(
+    new Set(complete.guides.map((guide) => guide.terrain)).size,
+    16,
+    `Page ${page} mirror augmentation provides at least one guide for all 16 terrain objects`
+  );
+}
+
 test("Page 18 canonical layer remains source-only and mirror augmentation is a separate second stage", () => {
   const layout = layoutForPage(18);
   const canonical = buildCanonicalTerrainPlacementOverlay(layout);
@@ -37,44 +68,11 @@ test("Page 18 canonical layer remains source-only and mirror augmentation is a s
 });
 
 test("Page 19 keeps its 20-guide canonical source layer separate from the mirror augmentation", () => {
-  const layout = layoutForPage(19);
-  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
-  const complete = buildCompleteTerrainPlacementOverlay(layout);
-  const mirrored = complete.guides.filter((guide) => guide.mirrored);
-  const official = complete.guides.filter((guide) => !guide.mirrored);
-
-  assert.equal(canonical.guides.length, 20, "Page 19 canonical layer remains exactly the 20 official terrain-placement measurements");
-  assert.equal(canonical.guides.some((guide) => guide.mirrored), false, "canonical layer remains mirror-free");
-  assert.equal(official.length, 20, "complete output preserves all 20 canonical guides unchanged");
-  assert.equal(mirrored.length, 20, "each canonical Page 19 guide is reused once on its clear 180-degree counterpart");
-  assert.equal(complete.guides.length, 40, "Page 19 complete output is canonical plus mirror augmentation");
-
-  assert.deepEqual(
-    official.map(sourceIdentity).sort(),
-    canonical.guides.map(sourceIdentity).sort(),
-    "enabling mirroring does not alter the approved canonical source layer"
-  );
-
-  const canonicalValues = canonical.guides.map((guide) => guide.value);
-  mirrored.forEach((guide) => {
-    assert.ok(canonicalValues.includes(guide.value), `${guide.value} mirror copy reuses an approved canonical value`);
-  });
+  expectCanonicalPlusMirrors(19, 20);
 });
 
-test("Page 20 canonical source pass is available while mirror augmentation remains disabled", () => {
-  const layout = layoutForPage(20);
-  const canonical = buildCanonicalTerrainPlacementOverlay(layout);
-  const complete = buildCompleteTerrainPlacementOverlay(layout);
-
-  assert.equal(canonical.guides.length, 19, "Page 20 exposes only the 19 terrain-placement dimensions transcribed from the Event Companion");
-  assert.equal(canonical.guides.some((guide) => guide.mirrored), false);
-  assert.equal(complete.guides.length, 19, "Page 20 mirror augmentation remains disabled until canonical visual approval");
-  assert.equal(complete.guides.some((guide) => guide.mirrored), false);
-  assert.deepEqual(
-    complete.guides.map(sourceIdentity).sort(),
-    canonical.guides.map(sourceIdentity).sort(),
-    "Page 20 complete output equals its source-only layer until mirroring is explicitly enabled"
-  );
+test("Page 20 keeps its approved 19-guide canonical source layer separate from the mirror augmentation", () => {
+  expectCanonicalPlusMirrors(20, 19);
 });
 
 test("a later unverified page cannot gain measurements before its canonical source pass", () => {
