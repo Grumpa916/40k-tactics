@@ -54,9 +54,34 @@ export const PAGE_21_SOURCE_GUIDES = Object.freeze([
 // deployment boundaries rather than terrain placement and are deliberately
 // excluded from this source layer.
 
+export const PAGE_22_SOURCE_GUIDES = Object.freeze([
+  { value: '7"', edge: "right", sourceAnchor: [53.15, 26.40] },
+  { value: '6"', edge: "bottom", sourceAnchor: [47.70, 5.89] },
+  { value: '19"', edge: "right", sourceAnchor: [41.02, 2.91] },
+  { value: '12"', edge: "bottom", sourceAnchor: [36.05, 11.81] },
+  { value: '6"', edge: "top", sourceAnchor: [46.02, 37.89] },
+  { value: '26"', edge: "right", sourceAnchor: [33.99, 17.88] },
+  { value: '20"', edge: "right", sourceAnchor: [40.06, 15.12] },
+  { value: '27"', edge: "right", sourceAnchor: [33.01, 31.97] },
+  { value: '3"', edge: "bottom", sourceAnchor: [41.07, 2.93] },
+  { value: '4"', edge: "top", sourceAnchor: [36.99, 40.09] },
+  { value: '3"', edge: "bottom", sourceAnchor: [29.61, 2.93] },
+  { value: '8"', edge: "top", sourceAnchor: [41.18, 35.89] },
+  { value: '12"', edge: "top", sourceAnchor: [33.01, 31.93] },
+  { value: '12"', edge: "bottom", sourceAnchor: [40.08, 12.01] },
+  { value: '6"', edge: "top", sourceAnchor: [53.07, 37.99] },
+  { value: '23"', edge: "right", sourceAnchor: [36.96, 40.06] }
+]);
+
+// Page 22 prints five deployment-zone dimensions that are not terrain-placement
+// measurements: the two 18-inch deployment depths, two 15-inch dimensions for
+// the lower central deployment shape, and its separate 12-inch horizontal
+// offset. Those five values are deliberately excluded from this source layer.
+
 const SUPPLEMENTAL_GUIDES_BY_PAGE = Object.freeze({
   20: PAGE_20_SOURCE_GUIDES,
-  21: PAGE_21_SOURCE_GUIDES
+  21: PAGE_21_SOURCE_GUIDES,
+  22: PAGE_22_SOURCE_GUIDES
 });
 
 export function getSupplementalEventCompanionPlacementOverlay(page) {
