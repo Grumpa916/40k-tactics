@@ -43,6 +43,20 @@ test("Page 20 canonical guides snap to reproducible terrain corners and leave th
   }
 });
 
+test("Page 20 upper-right 22-inch guide leaves T14 toward the Event Companion right-hand edge", () => {
+  const layout = layoutForPage(20);
+  const overlay = buildCanonicalTerrainPlacementOverlay(layout);
+  const guide = overlay.guides.find((item) => (
+    item.value === '22"'
+    && item.sourceAnchor?.[0] === 51.11
+    && item.sourceAnchor?.[1] === 22
+  ));
+
+  assert.ok(guide, "the official upper-right 22-inch source guide is present");
+  assert.equal(guide.terrain, "T14");
+  assert.equal(guide.edge, "top", "internal top renders toward the right-hand battlefield edge in Event Companion orientation");
+});
+
 test("Page 20 retains the distinctive official terrain-placement values", () => {
   const layout = layoutForPage(20);
   const overlay = buildCanonicalTerrainPlacementOverlay(layout);
