@@ -97,8 +97,8 @@ test("Page 21 uses the Page 20 x-axis source flip without per-guide overrides", 
   );
   assert.deepEqual(
     transformEventCompanionSourceGuide(21, {
-      value: '9"', edge: "left", sourceAnchor: [51.13, 6.97]
+      value: '9"', edge: "right", sourceAnchor: [51.13, 6.97]
     }),
-    { point: [8.87, 6.97], edge: "right" }
+    { point: [8.87, 6.97], edge: "left" }
   );
 });
