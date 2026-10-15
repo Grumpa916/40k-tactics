@@ -10,8 +10,8 @@ import {
 } from "../../src/ui/terrain-placement-guide-model.js";
 import {
   outwardPerpendicularEdges,
-  terrainGuideCrossesPolygonInterior,
-  terrainGuideEntersPolygonInterior
+  terrainGuideEntersPolygonInterior,
+  terrainGuideViolatesMeasuredTerrain
 } from "../../src/ui/terrain-placement-path-safety.js";
 
 const INCH_VALUE = /^\d+(?:\.\d+)?"$/;
@@ -43,19 +43,36 @@ function expectedSourceGuides(page) {
   return [...result.values()];
 }
 
-test("terrain path safety rejects a generated guide that rides along the terrain boundary", () => {
+test("measured-terrain validation rejects a guide that follows its own boundary", () => {
   const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
-  assert.equal(terrainGuideCrossesPolygonInterior([4, 2], "left", square), true);
-  assert.equal(terrainGuideCrossesPolygonInterior([2, 2], "left", square), false);
+  assert.equal(terrainGuideViolatesMeasuredTerrain([4, 2], "left", square), true);
+  assert.equal(terrainGuideViolatesMeasuredTerrain([2, 2], "left", square), false);
 });
 
-test("source-guide interior validation allows boundary contact but rejects actual terrain penetration", () => {
+test("measured-terrain validation rejects a guide that enters its own interior", () => {
   const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
-  assert.equal(terrainGuideEntersPolygonInterior([4, 2], "left", square), false);
   assert.equal(terrainGuideEntersPolygonInterior([4, 3], "left", square), true);
+  assert.equal(terrainGuideViolatesMeasuredTerrain([4, 3], "left", square), true);
 });
 
-test("outward perpendicular routing chooses edges that leave the terrain cleanly", () => {
+test("unrelated terrain is not a blocker for an Event Companion source line", () => {
+  const measuredTerrain = [[2, 2], [4, 2], [4, 4], [2, 4]];
+  const unrelatedTerrain = [[0.5, 1.5], [1.5, 1.5], [1.5, 2.5], [0.5, 2.5]];
+  const anchor = [2, 2];
+
+  assert.equal(
+    terrainGuideViolatesMeasuredTerrain(anchor, "left", measuredTerrain),
+    false,
+    "the guide leaves the terrain it measures immediately"
+  );
+  assert.equal(
+    terrainGuideViolatesMeasuredTerrain(anchor, "left", unrelatedTerrain),
+    true,
+    "the same geometric line crosses the unrelated terrain, which is intentionally not used to reject the source guide"
+  );
+});
+
+test("outward perpendicular routing chooses edges that leave the measured terrain cleanly", () => {
   const square = [[2, 2], [4, 2], [4, 4], [2, 4]];
   assert.deepEqual(outwardPerpendicularEdges([4, 2], square), ["right", "bottom"]);
   assert.deepEqual(outwardPerpendicularEdges([2, 2], square), ["left", "bottom"]);
@@ -125,16 +142,16 @@ for (const page of VERIFIED_SOURCE_PAGES) {
         [guide.anchor[0], guide.anchor[1], ...terrainGuideEndpoint(guide.anchor, guide.edge)]
       );
 
-      const sourceVertices = (layout.terrainGeometry?.[guide.terrain]?.points ?? [])
+      const measuredTerrainVertices = (layout.terrainGeometry?.[guide.terrain]?.points ?? [])
         .map((point) => [Number(point.x), Number(point.y)]);
       assert.ok(
-        sourceVertices.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1]),
+        measuredTerrainVertices.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1]),
         `${guide.terrain} ${guide.value} snaps to a reproducible terrain corner`
       );
       assert.equal(
-        terrainGuideEntersPolygonInterior(guide.anchor, guide.edge, sourceVertices),
+        terrainGuideViolatesMeasuredTerrain(guide.anchor, guide.edge, measuredTerrainVertices),
         false,
-        `${guide.terrain} ${guide.value} ${guide.edge} does not enter its own terrain interior`
+        `${guide.terrain} ${guide.value} ${guide.edge} leaves its measured terrain immediately without following its boundary or entering its interior`
       );
     });
 
