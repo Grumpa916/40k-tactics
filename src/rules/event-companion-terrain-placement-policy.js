@@ -59,6 +59,14 @@ const PAGE_POLICIES = Object.freeze({
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
+  }),
+  21: Object.freeze({
+    // Page 21 uses the same source frame as Page 20: the 60-inch axis is
+    // reversed and the 44-inch axis is already aligned. Transform the source
+    // point and its battlefield edge together before snapping to V2 geometry.
+    sourceTransform: "flipX",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
