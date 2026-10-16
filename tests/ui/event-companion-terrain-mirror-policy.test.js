@@ -7,13 +7,13 @@ import {
 } from "../../src/rules/event-companion-terrain-mirror-policy.js";
 
 test("mirroring is disabled by default until a page receives canonical confirmation", () => {
-  const policy = getEventCompanionTerrainMirrorPolicy(27);
+  const policy = getEventCompanionTerrainMirrorPolicy(28);
   assert.equal(policy.enabled, false);
   assert.deepEqual(policy.terrainMap, {});
   assert.equal(policy.targetInternalHalf, null);
 
   assert.deepEqual(
-    transformEventCompanionMirrorGuide(27, { anchor: [8, 7], edge: "left" }),
+    transformEventCompanionMirrorGuide(28, { anchor: [8, 7], edge: "left" }),
     { point: null, edge: "left" }
   );
 });
