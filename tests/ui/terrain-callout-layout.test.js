@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { EVENT_COMPANION_MAP_CATALOG } from '../../src/data/event-companion-map-catalog.js';
 import { buildCompleteTerrainPlacementOverlay } from '../../src/ui/terrain-placement-guide-model.js';
 import { layoutTerrainCallouts, TERRAIN_CALLOUT_WIDTH } from '../../src/ui/terrain-callout-layout.js';
-for(const layout of EVENT_COMPANION_MAP_CATALOG.layouts.filter(l=>+l.page>=15&&+l.page<=53)) {
+for(const layout of EVENT_COMPANION_MAP_CATALOG.layouts.filter(l=>+l.page>=9&&+l.page<=53)) {
  test(`Page ${layout.page}: focused callout boxes fit without overlap and preserve source information`,()=>{
   const overlay=buildCompleteTerrainPlacementOverlay(layout), before=structuredClone(overlay);
   const boxes=layoutTerrainCallouts(overlay.callouts);

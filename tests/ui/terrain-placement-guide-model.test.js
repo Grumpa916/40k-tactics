@@ -16,7 +16,7 @@ import {
 } from "../../src/ui/terrain-placement-path-safety.js";
 
 const INCH_VALUE = /^\d+(?:\.\d+)?"$/;
-const VERIFIED_SOURCE_PAGES = [15, 16, 17, 18, 19];
+const VERIFIED_SOURCE_PAGES = [18, 19];
 
 function guideKey(guide) {
   return [
@@ -79,14 +79,14 @@ test("outward perpendicular routing chooses edges that leave the measured terrai
   assert.deepEqual(outwardPerpendicularEdges([2, 2], square), ["left", "bottom"]);
 });
 
-test("pages 12-14 retain their explicit approved source overlays", () => {
+test("pages 12-14 preserve source values in the canonical layer while enabling separate mirrors", () => {
   for (const page of [12, 13, 14]) {
     const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === page);
     const canonical = getEventCompanionPlacementOverlay(page);
     assert.ok(layout, `page ${page} layout exists`);
     assert.ok(canonical, `page ${page} canonical overlay exists`);
 
-    const overlay = buildCompleteTerrainPlacementOverlay(layout);
+    const overlay = buildCanonicalTerrainPlacementOverlay(layout);
     assert.equal(overlay.guides.length, canonical.guides.length, `page ${page} source guide count remains locked`);
     assert.deepEqual(
       overlay.guides.map((guide) => guide.value),

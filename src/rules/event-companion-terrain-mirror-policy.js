@@ -1,3 +1,4 @@
+import { getEarlyTerrainMirrorPolicy } from "../data/event-companion-terrain-mirror-policies-early.js";
 import { REMAINING_TERRAIN_MIRROR_POLICIES } from "../data/event-companion-terrain-mirror-policies-remaining.js";
 import { transformEventCompanionPlacement } from "./event-companion-terrain-placement-policy.js";
 
@@ -88,7 +89,7 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
     enabled: true,
     transform: "rotate180",
     terrainMap: PAGE_18_TERRAIN_COUNTERPARTS,
-    targetInternalHalf: "right"
+    targetInternalHalf: null
   }),
   19: Object.freeze({
     enabled: true,
@@ -153,7 +154,7 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
 });
 
 export function getEventCompanionTerrainMirrorPolicy(page) {
-  return PAGE_MIRROR_POLICIES[Number(page)] ?? REMAINING_TERRAIN_MIRROR_POLICIES[Number(page)] ?? DEFAULT_MIRROR_POLICY;
+  return getEarlyTerrainMirrorPolicy(page) ?? PAGE_MIRROR_POLICIES[Number(page)] ?? REMAINING_TERRAIN_MIRROR_POLICIES[Number(page)] ?? DEFAULT_MIRROR_POLICY;
 }
 
 export function transformEventCompanionMirrorGuide(page, guide) {

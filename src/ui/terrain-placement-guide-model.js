@@ -385,8 +385,8 @@ export function buildCanonicalTerrainPlacementOverlay(layout) {
   const canonical = canonicalSourceOverlayForPage(page);
   if (!canonical) return emptyOverlay();
 
-  // Pages 12-14 retain their previously approved exact canonical presentation.
-  if (page <= 14) return canonicalOverlayWithPointNames(canonical);
+  // Pages 9-53 share the source-aligned presentation.
+  // Every terrain page now uses the shared source-aligned boxed-callout layer.
   return generatedOverlay(layout, guidesForPage(page, layout, { includeMirrors: false }));
 }
 
@@ -395,10 +395,8 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   const canonical = canonicalSourceOverlayForPage(page);
   if (!canonical) return emptyOverlay();
 
-  // Pages 12-14 currently have no mirror augmentation policy, so preserve their
-  // exact accepted source overlay until a separate mirror pass is explicitly
-  // approved for those layouts.
-  if (page <= 14 && !getEventCompanionTerrainMirrorPolicy(page).enabled) {
+  // Unsupported pages retain the fallback without adding inferred guides.
+  if (page < 9 && !getEventCompanionTerrainMirrorPolicy(page).enabled) {
     return canonicalOverlayWithPointNames(canonical);
   }
   return generatedOverlay(layout, guidesForPage(page, layout, { includeMirrors: true }));

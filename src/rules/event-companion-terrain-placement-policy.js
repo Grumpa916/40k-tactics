@@ -98,6 +98,7 @@ function normalizeCoordinate(value) {
 }
 
 export function getEventCompanionTerrainPlacementPolicy(page) {
+  if (Number(page) >= 9 && Number(page) <= 17) return REMAINING_SOURCE_POLICY;
   return PAGE_POLICIES[Number(page)] ?? (Number(page) >= 28 && Number(page) <= 53 ? REMAINING_SOURCE_POLICY : DEFAULT_POLICY);
 }
 
@@ -132,7 +133,7 @@ export function transformEventCompanionPlacement(point, edge, transform = "ident
 
 export function transformEventCompanionSourceGuide(page, guide) {
   const policy = getEventCompanionTerrainPlacementPolicy(page);
-  const sourceEdge = policy.sourceEdgeOverrides?.[normalizedSourceKey(guide)] ?? guide?.edge;
+  const sourceEdge = policy.sourceEdgeOverrides?.[normalizedSourceKey(guide)] ?? guide?.sourceEdge ?? guide?.edge;
   return transformEventCompanionPlacement(guide?.sourceAnchor, sourceEdge, policy.sourceTransform);
 }
 

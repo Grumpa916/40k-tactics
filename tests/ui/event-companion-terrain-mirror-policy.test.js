@@ -23,7 +23,7 @@ test("Page 18 mirror augmentation remains an explicit 180-degree app-only layer"
   assert.equal(policy.enabled, true);
   assert.equal(policy.transform, "rotate180");
   assert.equal(policy.terrainMap?.T3, "T15");
-  assert.equal(policy.targetInternalHalf, "right");
+  assert.equal(policy.targetInternalHalf, null);
 
   assert.deepEqual(
     transformEventCompanionMirrorGuide(18, { anchor: [8.8, 21.8], edge: "left" }),

@@ -10,6 +10,7 @@
 // geometry. Ambiguous source material must stay flagged for review rather than
 // being guessed.
 
+import { getEarlyEventCompanionPlacementCandidate, EARLY_CANDIDATE_PAGES } from "./event-companion-placement-candidates-early.js";
 import { getRemainingEventCompanionPlacementCandidate, REMAINING_CANDIDATE_PAGES } from "./event-companion-placement-candidates-remaining.js";
 
 export const PAGE_24_CANDIDATE_SOURCE_GUIDES = Object.freeze([
@@ -210,10 +211,10 @@ const CANDIDATES_BY_PAGE = Object.freeze({
 });
 
 export function getEventCompanionPlacementCandidate(page) {
-  return CANDIDATES_BY_PAGE[Number(page)] ?? getRemainingEventCompanionPlacementCandidate(page);
+  return getEarlyEventCompanionPlacementCandidate(page) ?? CANDIDATES_BY_PAGE[Number(page)] ?? getRemainingEventCompanionPlacementCandidate(page);
 }
 
 export function listEventCompanionPlacementCandidatePages() {
-  return [...Object.keys(CANDIDATES_BY_PAGE).map(Number), ...REMAINING_CANDIDATE_PAGES].sort((a, b) => a - b);
+  return [...EARLY_CANDIDATE_PAGES, ...Object.keys(CANDIDATES_BY_PAGE).map(Number), ...REMAINING_CANDIDATE_PAGES].sort((a, b) => a - b);
 }
 

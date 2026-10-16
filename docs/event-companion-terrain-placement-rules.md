@@ -246,3 +246,13 @@ both the local preview and the committed public preview, and the local runtime
 could not download its browser binary. These results are rendered SVG and mock
 DOM checks, not a successful live browser or Safari/iPad touch test. Setup-flow
 integration and live-device acceptance remain outstanding. PR #282 stays draft.
+
+## Full-range standardization, 15 October 2026
+
+The later user instruction to bring all maps to the same standards supersedes
+the earlier preservation-only treatment of Pages 12–17. Pages 9–17 now use a
+fresh source audit and the common canonical/mirror/boxed-focus method. The
+preview starts at Page 9 and includes every page through Page 53. Page 18’s
+obsolete right-half mirror restriction has been removed to cover T5 with the
+existing approved 10-inch source value. Full per-page coverage and review
+limits are documented in `event-companion-terrain-review-status.md`.

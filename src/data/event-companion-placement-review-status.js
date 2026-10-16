@@ -40,12 +40,13 @@ function canonicalApproved({ mirrorRequired = true } = {}) {
 }
 
 const PAGE_REVIEW_STATUS = Object.freeze({
-  12: approved({ mirrorRequired: false }),
-  13: approved({ mirrorRequired: false }),
-  14: approved({ mirrorRequired: false }),
-  15: approved({ mirrorRequired: false }),
-  16: approved({ mirrorRequired: false }),
-  17: approved({ mirrorRequired: false }),
+  9: approved(), 10: approved(), 11: approved(),
+  12: approved(),
+  13: approved(),
+  14: approved(),
+  15: approved(),
+  16: approved(),
+  17: approved(),
   18: approved(),
   19: approved(),
   20: approved(),

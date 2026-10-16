@@ -167,7 +167,7 @@ function addTerrainGuides(page, layout, mount) {
     );
   });
 
-  if (Number(page) <= 14) {
+  if (Number(page) < 9) {
     overlay.measurements.forEach((measurement) => {
       const oriented = orientEventCompanionPoint(measurement);
       if (!oriented) return;
@@ -217,7 +217,7 @@ function addTerrainGuides(page, layout, mount) {
 }
 
 function enableTerrainFocus(page, mount, overlay) {
-  if (Number(page) < 15 || !overlay?.lines?.length) return;
+  if (Number(page) < 9 || !overlay?.lines?.length) return;
   const board = mount.querySelector(".battlefield-map__board");
   const mapRoot = mount.querySelector(".battlefield-map");
   if (!board || !mapRoot) return;
@@ -353,7 +353,7 @@ const next = document.querySelector("[data-terrain-preview-next]");
 
 const pages = (EVENT_COMPANION_MAP_CATALOG.layouts ?? [])
   .map((item) => Number(item.page))
-  .filter((page) => Number.isInteger(page) && page >= 12 && page <= 53)
+  .filter((page) => Number.isInteger(page) && page >= 9 && page <= 53)
   .sort((a, b) => a - b);
 
 for (const page of pages) {
@@ -388,5 +388,5 @@ next.addEventListener("click", () => {
 });
 
 const requestedPage = Number(new URL(window.location.href).searchParams.get("page"));
-setPage(pages.includes(requestedPage) ? requestedPage : (pages.includes(12) ? 12 : pages[0]), { updateUrl: true });
+setPage(pages.includes(requestedPage) ? requestedPage : pages[0], { updateUrl: true });
 

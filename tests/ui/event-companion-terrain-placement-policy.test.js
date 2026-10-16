@@ -8,7 +8,7 @@ import {
 } from "../../src/rules/event-companion-terrain-placement-policy.js";
 
 test("ordinary pages default to identity source placement", () => {
-  const policy = getEventCompanionTerrainPlacementPolicy(17);
+  const policy = getEventCompanionTerrainPlacementPolicy(54);
   assert.equal(policy.sourceTransform, "identity");
   assert.equal(policy.alignSourceToGeometry, false);
   assert.deepEqual(policy.sourceEdgeOverrides, {});
@@ -59,3 +59,4 @@ test("Page 27 canonical candidate keeps the audited flipX source frame", () => {
   assert.deepEqual(transformEventCompanionSourceGuide(27, { value: '25"', edge: "left", sourceAnchor: [24.96, 40.07] }), { point: [35.04, 40.07], edge: "right" });
   assert.deepEqual(transformEventCompanionSourceGuide(27, { value: '22"', edge: "top", sourceAnchor: [54.14, 22.03] }), { point: [5.86, 22.03], edge: "top" });
 });
+

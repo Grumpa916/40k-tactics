@@ -33,8 +33,8 @@ test("page 12 display mirrors the 18 official terrain dimensions without creatin
 test("page 12 guides use stored official values and V2 anchor relationships without derived distances", () => {
   const overlay = getEventCompanionPlacementOverlay(12);
   assert.ok(overlay);
-  assert.equal(overlay.lines.length, 36);
-  assert.equal(overlay.measurements.length, 36);
+  assert.equal(overlay.lines.length, 18);
+  assert.equal(overlay.measurements.length, 18);
   assert.ok(overlay.anchors.length > 0);
   assert.ok(overlay.guides.every((guide) => ["left", "right", "top", "bottom"].includes(guide.edge)));
   assert.ok(overlay.guides.every((guide) => Array.isArray(guide.anchor) && guide.anchor.length === 2));
@@ -94,6 +94,7 @@ test("page 13 keeps the browser-verified official corner pairs", () => {
 });
 
 test("pages outside the converted terrain-placement range remain untouched", () => {
-  assert.equal(getEventCompanionPlacementOverlay(11), null);
+  assert.equal(getEventCompanionPlacementOverlay(8), null);
   assert.equal(getEventCompanionPlacementOverlay(54), null);
 });
+

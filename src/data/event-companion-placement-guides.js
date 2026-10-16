@@ -1,3 +1,4 @@
+import { getEarlyEventCompanionPlacementSource } from "./event-companion-placement-guides-early.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 
 // Terrain-placement transcription for the existing V2 battlefield geometry.
@@ -6,7 +7,8 @@ import { EVENT_COMPANION_MAP_CATALOG } from "./event-companion-map-catalog.js";
 // are never calculated from V2 geometry. Source anchors are expressed in the
 // existing V2 battlefield coordinate convention used by the map catalog.
 //
-// Pages 12-14 retain their previously approved mappings. Pages 15-19 were
+// Historical transcription constants remain for reference. Pages 9-17 now use
+// the fresh source audit in event-companion-placement-guides-early.js. Pages 18-19 were
 // re-transcribed directly from the PDF vector layer. Deployment-zone dimensions
 // are deliberately excluded: this module is for terrain placement only.
 const PAGE_12_GUIDES = Object.freeze([
@@ -372,7 +374,8 @@ function labelPosition(anchor, edge, page) {
 
 export function getEventCompanionPlacementOverlay(page) {
   const numericPage = Number(page);
-  const guides = numericPage === 12 ? PAGE_12_COMPLETE_GUIDES : resolveVerifiedGuides(numericPage);
+  const early = getEarlyEventCompanionPlacementSource(numericPage);
+  const guides = early ? early.guides.map((guide) => ({ ...guide, edge: guide.alignedEdge, anchor: [...guide.anchor] })) : resolveVerifiedGuides(numericPage);
   if (!guides.length) return null;
 
   const lines = guides.map((guide) => {
