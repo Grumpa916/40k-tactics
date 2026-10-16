@@ -75,6 +75,14 @@ const PAGE_POLICIES = Object.freeze({
     sourceTransform: "flipX",
     alignSourceToGeometry: true,
     sourceEdgeOverrides: Object.freeze({})
+  }),
+  27: Object.freeze({
+    // Punishment / Delaying Action Layout A uses the same PDF source frame as
+    // the preceding verified layouts: reverse the 60-inch axis while leaving
+    // the 44-inch axis and top/bottom edge directions unchanged.
+    sourceTransform: "flipX",
+    alignSourceToGeometry: true,
+    sourceEdgeOverrides: Object.freeze({})
   })
 });
 
