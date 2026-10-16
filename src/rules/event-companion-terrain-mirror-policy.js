@@ -70,6 +70,13 @@ const PAGE_26_TERRAIN_COUNTERPARTS = Object.freeze({
   T13: "T5", T14: "T9", T15: "T10", T16: "T11"
 });
 
+const PAGE_27_TERRAIN_COUNTERPARTS = Object.freeze({
+  T1: "T7", T2: "T9", T3: "T11", T4: "T10",
+  T5: "T6", T6: "T5", T7: "T1", T8: "T16",
+  T9: "T2", T10: "T4", T11: "T3", T12: "T14",
+  T13: "T15", T14: "T12", T15: "T13", T16: "T8"
+});
+
 // Mirror augmentation is intentionally separate from the canonical Event
 // Companion source policy. A page is first transcribed and verified exactly as
 // the official source presents it. Only after that canonical layer is accepted
@@ -131,6 +138,15 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
     // Confirmation 1 accepted the canonical Page 26 source layer. The second
     // review pass copies those exact values onto the eight declared 180-degree
     // terrain counterparts. No distance is calculated or inferred here.
+    targetInternalHalf: null
+  }),
+  27: Object.freeze({
+    enabled: true,
+    transform: "rotate180",
+    terrainMap: PAGE_27_TERRAIN_COUNTERPARTS,
+    // Confirmation 1 accepted the canonical Page 27 source layer. Confirmation
+    // 2 previews only copied source values on the declared rotational terrain
+    // counterparts; no new distance values are calculated.
     targetInternalHalf: null
   })
 });
