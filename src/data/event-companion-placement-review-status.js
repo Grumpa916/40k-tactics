@@ -59,7 +59,9 @@ const PAGE_REVIEW_STATUS = Object.freeze({
   26: approved(),
   // Page 27 canonical and app-only mirror measurements were visually confirmed
   // on iPad/Safari. It is now fully approved for production rendering.
-  27: approved()
+  27: approved(),
+  // Batch canonical and mirror reviews delegated by the user, 2026-10-15.
+  ...Object.fromEntries(Array.from({ length: 26 }, (_, index) => [28 + index, Object.freeze({ ...approved(), reviewedBy: "assistant", reviewMethod: "delegated-source-and-mirror-audit" })]))
 });
 
 const UNPREPARED_STATUS = Object.freeze({
@@ -84,3 +86,4 @@ export function eventCompanionTerrainPlacementReviewLabel(page) {
   if (status.state === TERRAIN_PLACEMENT_REVIEW_STATE.CANDIDATE) return "CANDIDATE · confirmation 1/2 pending";
   return "UNPREPARED";
 }
+

@@ -10,6 +10,8 @@
 // geometry. Ambiguous source material must stay flagged for review rather than
 // being guessed.
 
+import { getRemainingEventCompanionPlacementCandidate, REMAINING_CANDIDATE_PAGES } from "./event-companion-placement-candidates-remaining.js";
+
 export const PAGE_24_CANDIDATE_SOURCE_GUIDES = Object.freeze([
   { value: '5"', edge: "top", sourceAnchor: [44.58, 39.07] },
   { value: '26"', edge: "right", sourceAnchor: [34.02, 40.94] },
@@ -139,7 +141,9 @@ const CANDIDATES_BY_PAGE = Object.freeze({
       terrainGuideCount: 19,
       excludedDeploymentDimensions: Object.freeze(['7"', '9"']),
       ambiguousCount: 0,
-      sourcePathExceptions: Object.freeze([])
+      sourcePathExceptions: Object.freeze([
+        '16"|41.1|28.03'
+      ])
     })
   }),
   25: Object.freeze({
@@ -206,9 +210,10 @@ const CANDIDATES_BY_PAGE = Object.freeze({
 });
 
 export function getEventCompanionPlacementCandidate(page) {
-  return CANDIDATES_BY_PAGE[Number(page)] ?? null;
+  return CANDIDATES_BY_PAGE[Number(page)] ?? getRemainingEventCompanionPlacementCandidate(page);
 }
 
 export function listEventCompanionPlacementCandidatePages() {
-  return Object.keys(CANDIDATES_BY_PAGE).map(Number).sort((a, b) => a - b);
+  return [...Object.keys(CANDIDATES_BY_PAGE).map(Number), ...REMAINING_CANDIDATE_PAGES].sort((a, b) => a - b);
 }
+

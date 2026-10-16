@@ -22,7 +22,7 @@ function sourceIdentity(guide) {
   return [String(guide?.value ?? ""), Number(guide?.sourceAnchor?.[0]), Number(guide?.sourceAnchor?.[1])].join("|");
 }
 
-test("Pages 24-27 are fully approved and Page 28 is unprepared", () => {
+test("Pages 24-53 are approved following explicit individual or delegated batch review", () => {
   for (const page of [24, 25, 26, 27]) {
     const status = getEventCompanionTerrainPlacementReviewStatus(page);
     assert.equal(status.state, TERRAIN_PLACEMENT_REVIEW_STATE.APPROVED);
@@ -32,7 +32,7 @@ test("Pages 24-27 are fully approved and Page 28 is unprepared", () => {
   }
 
   const page28 = getEventCompanionTerrainPlacementReviewStatus(28);
-  assert.equal(page28.state, "unprepared");
+  assert.equal(page28.state, TERRAIN_PLACEMENT_REVIEW_STATE.APPROVED);
 });
 
 test("Page 26 approved source is promoted unchanged and renders with its approved mirrors", () => {
@@ -76,10 +76,12 @@ test("Page 27 approved source is promoted unchanged and renders with its approve
   assert.deepEqual(productionCanonical.guides.map(sourceIdentity).sort(), canonicalCandidate.guides.map(sourceIdentity).sort());
 });
 
-test("approved Pages 24-27 remain available while the production gate blocks Page 28 and later pages", () => {
+test("approved Pages 24-27 remain unchanged while delegated batch pages become available", () => {
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(24)).guides.length, 38);
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(25)).guides.length, 40);
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(26)).guides.length, 44);
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(27)).guides.length, 40);
-  assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(28)).guides.length, 0);
+  assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(28)).guides.length, 38);
+  assert.equal(isEventCompanionTerrainPlacementApproved(54), false);
 });
+

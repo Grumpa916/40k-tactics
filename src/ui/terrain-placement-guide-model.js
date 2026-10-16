@@ -110,7 +110,13 @@ function sourceAlignedGuide(page, guide, layout) {
 
   const transformed = transformEventCompanionSourceGuide(page, guide);
   if (!transformed.point) return guide;
-  const snapped = nearestTerrainVertex(layout, transformed.point);
+  // Audited source edge points must not be moved to a simplified V2 corner.
+  if (guide.preserveSourcePoint && layout?.terrainGeometry?.[guide.terrain]) {
+    return { ...guide, edge: transformed.edge, anchor: [...transformed.point] };
+  }
+  const snapped = guide.sourceTerrain && layout?.terrainGeometry?.[guide.sourceTerrain]
+    ? { terrain: guide.sourceTerrain, anchor: nearestShapeVertex(layout.terrainGeometry[guide.sourceTerrain], transformed.point) }
+    : nearestTerrainVertex(layout, transformed.point);
   return snapped
     ? { ...guide, edge: transformed.edge, ...snapped }
     : { ...guide, edge: transformed.edge };
@@ -139,7 +145,7 @@ function mirroredCounterpartGuides(page, canonicalGuides, layout) {
     const targetShape = layout?.terrainGeometry?.[targetTerrain];
     const transformed = transformEventCompanionMirrorGuide(page, guide);
     if (!transformed.point) continue;
-    const targetAnchor = nearestShapeVertex(targetShape, transformed.point);
+    const targetAnchor = guide.preserveSourcePoint ? [...transformed.point] : nearestShapeVertex(targetShape, transformed.point);
     if (!targetAnchor) continue;
 
     mirrored.push({
@@ -411,3 +417,4 @@ export function terrainGuideViolatesOwnTerrain(layout, guide) {
 export function terrainGuideCrossesOwnTerrain(layout, guide) {
   return terrainGuideViolatesOwnTerrain(layout, guide);
 }
+

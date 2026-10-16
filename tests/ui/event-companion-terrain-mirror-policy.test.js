@@ -7,13 +7,13 @@ import {
 } from "../../src/rules/event-companion-terrain-mirror-policy.js";
 
 test("mirroring is disabled by default until a page receives canonical confirmation", () => {
-  const policy = getEventCompanionTerrainMirrorPolicy(28);
+  const policy = getEventCompanionTerrainMirrorPolicy(54);
   assert.equal(policy.enabled, false);
   assert.deepEqual(policy.terrainMap, {});
   assert.equal(policy.targetInternalHalf, null);
 
   assert.deepEqual(
-    transformEventCompanionMirrorGuide(28, { anchor: [8, 7], edge: "left" }),
+    transformEventCompanionMirrorGuide(54, { anchor: [8, 7], edge: "left" }),
     { point: null, edge: "left" }
   );
 });
@@ -254,3 +254,4 @@ test("Page 25 candidate mirror augmentation declares all eight rotational terrai
     { point: [25.9, 6], edge: "left" }
   );
 });
+

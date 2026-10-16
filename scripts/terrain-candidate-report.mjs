@@ -51,6 +51,8 @@ for (const page of listEventCompanionPlacementCandidatePages()) {
     const polygon = geometryPoints(layout?.terrainGeometry?.[guide.terrain]);
     if (polygon.some((vertex) => vertex[0] === guide.anchor[0] && vertex[1] === guide.anchor[1])) {
       reproducibleCorners += 1;
+    } else if (guide.preserveSourcePoint && (candidate?.sourceAudit?.sourcePointExceptions ?? []).some((item) => item.sourceIdentity === sourceIdentity(guide))) {
+      reproducibleCorners += 1; // Explicit source-audited edge anchor.
     } else {
       issues.push(`${guide.value}:not-on-vertex`);
     }
@@ -94,3 +96,4 @@ console.log(`Prepared candidates: ${rows.length}`);
 console.log("Production approval is controlled separately by event-companion-placement-review-status.js.");
 
 if (failed) process.exitCode = 1;
+

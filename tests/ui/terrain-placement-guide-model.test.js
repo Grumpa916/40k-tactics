@@ -292,12 +292,7 @@ test("page 19 mirror pass reuses every canonical value on the eight unmeasured r
   }
 });
 
-test("pages beyond the approved range do not masquerade as canonical terrain guides", () => {
-  for (const layout of (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).filter((item) => Number(item.page) >= 27 && Number(item.page) <= 53)) {
-    const overlay = buildCompleteTerrainPlacementOverlay(layout);
-    assert.equal(overlay.guides.length, 0, `page ${layout.page} remains unapproved`);
-    assert.equal(overlay.lines.length, 0, `page ${layout.page} has no synthetic official lines`);
-    assert.equal(overlay.measurements.length, 0, `page ${layout.page} has no inferred official values`);
-    assert.equal(overlay.callouts.length, 0, `page ${layout.page} has no production placement callouts yet`);
-  }
+test("unknown pages remain blocked after the delegated batch is approved", () => {
+  const overlay = buildCompleteTerrainPlacementOverlay({ page: 54, terrainGeometry: {} });
+  assert.deepEqual(overlay, { guides: [], lines: [], measurements: [], anchors: [], callouts: [] });
 });

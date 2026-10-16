@@ -183,3 +183,39 @@ Verify:
 - canonical layer remains unchanged.
 
 A pass moves the page to `APPROVED`. Only then may candidate data be promoted into the production source layer.
+
+
+## Delegated batch review, 15 October 2026
+
+The user explicitly authorized processing all remaining maps without step-by-step
+review, with corrections after their final review. This replaces individual human
+confirmation pauses for Pages 28–53. Canonical source auditing and mirror auditing
+remain separate checks. Review status records assistant review, not iPad approval.
+
+All Pages 28–53 now have separate candidate transcriptions, production source
+copies, source/exclusion audits, explicit reciprocal terrain counterparts, and
+regression coverage. Pages 12–27 retain their established guide data and behavior.
+Page 24's existing 16-inch source-path exception is now documented in audit
+metadata without changing its overlay.
+
+Seven source anchors lie on illustrated footprint edges away from the simplified
+V2 vertices (Pages 28, 36, 37, 41, 43, 46, 47). `preserveSourcePoint` keeps their
+source location and edge direction together; mirrors rotate that exact point.
+They must not be snapped to an unrelated corner. Page 39's shared-corner pipeline
+association is explicit via `sourceTerrain`. Page 53's reciprocal geometry differs
+by up to about 1.12 inches in the simplified polygons; its approved labels remain
+unchanged and the existing counterpart-corner alignment remains in use.
+
+Pages 32 and 34 contain ambiguous PDF text/line associations. Their audit records
+retain the raw extraction, corrected visible label-to-line associations, and
+unassociated extraction artifacts separately from deployment exclusions. No
+unassociated label is assigned to a new terrain guide by guessing.
+
+All 26 complete overlays cover all 16 terrain objects. Some pages already measure
+both members of a counterpart pair; mirror augmentation therefore adds fewer
+than one copy per canonical guide on those pages. Canonical guides stay unchanged.
+
+Validation: 729 Node tests pass. Source pages and generated focused overlay renders
+were visually inspected. A live Safari/iPad review is still the user's final
+acceptance step; no new device review is claimed. This batch does not merge PR
+#282 or complete the separate setup-flow integration work.

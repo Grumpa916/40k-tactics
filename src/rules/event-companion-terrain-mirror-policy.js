@@ -1,3 +1,4 @@
+import { REMAINING_TERRAIN_MIRROR_POLICIES } from "../data/event-companion-terrain-mirror-policies-remaining.js";
 import { transformEventCompanionPlacement } from "./event-companion-terrain-placement-policy.js";
 
 const DEFAULT_MIRROR_POLICY = Object.freeze({
@@ -152,7 +153,7 @@ const PAGE_MIRROR_POLICIES = Object.freeze({
 });
 
 export function getEventCompanionTerrainMirrorPolicy(page) {
-  return PAGE_MIRROR_POLICIES[Number(page)] ?? DEFAULT_MIRROR_POLICY;
+  return PAGE_MIRROR_POLICIES[Number(page)] ?? REMAINING_TERRAIN_MIRROR_POLICIES[Number(page)] ?? DEFAULT_MIRROR_POLICY;
 }
 
 export function transformEventCompanionMirrorGuide(page, guide) {
@@ -162,3 +163,4 @@ export function transformEventCompanionMirrorGuide(page, guide) {
   }
   return transformEventCompanionPlacement(guide?.anchor, guide?.edge, policy.transform);
 }
+

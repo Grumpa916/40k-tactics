@@ -86,6 +86,8 @@ const PAGE_POLICIES = Object.freeze({
   })
 });
 
+const REMAINING_SOURCE_POLICY = Object.freeze({ sourceTransform: "flipX", alignSourceToGeometry: true, sourceEdgeOverrides: Object.freeze({}) });
+
 function normalizedSourceKey(guide) {
   const sourceAnchor = guide?.sourceAnchor ?? [];
   return String(guide?.value ?? "") + "|" + Number(sourceAnchor[0]) + "|" + Number(sourceAnchor[1]);
@@ -96,7 +98,7 @@ function normalizeCoordinate(value) {
 }
 
 export function getEventCompanionTerrainPlacementPolicy(page) {
-  return PAGE_POLICIES[Number(page)] ?? DEFAULT_POLICY;
+  return PAGE_POLICIES[Number(page)] ?? (Number(page) >= 28 && Number(page) <= 53 ? REMAINING_SOURCE_POLICY : DEFAULT_POLICY);
 }
 
 export function transformEventCompanionPlacement(point, edge, transform = "identity") {
@@ -133,3 +135,4 @@ export function transformEventCompanionSourceGuide(page, guide) {
   const sourceEdge = policy.sourceEdgeOverrides?.[normalizedSourceKey(guide)] ?? guide?.edge;
   return transformEventCompanionPlacement(guide?.sourceAnchor, sourceEdge, policy.sourceTransform);
 }
+

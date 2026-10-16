@@ -1,5 +1,6 @@
 // Canonical Event Companion terrain-placement source guides added after visual verification.
 // Values and source anchors are copied from the official PDF vector layer; no distances are derived from V2 geometry.
+import { getRemainingEventCompanionPlacementOverlay } from "./event-companion-placement-guides-remaining.js";
 const g=(value,edge,x,y)=>Object.freeze({value,edge,sourceAnchor:Object.freeze([x,y])});
 
 export const PAGE_20_SOURCE_GUIDES=Object.freeze([
@@ -28,4 +29,5 @@ g('25"','left',24.96,40.07),g('5"','top',26.9,40.08),g('21"','bottom',30.78,21.0
 ]);
 
 const SUPPLEMENTAL_GUIDES_BY_PAGE=Object.freeze({20:PAGE_20_SOURCE_GUIDES,21:PAGE_21_SOURCE_GUIDES,22:PAGE_22_SOURCE_GUIDES,23:PAGE_23_SOURCE_GUIDES,24:PAGE_24_SOURCE_GUIDES,25:PAGE_25_SOURCE_GUIDES,26:PAGE_26_SOURCE_GUIDES,27:PAGE_27_SOURCE_GUIDES});
-export function getSupplementalEventCompanionPlacementOverlay(page){const guides=SUPPLEMENTAL_GUIDES_BY_PAGE[Number(page)];return guides?{guides}:null;}
+export function getSupplementalEventCompanionPlacementOverlay(page){const guides=SUPPLEMENTAL_GUIDES_BY_PAGE[Number(page)];return guides?{guides}:getRemainingEventCompanionPlacementOverlay(page);}
+
