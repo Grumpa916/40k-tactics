@@ -1,0 +1,56 @@
+import { UNIT_STATUS } from "../state/unit.js";
+import { createEvent } from "../events/event.js";
+import { appendHistoryEntry } from "../state/history.js";
+import { getFightCandidates } from "../rules/fight-candidates.js";
+import { changePhase } from "./state-transitions.js";
+
+export function recordFightActivation(state, { unitId } = {}) {
+  if (!unitId) throw new TypeError("Fight activation unit id is required.");
+  if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
+  if (state.phase !== "fight") throw new Error("Fight activations may only be recorded in the Fight phase.");
+
+  const unit = state.units.find((item) => item.id === unitId);
+  if (!unit) throw new Error("Fight activation unit not found: " + unitId);
+  if (unit.status !== UNIT_STATUS.DEPLOYED) {
+    throw new Error("Fight activation unit must be deployed.");
+  }
+  if (!unit.ownerId) throw new Error("Fight activation unit must have an owner.");
+  if (state.players.length > 0 && !state.players.some((player) => player.id === unit.ownerId)) {
+    throw new Error("Fight activation unit owner must be a player in the game.");
+  }
+
+  const candidates = getFightCandidates(state);
+  const isCandidate = candidates.fightsFirst.includes(unitId) || candidates.normal.includes(unitId);
+  if (!isCandidate) {
+    throw new Error("Unit is not an available Fight candidate.");
+  }
+
+  if (
+    candidates.fightsFirst.length > 0 &&
+    candidates.normal.includes(unitId)
+  ) {
+    throw new Error("Fights First candidates must be activated before normal Fight candidates.");
+  }
+
+  if (state.history.some((event) =>
+    event.type === "fight.unit_activated" &&
+    event.payload?.unitId === unitId &&
+    event.payload?.turn === state.turn
+  )) {
+    throw new Error("A unit can be activated to fight only once per turn.");
+  }
+
+  const event = createEvent("fight.unit_activated", {
+    unitId,
+    playerId: unit.ownerId,
+    round: state.battle.round,
+    turn: state.turn,
+    fightsFirst: candidates.fightsFirst.includes(unitId)
+  });
+  return appendHistoryEntry(state, event);
+}
+
+export function completeFightPhase(state) {
+  return changePhase(state, { phase: "end_turn" });
+}
+

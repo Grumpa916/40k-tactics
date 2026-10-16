@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>40K Tactics · Terrain Placement Preview</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0f151b; color: #eef4f8; }
+    main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+    header { display: grid; gap: 8px; margin-bottom: 14px; }
+    h1 { margin: 0; font-size: clamp(22px, 4vw, 34px); }
+    p { margin: 0; line-height: 1.45; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
+    button, select { min-height: 44px; padding: 8px 12px; border: 1px solid #68798a; border-radius: 8px; background: #17222c; color: inherit; font: inherit; }
+    button:disabled { opacity: .45; }
+    [data-terrain-preview-status] { margin: 8px 0 12px; color: #bac8d4; font-size: 14px; font-weight: 700; }
+    .note { margin-top: 12px; padding: 10px 12px; border: 1px solid #465767; border-radius: 8px; background: #121c24; font-size: 13px; color: #c4d0da; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Terrain Placement Verification</h1>
+      <p>Development preview of the actual V2 battlefield-map renderer using Event Companion terrain geometry. Maps are shown with the blue side at the bottom. No units are shown.</p>
+    </header>
+    <div class="controls">
+      <button type="button" data-terrain-preview-prev>Previous</button>
+      <label>Event Companion <select data-terrain-preview-page aria-label="Event Companion page"></select></label>
+      <button type="button" data-terrain-preview-next>Next</button>
+    </div>
+    <div data-terrain-preview-status aria-live="polite"></div>
+    <div data-terrain-preview-map></div>
+    <p class="note"><strong>Candidate / approved workflow:</strong> The official Event Companion remains authoritative for terrain-placement values, source points, referenced battlefield edges, and the general measurement-line path. New maps are prepared in an isolated <strong>CANDIDATE</strong> layer and cannot appear in the production terrain overlay. Confirmation 1 verifies the canonical source transcription and placement. Confirmation 2 verifies the app-only mirror augmentation. Only after both confirmations does a map become <strong>APPROVED</strong>. The app never calculates missing terrain distances from V2 geometry, deployment-zone-only dimensions remain excluded, and ambiguous source material must be flagged rather than guessed. All 45 layouts on Pages 9–53 now use the common canonical and mirror review method, boxed callouts, and terrain focus. Pages 9–17 have a fresh source audit; Page 18 includes its previously restricted 10-inch mirror. All maps were reviewed and approved on 15 October 2026. Printed source edge points are preserved explicitly where simplified V2 corners differ. Tap a terrain footprint to focus its guides; Show all reveals the current verification layer.</p>
+  </main>
+  <script type="module" src="src/ui/terrain-placement-preview.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+import { createGameState } from "../state/game-state.js";
+import { createUnit } from "../state/unit.js";
+import { createGameSession } from "../application/game-session.js";
+import { registerCoreCommandHandlers } from "../engine/register-core-commands.js";
+import { clearCommandHandlers } from "../engine/command-engine.js";
+import { createBattleShell } from "./battle-shell.js";
+import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
+import { installV2SupabasePublicConfig } from "../persistence/supabase-runtime-config.js";
+import { createSupabaseClientFromPublicConfig } from "../persistence/supabase-client.js";
+
+clearCommandHandlers();
+registerCoreCommandHandlers();
+
+const gameData = {
+  weapons: [
+    {
+      id: "rifle",
+      name: "Bolt Rifle",
+      type: "ranged",
+      characteristics: { range: 24, attacks: 2, strength: 4, ap: -1, damage: 1 }
+    },
+    {
+      id: "blade",
+      name: "Power Blade",
+      type: "melee",
+      characteristics: { attacks: 2, strength: 5, ap: -2, damage: 2 }
+    }
+  ]
+};
+
+const state = createGameState({
+  phase: "setup",
+  turn: 0,
+  activePlayer: "p1",
+  players: [
+    { id: "p1", name: "You" },
+    { id: "p2", name: "Opponent" }
+  ],
+  battle: {
+    id: "integrated-demo",
+    status: "setup",
+    round: 0,
+    firstPlayerId: "p1",
+    activePlayerId: "p1"
+  },
+  objectives: [],
+  units: [
+    createUnit({
+      id: "intercessors",
+      ownerId: "p1",
+      name: "Intercessor Squad",
+      status: "deployed",
+      wounds: 10,
+      position: { x: 0, y: 0 },
+      profile: {
+        weaponIds: ["rifle", "blade"],
+        characteristics: { movement: 6, ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
+      }
+    }),
+    createUnit({
+      id: "captain",
+      ownerId: "p1",
+      name: "Captain",
+      status: "deployed",
+      wounds: 5,
+      position: { x: 3, y: 0 },
+      profile: {
+        weaponIds: ["rifle", "blade"],
+        characteristics: { ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
+      }
+    }),
+    createUnit({
+      id: "enemy",
+      ownerId: "p2",
+      name: "Enemy Guard",
+      status: "deployed",
+      wounds: 10,
+      position: { x: 6, y: 0 },
+      profile: {
+        weaponIds: ["blade"],
+        characteristics: { movement: 6, ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 4 }
+      }
+    })
+  ]
+});
+
+const session = createGameSession(state);
+
+// The full battle shell already owns the auth-to-cloud-save lifecycle. This demo
+// now supplies the public Supabase client so those existing controls can mount.
+// The root index.html remains on the isolated Fight Phase demo until integration
+// is ready for the main application entry point.
+async function initializeBattleDemo() {
+  let supabaseClient = null;
+  try {
+    installV2SupabasePublicConfig(window);
+    supabaseClient = await createSupabaseClientFromPublicConfig();
+  } catch (error) {
+    console.error("Supabase cloud controls could not be initialized:", error);
+  }
+
+  createBattleShell(document.getElementById("battle-app"), {
+    session,
+    perspectivePlayerId: "p1",
+    gameData,
+    missionActions: [{ id: "cleanse", name: "Cleanse" }],
+    secondaryMissionCatalog: SECONDARY_MISSION_CATALOG,
+    supabaseClient
+  });
+}
+
+void initializeBattleDemo();

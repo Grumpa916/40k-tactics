@@ -1,0 +1,55 @@
+// Exact printed Event Companion terrain-distance labels and source-page positions.
+// Extracted from the official Event Companion PDF, pages 9–53.
+// Source diagrams are portrait; positions are rotated onto the existing V2 60 × 44 landscape map.
+// Measurement strings are copied verbatim from the PDF. Distances are never calculated or rounded.
+const SOURCE_LABELS_B64 = "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";
+
+export async function loadEventCompanionEdgeMeasurements() {
+  if (typeof DecompressionStream === "undefined" || typeof atob !== "function" || typeof Blob === "undefined") return {};
+  try {
+    const bytes = Uint8Array.from(atob(SOURCE_LABELS_B64), (character) => character.charCodeAt(0));
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+    const compact = JSON.parse(await new Response(stream).text());
+    return Object.fromEntries(Object.entries(compact).map(([page, labels]) => [
+      page,
+      labels.map(([value, x, y]) => ({ value, x: x / 100, y: y / 100 }))
+    ]));
+  } catch {
+    return {};
+  }
+}
+
+
+// Official source-page measurement guide segments extracted from the PDF vector artwork.
+// Coordinates are inches on the V2 landscape battlefield; endpoints are transformed from the printed diagram.
+// Page 18 is the current Layout A reference under visual review.
+const SOURCE_MEASUREMENT_LINES = Object.freeze({
+  "18": [
+    [33.894, 0.458, 26.084, 43.771],
+    [35.891, 17.025, 59.96, 17.025],
+    [59.985, 25.487, 55.077, 25.487],
+    [59.985, 21.747, 51.2, 21.747],
+    [41.052, 40.0, 41.052, 43.997],
+    [45.081, 43.962, 45.081, 30.019],
+    [55.11, 37.037, 55.11, 44.017],
+    [60.09, 9.969, 47.215, 9.969],
+    [60.158, 40.0, 41.092, 40.0],
+    [35.747, 43.981, 35.747, 27.138],
+    [33.982, 4.927, 33.982, -0.124],
+    [34.01, 4.927, 60.078, 4.927],
+    [25.953, 9.855, 25.953, -0.124],
+    [24.231, 43.956, 24.231, 27.112],
+    [47.099, 4.056, 47.099, -0.1],
+    [40.201, 4.036, 40.201, -0.1],
+    [59.985, 37.037, 55.077, 37.037],
+    [59.985, 30.019, 45.087, 30.019],
+    [11.992, 42.971, -0.107, 42.971],
+    [48.11, 0.993, 60.088, 0.993],
+    [59.978, 42.971, 40.077, 42.971],
+    [0.003, 0.993, 19.904, 0.993]
+  ]
+});
+
+export async function loadEventCompanionMeasurementLines() {
+  return SOURCE_MEASUREMENT_LINES;
+}
