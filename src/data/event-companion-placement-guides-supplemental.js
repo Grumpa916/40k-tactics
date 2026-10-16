@@ -23,6 +23,9 @@ g('26"','left',25.97,26.5),g('26"','left',25.97,37.92),g('6"','top',32.97,38.03)
 export const PAGE_26_SOURCE_GUIDES=Object.freeze([
 g('17"','left',17.02,32.05),g('21"','left',21.01,38.97),g('5"','top',21.06,38.98),g('26"','left',26.04,37.1),g('7"','top',26.04,37.15),g('5"','top',27.52,38.92),g('26"','top',33.02,26.05),g('13"','top',33.97,30.94),g('6"','top',39.15,38.02),g('21"','right',39.21,38.06),g('26"','top',39.99,26.09),g('20"','right',40.08,14.57),g('5"','top',44.59,38.89),g('15"','top',46.06,29.01),g('14"','right',46.1,28.97),g('12"','bottom',50.06,12.07),g('17"','top',53.13,26.98),g('7"','right',53.17,27.02),g('12"','bottom',55.94,11.97),g('5"','top',56.07,38.94),g('4"','right',55.94,11.98),g('4"','right',56.07,31.97)
 ]);
+export const PAGE_27_SOURCE_GUIDES=Object.freeze([
+g('25"','left',24.96,40.07),g('5"','top',26.9,40.08),g('21"','bottom',30.78,21.01),g('9"','top',32.98,34.95),g('17"','top',36.04,27.12),g('3"','top',37.08,41.02),g('24"','right',36.06,27.1),g('3"','top',41.05,41.09),g('20"','right',40.04,11),g('19"','right',41.18,41.08),g('16"','top',44.04,28.11),g('16"','right',44.05,28.11),g('9"','right',51.01,14.55),g('8"','bottom',53.09,7.94),g('22"','top',54.14,22.03),g('7"','right',53.14,7.93),g('6"','top',55.01,38.09),g('6"','right',54.02,22.03),g('5"','right',54.95,30.97),g('5"','right',54.99,38.05)
+]);
 
-const SUPPLEMENTAL_GUIDES_BY_PAGE=Object.freeze({20:PAGE_20_SOURCE_GUIDES,21:PAGE_21_SOURCE_GUIDES,22:PAGE_22_SOURCE_GUIDES,23:PAGE_23_SOURCE_GUIDES,24:PAGE_24_SOURCE_GUIDES,25:PAGE_25_SOURCE_GUIDES,26:PAGE_26_SOURCE_GUIDES});
+const SUPPLEMENTAL_GUIDES_BY_PAGE=Object.freeze({20:PAGE_20_SOURCE_GUIDES,21:PAGE_21_SOURCE_GUIDES,22:PAGE_22_SOURCE_GUIDES,23:PAGE_23_SOURCE_GUIDES,24:PAGE_24_SOURCE_GUIDES,25:PAGE_25_SOURCE_GUIDES,26:PAGE_26_SOURCE_GUIDES,27:PAGE_27_SOURCE_GUIDES});
 export function getSupplementalEventCompanionPlacementOverlay(page){const guides=SUPPLEMENTAL_GUIDES_BY_PAGE[Number(page)];return guides?{guides}:null;}
