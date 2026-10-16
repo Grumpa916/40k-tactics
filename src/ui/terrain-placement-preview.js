@@ -1,3 +1,4 @@
+import { layoutTerrainCallouts, TERRAIN_CALLOUT_WIDTH } from "./terrain-callout-layout.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
 import {
   TERRAIN_PLACEMENT_REVIEW_STATE,
@@ -175,7 +176,7 @@ function addTerrainGuides(page, layout, mount) {
       );
     });
   } else {
-    overlay.callouts.forEach((callout) => {
+    layoutTerrainCallouts(overlay.callouts).forEach((callout) => {
       const orientedCallout = orientEventCompanionPoint({ x: callout.x, y: callout.y });
       const orientedAnchor = orientEventCompanionPoint({ x: callout.anchorX, y: callout.anchorY });
       if (!orientedCallout || !orientedAnchor) return;
@@ -185,12 +186,12 @@ function addTerrainGuides(page, layout, mount) {
         : (Array.isArray(callout.lines) ? callout.lines.filter(Boolean) : []);
       if (!calloutLines.length) return;
 
-      const x = px(orientedCallout.x);
-      const y = py(orientedCallout.y);
+      const x = callout.displayX;
+      const y = callout.displayY;
       const anchorX = px(orientedAnchor.x);
       const anchorY = py(orientedAnchor.y);
-      const boxWidth = 11.5;
-      const boxHeight = calloutLines.length === 1 ? 4.4 : 6.5;
+      const boxWidth = TERRAIN_CALLOUT_WIDTH;
+      const boxHeight = callout.boxHeight;
       const rowMarkup = calloutLines.map((text, index) => {
         const rowY = calloutLines.length === 1
           ? y + 0.7
@@ -388,3 +389,4 @@ next.addEventListener("click", () => {
 
 const requestedPage = Number(new URL(window.location.href).searchParams.get("page"));
 setPage(pages.includes(requestedPage) ? requestedPage : (pages.includes(12) ? 12 : pages[0]), { updateUrl: true });
+

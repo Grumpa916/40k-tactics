@@ -219,3 +219,30 @@ Validation: 729 Node tests pass. Source pages and generated focused overlay rend
 were visually inspected. A live Safari/iPad review is still the user's final
 acceptance step; no new device review is claimed. This batch does not merge PR
 #282 or complete the separate setup-flow integration work.
+## Visual render pass, 15 October 2026
+
+The exact SVG guide markup produced by `terrain-placement-preview.js` was
+exported for Pages 12–53 and rendered at a 560-pixel board width. The complete
+42-page set and focused source exceptions were inspected. This uncovered five
+same-footprint callout collisions on Pages 15 (T12), 23 (T4/T9), and 35 (T5/T9).
+
+A shared presentation-only helper now separates boxes that would be visible
+together in focused mode. It leaves printed values, canonical guide data,
+measurement endpoints, and source line paths unchanged. It does not try to make
+the deliberately dense Show all layer collision-free between different objects.
+
+Validation after the change:
+
+- 768 Node tests pass, including a layout regression for every Page 15–53.
+- The exact generated SVG has no clipped callout boxes or overlapping boxes
+  belonging to the same terrain piece across Pages 12–53.
+- 2,145 assertions exercised the actual focus event handlers with a mock DOM:
+  default hiding, Show all/Hide all, each footprint, Enter/Space activation,
+  focus status, callout visibility, and persistent anchor markers.
+- Corrected focused views were rendered and visually inspected.
+
+Browser testing was attempted but is incomplete: the browser environment blocked
+both the local preview and the committed public preview, and the local runtime
+could not download its browser binary. These results are rendered SVG and mock
+DOM checks, not a successful live browser or Safari/iPad touch test. Setup-flow
+integration and live-device acceptance remain outstanding. PR #282 stays draft.
