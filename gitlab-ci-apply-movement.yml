@@ -1,0 +1,23 @@
+image: node:22
+
+stages:
+  - update
+
+apply_movement_flexibility:
+  stage: update
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - git apply --check movement-flexibility.patch
+    - git apply movement-flexibility.patch
+    - npm test
+    - npm run build
+    - npx --yes wrangler@latest pages deploy dist --project-name=40k-tactics --branch="$CI_COMMIT_BRANCH"
+    - cp gitlab-ci-production.yml .gitlab-ci.yml
+    - rm movement-flexibility.patch gitlab-ci-production.yml
+    - git config user.name '40K Tactics Update'
+    - git config user.email 'update-bot@users.noreply.gitlab.com'
+    - git add -A
+    - git commit -m 'Relax movement map placement restrictions'
+    - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    - git push origin "HEAD:${CI_DEFAULT_BRANCH}"
