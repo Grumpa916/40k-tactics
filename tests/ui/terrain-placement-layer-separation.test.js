@@ -52,9 +52,4 @@ test("Page 23 keeps its approved 18-guide canonical source layer separate from m
 test("Page 24 keeps its approved 19-guide canonical source layer separate from mirror augmentation", () => expectCanonicalPlusMirrors(24, 19));
 test("Page 25 keeps its approved 20-guide canonical source layer separate from mirror augmentation", () => expectCanonicalPlusMirrors(25, 20));
 test("Page 26 keeps its approved 22-guide canonical source layer separate from mirror augmentation", () => expectCanonicalPlusMirrors(26, 22));
-
-test("Page 27 cannot gain production measurements before its two confirmations", () => {
-  const layout = layoutForPage(27);
-  assert.equal(buildCanonicalTerrainPlacementOverlay(layout).guides.length, 0);
-  assert.equal(buildCompleteTerrainPlacementOverlay(layout).guides.length, 0);
-});
+test("Page 27 keeps its approved 20-guide canonical source layer separate from mirror augmentation", () => expectCanonicalPlusMirrors(27, 20));
