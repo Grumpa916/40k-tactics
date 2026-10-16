@@ -76,15 +76,18 @@ test("Page 27 preserves only the official 20-inch own-footprint path as an audit
   }
 });
 
-test("Page 27 remains canonical-only and production-blocked before confirmation 1", () => {
+test("Page 27 confirmation-2 preview adds only declared mirrors while production remains blocked", () => {
   const layout = layoutForPage(27);
   const candidate = buildCandidateTerrainPlacementOverlay(layout);
-  const attemptedMirror = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
+  const mirrorPreview = buildCandidateTerrainPlacementOverlay(layout, { includeMirrors: true });
   const mirrorPolicy = getEventCompanionTerrainMirrorPolicy(27);
+  const mirrored = mirrorPreview.guides.filter((guide) => guide.mirrored);
 
   assert.equal(candidate.guides.length, 20);
-  assert.equal(mirrorPolicy.enabled, false);
-  assert.equal(attemptedMirror.guides.length, 20);
+  assert.equal(mirrorPolicy.enabled, true);
+  assert.equal(mirrorPolicy.transform, "rotate180");
+  assert.equal(mirrored.length, 20);
+  assert.equal(mirrorPreview.guides.length, 40);
   assert.equal(buildCanonicalTerrainPlacementOverlay(layout).guides.length, 0);
   assert.equal(buildCompleteTerrainPlacementOverlay(layout).guides.length, 0);
 });
