@@ -49,7 +49,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const fellBack = alreadyFellBack(unit.id);
       const action = actionFor(unit.id);
       return '<button type="button" class="move-unit' + (unit.id === selectedUnitId ? ' is-selected' : '') +
-        '" data-move-unit="' + escapeHtml(unit.id) + '"' + (action ? ' disabled' : '') + '><strong>' +
+        '" data-move-unit="' + escapeHtml(unit.id) + '"><strong>' +
         escapeHtml(unit.name) + '</strong><span>' + escapeHtml(ownerLabel(unit, state)) + '</span><small>' +
         (action ? ({ "unit.normal_move_resolved": "Normal Move recorded", "unit.fell_back": "Fall Back recorded", "unit.advanced": "Advance recorded", "unit.stationary_recorded": "Remained stationary" }[action.type] ?? "Movement recorded") : "Select movement") +
         '</small></button>';
@@ -67,10 +67,10 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
           escapeHtml(model.id) + '" value="' + escapeHtml(pos.y) + '" required></label><span>' +
           (movement == null ? 'Movement stat missing' : 'Move up to ' + movement + '"') + '</span></div>';
       }).join('');
-      const valid = models.length > 0 && models.every((model) => getBattleUnitMovement(state, selected, model) != null &&
+      const valid = models.length > 0 && models.every((model) =>
         Number.isFinite(model.position?.x) && Number.isFinite(model.position?.y));
       editor = '<div class="move-editor"><h2>' + escapeHtml(selected.name) + '</h2>' +
-        (models.length ? '<p>Enter each model’s destination coordinates. The app checks each displacement against its Movement characteristic; tabletop distances and terrain remain authoritative.</p>' +
+        (models.length ? '<p>Enter each model’s approximate destination coordinates. The map does not enforce movement distance; tabletop measurements and rules remain authoritative.</p>' +
           '<div class="move-coordinate-list">' + rows + '</div>' :
           '<p>This unit has no recorded battlefield position. Add positions before recording a Normal Move.</p>') +
         '<label>Advance roll (1–6) <input type="number" min="1" max="6" step="1" data-advance-roll value="1" required></label>' +
@@ -83,10 +83,10 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     container.innerHTML = '<main class="movement-screen"><header><div><div class="move-kicker">LIVE BATTLE</div><h1>Movement Phase</h1><p>Round ' +
       escapeHtml(state.battle?.round ?? '—') + ' · Turn ' + escapeHtml(state.turn ?? '—') +
       '</p></div><strong>' + eligible.length + ' deployed units</strong></header>' +
-      '<p class="move-note">Map coordinates are approximate. Record movement after checking tabletop distances, coherency, terrain, and applicable rules. Each unit records one movement choice per turn: Normal Move, Advance, Fall Back, or Remain Stationary.</p>' +
+      '<p class="move-note">Map coordinates are approximate and may be adjusted repeatedly. The map does not enforce movement distance. Each unit still records one gameplay movement choice per turn: Normal Move, Advance, Fall Back, or Remain Stationary.</p>' +
       '<section class="battlefield-map-section"><div class="move-heading"><h2>Live Battlefield</h2><span>Recorded positions · both armies</span></div>' +
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId, interactivePlayerId: playerId, selectedUnitId }) +
-      '<p>Drag an active player’s marker to record a Normal Move. Use the controls below for Advance, Fall Back, or Remain Stationary. Tabletop measurements remain authoritative.</p></section>' +
+      '<p>Drag an active player’s marker to place or refine its approximate position. The first drag records a Normal Move if no movement choice exists; later drags only refine the map position. Tabletop measurements remain authoritative.</p></section>' +
       (errorMessage ? '<p class="move-error" role="alert">' + escapeHtml(errorMessage) + '</p>' : '') +
       '<section><div class="move-heading"><h2>Eligible units</h2><span>Active player only</span></div><div class="move-units">' +
       unitCards + '</div></section><section>' + editor + '</section></main>';
@@ -131,7 +131,15 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
           y: Math.round(Math.max(0, Math.min(44, model.position.y + dy)) * 10) / 10
         }
       }));
-      session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
+      const movementActionAlreadyRecorded = state.history.some((event) =>
+        ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
+        event.payload?.unitId === unit.id && event.payload?.turn === state.turn);
+      session.dispatch({
+        type: movementActionAlreadyRecorded ? COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION : COMMAND_TYPES.RESOLVE_NORMAL_MOVE,
+        payload: movementActionAlreadyRecorded
+          ? { unitId: unit.id, playerId: unit.ownerId, moves }
+          : { unitId: unit.id, moves }
+      });
       errorMessage = "";
     } catch (error) {
       errorMessage = error?.message ?? String(error);

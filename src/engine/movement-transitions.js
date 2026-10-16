@@ -7,12 +7,6 @@ function positionIsValid(position) {
   return position && Number.isFinite(position.x) && Number.isFinite(position.y);
 }
 
-function movementCharacteristic(state, unit, model) {
-  const movement = getBattleUnitMovement(state, unit, model);
-  if (movement == null) throw new Error("Unit must have a valid Movement characteristic.");
-  return movement;
-}
-
 function distanceBetween(a, b) {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
@@ -76,11 +70,8 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   const movedModels = models.map((model) => {
     const position = destinations.get(model.id);
     if (!position) throw new Error("A Normal Move must include a destination for every model in the unit.");
-    const movement = movementCharacteristic(state, unit, model);
+    const movement = getBattleUnitMovement(state, unit, model) ?? null;
     const distance = distanceBetween(model.position, position);
-    if (distance > movement + 1e-9) {
-      throw new Error("A model cannot move farther than its Movement characteristic.");
-    }
     const destination = { ...position };
     moveRecords.push({
       modelId: model.id,
@@ -165,9 +156,8 @@ export function resolveAdvance(state, { unitId, moves, advanceRoll } = {}) {
   const movedModels = models.map((model) => {
     const destination = destinations.get(model.id);
     if (!destination) throw new Error("An Advance must include a destination for every model.");
-    const movement = movementCharacteristic(state, unit, model);
+    const movement = getBattleUnitMovement(state, unit, model) ?? null;
     const distance = distanceBetween(model.position, destination);
-    if (distance > movement + advanceRoll + 1e-9) throw new Error("A model cannot Advance farther than its Movement characteristic plus the recorded Advance roll.");
     records.push({ modelId: model.id, from: { ...model.position }, to: { ...destination }, distance, movement, advanceRoll });
     return { ...model, position: { ...destination } };
   });

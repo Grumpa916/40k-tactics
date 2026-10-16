@@ -107,6 +107,50 @@ export function setActualDeploymentPosition(state, { unitId, playerId, position 
   }));
 }
 
+
+/**
+ * Adjust the approximate live-map position without recording another gameplay
+ * movement action. The live map is advisory context, not a tabletop-rules
+ * authority, so this transition intentionally does not enforce Movement
+ * characteristics or append a game-history event.
+ */
+export function adjustLiveMapPosition(state, { unitId, playerId, moves } = {}) {
+  if (!state.battle || state.battle.status !== "active") {
+    throw new Error("Live map positions can only be adjusted during an active battle.");
+  }
+  if (state.phase !== "movement") {
+    throw new Error("Live map positions can only be adjusted in the Movement phase.");
+  }
+  const unit = requirePlayerUnit(state, unitId, playerId);
+  if (unit.status !== "deployed") throw new Error("Unit must be deployed before its map position can be adjusted.");
+
+  const models = Array.isArray(unit.models) && unit.models.length > 0
+    ? unit.models
+    : [{ id: unit.id, position: unit.position }];
+  if (!Array.isArray(moves) || moves.length !== models.length) {
+    throw new Error("A map adjustment must include a destination for every model in the unit.");
+  }
+  const destinations = new Map();
+  for (const move of moves) {
+    if (!move?.modelId || destinations.has(move.modelId)) {
+      throw new Error("Each model must have exactly one map destination.");
+    }
+    destinations.set(move.modelId, validatePosition(move.position));
+  }
+  const movedModels = models.map((model) => {
+    const position = destinations.get(model.id);
+    if (!position) throw new Error("A map adjustment must include a destination for every model in the unit.");
+    return { ...model, position };
+  });
+  const nextUnit = Array.isArray(unit.models) && unit.models.length > 0
+    ? { ...unit, models: movedModels }
+    : { ...unit, position: movedModels[0].position };
+  return {
+    ...state,
+    units: state.units.map((item) => item.id === unitId ? nextUnit : item)
+  };
+}
+
 export function declareUnitReserve(state, { unitId, playerId } = {}) {
   requireDeploymentState(state);
   const unit = requirePlayerUnit(state, unitId, playerId);

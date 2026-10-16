@@ -31,6 +31,7 @@ import {
   clearDeploymentPlanPosition,
   clearDeploymentPlan,
   setActualDeploymentPosition,
+  adjustLiveMapPosition,
   declareUnitReserve,
   setEventCompanionMissionSetup
 } from "./battlefield-map-transitions.js";
@@ -46,6 +47,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.CLEAR_DEPLOYMENT_PLAN_POSITION, (state, command) => clearDeploymentPlanPosition(state, command.payload)],
     [COMMAND_TYPES.CLEAR_DEPLOYMENT_PLAN, (state, command) => clearDeploymentPlan(state, command.payload)],
     [COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION, (state, command) => setActualDeploymentPosition(state, command.payload)],
+    [COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION, (state, command) => adjustLiveMapPosition(state, command.payload)],
     [COMMAND_TYPES.DECLARE_UNIT_RESERVE, (state, command) => declareUnitReserve(state, command.payload)],
     [COMMAND_TYPES.SET_EVENT_COMPANION_MISSION_SETUP, (state, command) => setEventCompanionMissionSetup(state, command.payload)],
     [COMMAND_TYPES.SET_PRE_GAME_ROLES, (state, command) => setPreGameRoles(state, command.payload)],

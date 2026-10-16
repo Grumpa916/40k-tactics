@@ -6,6 +6,7 @@ import { registerCoreCommandHandlers } from '../../src/engine/register-core-comm
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { getShootingCandidates } from '../../src/rules/shooting-candidates.js';
 import { recordShootingActivation, completeShootingPhase } from '../../src/engine/shooting-transitions.js';
+import { resolveAdvance } from '../../src/engine/movement-transitions.js';
 import { getShootingWeaponOptions, getShootingTargetOptions } from '../../src/application/shooting-workflow.js';
 import { summarizeGameEvent } from '../../src/ui/battle-context-panels.js';
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
@@ -109,13 +110,29 @@ for (const savedMovement of [false, true]) test(`opponent can drag its units wit
     assert.deepEqual(x.game.getState().units[1].position, { x: 12, y: 10 });
     assert.equal(x.game.getState().history.at(-1).payload.playerId, 'p2');
     assert.match(x.root.innerHTML, /Normal Move recorded/);
+    x.drag('enemy', 300, 200);
+    assert.deepEqual(x.game.getState().units[1].position, { x: 30, y: 24 });
+    assert.equal(x.game.getState().history.filter(e => e.type === 'unit.normal_move_resolved').length, 1);
   } finally { x.screen.destroy(); }
 });
-test('opponent map movement keeps engine range checks and restores rejected markers', () => {
+test('opponent map movement is advisory and does not enforce movement distance', () => {
   const x = movementFixture();
   try {
-    x.drag('enemy', 250, 340);
-    assert.deepEqual(x.game.getState().units[1].position, { x: 10, y: 10 });
-    assert.match(x.root.innerHTML, /cannot move farther/);
+    x.drag('enemy', 500, 40);
+    assert.deepEqual(x.game.getState().units[1].position, { x: 50, y: 40 });
+    assert.doesNotMatch(x.root.innerHTML, /cannot move farther/);
   } finally { x.screen.destroy(); }
+});
+
+
+test('Advance records approximate destination without enforcing map distance', () => {
+  const initial = state('movement');
+  const next = resolveAdvance(initial, {
+    unitId: 'enemy',
+    advanceRoll: 1,
+    moves: [{ modelId: 'enemy', position: { x: 55, y: 40 } }]
+  });
+  assert.deepEqual(next.units.find(u => u.id === 'enemy').position, { x: 55, y: 40 });
+  assert.equal(next.history.at(-1).type, 'unit.advanced');
+  assert.ok(next.history.at(-1).payload.moves[0].distance > 7);
 });
