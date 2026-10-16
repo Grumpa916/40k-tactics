@@ -80,6 +80,29 @@ export const PAGE_26_CANDIDATE_SOURCE_GUIDES = Object.freeze([
   { value: '4"', edge: "right", sourceAnchor: [56.07, 31.97] }
 ]);
 
+export const PAGE_27_CANDIDATE_SOURCE_GUIDES = Object.freeze([
+  { value: '25"', edge: "left", sourceAnchor: [24.96, 40.07] },
+  { value: '5"', edge: "top", sourceAnchor: [26.90, 40.08] },
+  { value: '21"', edge: "bottom", sourceAnchor: [30.78, 21.01] },
+  { value: '9"', edge: "top", sourceAnchor: [32.98, 34.95] },
+  { value: '17"', edge: "top", sourceAnchor: [36.04, 27.12] },
+  { value: '3"', edge: "top", sourceAnchor: [37.08, 41.02] },
+  { value: '24"', edge: "right", sourceAnchor: [36.06, 27.10] },
+  { value: '3"', edge: "top", sourceAnchor: [41.05, 41.09] },
+  { value: '20"', edge: "right", sourceAnchor: [40.04, 11.00] },
+  { value: '19"', edge: "right", sourceAnchor: [41.18, 41.08] },
+  { value: '16"', edge: "top", sourceAnchor: [44.04, 28.11] },
+  { value: '16"', edge: "right", sourceAnchor: [44.05, 28.11] },
+  { value: '9"', edge: "right", sourceAnchor: [51.01, 14.55] },
+  { value: '8"', edge: "bottom", sourceAnchor: [53.09, 7.94] },
+  { value: '22"', edge: "top", sourceAnchor: [54.14, 22.03] },
+  { value: '7"', edge: "right", sourceAnchor: [53.14, 7.93] },
+  { value: '6"', edge: "top", sourceAnchor: [55.01, 38.09] },
+  { value: '6"', edge: "right", sourceAnchor: [54.02, 22.03] },
+  { value: '5"', edge: "right", sourceAnchor: [54.95, 30.97] },
+  { value: '5"', edge: "right", sourceAnchor: [54.99, 38.05] }
+]);
+
 // Page 24 also prints a 7-inch horizontal offset to the diagonal deployment
 // boundary and a 9-inch diagonal dimension between deployment-boundary points.
 // Neither terminates on a terrain footprint, so both are excluded from this
@@ -98,6 +121,15 @@ export const PAGE_26_CANDIDATE_SOURCE_GUIDES = Object.freeze([
 // confirms both terminate on the two central terrain footprints, so both are
 // retained. The official 21-inch path at source [21.01,38.97] and 13-inch path
 // at [33.97,30.94] are preserved as source-audited path exceptions.
+//
+// Page 27 prints one 9-inch internal deployment-zone dimension from the curved
+// deployment boundary toward the central boundary intersection. It is not a
+// terrain-to-table-edge placement guide and is excluded. The extraction-marked
+// 5-inch source observation at [26.90,40.08] was resolved by direct inspection
+// of the official page and terminates on a terrain footprint, so it is retained.
+// The official 20-inch source path at [40.04,11.00] visibly follows the measured
+// footprint boundary before continuing to the battlefield edge and is preserved
+// as an explicit source-audited path exception.
 
 const CANDIDATES_BY_PAGE = Object.freeze({
   24: Object.freeze({
@@ -151,6 +183,23 @@ const CANDIDATES_BY_PAGE = Object.freeze({
       sourcePathExceptions: Object.freeze([
         '21"|21.01|38.97',
         '13"|33.97|30.94'
+      ])
+    })
+  }),
+  27: Object.freeze({
+    guides: PAGE_27_CANDIDATE_SOURCE_GUIDES,
+    sourceAudit: Object.freeze({
+      printedDimensionCount: 21,
+      terrainGuideCount: 20,
+      excludedDeploymentDimensions: Object.freeze([
+        '9"|internal|30.01|15.71|23.56|22.04'
+      ]),
+      ambiguousCount: 0,
+      resolvedAmbiguousSourceDimensions: Object.freeze([
+        '5"|top|26.9|40.08'
+      ]),
+      sourcePathExceptions: Object.freeze([
+        '20"|40.04|11'
       ])
     })
   })
