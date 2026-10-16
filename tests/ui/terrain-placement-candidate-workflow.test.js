@@ -22,8 +22,8 @@ function sourceIdentity(guide) {
   return [String(guide?.value ?? ""), Number(guide?.sourceAnchor?.[0]), Number(guide?.sourceAnchor?.[1])].join("|");
 }
 
-test("Pages 24-26 are fully approved and Page 27 awaits mirror confirmation", () => {
-  for (const page of [24, 25, 26]) {
+test("Pages 24-27 are fully approved and Page 28 is unprepared", () => {
+  for (const page of [24, 25, 26, 27]) {
     const status = getEventCompanionTerrainPlacementReviewStatus(page);
     assert.equal(status.state, TERRAIN_PLACEMENT_REVIEW_STATE.APPROVED);
     assert.equal(status.canonicalConfirmed, true);
@@ -31,13 +31,7 @@ test("Pages 24-26 are fully approved and Page 27 awaits mirror confirmation", ()
     assert.equal(isEventCompanionTerrainPlacementApproved(page), true);
   }
 
-  const page27 = getEventCompanionTerrainPlacementReviewStatus(27);
   const page28 = getEventCompanionTerrainPlacementReviewStatus(28);
-  assert.equal(page27.state, TERRAIN_PLACEMENT_REVIEW_STATE.CANONICAL_APPROVED);
-  assert.equal(page27.canonicalConfirmed, true);
-  assert.equal(page27.mirrorRequired, true);
-  assert.equal(page27.mirrorConfirmed, false);
-  assert.equal(isEventCompanionTerrainPlacementApproved(27), false);
   assert.equal(page28.state, "unprepared");
 });
 
@@ -54,7 +48,7 @@ test("Page 26 approved source is promoted unchanged and renders with its approve
   assert.deepEqual(canonical.guides.map(sourceIdentity).sort(), candidate.guides.map(sourceIdentity).sort());
 });
 
-test("Page 27 confirmation-2 preview contains canonical guides plus mirrors and remains isolated from production", () => {
+test("Page 27 approved source is promoted unchanged and renders with its approved mirrors", () => {
   const layout = layoutForPage(27);
   const candidate = getEventCompanionPlacementCandidate(27);
   const canonicalCandidate = buildCandidateTerrainPlacementOverlay(layout);
@@ -76,14 +70,16 @@ test("Page 27 confirmation-2 preview contains canonical guides plus mirrors and 
   assert.equal(canonicalCandidate.guides.some((guide) => guide.mirrored), false);
   assert.equal(mirrorCandidate.guides.length, 40);
   assert.equal(mirrorCandidate.guides.filter((guide) => guide.mirrored).length, 20);
-  assert.equal(productionCanonical.guides.length, 0);
-  assert.equal(productionComplete.guides.length, 0);
+  assert.equal(productionCanonical.guides.length, 20);
+  assert.equal(productionComplete.guides.length, 40);
+  assert.equal(productionComplete.guides.filter((guide) => guide.mirrored).length, 20);
+  assert.deepEqual(productionCanonical.guides.map(sourceIdentity).sort(), canonicalCandidate.guides.map(sourceIdentity).sort());
 });
 
-test("approved Pages 24-26 remain available while the production gate blocks Page 27 and later pages", () => {
+test("approved Pages 24-27 remain available while the production gate blocks Page 28 and later pages", () => {
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(24)).guides.length, 38);
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(25)).guides.length, 40);
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(26)).guides.length, 44);
-  assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(27)).guides.length, 0);
+  assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(27)).guides.length, 40);
   assert.equal(buildCompleteTerrainPlacementOverlay(layoutForPage(28)).guides.length, 0);
 });
