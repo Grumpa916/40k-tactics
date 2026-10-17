@@ -1,0 +1,185 @@
+diff --git a/src/application/shooting-workflow.js b/src/application/shooting-workflow.js
+index 6ea1df8..3f95e60 100644
+--- a/src/application/shooting-workflow.js
++++ b/src/application/shooting-workflow.js
+@@ -2,6 +2,7 @@ import { createCommand } from "../commands/command.js";
+ import { COMMAND_TYPES } from "../commands/game-commands.js";
+ import { executeCommand } from "../engine/command-engine.js";
+ import { getShootingState } from "../rules/shooting-state.js";
++import { getBattleUnitDatasheet } from "../rules/battle-unit-reference.js";
+ 
+ function playerName(player) {
+   return player?.name ?? player?.id ?? "Unknown";
+@@ -25,6 +26,39 @@ function describeUnit(state, unitId, perspectivePlayerId) {
+   };
+ }
+ 
++
++function parseNumericCharacteristic(value) {
++  if (Number.isFinite(value)) return Number(value);
++  const match = String(value ?? "").trim().match(/^(\d+(?:\.\d+)?)\s*(?:[+"″]|in)?$/i);
++  return match ? Number(match[1]) : null;
++}
++
++function datasheetRangedWeaponOptions(state, attacker) {
++  const weapons = getBattleUnitDatasheet(state, attacker)?.weapons;
++  if (!Array.isArray(weapons)) return [];
++  return weapons.flatMap((weapon, index) => {
++    const rawRange = weapon?.range ?? weapon?.characteristics?.range;
++    if (String(rawRange ?? "").trim().toLowerCase() === "melee") return [];
++    const range = parseNumericCharacteristic(rawRange);
++    if (range == null) return [];
++    const skill = parseNumericCharacteristic(weapon?.skill ?? weapon?.characteristics?.skill);
++    const name = weapon?.name ?? `Ranged weapon ${index + 1}`;
++    return [{
++      id: `datasheet:${attacker.id}:${index}`,
++      name,
++      type: "ranged",
++      characteristics: {
++        range,
++        attacks: weapon?.attacks ?? weapon?.characteristics?.attacks,
++        strength: weapon?.strength ?? weapon?.characteristics?.strength,
++        ap: weapon?.ap ?? weapon?.characteristics?.ap ?? 0,
++        damage: weapon?.damage ?? weapon?.characteristics?.damage,
++        ...(skill == null ? {} : { skill })
++      }
++    }];
++  });
++}
++
+ function wasActivatedToShootThisTurn(state, unitId) {
+   const history = Array.isArray(state?.history) ? state.history : [];
+   return history.some((event) =>
+@@ -128,7 +162,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null }
+     ? attacker.profile.weaponIds
+     : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
+   const weapons = Array.isArray(gameData?.weapons) ? gameData.weapons : [];
+-  return weaponIds
++  const linkedWeapons = weaponIds
+     .map((weaponId) => weapons.find((weapon) => weapon?.id === weaponId))
+     .filter((weapon) => weapon?.type === "ranged")
+     .map((weapon) => ({
+@@ -137,6 +171,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null }
+       type: weapon.type,
+       characteristics: { ...(weapon.characteristics ?? {}) }
+     }));
++  return linkedWeapons.length ? linkedWeapons : datasheetRangedWeaponOptions(state, attacker);
+ }
+ 
+ export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {
+diff --git a/src/engine/combat-transitions.js b/src/engine/combat-transitions.js
+index e242372..5616b1a 100644
+--- a/src/engine/combat-transitions.js
++++ b/src/engine/combat-transitions.js
+@@ -79,16 +79,26 @@ export function resolveUnitAttack(state, {
+     throw new Error("Fight attacks require the attacker and target to be engaged.");
+   }
+ 
+-  const profile = buildAttackProfile({
+-    attacker: attacker.profile ?? attacker,
+-    target: target.profile ?? target,
+-    weapon
+-  });
+   if (actualDamage !== null && (!Number.isInteger(actualDamage) || actualDamage < 0)) {
+     throw new TypeError("Actual damage must be a non-negative integer.");
+   }
+-  const result = resolveAttack({ ...profile, random });
+-  const expectedDamage = getDamageOutcomeDistribution({ attacker, target, weapon }).expectedDamage;
++  let profile = null;
++  let result = null;
++  let expectedDamage = null;
++  try {
++    profile = buildAttackProfile({
++      attacker: attacker.profile ?? attacker,
++      target: target.profile ?? target,
++      weapon
++    });
++    result = resolveAttack({ ...profile, random });
++    expectedDamage = getDamageOutcomeDistribution({ attacker, target, weapon }).expectedDamage;
++  } catch (error) {
++    // Live battles deliberately allow incomplete saved-roster profiles. When the
++    // player supplies actual damage, preserve that authoritative table result
++    // instead of blocking the event because baseline probability data is missing.
++    if (actualDamage === null) throw error;
++  }
+   const recordedDamage = actualDamage ?? result.damage.totalDamage;
+   const previousWounds = target.wounds;
+   const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
+diff --git a/src/rules/combat-profile.js b/src/rules/combat-profile.js
+index 22d81c8..5414d6e 100644
+--- a/src/rules/combat-profile.js
++++ b/src/rules/combat-profile.js
+@@ -8,7 +8,8 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
+   const weaponCharacteristics = weapon.characteristics;
+ 
+   const hitTargetKey = weapon.type === "melee" ? "weaponSkill" : "ballisticSkill";
+-  const hitTarget = attackerCharacteristics[hitTargetKey];
++  const weaponSkill = weaponCharacteristics.skill;
++  const hitTarget = Number.isInteger(weaponSkill) ? weaponSkill : attackerCharacteristics[hitTargetKey];
+ 
+   if (hitTarget === undefined) {
+     throw new Error("Attack profile is missing characteristic: " + hitTargetKey);
+diff --git a/tests/ui/shooting-skip-and-opponent-movement.test.js b/tests/ui/shooting-skip-and-opponent-movement.test.js
+index 02107e4..2d04b42 100644
+--- a/tests/ui/shooting-skip-and-opponent-movement.test.js
++++ b/tests/ui/shooting-skip-and-opponent-movement.test.js
+@@ -136,3 +136,59 @@ test('Advance records approximate destination without enforcing map distance', (
+   assert.equal(next.history.at(-1).type, 'unit.advanced');
+   assert.ok(next.history.at(-1).payload.moves[0].distance > 7);
+ });
++
++test('saved-roster ranged weapons populate Shooting weapon choices after choosing Shoot', () => {
++  const initial = state('shooting');
++  initial.activePlayer = 'p1';
++  initial.battle.activePlayerId = 'p1';
++  initial.units[0].profile = null;
++  initial.units[0].metadata = { rosterUnitId: 'gargoyles' };
++  initial.armyRosters = {
++    p1: {
++      units: [{
++        id: 'gargoyles',
++        datasheet: {
++          weapons: [
++            { name: 'Fleshborer', range: '18"', attacks: 1, skill: '4+', strength: 5, ap: 0, damage: 1 },
++            { name: 'Blinding venom', range: 'Melee', attacks: 1, skill: '4+', strength: 3, ap: 0, damage: 1 }
++          ]
++        }
++      }]
++    }
++  };
++  const game = session(initial);
++  game.dispatch({ type: 'shooting.record_activation', payload: { unitId: 'friendly', actionType: 'shoot', actionId: null } });
++  const options = getShootingWeaponOptions(game.getState(), { attackerId: 'friendly', gameData: { weapons: [] } });
++  assert.equal(options.length, 1);
++  assert.equal(options[0].name, 'Fleshborer');
++  assert.equal(options[0].type, 'ranged');
++  assert.equal(options[0].characteristics.range, 18);
++  assert.equal(options[0].characteristics.skill, 4);
++});
++
++test('saved-roster shooter can record actual damage even when live combat profiles are incomplete', () => {
++  const initial = state('shooting');
++  initial.activePlayer = 'p1';
++  initial.battle.activePlayerId = 'p1';
++  initial.units[0].profile = null;
++  initial.units[0].metadata = { rosterUnitId: 'gargoyles' };
++  initial.units[1].profile = null;
++  initial.armyRosters = {
++    p1: {
++      units: [{
++        id: 'gargoyles',
++        datasheet: {
++          weapons: [{ name: 'Fleshborer', range: '18"', attacks: 1, skill: '4+', strength: 5, ap: 0, damage: 1 }]
++        }
++      }]
++    }
++  };
++  const game = session(initial);
++  game.dispatch({ type: 'shooting.record_activation', payload: { unitId: 'friendly', actionType: 'shoot', actionId: null } });
++  const [weapon] = getShootingWeaponOptions(game.getState(), { attackerId: 'friendly', gameData: { weapons: [] } });
++  game.dispatch({ type: 'combat.resolve_attack', payload: { attackerId: 'friendly', targetId: 'enemy', weapon, actualDamage: 3 } });
++  const event = game.getState().history.at(-1);
++  assert.equal(event.type, 'combat.attack_resolved');
++  assert.equal(event.payload.actualDamage, 3);
++  assert.equal(event.payload.weaponId, weapon.id);
++});
