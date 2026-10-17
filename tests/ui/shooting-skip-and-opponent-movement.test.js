@@ -136,3 +136,59 @@ test('Advance records approximate destination without enforcing map distance', (
   assert.equal(next.history.at(-1).type, 'unit.advanced');
   assert.ok(next.history.at(-1).payload.moves[0].distance > 7);
 });
+
+test('saved-roster ranged weapons populate Shooting weapon choices after choosing Shoot', () => {
+  const initial = state('shooting');
+  initial.activePlayer = 'p1';
+  initial.battle.activePlayerId = 'p1';
+  initial.units[0].profile = null;
+  initial.units[0].metadata = { rosterUnitId: 'gargoyles' };
+  initial.armyRosters = {
+    p1: {
+      units: [{
+        id: 'gargoyles',
+        datasheet: {
+          weapons: [
+            { name: 'Fleshborer', range: '18"', attacks: 1, skill: '4+', strength: 5, ap: 0, damage: 1 },
+            { name: 'Blinding venom', range: 'Melee', attacks: 1, skill: '4+', strength: 3, ap: 0, damage: 1 }
+          ]
+        }
+      }]
+    }
+  };
+  const game = session(initial);
+  game.dispatch({ type: 'shooting.record_activation', payload: { unitId: 'friendly', actionType: 'shoot', actionId: null } });
+  const options = getShootingWeaponOptions(game.getState(), { attackerId: 'friendly', gameData: { weapons: [] } });
+  assert.equal(options.length, 1);
+  assert.equal(options[0].name, 'Fleshborer');
+  assert.equal(options[0].type, 'ranged');
+  assert.equal(options[0].characteristics.range, 18);
+  assert.equal(options[0].characteristics.skill, 4);
+});
+
+test('saved-roster shooter can record actual damage even when live combat profiles are incomplete', () => {
+  const initial = state('shooting');
+  initial.activePlayer = 'p1';
+  initial.battle.activePlayerId = 'p1';
+  initial.units[0].profile = null;
+  initial.units[0].metadata = { rosterUnitId: 'gargoyles' };
+  initial.units[1].profile = null;
+  initial.armyRosters = {
+    p1: {
+      units: [{
+        id: 'gargoyles',
+        datasheet: {
+          weapons: [{ name: 'Fleshborer', range: '18"', attacks: 1, skill: '4+', strength: 5, ap: 0, damage: 1 }]
+        }
+      }]
+    }
+  };
+  const game = session(initial);
+  game.dispatch({ type: 'shooting.record_activation', payload: { unitId: 'friendly', actionType: 'shoot', actionId: null } });
+  const [weapon] = getShootingWeaponOptions(game.getState(), { attackerId: 'friendly', gameData: { weapons: [] } });
+  game.dispatch({ type: 'combat.resolve_attack', payload: { attackerId: 'friendly', targetId: 'enemy', weapon, actualDamage: 3 } });
+  const event = game.getState().history.at(-1);
+  assert.equal(event.type, 'combat.attack_resolved');
+  assert.equal(event.payload.actualDamage, 3);
+  assert.equal(event.payload.weaponId, weapon.id);
+});

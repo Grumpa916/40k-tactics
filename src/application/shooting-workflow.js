@@ -2,6 +2,7 @@ import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getShootingState } from "../rules/shooting-state.js";
+import { getBattleUnitDatasheet } from "../rules/battle-unit-reference.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -23,6 +24,39 @@ function describeUnit(state, unitId, perspectivePlayerId) {
       : null,
     status: unit.status ?? null
   };
+}
+
+
+function parseNumericCharacteristic(value) {
+  if (Number.isFinite(value)) return Number(value);
+  const match = String(value ?? "").trim().match(/^(\d+(?:\.\d+)?)\s*(?:[+"″]|in)?$/i);
+  return match ? Number(match[1]) : null;
+}
+
+function datasheetRangedWeaponOptions(state, attacker) {
+  const weapons = getBattleUnitDatasheet(state, attacker)?.weapons;
+  if (!Array.isArray(weapons)) return [];
+  return weapons.flatMap((weapon, index) => {
+    const rawRange = weapon?.range ?? weapon?.characteristics?.range;
+    if (String(rawRange ?? "").trim().toLowerCase() === "melee") return [];
+    const range = parseNumericCharacteristic(rawRange);
+    if (range == null) return [];
+    const skill = parseNumericCharacteristic(weapon?.skill ?? weapon?.characteristics?.skill);
+    const name = weapon?.name ?? `Ranged weapon ${index + 1}`;
+    return [{
+      id: `datasheet:${attacker.id}:${index}`,
+      name,
+      type: "ranged",
+      characteristics: {
+        range,
+        attacks: weapon?.attacks ?? weapon?.characteristics?.attacks,
+        strength: weapon?.strength ?? weapon?.characteristics?.strength,
+        ap: weapon?.ap ?? weapon?.characteristics?.ap ?? 0,
+        damage: weapon?.damage ?? weapon?.characteristics?.damage,
+        ...(skill == null ? {} : { skill })
+      }
+    }];
+  });
 }
 
 function wasActivatedToShootThisTurn(state, unitId) {
@@ -128,7 +162,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
     ? attacker.profile.weaponIds
     : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
   const weapons = Array.isArray(gameData?.weapons) ? gameData.weapons : [];
-  return weaponIds
+  const linkedWeapons = weaponIds
     .map((weaponId) => weapons.find((weapon) => weapon?.id === weaponId))
     .filter((weapon) => weapon?.type === "ranged")
     .map((weapon) => ({
@@ -137,6 +171,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
       type: weapon.type,
       characteristics: { ...(weapon.characteristics ?? {}) }
     }));
+  return linkedWeapons.length ? linkedWeapons : datasheetRangedWeaponOptions(state, attacker);
 }
 
 export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {

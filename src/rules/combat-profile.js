@@ -8,7 +8,8 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
   const weaponCharacteristics = weapon.characteristics;
 
   const hitTargetKey = weapon.type === "melee" ? "weaponSkill" : "ballisticSkill";
-  const hitTarget = attackerCharacteristics[hitTargetKey];
+  const weaponSkill = weaponCharacteristics.skill;
+  const hitTarget = Number.isInteger(weaponSkill) ? weaponSkill : attackerCharacteristics[hitTargetKey];
 
   if (hitTarget === undefined) {
     throw new Error("Attack profile is missing characteristic: " + hitTargetKey);

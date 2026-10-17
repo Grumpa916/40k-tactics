@@ -79,16 +79,26 @@ export function resolveUnitAttack(state, {
     throw new Error("Fight attacks require the attacker and target to be engaged.");
   }
 
-  const profile = buildAttackProfile({
-    attacker: attacker.profile ?? attacker,
-    target: target.profile ?? target,
-    weapon
-  });
   if (actualDamage !== null && (!Number.isInteger(actualDamage) || actualDamage < 0)) {
     throw new TypeError("Actual damage must be a non-negative integer.");
   }
-  const result = resolveAttack({ ...profile, random });
-  const expectedDamage = getDamageOutcomeDistribution({ attacker, target, weapon }).expectedDamage;
+  let profile = null;
+  let result = null;
+  let expectedDamage = null;
+  try {
+    profile = buildAttackProfile({
+      attacker: attacker.profile ?? attacker,
+      target: target.profile ?? target,
+      weapon
+    });
+    result = resolveAttack({ ...profile, random });
+    expectedDamage = getDamageOutcomeDistribution({ attacker, target, weapon }).expectedDamage;
+  } catch (error) {
+    // Live battles deliberately allow incomplete saved-roster profiles. When the
+    // player supplies actual damage, preserve that authoritative table result
+    // instead of blocking the event because baseline probability data is missing.
+    if (actualDamage === null) throw error;
+  }
   const recordedDamage = actualDamage ?? result.damage.totalDamage;
   const previousWounds = target.wounds;
   const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
