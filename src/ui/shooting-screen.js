@@ -7,6 +7,7 @@ import {
   finishShootingPhase
 } from "../application/shooting-workflow.js";
 import { getShootingTargetPriorities } from "../rules/tactical-shooting-targets.js";
+import { getAttackDamageForecast } from "../rules/attack-damage-forecast.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -62,6 +63,35 @@ function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspe
   `;
 }
 
+
+function shootingDamageForecast(attackerId, weaponId, targetId, state, weapons) {
+  if (!attackerId || !weaponId || !targetId) return "";
+  const weapon = weapons.find((item) => item.id === weaponId);
+  if (!weapon) return "";
+  const forecast = getAttackDamageForecast(state, { attackerId, targetId, weapon });
+  if (!forecast) {
+    return `
+      <aside class="shoot-advisory" data-shoot-damage-forecast>
+        <div class="shoot-advisory__heading"><h3>Damage outlook</h3><span>table result remains authoritative</span></div>
+        <p>Expected damage is unavailable because one or more saved combat characteristics are incomplete.</p>
+      </aside>
+    `;
+  }
+  const expected = forecast.expectedDamage.toFixed(1);
+  const thresholdChance = Math.round(forecast.probabilityAtLeastThreshold * 100) + "%";
+  const anyDamageChance = Math.round(forecast.probabilityAnyDamage * 100) + "%";
+  return `
+    <aside class="shoot-advisory" data-shoot-damage-forecast>
+      <div class="shoot-advisory__heading"><h3>Damage outlook</h3><span>baseline probability</span></div>
+      <div class="shoot-advisory__grid">
+        <div><strong>${escapeHtml(expected)}</strong><span>expected damage</span></div>
+        <div><strong>${escapeHtml(thresholdChance)}</strong><span>chance of ${escapeHtml(forecast.thresholdDamage)}+ damage</span></div>
+        <div><strong>${escapeHtml(anyDamageChance)}</strong><span>chance to cause any damage</span></div>
+      </div>
+      <small>Uses saved profiles and known weapon characteristics. Exact tabletop modifiers and dice remain authoritative.</small>
+    </aside>
+  `;
+}
 function historyRow(item, state, gameData) {
   const attacker = state.units.find((unit) => unit?.id === item.attackerId);
   const target = state.units.find((unit) => unit?.id === item.targetId);
@@ -89,6 +119,7 @@ export function createShootingScreen(container, {
   let selectedWeaponId = null;
   let selectedTargetId = null;
   let actualDamage = "0";
+  let attackError = "";
 
   function clearPending() {
     pendingUnitId = null;
@@ -144,8 +175,8 @@ export function createShootingScreen(container, {
         <section><div class="heading"><h2>Ranged attack</h2><span>Only units that chose Shoot</span></div>
           <div class="controls">
             <div class="shoot-selected-shooter"><strong>${selectedAttackerId ? escapeHtml(model.activations.find((unit) => unit.unitId === selectedAttackerId)?.unit.name ?? selectedAttackerId) : "No shooter selected"}</strong><span>Selected shooter</span></div>
-            <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
-            <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
+            <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedWeaponId ? "" : "selected"}>Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
+            <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedTargetId ? "" : "selected"}>Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
             <div class="damage-control">
               <span class="damage-control__label">Actual damage</span>
               <div class="damage-control__buttons">
@@ -155,7 +186,9 @@ export function createShootingScreen(container, {
               </div>
               <small>Expected damage is calculated automatically and retained in the attack result.</small>
             </div>
-            <button type="button" data-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
+            <button type="button" data-attack ${selectedAttackerId ? "" : "disabled"}>Record Attack</button>
+            ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
+            ${selectedAttackerId && selectedWeaponId && selectedTargetId ? shootingDamageForecast(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons) : ""}
             ${selectedAttackerId && selectedWeaponId && selectedTargetId ? shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId) : ""}
           </div>
         </section>
@@ -188,6 +221,7 @@ export function createShootingScreen(container, {
       selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
       selectedTargetId = null;
       actualDamage = "0";
+      attackError = "";
       clearPending();
       render();
     });
@@ -198,6 +232,7 @@ export function createShootingScreen(container, {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      attackError = "";
       clearPending();
       render();
     });
@@ -220,24 +255,50 @@ export function createShootingScreen(container, {
     });
 
 
-    container.querySelector("[data-weapon]")?.addEventListener("change", (event) => { selectedWeaponId = event.target.value || null; render(); });
-    container.querySelector("[data-target]")?.addEventListener("change", (event) => { selectedTargetId = event.target.value || null; render(); });
+    container.querySelector("[data-weapon]")?.addEventListener("change", (event) => {
+      selectedWeaponId = event.target.value || null;
+      attackError = "";
+      render();
+    });
+    container.querySelector("[data-target]")?.addEventListener("change", (event) => {
+      selectedTargetId = event.target.value || null;
+      attackError = "";
+      render();
+    });
     container.querySelector("[data-shoot-damage-minus]")?.addEventListener("click", () => {
       actualDamage = String(Math.max(0, Number(actualDamage) - 1));
-      render();
+      const value = container.querySelector("[data-shoot-damage-value]");
+      if (value) value.textContent = actualDamage;
     });
     container.querySelector("[data-shoot-damage-plus]")?.addEventListener("click", () => {
       actualDamage = String(Number(actualDamage) + 1);
-      render();
+      const value = container.querySelector("[data-shoot-damage-value]");
+      if (value) value.textContent = actualDamage;
     });
     container.querySelector("[data-attack]")?.addEventListener("click", () => {
-      const weapon = weapons.find((item) => item.id === selectedWeaponId);
-      if (!weapon) return;
+      const weaponId = container.querySelector("[data-weapon]")?.value || selectedWeaponId;
+      const targetId = container.querySelector("[data-target]")?.value || selectedTargetId;
+      const weapon = weapons.find((item) => item.id === weaponId);
+      if (!selectedAttackerId || !weaponId || !weapon || !targetId) {
+        attackError = "Select a shooter, ranged weapon, and target before recording the attack.";
+        render();
+        return;
+      }
       const damage = Number(actualDamage);
-      if (!Number.isInteger(damage) || damage < 0) return;
-      resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
-      selectedTargetId = null;
-      actualDamage = "0";
+      if (!Number.isInteger(damage) || damage < 0) {
+        attackError = "Actual damage must be zero or a positive whole number.";
+        render();
+        return;
+      }
+      try {
+        resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId, weapon, actualDamage: damage });
+        selectedWeaponId = weaponId;
+        selectedTargetId = null;
+        actualDamage = "0";
+        attackError = "";
+      } catch (error) {
+        attackError = error?.message ?? String(error);
+      }
       render();
     });
     container.querySelector("[data-complete]")?.addEventListener("click", () => finishShootingPhase(session));

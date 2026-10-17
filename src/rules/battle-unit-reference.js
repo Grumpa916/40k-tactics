@@ -1,7 +1,26 @@
+import { ARMY_UNIT_CATALOG } from "../data/army-unit-catalog.js";
+
 // Saved battle roster data can fill missing live profiles, including older saves.
+// Older in-progress battles can lack the embedded roster snapshot, so fall back to
+// the reviewed unit catalog using the battle unit's stable datasheet ID or name.
 export function getBattleUnitDatasheet(state, unit) {
   const rosterUnit = state?.armyRosters?.[unit?.ownerId]?.units?.find(item => item.id === unit?.metadata?.rosterUnitId);
-  return rosterUnit?.datasheet ?? null;
+  if (rosterUnit?.datasheet) return rosterUnit.datasheet;
+
+  const datasheetId = unit?.metadata?.datasheetId;
+  if (datasheetId) {
+    const catalogUnit = ARMY_UNIT_CATALOG.find(item => item?.id === datasheetId);
+    if (catalogUnit?.datasheet) return catalogUnit.datasheet;
+  }
+
+  const unitName = String(unit?.name ?? "").trim().toLowerCase();
+  if (!unitName) return null;
+  const rosterFaction = String(state?.armyRosters?.[unit?.ownerId]?.faction ?? "").trim().toLowerCase();
+  const catalogUnit = ARMY_UNIT_CATALOG.find(item =>
+    String(item?.name ?? "").trim().toLowerCase() === unitName &&
+    (!rosterFaction || String(item?.faction ?? "").trim().toLowerCase() === rosterFaction)
+  );
+  return catalogUnit?.datasheet ?? null;
 }
 
 export function getBattleUnitMovement(state, unit, model = {}) {

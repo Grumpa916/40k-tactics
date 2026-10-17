@@ -30,18 +30,18 @@ function unitButton(unit, disabled) {
   const side = unit?.side ?? "unknown";
   const owner = escapeHtml(ownerLabel(unit));
   const name = escapeHtml(unit?.name ?? unit?.unitId);
+  const unitId = escapeHtml(unit?.unitId);
 
   return `
-    <button
-      class="fight-unit fight-unit--${side}"
-      type="button"
-      data-fight-unit="${escapeHtml(unit?.unitId)}"
-      ${disabled ? "disabled" : ""}
-    >
+    <div class="fight-unit fight-unit--${side}">
       <span class="fight-unit__name">${name}</span>
       <span class="fight-unit__owner">${owner}</span>
-      <span class="fight-unit__action">${disabled ? "Waiting" : "Activated by"} tap</span>
-    </button>
+      <div class="fight-unit__choices">
+        <button type="button" data-fight-unit="${unitId}" data-fight-choice="fight" ${disabled ? "disabled" : ""}>Fight</button>
+        <button type="button" data-fight-unit="${unitId}" data-fight-choice="not_fight" ${disabled ? "disabled" : ""}>Do not fight</button>
+      </div>
+      <span class="fight-unit__action">${disabled ? "Waiting for Fights First" : "Record this unit's Fight-phase choice"}</span>
+    </div>
   `;
 }
 
@@ -62,7 +62,7 @@ function candidateSection(title, candidates, blocked) {
       <div class="fight-section__heading">
         <h2>${escapeHtml(title)}</h2>
         <span class="fight-section__hint">
-          ${blocked ? "Fights First still available" : "Tap whichever unit activates"}
+          ${blocked ? "Fights First still available" : "Choose Fight or Do not fight"}
         </span>
       </div>
       <div class="fight-candidates">
@@ -148,15 +148,16 @@ function activationRow(activation, index) {
   const priority = activation.fightsFirst ? "Fights First" : "Normal";
   const damage = activation.totalDamage ?? 0;
   const attacks = activation.attackCount ?? 0;
+  const skipped = activation.actionType === "not_fight";
 
   return `
     <li class="fight-history__item">
       <span class="fight-history__number">${index + 1}</span>
       <span class="fight-history__main">
         <strong>${name}</strong>
-        <span>${owner} · ${priority}</span>
+        <span>${owner} · ${skipped ? "Did not fight" : priority}</span>
       </span>
-      <span class="fight-history__stats">${attacks} attacks · ${damage} damage</span>
+      <span class="fight-history__stats">${skipped ? "No Fight activation" : `${attacks} attacks · ${damage} damage`}</span>
     </li>
   `;
 }
@@ -176,6 +177,7 @@ export function createFightScreen(
   let selectedWeaponId = null;
   let selectedTargetId = null;
   let actualDamage = "0";
+  let attackError = "";
 
   function render() {
     const state = session.getState();
@@ -206,7 +208,7 @@ export function createFightScreen(
         </header>
 
         <div class="fight-note">
-          Select whichever unit actually activates at the table. The app records either side and does not enforce alternating selection order.
+          Record whether each eligible unit Fights or Does not fight. The app records either side and does not enforce alternating selection order.
         </div>
 
         ${candidateSection("Fights First", model.candidates.fightsFirst, false)}
@@ -217,8 +219,8 @@ export function createFightScreen(
           <div class="fight-section__heading"><h2>Attack entry</h2><span class="fight-section__hint">Select an activated unit, weapon, then target</span></div>
           <div class="fight-attack-entry">
             <label>Attacker<select data-fight-attacker><option value="">Select attacker</option>${attackOptions.attackers.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedAttackerId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
-            <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="">Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
-            <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="">Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
+            <label>Weapon<select data-fight-weapon ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedWeaponId ? "" : "selected"}>Select melee weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
+            <label>Target<select data-fight-target ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedTargetId ? "" : "selected"}>Select enemy target</option>${attackOptions.targets.map((unit) => `<option value="${escapeHtml(unit.unitId)}" ${unit.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(unit.name)} · ${escapeHtml(ownerLabel(unit))}</option>`).join("")}</select></label>
             ${fightAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId)}
             <div class="damage-control">
               <span class="damage-control__label">Actual damage</span>
@@ -229,7 +231,8 @@ export function createFightScreen(
               </div>
               <small>Expected damage is calculated automatically and retained in the attack result.</small>
             </div>
-            <button type="button" data-fight-attack ${selectedAttackerId && selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record Attack</button>
+            <button type="button" data-fight-attack ${selectedAttackerId ? "" : "disabled"}>Record Attack</button>
+            ${attackError ? `<p class="fight-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
           </div>
         </section>
 
@@ -270,39 +273,61 @@ export function createFightScreen(
       selectedWeaponId = null;
       selectedTargetId = null;
       actualDamage = "0";
+      attackError = "";
       render();
     });
     container.querySelector("[data-fight-weapon]")?.addEventListener("change", (event) => {
       selectedWeaponId = event.target.value || null;
+      attackError = "";
       render();
     });
     container.querySelector("[data-fight-target]")?.addEventListener("change", (event) => {
       selectedTargetId = event.target.value || null;
+      attackError = "";
       render();
     });
     container.querySelector("[data-fight-damage-minus]")?.addEventListener("click", () => {
       actualDamage = String(Math.max(0, Number(actualDamage) - 1));
-      render();
+      const value = container.querySelector("[data-fight-damage-value]");
+      if (value) value.textContent = actualDamage;
     });
     container.querySelector("[data-fight-damage-plus]")?.addEventListener("click", () => {
       actualDamage = String(Number(actualDamage) + 1);
-      render();
+      const value = container.querySelector("[data-fight-damage-value]");
+      if (value) value.textContent = actualDamage;
     });
     container.querySelector("[data-fight-attack]")?.addEventListener("click", () => {
-      const weapon = weapons.find((item) => item.id === selectedWeaponId);
-      if (!weapon) return;
+      const weaponId = container.querySelector("[data-fight-weapon]")?.value || selectedWeaponId;
+      const targetId = container.querySelector("[data-fight-target]")?.value || selectedTargetId;
+      const weapon = weapons.find((item) => item.id === weaponId);
+      if (!selectedAttackerId || !weaponId || !weapon || !targetId) {
+        attackError = "Select an attacker, melee weapon, and target before recording the attack.";
+        render();
+        return;
+      }
       const damage = Number(actualDamage);
-      if (!Number.isInteger(damage) || damage < 0) return;
-      resolveFightAttack(session, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon, actualDamage: damage });
-      selectedTargetId = null;
-      actualDamage = "0";
+      if (!Number.isInteger(damage) || damage < 0) {
+        attackError = "Actual damage must be zero or a positive whole number.";
+        render();
+        return;
+      }
+      try {
+        resolveFightAttack(session, { attackerId: selectedAttackerId, targetId, weapon, actualDamage: damage });
+        selectedWeaponId = weaponId;
+        selectedTargetId = null;
+        actualDamage = "0";
+        attackError = "";
+      } catch (error) {
+        attackError = error?.message ?? String(error);
+      }
       render();
     });
 
     container.querySelectorAll("[data-fight-unit]").forEach((button) => {
       button.addEventListener("click", () => {
         activateFightUnit(session, {
-          unitId: button.getAttribute("data-fight-unit")
+          unitId: button.getAttribute("data-fight-unit"),
+          actionType: button.getAttribute("data-fight-choice") ?? "fight"
         });
       });
     });

@@ -17,7 +17,8 @@ function getCurrentTurnFightActivations(state) {
       playerId: event.payload.playerId ?? null,
       round: event.payload.round ?? null,
       turn: event.payload.turn,
-      fightsFirst: event.payload.fightsFirst === true
+      fightsFirst: event.payload.fightsFirst === true,
+      actionType: event.payload.actionType ?? "fight"
     }));
 }
 

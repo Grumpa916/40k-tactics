@@ -3,6 +3,7 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getFightState } from "../rules/fight-state.js";
 import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
+import { getDatasheetWeaponOptions } from "../rules/saved-roster-combat-profile.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -65,10 +66,10 @@ export function getFightViewModel(state, { perspectivePlayerId = null } = {}) {
   };
 }
 
-export function recordFightActivation(state, { unitId } = {}, context = {}) {
+export function recordFightActivation(state, { unitId, actionType = "fight" } = {}, context = {}) {
   return executeCommand(
     state,
-    createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, { unitId }),
+    createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, { unitId, actionType }),
     context
   );
 }
@@ -81,13 +82,13 @@ export function completeFightPhase(state, context = {}) {
   );
 }
 
-export function activateFightUnit(session, { unitId } = {}, context = {}) {
+export function activateFightUnit(session, { unitId, actionType = "fight" } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
   }
 
   return session.dispatch(
-    createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, { unitId }),
+    createCommand(COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, { unitId, actionType }),
     context
   );
 }
@@ -101,7 +102,7 @@ export function getFightWeaponOptions(state, { attackerId, gameData = null } = {
     : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
   const weapons = Array.isArray(gameData?.weapons) ? gameData.weapons : [];
 
-  return weaponIds
+  const linkedWeapons = weaponIds
     .map((weaponId) => weapons.find((weapon) => weapon?.id === weaponId))
     .filter((weapon) => weapon?.type === "melee")
     .map((weapon) => ({
@@ -110,6 +111,7 @@ export function getFightWeaponOptions(state, { attackerId, gameData = null } = {
       type: weapon.type,
       characteristics: { ...(weapon.characteristics ?? {}) }
     }));
+  return linkedWeapons.length ? linkedWeapons : getDatasheetWeaponOptions(state, attacker, { type: "melee" });
 }
 
 export function resolveFightAttack(session, {
@@ -139,8 +141,18 @@ export function getFightAttackOptions(
 ) {
   const fight = getFightState(state);
   const activated = new Set(fight.candidates.activated);
+  const activatedToFight = new Set(
+    (Array.isArray(state?.history) ? state.history : [])
+      .filter((event) =>
+        event?.type === "fight.unit_activated" &&
+        event?.payload?.turn === state?.turn &&
+        (event?.payload?.actionType ?? "fight") === "fight"
+      )
+      .map((event) => event?.payload?.unitId)
+      .filter(Boolean)
+  );
   const attackers = state.units
-    .filter((unit) => activated.has(unit?.id))
+    .filter((unit) => activatedToFight.has(unit?.id))
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 
   if (!attackerId) {
@@ -153,7 +165,7 @@ export function getFightAttackOptions(
   }
 
   const attacker = state.units.find((unit) => unit?.id === attackerId);
-  if (!attacker || !activated.has(attackerId)) {
+  if (!attacker || !activatedToFight.has(attackerId)) {
     return {
       attackers,
       targets: []

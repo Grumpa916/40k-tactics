@@ -34,7 +34,8 @@ function wasActivatedToFightThisTurn(state, unitId) {
     event?.type === "fight.unit_activated" &&
     event?.payload?.unitId === unitId &&
     event?.payload?.round === state?.battle?.round &&
-    event?.payload?.turn === state?.turn
+    event?.payload?.turn === state?.turn &&
+    (event?.payload?.actionType ?? "fight") === "fight"
   );
 }
 
