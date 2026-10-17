@@ -1,0 +1,95 @@
+image: node:20
+
+stages:
+  - update
+  - test
+  - build
+  - deploy
+
+apply_queued_update:
+  image: node:22
+  stage: update
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      exists:
+        - pending-update.patch
+        - pending-update.mjs
+    - when: never
+  script:
+    - |
+      if [ -f pending-update.mjs ]; then
+        echo 'Applying queued update script.'
+        node pending-update.mjs
+      elif [ -f pending-update.patch ]; then
+        echo 'Applying queued patch.'
+        if git apply --check pending-update.patch; then
+          git apply pending-update.patch
+        elif git apply --reverse --check pending-update.patch; then
+          echo 'Patch changes are already present; continuing with validation and cleanup.'
+        elif git apply --3way --check pending-update.patch; then
+          echo 'Direct patch context changed; applying with Git three-way merge.'
+          git apply --3way pending-update.patch
+        else
+          echo 'Queued patch cannot be applied cleanly, even with a three-way merge.'
+          exit 1
+        fi
+      else
+        echo 'No queued update file found.'
+        exit 1
+      fi
+    - npm test
+    - npm run build
+    - npx --yes wrangler@latest pages deploy dist --project-name=40k-tactics --branch="$CI_COMMIT_BRANCH"
+    - rm -f pending-update.patch pending-update.mjs
+    - git config user.name '40K Tactics Update'
+    - git config user.email 'update-bot@users.noreply.gitlab.com'
+    - git add -A
+    - |
+      if git diff --cached --quiet; then
+        echo 'No source or cleanup changes remain after processing the queued update.'
+        exit 0
+      fi
+    - git commit -m 'Apply queued 40K Tactics update'
+    - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    - git push origin "HEAD:${CI_DEFAULT_BRANCH}"
+
+test:
+  stage: test
+  rules:
+    - exists:
+        - pending-update.patch
+        - pending-update.mjs
+      when: never
+    - when: on_success
+  script:
+    - npm test
+
+build:
+  stage: build
+  rules:
+    - exists:
+        - pending-update.patch
+        - pending-update.mjs
+      when: never
+    - when: on_success
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 7 days
+
+deploy_cloudflare:
+  image: node:22
+  stage: deploy
+  needs:
+    - job: build
+      artifacts: true
+  rules:
+    - exists:
+        - pending-update.patch
+        - pending-update.mjs
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - npx --yes wrangler@latest pages deploy dist --project-name=40k-tactics --branch="$CI_COMMIT_BRANCH"
