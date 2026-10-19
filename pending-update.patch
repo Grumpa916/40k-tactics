@@ -1,0 +1,1808 @@
+diff --git a/battle.html b/battle.html
+index d6edcd0..7ca8197 100644
+--- a/battle.html
++++ b/battle.html
+@@ -2,7 +2,7 @@
+ <html lang="en">
+ <head>
+   <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>40K Tactics — Integrated Battle</title>
+   <style>
+     body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+@@ -353,6 +353,168 @@
+     @media(max-width:800px) { .shoot-screen .grid { grid-template-columns:1fr; } .shoot-screen .candidates { grid-template-columns:repeat(2,minmax(0,1fr)); } .shoot-screen .choice { align-items:flex-start; flex-direction:column; } }
+     @media(max-width:520px) { .shoot-screen .candidates, .shoot-screen .controls { grid-template-columns:1fr; } .shoot-screen header { align-items:flex-start; flex-direction:column; } .shoot-screen .shoot-selected-shooter, .shoot-screen .shoot-advisory { grid-column:auto; } }
+ 
++    /* Tabletop interface experiment: opt-in with ?ui=tabletop. The classic layout remains unchanged. */
++    .battle-shell__layout-switch { display:flex; justify-content:flex-end; margin:0 0 8px; }
++    .battle-shell__layout-switch a { min-height:38px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid #566273; border-radius:8px; background:#202631; color:#dce5ef; font-size:12px; font-weight:750; text-decoration:none; }
++    .battle-shell.is-tabletop-experiment { max-width:none; padding:10px 18px 84px; }
++    .battle-shell.is-tabletop-experiment .battle-shell__workspace { grid-template-columns:minmax(0,1fr); gap:0; }
++    .battle-shell.is-tabletop-experiment .battle-shell__side-panel { display:none !important; }
++    .battle-shell.is-tabletop-experiment .battle-shell__content { width:100%; }
++    .battle-shell.is-tabletop-experiment .battle-shell__view-note { display:none; }
++    .battle-shell.is-tabletop-experiment .battle-shell__phases { margin:8px 0 10px; gap:7px; }
++    .battle-shell.is-tabletop-experiment .battle-phase { min-width:0; flex:1 1 0; }
++    .battle-shell.is-tabletop-experiment .battle-phase__button { min-height:44px; padding:7px 10px; text-align:center; }
++    .battle-shell.is-tabletop-experiment .battle-phase__button span { display:none; }
++    .battle-shell.is-tabletop-experiment .battle-shell__status-summary { margin-bottom:8px; }
++    .battle-shell.is-tabletop-experiment .battle-shell__tabletop-missions { margin:0 0 8px; }
++    .battle-shell.is-tabletop-experiment .battle-shell__tabletop-missions details { margin:0; }
++
++    .shoot-screen--tabletop { max-width:none; margin:0; padding:0; height:min(64dvh,690px); min-height:500px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(360px,1fr); gap:12px; overflow:hidden; }
++    .shoot-screen--tabletop .shoot-tabletop__map-panel,
++    .shoot-screen--tabletop .shoot-tabletop__control-panel { min-width:0; min-height:0; border:1px solid #3f4b57; border-radius:12px; background:#17201d; overflow:hidden; }
++    .shoot-tabletop__map-panel { display:flex; flex-direction:column; padding:10px; }
++    .shoot-tabletop__map-heading, .shoot-tabletop__phase-heading, .shoot-tabletop__advisor-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
++    .shoot-tabletop__map-heading h1, .shoot-tabletop__phase-heading h1 { margin:2px 0 0; font-size:20px; }
++    .shoot-tabletop__advisor-heading h2 { margin:2px 0 0; font-size:18px; }
++    .shoot-tabletop__map-heading > span, .shoot-tabletop__phase-heading > span, .shoot-tabletop__advisor-heading > span { flex:none; font-size:11px; opacity:.72; }
++    .shoot-tabletop__map-note { margin:6px 0 8px; font-size:12px; opacity:.72; }
++    .shoot-screen--tabletop .battlefield-map { flex:1; min-height:0; display:flex; flex-direction:column; }
++    .shoot-screen--tabletop .battlefield-map__meta:first-of-type { margin-top:0; }
++    .shoot-screen--tabletop .battlefield-map__board { flex:1; min-height:0; aspect-ratio:auto; }
++    .shoot-screen--tabletop .battlefield-map__notice { margin:6px 0 0; font-size:10px; }
++    .shoot-screen--tabletop .battlefield-map__unit { cursor:pointer; touch-action:manipulation; }
++    .shoot-screen--tabletop .battlefield-map__unit.is-targeted { outline:3px dashed #e9a873; outline-offset:3px; z-index:7; }
++
++    .shoot-tabletop__control-panel { display:flex; flex-direction:column; background:#1a251f; }
++    .shoot-tabletop__control-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:12px; scrollbar-gutter:stable; }
++    .shoot-tabletop__phase-heading { padding-bottom:8px; border-bottom:1px solid #39483f; }
++    .shoot-tabletop__unit-status { display:flex; flex-wrap:wrap; gap:7px; margin:9px 0; }
++    .shoot-tabletop__unit-status span { padding:5px 8px; border:1px solid #4f694e; border-radius:999px; background:#213124; font-size:11px; }
++    .shoot-tabletop__action-choice { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:8px 0; }
++    .shoot-tabletop__action-choice button, .shoot-tabletop__finish, .shoot-tabletop__record, .shoot-tabletop__action-picker button { min-height:46px; border:1px solid #4a5c68; border-radius:9px; background:#21303a; color:inherit; font:inherit; font-weight:750; cursor:pointer; }
++    .shoot-tabletop__action-choice button[data-choice-shoot] { border-color:#a7d878; }
++    .shoot-tabletop__action-choice button:disabled, .shoot-tabletop__record:disabled { opacity:.42; cursor:not-allowed; }
++    .shoot-tabletop__action-picker { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:end; margin:8px 0; }
++    .shoot-tabletop__action-picker label, .shoot-tabletop__attack-controls label { display:grid; gap:5px; font-size:12px; color:#b7c1bb; }
++    .shoot-tabletop__action-picker select, .shoot-tabletop__attack-controls select { box-sizing:border-box; width:100%; min-height:46px; padding:8px 10px; border:1px solid #4a5c68; border-radius:8px; background:#16222a; color:#eef3f0; font:inherit; }
++    .shoot-tabletop__attack-controls { display:grid; gap:8px; }
++    .shoot-tabletop__damage { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 0; }
++    .shoot-tabletop__damage .damage-control__buttons { display:flex; align-items:center; gap:8px; }
++    .shoot-tabletop__damage button { width:46px; min-height:46px; border:1px solid #4a5c68; border-radius:8px; background:#21303a; color:inherit; font-size:20px; }
++    .shoot-tabletop__damage strong { min-width:30px; text-align:center; font-size:24px; }
++    .shoot-tabletop__record { background:#bde98b; color:#122015; border-color:#bde98b; font-size:15px; }
++    .shoot-tabletop__finish { background:#21303a; }
++    .shoot-tabletop__selection-help, .shoot-tabletop__empty-advice { margin:10px 0; padding:10px; border:1px dashed #46564e; border-radius:8px; font-size:12px; opacity:.78; }
++
++    .shoot-tabletop__advisor { margin-top:12px; padding-top:10px; border-top:1px solid #39483f; }
++    .shoot-tabletop__comparison-list { display:grid; gap:6px; margin:8px 0; }
++    .shoot-tabletop__comparison { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; width:100%; padding:8px; border:1px solid #415148; border-radius:8px; background:#18251e; color:inherit; text-align:left; cursor:pointer; }
++    .shoot-tabletop__comparison.is-selected { border-color:#d2ea9c; box-shadow:inset 0 0 0 1px #d2ea9c; }
++    .shoot-tabletop__comparison > span:first-child { min-width:0; display:grid; gap:3px; }
++    .shoot-tabletop__comparison small { font-size:10px; opacity:.7; line-height:1.3; }
++    .shoot-tabletop__comparison-stats { display:grid; grid-template-columns:repeat(3,auto); gap:1px 8px; text-align:center; }
++    .shoot-tabletop__comparison-stats b { font-size:12px; }
++    .shoot-tabletop__comparison-stats small { font-size:9px; }
++    .shoot-tabletop__advisor-scroll { max-height:310px; overflow:auto; padding-right:3px; }
++    .shoot-screen--tabletop .shoot-advisory { grid-column:auto; margin:8px 0; }
++    .shoot-screen--tabletop .shoot-advisory__grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
++    .shoot-screen--tabletop .shoot-advisory__details { margin-top:8px; padding:8px; border:1px solid #46564e; border-radius:7px; background:#141f19; }
++    .shoot-screen--tabletop .shoot-advisory__details summary { min-height:34px; cursor:pointer; font-weight:800; color:#c8e99e; }
++    .shoot-tabletop__history { margin-top:10px; border-top:1px solid #39483f; padding-top:8px; }
++    .shoot-tabletop__history summary { min-height:36px; cursor:pointer; font-weight:700; }
++    .shoot-tabletop__footer { flex:none; padding:8px 12px; border-top:1px solid #39483f; background:#152019; }
++    .shoot-tabletop__footer .complete { width:100%; min-height:46px; }
++
++    @media (max-width:1050px) and (orientation:landscape) {
++      .shoot-screen--tabletop { grid-template-columns:minmax(0,1.3fr) minmax(330px,1fr); height:62dvh; }
++      .shoot-tabletop__comparison-stats { grid-template-columns:repeat(2,auto); }
++      .shoot-screen--tabletop .shoot-advisory__grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
++    }
++    @media (orientation:portrait), (max-width:760px) {
++      .shoot-screen--tabletop { height:auto; min-height:0; grid-template-columns:minmax(0,1fr); overflow:visible; }
++      .shoot-tabletop__map-panel { min-height:520px; }
++      .shoot-tabletop__control-panel { max-height:none; }
++      .shoot-tabletop__control-scroll { overflow:visible; }
++      .battle-shell.is-tabletop-experiment .battle-shell__phases { overflow-x:auto; }
++      .battle-shell.is-tabletop-experiment .battle-phase { flex:0 0 110px; }
++    }
++
++    @media (orientation:landscape) and (min-width:761px) {
++      html:has(.battle-shell.is-tabletop-experiment),
++      body:has(.battle-shell.is-tabletop-experiment),
++      body:has(.battle-shell.is-tabletop-experiment) #battle-app { height:100%; overflow:hidden; }
++      .battle-shell.is-tabletop-experiment {
++        position:relative; width:100vw; max-width:none; height:100dvh; margin:0; padding:6px 8px 62px;
++        display:flex; flex-direction:column; gap:6px; overflow:hidden;
++      }
++      .battle-shell.is-tabletop-experiment > [data-decision-reminder-host]:empty,
++      .battle-shell.is-tabletop-experiment > [data-turn-clock-panel-host]:empty { display:none; }
++      .battle-shell.is-tabletop-experiment > [data-phase-progression-host] { display:none; }
++      .battle-shell__tabletop-header { position:relative; flex:none; display:grid; gap:5px; min-height:0; }
++      .battle-shell__tabletop-topline { display:grid; grid-template-columns:minmax(420px,1.1fr) minmax(360px,.9fr); gap:6px; align-items:stretch; min-height:0; }
++      .battle-shell.is-tabletop-experiment .battle-shell__status-summary {
++        min-width:0; min-height:42px; margin:0; padding:4px 8px; gap:6px; flex-wrap:nowrap;
++      }
++      .battle-shell.is-tabletop-experiment .battle-shell__round-summary { gap:0; }
++      .battle-shell.is-tabletop-experiment .battle-shell__round-summary strong { font-size:12px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__round-summary span { font-size:10px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__player-summaries { min-width:0; flex:1; flex-wrap:nowrap; gap:5px; justify-content:flex-end; }
++      .battle-shell.is-tabletop-experiment .battle-shell__player-summary { min-width:0; padding:4px 7px; gap:6px; font-size:11px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__player-summary strong { max-width:112px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__tabletop-missions { min-width:0; margin:0; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary { height:100%; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary__section { position:relative; margin:0; padding:2px 7px; border-radius:7px; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > summary { min-height:36px; gap:5px; font-size:11px; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > summary > span:first-child { font-size:11px; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > summary .battle-context__count { font-size:9px; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > .battle-mission-summary__section-content { display:none; }
++      .battle-shell.is-tabletop-experiment .battle-mission-summary__section[open] > .battle-mission-summary__section-content {
++        display:grid; position:absolute; z-index:1050; top:calc(100% + 5px); right:0; width:min(520px,70vw); max-height:52dvh;
++        overflow:auto; padding:8px; border:1px solid #566273; border-radius:9px; background:#171d26; box-shadow:0 12px 32px rgba(0,0,0,.55);
++      }
++      .battle-shell.is-tabletop-experiment .battle-shell__phases { margin:0; gap:5px; overflow:visible; }
++      .battle-shell.is-tabletop-experiment .battle-phase { flex:1 1 0; min-width:0; }
++      .battle-shell.is-tabletop-experiment .battle-phase__button { min-height:34px; padding:4px 8px; font-size:11px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__layout-switch { position:absolute; right:4px; bottom:-1px; z-index:4; margin:0; pointer-events:none; }
++      .battle-shell.is-tabletop-experiment .battle-shell__layout-switch a { min-height:28px; padding:0 8px; font-size:10px; opacity:.72; pointer-events:auto; }
++      .battle-shell.is-tabletop-experiment .battle-shell__workspace { flex:1; min-height:0; height:auto; overflow:hidden; }
++      .battle-shell.is-tabletop-experiment .battle-shell__content,
++      .battle-shell.is-tabletop-experiment [data-battle-screen] { height:100%; min-height:0; }
++      .battle-shell.is-tabletop-experiment .shoot-screen--tabletop {
++        width:100%; height:100%; min-height:0; max-height:none; grid-template-columns:minmax(0,1.55fr) minmax(350px,.9fr); gap:8px;
++      }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__map-panel { padding:7px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__map-heading h1,
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__phase-heading h1 { font-size:16px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__map-note { margin:3px 0 5px; font-size:10px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__control-scroll { padding:8px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__phase-heading { padding-bottom:5px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__unit-status { margin:5px 0; gap:4px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__unit-status span { padding:3px 6px; font-size:10px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-choice { margin:5px 0; gap:5px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-choice button,
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__finish,
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__record,
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-picker button,
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-picker select,
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__attack-controls select { min-height:38px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__attack-controls { gap:5px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__damage button { width:40px; min-height:38px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__damage strong { font-size:20px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__advisor { margin-top:7px; padding-top:6px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__advisor-heading h2 { font-size:15px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-list { margin:5px 0; gap:4px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison { padding:5px 6px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__advisor-scroll { max-height:none; overflow:visible; }
++      .battle-shell.is-tabletop-experiment .shoot-advisory__details { max-height:190px; overflow:auto; overscroll-behavior:contain; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__history { margin-top:6px; padding-top:5px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__footer { padding:5px 8px; }
++      .battle-shell.is-tabletop-experiment .shoot-tabletop__footer .complete { min-height:38px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__army-dock { width:calc(100vw - 16px); padding:5px; gap:5px; }
++      .battle-shell.is-tabletop-experiment .battle-shell__army-dock button { min-height:46px; padding:6px 10px; }
++    }
++
++
+     .army-roster-panel { margin:1rem 0; padding:1rem; border:1px solid #7b8794; border-radius:12px; background:#f8fafc; color:#17212b; }
+     .pre-game-role-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:.5rem 0 1rem; }
+     .pre-game-role-choice { min-height:58px; padding:12px; border:2px solid #697386; border-radius:9px; background:#202631; color:#f7f8fb; font:inherit; font-weight:750; cursor:pointer; touch-action:manipulation; }
+@@ -446,16 +608,6 @@
+     .army-selection__message { min-height:1.5em; font-weight:650; }
+     @media (max-width:760px) { .army-selection__sides { grid-template-columns:minmax(0,1fr); } }
+   </style>
+-  <meta name="theme-color" content="#0b1115">
+-  <meta name="mobile-web-app-capable" content="yes">
+-  <meta name="apple-mobile-web-app-capable" content="yes">
+-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="40K Tactics">
+-  <link rel="manifest" href="./manifest.webmanifest">
+-  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+-  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+-  <link rel="stylesheet" href="./src/ui/styles/pwa.css">
+ </head>
+ <body>
+   <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>
+diff --git a/src/rules/tactical-context-utils.js b/src/rules/tactical-context-utils.js
+new file mode 100644
+index 0000000..a4ad902
+--- /dev/null
++++ b/src/rules/tactical-context-utils.js
+@@ -0,0 +1,71 @@
++import { getBattleUnitDatasheet } from "./battle-unit-reference.js";
++
++export function unitsOf(state) {
++  return Array.isArray(state?.units) ? state.units : [];
++}
++
++export function unitById(state, unitId) {
++  return unitsOf(state).find((unit) => unit?.id === unitId) ?? null;
++}
++
++export function clamp01(value) {
++  return Math.max(0, Math.min(1, Number(value) || 0));
++}
++
++export function impactLabel(score) {
++  if (score >= 0.75) return "high";
++  if (score >= 0.4) return "moderate";
++  if (score > 0) return "low";
++  return "none";
++}
++
++export function opponentPlayerIds(state, playerId) {
++  const fromPlayers = (Array.isArray(state?.players) ? state.players : [])
++    .map((player) => player?.id)
++    .filter((id) => id && id !== playerId);
++  const fromUnits = unitsOf(state)
++    .map((unit) => unit?.ownerId)
++    .filter((id) => id && id !== playerId);
++  return [...new Set([...fromPlayers, ...fromUnits])];
++}
++
++export function validPosition(position) {
++  return Number.isFinite(position?.x) && Number.isFinite(position?.y);
++}
++
++export function unitPosition(unit) {
++  const models = Array.isArray(unit?.models) ? unit.models : [];
++  const positions = models
++    .map((model) => model?.position)
++    .filter(validPosition);
++  if (positions.length) {
++    return {
++      x: positions.reduce((sum, position) => sum + position.x, 0) / positions.length,
++      y: positions.reduce((sum, position) => sum + position.y, 0) / positions.length
++    };
++  }
++  return validPosition(unit?.position) ? unit.position : null;
++}
++
++export function distanceBetween(first, second) {
++  if (!validPosition(first) || !validPosition(second)) return null;
++  return Math.hypot(second.x - first.x, second.y - first.y);
++}
++
++export function targetKeywords(state, target) {
++  const datasheet = getBattleUnitDatasheet(state, target);
++  const sources = [
++    target?.keywords,
++    target?.profile?.keywords,
++    target?.metadata?.keywords,
++    datasheet?.keywords
++  ];
++  return [...new Set(sources.flatMap((value) => Array.isArray(value) ? value : []))]
++    .map((keyword) => String(keyword).trim().toLowerCase())
++    .filter(Boolean);
++}
++
++export function hasKeyword(state, target, keyword) {
++  const normalized = String(keyword).trim().toLowerCase();
++  return targetKeywords(state, target).includes(normalized);
++}
+diff --git a/src/rules/tactical-objective-impact.js b/src/rules/tactical-objective-impact.js
+new file mode 100644
+index 0000000..acef36c
+--- /dev/null
++++ b/src/rules/tactical-objective-impact.js
+@@ -0,0 +1,185 @@
++import { getObjectiveControlForPlayer } from "./objective-control-state.js";
++import { getSpatialContext } from "./spatial-context.js";
++import {
++  clamp01,
++  impactLabel,
++  opponentPlayerIds,
++  unitById
++} from "./tactical-context-utils.js";
++
++function objectiveBandWeight(band) {
++  return {
++    close: 1,
++    near: 0.72,
++    mid: 0.3,
++    far: 0.08,
++    "very-far": 0
++  }[band] ?? 0;
++}
++
++function objectiveControlWeight(control) {
++  return {
++    "enemy-controlled": 1,
++    contested: 0.9,
++    "contested-by-others": 0.7,
++    uncontrolled: 0.45,
++    controlled: 0.35
++  }[control] ?? 0.25;
++}
++
++function primaryOwnScoringWeight(control) {
++  return {
++    "enemy-controlled": 0.95,
++    contested: 0.9,
++    "contested-by-others": 0.8,
++    uncontrolled: 0.55,
++    controlled: 0.2
++  }[control] ?? 0.25;
++}
++
++function primaryDenialWeight(control) {
++  return {
++    "enemy-controlled": 1,
++    contested: 0.75,
++    "contested-by-others": 0.65,
++    uncontrolled: 0.15,
++    controlled: 0.05
++  }[control] ?? 0.15;
++}
++
++function scoreForPlayer(state, playerId) {
++  const value = state?.victoryPoints?.[playerId];
++  return Number.isFinite(value) ? Number(value) : 0;
++}
++
++function scoringUrgency(state, playerId) {
++  const round = Math.max(1, Number(state?.battle?.round) || 1);
++  const ownScore = scoreForPlayer(state, playerId);
++  const opponents = opponentPlayerIds(state, playerId);
++  const opponentScore = opponents.length
++    ? Math.max(...opponents.map((id) => scoreForPlayer(state, id)))
++    : ownScore;
++  const gap = ownScore - opponentScore;
++  return clamp01(
++    (round >= 4 ? 0.45 : round >= 3 ? 0.25 : 0.1) +
++    (gap < 0 ? Math.min(0.4, Math.abs(gap) / 30) : 0)
++  );
++}
++
++/**
++ * Objective ownership is authoritative; the unit-to-objective distance is only
++ * approximate battlefield context and never establishes legality or OC.
++ */
++export function getTargetObjectiveImpact(state, { playerId, targetUnitId } = {}) {
++  if (!playerId) throw new TypeError("playerId is required.");
++  if (!targetUnitId) throw new TypeError("targetUnitId is required.");
++
++  const target = unitById(state, targetUnitId);
++  if (!target || target.ownerId === playerId || target.status === "destroyed") {
++    return Object.freeze({
++      score: 0,
++      label: "none",
++      confidence: "low",
++      objectiveId: null,
++      control: null,
++      distance: null,
++      band: "unknown",
++      reason: "No enemy objective context is available for this target."
++    });
++  }
++
++  let spatial = null;
++  try {
++    spatial = getSpatialContext(state, { playerId: target.ownerId });
++  } catch {
++    spatial = null;
++  }
++
++  const nearby = (spatial?.objectiveProximity ?? [])
++    .filter((entry) => entry.unitId === targetUnitId)
++    .map((entry) => {
++      const control = getObjectiveControlForPlayer(state, {
++        playerId,
++        objectiveId: entry.objectiveId
++      });
++      const score = clamp01(objectiveBandWeight(entry.band) * objectiveControlWeight(control));
++      return { ...entry, control, score };
++    })
++    .sort((a, b) => b.score - a.score || a.distance - b.distance || a.objectiveId.localeCompare(b.objectiveId));
++
++  const strongest = nearby[0];
++  if (!strongest || strongest.score <= 0) {
++    return Object.freeze({
++      score: 0,
++      label: "none",
++      confidence: "low",
++      objectiveId: null,
++      control: null,
++      distance: null,
++      band: "unknown",
++      reason: "No nearby objective meaningfully changes this target's mission priority."
++    });
++  }
++
++  const controlPhrase = strongest.control === "enemy-controlled"
++    ? "an opponent-controlled objective"
++    : strongest.control === "controlled"
++      ? "one of your controlled objectives"
++      : strongest.control === "contested"
++        ? "a contested objective"
++        : strongest.control === "uncontrolled"
++          ? "an uncontrolled objective"
++          : "an objective";
++
++  return Object.freeze({
++    score: strongest.score,
++    label: impactLabel(strongest.score),
++    confidence: strongest.band === "close" ? "moderate" : "low",
++    objectiveId: strongest.objectiveId,
++    control: strongest.control,
++    distance: strongest.distance,
++    band: strongest.band,
++    reason: `Target is approximately ${strongest.distance} inches from ${controlPhrase}; tabletop position and actual OC remain authoritative.`
++  });
++}
++
++/**
++ * Translate objective context into Primary board-control and score-denial value.
++ * It does not claim that a particular Primary card scores from this objective.
++ */
++export function getTargetPrimaryMissionImpact(state, { playerId, targetUnitId } = {}) {
++  const objective = getTargetObjectiveImpact(state, { playerId, targetUnitId });
++  if (!objective.objectiveId || objective.score <= 0) {
++    return Object.freeze({
++      score: 0,
++      label: "none",
++      confidence: "low",
++      objectiveId: null,
++      ownScoringValue: 0,
++      denyScoringValue: 0,
++      urgency: scoringUrgency(state, playerId),
++      reason: "No objective-linked Primary scoring impact is established for this target."
++    });
++  }
++
++  const ownScoringValue = clamp01(objective.score * primaryOwnScoringWeight(objective.control));
++  const denyScoringValue = clamp01(objective.score * primaryDenialWeight(objective.control));
++  const urgency = scoringUrgency(state, playerId);
++  const score = clamp01(
++    0.48 * ownScoringValue +
++    0.38 * denyScoringValue +
++    0.14 * urgency * objective.score
++  );
++
++  return Object.freeze({
++    score,
++    label: impactLabel(score),
++    confidence: objective.confidence,
++    objectiveId: objective.objectiveId,
++    control: objective.control,
++    ownScoringValue,
++    denyScoringValue,
++    urgency,
++    reason: `${objective.reason} Removing or degrading this unit may change Primary board control or deny scoring, but the physical mission card and actual OC determine the score.`
++  });
++}
+diff --git a/src/rules/tactical-secondary-target-impact.js b/src/rules/tactical-secondary-target-impact.js
+new file mode 100644
+index 0000000..16c7888
+--- /dev/null
++++ b/src/rules/tactical-secondary-target-impact.js
+@@ -0,0 +1,172 @@
++import {
++  getSecondaryMissionHistory,
++  SECONDARY_MISSION_STATUS
++} from "./secondary-mission-lifecycle.js";
++import { isUnitBattleShocked } from "./unit-status-summary.js";
++import {
++  clamp01,
++  distanceBetween,
++  hasKeyword,
++  impactLabel,
++  opponentPlayerIds,
++  unitById,
++  unitPosition
++} from "./tactical-context-utils.js";
++
++const TABLE_CENTRE = Object.freeze({ x: 30, y: 22 });
++
++function activeSecondaryEntries(state, playerId) {
++  if (!playerId) return [];
++  return getSecondaryMissionHistory(state, playerId)
++    .filter((entry) => entry.status === SECONDARY_MISSION_STATUS.ACTIVE);
++}
++
++function definitionSlug(definition) {
++  return String(definition?.id ?? "")
++    .replace(/^secondary-/, "")
++    .trim()
++    .toLowerCase();
++}
++
++function structuredDestructionRelevance(definition, targetUnitId) {
++  const conditions = Array.isArray(definition?.conditions) ? definition.conditions : [];
++  return conditions.some((condition) =>
++    condition?.evidence === "unit-destruction" &&
++    condition?.args?.unitId === targetUnitId &&
++    condition?.args?.expected !== false
++  );
++}
++
++function centreGroundRelevance(state, target) {
++  if (!target || target.status === "destroyed") return null;
++  if (isUnitBattleShocked(target) || hasKeyword(state, target, "aircraft")) return null;
++  const distance = distanceBetween(unitPosition(target), TABLE_CENTRE);
++  if (!Number.isFinite(distance) || distance > 9) return null;
++  const score = distance <= 3 ? 1 : distance <= 6 ? 0.82 : 0.3;
++  return { score, distance };
++}
++
++/**
++ * Active secondary cards influence target ranking only when their stored rules
++ * are verified or when they contain an explicit structured destruction target.
++ * Draft/unverified card text remains visible but cannot silently alter advice.
++ */
++export function getTargetSecondaryMissionImpact(state, { playerId, targetUnitId } = {}) {
++  if (!playerId) throw new TypeError("playerId is required.");
++  if (!targetUnitId) throw new TypeError("targetUnitId is required.");
++
++  const target = unitById(state, targetUnitId);
++  if (!target || target.ownerId === playerId || target.status === "destroyed") {
++    return Object.freeze({
++      score: 0,
++      label: "none",
++      confidence: "low",
++      scoringSignals: Object.freeze([]),
++      denialSignals: Object.freeze([]),
++      unresolvedMissions: Object.freeze([]),
++      reason: "No active secondary target context is available."
++    });
++  }
++
++  const own = activeSecondaryEntries(state, playerId);
++  const opponent = opponentPlayerIds(state, playerId)
++    .flatMap((id) => activeSecondaryEntries(state, id));
++  const scoringSignals = [];
++  const denialSignals = [];
++  const unresolvedMissions = [];
++
++  for (const entry of own) {
++    const definition = entry.definition ?? {};
++    const slug = definitionSlug(definition);
++    const verified = definition.rulesVerified === true;
++
++    if (structuredDestructionRelevance(definition, targetUnitId)) {
++      scoringSignals.push({
++        missionId: definition.id,
++        missionName: definition.name ?? definition.id,
++        score: 1,
++        confidence: verified ? "high" : "moderate",
++        reason: "This active secondary contains a structured destruction condition for the selected target."
++      });
++      continue;
++    }
++
++    if (verified && slug === "assassination" && hasKeyword(state, target, "character")) {
++      scoringSignals.push({
++        missionId: definition.id,
++        missionName: definition.name ?? "Assassination",
++        score: 1,
++        confidence: "high",
++        reason: "Active Assassination makes this enemy CHARACTER a directly scoring-relevant target."
++      });
++      continue;
++    }
++
++    if (verified && slug === "centre-ground") {
++      const relevance = centreGroundRelevance(state, target);
++      if (relevance) {
++        scoringSignals.push({
++          missionId: definition.id,
++          missionName: definition.name ?? "Centre Ground",
++          score: relevance.score,
++          confidence: relevance.distance <= 3 ? "moderate" : "low",
++          reason: `This enemy is approximately ${relevance.distance.toFixed(1)} inches from battlefield centre; removing it may help clear Centre Ground. Exact tabletop distance remains authoritative.`
++        });
++      }
++      continue;
++    }
++
++    if (!verified) unresolvedMissions.push(definition.name ?? definition.id ?? "Unverified secondary");
++  }
++
++  for (const entry of opponent) {
++    const definition = entry.definition ?? {};
++    const slug = definitionSlug(definition);
++    const verified = definition.rulesVerified === true;
++
++    if (verified && slug === "centre-ground") {
++      const relevance = centreGroundRelevance(state, target);
++      if (relevance) {
++        denialSignals.push({
++          missionId: definition.id,
++          missionName: definition.name ?? "Centre Ground",
++          score: relevance.score,
++          confidence: relevance.distance <= 3 ? "moderate" : "low",
++          reason: `This opponent unit is approximately ${relevance.distance.toFixed(1)} inches from battlefield centre and may be contributing to their Centre Ground scoring.`
++        });
++      }
++      continue;
++    }
++
++    if (!verified) unresolvedMissions.push(definition.name ?? definition.id ?? "Unverified opponent secondary");
++  }
++
++  const bestScoring = scoringSignals.reduce((best, signal) => Math.max(best, signal.score), 0);
++  const bestDenial = denialSignals.reduce((best, signal) => Math.max(best, signal.score), 0);
++  const score = clamp01(Math.max(
++    bestScoring,
++    0.8 * bestDenial,
++    0.65 * bestScoring + 0.35 * bestDenial
++  ));
++  const evidence = [...scoringSignals, ...denialSignals];
++  const confidence = evidence.some((signal) => signal.confidence === "high")
++    ? "high"
++    : evidence.some((signal) => signal.confidence === "moderate")
++      ? "moderate"
++      : "low";
++
++  const reasonParts = evidence.map((signal) => signal.reason);
++  if (unresolvedMissions.length) {
++    reasonParts.push(`${[...new Set(unresolvedMissions)].join(", ")} are active but their target-specific effect is not used for ranking because the stored card rules are not verified.`);
++  }
++
++  return Object.freeze({
++    score,
++    label: impactLabel(score),
++    confidence,
++    scoringSignals: Object.freeze(scoringSignals.map((signal) => Object.freeze({ ...signal }))),
++    denialSignals: Object.freeze(denialSignals.map((signal) => Object.freeze({ ...signal }))),
++    unresolvedMissions: Object.freeze([...new Set(unresolvedMissions)]),
++    reason: reasonParts.join(" ") || "No verified active secondary directly changes this target's priority."
++  });
++}
+diff --git a/src/rules/tactical-shooting-comparison.js b/src/rules/tactical-shooting-comparison.js
+new file mode 100644
+index 0000000..6799bda
+--- /dev/null
++++ b/src/rules/tactical-shooting-comparison.js
+@@ -0,0 +1,166 @@
++import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
++import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
++import { getTargetStrategicContext } from "./tactical-target-context.js";
++
++function unitById(state, unitId) {
++  return (Array.isArray(state?.units) ? state.units : [])
++    .find((unit) => unit?.id === unitId) ?? null;
++}
++
++function probabilityAtLeast(distribution, threshold) {
++  if (!distribution || !Array.isArray(distribution.outcomes) || !Number.isFinite(threshold)) return null;
++  return distribution.outcomes
++    .filter((outcome) => outcome.damage >= threshold)
++    .reduce((sum, outcome) => sum + outcome.probability, 0);
++}
++
++function probabilityAnyDamage(distribution) {
++  if (!distribution || !Array.isArray(distribution.outcomes)) return null;
++  const noDamage = distribution.outcomes
++    .filter((outcome) => outcome.damage <= 0)
++    .reduce((sum, outcome) => sum + outcome.probability, 0);
++  return Math.max(0, Math.min(1, 1 - noDamage));
++}
++
++function strategicRecommendation({ strategicContext, impactClassification, destructionProbability, expectedDamage }) {
++  if (strategicContext.secondary.score >= 0.7) {
++    return "Priority target: destroying or degrading this unit has strong verified active-secondary impact in addition to its combat value.";
++  }
++  if (strategicContext.primary.score >= 0.7) {
++    return "Priority target: this unit has strong objective-linked Primary scoring or denial value; confirm actual OC and mission conditions at the table.";
++  }
++  if (strategicContext.threat.score >= 0.7) {
++    return "Priority target: recorded combat history identifies this unit as a proven threat worth suppressing.";
++  }
++  if (destructionProbability >= 0.8) {
++    return "Strong offensive opportunity with a likely destruction result; compare its mission value before committing the activation.";
++  }
++  if (strategicContext.primary.score >= 0.4 || strategicContext.secondary.score >= 0.4) {
++    return "Mission-relevant target: its scoring impact may justify attacking it even if another target offers slightly better raw damage.";
++  }
++  if (strategicContext.threat.score >= 0.4) {
++    return "Threat-suppression candidate: this unit has meaningful recorded combat impact.";
++  }
++  if (impactClassification === "possible-destruction") {
++    return "Possible destruction opportunity; weigh the kill chance against mission value and other available targets.";
++  }
++  if (impactClassification === "likely-severe-degradation") {
++    return "Strong degradation opportunity; expected damage is at least half the target's remaining wounds.";
++  }
++  if (Number.isFinite(expectedDamage) && expectedDamage > 0) {
++    return "Limited baseline impact; prefer this target only if its mission or threat value justifies the shooting commitment.";
++  }
++  return "Insufficient combat or strategic evidence for a stronger recommendation.";
++}
++
++/**
++ * Stable view-model contract for the tablet "Compare your targets" surface.
++ *
++ * The existing Shooting target resolver remains untouched. This decision layer
++ * enriches its candidates with mission context, active verified secondaries,
++ * recorded opponent threat and probability detail, then ranks the candidates
++ * for advice. The UI can render this without duplicating Tactical Advisor math.
++ */
++export function getShootingTargetComparison(state, {
++  playerId,
++  attackerId,
++  weapon = null
++} = {}) {
++  const attacker = unitById(state, attackerId);
++  const base = getShootingTargetPriorities(state, { playerId, attackerId, weapon });
++
++  const comparisons = base.priorities.map((item) => {
++    const target = unitById(state, item.targetUnitId);
++    const strategicContext = getTargetStrategicContext(state, {
++      playerId,
++      targetUnitId: item.targetUnitId
++    });
++
++    let distribution = null;
++    if (target && weapon?.characteristics &&
++        (attacker?.characteristics ?? attacker?.profile?.characteristics) &&
++        (target?.characteristics ?? target?.profile?.characteristics)) {
++      try {
++        distribution = getDamageOutcomeDistribution({ attacker, target, weapon });
++      } catch {
++        distribution = null;
++      }
++    }
++
++    const expectedDamage = item.expectedDamage;
++    const expectedDamageThreshold = Number.isFinite(expectedDamage) && expectedDamage > 0
++      ? Math.max(1, Math.ceil(expectedDamage))
++      : 1;
++    const severeDamageThreshold = Number.isFinite(target?.wounds) && target.wounds > 0
++      ? Math.max(1, Math.ceil(target.wounds * 0.5))
++      : null;
++    const probabilityAnyDamageValue = probabilityAnyDamage(distribution);
++    const probabilityAtLeastExpectedDamage = probabilityAtLeast(distribution, expectedDamageThreshold);
++    const severeDamageProbability = severeDamageThreshold == null
++      ? null
++      : probabilityAtLeast(distribution, severeDamageThreshold);
++
++    const primaryMissionPoints = strategicContext.primary.score * 3.5;
++    const secondaryMissionPoints = strategicContext.secondary.score * 3.5;
++    const threatPoints = strategicContext.threat.score * 2.25;
++    const objectiveContextPoints = strategicContext.objective.score * 0.75;
++    const strategicPoints = primaryMissionPoints + secondaryMissionPoints + threatPoints + objectiveContextPoints;
++    const decisionScore = item.priority + strategicPoints;
++
++    return {
++      ...item,
++      targetName: target?.name ?? item.targetUnitId,
++      probabilityAnyDamage: probabilityAnyDamageValue,
++      expectedDamageThreshold,
++      probabilityAtLeastExpectedDamage,
++      severeDamageThreshold,
++      severeDamageProbability,
++      objectiveImpact: strategicContext.objective,
++      primaryMissionImpact: strategicContext.primary,
++      secondaryMissionImpact: strategicContext.secondary,
++      recentThreat: strategicContext.threat,
++      strategicContext,
++      decisionScore,
++      decisionBreakdown: Object.freeze({
++        baselineTargetPriority: item.priority,
++        primaryMissionPoints,
++        secondaryMissionPoints,
++        threatPoints,
++        objectiveContextPoints,
++        strategicPoints,
++        weights: Object.freeze({
++          primaryMission: 3.5,
++          secondaryMission: 3.5,
++          threat: 2.25,
++          objectiveContext: 0.75
++        })
++      }),
++      recommendation: strategicRecommendation({
++        strategicContext,
++        impactClassification: item.impactClassification,
++        destructionProbability: item.destructionProbability,
++        expectedDamage
++      }),
++      assumptions: Object.freeze([
++        "Battlefield distances are approximate and tabletop measurement remains authoritative.",
++        "Probabilities use saved profiles and known weapon characteristics only.",
++        "Mission impact never awards VP automatically.",
++        "Unverified secondary-card text is not used to change target ranking."
++      ])
++    };
++  }).sort((a, b) =>
++    b.decisionScore - a.decisionScore ||
++    (a.targetDistance ?? Infinity) - (b.targetDistance ?? Infinity) ||
++    a.targetUnitId.localeCompare(b.targetUnitId)
++  );
++
++  return Object.freeze({
++    playerId,
++    attackerId,
++    weaponId: weapon?.id ?? null,
++    comparisons: Object.freeze(comparisons.map((item, index) => Object.freeze({
++      ...item,
++      rank: index + 1
++    })))
++  });
++}
+diff --git a/src/rules/tactical-target-context.js b/src/rules/tactical-target-context.js
+new file mode 100644
+index 0000000..46ab084
+--- /dev/null
++++ b/src/rules/tactical-target-context.js
+@@ -0,0 +1,38 @@
++import {
++  getTargetObjectiveImpact,
++  getTargetPrimaryMissionImpact
++} from "./tactical-objective-impact.js";
++import { getTargetSecondaryMissionImpact } from "./tactical-secondary-target-impact.js";
++import { getTargetThreatImpact } from "./tactical-threat-impact.js";
++import { clamp01, impactLabel } from "./tactical-context-utils.js";
++
++export {
++  getTargetObjectiveImpact,
++  getTargetPrimaryMissionImpact,
++  getTargetSecondaryMissionImpact,
++  getTargetThreatImpact
++};
++
++export function getTargetStrategicContext(state, options = {}) {
++  const objective = getTargetObjectiveImpact(state, options);
++  const primary = getTargetPrimaryMissionImpact(state, options);
++  const secondary = getTargetSecondaryMissionImpact(state, options);
++  const threat = getTargetThreatImpact(state, options);
++  const score = clamp01(
++    0.32 * primary.score +
++    0.28 * secondary.score +
++    0.22 * threat.score +
++    0.18 * objective.score
++  );
++  return Object.freeze({
++    score,
++    label: impactLabel(score),
++    objective,
++    primary,
++    secondary,
++    threat,
++    reason: [primary.reason, secondary.reason, threat.reason]
++      .filter(Boolean)
++      .join(" ")
++  });
++}
+diff --git a/src/rules/tactical-threat-impact.js b/src/rules/tactical-threat-impact.js
+new file mode 100644
+index 0000000..fa7dad7
+--- /dev/null
++++ b/src/rules/tactical-threat-impact.js
+@@ -0,0 +1,75 @@
++import { getCombatHistorySummary } from "./combat-history-summary.js";
++import { clamp01, impactLabel, unitById } from "./tactical-context-utils.js";
++
++/**
++ * Summarize authoritative opponent combat events caused by one target unit.
++ * Damage, charges and activations come from state.history rather than map
++ * inference. Recent rounds are weighted slightly more heavily.
++ */
++export function getTargetThreatImpact(state, { playerId, targetUnitId } = {}) {
++  if (!playerId) throw new TypeError("playerId is required.");
++  if (!targetUnitId) throw new TypeError("targetUnitId is required.");
++
++  const target = unitById(state, targetUnitId);
++  if (!target || target.ownerId === playerId || target.status === "destroyed") {
++    return Object.freeze({
++      score: 0,
++      label: "none",
++      damageDealt: 0,
++      attacks: 0,
++      charges: 0,
++      fights: 0,
++      activations: 0,
++      reason: "No opponent threat history is available."
++    });
++  }
++
++  let summary = null;
++  try {
++    summary = getCombatHistorySummary(state, { playerId });
++  } catch {
++    summary = null;
++  }
++
++  const currentRound = Math.max(1, Number(state?.battle?.round) || 1);
++  let damageDealt = 0;
++  let attacks = 0;
++  let charges = 0;
++  let fights = 0;
++  let activations = 0;
++
++  for (const action of summary?.opponentActions ?? []) {
++    if (action.actorId !== targetUnitId) continue;
++    const actionRound = Number.isFinite(action.round) ? action.round : currentRound;
++    const recency = actionRound >= currentRound - 1 ? 1 : 0.6;
++    if (action.type === "combat.attack_resolved") {
++      attacks += recency;
++      damageDealt += Math.max(0, Number(action.actualDamage) || 0) * recency;
++      if (action.phase === "fight") fights += recency;
++    } else if (action.type === "charge.outcome_recorded") {
++      charges += recency;
++    } else if (action.type === "fight.unit_activated" || action.type === "shooting.unit_activated") {
++      activations += recency;
++    }
++  }
++
++  const damageScore = Math.min(0.7, damageDealt / 12);
++  const actionScore = Math.min(0.3, attacks * 0.06 + charges * 0.12 + fights * 0.06 + activations * 0.04);
++  const score = clamp01(damageScore + actionScore);
++  const roundedDamage = Math.round(damageDealt * 10) / 10;
++
++  const reason = score <= 0
++    ? "No recorded opponent combat events make this target a higher immediate threat."
++    : `Recorded recent history: approximately ${roundedDamage} damage, ${Math.round(attacks)} attack event${Math.round(attacks) === 1 ? "" : "s"}, ${Math.round(charges)} successful charge${Math.round(charges) === 1 ? "" : "s"}, and ${Math.round(fights)} Fight attack${Math.round(fights) === 1 ? "" : "s"}.`;
++
++  return Object.freeze({
++    score,
++    label: impactLabel(score),
++    damageDealt: roundedDamage,
++    attacks: Math.round(attacks),
++    charges: Math.round(charges),
++    fights: Math.round(fights),
++    activations: Math.round(activations),
++    reason
++  });
++}
+diff --git a/src/ui/battle-demo.js b/src/ui/battle-demo.js
+index c2f3e54..f4a5a5c 100644
+--- a/src/ui/battle-demo.js
++++ b/src/ui/battle-demo.js
+@@ -99,13 +99,18 @@ async function initializeBattleDemo() {
+     console.error("Supabase cloud controls could not be initialized:", error);
+   }
+ 
++  const layoutMode = new URLSearchParams(window.location.search).get("ui") === "classic"
++    ? "classic"
++    : "tabletop";
++
+   createBattleShell(document.getElementById("battle-app"), {
+     session,
+     perspectivePlayerId: "p1",
+     gameData,
+     missionActions: [{ id: "cleanse", name: "Cleanse" }],
+     secondaryMissionCatalog: SECONDARY_MISSION_CATALOG,
+-    supabaseClient
++    supabaseClient,
++    layoutMode
+   });
+ }
+ 
+diff --git a/src/ui/battle-shell.js b/src/ui/battle-shell.js
+index 1e88809..b1faa2a 100644
+--- a/src/ui/battle-shell.js
++++ b/src/ui/battle-shell.js
+@@ -225,7 +225,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
+   referenceOpenStates = { stratagems: true },
+   missionOpenStates = {},
+   setupWorkspaceTab = "saves",
+-  setupNavigationMessage = ""
++  setupNavigationMessage = "",
++  layoutMode = "classic"
+ } = {}) {
+   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
+   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
+@@ -294,6 +295,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
+     'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
+     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
+   const isSetupView = viewedPhase === "setup";
++  const tabletopExperiment = layoutMode === "tabletop" && !isSetupView;
++  const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
++  const layoutSwitch = viewedPhase === "setup" ? "" : '<nav class="battle-shell__layout-switch" aria-label="Battle interface layout"><a href="' +
++    (layoutMode === "tabletop" ? '?ui=classic' : '?ui=tabletop') + '">' +
++    (layoutMode === "tabletop" ? 'Current layout' : 'Test tabletop layout') + '</a></nav>';
+   const workspace = '<section class="battle-shell__workspace' + (isSetupView ? ' is-setup-view' : '') + '" data-battle-workspace' +
+     (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "army-selection" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
+     ' data-left-collapsed="' + String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
+@@ -302,9 +308,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
+     renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
+     '<section class="battle-shell__content">' +
+     '<section data-battle-screen></section>' +
+-    '<div data-battle-mission-summary-host>' +
+-    renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates }) +
+-    '</div></section>' +
++    (tabletopExperiment ? '' : '<div data-battle-mission-summary-host>' + persistentMissionSummary + '</div>') +
++    '</section>' +
+     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
+     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
+     renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
+@@ -316,11 +321,19 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
+   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
+     (armyRosterPlayerId ? "" : " hidden") + '>' +
+     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
+-
+-  container.innerHTML = '<main class="battle-shell">' + reminderMarkup +
++  const shellLiveHeader = tabletopExperiment
++    ? '<header class="battle-shell__tabletop-header">' +
++      '<div class="battle-shell__tabletop-topline">' + statusSummary +
++      '<div class="battle-shell__tabletop-missions" data-battle-mission-summary-host>' + persistentMissionSummary + '</div></div>' +
++      '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
++      layoutSwitch + '</header>'
++    : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
++      statusSummary + layoutSwitch;
++
++  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + '">' + reminderMarkup +
+     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
+-    '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
+-    statusSummary + clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
++    shellLiveHeader +
++    clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
+     (viewedPhase === "setup"
+       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
+         '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
+@@ -356,7 +369,8 @@ export function createBattleShell(container, {
+   secondaryMissionCatalog = [],
+   screenFactories = SCREEN_FACTORIES,
+   battleStore = null,
+-  supabaseClient = null
++  supabaseClient = null,
++  layoutMode = "classic"
+ } = {}) {
+   if (!container || typeof container.replaceChildren !== "function") {
+     throw new TypeError("A browser container element is required.");
+@@ -608,7 +622,7 @@ export function createBattleShell(container, {
+       mountedRosterPanel?.destroy();
+       mountedRosterPanel = null;
+       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
+-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage
++        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode
+       });
+ 
+       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
+@@ -669,7 +683,8 @@ export function createBattleShell(container, {
+           scoringCheckpoint: scoringReviewCheckpoint,
+           scoringCheckpointActivePlayerId: scoringReviewActivePlayerId,
+           scoringCheckpointPlayerId: scoringReviewPlayerId,
+-          setupTab: setupWorkspaceTab
++          setupTab: setupWorkspaceTab,
++          layoutMode
+         });
+         mountedPhase = viewedPhase;
+       } else if (screenContainer) {
+diff --git a/src/ui/shooting-screen.js b/src/ui/shooting-screen.js
+index cfb2c30..6768450 100644
+--- a/src/ui/shooting-screen.js
++++ b/src/ui/shooting-screen.js
+@@ -6,8 +6,9 @@ import {
+   resolveShootingAttack,
+   finishShootingPhase
+ } from "../application/shooting-workflow.js";
+-import { getShootingTargetPriorities } from "../rules/tactical-shooting-targets.js";
++import { getShootingTargetComparison } from "../rules/tactical-shooting-comparison.js";
+ import { getAttackDamageForecast } from "../rules/attack-damage-forecast.js";
++import { renderBattlefieldMap } from "./battlefield-map.js";
+ 
+ function escapeHtml(value) {
+   return String(value ?? "")
+@@ -32,38 +33,85 @@ function unitButton(unit) {
+   </button>`;
+ }
+ 
++function tabletopUnitSummary(state, unitId) {
++  const unit = (Array.isArray(state?.units) ? state.units : []).find((item) => item?.id === unitId);
++  if (!unit) return { unit: null, wounds: "—", models: "—", status: "" };
++  const wounds = Number.isFinite(unit.wounds) ? String(unit.wounds) : "—";
++  const models = Array.isArray(unit.models)
++    ? unit.models.length
++    : Number.isFinite(unit.modelCount) ? unit.modelCount : Number.isFinite(unit.models) ? unit.models : "—";
++  const status = unit.battleShocked || unit.battleshocked || unit.status === "battle_shocked" ? "Battle-shocked" : "";
++  return { unit, wounds, models: String(models), status };
++}
++
++function shootingTargetComparisonCards(attackerId, weaponId, selectedTargetId, state, weapons, perspectivePlayerId) {
++  if (!attackerId || !weaponId || !perspectivePlayerId) return '<p class="shoot-tabletop__empty-advice">Choose a shooter and weapon to compare targets.</p>';
++  const weapon = weapons.find((item) => item.id === weaponId);
++  if (!weapon) return '<p class="shoot-tabletop__empty-advice">Choose a valid ranged weapon to compare targets.</p>';
++  const result = getShootingTargetComparison(state, { playerId: perspectivePlayerId, attackerId, weapon });
++  if (!result.comparisons.length) return '<p class="shoot-tabletop__empty-advice">No eligible targets are available for comparison.</p>';
++  return '<div class="shoot-tabletop__comparison-list">' + result.comparisons.slice(0, 5).map((item) => {
++    const destroy = Number.isFinite(item.destructionProbability) ? Math.round(item.destructionProbability * 100) + '%' : '—';
++    const expected = Number.isFinite(item.expectedDamage) ? item.expectedDamage.toFixed(1) : '—';
++    const mission = item.secondaryMissionImpact?.score >= item.primaryMissionImpact?.score
++      ? item.secondaryMissionImpact?.label ?? 'none'
++      : item.primaryMissionImpact?.label ?? 'none';
++    return `<button type="button" class="shoot-tabletop__comparison${item.targetUnitId === selectedTargetId ? ' is-selected' : ''}" data-advisor-target="${escapeHtml(item.targetUnitId)}">
++      <span><strong>#${item.rank} ${escapeHtml(item.targetName)}</strong><small>${escapeHtml(item.recommendation)}</small></span>
++      <span class="shoot-tabletop__comparison-stats"><b>${expected}</b><small>mean</small><b>${destroy}</b><small>destroy</small><b>${escapeHtml(mission)}</b><small>mission</small></span>
++    </button>`;
++  }).join('') + '</div>';
++}
+ 
+-function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspectivePlayerId) {
++
++function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspectivePlayerId, { openDetails = false } = {}) {
+   if (!attackerId || !weaponId || !targetId || !perspectivePlayerId) return "";
+   const weapon = weapons.find((item) => item.id === weaponId);
+   if (!weapon) return "";
+-  const result = getShootingTargetPriorities(state, { playerId: perspectivePlayerId, attackerId, weapon });
+-  const recommendation = result.priorities.find((item) => item.targetUnitId === targetId);
++  const result = getShootingTargetComparison(state, { playerId: perspectivePlayerId, attackerId, weapon });
++  const recommendation = result.comparisons.find((item) => item.targetUnitId === targetId);
+   if (!recommendation) return "";
+   const expected = Number.isFinite(recommendation.expectedDamage) ? recommendation.expectedDamage.toFixed(1) : "—";
+-  const destruction = Number.isFinite(recommendation.destructionProbability) ? Math.round(recommendation.destructionProbability * 100) + "%" : "—";
+-  const survival = Number.isFinite(recommendation.survivalProbability) ? Math.round(recommendation.survivalProbability * 100) + "%" : "—";
+-  const impact = recommendation.impactClassification === "unknown" ? "Unknown" : recommendation.impactClassification.replaceAll("-", " ");
+-  const targetImpact = Number.isFinite(recommendation.normalizedImpact) ? Math.round(recommendation.normalizedImpact * 100) + "%" : "—";
++  const expectedOrMore = Number.isFinite(recommendation.probabilityAtLeastExpectedDamage)
++    ? Math.round(recommendation.probabilityAtLeastExpectedDamage * 100) + "%"
++    : "—";
++  const destruction = Number.isFinite(recommendation.destructionProbability)
++    ? Math.round(recommendation.destructionProbability * 100) + "%"
++    : "—";
++  const primaryImpact = recommendation.primaryMissionImpact?.label ?? "none";
++  const secondaryImpact = recommendation.secondaryMissionImpact?.label ?? "none";
++  const threat = recommendation.recentThreat?.label ?? "none";
++  const impact = recommendation.impactClassification === "unknown"
++    ? "Unknown"
++    : recommendation.impactClassification.replaceAll("-", " ");
+   const confidence = recommendation.confidence ? recommendation.confidence : "low";
+   const rangeConfidence = recommendation.rangeConfidence ? recommendation.rangeConfidence : "low";
++  const unresolved = recommendation.secondaryMissionImpact?.unresolvedMissions ?? [];
+   return `
+     <aside class="shoot-advisory" data-shoot-advisory>
+       <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>${escapeHtml(recommendation.rangeStatus)} range</span></div>
+       <div class="shoot-advisory__grid">
+         <div><strong>${expected}</strong><span>expected damage</span></div>
++        <div><strong>${expectedOrMore}</strong><span>chance of ${escapeHtml(recommendation.expectedDamageThreshold ?? "expected")}+ damage</span></div>
+         <div><strong>${destruction}</strong><span>destruction chance</span></div>
+-        <div><strong>${survival}</strong><span>target survival</span></div>
+-        <div><strong>${targetImpact}</strong><span>target impact</span></div>
++        <div><strong>${escapeHtml(primaryImpact)}</strong><span>Primary impact</span></div>
++        <div><strong>${escapeHtml(secondaryImpact)}</strong><span>Secondary impact</span></div>
++        <div><strong>${escapeHtml(threat)}</strong><span>recent threat</span></div>
+         <div><strong>${escapeHtml(impact)}</strong><span>outcome profile</span></div>
+       </div>
+-      <p>${escapeHtml(recommendation.recommendationReason || recommendation.reason)}</p>
++      <p>${escapeHtml(recommendation.recommendation)}</p>
++      <details class="shoot-advisory__details" ${openDetails ? "open" : ""}><summary>Advisor assumptions &amp; detail</summary>
++        <p>${escapeHtml(recommendation.primaryMissionImpact?.reason ?? "")}</p>
++        <p>${escapeHtml(recommendation.secondaryMissionImpact?.reason ?? "")}</p>
++        <p>${escapeHtml(recommendation.recentThreat?.reason ?? "")}</p>
++        ${unresolved.length ? `<p>Not used for ranking until verified: ${escapeHtml(unresolved.join(", "))}.</p>` : ""}
++        <small>${recommendation.assumptions.map(escapeHtml).join(" · ")}</small>
++      </details>
+       <small>Advisor confidence: ${escapeHtml(confidence)} · Range confidence: ${escapeHtml(rangeConfidence)}</small>
+     </aside>
+   `;
+ }
+ 
+-
+ function shootingDamageForecast(attackerId, weaponId, targetId, state, weapons) {
+   if (!attackerId || !weaponId || !targetId) return "";
+   const weapon = weapons.find((item) => item.id === weaponId);
+@@ -109,7 +157,8 @@ export function createShootingScreen(container, {
+   session,
+   perspectivePlayerId = null,
+   gameData = null,
+-  missionActions = []
++  missionActions = [],
++  layoutMode = "classic"
+ } = {}) {
+   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
+   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") throw new TypeError("A game session is required.");
+@@ -120,6 +169,7 @@ export function createShootingScreen(container, {
+   let selectedTargetId = null;
+   let actualDamage = "0";
+   let attackError = "";
++  let actionPickerOpen = false;
+ 
+   function clearPending() {
+     pendingUnitId = null;
+@@ -147,7 +197,70 @@ export function createShootingScreen(container, {
+       .map((action) => `<option value="${escapeHtml(action.id)}">${escapeHtml(action.name ?? action.id)}</option>`)
+       .join("");
+ 
+-    container.innerHTML = `<main class="shoot-screen">
++    if (layoutMode === "tabletop") {
++      const activeUnitId = selectedAttackerId ?? pendingUnitId;
++      const activeSummary = tabletopUnitSummary(state, activeUnitId);
++      const activeUnit = activeSummary.unit;
++      const activeActivation = selectedAttackerId
++        ? model.activations.find((activation) => activation.unitId === selectedAttackerId && activation.actionType === "shoot")
++        : null;
++      const targetComparison = shootingTargetComparisonCards(
++        selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId
++      );
++      const mapMarkup = renderBattlefieldMap(state, {
++        mode: "live",
++        perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
++        interactivePlayerId: null,
++        selectedUnitId: activeUnitId,
++        showMeasurements: false,
++        mapLabel: "Battlefield · approximate context"
++      });
++      container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop">
++        <section class="shoot-tabletop__map-panel">
++          <div class="shoot-tabletop__map-heading"><div><span class="kicker">BATTLEFIELD</span><h1>Approximate tactical context</h1></div><span>${model.candidates.length} shooting choices remaining</span></div>
++          <p class="shoot-tabletop__map-note">Tap an eligible acting unit, then tap an enemy marker to compare targets. Tabletop range, visibility and measurements remain authoritative.</p>
++          ${mapMarkup}
++        </section>
++
++        <section class="shoot-tabletop__control-panel">
++          <div class="shoot-tabletop__control-scroll">
++            <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map")}</p></div><span>${model.canComplete ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
++            ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
++
++            ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
++              <button type="button" data-choice-shoot ${actionOnly.some((unit) => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
++              <button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Action</button>
++              <button type="button" data-choice-not-shoot>Skip</button>
++            </div>
++            ${actionPickerOpen ? `<div class="shoot-tabletop__action-picker"><label>Mission action<select data-choice-action><option value="">Choose action…</option>${missionActionOptions}</select></label><button type="button" data-choice-action-confirm disabled>Record Action</button></div>` : ""}` : ""}
++
++            ${selectedAttackerId && activeActivation ? `<div class="shoot-tabletop__attack-controls">
++              <label>Ranged weapon<select data-weapon><option value="" ${selectedWeaponId ? "" : "selected"}>Choose weapon…</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
++              <label>Target · tap an enemy marker or choose below<select data-target><option value="" ${selectedTargetId ? "" : "selected"}>Choose target…</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)}</option>`).join("")}</select></label>
++              <div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
++              <button class="shoot-tabletop__record" type="button" data-attack ${selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record shooting attack →</button>
++              <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>
++              ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
++            </div>` : (!pendingUnit ? `<p class="shoot-tabletop__selection-help">Select one of the active army's eligible units on the battlefield to choose Shoot, Action, or Skip.</p>` : "")}
++
++            <section class="shoot-tabletop__advisor" aria-label="Tactical Advisor">
++              <div class="shoot-tabletop__advisor-heading"><div><span class="kicker">TACTICAL ADVISOR</span><h2>Compare your targets</h2></div><span>${selectedTargetId ? "Selected target" : "Choose target"}</span></div>
++              ${targetComparison}
++              ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<div class="shoot-tabletop__advisor-scroll">
++                ${shootingDamageForecast(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons)}
++                ${shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, { openDetails: true })}
++              </div>` : '<p class="shoot-tabletop__empty-advice">Select a target to show probability, Primary/Secondary impact, recent threat, recommendation and assumptions.</p>'}
++            </section>
++
++            <details class="shoot-tabletop__history"><summary>Phase history · ${model.attacks.length} attacks</summary>
++              <ol class="history">${model.attacks.length ? model.attacks.map((item) => historyRow(item, state, gameData)).join("") : "<li>No attacks recorded yet.</li>"}</ol>
++            </details>
++          </div>
++          <footer class="shoot-tabletop__footer"><button class="complete" type="button" data-complete ${model.canComplete ? "" : "disabled"}>${model.canComplete ? "Next phase →" : "Finish remaining units"}</button></footer>
++        </section>
++      </main>`;
++    } else {
++      container.innerHTML = `<main class="shoot-screen">
+       <header><div><div class="kicker">LIVE BATTLE</div><h1>Shooting Phase</h1><p>Round ${escapeHtml(model.round)} · Turn ${escapeHtml(model.turn)}</p></div>
+       <strong>${model.canComplete ? "All Shooting choices recorded" : "Resolve the next eligible unit"}</strong></header>
+       <p class="note">Select a unit, then record whether it Shoots, performs an Action, or Does not shoot. The app records the choice; range, visibility, modifiers, action eligibility and dice remain table-side decisions.</p>
+@@ -203,6 +316,13 @@ export function createShootingScreen(container, {
+       </div>
+       <footer><button class="complete" type="button" data-complete ${model.canComplete ? "" : "disabled"}>End Shooting Phase</button></footer>
+     </main>`;
++    }
++
++    if (layoutMode === "tabletop" && selectedTargetId) {
++      container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
++        if (marker.getAttribute?.("data-map-unit-id") === selectedTargetId) marker.classList?.add?.("is-targeted");
++      });
++    }
+ 
+     container.querySelectorAll("[data-shoot-unit]").forEach((button) => button.addEventListener("click", () => {
+       pendingUnitId = button.getAttribute("data-shoot-unit");
+@@ -212,6 +332,67 @@ export function createShootingScreen(container, {
+       render();
+     }));
+ 
++    if (layoutMode === "tabletop") {
++      const selectMapUnit = (unitId) => {
++        if (!unitId) return;
++        if (selectedAttackerId && targets.some((target) => target.unitId === unitId)) {
++          selectedTargetId = unitId;
++          attackError = "";
++          render();
++          return;
++        }
++        if ([...model.candidates, ...actionOnly].some((unit) => unit.unitId === unitId)) {
++          pendingUnitId = unitId;
++          selectedAttackerId = null;
++          selectedWeaponId = null;
++          selectedTargetId = null;
++          actualDamage = "0";
++          attackError = "";
++          actionPickerOpen = false;
++          render();
++          return;
++        }
++        if (model.activations.some((activation) => activation.unitId === unitId && activation.actionType === "shoot")) {
++          selectedAttackerId = unitId;
++          pendingUnitId = null;
++          const availableWeapons = getShootingWeaponOptions(state, { attackerId: unitId, gameData });
++          selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
++          selectedTargetId = null;
++          actualDamage = "0";
++          attackError = "";
++          actionPickerOpen = false;
++          render();
++        }
++      };
++      container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
++        marker.addEventListener?.("click", () => selectMapUnit(marker.getAttribute?.("data-map-unit-id")));
++        marker.addEventListener?.("keydown", (event) => {
++          if (event?.key === "Enter" || event?.key === " ") {
++            event.preventDefault?.();
++            selectMapUnit(marker.getAttribute?.("data-map-unit-id"));
++          }
++        });
++      });
++      container.querySelectorAll?.("[data-advisor-target]").forEach((button) => button.addEventListener?.("click", () => {
++        selectedTargetId = button.getAttribute?.("data-advisor-target") || null;
++        attackError = "";
++        render();
++      }));
++      container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
++        actionPickerOpen = !actionPickerOpen;
++        render();
++      });
++      container.querySelector?.("[data-finish-unit]")?.addEventListener?.("click", () => {
++        selectedAttackerId = null;
++        selectedWeaponId = null;
++        selectedTargetId = null;
++        actualDamage = "0";
++        attackError = "";
++        actionPickerOpen = false;
++        render();
++      });
++    }
++
+     container.querySelector("[data-choice-shoot]")?.addEventListener("click", () => {
+       if (!pendingUnitId) return;
+       const unitId = pendingUnitId;
+@@ -222,6 +403,7 @@ export function createShootingScreen(container, {
+       selectedTargetId = null;
+       actualDamage = "0";
+       attackError = "";
++      actionPickerOpen = false;
+       clearPending();
+       render();
+     });
+@@ -233,6 +415,7 @@ export function createShootingScreen(container, {
+       selectedWeaponId = null;
+       selectedTargetId = null;
+       attackError = "";
++      actionPickerOpen = false;
+       clearPending();
+       render();
+     });
+@@ -246,10 +429,12 @@ export function createShootingScreen(container, {
+       const actionId = container.querySelector("[data-choice-action]")?.value;
+       if (!pendingUnitId || !actionId) return;
+       activateShootingUnit(session, { unitId: pendingUnitId, actionType: "mission_action", actionId });
++      actionPickerOpen = false;
+       clearPending();
+     });
+ 
+     container.querySelector("[data-choice-cancel]")?.addEventListener("click", () => {
++      actionPickerOpen = false;
+       clearPending();
+       render();
+     });
+diff --git a/tests/rules/tactical-advisor-target-context.test.js b/tests/rules/tactical-advisor-target-context.test.js
+new file mode 100644
+index 0000000..8eafdf2
+--- /dev/null
++++ b/tests/rules/tactical-advisor-target-context.test.js
+@@ -0,0 +1,257 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { createGameState } from "../../src/state/game-state.js";
++import { SECONDARY_MISSION_CATALOG } from "../../src/data/secondary-mission-catalog.js";
++import {
++  getTargetPrimaryMissionImpact,
++  getTargetSecondaryMissionImpact,
++  getTargetThreatImpact
++} from "../../src/rules/tactical-target-context.js";
++import { getShootingTargetComparison } from "../../src/rules/tactical-shooting-comparison.js";
++
++function profile({ keywords = [], toughness = 5, save = 3, wounds = 10 } = {}) {
++  return {
++    keywords,
++    characteristics: {
++      ballisticSkill: 3,
++      weaponSkill: 3,
++      toughness,
++      save,
++      wounds
++    }
++  };
++}
++
++function baseState() {
++  return createGameState({
++    phase: "shooting",
++    turn: 2,
++    activePlayer: "p1",
++    battle: { id: "battle", round: 3, activePlayerId: "p1" },
++    players: [
++      { id: "p1", name: "You" },
++      { id: "p2", name: "Opponent" }
++    ],
++    victoryPoints: { p1: 18, p2: 24 },
++    units: [
++      {
++        id: "shooter",
++        ownerId: "p1",
++        name: "Shooter",
++        status: "deployed",
++        position: { x: 6, y: 6 },
++        wounds: 10,
++        profile: profile({ toughness: 6, wounds: 10 })
++      },
++      {
++        id: "friendly",
++        ownerId: "p1",
++        name: "Friendly",
++        status: "deployed",
++        position: { x: 8, y: 6 },
++        wounds: 10,
++        profile: profile()
++      },
++      {
++        id: "objective-target",
++        ownerId: "p2",
++        name: "Objective Target",
++        status: "deployed",
++        position: { x: 18, y: 6 },
++        wounds: 10,
++        profile: profile()
++      },
++      {
++        id: "plain-target",
++        ownerId: "p2",
++        name: "Plain Target",
++        status: "deployed",
++        position: { x: 6, y: 18 },
++        wounds: 10,
++        profile: profile()
++      },
++      {
++        id: "character-target",
++        ownerId: "p2",
++        name: "Enemy Character",
++        status: "deployed",
++        position: { x: 18, y: 18 },
++        wounds: 10,
++        profile: profile({ keywords: ["Character"] })
++      },
++      {
++        id: "centre-target",
++        ownerId: "p2",
++        name: "Centre Target",
++        status: "deployed",
++        position: { x: 30, y: 22 },
++        wounds: 10,
++        profile: profile()
++      }
++    ],
++    objectives: [
++      {
++        id: "central-objective",
++        position: { x: 18, y: 6 },
++        control: {
++          controlState: "controlled",
++          controllerId: "p2",
++          contestingPlayerIds: []
++        }
++      }
++    ],
++    history: [],
++    scoring: { turnSnapshots: [], secondaryMissionMode: null, secondaryMissions: [] }
++  });
++}
++
++function activeSecondary(playerId, definition, index = 1) {
++  return {
++    instanceId: `${playerId}:${definition.id}:3:2:${index}`,
++    definitionId: definition.id,
++    definition,
++    playerId,
++    status: "active",
++    drawnRound: 3,
++    drawnTurn: 2,
++    scoringHistory: []
++  };
++}
++
++const assassination = SECONDARY_MISSION_CATALOG.find((card) => card.id === "secondary-assassination");
++const centreGround = SECONDARY_MISSION_CATALOG.find((card) => card.id === "secondary-centre-ground");
++const noPrisoners = SECONDARY_MISSION_CATALOG.find((card) => card.id === "secondary-no-prisoners");
++
++const weapon = {
++  id: "test-gun",
++  name: "Test Gun",
++  type: "ranged",
++  characteristics: {
++    range: 24,
++    attacks: 4,
++    strength: 6,
++    ap: -2,
++    damage: 2
++  }
++};
++
++test("primary impact recognizes an enemy-controlled objective without awarding score", () => {
++  const state = baseState();
++  const before = JSON.stringify(state);
++  const impact = getTargetPrimaryMissionImpact(state, {
++    playerId: "p1",
++    targetUnitId: "objective-target"
++  });
++  assert.equal(impact.objectiveId, "central-objective");
++  assert.ok(impact.score > 0.4);
++  assert.ok(impact.denyScoringValue > 0);
++  assert.match(impact.reason, /actual OC determine the score/);
++  assert.equal(JSON.stringify(state), before);
++});
++
++test("verified Assassination makes an enemy Character secondary-relevant", () => {
++  const state = baseState();
++  state.scoring.secondaryMissions = [activeSecondary("p1", assassination)];
++  const impact = getTargetSecondaryMissionImpact(state, {
++    playerId: "p1",
++    targetUnitId: "character-target"
++  });
++  assert.equal(impact.label, "high");
++  assert.equal(impact.scoringSignals[0].missionId, "secondary-assassination");
++  assert.match(impact.reason, /CHARACTER/);
++});
++
++test("verified Centre Ground can score target removal and opponent denial context", () => {
++  const state = baseState();
++  state.scoring.secondaryMissions = [
++    activeSecondary("p1", centreGround, 1),
++    activeSecondary("p2", centreGround, 2)
++  ];
++  const impact = getTargetSecondaryMissionImpact(state, {
++    playerId: "p1",
++    targetUnitId: "centre-target"
++  });
++  assert.ok(impact.score >= 0.9);
++  assert.equal(impact.scoringSignals.length, 1);
++  assert.equal(impact.denialSignals.length, 1);
++  assert.match(impact.reason, /battlefield centre/);
++});
++
++test("unverified active secondary remains visible but does not alter ranking score", () => {
++  const state = baseState();
++  state.scoring.secondaryMissions = [activeSecondary("p1", noPrisoners)];
++  const impact = getTargetSecondaryMissionImpact(state, {
++    playerId: "p1",
++    targetUnitId: "plain-target"
++  });
++  assert.equal(impact.score, 0);
++  assert.deepEqual(impact.unresolvedMissions, ["No Prisoners"]);
++  assert.match(impact.reason, /not used for ranking/);
++});
++
++test("recorded opponent damage and charges raise recent threat", () => {
++  const state = baseState();
++  state.history.push(
++    {
++      type: "combat.attack_resolved",
++      payload: {
++        attackerId: "plain-target",
++        targetId: "friendly",
++        phase: "shooting",
++        actualDamage: 8,
++        round: 2,
++        turn: 1
++      }
++    },
++    {
++      type: "charge.outcome_recorded",
++      payload: {
++        unitId: "plain-target",
++        targetIds: ["friendly"],
++        outcome: "successful",
++        round: 2,
++        turn: 1
++      }
++    }
++  );
++  const impact = getTargetThreatImpact(state, {
++    playerId: "p1",
++    targetUnitId: "plain-target"
++  });
++  assert.ok(impact.score > 0.5);
++  assert.equal(impact.damageDealt, 8);
++  assert.equal(impact.charges, 1);
++});
++
++test("objective-linked target outranks an otherwise equivalent target", () => {
++  const state = baseState();
++  const ranked = getShootingTargetComparison(state, {
++    playerId: "p1",
++    attackerId: "shooter",
++    weapon
++  });
++  const objective = ranked.comparisons.find((item) => item.targetUnitId === "objective-target");
++  const plain = ranked.comparisons.find((item) => item.targetUnitId === "plain-target");
++  assert.ok(objective.decisionScore > plain.decisionScore);
++  assert.ok(objective.decisionBreakdown.primaryMissionPoints > plain.decisionBreakdown.primaryMissionPoints);
++});
++
++test("shooting comparison exposes probabilities and strategic context without mutating state", () => {
++  const state = baseState();
++  state.scoring.secondaryMissions = [activeSecondary("p1", assassination)];
++  const before = JSON.stringify(state);
++  const comparison = getShootingTargetComparison(state, {
++    playerId: "p1",
++    attackerId: "shooter",
++    weapon
++  });
++  const character = comparison.comparisons.find((item) => item.targetUnitId === "character-target");
++  assert.ok(character);
++  assert.ok(Number.isFinite(character.expectedDamage));
++  assert.ok(character.probabilityAnyDamage > 0);
++  assert.ok(Number.isFinite(character.probabilityAtLeastExpectedDamage));
++  assert.ok(Number.isFinite(character.destructionProbability));
++  assert.equal(character.secondaryMissionImpact.scoringSignals[0].missionId, "secondary-assassination");
++  assert.match(character.recommendation, /secondary/i);
++  assert.equal(JSON.stringify(state), before);
++});
+diff --git a/tests/ui/tabletop-default-layout.test.js b/tests/ui/tabletop-default-layout.test.js
+new file mode 100644
+index 0000000..4ee45e3
+--- /dev/null
++++ b/tests/ui/tabletop-default-layout.test.js
+@@ -0,0 +1,13 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++
++test('Tabletop is the authoritative default and classic remains explicit rollback', () => {
++  const demo = readFileSync(new URL('../../src/ui/battle-demo.js', import.meta.url), 'utf8');
++  const shell = readFileSync(new URL('../../src/ui/battle-shell.js', import.meta.url), 'utf8');
++  const shooting = readFileSync(new URL('../../src/ui/shooting-screen.js', import.meta.url), 'utf8');
++  assert.match(demo, /get\("ui"\) === "classic"[\s\S]*\? "classic"[\s\S]*: "tabletop"/);
++  assert.match(shell, /layoutMode/);
++  assert.match(shooting, /layoutMode/);
++  assert.match(shell, /\?ui=classic/);
++});
+diff --git a/tests/ui/tabletop-shooting-layout.test.js b/tests/ui/tabletop-shooting-layout.test.js
+new file mode 100644
+index 0000000..d89fff1
+--- /dev/null
++++ b/tests/ui/tabletop-shooting-layout.test.js
+@@ -0,0 +1,132 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { createGameState } from '../../src/state/game-state.js';
++import { createGameSession } from '../../src/application/game-session.js';
++import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
++import { clearCommandHandlers } from '../../src/engine/command-engine.js';
++import { createShootingScreen } from '../../src/ui/shooting-screen.js';
++
++function testState() {
++  return createGameState({
++    phase: 'shooting',
++    turn: 1,
++    activePlayer: 'p1',
++    players: [{ id: 'p1', name: 'Tyranids' }, { id: 'p2', name: 'Space Marines' }],
++    battle: { id: 'b', status: 'active', round: 2, firstPlayerId: 'p1', activePlayerId: 'p1' },
++    units: [
++      {
++        id: 'exo', name: 'Exocrine', ownerId: 'p1', status: 'deployed', wounds: 14,
++        position: { x: 20, y: 8 },
++        profile: { weaponIds: ['bio'], characteristics: { ballisticSkill: 3, toughness: 10, save: 3 } }
++      },
++      {
++        id: 'marine', name: 'Intercessor Squad', ownerId: 'p2', status: 'deployed', wounds: 10,
++        position: { x: 25, y: 27 },
++        profile: { characteristics: { toughness: 4, save: 3 } }
++      }
++    ]
++  });
++}
++
++function parseAttrs(text) {
++  const attrs = new Map();
++  for (const match of text.matchAll(/([\w-]+)(?:="([^"]*)")?/g)) attrs.set(match[1], match[2] ?? '');
++  return attrs;
++}
++
++function fakeDom() {
++  let html = '';
++  let nodes = [];
++  const rebuild = (value) => {
++    html = value;
++    nodes = [...value.matchAll(/<(button|select|div|details|summary)([^>]*)>/g)].map((match) => {
++      const attrs = parseAttrs(match[2]);
++      return {
++        attrs,
++        events: {},
++        disabled: attrs.has('disabled'),
++        value: attrs.get('value') ?? '',
++        getAttribute(name) { return this.attrs.get(name) ?? null; },
++        setAttribute(name, value) { this.attrs.set(name, String(value)); },
++        addEventListener(name, fn) { this.events[name] = fn; },
++        classList: { add() {}, remove() {} }
++      };
++    });
++  };
++  const attrName = (selector) => selector.match(/^\[([^\]]+)\]$/)?.[1] ?? null;
++  return {
++    get innerHTML() { return html; },
++    set innerHTML(value) { rebuild(value); },
++    replaceChildren() { rebuild(''); },
++    querySelector(selector) {
++      const attr = attrName(selector);
++      return attr ? nodes.find((node) => node.attrs.has(attr)) ?? null : null;
++    },
++    querySelectorAll(selector) {
++      const attr = attrName(selector);
++      return attr ? nodes.filter((node) => node.attrs.has(attr)) : [];
++    },
++    click(selector, value = null) {
++      const attr = attrName(selector);
++      const node = nodes.find((candidate) => candidate.attrs.has(attr) && (value == null || candidate.attrs.get(attr) === value));
++      assert.ok(node, `Missing ${selector}${value == null ? '' : '=' + value}`);
++      assert.equal(typeof node.events.click, 'function', `No click handler for ${selector}`);
++      node.events.click({ target: node, preventDefault() {} });
++    }
++  };
++}
++
++const gameData = {
++  weapons: [{
++    id: 'bio', name: 'Bio-plasmic cannon', type: 'ranged',
++    characteristics: { range: 36, attacks: 6, strength: 9, ap: -3, damage: 3 }
++  }]
++};
++
++test('tabletop Shooting mode renders the preferred map-plus-controls workspace without replacing classic mode', () => {
++  clearCommandHandlers();
++  registerCoreCommandHandlers();
++  const tabletopSession = createGameSession(testState());
++  const root = fakeDom();
++  const tabletop = createShootingScreen(root, {
++    session: tabletopSession,
++    perspectivePlayerId: 'p1',
++    gameData,
++    layoutMode: 'tabletop'
++  });
++  try {
++    assert.match(root.innerHTML, /shoot-screen--tabletop/);
++    assert.match(root.innerHTML, /BATTLEFIELD/);
++    assert.match(root.innerHTML, /TACTICAL ADVISOR/);
++    assert.match(root.innerHTML, /Tabletop range, visibility and measurements remain authoritative/);
++
++    root.click('[data-map-unit-id]', 'exo');
++    assert.match(root.innerHTML, /data-choice-shoot/);
++    root.click('[data-choice-shoot]');
++    assert.match(root.innerHTML, /Bio-plasmic cannon/);
++    root.click('[data-map-unit-id]', 'marine');
++    assert.match(root.innerHTML, /Intercessor Squad/);
++    assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
++    assert.match(root.innerHTML, /shoot-advisory__details" open/);
++    assert.match(root.innerHTML, /Primary impact/);
++    assert.match(root.innerHTML, /Secondary impact/);
++    assert.match(root.innerHTML, /recent threat/);
++  } finally {
++    tabletop.destroy();
++  }
++
++  const classicRoot = fakeDom();
++  const classicSession = createGameSession(testState());
++  const classic = createShootingScreen(classicRoot, {
++    session: classicSession,
++    perspectivePlayerId: 'p1',
++    gameData,
++    layoutMode: 'classic'
++  });
++  try {
++    assert.doesNotMatch(classicRoot.innerHTML, /shoot-screen--tabletop/);
++    assert.match(classicRoot.innerHTML, /Eligible units/);
++  } finally {
++    classic.destroy();
++  }
++});
+diff --git a/tests/ui/tabletop-viewport-fit.test.js b/tests/ui/tabletop-viewport-fit.test.js
+new file mode 100644
+index 0000000..9974184
+--- /dev/null
++++ b/tests/ui/tabletop-viewport-fit.test.js
+@@ -0,0 +1,12 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++
++test('tabletop experiment is constrained to the landscape viewport and keeps scrolling inside the control/advisor regions', () => {
++  const html = readFileSync(new URL('../../battle.html', import.meta.url), 'utf8');
++  assert.match(html, /height:100dvh/);
++  assert.match(html, /body:has\(\.battle-shell\.is-tabletop-experiment\).*overflow:hidden/s);
++  assert.match(html, /\.battle-shell\.is-tabletop-experiment \.battle-shell__workspace \{ flex:1; min-height:0; height:auto; overflow:hidden; \}/);
++  assert.match(html, /\.battle-shell\.is-tabletop-experiment \.shoot-screen--tabletop \{[\s\S]*height:100%; min-height:0;/);
++  assert.match(html, /\.battle-shell\.is-tabletop-experiment \.shoot-advisory__details \{ max-height:190px; overflow:auto;/);
++});
