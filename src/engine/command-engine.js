@@ -1,3 +1,4 @@
+import { guardPreparationCommand } from '../rules/preparation-command-guard.js';
 const COMMAND_HANDLERS = new Map();
 
 export function registerCommandHandler(type, handler) {
@@ -18,6 +19,7 @@ export function executeCommand(state, command, context = {}) {
   if (!handler) {
     throw new Error("No command handler registered: " + command.type);
   }
+  guardPreparationCommand(state, command);
   return handler(state, command, context);
 }
 

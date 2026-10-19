@@ -26,6 +26,7 @@ export function createBattleSetupScreen(container, {
   perspectivePlayerId = null,
   missionDefinitions = [],
   secondaryMissionCatalog = [],
+  eventStage = null,
   setupTab = "pre-game"
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
@@ -119,7 +120,7 @@ export function createBattleSetupScreen(container, {
       const kind = roleButton.getAttribute("data-pre-game-role-choice");
       const nextValue = roleButton.getAttribute("data-player-id") || null;
       const attackerPlayerId = kind === "attackerPlayerId" ? nextValue : (current.attackerPlayerId ?? null);
-      const firstPlayerId = kind === "firstPlayerId" ? nextValue : (current.firstPlayerId ?? null);
+      const firstPlayerId = null; // First-turn result belongs to the post-redeployment checkpoint.
       try {
         session.dispatch({ type: COMMAND_TYPES.SET_PRE_GAME_ROLES, payload: { attackerPlayerId, firstPlayerId }});
         message = "Battle roles saved. Defender is automatically the other army.";
@@ -236,7 +237,7 @@ export function createBattleSetupScreen(container, {
     const playerId = target.getAttribute("data-setup-fixed-add") || selectedPlayerId;
     const playerPanel = target.closest?.("[data-secondary-player-panel]") ?? container;
     const field = (selector) => playerPanel.querySelector?.(selector) ?? container.querySelector(selector);
-    if (state.battle) {
+    if (state.battle && state.battle.status !== "setup") {
       message = "Fixed secondary cards must be selected before the battle starts.";
       render();
       return;
@@ -351,8 +352,7 @@ export function createBattleSetupScreen(container, {
       '<h3>Who is the attacker?</h3><div class="pre-game-role-choices" role="group" aria-label="Choose attacker">' +
       roleButtons("attackerPlayerId", preGameSetup.attackerPlayerId) + '</div>' +
       '<p><strong>Defender:</strong> ' + escapeHtml(defender?.name ?? (attacker ? "Automatically assigned to the other army" : "Choose the attacker above")) + '</p>' +
-      '<h3>Who takes the first turn?</h3><div class="pre-game-role-choices" role="group" aria-label="Choose first player">' +
-      roleButtons("firstPlayerId", preGameSetup.firstPlayerId) + '</div></section>';
+      '</section>';
     const missionSetup = state.battlefieldMap?.missionSetup ?? {};
     const layoutOptions = missionSetup.myDisposition && missionSetup.opponentDisposition
       ? getLayoutOptionsForForceDispositions(missionSetup.myDisposition, missionSetup.opponentDisposition)
@@ -417,7 +417,7 @@ export function createBattleSetupScreen(container, {
           ? '<p>Draw and record Tactical cards manually from the physical deck on this player’s Command phase. Scoring and discards remain manually confirmed.</p>'
           : '<p>Choose this player’s mode independently of the opponent.</p>';
       const modeLocked = playerHistory.length > 0;
-      const fixedMarkup = playerMode === "fixed" && !state.battle
+      const fixedMarkup = playerMode === "fixed" && (!state.battle || state.battle.status === "setup")
         ? '<div class="command-vp-form"><label>Fixed card<select data-setup-secondary-definition>' + fixedOptions + '</select></label>' +
           '<label>Checkpoint if not verified<select data-setup-secondary-timing>' + timingOptions + '</select></label>' +
           '<label>Or type the printed card name<input data-setup-secondary-name maxlength="160" placeholder="Fixed card name"></label>' +
@@ -462,12 +462,15 @@ export function createBattleSetupScreen(container, {
     if (terrainPage === selectedLayoutOption?.page) terrainFocus = terrainMapController?.getFocus() ?? terrainFocus;
     else terrainFocus = {};
     terrainPage = selectedLayoutOption?.page;
-    container.innerHTML = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
+    const legacyMarkup = '<main class="battle-setup-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Mission setup</h1><p>Choose the secondary mission mode before starting the battle. Complete pre-game checks, then confirm the mission and map.</p></header>' +
       '<section data-setup-content="pre-game"' + (activeSetupTab === "pre-game" ? '' : ' hidden') + '>' + preGameMarkup + missionMapMarkup + '</section>' +
       '<section data-setup-content="mission-map"' + (activeSetupTab === "mission-map" ? '' : ' hidden') + '>' + preFirstTurnMarkup + '</section>' +
       '<section data-setup-content="battlefield"' + (activeSetupTab === "battlefield" ? '' : ' hidden') + '>' + battlefieldMarkup + '</section>' +
       (message ? '<p role="status" class="battle-setup-screen__message">' + escapeHtml(message) + '</p>' : '') + '</main>';
+    container.innerHTML = eventStage ? '<main class="battle-setup-screen">' +
+      ({mission: preGameMarkup, terrain: battlefieldMarkup, roles: preGameRolesMarkup, secondaries: missionMapMarkup}[eventStage] ?? '') +
+      '<p role="status">' + escapeHtml(message) + '</p></main>' : legacyMarkup;
     const terrainMount = container.querySelector?.('[data-terrain-placement-map]');
     terrainMapController = terrainMount && selectedTerrainLayout
       ? enhanceTerrainPlacementMap(selectedTerrainLayout.page, selectedTerrainLayout, terrainMount, { initialFocus: terrainFocus }) : null;

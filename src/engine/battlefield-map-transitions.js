@@ -1,3 +1,4 @@
+import { attachmentParent, formationFor, preparationStep } from '../rules/event-preparation.js';
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
@@ -87,13 +88,16 @@ function requireDeploymentState(state) {
 export function setActualDeploymentPosition(state, { unitId, playerId, position } = {}) {
   requireDeploymentState(state);
   const unit = requirePlayerUnit(state, unitId, playerId);
+  if (attachmentParent(state, unit)) throw new Error("Place the bodyguard; attached units follow it.");
+  if (formationFor(state, unit).kind !== 'field' || unit.status === 'embarked') throw new Error("This unit is declared off the battlefield. Use a rule-authorised reserve change first.");
+  if (!['deployment','redeployment','pre-battle'].includes(preparationStep(state))) throw new Error("Placement is locked at this checkpoint.");
   const nextPosition = validatePosition(position);
   const previousPosition = state.battlefieldMap?.actualDeployment?.[unitId] ?? null;
   const declaredReserves = { ...(state.battlefieldMap?.declaredReserves ?? {}) };
   delete declaredReserves[unitId];
   const nextState = {
     ...state,
-    units: state.units.map((item) => item.id === unitId
+    units: state.units.map((item) => item.id === unitId || attachmentParent(state, item) === unitId
       ? { ...item, status: "deployed", position: nextPosition }
       : item),
     battlefieldMap: {

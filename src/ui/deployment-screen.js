@@ -1,3 +1,4 @@
+import { attachmentParent } from '../rules/event-preparation.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
@@ -8,6 +9,7 @@ function escapeHtml(value) {
 
 export function createDeploymentScreen(container, {
   session,
+  guidedPreparation = false,
   perspectivePlayerId = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
@@ -36,7 +38,7 @@ export function createDeploymentScreen(container, {
       firstPlayerId = state.preGameSetup?.firstPlayerId ?? state.battle?.firstPlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const eligible = (state.units ?? []).filter((unit) =>
-      unit?.ownerId === playerId && unit.status !== "destroyed");
+      unit?.ownerId === playerId && unit.status !== "destroyed" && unit.status !== "embarked" && !attachmentParent(state, unit));
     if (!eligible.some((unit) => unit.id === selectedUnitId)) {
       selectedUnitId = eligible.find((unit) => !state.battlefieldMap?.actualDeployment?.[unit.id] &&
         !state.battlefieldMap?.declaredReserves?.[unit.id])?.id ?? eligible[0]?.id ?? null;
@@ -73,7 +75,7 @@ export function createDeploymentScreen(container, {
       item.unaccounted + ' unaccounted</li>'
     ).join("");
 
-    container.innerHTML = '<main class="deployment-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
+    let markup = '<main class="deployment-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
       '<h1>Actual Deployment</h1><p>Record where both armies actually deploy. Planned positions are a guide only and are not copied automatically.</p></header>' +
       '<p class="battlefield-map__notice">The map is approximate context, not a measurement tool. Follow the mission pack and tabletop rules for legal deployment, terrain, and reserve restrictions.</p>' +
       '<section class="battlefield-map-section"><h2>Deployment Map</h2>' +
@@ -100,6 +102,14 @@ export function createDeploymentScreen(container, {
       (totalUnaccounted ? '<p>Both armies must account for every non-destroyed unit before the first turn can start.</p>' :
         '<p>All units are accounted for. Confirm the first player to begin the battle.</p>') +
       '</section>' + (message ? '<p role="status">' + escapeHtml(message) + '</p>' : "") + '</main>';
+    if (guidedPreparation) {
+      markup = markup.replace(/<section class="deployment-completion">[\s\S]*?<\/section>/, '')
+        .replace(/<div class="deployment-actions">[\s\S]*?<\/div>/, '')
+        .replace('Actual Deployment', 'Battlefield positions')
+        .replace('Tap to select, then tap the map to deploy', 'Off battlefield — use a rule-authorised reserve change below')
+        .replace('No units declared in reserves. Select a unit above and use “Declare selected unit in reserves”.', 'No units declared in reserves.');
+    }
+    container.innerHTML = markup;
   }
 
   function mapCoordinates(board, x, y) {

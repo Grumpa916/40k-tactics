@@ -82,15 +82,14 @@ export function evaluatePreGameReadiness(state = {}) {
   const rolesComplete = players.length === 2 &&
     validPlayerIds.has(roleSetup.attackerPlayerId) &&
     validPlayerIds.has(roleSetup.defenderPlayerId) &&
-    roleSetup.attackerPlayerId !== roleSetup.defenderPlayerId &&
-    validPlayerIds.has(roleSetup.firstPlayerId);
+    roleSetup.attackerPlayerId !== roleSetup.defenderPlayerId;
   checks.push({
     id: "battle-roles",
-    label: "Attacker, defender, and first player designated",
+    label: "Attacker and defender designated",
     status: rolesComplete ? "complete" : "incomplete",
     detail: rolesComplete
-      ? "Attacker and first player are recorded; defender is the other army."
-      : "Choose the attacker and first player. The defender is automatically the other army."
+      ? "Attacker and defender are recorded. First turn is determined after redeployment."
+      : "Choose the attacker. The defender is automatically the other army."
   });
 
   const missing = checks.filter((check) => check.status !== "complete");

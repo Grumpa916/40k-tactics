@@ -8,13 +8,17 @@
 export const PRE_GAME_RULESET_ID = "warhammer-40000-11th-edition";
 
 export const PRE_GAME_PROCEDURE_STEPS = Object.freeze([
-  Object.freeze({ id: "confirm-mission", title: "Confirm the mission", detail: "Follow the selected mission pack's setup sequence, battlefield layout, and special instructions." }),
-  Object.freeze({ id: "confirm-armies", title: "Confirm both armies", detail: "Check both rosters and note unit abilities that affect pre-game setup." }),
-  Object.freeze({ id: "terrain-objectives", title: "Set up terrain and objectives", detail: "Use the mission instructions; the app map does not infer or validate tabletop placement." }),
-  Object.freeze({ id: "pre-battle-abilities", title: "Review pre-battle abilities", detail: "Resolve relevant abilities at their rules-defined timing, including Scouts and Infiltrators when applicable." }),
-  Object.freeze({ id: "actual-deployment", title: "Record actual deployment", detail: "Record each non-destroyed unit's starting position or explicitly declare it in reserves." }),
-  Object.freeze({ id: "first-turn", title: "Confirm the first player", detail: "Record the first player at the timing required by the mission's setup sequence, then begin the first turn." })
-]);
+  {id:'confirm-armies',title:'Confirm submitted armies',detail:'Use the mustered rosters and recorded Force Dispositions.'},
+  {id:'confirm-mission',title:'Determine missions and layout',detail:'Resolve both Primary Missions and use the organiser’s layout or random result.'},
+  {id:'terrain-objectives',title:'Create the battlefield',detail:'Place terrain areas, then features from the official layout.'},
+  {id:'roles',title:'Determine attacker and defender',detail:'Agree table edges; roll off and let the winner choose roles.'},
+  {id:'secondaries',title:'Reveal secondary choices',detail:'Choose privately, reveal together, then record modes and Fixed cards.'},
+  {id:'formations',title:'Declare battle formations',detail:'Privately declare passengers, then strategic reserves; reveal together.'},
+  {id:'actual-deployment',title:'Deploy armies',detail:'Alternate from Defender; apply Titanic skips and Infiltrators here.'},
+  {id:'redeploy',title:'Redeploy units',detail:'Alternate applicable redeploy rules from Attacker.'},
+  {id:'first-turn',title:'Determine first turn',detail:'Roll off; the winner takes first turn.'},
+  {id:'pre-battle-abilities',title:'Resolve pre-battle rules',detail:'Alternate from the first player, including Scouts at this timing.'}
+].map(Object.freeze));
 
 export function getPreGameProcedureSteps() {
   return PRE_GAME_PROCEDURE_STEPS.map((step) => ({ ...step }));

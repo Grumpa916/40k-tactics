@@ -1,4 +1,5 @@
 export const UNIT_STATUS = Object.freeze({
+  EMBARKED: "embarked",
   RESERVES: "reserves",
   DEPLOYED: "deployed",
   DESTROYED: "destroyed"

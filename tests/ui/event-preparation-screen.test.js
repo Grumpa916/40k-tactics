@@ -1,0 +1,48 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createEventPreparationScreen } from '../../src/ui/event-preparation-screen.js';
+import { createBattleSetupScreen } from '../../src/ui/battle-setup-screen.js';
+import { createGameSession } from '../../src/application/game-session.js';
+import { createGameState } from '../../src/state/game-state.js';
+import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
+import { clearCommandHandlers } from '../../src/engine/command-engine.js';
+import { COMMAND_TYPES as C } from '../../src/commands/game-commands.js';
+clearCommandHandlers();registerCoreCommandHandlers();
+function element() {
+ const listeners = new Map(), fields = new Map();
+ return {innerHTML:'', fields, contains:()=>true, replaceChildren(){this.innerHTML='';},
+ addEventListener(k,f){if(!listeners.has(k))listeners.set(k,new Set());listeners.get(k).add(f);},
+ removeEventListener(k,f){listeners.get(k)?.delete(f);}, querySelector(s){return fields.get(s)??null;},querySelectorAll(){return [];},
+ click(attrs){const t={hasAttribute:k=>Object.hasOwn(attrs,k),getAttribute:k=>attrs[k]??null,closest(s){return s==='button'||Object.keys(attrs).some(k=>s==='['+k+']')?this:null;}};for(const f of [...(listeners.get('click')??[])])f({target:t});},
+ listenerCount(){return [...listeners.values()].reduce((n,s)=>n+s.size,0);}};
+}
+function fixture(){return createGameSession(createGameState({battle:{id:'test',status:'setup',round:0},battleSetup:{battleSize:'strike_force'},battlefieldMap:{missionSetup:{myDisposition:'Take and Hold',opponentDisposition:'Take and Hold',layout:'A'}},players:[{id:'p1',name:'Mine'},{id:'p2',name:'Other'}],units:[{id:'a',name:'A',ownerId:'p1',status:'reserves',points:100},{id:'b',name:'B',ownerId:'p2',status:'reserves',points:100}]}));}
+test('guided controller traverses setup to Command, keeps first player unset until roll and cleans listeners',()=>{
+ const session=fixture(),root=element(),child=element();root.fields.set('[data-prep-child]',child);
+ const screen=createEventPreparationScreen(root,{session});
+ const next=()=>root.click({'data-prep-next':''});
+ assert.match(root.innerHTML,/Missions &amp; layout/);next();assert.match(root.innerHTML,/Create battlefield/);
+ next();assert.doesNotMatch(child.innerHTML,/Who takes the first turn/);
+ session.dispatch({type:C.SET_PRE_GAME_ROLES,payload:{attackerPlayerId:'p1'}});next();
+ for(const playerId of ['p1','p2'])session.dispatch({type:C.SET_SECONDARY_MISSION_MODE,payload:{playerId,mode:'tactical'}});
+ next();next();assert.equal(session.getState().battle.status,'deployment');
+ assert.doesNotMatch(child.innerHTML,/data-start-first-turn/);assert.doesNotMatch(child.innerHTML,/data-declare-reserve/);
+ for(const [unitId,playerId] of [['a','p1'],['b','p2']])session.dispatch({type:C.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId,playerId,position:{x:10,y:10}}});
+ next();assert.match(root.innerHTML,/Redeploy units/);next();assert.match(root.innerHTML,/Determine first turn/);
+ root.click({'data-prep-first':'p2'});next();assert.match(root.innerHTML,/Resolve pre-battle rules/);next();next();
+ assert.equal(session.getState().phase,'command');assert.equal(session.getState().activePlayer,'p2');
+ screen.destroy();assert.equal(root.listenerCount(),0);assert.equal(child.listenerCount(),0);
+});
+test('Fixed card UI accepts input while battle is in setup, rather than rejecting every battle record',()=>{
+ const session=fixture(),root=element();
+ session.replaceState({...session.getState(),preparation:{version:1,step:'secondaries',confirmed:['mission','terrain','roles']},scoring:{secondaryMissionModeByPlayer:{p1:'fixed'}}});
+ root.fields.set('[data-setup-secondary-definition]',{value:'fixture-card'});
+ root.fields.set('[data-setup-secondary-name]',{value:''});
+ root.fields.set('[data-setup-secondary-timing]',{value:'end-of-turn'});
+ const screen=createBattleSetupScreen(root,{session,eventStage:'secondaries',secondaryMissionCatalog:[{id:'fixture-card',name:'Fixture card',category:'secondary',fixedAvailable:true,availableModes:['fixed'],scoringWindows:[{timing:'end-of-turn'}]}]});
+ assert.match(root.innerHTML,/data-setup-fixed-add/);
+ root.click({'data-setup-fixed-add':'p1'});
+ assert.equal(session.getState().scoring.secondaryMissions.length,1);
+ assert.equal(session.getState().scoring.secondaryMissions[0].definitionId,'fixture-card');
+ screen.destroy();
+});

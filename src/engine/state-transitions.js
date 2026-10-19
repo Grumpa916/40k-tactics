@@ -1,3 +1,4 @@
+import { requirePreparationComplete } from "./event-preparation-transitions.js";
 import { BATTLE_STATUS } from "../state/battle.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { PHASES, TURN_STEPS } from "../state/turn.js";
@@ -37,6 +38,7 @@ export function startBattle(state, { battleId, missionId = null } = {}) {
 }
 
 export function enterDeployment(state) {
+  requirePreparationComplete(state, "formations");
   if (!state.battle || state.battle.status !== BATTLE_STATUS.SETUP) {
     throw new Error("Battle must be in setup before deployment.");
   }
@@ -107,6 +109,8 @@ export function recordObjectiveControl(state, {
 }
 
 export function startFirstTurn(state, { activePlayerId, nowMs = Date.now() } = {}) {
+  requirePreparationComplete(state, "pre-battle");
+  if (activePlayerId !== state.preparation.firstPlayerId) throw new Error("Use the recorded first-turn roll winner.");
   requirePlayer(state, activePlayerId);
   if (!state.battle || state.battle.status !== BATTLE_STATUS.DEPLOYMENT) {
     throw new Error("Battle must be in deployment before the first turn.");

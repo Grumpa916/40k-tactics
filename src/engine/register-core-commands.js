@@ -1,3 +1,4 @@
+import { updatePreparation } from "./event-preparation-transitions.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
 import { setPreGameRoles, setBattleSize } from "./battle-setup-transitions.js";
@@ -39,6 +40,7 @@ import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondar
 
 export function registerCoreCommandHandlers() {
   const handlers = [
+    [COMMAND_TYPES.UPDATE_PREPARATION, (state, command) => updatePreparation(state, command.payload)],
     [COMMAND_TYPES.START_BATTLE, (state, command) => startBattle(state, command.payload)],
     [COMMAND_TYPES.APPLY_ARMY_ROSTER_TO_BATTLE, (state, command) => applyArmyRosterToBattle(state, command.payload)],
     [COMMAND_TYPES.ENTER_DEPLOYMENT, (state) => enterDeployment(state)],
