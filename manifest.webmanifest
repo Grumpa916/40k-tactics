@@ -2,7 +2,7 @@
   "name": "40K Tactics — Battle Table",
   "short_name": "40K Tactics",
   "id": "./battle.html",
-  "start_url": "./battle.html?source=pwa",
+  "start_url": "./battle.html?ui=tabletop&source=pwa",
   "scope": "./",
   "display": "standalone",
   "display_override": [
