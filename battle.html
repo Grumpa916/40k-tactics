@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>40K Tactics — Integrated Battle</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
@@ -446,6 +446,16 @@
     .army-selection__message { min-height:1.5em; font-weight:650; }
     @media (max-width:760px) { .army-selection__sides { grid-template-columns:minmax(0,1fr); } }
   </style>
+  <meta name="theme-color" content="#0b1115">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="40K Tactics">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+  <link rel="stylesheet" href="./src/ui/styles/pwa.css">
 </head>
 <body>
   <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>
