@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>40K Tactics — Integrated Battle</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
@@ -353,6 +353,168 @@
     @media(max-width:800px) { .shoot-screen .grid { grid-template-columns:1fr; } .shoot-screen .candidates { grid-template-columns:repeat(2,minmax(0,1fr)); } .shoot-screen .choice { align-items:flex-start; flex-direction:column; } }
     @media(max-width:520px) { .shoot-screen .candidates, .shoot-screen .controls { grid-template-columns:1fr; } .shoot-screen header { align-items:flex-start; flex-direction:column; } .shoot-screen .shoot-selected-shooter, .shoot-screen .shoot-advisory { grid-column:auto; } }
 
+    /* Tabletop interface experiment: opt-in with ?ui=tabletop. The classic layout remains unchanged. */
+    .battle-shell__layout-switch { display:flex; justify-content:flex-end; margin:0 0 8px; }
+    .battle-shell__layout-switch a { min-height:38px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid #566273; border-radius:8px; background:#202631; color:#dce5ef; font-size:12px; font-weight:750; text-decoration:none; }
+    .battle-shell.is-tabletop-experiment { max-width:none; padding:10px 18px 84px; }
+    .battle-shell.is-tabletop-experiment .battle-shell__workspace { grid-template-columns:minmax(0,1fr); gap:0; }
+    .battle-shell.is-tabletop-experiment .battle-shell__side-panel { display:none !important; }
+    .battle-shell.is-tabletop-experiment .battle-shell__content { width:100%; }
+    .battle-shell.is-tabletop-experiment .battle-shell__view-note { display:none; }
+    .battle-shell.is-tabletop-experiment .battle-shell__phases { margin:8px 0 10px; gap:7px; }
+    .battle-shell.is-tabletop-experiment .battle-phase { min-width:0; flex:1 1 0; }
+    .battle-shell.is-tabletop-experiment .battle-phase__button { min-height:44px; padding:7px 10px; text-align:center; }
+    .battle-shell.is-tabletop-experiment .battle-phase__button span { display:none; }
+    .battle-shell.is-tabletop-experiment .battle-shell__status-summary { margin-bottom:8px; }
+    .battle-shell.is-tabletop-experiment .battle-shell__tabletop-missions { margin:0 0 8px; }
+    .battle-shell.is-tabletop-experiment .battle-shell__tabletop-missions details { margin:0; }
+
+    .shoot-screen--tabletop { max-width:none; margin:0; padding:0; height:min(64dvh,690px); min-height:500px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(360px,1fr); gap:12px; overflow:hidden; }
+    .shoot-screen--tabletop .shoot-tabletop__map-panel,
+    .shoot-screen--tabletop .shoot-tabletop__control-panel { min-width:0; min-height:0; border:1px solid #3f4b57; border-radius:12px; background:#17201d; overflow:hidden; }
+    .shoot-tabletop__map-panel { display:flex; flex-direction:column; padding:10px; }
+    .shoot-tabletop__map-heading, .shoot-tabletop__phase-heading, .shoot-tabletop__advisor-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .shoot-tabletop__map-heading h1, .shoot-tabletop__phase-heading h1 { margin:2px 0 0; font-size:20px; }
+    .shoot-tabletop__advisor-heading h2 { margin:2px 0 0; font-size:18px; }
+    .shoot-tabletop__map-heading > span, .shoot-tabletop__phase-heading > span, .shoot-tabletop__advisor-heading > span { flex:none; font-size:11px; opacity:.72; }
+    .shoot-tabletop__map-note { margin:6px 0 8px; font-size:12px; opacity:.72; }
+    .shoot-screen--tabletop .battlefield-map { flex:1; min-height:0; display:flex; flex-direction:column; }
+    .shoot-screen--tabletop .battlefield-map__meta:first-of-type { margin-top:0; }
+    .shoot-screen--tabletop .battlefield-map__board { flex:1; min-height:0; aspect-ratio:auto; }
+    .shoot-screen--tabletop .battlefield-map__notice { margin:6px 0 0; font-size:10px; }
+    .shoot-screen--tabletop .battlefield-map__unit { cursor:pointer; touch-action:manipulation; }
+    .shoot-screen--tabletop .battlefield-map__unit.is-targeted { outline:3px dashed #e9a873; outline-offset:3px; z-index:7; }
+
+    .shoot-tabletop__control-panel { display:flex; flex-direction:column; background:#1a251f; }
+    .shoot-tabletop__control-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:12px; scrollbar-gutter:stable; }
+    .shoot-tabletop__phase-heading { padding-bottom:8px; border-bottom:1px solid #39483f; }
+    .shoot-tabletop__unit-status { display:flex; flex-wrap:wrap; gap:7px; margin:9px 0; }
+    .shoot-tabletop__unit-status span { padding:5px 8px; border:1px solid #4f694e; border-radius:999px; background:#213124; font-size:11px; }
+    .shoot-tabletop__action-choice { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:8px 0; }
+    .shoot-tabletop__action-choice button, .shoot-tabletop__finish, .shoot-tabletop__record, .shoot-tabletop__action-picker button { min-height:46px; border:1px solid #4a5c68; border-radius:9px; background:#21303a; color:inherit; font:inherit; font-weight:750; cursor:pointer; }
+    .shoot-tabletop__action-choice button[data-choice-shoot] { border-color:#a7d878; }
+    .shoot-tabletop__action-choice button:disabled, .shoot-tabletop__record:disabled { opacity:.42; cursor:not-allowed; }
+    .shoot-tabletop__action-picker { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:end; margin:8px 0; }
+    .shoot-tabletop__action-picker label, .shoot-tabletop__attack-controls label { display:grid; gap:5px; font-size:12px; color:#b7c1bb; }
+    .shoot-tabletop__action-picker select, .shoot-tabletop__attack-controls select { box-sizing:border-box; width:100%; min-height:46px; padding:8px 10px; border:1px solid #4a5c68; border-radius:8px; background:#16222a; color:#eef3f0; font:inherit; }
+    .shoot-tabletop__attack-controls { display:grid; gap:8px; }
+    .shoot-tabletop__damage { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 0; }
+    .shoot-tabletop__damage .damage-control__buttons { display:flex; align-items:center; gap:8px; }
+    .shoot-tabletop__damage button { width:46px; min-height:46px; border:1px solid #4a5c68; border-radius:8px; background:#21303a; color:inherit; font-size:20px; }
+    .shoot-tabletop__damage strong { min-width:30px; text-align:center; font-size:24px; }
+    .shoot-tabletop__record { background:#bde98b; color:#122015; border-color:#bde98b; font-size:15px; }
+    .shoot-tabletop__finish { background:#21303a; }
+    .shoot-tabletop__selection-help, .shoot-tabletop__empty-advice { margin:10px 0; padding:10px; border:1px dashed #46564e; border-radius:8px; font-size:12px; opacity:.78; }
+
+    .shoot-tabletop__advisor { margin-top:12px; padding-top:10px; border-top:1px solid #39483f; }
+    .shoot-tabletop__comparison-list { display:grid; gap:6px; margin:8px 0; }
+    .shoot-tabletop__comparison { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; width:100%; padding:8px; border:1px solid #415148; border-radius:8px; background:#18251e; color:inherit; text-align:left; cursor:pointer; }
+    .shoot-tabletop__comparison.is-selected { border-color:#d2ea9c; box-shadow:inset 0 0 0 1px #d2ea9c; }
+    .shoot-tabletop__comparison > span:first-child { min-width:0; display:grid; gap:3px; }
+    .shoot-tabletop__comparison small { font-size:10px; opacity:.7; line-height:1.3; }
+    .shoot-tabletop__comparison-stats { display:grid; grid-template-columns:repeat(3,auto); gap:1px 8px; text-align:center; }
+    .shoot-tabletop__comparison-stats b { font-size:12px; }
+    .shoot-tabletop__comparison-stats small { font-size:9px; }
+    .shoot-tabletop__advisor-scroll { max-height:310px; overflow:auto; padding-right:3px; }
+    .shoot-screen--tabletop .shoot-advisory { grid-column:auto; margin:8px 0; }
+    .shoot-screen--tabletop .shoot-advisory__grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .shoot-screen--tabletop .shoot-advisory__details { margin-top:8px; padding:8px; border:1px solid #46564e; border-radius:7px; background:#141f19; }
+    .shoot-screen--tabletop .shoot-advisory__details summary { min-height:34px; cursor:pointer; font-weight:800; color:#c8e99e; }
+    .shoot-tabletop__history { margin-top:10px; border-top:1px solid #39483f; padding-top:8px; }
+    .shoot-tabletop__history summary { min-height:36px; cursor:pointer; font-weight:700; }
+    .shoot-tabletop__footer { flex:none; padding:8px 12px; border-top:1px solid #39483f; background:#152019; }
+    .shoot-tabletop__footer .complete { width:100%; min-height:46px; }
+
+    @media (max-width:1050px) and (orientation:landscape) {
+      .shoot-screen--tabletop { grid-template-columns:minmax(0,1.3fr) minmax(330px,1fr); height:62dvh; }
+      .shoot-tabletop__comparison-stats { grid-template-columns:repeat(2,auto); }
+      .shoot-screen--tabletop .shoot-advisory__grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (orientation:portrait), (max-width:760px) {
+      .shoot-screen--tabletop { height:auto; min-height:0; grid-template-columns:minmax(0,1fr); overflow:visible; }
+      .shoot-tabletop__map-panel { min-height:520px; }
+      .shoot-tabletop__control-panel { max-height:none; }
+      .shoot-tabletop__control-scroll { overflow:visible; }
+      .battle-shell.is-tabletop-experiment .battle-shell__phases { overflow-x:auto; }
+      .battle-shell.is-tabletop-experiment .battle-phase { flex:0 0 110px; }
+    }
+
+    @media (orientation:landscape) and (min-width:761px) {
+      html:has(.battle-shell.is-tabletop-experiment),
+      body:has(.battle-shell.is-tabletop-experiment),
+      body:has(.battle-shell.is-tabletop-experiment) #battle-app { height:100%; overflow:hidden; }
+      .battle-shell.is-tabletop-experiment {
+        position:relative; width:100vw; max-width:none; height:100dvh; margin:0; padding:6px 8px 62px;
+        display:flex; flex-direction:column; gap:6px; overflow:hidden;
+      }
+      .battle-shell.is-tabletop-experiment > [data-decision-reminder-host]:empty,
+      .battle-shell.is-tabletop-experiment > [data-turn-clock-panel-host]:empty { display:none; }
+      .battle-shell.is-tabletop-experiment > [data-phase-progression-host] { display:none; }
+      .battle-shell__tabletop-header { position:relative; flex:none; display:grid; gap:5px; min-height:0; }
+      .battle-shell__tabletop-topline { display:grid; grid-template-columns:minmax(420px,1.1fr) minmax(360px,.9fr); gap:6px; align-items:stretch; min-height:0; }
+      .battle-shell.is-tabletop-experiment .battle-shell__status-summary {
+        min-width:0; min-height:42px; margin:0; padding:4px 8px; gap:6px; flex-wrap:nowrap;
+      }
+      .battle-shell.is-tabletop-experiment .battle-shell__round-summary { gap:0; }
+      .battle-shell.is-tabletop-experiment .battle-shell__round-summary strong { font-size:12px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__round-summary span { font-size:10px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__player-summaries { min-width:0; flex:1; flex-wrap:nowrap; gap:5px; justify-content:flex-end; }
+      .battle-shell.is-tabletop-experiment .battle-shell__player-summary { min-width:0; padding:4px 7px; gap:6px; font-size:11px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__player-summary strong { max-width:112px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__tabletop-missions { min-width:0; margin:0; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary { height:100%; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary__section { position:relative; margin:0; padding:2px 7px; border-radius:7px; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > summary { min-height:36px; gap:5px; font-size:11px; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > summary > span:first-child { font-size:11px; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > summary .battle-context__count { font-size:9px; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary__section > .battle-mission-summary__section-content { display:none; }
+      .battle-shell.is-tabletop-experiment .battle-mission-summary__section[open] > .battle-mission-summary__section-content {
+        display:grid; position:absolute; z-index:1050; top:calc(100% + 5px); right:0; width:min(520px,70vw); max-height:52dvh;
+        overflow:auto; padding:8px; border:1px solid #566273; border-radius:9px; background:#171d26; box-shadow:0 12px 32px rgba(0,0,0,.55);
+      }
+      .battle-shell.is-tabletop-experiment .battle-shell__phases { margin:0; gap:5px; overflow:visible; }
+      .battle-shell.is-tabletop-experiment .battle-phase { flex:1 1 0; min-width:0; }
+      .battle-shell.is-tabletop-experiment .battle-phase__button { min-height:34px; padding:4px 8px; font-size:11px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__layout-switch { position:absolute; right:4px; bottom:-1px; z-index:4; margin:0; pointer-events:none; }
+      .battle-shell.is-tabletop-experiment .battle-shell__layout-switch a { min-height:28px; padding:0 8px; font-size:10px; opacity:.72; pointer-events:auto; }
+      .battle-shell.is-tabletop-experiment .battle-shell__workspace { flex:1; min-height:0; height:auto; overflow:hidden; }
+      .battle-shell.is-tabletop-experiment .battle-shell__content,
+      .battle-shell.is-tabletop-experiment [data-battle-screen] { height:100%; min-height:0; }
+      .battle-shell.is-tabletop-experiment .shoot-screen--tabletop {
+        width:100%; height:100%; min-height:0; max-height:none; grid-template-columns:minmax(0,1.55fr) minmax(350px,.9fr); gap:8px;
+      }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__map-panel { padding:7px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__map-heading h1,
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__phase-heading h1 { font-size:16px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__map-note { margin:3px 0 5px; font-size:10px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__control-scroll { padding:8px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__phase-heading { padding-bottom:5px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__unit-status { margin:5px 0; gap:4px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__unit-status span { padding:3px 6px; font-size:10px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-choice { margin:5px 0; gap:5px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-choice button,
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__finish,
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__record,
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-picker button,
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__action-picker select,
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__attack-controls select { min-height:38px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__attack-controls { gap:5px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__damage button { width:40px; min-height:38px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__damage strong { font-size:20px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__advisor { margin-top:7px; padding-top:6px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__advisor-heading h2 { font-size:15px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-list { margin:5px 0; gap:4px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison { padding:5px 6px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__advisor-scroll { max-height:none; overflow:visible; }
+      .battle-shell.is-tabletop-experiment .shoot-advisory__details { max-height:190px; overflow:auto; overscroll-behavior:contain; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__history { margin-top:6px; padding-top:5px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__footer { padding:5px 8px; }
+      .battle-shell.is-tabletop-experiment .shoot-tabletop__footer .complete { min-height:38px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__army-dock { width:calc(100vw - 16px); padding:5px; gap:5px; }
+      .battle-shell.is-tabletop-experiment .battle-shell__army-dock button { min-height:46px; padding:6px 10px; }
+    }
+
+
     .army-roster-panel { margin:1rem 0; padding:1rem; border:1px solid #7b8794; border-radius:12px; background:#f8fafc; color:#17212b; }
     .pre-game-role-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:.5rem 0 1rem; }
     .pre-game-role-choice { min-height:58px; padding:12px; border:2px solid #697386; border-radius:9px; background:#202631; color:#f7f8fb; font:inherit; font-weight:750; cursor:pointer; touch-action:manipulation; }
@@ -446,16 +608,6 @@
     .army-selection__message { min-height:1.5em; font-weight:650; }
     @media (max-width:760px) { .army-selection__sides { grid-template-columns:minmax(0,1fr); } }
   </style>
-  <meta name="theme-color" content="#0b1115">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="40K Tactics">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
-  <link rel="stylesheet" href="./src/ui/styles/pwa.css">
 </head>
 <body>
   <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>

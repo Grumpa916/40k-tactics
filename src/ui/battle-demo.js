@@ -99,13 +99,18 @@ async function initializeBattleDemo() {
     console.error("Supabase cloud controls could not be initialized:", error);
   }
 
+  const layoutMode = new URLSearchParams(window.location.search).get("ui") === "classic"
+    ? "classic"
+    : "tabletop";
+
   createBattleShell(document.getElementById("battle-app"), {
     session,
     perspectivePlayerId: "p1",
     gameData,
     missionActions: [{ id: "cleanse", name: "Cleanse" }],
     secondaryMissionCatalog: SECONDARY_MISSION_CATALOG,
-    supabaseClient
+    supabaseClient,
+    layoutMode
   });
 }
 

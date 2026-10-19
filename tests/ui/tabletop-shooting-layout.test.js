@@ -1,0 +1,132 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createGameState } from '../../src/state/game-state.js';
+import { createGameSession } from '../../src/application/game-session.js';
+import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
+import { clearCommandHandlers } from '../../src/engine/command-engine.js';
+import { createShootingScreen } from '../../src/ui/shooting-screen.js';
+
+function testState() {
+  return createGameState({
+    phase: 'shooting',
+    turn: 1,
+    activePlayer: 'p1',
+    players: [{ id: 'p1', name: 'Tyranids' }, { id: 'p2', name: 'Space Marines' }],
+    battle: { id: 'b', status: 'active', round: 2, firstPlayerId: 'p1', activePlayerId: 'p1' },
+    units: [
+      {
+        id: 'exo', name: 'Exocrine', ownerId: 'p1', status: 'deployed', wounds: 14,
+        position: { x: 20, y: 8 },
+        profile: { weaponIds: ['bio'], characteristics: { ballisticSkill: 3, toughness: 10, save: 3 } }
+      },
+      {
+        id: 'marine', name: 'Intercessor Squad', ownerId: 'p2', status: 'deployed', wounds: 10,
+        position: { x: 25, y: 27 },
+        profile: { characteristics: { toughness: 4, save: 3 } }
+      }
+    ]
+  });
+}
+
+function parseAttrs(text) {
+  const attrs = new Map();
+  for (const match of text.matchAll(/([\w-]+)(?:="([^"]*)")?/g)) attrs.set(match[1], match[2] ?? '');
+  return attrs;
+}
+
+function fakeDom() {
+  let html = '';
+  let nodes = [];
+  const rebuild = (value) => {
+    html = value;
+    nodes = [...value.matchAll(/<(button|select|div|details|summary)([^>]*)>/g)].map((match) => {
+      const attrs = parseAttrs(match[2]);
+      return {
+        attrs,
+        events: {},
+        disabled: attrs.has('disabled'),
+        value: attrs.get('value') ?? '',
+        getAttribute(name) { return this.attrs.get(name) ?? null; },
+        setAttribute(name, value) { this.attrs.set(name, String(value)); },
+        addEventListener(name, fn) { this.events[name] = fn; },
+        classList: { add() {}, remove() {} }
+      };
+    });
+  };
+  const attrName = (selector) => selector.match(/^\[([^\]]+)\]$/)?.[1] ?? null;
+  return {
+    get innerHTML() { return html; },
+    set innerHTML(value) { rebuild(value); },
+    replaceChildren() { rebuild(''); },
+    querySelector(selector) {
+      const attr = attrName(selector);
+      return attr ? nodes.find((node) => node.attrs.has(attr)) ?? null : null;
+    },
+    querySelectorAll(selector) {
+      const attr = attrName(selector);
+      return attr ? nodes.filter((node) => node.attrs.has(attr)) : [];
+    },
+    click(selector, value = null) {
+      const attr = attrName(selector);
+      const node = nodes.find((candidate) => candidate.attrs.has(attr) && (value == null || candidate.attrs.get(attr) === value));
+      assert.ok(node, `Missing ${selector}${value == null ? '' : '=' + value}`);
+      assert.equal(typeof node.events.click, 'function', `No click handler for ${selector}`);
+      node.events.click({ target: node, preventDefault() {} });
+    }
+  };
+}
+
+const gameData = {
+  weapons: [{
+    id: 'bio', name: 'Bio-plasmic cannon', type: 'ranged',
+    characteristics: { range: 36, attacks: 6, strength: 9, ap: -3, damage: 3 }
+  }]
+};
+
+test('tabletop Shooting mode renders the preferred map-plus-controls workspace without replacing classic mode', () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const tabletopSession = createGameSession(testState());
+  const root = fakeDom();
+  const tabletop = createShootingScreen(root, {
+    session: tabletopSession,
+    perspectivePlayerId: 'p1',
+    gameData,
+    layoutMode: 'tabletop'
+  });
+  try {
+    assert.match(root.innerHTML, /shoot-screen--tabletop/);
+    assert.match(root.innerHTML, /BATTLEFIELD/);
+    assert.match(root.innerHTML, /TACTICAL ADVISOR/);
+    assert.match(root.innerHTML, /Tabletop range, visibility and measurements remain authoritative/);
+
+    root.click('[data-map-unit-id]', 'exo');
+    assert.match(root.innerHTML, /data-choice-shoot/);
+    root.click('[data-choice-shoot]');
+    assert.match(root.innerHTML, /Bio-plasmic cannon/);
+    root.click('[data-map-unit-id]', 'marine');
+    assert.match(root.innerHTML, /Intercessor Squad/);
+    assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
+    assert.match(root.innerHTML, /shoot-advisory__details" open/);
+    assert.match(root.innerHTML, /Primary impact/);
+    assert.match(root.innerHTML, /Secondary impact/);
+    assert.match(root.innerHTML, /recent threat/);
+  } finally {
+    tabletop.destroy();
+  }
+
+  const classicRoot = fakeDom();
+  const classicSession = createGameSession(testState());
+  const classic = createShootingScreen(classicRoot, {
+    session: classicSession,
+    perspectivePlayerId: 'p1',
+    gameData,
+    layoutMode: 'classic'
+  });
+  try {
+    assert.doesNotMatch(classicRoot.innerHTML, /shoot-screen--tabletop/);
+    assert.match(classicRoot.innerHTML, /Eligible units/);
+  } finally {
+    classic.destroy();
+  }
+});

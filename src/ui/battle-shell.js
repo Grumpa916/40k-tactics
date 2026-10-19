@@ -225,7 +225,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   referenceOpenStates = { stratagems: true },
   missionOpenStates = {},
   setupWorkspaceTab = "saves",
-  setupNavigationMessage = ""
+  setupNavigationMessage = "",
+  layoutMode = "classic"
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -294,6 +295,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
   const isSetupView = viewedPhase === "setup";
+  const tabletopExperiment = layoutMode === "tabletop" && !isSetupView;
+  const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
+  const layoutSwitch = viewedPhase === "setup" ? "" : '<nav class="battle-shell__layout-switch" aria-label="Battle interface layout"><a href="' +
+    (layoutMode === "tabletop" ? '?ui=classic' : '?ui=tabletop') + '">' +
+    (layoutMode === "tabletop" ? 'Current layout' : 'Test tabletop layout') + '</a></nav>';
   const workspace = '<section class="battle-shell__workspace' + (isSetupView ? ' is-setup-view' : '') + '" data-battle-workspace' +
     (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "army-selection" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
     ' data-left-collapsed="' + String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
@@ -302,9 +308,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
     '<section class="battle-shell__content">' +
     '<section data-battle-screen></section>' +
-    '<div data-battle-mission-summary-host>' +
-    renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates }) +
-    '</div></section>' +
+    (tabletopExperiment ? '' : '<div data-battle-mission-summary-host>' + persistentMissionSummary + '</div>') +
+    '</section>' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
     renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
@@ -316,11 +321,19 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
+  const shellLiveHeader = tabletopExperiment
+    ? '<header class="battle-shell__tabletop-header">' +
+      '<div class="battle-shell__tabletop-topline">' + statusSummary +
+      '<div class="battle-shell__tabletop-missions" data-battle-mission-summary-host>' + persistentMissionSummary + '</div></div>' +
+      '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
+      layoutSwitch + '</header>'
+    : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
+      statusSummary + layoutSwitch;
 
-  container.innerHTML = '<main class="battle-shell">' + reminderMarkup +
+  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
-    '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
-    statusSummary + clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
+    shellLiveHeader +
+    clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
         '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
@@ -356,7 +369,8 @@ export function createBattleShell(container, {
   secondaryMissionCatalog = [],
   screenFactories = SCREEN_FACTORIES,
   battleStore = null,
-  supabaseClient = null
+  supabaseClient = null,
+  layoutMode = "classic"
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -608,7 +622,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
@@ -669,7 +683,8 @@ export function createBattleShell(container, {
           scoringCheckpoint: scoringReviewCheckpoint,
           scoringCheckpointActivePlayerId: scoringReviewActivePlayerId,
           scoringCheckpointPlayerId: scoringReviewPlayerId,
-          setupTab: setupWorkspaceTab
+          setupTab: setupWorkspaceTab,
+          layoutMode
         });
         mountedPhase = viewedPhase;
       } else if (screenContainer) {
