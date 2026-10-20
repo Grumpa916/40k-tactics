@@ -1,0 +1,17 @@
+*** Begin Patch
+*** Update File: .gitlab-ci.yml
+@@
+ mirror_to_github:
+   stage: deploy
+   image: node:20
+   rules:
+     - when: manual
+   script:
++    - git fetch --unshallow origin || git fetch --all --tags --prune
++    - git fetch origin "+refs/heads/*:refs/remotes/origin/*" --tags --prune
+     - git config user.name '40K Tactics Migration'
+     - git config user.email 'migration@users.noreply.github.com'
+     - git remote remove github 2>/dev/null || true
+     - git remote add github "https://x-access-token:${GITHUB_MIGRATION_TOKEN}@github.com/Grumpa916/40k-tactics.git"
+     - git push --force github "HEAD:refs/heads/migration/gitlab-current-2026-10-20"
+*** End Patch
