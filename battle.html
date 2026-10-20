@@ -353,7 +353,7 @@
     @media(max-width:800px) { .shoot-screen .grid { grid-template-columns:1fr; } .shoot-screen .candidates { grid-template-columns:repeat(2,minmax(0,1fr)); } .shoot-screen .choice { align-items:flex-start; flex-direction:column; } }
     @media(max-width:520px) { .shoot-screen .candidates, .shoot-screen .controls { grid-template-columns:1fr; } .shoot-screen header { align-items:flex-start; flex-direction:column; } .shoot-screen .shoot-selected-shooter, .shoot-screen .shoot-advisory { grid-column:auto; } }
 
-    /* Tabletop interface experiment: opt-in with ?ui=tabletop. The classic layout remains unchanged. */
+    /* Tabletop is the authoritative live-battle layout. Use ?ui=classic only for explicit rollback/reference. */
     .battle-shell__layout-switch { display:flex; justify-content:flex-end; margin:0 0 8px; }
     .battle-shell__layout-switch a { min-height:38px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid #566273; border-radius:8px; background:#202631; color:#dce5ef; font-size:12px; font-weight:750; text-decoration:none; }
     .battle-shell.is-tabletop-experiment { max-width:none; padding:10px 18px 84px; }
@@ -608,6 +608,16 @@
     .army-selection__message { min-height:1.5em; font-weight:650; }
     @media (max-width:760px) { .army-selection__sides { grid-template-columns:minmax(0,1fr); } }
   </style>
+  <meta name="theme-color" content="#0b1115">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="40K Tactics">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+  <link rel="stylesheet" href="./src/ui/styles/pwa.css">
 </head>
 <body>
   <div id="battle-app"><main class="battle-shell"><h1>Loading integrated battle…</h1><p>Starting the phase screens.</p></main></div>

@@ -158,7 +158,7 @@ export function createShootingScreen(container, {
   perspectivePlayerId = null,
   gameData = null,
   missionActions = [],
-  layoutMode = "classic"
+  layoutMode = "tabletop"
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") throw new TypeError("A game session is required.");

@@ -68,7 +68,7 @@ function shootingDom() {
 }
 test('Shooting UI offers and records Do not shoot for the selected unit', () => {
   const game = session(state()), root = shootingDom();
-  const screen = createShootingScreen(root, { session: game, perspectivePlayerId: 'p1' });
+  const screen = createShootingScreen(root, { session: game, perspectivePlayerId: 'p1', layoutMode: 'classic' });
   try {
     root.click('[data-shoot-unit]');
     assert.match(root.innerHTML, /data-choice-not-shoot>Do not shoot/);

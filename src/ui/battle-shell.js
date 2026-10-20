@@ -226,7 +226,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   missionOpenStates = {},
   setupWorkspaceTab = "saves",
   setupNavigationMessage = "",
-  layoutMode = "classic"
+  layoutMode = "tabletop"
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -370,7 +370,7 @@ export function createBattleShell(container, {
   screenFactories = SCREEN_FACTORIES,
   battleStore = null,
   supabaseClient = null,
-  layoutMode = "classic"
+  layoutMode = "tabletop"
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");

@@ -91,8 +91,7 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
   const tabletop = createShootingScreen(root, {
     session: tabletopSession,
     perspectivePlayerId: 'p1',
-    gameData,
-    layoutMode: 'tabletop'
+    gameData
   });
   try {
     assert.match(root.innerHTML, /shoot-screen--tabletop/);
