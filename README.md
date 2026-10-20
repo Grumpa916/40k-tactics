@@ -4,7 +4,7 @@ Recovered development source for the Warhammer 40,000 11th-edition live tactical
 
 ## Current hosting
 
-The application is intended for Cloudflare Pages. The production static bundle is generated in `dist/`.
+GitHub is the authoritative source repository. The production static bundle is generated in `dist/` and deployed with GitHub Pages.
 
 ## Commands
 
@@ -16,13 +16,17 @@ npm run verify
 
 The project intentionally has no runtime npm dependencies. Browser modules are served directly from `src/`.
 
-## Cloudflare Pages settings
+## Architecture policy
+
+V2 uses an explicit anti-monolith policy. `src/ui/battle-shell.js` is a top-level coordinator only; phase-specific state, rules, handlers, and rendering belong in focused modules. See [`docs/ARCHITECTURE_POLICY.md`](docs/ARCHITECTURE_POLICY.md).
+
+## GitHub Pages settings
 
 - Production branch: `main`
-- Build command: `npm run verify`
+- Build command: `npm run build`
 - Build output directory: `dist`
-- Node version: 20 or newer
+- Node version: 22 in GitHub Actions
 
 ## Recovery note
 
-This repository was reconstructed after the previous GitHub account became unavailable. The runtime source is the exact source used for the preserved Cloudflare deployment bundle at the recovery point. Tests included here are those recoverable from the preserved integration patch, including the current Shooting skip and opponent Movement regression tests. Historical Git metadata and portions of the older test suite were not present in the deployment bundle and are not fabricated here.
+This repository was reconstructed after the previous GitHub account became unavailable and was later migrated back to GitHub from the preserved deployment source. The current `main` history is the validated migrated V2 line. Older pre-migration GitHub state is retained on a backup branch.
