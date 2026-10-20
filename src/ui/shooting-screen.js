@@ -63,7 +63,6 @@ function shootingTargetComparisonCards(attackerId, weaponId, selectedTargetId, s
   }).join('') + '</div>';
 }
 
-
 function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspectivePlayerId, { openDetails = false } = {}) {
   if (!attackerId || !weaponId || !targetId || !perspectivePlayerId) return "";
   const weapon = weapons.find((item) => item.id === weaponId);
@@ -186,16 +185,40 @@ export function createShootingScreen(container, {
     }
   }
 
+  function beginShoot(unitId, { targetId = null } = {}) {
+    if (!unitId) return false;
+    const previousPendingUnitId = pendingUnitId;
+    selectedAttackerId = unitId;
+    selectedWeaponId = null;
+    selectedTargetId = targetId;
+    pendingUnitId = null;
+    actualDamage = "0";
+    attackError = "";
+    actionPickerOpen = false;
+    try {
+      activateShootingUnit(session, { unitId, actionType: "shoot" });
+    } catch (error) {
+      selectedAttackerId = null;
+      selectedWeaponId = null;
+      selectedTargetId = null;
+      pendingUnitId = previousPendingUnitId ?? unitId;
+      attackError = error?.message ?? String(error);
+      render();
+      return false;
+    }
+    const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId: unitId, gameData });
+    selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
+    render();
+    return true;
+  }
+
   function render() {
     const state = session.getState();
     const model = getShootingViewModel(state, { perspectivePlayerId });
     const phaseNotice = state.phase !== "shooting"
       ? `<p class="shoot-error" role="status">Viewing Shooting. The game is still in ${escapeHtml(state.phase)}. Use Return to current phase, then the phase advance button to reach Shooting.</p>`
       : "";
-    const weapons = getShootingWeaponOptions(state, { attackerId: selectedAttackerId, gameData });
-    const targets = getShootingTargetOptions(state, { attackerId: selectedAttackerId, perspectivePlayerId });
     const actionOnly = model.actionOnly ?? [];
-    const pendingUnit = [...model.candidates, ...actionOnly].find((unit) => unit.unitId === pendingUnitId);
 
     if (selectedAttackerId && !model.activations.some((activation) =>
       activation.unitId === selectedAttackerId && activation.actionType === "shoot"
@@ -204,6 +227,10 @@ export function createShootingScreen(container, {
       selectedWeaponId = null;
       selectedTargetId = null;
     }
+
+    const weapons = getShootingWeaponOptions(state, { attackerId: selectedAttackerId, gameData });
+    const targets = getShootingTargetOptions(state, { attackerId: selectedAttackerId, perspectivePlayerId });
+    const pendingUnit = [...model.candidates, ...actionOnly].find((unit) => unit.unitId === pendingUnitId);
     if (!weapons.some((weapon) => weapon.id === selectedWeaponId)) selectedWeaponId = null;
     if (!targets.some((target) => target.unitId === selectedTargetId)) selectedTargetId = null;
 
@@ -337,7 +364,14 @@ export function createShootingScreen(container, {
 
     if (layoutMode === "tabletop" && selectedTargetId) {
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
-        if (marker.getAttribute?.("data-map-unit-id") === selectedTargetId) marker.classList?.add?.("is-targeted");
+        if (marker.getAttribute?.("data-map-unit-id") === selectedTargetId) {
+          marker.classList?.add?.("is-targeted");
+          marker.setAttribute?.("aria-pressed", "true");
+          if (marker.style) {
+            marker.style.outline = "3px solid #ffd36a";
+            marker.style.outlineOffset = "2px";
+          }
+        }
       });
     }
 
@@ -346,29 +380,19 @@ export function createShootingScreen(container, {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      actionPickerOpen = false;
       render();
     }));
 
     if (layoutMode === "tabletop") {
       const selectMapUnit = (unitId) => {
         if (!unitId) return;
-        // Tapping an enemy after choosing a pending shooter begins Shooting directly.
-        // Keep the rules engine authoritative; a rejected activation stays visible.
         const pendingAttacker = state.units.find((unit) => unit.id === pendingUnitId);
         const tappedUnit = state.units.find((unit) => unit.id === unitId);
         if (!selectedAttackerId && pendingAttacker && tappedUnit?.status === "deployed" &&
             tappedUnit.ownerId !== pendingAttacker.ownerId &&
             model.candidates.some((unit) => unit.unitId === pendingUnitId)) {
-          const attackerId = pendingUnitId;
-          actionPickerOpen = false;
-          if (!tryActivate({ unitId: attackerId, actionType: "shoot" })) return;
-          selectedAttackerId = attackerId;
-          pendingUnitId = null;
-          const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId, gameData });
-          selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
-          selectedTargetId = unitId;
-          attackError = "";
-          render();
+          beginShoot(pendingUnitId, { targetId: unitId });
           return;
         }
         if (selectedAttackerId && targets.some((target) => target.unitId === unitId)) {
@@ -401,13 +425,18 @@ export function createShootingScreen(container, {
         }
       };
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
+        const unitId = marker.getAttribute?.("data-map-unit-id");
+        const isTarget = Boolean(selectedAttackerId && targets.some((target) => target.unitId === unitId));
         marker.setAttribute?.("role", "button");
         marker.setAttribute?.("tabindex", "0");
-        marker.addEventListener?.("click", () => selectMapUnit(marker.getAttribute?.("data-map-unit-id")));
+        marker.setAttribute?.("aria-pressed", unitId === selectedTargetId ? "true" : "false");
+        if (isTarget) marker.setAttribute?.("data-shoot-target-marker", "true");
+        if (marker.style) marker.style.touchAction = "manipulation";
+        marker.addEventListener?.("click", () => selectMapUnit(unitId));
         marker.addEventListener?.("keydown", (event) => {
           if (event?.key === "Enter" || event?.key === " ") {
             event.preventDefault?.();
-            selectMapUnit(marker.getAttribute?.("data-map-unit-id"));
+            selectMapUnit(unitId);
           }
         });
       });
@@ -418,6 +447,7 @@ export function createShootingScreen(container, {
       }));
       container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
         actionPickerOpen = !actionPickerOpen;
+        attackError = "";
         render();
       });
       container.querySelector?.("[data-finish-unit]")?.addEventListener?.("click", () => {
@@ -433,19 +463,7 @@ export function createShootingScreen(container, {
 
     container.querySelector("[data-choice-shoot]")?.addEventListener("click", () => {
       if (!pendingUnitId) return;
-      const unitId = pendingUnitId;
-      actionPickerOpen = false;
-      attackError = "";
-      if (!tryActivate({ unitId, actionType: "shoot" })) return;
-      selectedAttackerId = unitId;
-      const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId: unitId, gameData });
-      selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
-      selectedTargetId = null;
-      actualDamage = "0";
-      attackError = "";
-      actionPickerOpen = false;
-      clearPending();
-      render();
+      beginShoot(pendingUnitId);
     });
 
     container.querySelector("[data-choice-not-shoot]")?.addEventListener("click", () => {
@@ -479,7 +497,6 @@ export function createShootingScreen(container, {
       clearPending();
       render();
     });
-
 
     container.querySelector("[data-weapon]")?.addEventListener("change", (event) => {
       selectedWeaponId = event.target.value || null;
@@ -543,4 +560,3 @@ export function createShootingScreen(container, {
     destroy: () => { unsubscribe(); container.replaceChildren(); }
   };
 }
-
