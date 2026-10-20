@@ -44,6 +44,7 @@ function fakeDom() {
       return {
         attrs,
         events: {},
+        style: {},
         disabled: attrs.has('disabled'),
         value: attrs.get('value') ?? '',
         getAttribute(name) { return this.attrs.get(name) ?? null; },
@@ -54,6 +55,10 @@ function fakeDom() {
     });
   };
   const attrName = (selector) => selector.match(/^\[([^\]]+)\]$/)?.[1] ?? null;
+  const findNode = (selector, value = null) => {
+    const attr = attrName(selector);
+    return nodes.find((candidate) => candidate.attrs.has(attr) && (value == null || candidate.attrs.get(attr) === value));
+  };
   return {
     get innerHTML() { return html; },
     set innerHTML(value) { rebuild(value); },
@@ -66,12 +71,23 @@ function fakeDom() {
       const attr = attrName(selector);
       return attr ? nodes.filter((node) => node.attrs.has(attr)) : [];
     },
+    node(selector, value = null) {
+      const node = findNode(selector, value);
+      assert.ok(node, `Missing ${selector}${value == null ? '' : '=' + value}`);
+      return node;
+    },
     click(selector, value = null) {
-      const attr = attrName(selector);
-      const node = nodes.find((candidate) => candidate.attrs.has(attr) && (value == null || candidate.attrs.get(attr) === value));
+      const node = findNode(selector, value);
       assert.ok(node, `Missing ${selector}${value == null ? '' : '=' + value}`);
       assert.equal(typeof node.events.click, 'function', `No click handler for ${selector}`);
       node.events.click({ target: node, preventDefault() {} });
+    },
+    change(selector, value) {
+      const node = findNode(selector);
+      assert.ok(node, `Missing ${selector}`);
+      assert.equal(typeof node.events.change, 'function', `No change handler for ${selector}`);
+      node.value = value;
+      node.events.change({ target: node, preventDefault() {} });
     }
   };
 }
@@ -103,8 +119,14 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
     assert.match(root.innerHTML, /data-choice-shoot/);
     root.click('[data-choice-shoot]');
     assert.match(root.innerHTML, /Bio-plasmic cannon/);
+    const targetMarker = root.node('[data-map-unit-id]', 'marine');
+    assert.equal(targetMarker.getAttribute('data-shoot-target-marker'), 'true');
+    assert.equal(targetMarker.style.touchAction, 'manipulation');
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /Intercessor Squad/);
+    const selectedMarker = root.node('[data-map-unit-id]', 'marine');
+    assert.equal(selectedMarker.getAttribute('aria-pressed'), 'true');
+    assert.equal(selectedMarker.style.outline, '3px solid #ffd36a');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
     assert.match(root.innerHTML, /shoot-advisory__details" open/);
     assert.match(root.innerHTML, /Primary impact/);
@@ -135,14 +157,23 @@ test('Action picker returns to Shoot and enemy map taps cycle targets without re
   const state = testState();
   state.units.push({ ...state.units[1], id: 'marine2', name: 'Second squad', position: { x: 30, y: 25 } });
   const session = createGameSession(state), root = fakeDom();
-  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  const screen = createShootingScreen(root, {
+    session,
+    perspectivePlayerId: 'p1',
+    gameData,
+    missionActions: [{ id: 'cleanse', name: 'Cleanse' }]
+  });
   try {
     root.click('[data-map-unit-id]', 'exo');
     root.click('[data-choice-action-toggle]');
     assert.match(root.innerHTML, /data-choice-action-confirm/);
+    root.change('[data-choice-action]', 'cleanse');
+    assert.equal(root.node('[data-choice-action-confirm]').disabled, false);
     root.click('[data-choice-shoot]');
     assert.doesNotMatch(root.innerHTML, /data-choice-action-confirm/);
     assert.ok(root.querySelector('[data-target]'));
+    assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('data-shoot-target-marker'), 'true');
+    assert.equal(root.node('[data-map-unit-id]', 'marine2').getAttribute('data-shoot-target-marker'), 'true');
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /value="marine" selected/);
     root.click('[data-map-unit-id]', 'marine2');
@@ -160,6 +191,7 @@ test('tap shooter then enemy selects a target directly and preserves a single ac
     root.click('[data-map-unit-id]', 'exo');
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /value="marine" selected/);
+    assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
     assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
   } finally { screen.destroy(); }
