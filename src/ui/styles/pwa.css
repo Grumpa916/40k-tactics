@@ -7,9 +7,9 @@
 }
 
 @media (display-mode: standalone) {
-  html:has(.battle-shell.is-tabletop-experiment),
-  body:has(.battle-shell.is-tabletop-experiment),
-  body:has(.battle-shell.is-tabletop-experiment) #battle-app {
+  html:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
+  body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
+  body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)) #battle-app {
     width: 100%;
     min-width: 0;
     height: 100%;
@@ -18,7 +18,7 @@
     background: #0b1115;
   }
 
-  body:has(.battle-shell.is-tabletop-experiment) {
+  body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)) {
     position: fixed;
     inset: 0;
     box-sizing: border-box;
@@ -29,7 +29,7 @@
     overscroll-behavior: none;
   }
 
-  .battle-shell.is-tabletop-experiment {
+  .battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation) {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
