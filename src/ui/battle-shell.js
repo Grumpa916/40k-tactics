@@ -296,6 +296,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
   const isSetupView = viewedPhase === "setup";
   const isScrollablePreparationView = viewedPhase === "deployment";
+  // Only Shooting currently owns an internal scroll region. Other phase screens
+  // must retain document scrolling so their controls remain reachable on iPad.
+  const isScrollableLiveView = ["command", "movement", "charge", "fight"].includes(viewedPhase);
   const tabletopExperiment = layoutMode === "tabletop" && !isSetupView;
   const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
   const layoutSwitch = viewedPhase === "setup" ? "" : '<nav class="battle-shell__layout-switch" aria-label="Battle interface layout"><a href="' +
@@ -331,7 +334,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
-  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (isScrollablePreparationView ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
+  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
     shellLiveHeader +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +

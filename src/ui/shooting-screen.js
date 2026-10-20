@@ -175,9 +175,23 @@ export function createShootingScreen(container, {
     pendingUnitId = null;
   }
 
+  function tryActivate(payload) {
+    try {
+      activateShootingUnit(session, payload);
+      return true;
+    } catch (error) {
+      attackError = error?.message ?? String(error);
+      render();
+      return false;
+    }
+  }
+
   function render() {
     const state = session.getState();
     const model = getShootingViewModel(state, { perspectivePlayerId });
+    const phaseNotice = state.phase !== "shooting"
+      ? `<p class="shoot-error" role="status">Viewing Shooting. The game is still in ${escapeHtml(state.phase)}. Use Return to current phase, then the phase advance button to reach Shooting.</p>`
+      : "";
     const weapons = getShootingWeaponOptions(state, { attackerId: selectedAttackerId, gameData });
     const targets = getShootingTargetOptions(state, { attackerId: selectedAttackerId, perspectivePlayerId });
     const actionOnly = model.actionOnly ?? [];
@@ -227,6 +241,8 @@ export function createShootingScreen(container, {
             <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map")}</p></div><span>${model.canComplete ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
             ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
 
+            ${phaseNotice}
+            ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
             ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
               <button type="button" data-choice-shoot ${actionOnly.some((unit) => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
               <button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Action</button>
@@ -240,7 +256,6 @@ export function createShootingScreen(container, {
               <div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
               <button class="shoot-tabletop__record" type="button" data-attack ${selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record shooting attack →</button>
               <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>
-              ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
             </div>` : (!pendingUnit ? `<p class="shoot-tabletop__selection-help">Select one of the active army's eligible units on the battlefield to choose Shoot, Action, or Skip.</p>` : "")}
 
             <section class="shoot-tabletop__advisor" aria-label="Tactical Advisor">
@@ -263,6 +278,8 @@ export function createShootingScreen(container, {
       container.innerHTML = `<main class="shoot-screen">
       <header><div><div class="kicker">LIVE BATTLE</div><h1>Shooting Phase</h1><p>Round ${escapeHtml(model.round)} · Turn ${escapeHtml(model.turn)}</p></div>
       <strong>${model.canComplete ? "All Shooting choices recorded" : "Resolve the next eligible unit"}</strong></header>
+      ${phaseNotice}
+      ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
       <p class="note">Select a unit, then record whether it Shoots, performs an Action, or Does not shoot. The app records the choice; range, visibility, modifiers, action eligibility and dice remain table-side decisions.</p>
 
       <section>
@@ -335,6 +352,25 @@ export function createShootingScreen(container, {
     if (layoutMode === "tabletop") {
       const selectMapUnit = (unitId) => {
         if (!unitId) return;
+        // Tapping an enemy after choosing a pending shooter begins Shooting directly.
+        // Keep the rules engine authoritative; a rejected activation stays visible.
+        const pendingAttacker = state.units.find((unit) => unit.id === pendingUnitId);
+        const tappedUnit = state.units.find((unit) => unit.id === unitId);
+        if (!selectedAttackerId && pendingAttacker && tappedUnit?.status === "deployed" &&
+            tappedUnit.ownerId !== pendingAttacker.ownerId &&
+            model.candidates.some((unit) => unit.unitId === pendingUnitId)) {
+          const attackerId = pendingUnitId;
+          actionPickerOpen = false;
+          if (!tryActivate({ unitId: attackerId, actionType: "shoot" })) return;
+          selectedAttackerId = attackerId;
+          pendingUnitId = null;
+          const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId, gameData });
+          selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
+          selectedTargetId = unitId;
+          attackError = "";
+          render();
+          return;
+        }
         if (selectedAttackerId && targets.some((target) => target.unitId === unitId)) {
           selectedTargetId = unitId;
           attackError = "";
@@ -365,6 +401,8 @@ export function createShootingScreen(container, {
         }
       };
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
+        marker.setAttribute?.("role", "button");
+        marker.setAttribute?.("tabindex", "0");
         marker.addEventListener?.("click", () => selectMapUnit(marker.getAttribute?.("data-map-unit-id")));
         marker.addEventListener?.("keydown", (event) => {
           if (event?.key === "Enter" || event?.key === " ") {
@@ -396,7 +434,9 @@ export function createShootingScreen(container, {
     container.querySelector("[data-choice-shoot]")?.addEventListener("click", () => {
       if (!pendingUnitId) return;
       const unitId = pendingUnitId;
-      activateShootingUnit(session, { unitId, actionType: "shoot" });
+      actionPickerOpen = false;
+      attackError = "";
+      if (!tryActivate({ unitId, actionType: "shoot" })) return;
       selectedAttackerId = unitId;
       const availableWeapons = getShootingWeaponOptions(session.getState(), { attackerId: unitId, gameData });
       selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
@@ -410,7 +450,7 @@ export function createShootingScreen(container, {
 
     container.querySelector("[data-choice-not-shoot]")?.addEventListener("click", () => {
       if (!pendingUnitId) return;
-      activateShootingUnit(session, { unitId: pendingUnitId, actionType: "not_shoot" });
+      if (!tryActivate({ unitId: pendingUnitId, actionType: "not_shoot" })) return;
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
@@ -428,9 +468,10 @@ export function createShootingScreen(container, {
     container.querySelector("[data-choice-action-confirm]")?.addEventListener("click", () => {
       const actionId = container.querySelector("[data-choice-action]")?.value;
       if (!pendingUnitId || !actionId) return;
-      activateShootingUnit(session, { unitId: pendingUnitId, actionType: "mission_action", actionId });
+      if (!tryActivate({ unitId: pendingUnitId, actionType: "mission_action", actionId })) return;
       actionPickerOpen = false;
       clearPending();
+      render();
     });
 
     container.querySelector("[data-choice-cancel]")?.addEventListener("click", () => {
@@ -486,7 +527,10 @@ export function createShootingScreen(container, {
       }
       render();
     });
-    container.querySelector("[data-complete]")?.addEventListener("click", () => finishShootingPhase(session));
+    container.querySelector("[data-complete]")?.addEventListener("click", () => {
+      try { finishShootingPhase(session); }
+      catch (error) { attackError = error?.message ?? String(error); render(); }
+    });
 
     return model;
   }

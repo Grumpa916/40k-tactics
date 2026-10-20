@@ -449,7 +449,10 @@
       }
       .battle-shell.is-tabletop-experiment > [data-decision-reminder-host]:empty,
       .battle-shell.is-tabletop-experiment > [data-turn-clock-panel-host]:empty { display:none; }
-      .battle-shell.is-tabletop-experiment > [data-phase-progression-host] { display:none; }
+      .battle-shell.is-tabletop-experiment > [data-phase-progression-host] { display:block; flex:none; }
+      .battle-shell.is-tabletop-experiment .battle-phase-progress { margin:0; padding:4px 8px; gap:8px; }
+      .battle-shell.is-tabletop-experiment .battle-phase-progress p { font-size:11px; margin:2px 0; }
+      .battle-shell.is-tabletop-experiment .battle-phase-progress button { min-height:44px; padding:6px 12px; font-size:12px; }
       .battle-shell__tabletop-header { position:relative; flex:none; display:grid; gap:5px; min-height:0; }
       .battle-shell__tabletop-topline { display:grid; grid-template-columns:minmax(420px,1.1fr) minmax(360px,.9fr); gap:6px; align-items:stretch; min-height:0; }
       .battle-shell.is-tabletop-experiment .battle-shell__status-summary {

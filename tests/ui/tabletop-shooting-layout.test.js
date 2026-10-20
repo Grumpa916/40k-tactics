@@ -129,3 +129,56 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
     classic.destroy();
   }
 });
+
+test('Action picker returns to Shoot and enemy map taps cycle targets without reactivating shooter', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const state = testState();
+  state.units.push({ ...state.units[1], id: 'marine2', name: 'Second squad', position: { x: 30, y: 25 } });
+  const session = createGameSession(state), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  try {
+    root.click('[data-map-unit-id]', 'exo');
+    root.click('[data-choice-action-toggle]');
+    assert.match(root.innerHTML, /data-choice-action-confirm/);
+    root.click('[data-choice-shoot]');
+    assert.doesNotMatch(root.innerHTML, /data-choice-action-confirm/);
+    assert.ok(root.querySelector('[data-target]'));
+    root.click('[data-map-unit-id]', 'marine');
+    assert.match(root.innerHTML, /value="marine" selected/);
+    root.click('[data-map-unit-id]', 'marine2');
+    assert.match(root.innerHTML, /value="marine2" selected/);
+    assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
+    assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
+  } finally { screen.destroy(); }
+});
+
+test('tap shooter then enemy selects a target directly and preserves a single activation', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const session = createGameSession(testState()), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  try {
+    root.click('[data-map-unit-id]', 'exo');
+    root.click('[data-map-unit-id]', 'marine');
+    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
+    assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
+  } finally { screen.destroy(); }
+});
+
+test('browsing Shooting during Command shows rejection, closes action picker, and preserves battle state', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const state = testState(); state.phase = 'command';
+  const session = createGameSession(state), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  try {
+    assert.match(root.innerHTML, /game is still in command/);
+    root.click('[data-map-unit-id]', 'exo');
+    root.click('[data-choice-action-toggle]');
+    root.click('[data-choice-shoot]');
+    assert.doesNotMatch(root.innerHTML, /data-choice-action-confirm/);
+    assert.match(root.innerHTML, /Shooting activations may only be recorded in the Shooting phase/);
+    assert.equal(session.getState(), state);
+    root.click('[data-map-unit-id]', 'marine');
+    assert.equal(session.getState(), state);
+  } finally { screen.destroy(); }
+});
