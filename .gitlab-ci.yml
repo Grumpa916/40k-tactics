@@ -93,3 +93,16 @@ deploy_cloudflare:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
     - npx --yes wrangler@latest pages deploy dist --project-name=40k-tactics --branch="$CI_COMMIT_BRANCH"
+
+mirror_to_github:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $GITHUB_MIGRATION_TOKEN'
+      when: manual
+    - when: never
+  script:
+    - git config user.name '40K Tactics Migration'
+    - git config user.email 'migration@users.noreply.github.com'
+    - git remote remove github 2>/dev/null || true
+    - git remote add github "https://x-access-token:${GITHUB_MIGRATION_TOKEN}@github.com/Grumpa916/40k-tactics.git"
+    - git push --force github "HEAD:refs/heads/migration/gitlab-current-2026-10-20"
