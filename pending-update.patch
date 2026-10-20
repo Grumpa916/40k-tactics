@@ -1,0 +1,125 @@
+diff --git a/battle.html b/battle.html
+index af4a55b..bdaca56 100644
+--- a/battle.html
++++ b/battle.html
+@@ -440,9 +440,9 @@
+     }
+ 
+     @media (orientation:landscape) and (min-width:761px) {
+-      html:has(.battle-shell.is-tabletop-experiment),
+-      body:has(.battle-shell.is-tabletop-experiment),
+-      body:has(.battle-shell.is-tabletop-experiment) #battle-app { height:100%; overflow:hidden; }
++      html:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
++      body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
++      body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)) #battle-app { height:100%; overflow:hidden; }
+       .battle-shell.is-tabletop-experiment {
+         position:relative; width:100vw; max-width:none; height:100dvh; margin:0; padding:6px 8px 62px;
+         display:flex; flex-direction:column; gap:6px; overflow:hidden;
+@@ -480,6 +480,16 @@
+       .battle-shell.is-tabletop-experiment .battle-shell__workspace { flex:1; min-height:0; height:auto; overflow:hidden; }
+       .battle-shell.is-tabletop-experiment .battle-shell__content,
+       .battle-shell.is-tabletop-experiment [data-battle-screen] { height:100%; min-height:0; }
++      .battle-shell.is-tabletop-experiment.is-scrollable-preparation {
++        height:auto; min-height:100dvh; overflow:visible; padding-bottom:84px;
++      }
++      .battle-shell.is-tabletop-experiment.is-scrollable-preparation .battle-shell__workspace {
++        flex:none; min-height:0; height:auto; overflow:visible;
++      }
++      .battle-shell.is-tabletop-experiment.is-scrollable-preparation .battle-shell__content,
++      .battle-shell.is-tabletop-experiment.is-scrollable-preparation [data-battle-screen] {
++        height:auto; min-height:0; overflow:visible;
++      }
+       .battle-shell.is-tabletop-experiment .shoot-screen--tabletop {
+         width:100%; height:100%; min-height:0; max-height:none; grid-template-columns:minmax(0,1.55fr) minmax(350px,.9fr); gap:8px;
+       }
+diff --git a/src/ui/battle-shell.js b/src/ui/battle-shell.js
+index 103b2cc..f3dabb6 100644
+--- a/src/ui/battle-shell.js
++++ b/src/ui/battle-shell.js
+@@ -295,6 +295,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
+     'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
+     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
+   const isSetupView = viewedPhase === "setup";
++  const isScrollablePreparationView = viewedPhase === "deployment";
+   const tabletopExperiment = layoutMode === "tabletop" && !isSetupView;
+   const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
+   const layoutSwitch = viewedPhase === "setup" ? "" : '<nav class="battle-shell__layout-switch" aria-label="Battle interface layout"><a href="' +
+@@ -330,7 +331,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
+     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
+       statusSummary + layoutSwitch;
+ 
+-  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + '">' + reminderMarkup +
++  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (isScrollablePreparationView ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
+     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
+     shellLiveHeader +
+     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
+diff --git a/src/ui/styles/pwa.css b/src/ui/styles/pwa.css
+index 8e38018..d38299f 100644
+--- a/src/ui/styles/pwa.css
++++ b/src/ui/styles/pwa.css
+@@ -7,9 +7,9 @@
+ }
+ 
+ @media (display-mode: standalone) {
+-  html:has(.battle-shell.is-tabletop-experiment),
+-  body:has(.battle-shell.is-tabletop-experiment),
+-  body:has(.battle-shell.is-tabletop-experiment) #battle-app {
++  html:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
++  body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
++  body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)) #battle-app {
+     width: 100%;
+     min-width: 0;
+     height: 100%;
+@@ -18,7 +18,7 @@
+     background: #0b1115;
+   }
+ 
+-  body:has(.battle-shell.is-tabletop-experiment) {
++  body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)) {
+     position: fixed;
+     inset: 0;
+     box-sizing: border-box;
+@@ -29,7 +29,7 @@
+     overscroll-behavior: none;
+   }
+ 
+-  .battle-shell.is-tabletop-experiment {
++  .battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation) {
+     box-sizing: border-box;
+     width: 100%;
+     height: 100%;
+diff --git a/tests/ui/deployment-scroll.test.js b/tests/ui/deployment-scroll.test.js
+new file mode 100644
+index 0000000..f16f897
+--- /dev/null
++++ b/tests/ui/deployment-scroll.test.js
+@@ -0,0 +1,14 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++
++test('deployment remains vertically scrollable while live Tabletop phases keep viewport lock', () => {
++  const shell = readFileSync(new URL('../../src/ui/battle-shell.js', import.meta.url), 'utf8');
++  const html = readFileSync(new URL('../../battle.html', import.meta.url), 'utf8');
++  const pwa = readFileSync(new URL('../../src/ui/styles/pwa.css', import.meta.url), 'utf8');
++  assert.match(shell, /isScrollablePreparationView = viewedPhase === "deployment"/);
++  assert.match(shell, /is-scrollable-preparation/);
++  assert.match(html, /is-tabletop-experiment:not\(\.is-scrollable-preparation\)/);
++  assert.match(html, /is-tabletop-experiment\.is-scrollable-preparation[\s\S]*height:auto; min-height:100dvh; overflow:visible/);
++  assert.match(pwa, /is-tabletop-experiment:not\(\.is-scrollable-preparation\)/);
++});
+diff --git a/tests/ui/tabletop-viewport-fit.test.js b/tests/ui/tabletop-viewport-fit.test.js
+index 9974184..c984513 100644
+--- a/tests/ui/tabletop-viewport-fit.test.js
++++ b/tests/ui/tabletop-viewport-fit.test.js
+@@ -5,8 +5,9 @@ import { readFileSync } from 'node:fs';
+ test('tabletop experiment is constrained to the landscape viewport and keeps scrolling inside the control/advisor regions', () => {
+   const html = readFileSync(new URL('../../battle.html', import.meta.url), 'utf8');
+   assert.match(html, /height:100dvh/);
+-  assert.match(html, /body:has\(\.battle-shell\.is-tabletop-experiment\).*overflow:hidden/s);
++  assert.match(html, /body:has\(\.battle-shell\.is-tabletop-experiment:not\(\.is-scrollable-preparation\)\).*overflow:hidden/s);
+   assert.match(html, /\.battle-shell\.is-tabletop-experiment \.battle-shell__workspace \{ flex:1; min-height:0; height:auto; overflow:hidden; \}/);
++  assert.match(html, /\.battle-shell\.is-tabletop-experiment\.is-scrollable-preparation \.battle-shell__workspace \{[\s\S]*overflow:visible;/);
+   assert.match(html, /\.battle-shell\.is-tabletop-experiment \.shoot-screen--tabletop \{[\s\S]*height:100%; min-height:0;/);
+   assert.match(html, /\.battle-shell\.is-tabletop-experiment \.shoot-advisory__details \{ max-height:190px; overflow:auto;/);
+ });
