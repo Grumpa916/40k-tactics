@@ -18,45 +18,8 @@ jobs:
         with:
           ref: feature/mission-summary-cleanup
       - name: Apply focused UI patches
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          shell = Path('src/ui/battle-shell.js')
-          text = shell.read_text()
-          old = '      missionOpenStates = { ...missionOpenStates, ...openStates };'
-          new = '      missionOpenStates = openStates;'
-          if text.count(old) != 1:
-              raise SystemExit(f'expected one missionOpenStates merge, found {text.count(old)}')
-          shell.write_text(text.replace(old, new, 1))
-
-          command = Path('src/ui/command-screen.js')
-          text = command.read_text()
-          old_entry_tail = '''          secondaryModeStatusMarkup + '</div></form>' +
-          '<p>In Tactical mode, use this form during that player’s Command phase to record the two cards drawn from the physical deck. Choose the printed card from the catalog or type its name. Check the actual card before scoring; no VP is awarded automatically.</p>' +
-          '<p>The catalog contains names and Fixed/Tactical availability, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked.</p>';'''
-          new_entry_tail = '''          secondaryModeStatusMarkup + '</div></form>';'''
-          if text.count(old_entry_tail) != 1:
-              raise SystemExit(f'expected one secondary entry help block, found {text.count(old_entry_tail)}')
-          text = text.replace(old_entry_tail, new_entry_tail, 1)
-
-          old_manager = '''    const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Enter secondary mission cards</h2>' +
-      '<p>Record Fixed cards for the selected player, or record Tactical cards during that player’s Command phase. Each player has an independent Fixed/Tactical mode chosen during Mission &amp; Map setup.</p>' +
-      secondaryEntryMarkup +
-      (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
-      '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';'''
-          new_manager = '''    const secondaryMissionManager = state.phase === "command"
-      ? '<section class="command-secondary-missions">' + secondaryEntryMarkup +
-        (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
-        '</section>'
-      : '';'''
-          if text.count(old_manager) != 1:
-              raise SystemExit(f'expected one secondary mission manager block, found {text.count(old_manager)}')
-          command.write_text(text.replace(old_manager, new_manager, 1))
-          PY
+        run: node scripts/apply-mission-summary-cleanup.mjs
       - name: Commit cleanup
-        shell: bash
         run: |
           git config user.name "40K Tactics Automation"
           git config user.email "actions@users.noreply.github.com"
