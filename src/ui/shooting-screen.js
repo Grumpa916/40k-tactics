@@ -8,7 +8,9 @@ import {
 } from "../application/shooting-workflow.js";
 import { getShootingTargetComparison } from "../rules/tactical-shooting-comparison.js";
 import { getAttackDamageForecast } from "../rules/attack-damage-forecast.js";
-import { renderBattlefieldMap } from "./battlefield-map.js";
+import { createLiveMapView } from "./live-map-view.js";
+import { finishCombatUnit } from "../application/combat-activation-workflow.js";
+import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -48,7 +50,7 @@ function shootingTargetComparisonCards(attackerId, weaponId, selectedTargetId, s
   if (!attackerId || !weaponId || !perspectivePlayerId) return '<p class="shoot-tabletop__empty-advice">Choose a shooter and weapon to compare targets.</p>';
   const weapon = weapons.find((item) => item.id === weaponId);
   if (!weapon) return '<p class="shoot-tabletop__empty-advice">Choose a valid ranged weapon to compare targets.</p>';
-  const result = getShootingTargetComparison(state, { playerId: perspectivePlayerId, attackerId, weapon });
+  const result = getShootingTargetComparison(state, { playerId: state.units.find(unit => unit.id === attackerId)?.ownerId ?? perspectivePlayerId, attackerId, weapon });
   if (!result.comparisons.length) return '<p class="shoot-tabletop__empty-advice">No eligible targets are available for comparison.</p>';
   return '<div class="shoot-tabletop__comparison-list">' + result.comparisons.slice(0, 5).map((item) => {
     const destroy = Number.isFinite(item.destructionProbability) ? Math.round(item.destructionProbability * 100) + '%' : '—';
@@ -67,7 +69,7 @@ function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspe
   if (!attackerId || !weaponId || !targetId || !perspectivePlayerId) return "";
   const weapon = weapons.find((item) => item.id === weaponId);
   if (!weapon) return "";
-  const result = getShootingTargetComparison(state, { playerId: perspectivePlayerId, attackerId, weapon });
+  const result = getShootingTargetComparison(state, { playerId: state.units.find(unit => unit.id === attackerId)?.ownerId ?? perspectivePlayerId, attackerId, weapon });
   const recommendation = result.comparisons.find((item) => item.targetUnitId === targetId);
   if (!recommendation) return "";
   const expected = Number.isFinite(recommendation.expectedDamage) ? recommendation.expectedDamage.toFixed(1) : "—";
@@ -162,6 +164,7 @@ export function createShootingScreen(container, {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") throw new TypeError("A game session is required.");
 
+  const mapView = createLiveMapView();
   let pendingUnitId = null;
   let selectedAttackerId = null;
   let selectedWeaponId = null;
@@ -220,9 +223,9 @@ export function createShootingScreen(container, {
       : "";
     const actionOnly = model.actionOnly ?? [];
 
-    if (selectedAttackerId && !model.activations.some((activation) =>
+    if (selectedAttackerId && (isCombatActivationFinished(state, selectedAttackerId, "shooting") || !model.activations.some((activation) =>
       activation.unitId === selectedAttackerId && activation.actionType === "shoot"
-    )) {
+    ))) {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
@@ -248,7 +251,7 @@ export function createShootingScreen(container, {
       const targetComparison = shootingTargetComparisonCards(
         selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId
       );
-      const mapMarkup = renderBattlefieldMap(state, {
+      const mapMarkup = mapView.render(state, {
         mode: "live",
         perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
         interactivePlayerId: null,
@@ -268,6 +271,11 @@ export function createShootingScreen(container, {
             <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map")}</p></div><span>${model.canComplete ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
             ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
 
+            <label class="shoot-tabletop__unit-picker">Acting unit · ${escapeHtml(model.activePlayerId === perspectivePlayerId ? 'your army' : 'opponent army')}
+              <select data-shooting-unit-picker><option value="">Choose unit by name…</option>
+              ${[...model.candidates, ...actionOnly].map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === pendingUnitId ? 'selected' : ''}>${escapeHtml(item.name)} · awaiting choice</option>`).join('')}
+              ${model.activations.filter(item => item.actionType === 'shoot' && !isCombatActivationFinished(state, item.unitId, 'shooting')).map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === selectedAttackerId ? 'selected' : ''}>${escapeHtml(item.unit.name)} · continue shooting</option>`).join('')}
+              </select></label>
             ${phaseNotice}
             ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
             ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
@@ -412,7 +420,7 @@ export function createShootingScreen(container, {
           render();
           return;
         }
-        if (model.activations.some((activation) => activation.unitId === unitId && activation.actionType === "shoot")) {
+        if (model.activations.some((activation) => activation.unitId === unitId && activation.actionType === "shoot") && !isCombatActivationFinished(state, unitId, "shooting")) {
           selectedAttackerId = unitId;
           pendingUnitId = null;
           const availableWeapons = getShootingWeaponOptions(state, { attackerId: unitId, gameData });
@@ -424,6 +432,8 @@ export function createShootingScreen(container, {
           render();
         }
       };
+      mapView.bind(container);
+      container.querySelector("[data-shooting-unit-picker]")?.addEventListener("change", event => selectMapUnit(event.target.value));
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         const unitId = marker.getAttribute?.("data-map-unit-id");
         const isTarget = Boolean(selectedAttackerId && targets.some((target) => target.unitId === unitId));
@@ -451,6 +461,8 @@ export function createShootingScreen(container, {
         render();
       });
       container.querySelector?.("[data-finish-unit]")?.addEventListener?.("click", () => {
+        try { finishCombatUnit(session, selectedAttackerId); }
+        catch (cause) { attackError = cause?.message ?? String(cause); render(); return; }
         selectedAttackerId = null;
         selectedWeaponId = null;
         selectedTargetId = null;

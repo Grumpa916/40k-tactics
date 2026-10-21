@@ -129,3 +129,53 @@ test('Fight advisor resolves enemy catalog weapons without mutating the live sta
   assert.equal(JSON.stringify(initial),before);
   assert.ok(advice[0].retaliationExpectedDamage>0);
 });
+
+test('finishing Fight activation persists across remount and rejects further attacks', () => {
+  const x = setup('fight',engage(state('fight'),['enemy']));
+  try {
+    click(x,'data-map-unit-id','fighter'); x.root.change('[data-fight-weapon]','blade');
+    click(x,'data-map-unit-id','enemy'); click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
+    click(x,'data-fight-finish-entry');
+    assert.ok(x.session.getState().history.some(e => e.type === 'combat.activation_finished'));
+    x.screen.destroy();
+    const reloaded=setup('fight',JSON.parse(JSON.stringify(x.session.getState())));
+    try {
+      click(reloaded,'data-map-unit-id','fighter');
+      assert.match(reloaded.root.innerHTML,/finished its Fight activation/);
+      assert.equal(reloaded.root.querySelector('[data-fight-attack]'),null);
+      assert.throws(() => reloaded.session.dispatch({type:'combat.resolve_attack',payload:{attackerId:'fighter',targetId:'enemy',weapon:blade,actualDamage:1}}), /finished its activation/);
+    } finally { reloaded.screen.destroy(); }
+  } finally { x.screen.destroy(); }
+});
+
+test('End Fight reviews remaining units and explicitly records skips before advancing', () => {
+  const x=setup('fight',engage(state('fight'),['enemy']));
+  try {
+    click(x,'data-map-unit-id','fighter'); click(x,'data-fight-begin');
+    x.screen.requestPhaseEnd();
+    assert.match(x.root.innerHTML,/Record these remaining units as not fighting/);
+    click(x,'data-fight-cancel-end');
+    assert.equal(x.session.getState().phase,'fight');
+    click(x,'data-fight-complete'); click(x,'data-fight-confirm-end');
+    const result=x.session.getState();
+    assert.equal(result.phase,'end_turn');
+    assert.ok(result.history.some(e=>e.type==='fight.unit_activated'&&e.payload.unitId==='enemy'&&e.payload.actionType==='not_fight'));
+    assert.ok(result.history.some(e=>e.type==='combat.activation_finished'&&e.payload.unitId==='fighter'));
+  } finally { x.screen.destroy(); }
+});
+
+test('map zoom and Fit preserve unit coordinates and the selected fighter', () => {
+  const initial=engage(state('fight'),['enemy']), positions=JSON.stringify(initial.units.map(u=>u.position));
+  const x=setup('fight',initial);
+  try {
+    click(x,'data-map-unit-id','fighter');
+    click(x,'data-map-zoom','in'); click(x,'data-map-zoom','in');
+    assert.equal(x.root.node('[data-live-map-canvas]').style.width,'200%');
+    x.root.change('[data-fight-weapon]','blade');
+    assert.match(x.root.innerHTML,/width:200%;height:200%/);
+    click(x,'data-map-zoom','fit');
+    assert.equal(x.root.node('[data-live-map-canvas]').style.width,'100%');
+    assert.equal(JSON.stringify(x.session.getState().units.map(u=>u.position)),positions);
+    assert.match(x.root.innerHTML,/<h1>fighter<\/h1>/);
+  } finally { x.screen.destroy(); }
+});

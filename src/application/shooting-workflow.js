@@ -1,3 +1,4 @@
+import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
@@ -123,7 +124,7 @@ export function finishShootingPhase(session, context = {}) {
 }
 
 export function getShootingWeaponOptions(state, { attackerId, gameData = null } = {}) {
-  if (!wasActivatedToShootThisTurn(state, attackerId)) return [];
+  if (!wasActivatedToShootThisTurn(state, attackerId) || isCombatActivationFinished(state, attackerId, "shooting")) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
   const weaponIds = Array.isArray(attacker.profile?.weaponIds)
@@ -143,7 +144,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
 }
 
 export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {
-  if (!wasActivatedToShootThisTurn(state, attackerId)) return [];
+  if (!wasActivatedToShootThisTurn(state, attackerId) || isCombatActivationFinished(state, attackerId, "shooting")) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
   return state.units

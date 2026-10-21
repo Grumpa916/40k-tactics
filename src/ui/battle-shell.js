@@ -934,6 +934,7 @@ export function createBattleShell(container, {
       return;
     }
     if (viewedPhase !== state.phase) return;
+    if (mountedScreen?.requestPhaseEnd) { mountedScreen.requestPhaseEnd(); return; }
     const action = getPhaseProgressionAction(state);
     if (!action) return;
     try {

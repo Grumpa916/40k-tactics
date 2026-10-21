@@ -1,9 +1,14 @@
+import { createLiveMapView } from './live-map-view.js';
+import { finishCombatUnit } from '../application/combat-activation-workflow.js';
+import { isCombatActivationFinished } from '../rules/combat-activation-state.js';
 import { getFightViewModel, getFightAttackOptions, getFightWeaponOptions, activateFightUnit, resolveFightAttack, finishFightPhase } from '../application/fight-workflow.js';
 import { getFightAdvisorContext } from '../application/fight-advisor-context.js';
 import { fightAdvisory } from './fight-advisor.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 
 export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null }) {
+  const mapView = createLiveMapView();
+  let endReview = false;
   let attackerId = null, weaponId = null, targetId = null;
   let damage = 0, error = '', dispatching = false;
   const reset = () => { attackerId = weaponId = targetId = null; damage = 0; };
@@ -34,13 +39,13 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       <details ${attackerId ? '' : 'open'}><summary>Fighters · ${available.length} available</summary>
         <h3>Fights First</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
         <h3>Remaining combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal, model.candidates.fightsFirst.length > 0) || '<small>None remaining</small>'}</div>
-        ${model.activations.some(item => item.actionType !== 'not_fight') ? `<h3>Continue attack entry</h3><div class="combat-workspace__choices">${chooseButtons(options.attackers.filter(item => !available.some(c => c.unitId === item.unitId)))}</div>` : ''}
+        ${model.activations.some(item => item.actionType !== 'not_fight') ? `<h3>Unfinished activations</h3><div class="combat-workspace__choices">${chooseButtons(options.attackers.filter(item => !available.some(c => c.unitId === item.unitId)))}</div>` : ''}
       </details>
       ${unit ? `<p>${active ? 'Fight activation recorded · add weapon/target results below.' : 'Compare targets, then record the first attack to begin this activation.'}</p>
         <label>Melee weapon<select data-fight-weapon><option value="">Choose weapon…</option>${weapons.map(weapon => `<option value="${esc(weapon.id)}" ${weapon.id === weaponId ? 'selected' : ''}>${esc(weapon.name)}</option>`).join('')}</select></label>
         <label>Target · tap an enemy marker<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
         ${!options.targets.length ? '<p>No eligible targets remain in the recorded engagement context.</p>' : ''}
-        <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-begin>Begin Fight</button><button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish unit entry</button>'}</div>` : '<p>Tap a fighter, then an enemy. Target comparison does not record an activation.</p>'}
+        <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-begin>Begin Fight</button><button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish activation</button>'}</div>` : '<p>Tap a fighter, then an enemy. Target comparison does not record an activation.</p>'}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Fight Tactical Advisor"><h2>Tactical Advisor</h2>
         ${advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
         <details><summary>Advisor assumptions</summary><p>Uses known weapon profiles, wounds and recorded engagements. Return damage is the strongest known eligible retaliation estimate across possible target survival outcomes, not the sum of every enemy attack. Unknown profiles or abilities can change the result.</p></details>
@@ -48,11 +53,13 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       ${unit ? `<div class="combat-workspace__damage"><span>Actual damage</span><div><button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button><strong data-fight-damage-value>${damage}</strong><button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button></div></div>
         <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button><p>Record another weapon or target within this activation as needed.</p>` : ''}
       <details><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
-    container.innerHTML = renderCombatWorkspace({ state, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`<button type="button" data-fight-complete ${model.canComplete ? '' : 'disabled'}>End Fight · Review turn →</button>` });
+    const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining units as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${endPrompt}<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>` });
 
+    mapView.bind(container);
     const choose = id => {
       if (!options.attackers.some(unit => unit.unitId === id)) {
-        error = 'This unit cannot begin a Fight activation yet. Resolve remaining Fights First units and confirm eligibility.'; render(); return;
+        error = isCombatActivationFinished(state, id, 'fight') ? 'This unit has finished its Fight activation this turn.' : 'This unit cannot begin a Fight activation yet. Resolve remaining Fights First units and confirm eligibility.'; render(); return;
       }
       if (id !== attackerId) { reset(); attackerId = id; }
       error = ''; render();
@@ -78,7 +85,12 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     };
     container.querySelector('[data-fight-begin]')?.addEventListener('click', () => begin());
     container.querySelector('[data-fight-skip]')?.addEventListener('click', () => begin('not_fight'));
-    container.querySelector('[data-fight-finish-entry]')?.addEventListener('click', () => { reset(); error = ''; render(); });
+    container.querySelector('[data-fight-finish-entry]')?.addEventListener('click', () => {
+      try { dispatching = true; finishCombatUnit(session, attackerId); reset(); error = ''; }
+      catch (cause) { error = cause?.message ?? String(cause); }
+      finally { dispatching = false; }
+      render();
+    });
     for (const [selector, delta] of [['[data-fight-damage-minus]', -1], ['[data-fight-damage-plus]', 1]]) {
       container.querySelector(selector)?.addEventListener('click', () => { damage = Math.max(0, damage + delta); const value = container.querySelector('[data-fight-damage-value]'); if (value) value.textContent = damage; });
     }
@@ -94,12 +106,19 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       finally { dispatching = false; }
       render();
     });
-    container.querySelector('[data-fight-complete]')?.addEventListener('click', () => {
-      try { finishFightPhase(session); } catch (cause) { error = cause?.message ?? String(cause); render(); }
+    container.querySelector('[data-fight-complete]')?.addEventListener('click', requestPhaseEnd);
+    container.querySelector('[data-fight-cancel-end]')?.addEventListener('click', () => { endReview = false; render(); });
+    container.querySelector('[data-fight-confirm-end]')?.addEventListener('click', () => {
+      try { endReview = false; finishFightPhase(session, { confirmRemaining:true }); }
+      catch (cause) { error = cause?.message ?? String(cause); render(); }
     });
     return model;
   }
+  function requestPhaseEnd() {
+    endReview = true; error = ''; render();
+    container.querySelector('[data-fight-confirm-end]')?.focus?.();
+  }
   const unsubscribe = session.subscribe(render);
   render();
-  return { getState:session.getState, render, destroy:() => { unsubscribe(); container.replaceChildren(); } };
+  return { getState:session.getState, render, requestPhaseEnd, destroy:() => { unsubscribe(); container.replaceChildren(); } };
 }

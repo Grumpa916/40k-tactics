@@ -214,3 +214,23 @@ test('browsing Shooting during Command shows rejection, closes action picker, an
     assert.equal(session.getState(), state);
   } finally { screen.destroy(); }
 });
+
+test('opponent shooter can be chosen by name and resolve damage without Advisor ownership errors', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const initial=testState();
+  initial.activePlayer='p2'; initial.battle.activePlayerId='p2';
+  initial.units[1].profile.weaponIds=['bio'];
+  const session=createGameSession(initial), root=fakeDom();
+  const screen=createShootingScreen(root,{session,perspectivePlayerId:'p1',gameData});
+  try {
+    root.change('[data-shooting-unit-picker]','marine'); root.click('[data-choice-shoot]');
+    assert.match(root.innerHTML,/data-attack/);
+    root.change('[data-target]','exo'); root.click('[data-shoot-damage-plus]'); root.click('[data-attack]');
+    assert.equal(session.getState().units.find(u=>u.id==='exo').wounds,13);
+    assert.equal(session.getState().history.filter(e=>e.type==='combat.attack_resolved').length,1);
+    root.click('[data-finish-unit]');
+    assert.ok(session.getState().history.some(e=>e.type==='combat.activation_finished'&&e.payload.unitId==='marine'));
+    root.click('[data-map-unit-id]','marine');
+    assert.equal(root.querySelector('[data-attack]'),null);
+  } finally { screen.destroy(); }
+});
