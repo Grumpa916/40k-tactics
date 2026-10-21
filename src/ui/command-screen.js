@@ -657,14 +657,12 @@ export function createCommandScreen(container, {
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>Record secondary card</button>' +
-          secondaryModeStatusMarkup + '</div></form>' +
-          '<p>In Tactical mode, use this form during that player’s Command phase to record the two cards drawn from the physical deck. Choose the printed card from the catalog or type its name. Check the actual card before scoring; no VP is awarded automatically.</p>' +
-          '<p>The catalog contains names and Fixed/Tactical availability, plus verified scoring-window references for a limited set of official sample cards. Other cards remain names-only until their text is checked.</p>';
-    const secondaryMissionManager = '<section class="command-secondary-missions"><h2>Enter secondary mission cards</h2>' +
-      '<p>Record Fixed cards for the selected player, or record Tactical cards during that player’s Command phase. Each player has an independent Fixed/Tactical mode chosen during Mission &amp; Map setup.</p>' +
-      secondaryEntryMarkup +
-      (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
-      '<h3>Secondary mission history</h3><ol class="command-ledger-history">' + secondaryHistoryMarkup + '</ol></section>';
+          secondaryModeStatusMarkup + '</div></form>';
+    const secondaryMissionManager = state.phase === "command"
+      ? '<section class="command-secondary-missions">' + secondaryEntryMarkup +
+        (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
+        '</section>'
+      : '';
 
     const cpPlayerId = container.querySelector?.("[data-cp-player]")?.value || perspectivePlayerId || state.activePlayer || players[0]?.id;
     const cpHistory = getCommandPointHistory(state, cpPlayerId).slice(-5).reverse();

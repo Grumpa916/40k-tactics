@@ -464,7 +464,7 @@ export function createBattleShell(container, {
     const missionSummaryHost = container.querySelector?.("[data-battle-mission-summary-host]");
     if (missionSummaryHost) {
       const openStates = readOpenStates(missionSummaryHost, "details[data-mission-summary-key]", "data-mission-summary-key");
-      missionOpenStates = { ...missionOpenStates, ...openStates };
+      missionOpenStates = openStates;
       missionSummaryHost.innerHTML = renderPersistentMissionSummary(state, {
         perspectivePlayerId, missionDefinitions, openStates
       });
