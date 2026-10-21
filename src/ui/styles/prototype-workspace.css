@@ -118,3 +118,13 @@
 .event-companion-layout-thumbnail .battlefield-map__toolbar,.event-companion-layout-thumbnail .battlefield-map__legend,.event-companion-layout-thumbnail .battlefield-map__notice,.event-companion-layout-thumbnail [data-map-unit-list] { display:none !important; }
 .event-companion-layout-thumbnail .battlefield-map__board { width:100%; height:auto !important; min-height:0 !important; max-height:none !important; aspect-ratio:15/11; }
 @media (max-width:760px), (orientation:portrait) { .event-companion-layout-previews { grid-template-columns:1fr; } }
+
+/* Movement focus: maximize the battlefield while retaining Battle view and side-panel controls. */
+.battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=movement] .live-map > nav { display:none; }
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .combat-workspace__map > header,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .combat-workspace__map > p { display:none; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .combat-workspace__map { padding:4px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .battlefield-map__board { min-height:0; height:100%; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .battlefield-map__legend { margin:2px 0 0; padding:2px 0; }
+}

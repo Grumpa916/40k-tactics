@@ -44,6 +44,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   let errorMessage = "";
   let advanceRoll = 1;
   let livePointerDrag = null;
+  const movementStartPositions = new Map();
 
   function movementAction(state, unitId) {
     return state.history.find((event) =>
@@ -56,6 +57,9 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const state = session.getState();
     const playerId = state.activePlayer ?? state.battle?.activePlayerId;
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
+    for (const unit of eligible) {
+      if (!movementStartPositions.has(unit.id)) movementStartPositions.set(unit.id, movesAtCurrentPositions(unit));
+    }
     if (!eligible.some((unit) => unit.id === selectedUnitId)) selectedUnitId = eligible[0]?.id ?? null;
     const selected = eligible.find((unit) => unit.id === selectedUnitId) ?? null;
 
@@ -74,7 +78,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       editor = `<div class="move-editor">
         <h2>${escapeHtml(selected.name)}</h2>
         ${action
-          ? `<p><strong>${escapeHtml(MOVEMENT_LABELS[action.type] ?? "Movement recorded")}</strong>. Drag this unit on the map as often as needed to refine its approximate position.</p>`
+          ? `<p><strong>${escapeHtml(MOVEMENT_LABELS[action.type] ?? "Movement recorded")}</strong>. Drag this unit on the map as often as needed to refine its approximate position.</p>
+             <div class="move-actions"><button type="button" data-reset-position>Undo / Reset Position</button></div>`
           : `<p>Record the tabletop movement choice. Position is handled only by dragging the map marker; no X/Y coordinate entry is required.</p>
              <div class="move-actions">
                <button type="button" data-move-save>Record Normal Move</button>
@@ -84,7 +89,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
                  <button type="button" data-move-advance>Record Advance</button>
                </div>
                <button type="button" data-move-fallback>Record Fall Back</button>
-               <button type="button" data-move-stationary>Remain Stationary</button>
+               <button type="button" data-move-stationary>Did Not Move · Heavy</button>
              </div>`}
       </div>`;
     }
@@ -224,7 +229,11 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const moves = movesAtCurrentPositions(unit);
       if (!moves.length) throw new Error("This unit has no map position yet. Place it on the battlefield map first.");
 
-      if (button.hasAttribute("data-move-save")) {
+      if (button.hasAttribute("data-reset-position")) {
+        const resetMoves = movementStartPositions.get(unit.id);
+        if (!Array.isArray(resetMoves) || !resetMoves.length) throw new Error("No earlier position is available for this unit.");
+        session.dispatch({ type: COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION, payload: { unitId: unit.id, playerId: unit.ownerId, moves: resetMoves.map((move) => ({ modelId: move.modelId, position: { ...move.position } })) } });
+      } else if (button.hasAttribute("data-move-save")) {
         session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
       } else if (button.hasAttribute("data-move-advance")) {
         session.dispatch({ type: COMMAND_TYPES.RESOLVE_ADVANCE, payload: { unitId: unit.id, moves, advanceRoll } });
