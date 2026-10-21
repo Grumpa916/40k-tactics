@@ -1,4 +1,5 @@
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
+import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 
 function escapeHtml(value) {
@@ -24,23 +25,31 @@ function getPrimaryMissionNames(state, players, perspectivePlayerId, missionDefi
   const opponentPlayerId = players.find((player) => player.id !== myPlayerId)?.id ?? null;
   const setup = state.battlefieldMap?.missionSetup ?? {};
   let resolved = null;
+  let detailed = null;
   if (setup.myDisposition && setup.opponentDisposition) {
     try {
       resolved = getLayoutOptionsForForceDispositions(setup.myDisposition, setup.opponentDisposition);
+      detailed = getBattlePrimaryMissionDefinitions(setup.myDisposition, setup.opponentDisposition);
     } catch {
       resolved = null;
+      detailed = null;
     }
   }
   const definitionFor = (playerId) => missionDefinitions.find((definition) =>
     definition?.category === "primary" &&
     (definition?.playerId === playerId || definition?.ownerId === playerId));
+  const combine = (catalogDefinition, configuredDefinition) => catalogDefinition || configuredDefinition
+    ? { ...(catalogDefinition ?? {}), ...(configuredDefinition ?? {}) }
+    : null;
+  const configuredMy = definitionFor(myPlayerId);
+  const configuredOpponent = definitionFor(opponentPlayerId);
   return {
     myPlayerId,
     opponentPlayerId,
-    myName: resolved?.myMission ?? definitionFor(myPlayerId)?.name ?? null,
-    opponentName: resolved?.opponentMission ?? definitionFor(opponentPlayerId)?.name ?? null,
-    myDefinition: definitionFor(myPlayerId) ?? null,
-    opponentDefinition: definitionFor(opponentPlayerId) ?? null
+    myName: detailed?.myMission?.name ?? resolved?.myMission ?? configuredMy?.name ?? null,
+    opponentName: detailed?.opponentMission?.name ?? resolved?.opponentMission ?? configuredOpponent?.name ?? null,
+    myDefinition: combine(detailed?.myMission, configuredMy),
+    opponentDefinition: combine(detailed?.opponentMission, configuredOpponent)
   };
 }
 
@@ -55,11 +64,20 @@ function renderPrimaryPlayer(state, player, playerId, missionName, definition, s
     sideLabel === "Opponent" && setup.opponentDisposition ? "Disposition: " + setup.opponentDisposition : "",
     setup.layout ? "Battlefield layout " + setup.layout : ""
   ].filter(Boolean);
+  const windows = Array.isArray(definition?.scoring) ? definition.scoring : [];
+  const scoring = windows.map((window) =>
+    '<li><strong>' + escapeHtml(window.when) + '</strong><ul>' +
+    (window.items ?? []).map((item) => '<li><strong>' + escapeHtml(item.vp) + ' VP' + (item.bonus ? ' bonus' : '') + ':</strong> ' + escapeHtml(item.summary) + '</li>').join('') +
+    '</ul></li>').join('');
+  const setupText = definition?.setup ? '<p><strong>Setup:</strong> ' + escapeHtml(definition.setup) + '</p>' : '';
+  const actionText = definition?.action ? '<p><strong>Shooting Action — ' + escapeHtml(definition.action.name) + ':</strong> ' + escapeHtml(definition.action.summary) + '</p>' : '';
   return '<details class="battle-mission-summary__player" data-mission-summary-key="' + escapeHtml(key) + '"' +
     openAttribute(openStates, key) + '><summary><span>' + escapeHtml(sideLabel) + '</span><strong>' +
     escapeHtml(name) + '</strong></summary><div class="battle-mission-summary__detail">' +
-    (detail.length ? '<p>' + detail.map(escapeHtml).join(" · ") + '</p>' : '<p>Check the selected mission card for its exact scoring timing and conditions.</p>') +
-    '<p>Scoring must be checked against the mission rules and battlefield state; this summary does not award VP.</p>' +
+    (detail.length ? '<p>' + detail.map(escapeHtml).join(" · ") + '</p>' : '') +
+    setupText + actionText +
+    (scoring ? '<p><strong>Primary scoring reference</strong></p><ul>' + scoring + '</ul>' : '<p>Check the selected mission card for its exact scoring timing and conditions.</p>') +
+    '<p>Primary scoring remains player-confirmed; this reference never awards VP automatically.</p>' +
     '</div></details>';
 }
 
@@ -98,10 +116,6 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
     '<div class="battle-mission-summary__detail">' + cards + '</div></details>';
 }
 
-/**
- * Compact, persistent mission context for the active battle workspace.
- * Both mission categories and each player's details can collapse independently.
- */
 export function renderPersistentMissionSummary(state = {}, {
   perspectivePlayerId = null,
   missionDefinitions = [],
