@@ -4,7 +4,7 @@ import { createGameSession } from "../application/game-session.js";
 import { registerCoreCommandHandlers } from "../engine/register-core-commands.js";
 import { clearCommandHandlers } from "../engine/command-engine.js";
 import { createBattleShell } from "./battle-shell.js";
-import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
+import { COMPLETE_SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-complete-catalog.js";
 import { installV2SupabasePublicConfig } from "../persistence/supabase-runtime-config.js";
 import { createSupabaseClientFromPublicConfig } from "../persistence/supabase-client.js";
 
@@ -107,7 +107,7 @@ async function initializeBattleDemo() {
     session,
     perspectivePlayerId: "p1",
     gameData,
-    secondaryMissionCatalog: SECONDARY_MISSION_CATALOG,
+    secondaryMissionCatalog: COMPLETE_SECONDARY_MISSION_CATALOG,
     supabaseClient,
     layoutMode
   });
