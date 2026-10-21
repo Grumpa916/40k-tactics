@@ -1,6 +1,10 @@
 import fs from 'node:fs';
 
-function replaceOnce(path,before,after,label){let text=fs.readFileSync(path,'utf8');if(!text.includes(before))throw new Error(`${label}: source not found`);fs.writeFileSync(path,text.replace(before,after));}
+function replaceOnce(path,before,after,label){
+  let text=fs.readFileSync(path,'utf8');
+  if(!text.includes(before)) throw new Error(`${label}: source not found`);
+  fs.writeFileSync(path,text.replace(before,after));
+}
 
 // Compact deployment unit rows to one line each.
 fs.appendFileSync('src/ui/styles/deploy-begin.css', `
@@ -20,11 +24,13 @@ fs.appendFileSync('src/ui/styles/deploy-begin.css', `
 }
 `);
 
-// Remove the crossed-out Movement instructions from the phase side panel.
-replaceOnce('src/ui/movement-screen.js',
-`        controls:\`<div class="movement-screen"><h1>Movement</h1><p>Drag an active player's marker to refine its approximate position. The first drag records a Normal Move unless another movement choice was recorded first. Later drags only refine map position.</p>${errorMessage ? \`<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>\` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>\`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});`,
-`        controls:\`<div class="movement-screen">${errorMessage ? \`<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>\` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>\`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});`,
-'movement side-panel intro');
+// Remove the crossed-out Movement heading/instructions from the phase side panel only.
+replaceOnce(
+  'src/ui/movement-screen.js',
+  '<div class="movement-screen"><h1>Movement</h1><p>Drag an active player\'s marker to refine its approximate position. The first drag records a Normal Move unless another movement choice was recorded first. Later drags only refine map position.</p>',
+  '<div class="movement-screen">',
+  'movement side-panel intro'
+);
 
 // Make Command secondary controls fit within the narrow phase panel; maximize Shooting map.
 fs.appendFileSync('src/ui/styles/prototype-workspace.css', `
@@ -48,57 +54,24 @@ fs.appendFileSync('src/ui/styles/prototype-workspace.css', `
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .battlefield-map__legend { margin:2px 0 0 !important; padding:2px 0 !important; }
 `);
 
-// Correct Command checkpoint Primary rendering and explicitly present scoring due now.
-replaceOnce('src/ui/scoring-checkpoint-review.js',
-`    const missions=[...group.review.primary,...group.review.secondary];
-    const actions=getMissionActionReviews(state,{playerId:group.playerId,checkpoint:group.checkpoint});
-    return \`<section class="checkpoint-player"><h3>${esc(group.playerName)} · ${esc(checkpointLabels[group.checkpoint])}</h3>
-      ${group.primaryReference?\`<p>Primary: <strong>${esc(group.primaryReference)}</strong> · check the printed card's timing and conditions.</p>\`:''}
-      ${missions.map(mission=>\`<details><summary>${esc(mission.definitionName??mission.definitionId)}</summary>${mission.result.rulesVerified===false?'<p>Card reference awaiting official verification. Check the physical card.</p>':''}
-        ${(mission.result.scoringWindows??[]).flatMap(window=>(window.tiers??[]).map(tier=>\`<p>${esc(tier.vp)} VP · ${esc(tier.summary)}</p>\`)).join('')}
-        ${(mission.result.referenceNotes??[]).map(note=>\`<p>${esc(note)}</p>\`).join('')}
-      </details>\`).join('')||'<p>No configured mission scoring windows are due.</p>'}`, 
-`    const missions=[...group.review.primary,...group.review.secondary];
-    const actions=getMissionActionReviews(state,{playerId:group.playerId,checkpoint:group.checkpoint});
-    const primaryName=typeof group.primaryReference==='string'?group.primaryReference:(group.primaryReference?.name??group.primaryReference?.title??null);
-    const primaryWindows=group.primaryScoringWindows??[];
-    const primaryDue=primaryName&&primaryWindows.length?\`<details open class="checkpoint-mission checkpoint-mission--primary"><summary>Primary · ${esc(primaryName)} · score now</summary>${primaryWindows.map(window=>\`<p><strong>${esc(window.when)}</strong></p>${(window.items??[]).map(item=>\`<p>${esc(item.vp)} VP · ${esc(item.summary)}</p>\`).join('')}\`).join('')}</details>\`:'';
-    const secondaryDue=missions.map(mission=>\`<details open class="checkpoint-mission"><summary>${esc(mission.definitionName??mission.definitionId)} · score now</summary>${mission.result.rulesVerified===false?'<p>Card reference awaiting official verification. Check the physical card.</p>':''}
-        ${(mission.result.scoringWindows??[]).flatMap(window=>(window.tiers??[]).map(tier=>\`<p>${esc(tier.vp)} VP · ${esc(tier.summary)}</p>\`)).join('')}
-        ${(mission.result.referenceNotes??[]).map(note=>\`<p>${esc(note)}</p>\`).join('')}
-      </details>\`).join('');
-    return \`<section class="checkpoint-player"><h3>${esc(group.playerName)} · ${esc(checkpointLabels[group.checkpoint])}</h3>
-      ${primaryDue}${secondaryDue}${!primaryDue&&!secondaryDue?'<p>No Primary or Secondary mission scores are due at this checkpoint.</p>':''}`,
-'checkpoint due scoring');
-
-// Remove generic text that duplicates the specific due-now list.
-replaceOnce('src/ui/scoring-checkpoint-dialog.js',
-`    '<p>' + escapeHtml(scoringReminder.label) + '. Check any Primary or Secondary mission due now.</p>' +`,
-`    '<p>' + escapeHtml(scoringReminder.label) + '. Record any Primary or Secondary score shown below before continuing.</p>' +`,
-'scoring dialog prompt');
-
 // Mark selected-target state and auto-scroll the right panel to Tactical Advisor.
-replaceOnce('src/ui/shooting-screen.js',
-`      container.innerHTML = \`<main class="shoot-screen shoot-screen--tabletop">`,
-`      container.innerHTML = \`<main class="shoot-screen shoot-screen--tabletop${selectedTargetId ? ' is-target-selected' : ''}">`,
-'shooting selected-target class');
-replaceOnce('src/ui/shooting-screen.js',
-`      container.querySelectorAll?.("[data-advisor-target]").forEach((button) => button.addEventListener?.("click", () => {
-        selectedTargetId = button.getAttribute?.("data-advisor-target") || null;
-        attackError = "";
-        render();
-      }));`,
-`      container.querySelectorAll?.("[data-advisor-target]").forEach((button) => button.addEventListener?.("click", () => {
-        selectedTargetId = button.getAttribute?.("data-advisor-target") || null;
-        attackError = "";
-        render();
-      }));
-      if (selectedTargetId) {
+replaceOnce(
+  'src/ui/shooting-screen.js',
+  'container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop">',
+  'container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop${selectedTargetId ? \' is-target-selected\' : \'\'}">',
+  'shooting selected-target class'
+);
+replaceOnce(
+  'src/ui/shooting-screen.js',
+  '      container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {',
+  `      if (selectedTargetId) {
         const scroll = container.querySelector?.('.shoot-tabletop__control-scroll');
         const advisor = container.querySelector?.('.shoot-tabletop__advisor');
         if (scroll && advisor) scroll.scrollTop = Math.max(0, advisor.offsetTop - 8);
-      }`,
-'shooting advisor auto-scroll');
+      }
+      container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {`,
+  'shooting advisor auto-scroll'
+);
 
 fs.writeFileSync('tests/ui/ipad-phase-layout-scoring.test.js', `import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -106,12 +79,11 @@ import fs from 'node:fs';
 
 test('movement tabletop panel omits duplicated instructional heading text',()=>{
  const src=fs.readFileSync(new URL('../../src/ui/movement-screen.js',import.meta.url),'utf8');
- assert.doesNotMatch(src,/controls:\\`<div class="movement-screen"><h1>Movement<\\/h1><p>Drag an active player/);
+ assert.doesNotMatch(src,/controls:\\`<div class="movement-screen"><h1>Movement/);
 });
 
 test('shooting tabletop view auto-scrolls Tactical Advisor after target selection',()=>{
  const src=fs.readFileSync(new URL('../../src/ui/shooting-screen.js',import.meta.url),'utf8');
- assert.match(src,/shoot-tabletop__advisor/);
  assert.match(src,/scroll\.scrollTop = Math\.max\(0, advisor\.offsetTop - 8\)/);
 });
 
