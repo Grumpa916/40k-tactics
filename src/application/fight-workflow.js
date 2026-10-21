@@ -137,7 +137,7 @@ export function resolveFightAttack(session, {
 
 export function getFightAttackOptions(
   state,
-  { attackerId = null, perspectivePlayerId = null } = {}
+  { attackerId = null, perspectivePlayerId = null, includeCandidates = false } = {}
 ) {
   const fight = getFightState(state);
   const activated = new Set(fight.candidates.activated);
@@ -151,8 +151,13 @@ export function getFightAttackOptions(
       .map((event) => event?.payload?.unitId)
       .filter(Boolean)
   );
+  const selectable = new Set(activatedToFight);
+  if (includeCandidates) {
+    for (const id of fight.candidates.fightsFirst) selectable.add(id);
+    if (!fight.candidates.fightsFirst.length) for (const id of fight.candidates.normal) selectable.add(id);
+  }
   const attackers = state.units
-    .filter((unit) => activatedToFight.has(unit?.id))
+    .filter((unit) => unit.status === "deployed" && selectable.has(unit?.id))
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 
   if (!attackerId) {
@@ -165,7 +170,7 @@ export function getFightAttackOptions(
   }
 
   const attacker = state.units.find((unit) => unit?.id === attackerId);
-  if (!attacker || !activatedToFight.has(attackerId)) {
+  if (!attacker || !selectable.has(attackerId)) {
     return {
       attackers,
       targets: []
