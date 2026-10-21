@@ -1,3 +1,4 @@
+import { renderCombatMapPanel } from './combat-workspace.js';
 import { createMissionActionPicker } from "./mission-action-picker.js";
 import {
   getShootingViewModel,
@@ -253,20 +254,10 @@ export function createShootingScreen(container, {
       const targetComparison = shootingTargetComparisonCards(
         selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId
       );
-      const mapMarkup = mapView.render(state, {
-        mode: "live",
-        perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
-        interactivePlayerId: null,
-        selectedUnitId: activeUnitId,
-        showMeasurements: false,
-        mapLabel: "Battlefield · approximate context"
-      });
       container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop">
-        <section class="shoot-tabletop__map-panel">
-          <div class="shoot-tabletop__map-heading"><div><span class="kicker">BATTLEFIELD</span><h1>Approximate tactical context</h1></div><span>${model.candidates.length} shooting choices remaining</span></div>
-          <p class="shoot-tabletop__map-note">Tap an eligible acting unit, then tap an enemy marker to compare targets. Tabletop range, visibility and measurements remain authoritative.</p>
-          ${mapMarkup}
-        </section>
+        ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
+          perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
+          selectedUnitId: activeUnitId })}
 
         <section class="shoot-tabletop__control-panel">
           <div class="shoot-tabletop__control-scroll">
