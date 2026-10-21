@@ -9,7 +9,7 @@ export function setPreGameRoles(state, {
   attackerPlayerId = null,
   firstPlayerId = null
 } = {}) {
-  if (state.battle && state.battle.status !== "setup") {
+  if (state.battle && state.battle.status !== "setup" && !(state.battle.status === "deployment" && state.preparation?.mode === "combined")) {
     throw new Error("Battle roles are locked after deployment begins.");
   }
   const players = Array.isArray(state.players) ? state.players : [];

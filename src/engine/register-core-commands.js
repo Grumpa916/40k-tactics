@@ -1,3 +1,4 @@
+import { updateDeploymentWorkspace } from './deployment-workspace-transitions.js';
 import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
 import { reviewMissionAction } from "./mission-action-transitions.js";
 import { finishCombatActivation } from "./combat-activation-transitions.js";
@@ -43,6 +44,7 @@ import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondar
 
 export function registerCoreCommandHandlers() {
   const handlers = [
+    [COMMAND_TYPES.UPDATE_DEPLOYMENT_WORKSPACE, (state, command) => updateDeploymentWorkspace(state, command.payload)],
     [COMMAND_TYPES.UPDATE_PREPARATION, (state, command) => updatePreparation(state, command.payload)],
     [COMMAND_TYPES.START_BATTLE, (state, command) => startBattle(state, command.payload)],
     [COMMAND_TYPES.APPLY_ARMY_ROSTER_TO_BATTLE, (state, command) => applyArmyRosterToBattle(state, command.payload)],
@@ -96,3 +98,4 @@ export function registerCoreCommandHandlers() {
 
   for (const [type, handler] of handlers) registerCommandHandler(type, handler);
 }
+

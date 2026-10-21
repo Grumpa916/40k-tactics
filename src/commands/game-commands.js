@@ -1,4 +1,5 @@
 export const COMMAND_TYPES = Object.freeze({
+  UPDATE_DEPLOYMENT_WORKSPACE: "battle.deployment_workspace",
   UPDATE_PREPARATION: "battle.update_preparation",
   START_BATTLE: "battle.start",
   APPLY_ARMY_ROSTER_TO_BATTLE: "battle.apply_army_roster",
@@ -49,3 +50,4 @@ export const COMMAND_TYPES = Object.freeze({
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));
+

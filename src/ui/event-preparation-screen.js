@@ -1,3 +1,4 @@
+import { createLivePreparationScreen } from './live-preparation-screen.js';
 import { createBattleSetupScreen } from './battle-setup-screen.js';
 import { createDeploymentScreen } from './deployment-screen.js';
 import { PREPARATION_STEPS, preparationStep, preparationIssues, deploymentUnits, formationFor, reserveSummary } from '../rules/event-preparation.js';
@@ -26,6 +27,7 @@ function formationsMarkup(state, stage) {
 
 /** Shared setup/deployment controller; existing map renderer remains untouched. */
 export function createEventPreparationScreen(container, options = {}) {
+  if (!options.guidedOrder) return createLivePreparationScreen(container, options);
   const { session } = options;
   let child = null, message = '', destroyed = false;
   function send(payload) {
@@ -92,3 +94,4 @@ export function createEventPreparationScreen(container, options = {}) {
   const unsubscribe=session.subscribe(render);render();
   return {render,setTab:render,destroy(){destroyed=true;unsubscribe();child?.destroy();container.removeEventListener('click',click);container.removeEventListener('change',change);container.replaceChildren();}};
 }
+

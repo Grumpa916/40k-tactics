@@ -54,6 +54,10 @@ export function updatePreparation(state, payload = {}) {
 }
 
 export function requirePreparationComplete(state, through) {
+  if (state.preparation?.mode === 'combined' && through === 'pre-battle') {
+    if (!state.preparation.deploymentComplete || !state.preparation.tabletopReview) throw new Error('Complete Deploy & Begin before continuing.');
+    return;
+  }
   const i = PREPARATION_STEPS.findIndex(x => x.id === through);
   const required = PREPARATION_STEPS.slice(0,i+1).map(x => x.id);
   if (!required.every(id => state.preparation?.confirmed?.includes(id))) throw new Error('Complete the guided preparation checkpoints before continuing.');
