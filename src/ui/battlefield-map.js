@@ -119,7 +119,7 @@ function liveStatusLabel(state) {
 export function renderBattlefieldMap(state, {
   mode = "live", perspectivePlayerId = state?.activePlayer ?? null, interactivePlayerId = perspectivePlayerId, selectedUnitId = null, showUnits = true,
   showMeasurements = mode === "live", showTerrainEdgeMeasurements = false, terrainMeasurements = [],
-  terrainMeasurementLines = [], mapLabel = null, compactMarkers = false
+  terrainMeasurementLines = [], mapLabel = null, compactMarkers = false, activationForUnit = () => ''
 } = {}) {
   if (!["planning", "deployment", "live"].includes(mode)) throw new RangeError("Unknown battlefield map mode: " + mode);
   const safeState = state && typeof state === "object" ? state : {};
@@ -156,8 +156,10 @@ export function renderBattlefieldMap(state, {
     }
     const percent = battlefieldPositionToPercent(position); if (!percent) continue; positionedUnits += 1;
     const sideClass = friendly ? "friendly" : "opponent"; const marker = compactMarkers ? escapeHtml((unit.name ?? unit.id).split(/\s+/).map(word => word[0]).join("").slice(0, 2).toUpperCase() + (index + 1)) : escapeHtml((unit.name ?? unit.id).slice(0, 22));
+    const activation = activationForUnit(unit.id);
+    const activationBadge = activation ? '<span class="unit-activation-badge" aria-label="' + (activation === 'resolved' ? 'Activation complete' : 'Activation in progress') + '">' + (activation === 'resolved' ? '✓' : '…') + '</span>' : '';
     const modelCount = Array.isArray(unit.models) ? unit.models.length : 0; const isSelected = unit.id === selectedUnitId;
-    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + (isSelected ? ' is-selected' : '') + (unplaced ? ' is-unplaced' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(unit.name ?? unit.id) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(unit.name ?? unit.id) + (unplaced ? ' · not placed' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + '</div>');
+    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + (isSelected ? ' is-selected' : '') + (unplaced ? ' is-unplaced' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(unit.name ?? unit.id) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(unit.name ?? unit.id) + (unplaced ? ' · not placed' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + activationBadge + '</div>');
   }
   const objectives = Array.isArray(safeState.objectives) ? safeState.objectives : [];
   const layoutObjectiveNodes = layoutGeometry ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {

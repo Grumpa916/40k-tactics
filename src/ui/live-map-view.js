@@ -1,3 +1,4 @@
+import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 
@@ -7,7 +8,7 @@ export function createLiveMapView() {
   return {
     render(state, options) {
       const href = new URL('./styles/live-map.css', import.meta.url).href;
-      let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false });
+      let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, activationForUnit:id => getUnitActivationPresentation(state,id) });
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${zoom*100}%"><div class="battlefield-map__board"`);
       map = map.replace('</div><div class="battlefield-map__legend"', '</div></div></div><div class="battlefield-map__legend"');
       return `<link rel="stylesheet" href="${esc(href)}"><div class="live-map"><nav aria-label="Map zoom"><button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><span data-map-zoom-value>${Math.round(zoom*100)}%</span><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="fit">Fit</button><small>Zoom and scroll for crowded units · full names in unit/target selectors</small></nav>${map}</div>`;
@@ -19,7 +20,7 @@ export function createLiveMapView() {
         viewport.scrollLeft = left; viewport.scrollTop = top;
         viewport.addEventListener('scroll', () => { left = viewport.scrollLeft; top = viewport.scrollTop; });
       }
-      container.querySelectorAll('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
+      container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
         const old = zoom;
         zoom = button.getAttribute('data-map-zoom') === 'fit' ? 1 : Math.max(1,Math.min(3,zoom+(button.getAttribute('data-map-zoom') === 'in' ? .5 : -.5)));
         if (canvas?.style) { canvas.style.width = zoom*100+'%'; canvas.style.height = zoom*100+'%'; }

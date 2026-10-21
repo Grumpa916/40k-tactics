@@ -1,3 +1,5 @@
+import { createLiveMapView } from './live-map-view.js';
+import { renderCombatWorkspace } from './combat-workspace.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
@@ -31,12 +33,13 @@ const MOVEMENT_LABELS = {
   "unit.stationary_recorded": "Remained stationary"
 };
 
-export function createMovementScreen(container, { session, perspectivePlayerId = null } = {}) {
+export function createMovementScreen(container, { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function" || typeof session.dispatch !== "function") {
     throw new TypeError("A dispatchable game session is required.");
   }
 
+  const mapView = createLiveMapView();
   let selectedUnitId = null;
   let errorMessage = "";
   let advanceRoll = 1;
@@ -86,6 +89,12 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       </div>`;
     }
 
+    if (layoutMode === 'tabletop') {
+      container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
+        controls:`<div class="movement-screen"><h1>Movement</h1><p>Drag an active player's marker to refine its approximate position. The first drag records a Normal Move unless another movement choice was recorded first. Later drags only refine map position.</p>${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});
+      mapView.bind(container);
+      return;
+    }
     container.innerHTML = `<main class="movement-screen">
       <header><div><div class="move-kicker">LIVE BATTLE</div><h1>Movement Phase</h1><p>Round ${escapeHtml(state.battle?.round ?? "—")} · Turn ${escapeHtml(state.turn ?? "—")}</p></div><strong>${eligible.length} deployed units</strong></header>
       <p class="move-note">Map positions are approximate and may be adjusted repeatedly. The app does not enforce movement distance. Each unit still records one gameplay movement choice per turn.</p>
@@ -195,7 +204,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     }
 
     const button = event.target?.closest?.("button");
-    if (!button) return;
+    if (!button || button.hasAttribute("data-map-zoom")) return;
     try {
       if (button.dataset.moveUnit) {
         selectedUnitId = button.dataset.moveUnit;

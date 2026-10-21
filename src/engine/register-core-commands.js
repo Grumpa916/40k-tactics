@@ -1,3 +1,4 @@
+import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
 import { reviewMissionAction } from "./mission-action-transitions.js";
 import { finishCombatActivation } from "./combat-activation-transitions.js";
 import { updatePreparation } from "./event-preparation-transitions.js";
@@ -77,6 +78,7 @@ export function registerCoreCommandHandlers() {
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ],
     [COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, (state, command) => recordCommandPointChange(state, command.payload)],
+    [COMMAND_TYPES.SET_MANUAL_BATTLE_SHOCK, (state, command) => setManualBattleShock(state, command.payload)],
     [COMMAND_TYPES.RECORD_BATTLE_SHOCK_TEST, (state, command) => recordBattleShockTest(state, command.payload)],
     [COMMAND_TYPES.RECORD_FACTION_ABILITY_DECISION, (state, command) => recordFactionAbilityDecision(state, command.payload)],
     [COMMAND_TYPES.START_TURN_CLOCK, (state, command) => startTurnClock(state, command.payload)],

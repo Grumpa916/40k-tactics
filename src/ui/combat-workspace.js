@@ -3,14 +3,14 @@ import { createLiveMapView } from './live-map-view.js';
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
 // Shared presentation only. Each phase owns its selection and command handling.
-export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, controls, footer, mapView = createLiveMapView() }) {
+export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, footer, mapView = createLiveMapView() }) {
   const styles = new URL('./styles/combat-workspace.css', import.meta.url).href;
   return `<link rel="stylesheet" href="${escapeHtml(styles)}"><main class="combat-workspace" data-combat-phase="${phase}">
-    <section class="combat-workspace__map"><header><strong>Battlefield · ${phase === 'charge' ? 'Charge' : 'Fight'}</strong><span>APPROXIMATE</span></header>
-      <p>Tap an acting unit, then an enemy target. Tabletop measurements and eligibility take priority.</p>
-      ${mapView.render(state, { mode: 'live', perspectivePlayerId, interactivePlayerId: null, selectedUnitId })}
+    <section class="combat-workspace__map"><header><strong>Battlefield · ${phase.charAt(0).toUpperCase() + phase.slice(1)}</strong><span>APPROXIMATE</span></header>
+      <p>${phase === 'movement' ? 'Drag an active unit to adjust its approximate position.' : 'Tap an acting unit, then an enemy target.'} Tabletop measurements and eligibility take priority.</p>
+      ${mapView.render(state, { mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId })}
     </section>
-    <section class="combat-workspace__panel" aria-label="${phase === 'charge' ? 'Charge' : 'Fight'} controls and Tactical Advisor">
+    <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       <div class="combat-workspace__scroll">${controls}</div><footer>${footer}</footer>
     </section></main>`;
 }
