@@ -29,6 +29,7 @@ function sampleState(overrides = {}) {
             timing: "end-of-turn",
             description: "Score for qualifying units in the opponent's deployment zone.",
             rulesVerified: false,
+            referenceNotes: ["When drawn in the first battle round, a replacement may be drawn."],
             scoringWindows: [
               { timing: "end-of-turn", minRound: 1, tiers: [{ vp: 3, summary: "One qualifying unit" }] }
             ]
@@ -96,8 +97,11 @@ test("each player's secondary list and individual card details can expand indepe
   assert.match(html, /data-mission-summary-key="mission-secondary-player-p1"/);
   assert.match(html, /data-mission-summary-key="mission-secondary-player-p2"/);
   assert.match(html, /data-mission-summary-key="mission-secondary-card-p1:behind-enemy-lines"/);
+  assert.match(html, /Mission text/);
+  assert.match(html, /replacement may be drawn/);
+  assert.match(html, /Scoring/);
   assert.match(html, /3 VP/);
-  assert.match(html, /not fully verified/);
+  assert.doesNotMatch(html, /not fully verified|Check the printed card/);
 });
 
 test("mission summary preserves all independent expanded states after a state refresh", () => {
