@@ -457,9 +457,7 @@ export function createBattleSetupScreen(container, {
       terrainReferenceMarkup + '</section>';
     const missionMapMarkup =
       '<section class="secondary-mission-setup"><h2>Secondary missions</h2>' +
-      '<p>Set each player’s mode independently. Both players remain visible so you can configure both sides without switching a selector.</p>' +
-      '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div>' +
-      '<p>Card rules remain manual-review-only unless their scoring windows are verified from official card text. This screen records the physical cards; it does not award VP.</p></section>';
+      '<div class="secondary-player-panels">' + secondaryPlayerPanels + '</div></section>';
     const preFirstTurnSteps = getPreGameProcedureSteps().filter((step) =>
       !["confirm-mission", "confirm-armies", "terrain-objectives", "actual-deployment"].includes(step.id));
     const preFirstTurnMarkup = '<section class="pre-first-turn"><h2>Before the First Turn</h2><ol>' +

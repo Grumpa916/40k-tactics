@@ -38,7 +38,7 @@ export function startBattle(state, { battleId, missionId = null } = {}) {
 }
 
 export function enterDeployment(state) {
-  requirePreparationComplete(state, "formations");
+  requirePreparationComplete(state, "secondaries");
   if (!state.battle || state.battle.status !== BATTLE_STATUS.SETUP) {
     throw new Error("Battle must be in setup before deployment.");
   }
