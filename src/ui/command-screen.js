@@ -6,6 +6,8 @@ import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
+import { createLiveMapView } from "./live-map-view.js";
+import { renderCombatWorkspace } from "./combat-workspace.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -48,7 +50,8 @@ export function createCommandScreen(container, {
   secondaryMissionCatalog = [],
   scoringCheckpoint = null,
   scoringCheckpointActivePlayerId = null,
-  scoringCheckpointPlayerId = null
+  scoringCheckpointPlayerId = null,
+  layoutMode = "tabletop"
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -57,6 +60,7 @@ export function createCommandScreen(container, {
     throw new TypeError("A game session is required.");
   }
 
+  const mapView = createLiveMapView();
   let secondaryMissionMessage = "";
   let vpMessage = "";
   let objectiveMessage = "";
@@ -241,7 +245,7 @@ export function createCommandScreen(container, {
         };
       } else {
         if (!manualName || !allowedTimings.includes(manualTiming)) {
-          secondaryMissionMessage = "Choose a catalog mission or enter a card name and its scoring checkpoint.";
+          secondaryMissionMessage = "Choose a secondary mission from the catalog.";
           render();
           return;
         }
@@ -608,7 +612,7 @@ export function createCommandScreen(container, {
         '<label>VP actually scored<input name="secondary-vp-amount" type="number" min="1" step="1" value="3" required></label>' +
         '<button type="submit">Confirm secondary VP</button></form></section>'
       : "";
-    const secondaryDefinitionOptions = '<option value="">Enter a mission manually</option>' +
+    const secondaryDefinitionOptions = '<option value="">Select a mission…</option>' +
       selectableSecondaryDefinitions.map((definition) =>
         '<option value="' + escapeHtml(definition.id) + '">' + escapeHtml(definition.name ?? definition.id) + '</option>'
       ).join("");
@@ -633,7 +637,6 @@ export function createCommandScreen(container, {
         : '<form data-secondary-mission-form><div class="command-vp-form">' +
           '<p><strong>Secondary mode:</strong> ' + escapeHtml(secondaryMissionMode || "Not set") + '</p>' +
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
-          '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
           '<button type="button" data-secondary-mission-add>Record secondary card</button>' +
           secondaryModeStatusMarkup + '</div></form>';
     const secondaryMissionManager = state.phase === "command"
@@ -686,15 +689,35 @@ export function createCommandScreen(container, {
         capNotice + '</li>';
     }).join("") : '<li>No victory points recorded yet.</li>';
 
+    const commandControls = '<div class="command-screen command-screen--tabletop"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
+      '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
+      escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
+      '</p></div><div class="command-points"><span>Command Points</span><strong>' +
+      escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
+      '<p class="command-note">Tap objective labels on the live map to update control. Review cards and scoring here without shrinking the battlefield.</p>' +
+      secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm +
+      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</div>';
+    if (layoutMode === "tabletop") {
+      container.innerHTML = renderCombatWorkspace({
+        state,
+        phase: "command",
+        perspectivePlayerId: perspectivePlayerId ?? playerId,
+        selectedUnitId: null,
+        interactivePlayerId: null,
+        mapView,
+        controls: commandControls,
+        footer: '<small>Objective control, secondary cards and scoring controls remain available in this panel.</small>'
+      });
+      mapView.bind(container);
+      return;
+    }
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
-      secondaryMissionManager +
-      secondaryRedrawMarkup +
-      secondaryVpForm +
+      secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm +
       '<section><h2>Live battlefield map</h2>' +
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
       '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +

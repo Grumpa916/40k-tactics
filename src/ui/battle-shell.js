@@ -186,10 +186,11 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
   const playerSummary = players.map((player) => {
     const vp = getVictoryPointScore(state, player.id);
     const cp = getCommandPointBalance(state, player.id);
+    const elapsed = formatElapsedTime(getTurnClockElapsedMs(state, player.id));
     const active = player.id === activePlayerId ? " is-active" : "";
     return '<button type="button" class="battle-shell__player-summary' + active + '" data-open-score-adjust="' + escapeHtml(player.id) + '" aria-label="Adjust score for ' + escapeHtml(player.name ?? player.id) + '">' +
       '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
-      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span></button>';
+      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span><time data-clock-player-elapsed="' + escapeHtml(player.id) + '">' + elapsed + '</time></button>';
   }).join("");
   return '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
     '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
