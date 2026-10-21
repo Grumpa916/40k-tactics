@@ -139,3 +139,55 @@
 .event-companion-layout-diagrams .event-companion-layout-thumbnail [data-battlefield-map] { min-width:0 !important; width:100% !important; }
 .event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__board { width:100% !important; min-width:0 !important; min-height:0 !important; height:auto !important; max-height:none !important; aspect-ratio:15/11; }
 @media (max-width:760px), (orientation:portrait) { .event-companion-layout-buttons,.event-companion-layout-diagrams { grid-template-columns:1fr; } }
+
+
+/* Select Armies and battlefield-layout tablet refinements. */
+.battle-shell__setup-tools:has([data-setup-workspace-panel="army-selection"]:not([hidden])) {
+  background:#101820 !important;
+  color:#edf4f7 !important;
+  border-color:#304149 !important;
+}
+.battle-shell__setup-tools [data-setup-workspace-panel="army-selection"],
+.battle-shell__setup-tools [data-army-selection-panel],
+.battle-shell__setup-tools [data-army-selection-panel] > .army-selection {
+  background:#101820 !important;
+  color:#edf4f7 !important;
+}
+.event-companion-layout-buttons {
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:8px !important;
+  width:100%;
+}
+.event-companion-layout-buttons .event-companion-layout-select { min-width:0; margin:0; }
+.event-companion-layout-diagrams {
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:8px !important;
+  width:100%;
+  align-items:start;
+}
+.event-companion-layout-diagrams .event-companion-layout-preview {
+  width:100%; max-width:100%; min-width:0; box-sizing:border-box; overflow:hidden;
+}
+.event-companion-layout-diagrams .event-companion-layout-thumbnail,
+.event-companion-layout-diagrams .event-companion-layout-thumbnail [data-battlefield-map] {
+  width:100% !important; max-width:100% !important; min-width:0 !important; overflow:hidden;
+}
+.event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__meta,
+.event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__legend,
+.event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__notice { display:none !important; }
+.event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__board {
+  width:100% !important; max-width:100% !important; min-width:0 !important;
+  height:auto !important; min-height:0 !important; max-height:none !important; aspect-ratio:15/11 !important;
+}
+.battle-shell__player-summary time { font-variant-numeric:tabular-nums; font-weight:800; white-space:nowrap; }
+/* Command uses the same full live-map workspace sizing as Movement. */
+.battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=command] .live-map > nav { display:none; }
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .combat-workspace__map > header,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .combat-workspace__map > p { display:none; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .combat-workspace__map { padding:4px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .battlefield-map__board { min-height:0; height:100%; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .battlefield-map__legend { margin:2px 0 0; padding:2px 0; }
+}

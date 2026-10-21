@@ -10,6 +10,7 @@ import { createObjectiveState } from "../rules/objective-control-state.js";
 import { captureTurnStartSnapshot } from "./scoring-transitions.js";
 import { updateTurnClockForPlayer } from "../state/turn-clock.js";
 import { pauseTurnClock, startTurnClock } from "./turn-clock-transitions.js";
+import { recordCommandPointChange } from "./command-points-ledger.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -178,6 +179,25 @@ export function changePhase(state, { phase } = {}) {
         pendingRedraw.turn === (state.turn ?? 0)) {
       throw new Error("Record the New Orders replacement card before leaving the Command phase.");
     }
+  }
+
+  if (phase === "command") {
+    let next = transition(state, "turn.phase_changed", {
+      phase,
+      round: state.battle.round,
+      turn: state.turn
+    }, (current) => ({ ...current, phase }));
+    for (const player of state.players ?? []) {
+      next = recordCommandPointChange(next, {
+        playerId: player.id,
+        amount: 1,
+        reason: "gain",
+        note: "Automatic Command phase gain",
+        turn: state.turn ?? 0,
+        round: state.battle?.round ?? 0
+      });
+    }
+    return next;
   }
 
   const isShootingCompletion = state.phase === "shooting" && phase === "charge";
