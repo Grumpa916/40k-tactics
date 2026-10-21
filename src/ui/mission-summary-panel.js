@@ -38,13 +38,18 @@ function getPrimaryMissionNames(state, players, perspectivePlayerId, missionDefi
   const definitionFor = (playerId) => missionDefinitions.find((definition) =>
     definition?.category === "primary" &&
     (definition?.playerId === playerId || definition?.ownerId === playerId));
+  const combine = (catalogDefinition, configuredDefinition) => catalogDefinition || configuredDefinition
+    ? { ...(catalogDefinition ?? {}), ...(configuredDefinition ?? {}) }
+    : null;
+  const configuredMy = definitionFor(myPlayerId);
+  const configuredOpponent = definitionFor(opponentPlayerId);
   return {
     myPlayerId,
     opponentPlayerId,
-    myName: detailed?.myMission?.name ?? resolved?.myMission ?? definitionFor(myPlayerId)?.name ?? null,
-    opponentName: detailed?.opponentMission?.name ?? resolved?.opponentMission ?? definitionFor(opponentPlayerId)?.name ?? null,
-    myDefinition: detailed?.myMission ?? definitionFor(myPlayerId) ?? null,
-    opponentDefinition: detailed?.opponentMission ?? definitionFor(opponentPlayerId) ?? null
+    myName: detailed?.myMission?.name ?? resolved?.myMission ?? configuredMy?.name ?? null,
+    opponentName: detailed?.opponentMission?.name ?? resolved?.opponentMission ?? configuredOpponent?.name ?? null,
+    myDefinition: combine(detailed?.myMission, configuredMy),
+    opponentDefinition: combine(detailed?.opponentMission, configuredOpponent)
   };
 }
 
@@ -53,6 +58,8 @@ function renderPrimaryPlayer(state, player, playerId, missionName, definition, s
   const key = "mission-primary-player-" + player.id;
   const name = missionName ?? "Primary Mission not selected";
   const detail = [
+    definition?.timing ? "Scoring: " + missionTimingLabel(definition.timing) : "",
+    Number.isFinite(definition?.victoryPoints) ? "Configured award: " + definition.victoryPoints + " VP" : "",
     sideLabel === "You" && setup.myDisposition ? "Disposition: " + setup.myDisposition : "",
     sideLabel === "Opponent" && setup.opponentDisposition ? "Disposition: " + setup.opponentDisposition : "",
     setup.layout ? "Battlefield layout " + setup.layout : ""
