@@ -92,7 +92,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
     if (layoutMode === 'tabletop') {
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        controls:`<div class="movement-screen"><h1>Movement</h1><p>Drag an active player's marker to refine its approximate position. The first drag records a Normal Move unless another movement choice was recorded first. Later drags only refine map position.</p>${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});
+        controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});
       mapView.bind(container);
       return;
     }

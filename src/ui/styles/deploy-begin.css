@@ -62,3 +62,18 @@
   .deploy-begin__scroll { overflow:visible; }
   .deploy-begin__heading { flex-wrap:wrap; }
 }
+
+
+/* Compact deployment roster: one line per unit on iPad landscape. */
+@media (orientation:landscape) and (min-width:761px) {
+  .deploy-unit-list { gap:4px; }
+  .deploy-unit-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:5px; padding:4px 5px; }
+  .deploy-unit-row > button { min-height:36px; padding:4px 6px; flex-direction:row; align-items:center; gap:6px; overflow:hidden; }
+  .deploy-unit-row > button strong { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .deploy-unit-row > button small { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right; }
+  .deploy-unit-row > div { display:flex; gap:4px; }
+  .deploy-unit-row > div button { min-height:36px; padding:4px 7px; font-size:11px; }
+  .deploy-reserve-tray { max-height:92px; }
+  .deploy-reserve-tray button { min-height:34px; padding:4px 7px; flex-direction:row; align-items:center; gap:5px; }
+  .deploy-reserve-tray button small { display:inline; }
+}
