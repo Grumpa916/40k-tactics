@@ -94,7 +94,7 @@ export function setActualDeploymentPosition(state, { unitId, playerId, position 
   const nextPosition = validatePosition(position);
   const previousPosition = state.battlefieldMap?.actualDeployment?.[unitId] ?? null;
   const declaredReserves = { ...(state.battlefieldMap?.declaredReserves ?? {}) };
-  delete declaredReserves[unitId];
+  for (const member of state.units.filter(item=>item.id===unitId || attachmentParent(state,item)===unitId)) delete declaredReserves[member.id];
   const nextState = {
     ...state,
     units: state.units.map((item) => item.id === unitId || attachmentParent(state, item) === unitId
@@ -253,3 +253,4 @@ export function setEventCompanionMissionSetup(state, {
     previous, missionSetup: nextSetup
   }));
 }
+

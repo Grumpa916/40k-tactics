@@ -10,6 +10,8 @@ function escapeHtml(value) {
 export function createDeploymentScreen(container, {
   session,
   guidedPreparation = false,
+  mapOnly = false,
+  initialSelectedUnitId = null,
   perspectivePlayerId = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
@@ -20,8 +22,8 @@ export function createDeploymentScreen(container, {
     throw new TypeError("A dispatchable game session is required.");
   }
 
-  let selectedPlayerId = null;
-  let selectedUnitId = null;
+  let selectedPlayerId = session.getState().units?.find(unit=>unit.id===initialSelectedUnitId)?.ownerId ?? null;
+  let selectedUnitId = initialSelectedUnitId;
   let firstPlayerId = null;
   let message = "";
   let deploymentPointerDrag = null;
@@ -107,6 +109,7 @@ export function createDeploymentScreen(container, {
         .replace('Tap to select, then tap the map to deploy', 'Off battlefield — use a rule-authorised reserve change below')
         .replace('No units declared in reserves. Select a unit above and use “Declare selected unit in reserves”.', 'No units declared in reserves.');
     }
+    if (mapOnly) markup = '<section class="combined-deployment-map"><h2>Deployment map</h2><p>Drag either army’s units from the staging edges. Planned positions are retained. Dashed markers still need placement.</p>' + renderBattlefieldMap(state,{mode:'deployment',perspectivePlayerId:perspectivePlayerId ?? players[0]?.id,selectedUnitId,compactMarkers:true,showMeasurements:false}) + '</section>';
     container.innerHTML = markup;
   }
 
@@ -270,6 +273,8 @@ export function createDeploymentScreen(container, {
   render();
   return {
     render,
+    getSelectedUnitId: () => selectedUnitId,
+    selectUnit(id) { const unit=session.getState().units.find(item=>item.id===id); if(unit){selectedUnitId=id;selectedPlayerId=unit.ownerId;render();} },
     destroy() {
       unsubscribe();
       container.removeEventListener?.("change", handleChange);
@@ -282,3 +287,4 @@ export function createDeploymentScreen(container, {
     }
   };
 }
+

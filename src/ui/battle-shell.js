@@ -207,7 +207,7 @@ function setupTabLabel(tab) {
 
 function setupContinueLabel(tab) {
   return ({ saves: "Continue to Select Armies", "army-builder": "Back to Select Armies", "army-selection": "Continue to Prepare Game",
-    "pre-game": "Confirm current checkpoint", battlefield: "Continue to Pre-First Turn",
+    "pre-game": "Continue to Deploy & Begin", battlefield: "Continue to Pre-First Turn",
     "mission-map": "Continue", deployment: "Deploy and Begin" })[tab] ?? "Continue";
 }
 
@@ -317,7 +317,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
-  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
+  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
     shellLiveHeader + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
@@ -1034,3 +1034,4 @@ export function createBattleShell(container, {
     }
   };
 }
+

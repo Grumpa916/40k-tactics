@@ -1,0 +1,64 @@
+.deploy-begin { display:flex; flex-direction:column; gap:10px; color:#f1f3e9; min-height:0; font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.deploy-begin * { box-sizing:border-box; }
+.deploy-begin button,.deploy-begin select { min-height:44px; padding:8px 10px; border:1px solid #53676a; border-radius:8px; background:#19262d; color:#f1f3e9; font:inherit; font-size:13px; touch-action:manipulation; }
+.deploy-begin button { cursor:pointer; }
+.deploy-begin button[aria-pressed=true] { border-color:#c4e99b; background:#354a35; }
+.deploy-begin button:disabled { opacity:.5; cursor:default; }
+.deploy-begin button:focus-visible,.deploy-begin select:focus-visible { outline:3px solid #c4e99b; outline-offset:2px; }
+.deploy-begin h1 { font-size:21px; margin:0; }
+.deploy-begin h2 { font-size:16px; margin:0 0 6px; }
+.deploy-begin p { font-size:12px; line-height:1.4; margin:5px 0; color:#b9c9ca; }
+.deploy-begin small { font-size:11px; line-height:1.35; color:#b9c9ca; }
+.deploy-begin__heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex:none; }
+.deploy-begin__workspace { display:grid; grid-template-columns:minmax(0,1fr) 365px; gap:12px; min-height:0; flex:1; }
+.deploy-begin__map,.deploy-begin__panel { min-width:0; min-height:0; border:1px solid #304149; border-radius:12px; background:#19262d; }
+.deploy-begin__map { display:flex; flex-direction:column; padding:10px; }
+.deploy-begin [data-deploy-map],.deploy-begin .combined-deployment-map { display:flex; flex-direction:column; flex:1; min-height:0; }
+.deploy-begin .battlefield-map { flex:1; display:flex; flex-direction:column; min-height:0; }
+.deploy-begin .battlefield-map__meta,.deploy-begin .battlefield-map__notice { display:none; }
+.deploy-begin .battlefield-map__board { flex:1; min-height:250px; max-height:none; aspect-ratio:auto; }
+.deploy-begin .battlefield-map__legend { padding-top:7px; font-size:11px; }
+.deploy-begin .battlefield-map__unit.is-compact { width:36px; height:36px; display:grid; place-items:center; padding:2px; border-radius:50%; font-size:11px; border-width:2px; background:#213f60; border-color:#79bbff; }
+.deploy-begin .battlefield-map__unit.opponent { background:#602e34; border-color:#ff8585; }
+.deploy-begin .battlefield-map__unit.is-selected { outline:3px solid #c4e99b; }
+.deploy-begin .battlefield-map__unit.is-unplaced { border-style:dashed; }
+.deploy-reserve-tray { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding-top:8px; max-height:145px; overflow:auto; }
+.deploy-reserve-tray > strong { font-size:13px; }
+.deploy-reserve-tray > small { width:100%; }
+.deploy-reserve-tray button { display:flex; flex-direction:column; gap:3px; }
+.deploy-reserve-tray > span { font-size:12px; color:#b9c9ca; }
+.deploy-begin__panel { display:flex; flex-direction:column; overflow:hidden; }
+.deploy-begin__scroll { padding:10px; min-height:0; overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; flex:1; }
+.deploy-begin__scroll > details,.deploy-army { margin-bottom:12px; border-bottom:1px solid #304149; padding-bottom:8px; }
+.deploy-begin details > summary { cursor:pointer; min-height:44px; padding:10px 0; font-weight:700; font-size:13px; }
+.deploy-begin fieldset { margin:8px 0; border:1px solid #53676a; border-radius:8px; display:flex; gap:6px; }
+.deploy-begin fieldset button { flex:1; }
+.deploy-begin legend { font-size:12px; }
+.deploy-begin__scroll > button { width:100%; margin:0 0 12px; }
+.deploy-unit-list { display:grid; gap:7px; }
+.deploy-unit-row { padding:7px; background:#10191f; border:1px solid #304149; border-radius:9px; }
+.deploy-unit-row > button { width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:3px; border:0; background:transparent; text-align:left; }
+.deploy-unit-row > div { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.deploy-warning { padding:8px; color:#f3c695; border:1px solid #a08356; border-radius:8px; font-size:12px; }
+.deploy-warning button { width:100%; margin-top:6px; }
+.deploy-begin__panel footer { padding:10px; border-top:1px solid #304149; flex:none; }
+.deploy-begin__panel footer > button { width:100%; background:#c4e99b; color:#17212b; border-color:#c4e99b; font-weight:750; margin-top:8px; }
+.deploy-missing ul { max-height:100px; overflow:auto; margin:0; font-size:12px; }
+.deploy-begin label { display:block; font-size:12px; margin:8px 0; }
+.deploy-begin label select { display:block; width:100%; }
+.deploy-reference-overlay { position:fixed; inset:0; z-index:1300; display:grid; place-items:center; background:#000b; padding:10px; }
+.deploy-reference-overlay > section { width:min(1200px,100%); max-height:95dvh; overflow:auto; background:#10191f; border:1px solid #53676a; border-radius:12px; padding:12px; }
+.deploy-reference-overlay > section > header { display:flex; justify-content:space-between; align-items:center; gap:12px; position:sticky; top:-12px; padding:10px 0; background:#10191f; z-index:2; }
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment.is-deploy-begin { position:fixed; inset:0; height:100dvh; min-height:0; padding:10px 10px calc(76px + env(safe-area-inset-bottom,0px)); overflow:hidden; }
+  .battle-shell.is-deploy-begin > .battle-shell__tabletop-header,.battle-shell.is-deploy-begin > [data-phase-progression-host],.battle-shell.is-deploy-begin > [data-prototype-tools] { display:none; }
+  .battle-shell.is-tabletop-experiment.is-deploy-begin .battle-shell__workspace { flex:1; height:auto; min-height:0; overflow:hidden; }
+  .battle-shell.is-tabletop-experiment.is-deploy-begin .battle-shell__content,.battle-shell.is-tabletop-experiment.is-deploy-begin [data-battle-screen],.battle-shell.is-deploy-begin [data-live-deploy-begin],.battle-shell.is-deploy-begin .deploy-begin { height:100%; min-height:0; }
+}
+@media (max-width:1000px) { .deploy-begin__workspace { grid-template-columns:minmax(0,1fr) 315px; } }
+@media (orientation:portrait), (max-width:760px) {
+  .deploy-begin__workspace { grid-template-columns:minmax(0,1fr); }
+  .deploy-begin .battlefield-map__board { min-height:360px; }
+  .deploy-begin__scroll { overflow:visible; }
+  .deploy-begin__heading { flex-wrap:wrap; }
+}

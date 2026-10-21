@@ -237,7 +237,7 @@ export function createBattleSetupScreen(container, {
     const playerId = target.getAttribute("data-setup-fixed-add") || selectedPlayerId;
     const playerPanel = target.closest?.("[data-secondary-player-panel]") ?? container;
     const field = (selector) => playerPanel.querySelector?.(selector) ?? container.querySelector(selector);
-    if (state.battle && state.battle.status !== "setup") {
+    if (state.battle && state.battle.status !== "setup" && !(state.battle.status === "deployment" && state.preparation?.mode === "combined")) {
       message = "Fixed secondary cards must be selected before the battle starts.";
       render();
       return;
@@ -427,7 +427,7 @@ export function createBattleSetupScreen(container, {
           ? '<p>Draw and record Tactical cards manually from the physical deck on this player’s Command phase. Scoring and discards remain manually confirmed.</p>'
           : '<p>Choose this player’s mode independently of the opponent.</p>';
       const modeLocked = playerHistory.length > 0;
-      const fixedMarkup = playerMode === "fixed" && (!state.battle || state.battle.status === "setup")
+      const fixedMarkup = playerMode === "fixed" && (!state.battle || state.battle.status === "setup" || (state.battle.status === "deployment" && state.preparation?.mode === "combined"))
         ? '<div class="command-vp-form"><label>Fixed card<select data-setup-secondary-definition>' + fixedOptions + '</select></label>' +
           '<label>Checkpoint if not verified<select data-setup-secondary-timing>' + timingOptions + '</select></label>' +
           '<label>Or type the printed card name<input data-setup-secondary-name maxlength="160" placeholder="Fixed card name"></label>' +
@@ -512,3 +512,4 @@ export function createBattleSetupScreen(container, {
     }
   };
 }
+

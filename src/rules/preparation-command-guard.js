@@ -4,6 +4,8 @@ import { preparationStep } from './event-preparation.js';
 export function guardPreparationCommand(state, command) {
   if (!['setup','deployment'].includes(state.battle?.status)) return;
   const step = preparationStep(state);
+  if (state.preparation?.mode === 'combined' && state.battle.status === 'deployment' &&
+      ['secondary_mission.set_mode','secondary_mission.draw','battle.set_pre_game_roles'].includes(command.type)) return;
   const allowed = {
     'battle.apply_army_roster': ['mission'],
     'battle.set_size': ['mission'],
