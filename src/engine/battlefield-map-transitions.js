@@ -207,7 +207,7 @@ function synchronizeCanonicalLayoutObjectives(state, missionSetup) {
     if (index >= 0) {
       // Explicit layoutObjective links are authoritative. Preserve the application
       // ID and control record while updating only the verified position.
-      objectives[index] = { ...objectives[index], position: { ...position } };
+      objectives[index] = { ...objectives[index], position: { ...position }, control: objectives[index].control ?? { controlState: "uncontrolled", controllerId: null, contestingPlayerIds: [] } };
     } else {
       objectives.push({
         id: canonicalId,
@@ -215,7 +215,7 @@ function synchronizeCanonicalLayoutObjectives(state, missionSetup) {
         label: name,
         layoutObjective: name,
         position: { ...position },
-        control: null
+        control: { controlState: "uncontrolled", controllerId: null, contestingPlayerIds: [] }
       });
     }
   }
