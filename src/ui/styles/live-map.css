@@ -1,0 +1,17 @@
+.live-map { flex:1; min-height:0; display:flex; flex-direction:column; }
+.live-map > nav { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:6px; }
+.live-map > nav button { min-width:44px; min-height:44px; padding:6px; color:inherit; background:#21303a; border:1px solid #60737e; border-radius:8px; font:inherit; touch-action:manipulation; }
+.live-map > nav small { font-size:11px; flex:1; min-width:140px; color:#bac7c8; }
+.live-map .battlefield-map { flex:1; min-height:0; display:flex; flex-direction:column; }
+.live-map .battlefield-map__meta { display:none; }
+.live-map .live-map__viewport { flex:1; min-height:200px; overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; border:1px solid #60737e; border-radius:9px; }
+.live-map .live-map__canvas { min-width:100%; min-height:100%; }
+.live-map .battlefield-map .battlefield-map__board { height:100%; width:100%; min-height:0; aspect-ratio:auto; border:0; border-radius:0; }
+.live-map .battlefield-map__unit.is-compact { width:36px; height:36px; min-width:36px; max-width:none; display:flex; align-items:center; justify-content:center; padding:2px; border-radius:50%; font-size:11px; line-height:1; touch-action:manipulation; }
+.live-map .battlefield-map__unit.is-selected, .live-map .battlefield-map__unit.is-targeted { z-index:9; }
+.live-map .battlefield-map__notice { font-size:10px; margin:4px 0; }
+.shoot-tabletop__unit-picker { margin:8px 0; }
+.shoot-tabletop__unit-picker select { width:100%; min-height:44px; margin:4px 0; padding:8px; background:#16222a; color:#eef3f0; border:1px solid #60737e; border-radius:8px; font:inherit; }
+.combat-end-review { border:1px solid #c6e99e; padding:10px; margin:8px 0; border-radius:8px; }
+.combat-end-review button { width:100%; min-height:44px; margin:4px 0; }
+@media (orientation:portrait), (max-width:760px) { .live-map .live-map__viewport { min-height:320px; } }

@@ -1,3 +1,4 @@
+import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
@@ -157,7 +158,7 @@ export function getFightAttackOptions(
     if (!fight.candidates.fightsFirst.length) for (const id of fight.candidates.normal) selectable.add(id);
   }
   const attackers = state.units
-    .filter((unit) => unit.status === "deployed" && selectable.has(unit?.id))
+    .filter((unit) => unit.status === "deployed" && selectable.has(unit?.id) && !isCombatActivationFinished(state, unit.id, "fight"))
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 
   if (!attackerId) {
@@ -190,13 +191,13 @@ export function getFightAttackOptions(
   };
 }
 
-export function finishFightPhase(session, context = {}) {
+export function finishFightPhase(session, { confirmRemaining = false } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
   }
 
   return session.dispatch(
-    createCommand(COMMAND_TYPES.COMPLETE_FIGHT_PHASE),
+    createCommand(COMMAND_TYPES.COMPLETE_FIGHT_PHASE, { confirmRemaining }),
     context
   );
 }

@@ -1,3 +1,4 @@
+import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -48,6 +49,7 @@ export function resolveUnitAttack(state, {
 } = {}) {
   if (!attackerId || !targetId) throw new TypeError("Attacker and target unit ids are required.");
   if (!weapon) throw new TypeError("A weapon profile is required.");
+  if (isCombatActivationFinished(state, attackerId)) throw new Error("This unit has finished its activation for this phase and turn.");
   if (attackerId === targetId) throw new Error("Attacker and target must be different units.");
   if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
   if (state.phase !== "shooting" && state.phase !== "fight") {

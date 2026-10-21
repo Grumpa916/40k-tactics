@@ -1,3 +1,4 @@
+import { finishCombatActivation } from "./combat-activation-transitions.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -54,7 +55,21 @@ export function recordFightActivation(state, { unitId, actionType = "fight" } = 
   return appendHistoryEntry(state, event);
 }
 
-export function completeFightPhase(state) {
-  return changePhase(state, { phase: "end_turn" });
+export function completeFightPhase(state, { confirmRemaining = false } = {}) {
+  if (state.phase !== "fight") throw new Error("End Fight during the Fight phase.");
+  let next = state;
+  if (confirmRemaining) {
+    // Explicit confirmation records each remaining unit as not fighting.
+    // Process Fights First before the normal group, through the same validator.
+    let candidates = getFightCandidates(next);
+    for (const id of [...candidates.fightsFirst, ...candidates.normal]) {
+      next = recordFightActivation(next, { unitId:id, actionType:"not_fight" });
+    }
+  }
+  const activations = next.history.filter(event => event.type === "fight.unit_activated" &&
+    event.payload?.round === next.battle.round && event.payload?.turn === next.turn &&
+    (event.payload?.actionType ?? "fight") === "fight");
+  for (const activation of activations) next = finishCombatActivation(next, { unitId:activation.payload.unitId });
+  return changePhase(next, { phase:"end_turn" });
 }
 

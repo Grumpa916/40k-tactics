@@ -1,3 +1,4 @@
+import { finishCombatActivation } from "./combat-activation-transitions.js";
 import { updatePreparation } from "./event-preparation-transitions.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
@@ -68,7 +69,8 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) => recordShootingActivation(state, command.payload)],
     [COMMAND_TYPES.COMPLETE_SHOOTING_PHASE, (state) => completeShootingPhase(state)],
     [COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, (state, command) => recordFightActivation(state, command.payload)],
-    [COMMAND_TYPES.COMPLETE_FIGHT_PHASE, (state) => completeFightPhase(state)],
+    [COMMAND_TYPES.COMPLETE_FIGHT_PHASE, (state, command) => completeFightPhase(state, command.payload)],
+    [COMMAND_TYPES.FINISH_COMBAT_ACTIVATION, (state, command) => finishCombatActivation(state, command.payload)],
     [COMMAND_TYPES.RESOLVE_ATTACK, (state, command, context) =>
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ],
