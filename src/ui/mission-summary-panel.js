@@ -95,9 +95,10 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
         (Number.isInteger(window.minRound) ? " (from Round " + window.minRound + ")" : "")).join(" · ")
       : definition.timing ? missionTimingLabel(definition.timing) : "Scoring timing not configured";
     const description = definition.description ?? definition.summary ?? "";
-    const rulesNote = definition.rulesVerified === true
-      ? "Reference marked reviewed; confirm the physical card and actual battlefield conditions."
-      : "Rules text or scoring criteria are not fully verified in the app. Check the printed card.";
+    const referenceNotes = Array.isArray(definition.referenceNotes) ? definition.referenceNotes : [];
+    const missionText = referenceNotes.length
+      ? '<p><strong>Mission text</strong></p><ul>' + referenceNotes.map((note) => '<li>' + escapeHtml(note) + '</li>').join('') + '</ul>'
+      : '';
     const scoring = windows.flatMap((window) => (window.tiers ?? []).map((tier) =>
       '<li><strong>' + escapeHtml(tier.vp) + ' VP:</strong> ' + escapeHtml(tier.summary) + '</li>')).join("");
     return '<details class="battle-mission-summary__card" data-mission-summary-key="' + escapeHtml(cardKey) + '"' +
@@ -105,8 +106,9 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       '<span class="battle-context__badge">' + escapeHtml(item.status) + '</span></summary>' +
       '<div class="battle-mission-summary__detail"><p>' + escapeHtml(timing) + '</p>' +
       (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
-      (scoring ? '<ul>' + scoring + '</ul>' : '') +
-      '<p>' + escapeHtml(rulesNote) + '</p></div></details>';
+      missionText +
+      (scoring ? '<p><strong>Scoring</strong></p><ul>' + scoring + '</ul>' : '') +
+      '</div></details>';
   }).join("") : '<p class="battle-context__empty">No active secondary missions are recorded for this player.</p>';
   const mode = getSecondaryMissionMode(state, playerId);
   return '<details class="battle-mission-summary__player" data-mission-summary-key="' + escapeHtml(key) + '"' +
