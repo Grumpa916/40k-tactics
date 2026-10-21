@@ -1,6 +1,6 @@
 import { evaluateScoringCheckpoint } from '../engine/scoring-check-coordinator.js';
 import { getMissionActionReviews } from '../rules/mission-action-state.js';
-import { getBattlePrimaryMissions } from '../rules/event-companion-map-catalog.js';
+import { getBattlePrimaryMissionDefinitions } from '../data/primary-mission-catalog.js';
 
 export function getScoringCheckpointReminder(state, { previousPhase, missionDefinitions=[], perspectivePlayerId=null } = {}) {
   const timing=previousPhase==='command'&&state.phase==='movement'?'command-phase':state.phase==='end_turn'&&previousPhase!=='end_turn'?'end-of-turn':null;
@@ -14,11 +14,25 @@ export function getScoringCheckpointReminder(state, { previousPhase, missionDefi
       actions:getMissionActionReviews(state,{playerId:player.id,checkpoint})};
   });
   const setup=state.battlefieldMap?.missionSetup;
-  const primaries=setup?getBattlePrimaryMissions(setup.myDisposition,setup.opponentDisposition):null;
+  const primaries=setup?.myDisposition&&setup?.opponentDisposition
+    ? getBattlePrimaryMissionDefinitions(setup.myDisposition,setup.opponentDisposition)
+    : null;
   const myPlayer=perspectivePlayerId??players[0]?.id;
-  for (const group of groups) group.primaryReference=primaries?(group.playerId===myPlayer?primaries.myMission:primaries.opponentMission):null;
+  for (const group of groups) {
+    group.primaryReference=primaries?(group.playerId===myPlayer?primaries.myMission:primaries.opponentMission):null;
+    group.primaryScoringWindows=(group.primaryReference?.scoring??[]).filter(window=>{
+      const when=String(window.when??'').toLowerCase();
+      if (group.checkpoint==='command-phase') return when.includes('command');
+      if (group.checkpoint==='end-of-opponent-turn') return when.includes('either player')||when.includes("opponent");
+      if (group.checkpoint==='end-of-turn') return when.includes('end of your turn')||when.includes('either player')||when.includes('r5 end of turn');
+      return false;
+    });
+  }
   const activeName=players.find(p=>p.id===activePlayerId)?.name??'active player';
   return {timing,label:`End of ${activeName}'s ${timing==='command-phase'?'Command phase':'turn'}`,
     activePlayerId,scoringPlayerId:activePlayerId,groups,
-    missions:groups.flatMap(group=>[...group.review.primary,...group.review.secondary].map(item=>`${group.playerName}: ${item.definitionName??item.definitionId}`))};
+    missions:groups.flatMap(group=>[
+      ...(group.primaryReference?[`${group.playerName}: ${group.primaryReference.name}`]:[]),
+      ...[...group.review.primary,...group.review.secondary].map(item=>`${group.playerName}: ${item.definitionName??item.definitionId}`)
+    ])};
 }
