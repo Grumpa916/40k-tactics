@@ -254,7 +254,7 @@ export function createShootingScreen(container, {
       const targetComparison = shootingTargetComparisonCards(
         selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId
       );
-      container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop">
+      container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop${selectedTargetId ? ' is-target-selected' : ''}">
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
           perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
           selectedUnitId: activeUnitId })}
@@ -448,6 +448,11 @@ export function createShootingScreen(container, {
         attackError = "";
         render();
       }));
+      if (selectedTargetId) {
+        const scroll = container.querySelector?.('.shoot-tabletop__control-scroll');
+        const advisor = container.querySelector?.('.shoot-tabletop__advisor');
+        if (scroll && advisor) scroll.scrollTop = Math.max(0, advisor.offsetTop - 8);
+      }
       container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
         actionPickerOpen = !actionPickerOpen;
         attackError = "";

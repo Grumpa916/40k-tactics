@@ -22,7 +22,7 @@ export function renderScoringCheckpointDialog(state,scoringReminder) {
   const reminderMarkup = scoringReminder ? '<link rel="stylesheet" href="' + new URL('./styles/scoring-checkpoints.css',import.meta.url).href + '"><div class="battle-scoring-reminder__backdrop">' +
     '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
     '<h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>' +
-    '<p>' + escapeHtml(scoringReminder.label) + '. Check any Primary or Secondary mission due now.</p>' +
+    '<p>' + escapeHtml(scoringReminder.label) + '. Record any Primary or Secondary score shown below before continuing.</p>' +
     renderScoringCheckpointGroups(state, scoringReminder) +
     (scoringReminder.groups ? '' : '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
       '<li>Review your mission cards and confirm any points earned.</li>') + '</ul>') +
