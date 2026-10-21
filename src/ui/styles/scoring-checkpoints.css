@@ -1,0 +1,10 @@
+.battle-scoring-reminder { width:min(760px,92vw); }
+.checkpoint-player { padding:10px 0; border-top:1px solid #5c6872; }
+.checkpoint-player h3 { margin:6px 0; font-size:17px; }
+.checkpoint-player details > summary { min-height:44px; padding:10px 0; cursor:pointer; font-weight:700; }
+.checkpoint-player button { min-height:44px; margin:4px 6px 4px 0; padding:8px 12px; border:1px solid #7c9668; border-radius:8px; background:#28362d; color:#f2f4f8; font:inherit; cursor:pointer; touch-action:manipulation; }
+.checkpoint-action { padding:10px; margin:8px 0; border:1px solid #596e5b; border-radius:8px; }
+.checkpoint-action p { margin:6px 0; }
+.shoot-tabletop__action-picker label { display:block; line-height:1.5; }
+.shoot-tabletop__action-picker input[type=checkbox] { width:22px; height:22px; vertical-align:middle; margin:8px; }
+.shoot-tabletop__action-picker small { display:block; margin:8px 0; }

@@ -62,11 +62,12 @@ export function getShootingViewModel(state, { perspectivePlayerId = null } = {})
 export function recordShootingActivation(state, {
   unitId,
   actionType = "shoot",
-  actionId = null
+  actionId = null,
+  missionInstanceId = null, objectiveId = null, reviewTiming = null, rulesConfirmed = false
 } = {}, context = {}) {
   return executeCommand(
     state,
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId }),
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId, missionInstanceId, objectiveId, reviewTiming, rulesConfirmed }),
     context
   );
 }
@@ -82,13 +83,14 @@ export function completeShootingPhase(state, context = {}) {
 export function activateShootingUnit(session, {
   unitId,
   actionType = "shoot",
-  actionId = null
+  actionId = null,
+  missionInstanceId = null, objectiveId = null, reviewTiming = null, rulesConfirmed = false
 } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
   }
   return session.dispatch(
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId }),
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId, missionInstanceId, objectiveId, reviewTiming, rulesConfirmed }),
     context
   );
 }

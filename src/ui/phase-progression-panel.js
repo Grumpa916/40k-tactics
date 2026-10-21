@@ -26,5 +26,6 @@ export function renderPhaseProgressionPanel(state, viewedPhase, message = '') {
     '<section class="battle-phase-progress" aria-label="Advance the recorded game phase"><div><strong>Current phase: ' + escapeHtml(current) + '</strong><p>' +
     (viewingOther ? 'Return to the current phase to continue play.' : state.phase === 'end_turn' || state.phase === 'end_battle_round' ? 'Finish any scoring checks before continuing.' : 'Complete your tabletop actions, then end this phase.') + '</p></div>' +
     '<button type="button" ' + (viewingOther ? 'data-return-current-phase' : 'data-advance-game-phase') + '>' + escapeHtml(viewingOther ? 'Return to current phase · ' + current : action.label) + '</button>' +
+    (['movement','end_turn'].includes(state.phase) ? '<button type="button" data-open-scoring-checkpoint>Scoring check</button>' : '') +
     (message ? '<p role="status">' + escapeHtml(message) + '</p>' : '') + '</section>';
 }

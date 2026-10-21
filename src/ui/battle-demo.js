@@ -107,7 +107,6 @@ async function initializeBattleDemo() {
     session,
     perspectivePlayerId: "p1",
     gameData,
-    missionActions: [{ id: "cleanse", name: "Cleanse" }],
     secondaryMissionCatalog: SECONDARY_MISSION_CATALOG,
     supabaseClient,
     layoutMode

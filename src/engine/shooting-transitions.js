@@ -1,3 +1,4 @@
+import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -9,7 +10,8 @@ const SHOOTING_ACTION_TYPES = new Set(["shoot", "mission_action", "special_actio
 export function recordShootingActivation(state, {
   unitId,
   actionType = "shoot",
-  actionId = null
+  actionId = null,
+  missionInstanceId = null, objectiveId = null, reviewTiming = null, rulesConfirmed = false
 } = {}) {
   if (!unitId) throw new TypeError("Shooting activation unit id is required.");
   if (!SHOOTING_ACTION_TYPES.has(actionType)) {
@@ -44,13 +46,24 @@ export function recordShootingActivation(state, {
     throw new Error("Unit is not an available Shooting candidate.");
   }
 
+  let linkedMission = null;
+  if (missionInstanceId) {
+    if (actionType !== "mission_action") throw new Error("Only a mission Action can link a secondary card.");
+    linkedMission = getMissionActionOptions(state, activePlayerId).find(item => item.instanceId === missionInstanceId);
+    if (!linkedMission) throw new Error("Select one of the active player's active secondary cards.");
+    if (!rulesConfirmed) throw new Error("Confirm action eligibility against the physical mission card.");
+    if (!ACTION_REVIEW_TIMINGS.includes(reviewTiming)) throw new Error("Choose the card's scoring checkpoint.");
+    if (objectiveId && !state.objectives.some(item=>item.id===objectiveId)) throw new Error("Select an objective on this battlefield.");
+  }
   return appendHistoryEntry(state, createEvent("shooting.unit_activated", {
     unitId,
     playerId: unit.ownerId,
     round: state.battle.round,
     turn: state.turn,
     actionType,
-    actionId
+    actionId:linkedMission?.definitionId ?? actionId,
+    ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
+      reviewTiming, objectiveId, rulesConfirmed:true } : {})
   }));
 }
 

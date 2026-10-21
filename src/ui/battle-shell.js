@@ -1,3 +1,5 @@
+import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
+import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
 import { getPhaseProgressionAction, renderPhaseProgressionPanel } from "./phase-progression-panel.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
@@ -250,23 +252,6 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const clockPanel = '<div data-turn-clock-panel-host>' +
     renderTurnClockPanel(state, { open: clockPanelOpen, message: clockMessage }) + '</div>';
 
-  const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
-  const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
-    getSecondaryMissionMode(state, reminderPlayerId) === SECONDARY_MISSION_MODES.TACTICAL && reminderPlayerId
-    ? getSecondaryMissionHistory(state, reminderPlayerId).filter((item) =>
-        item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
-        item.definition?.missionMode === SECONDARY_MISSION_MODES.TACTICAL)
-    : [];
-  const tacticalDiscardForm = tacticalDiscardCards.length
-    ? '<section class="battle-tactical-discard"><h3>Discard Tactical cards for +1 CP</h3>' +
-      '<p>At the end of your own turn, discard one or more active Tactical cards to gain 1 CP total.</p>' +
-      '<form data-tactical-discard-form>' +
-      tacticalDiscardCards.map((item) =>
-        '<label><input type="checkbox" name="discard-instance" value="' + escapeHtml(item.instanceId) + '">' +
-        escapeHtml(item.definition?.name ?? item.definitionId) + '</label>'
-      ).join("") +
-      '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
-    : "";
   const decisionReminderMarkup = !scoringReminder && !scoringReviewCheckpoint
     ? renderDecisionReminderHost(state, {
         perspectivePlayerId,
@@ -274,15 +259,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
         dismissedTyranidDecisionContextKey
       })
     : "";
-  const reminderMarkup = scoringReminder ? '<div class="battle-scoring-reminder__backdrop">' +
-    '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
-    '<h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>' +
-    '<p>' + escapeHtml(scoringReminder.label) + '. Check any Primary or Secondary mission due now.</p>' +
-    '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
-      '<li>Review your mission cards and confirm any points earned.</li>') + '</ul>' +
-    tacticalDiscardForm +
-    '<div class="battle-scoring-reminder__actions"><button type="button" data-review-scoring>Review scoring</button>' +
-    '<button type="button" data-dismiss-scoring-reminder>Remind me later</button></div></section></div>' : "";
+  const reminderMarkup = '<div data-scoring-reminder-host>' + renderScoringCheckpointDialog(state, scoringReminder) + '</div>';
 
   const yourPlayerId = perspectivePlayerId ?? activePlayerId ?? players[0]?.id ?? null;
   const opponentPlayerId = players.find((player) => player.id !== yourPlayerId)?.id ?? null;
@@ -396,7 +373,6 @@ export function createBattleShell(container, {
   let phaseProgressionMessage = "";
   let viewedPhase = session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
-  let observedActivePlayerId = session.getState()?.activePlayer ?? session.getState()?.battle?.activePlayerId ?? null;
   let scoringReminder = null;
   let scoringReviewCheckpoint = null;
   let scoringReviewActivePlayerId = null;
@@ -458,6 +434,7 @@ export function createBattleShell(container, {
     const phaseHost = container.querySelector?.("[data-phase-progression-host]");
     if (phaseHost) phaseHost.innerHTML = renderPhaseProgressionPanel(session.getState(), viewedPhase, phaseProgressionMessage);
     const state = session.getState();
+    refreshScoringCheckpointDialog(container, state, scoringReminder, session);
     const decisionHost = container.querySelector?.("[data-decision-reminder-host]");
     if (decisionHost) {
       decisionHost.innerHTML = renderDecisionReminderHost(state, {
@@ -548,7 +525,6 @@ export function createBattleShell(container, {
     }
     if (actualPhase !== observedGamePhase) {
       const previousPhase = observedGamePhase;
-      const endingPlayerId = observedActivePlayerId;
       observedGamePhase = actualPhase;
       viewedPhase = actualPhase;
       // A checkpoint review belongs to one specific transition. Do not carry it
@@ -556,51 +532,10 @@ export function createBattleShell(container, {
       scoringReviewCheckpoint = null;
       scoringReviewActivePlayerId = null;
       scoringReviewPlayerId = null;
-      const currentActivePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
-      const opponentTurnJustEnded = previousPhase === "end_turn" &&
-        (actualPhase === "start_turn" || actualPhase === "end_battle_round") &&
-        perspectivePlayerId != null && endingPlayerId != null && endingPlayerId !== perspectivePlayerId;
-      const timing = previousPhase === "command" && actualPhase === "movement"
-        ? "command-phase"
-        : actualPhase === "end_turn" ? "end-of-turn"
-        : opponentTurnJustEnded ? "end-of-opponent-turn" : null;
-      if (timing) {
-        const reminderPlayerId = timing === "end-of-opponent-turn" ? endingPlayerId : currentActivePlayerId;
-        const scoringPlayerId = timing === "end-of-opponent-turn" ? perspectivePlayerId : reminderPlayerId;
-        const definitionsDue = missionDefinitions.filter((definition) =>
-          definition.timing === timing && definition.category !== "secondary");
-        const activeSecondaryDue = scoringPlayerId
-          ? getSecondaryMissionHistory(state, scoringPlayerId)
-            .filter((instance) => {
-              if (instance.status !== SECONDARY_MISSION_STATUS.ACTIVE) return false;
-              const definition = instance.definition;
-              if (Array.isArray(definition?.scoringWindows) && definition.scoringWindows.length) {
-                return definition.scoringWindows.some((window) => window?.timing === timing);
-              }
-              return definition?.timing === timing;
-            })
-            .map((instance) => instance.definition?.name ?? instance.definitionId)
-          : [];
-        const missionNames = [...definitionsDue.map((definition) => definition.name), ...activeSecondaryDue];
-        const isPerspectiveTurn = perspectivePlayerId != null && reminderPlayerId != null
-          ? reminderPlayerId === perspectivePlayerId
-          : null;
-        const ownerLabel = timing === "end-of-opponent-turn" ? "your opponent's"
-          : isPerspectiveTurn === true ? "your"
-          : isPerspectiveTurn === false ? "your opponent's" : "the active player's";
-        scoringReminder = {
-          id: ++reminderSequence,
-          timing,
-          label: timing === "command-phase"
-            ? `End of ${ownerLabel} Command phase`
-            : `End of ${ownerLabel} turn`,
-          activePlayerId: reminderPlayerId,
-          scoringPlayerId,
-          missions: missionNames
-        };
-      }
+      const nextReminder = getScoringCheckpointReminder(state, {previousPhase, missionDefinitions, perspectivePlayerId});
+      if (nextReminder) scoringReminder = {...nextReminder, id:++reminderSequence};
+      else scoringReminder = null;
     }
-    observedActivePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
 
     if (viewedPhase !== mountedPhase) {
       contextOpenStates = {
@@ -885,9 +820,9 @@ export function createBattleShell(container, {
   function handleReviewScoring(event) {
     const button = event.target?.closest?.("[data-review-scoring]");
     if (!button || !container.contains(button)) return;
-    scoringReviewCheckpoint = scoringReminder?.timing ?? null;
+    scoringReviewCheckpoint = button.getAttribute("data-scoring-checkpoint") ?? scoringReminder?.timing ?? null;
     scoringReviewActivePlayerId = scoringReminder?.activePlayerId ?? null;
-    scoringReviewPlayerId = scoringReminder?.scoringPlayerId ?? scoringReminder?.activePlayerId ?? null;
+    scoringReviewPlayerId = button.getAttribute("data-scoring-player") ?? scoringReminder?.scoringPlayerId ?? scoringReminder?.activePlayerId ?? null;
     scoringReminder = null;
     viewedPhase = "command";
     render();
@@ -922,6 +857,12 @@ export function createBattleShell(container, {
   }
 
   function handlePhaseProgression(event) {
+    const checkpointButton = event.target?.closest?.("[data-open-scoring-checkpoint]");
+    if (checkpointButton && container.contains(checkpointButton)) {
+      const state=session.getState();
+      scoringReminder=getScoringCheckpointReminder(state,{previousPhase:state.phase === "movement" ? "command" : "fight",missionDefinitions,perspectivePlayerId});
+      refreshPersistentPanels(); return;
+    }
     const returnButton = event.target?.closest?.("[data-return-current-phase]");
     const advanceButton = event.target?.closest?.("[data-advance-game-phase]");
     const button = returnButton ?? advanceButton;

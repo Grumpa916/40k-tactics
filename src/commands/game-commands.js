@@ -28,6 +28,7 @@ export const COMMAND_TYPES = Object.freeze({
   COMPLETE_SHOOTING_PHASE: "shooting.complete_phase",
   RECORD_FIGHT_ACTIVATION: "fight.record_activation",
   COMPLETE_FIGHT_PHASE: "fight.complete_phase",
+  REVIEW_MISSION_ACTION: "mission_action.review",
   FINISH_COMBAT_ACTIVATION: "combat.finish_activation",
   RESOLVE_ATTACK: "combat.resolve_attack",
   RECORD_COMMAND_POINT_CHANGE: "command_points.record_change",

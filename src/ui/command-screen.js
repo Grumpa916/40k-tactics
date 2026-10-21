@@ -395,7 +395,7 @@ export function createCommandScreen(container, {
       }
       try {
         session.dispatch({ type: COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, payload: {
-          playerId, instanceId, amount, turn, round
+          playerId, instanceId, amount, turn, round, scoringTiming:scoringCheckpoint
         }});
         secondaryMissionMessage = "Secondary VP recorded for " + (entry.definition?.name ?? entry.definitionId) + ". Check the ledger for any cap applied.";
       } catch (error) {
@@ -430,10 +430,10 @@ export function createCommandScreen(container, {
 
   function render() {
     const state = session.getState();
-    const playerId = perspectivePlayerId ?? state.activePlayer;
+    const playerId = scoringCheckpointPlayerId ?? perspectivePlayerId ?? state.activePlayer;
     const players = Array.isArray(state.players) ? state.players : [];
     if (!selectedSecondaryPlayerId || !players.some((player) => player.id === selectedSecondaryPlayerId)) {
-      selectedSecondaryPlayerId = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
+      selectedSecondaryPlayerId = scoringCheckpointPlayerId ?? perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
     }
     const objectives = Array.isArray(state.objectives) ? state.objectives : [];
     const objectiveCards = objectives.length ? objectives.map((objective) => {
@@ -581,6 +581,7 @@ export function createCommandScreen(container, {
       !(getSecondaryMissionMode(state, selectedSecondaryPlayerId) === "fixed" && definition.fixedAvailable === false));
     const activeSecondaryForVp = secondaryHistory.filter((item) =>
       item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
+      (!scoringCheckpointPlayerId || item.playerId === scoringCheckpointPlayerId) &&
       !(((getSecondaryMissionMode(state, item.playerId) ?? item.definition?.missionMode) === "fixed") &&
         (item.scoringHistory ?? []).some((scored) =>
           scored.round === (state.battle?.round ?? 0) && scored.turn === (state.turn ?? 0))));
