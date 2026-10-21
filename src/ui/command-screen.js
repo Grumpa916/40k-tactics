@@ -418,7 +418,7 @@ export function createCommandScreen(container, {
 
   function render() {
     const state = session.getState();
-    const playerId = scoringCheckpointPlayerId ?? perspectivePlayerId ?? state.activePlayer;
+    const playerId = scoringCheckpointPlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
     const players = Array.isArray(state.players) ? state.players : [];
     const selectedSecondaryPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId ?? players[0]?.id ?? null;
     const objectives = Array.isArray(state.objectives) ? state.objectives : [];
