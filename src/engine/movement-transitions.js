@@ -182,3 +182,61 @@ export function recordStationary(state, { unitId } = {}) {
   }));
 }
 
+
+const MOVEMENT_ACTION_EVENT_TYPES = new Set([
+  "unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"
+]);
+
+/** Undo the selected unit's current-turn Movement action.
+ * Normal Move and Advance restore the positions recorded before the action.
+ * Fall Back and Stationary only remove their gameplay fact.
+ */
+export function undoMovementAction(state, { unitId } = {}) {
+  if (!unitId) throw new TypeError("Unit id is required.");
+  if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
+  if (state.phase !== "movement") throw new Error("Movement actions may only be undone in the Movement phase.");
+  const unit = state.units.find((item) => item.id === unitId);
+  if (!unit) throw new Error("Unit not found: " + unitId);
+  if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's movement action may be undone.");
+
+  const history = Array.isArray(state.history) ? state.history : [];
+  let eventIndex = -1;
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const event = history[index];
+    if (MOVEMENT_ACTION_EVENT_TYPES.has(event?.type) && event.payload?.unitId === unitId && event.payload?.turn === state.turn) {
+      eventIndex = index;
+      break;
+    }
+  }
+  if (eventIndex < 0) throw new Error("This unit has no movement action to undo this turn.");
+
+  const event = history[eventIndex];
+  let nextUnit = unit;
+  if (["unit.normal_move_resolved", "unit.advanced"].includes(event.type)) {
+    const records = Array.isArray(event.payload?.moves) ? event.payload.moves : [];
+    if (!records.length || records.some((record) => !record?.modelId || !positionIsValid(record.from))) {
+      throw new Error("The original movement positions are unavailable for this action.");
+    }
+    const originals = new Map(records.map((record) => [record.modelId, { ...record.from }]));
+    if (Array.isArray(unit.models) && unit.models.length > 0) {
+      nextUnit = {
+        ...unit,
+        models: unit.models.map((model) => {
+          const position = originals.get(model.id);
+          if (!position) throw new Error("The original movement position is unavailable for model " + model.id + ".");
+          return { ...model, position };
+        })
+      };
+    } else {
+      const position = originals.get(unit.id) ?? records[0]?.from;
+      if (!positionIsValid(position)) throw new Error("The original movement position is unavailable.");
+      nextUnit = { ...unit, position: { ...position } };
+    }
+  }
+
+  return {
+    ...state,
+    units: state.units.map((item) => item.id === unitId ? nextUnit : item),
+    history: history.filter((_, index) => index !== eventIndex)
+  };
+}
