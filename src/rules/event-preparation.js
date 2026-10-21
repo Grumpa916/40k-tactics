@@ -7,6 +7,7 @@ export const PREPARATION_STEPS = [
   ['terrain', 'Create battlefield', 'Place terrain areas, then features using the official diagram. Confirm the physical table is ready.'],
   ['roles', 'Attacker & defender', 'Agree which table edges correspond to the layout. Roll off; the winner chooses attacker and defender.'],
   ['secondaries', 'Reveal secondary choices', ''],
+  ['formations', 'Declare battle formations', ''],
   ['deployment', 'Deploy armies', ''],
   ['redeployment', 'Redeploy units', 'Alternate applicable redeployment rules starting with Attacker. Confirm resolved, declined or none. Reserve transfers here are recorded separately.'],
   ['first-turn', 'Determine first turn', 'Roll off now. The winner takes the first turn. Record the result below.'],

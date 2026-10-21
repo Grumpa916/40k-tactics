@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-test('formations page is removed from the guided preparation sequence',()=>{
- const src=fs.readFileSync(new URL('../../src/rules/event-preparation.js',import.meta.url),'utf8');
- assert.doesNotMatch(src,/\['formations', 'Declare battle formations'/);
+test('formations remains an engine checkpoint but its page is skipped by the UI',()=>{
+ const rules=fs.readFileSync(new URL('../../src/rules/event-preparation.js',import.meta.url),'utf8');
+ const ui=fs.readFileSync(new URL('../../src/ui/event-preparation-screen.js',import.meta.url),'utf8');
+ assert.match(rules,/\['formations', 'Declare battle formations'/);
+ assert.match(ui,/stage==='secondaries'&&preparationStep\(session.getState\(\)\)==='formations'/);
 });
 
-test('deployment begins after the secondary-choice checkpoint',()=>{
+test('deployment still requires formations to be confirmed in engine state',()=>{
  const state=fs.readFileSync(new URL('../../src/engine/state-transitions.js',import.meta.url),'utf8');
- assert.match(state,/requirePreparationComplete\(state, \"secondaries\"\)/);
+ assert.match(state,/requirePreparationComplete\(state, \"formations\"\)/);
 });
 
 test('command screen uses active player for secondary entry and ledger CP balance',()=>{
