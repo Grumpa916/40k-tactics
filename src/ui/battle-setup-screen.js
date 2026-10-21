@@ -373,20 +373,23 @@ export function createBattleSetupScreen(container, {
       '</div></fieldset></div>' +
       (layoutOptions ? '<div class="event-companion-missions"><p><strong>Your Primary Mission:</strong> ' + escapeHtml(layoutOptions.myMission) +
         '</p><p><strong>Opponent Primary Mission:</strong> ' + escapeHtml(layoutOptions.opponentMission) + '</p>' +
-        '<h3>Choose battlefield layout</h3><p class="event-companion-layout-hint">Compare all three layouts at a glance, then tap the layout you want to use.</p>' +
-        '<div class="event-companion-layout-previews" role="group" aria-label="Battlefield layout choices">' +
+        '<h3>Choose battlefield layout</h3><p class="event-companion-layout-hint">Tap A, B, or C, then compare the three reduced diagrams below.</p>' +
+        '<div class="event-companion-layout-buttons" role="group" aria-label="Battlefield layout choices">' +
+        layoutOptions.layouts.map((item) =>
+          '<button type="button" class="event-companion-layout-select" data-event-companion-layout="' + item.layout + '" aria-pressed="' +
+          (item.layout === missionSetup.layout ? 'true' : 'false') + '"' +
+          (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout + ' · p. ' + item.page +
+          (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>'
+        ).join("") + '</div>' +
+        '<div class="event-companion-layout-diagrams" aria-label="Battlefield layout diagrams">' +
         layoutOptions.layouts.map((item) => {
           const previewState = { ...state, battlefieldMap: { ...(state.battlefieldMap ?? {}), missionSetup: { ...missionSetup, layout: item.layout } } };
-          return '<article class="event-companion-layout-preview' + (item.layout === missionSetup.layout ? ' is-selected' : '') + '">' +
-            '<button type="button" class="event-companion-layout-select" data-event-companion-layout="' + item.layout + '" aria-pressed="' +
-            (item.layout === missionSetup.layout ? 'true' : 'false') + '"' +
-            (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout + ' · p. ' + item.page +
-            (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>' +
-            '<div class="event-companion-layout-thumbnail" aria-hidden="true">' +
+          return '<figure class="event-companion-layout-preview' + (item.layout === missionSetup.layout ? ' is-selected' : '') + '">' +
+            '<figcaption>Layout ' + item.layout + '</figcaption><div class="event-companion-layout-thumbnail" aria-hidden="true">' +
             renderBattlefieldMap(previewState, { mode: "planning", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId: null, showUnits: false }) +
-            '</div></article>';
+            '</div></figure>';
         }).join("") +
-        '</div><p>Source pages refer to the official Event Companion. These previews keep the battlefield proportions while reducing each map to a quick comparison view.</p>' +
+        '</div><p>Source pages refer to the official Event Companion. These diagrams are intentionally reduced for quick comparison.</p>' +
         '</div>' :
         '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
       '</section>';
