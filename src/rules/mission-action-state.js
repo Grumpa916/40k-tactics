@@ -1,15 +1,52 @@
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from './secondary-mission-lifecycle.js';
+import { getPrimaryMissionDefinition } from '../data/primary-mission-catalog.js';
+
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
+
+function getPrimaryMissionActionOption(state, playerId) {
+  const players = state.players ?? [];
+  const myPlayerId = players[0]?.id ?? null;
+  const setup = state.battlefieldMap?.missionSetup;
+  if (!playerId || !setup?.myDisposition || !setup?.opponentDisposition) return null;
+  const ownDisposition = playerId === myPlayerId ? setup.myDisposition : setup.opponentDisposition;
+  const opponentDisposition = playerId === myPlayerId ? setup.opponentDisposition : setup.myDisposition;
+  const definition = getPrimaryMissionDefinition(ownDisposition, opponentDisposition);
+  const action = definition?.action;
+  if (!definition || !action || action.phase !== 'shooting') return null;
+  const round = state.battle?.round ?? 0;
+  if (Number.isInteger(action.minRound) && round < action.minRound) return null;
+  const instanceId = `primary:${playerId}:${definition.id}`;
+  return {
+    id: instanceId,
+    instanceId,
+    definitionId: definition.id,
+    name: `${definition.name} — ${action.name}`,
+    missionName: definition.name,
+    actionName: action.name,
+    missionKind: 'primary',
+    timings: [action.reviewTiming ?? 'end-of-turn'],
+    notes: [action.summary],
+    rulesVerified: definition.rulesVerified === true,
+    fallbackTiming: action.reviewTiming ?? 'end-of-turn'
+  };
+}
+
 export function getMissionActionOptions(state, playerId = state.activePlayer) {
   const mode = getSecondaryMissionMode(state, playerId);
-  return getSecondaryMissionHistory(state, playerId).filter(item => item.status === SECONDARY_MISSION_STATUS.ACTIVE).map(item => {
-    const windows = (item.definition.scoringWindows ?? []).filter(window => !window.modes?.length || window.modes.includes(mode));
-    return { id:item.instanceId, instanceId:item.instanceId, definitionId:item.definitionId, name:item.definition.name,
-      timings:[...new Set(windows.map(window=>window.timing).filter(t=>ACTION_REVIEW_TIMINGS.includes(t)))],
-      notes:item.definition.referenceNotes ?? [], rulesVerified:item.definition.rulesVerified === true,
-      fallbackTiming:ACTION_REVIEW_TIMINGS.includes(item.definition.timing) ? item.definition.timing : 'end-of-turn' };
-  });
+  const secondary = getSecondaryMissionHistory(state, playerId)
+    .filter(item => item.status === SECONDARY_MISSION_STATUS.ACTIVE)
+    .filter(item => item.definition?.action || item.definition?.missionAction || item.definition?.referenceNotes?.some?.(note => /action/i.test(note)))
+    .map(item => {
+      const windows = (item.definition.scoringWindows ?? []).filter(window => !window.modes?.length || window.modes.includes(mode));
+      return { id:item.instanceId, instanceId:item.instanceId, definitionId:item.definitionId, name:item.definition.name,
+        missionKind:'secondary', timings:[...new Set(windows.map(window=>window.timing).filter(t=>ACTION_REVIEW_TIMINGS.includes(t)))],
+        notes:item.definition.referenceNotes ?? [], rulesVerified:item.definition.rulesVerified === true,
+        fallbackTiming:ACTION_REVIEW_TIMINGS.includes(item.definition.timing) ? item.definition.timing : 'end-of-turn' };
+    });
+  const primary = getPrimaryMissionActionOption(state, playerId);
+  return primary ? [primary, ...secondary] : secondary;
 }
+
 export function getMissionActionReviews(state, { playerId, checkpoint, round = state.battle?.round, turn = state.turn } = {}) {
   const reviewed = new Map((state.history ?? []).filter(e=>e.type==='mission_action.reviewed').map(e=>[e.payload.actionKey,e.payload]));
   return (state.history ?? []).filter(e=>e.type==='shooting.unit_activated' && e.payload?.missionInstanceId).map(e=>{
