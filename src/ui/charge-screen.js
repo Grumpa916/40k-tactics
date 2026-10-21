@@ -1,3 +1,4 @@
+import { createChargeTabletopScreen } from './charge-tabletop-screen.js';
 import {
   getChargeViewModel,
   recordChargeOutcomeForSession,
@@ -58,7 +59,7 @@ function outcomeRow(outcome) {
 
 export function createChargeScreen(
   container,
-  { session, perspectivePlayerId = null } = {}
+  { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}
 ) {
   if (!container || typeof container.replaceChildren !== 'function') {
     throw new TypeError('A browser container element is required.');
@@ -66,6 +67,8 @@ export function createChargeScreen(
   if (!session || typeof session.getState !== 'function' || typeof session.subscribe !== 'function') {
     throw new TypeError('A game session is required.');
   }
+
+  if (layoutMode === "tabletop") return createChargeTabletopScreen(container, { session, perspectivePlayerId });
 
   let selectedUnitId = null;
   let selectedTargetIds = new Set();
@@ -111,10 +114,6 @@ export function createChargeScreen(
           targetRow(item, selectedTargetIds.has(item.targetUnitId), measuredDistances.get(item.targetUnitId))
         ).join('')
       : '';
-
-    const measuredPayload = Object.fromEntries(
-      [...selectedTargetIds].map((id) => [id, measuredDistances.get(id)])
-    );
 
     container.innerHTML = [
       '<main class="charge-screen"><header class="charge-header"><div>',
@@ -195,12 +194,12 @@ export function createChargeScreen(
     });
 
     container.querySelector('[data-charge-success]')?.addEventListener('click', () => {
-      if (!selectedUnitId || !hasCompleteMeasurements) return;
+      if (!selectedUnitId || !selectedTargetIds.size || ![...selectedTargetIds].every(id => Number.isFinite(measuredDistances.get(id)))) return;
       recordChargeOutcomeForSession(session, {
         unitId: selectedUnitId,
         succeeded: true,
         targetIds: [...selectedTargetIds],
-        measuredDistances: measuredPayload
+        measuredDistances: Object.fromEntries([...selectedTargetIds].map(id => [id, measuredDistances.get(id)]))
       });
       selectedUnitId = null;
       selectedTargetIds = new Set();
@@ -209,12 +208,12 @@ export function createChargeScreen(
     });
 
     container.querySelector('[data-charge-failed]')?.addEventListener('click', () => {
-      if (!selectedUnitId || !hasCompleteMeasurements) return;
+      if (!selectedUnitId || !selectedTargetIds.size || ![...selectedTargetIds].every(id => Number.isFinite(measuredDistances.get(id)))) return;
       recordChargeOutcomeForSession(session, {
         unitId: selectedUnitId,
         succeeded: false,
         targetIds: [...selectedTargetIds],
-        measuredDistances: measuredPayload
+        measuredDistances: Object.fromEntries([...selectedTargetIds].map(id => [id, measuredDistances.get(id)]))
       });
       selectedUnitId = null;
       selectedTargetIds = new Set();

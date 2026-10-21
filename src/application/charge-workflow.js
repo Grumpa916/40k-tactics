@@ -65,7 +65,9 @@ export function getChargeViewModel(
     round: state?.battle?.round ?? null,
     turn: state?.turn ?? null,
     activePlayerId: state?.activePlayer ?? state?.battle?.activePlayerId ?? null,
-    candidates: groupRecommendations(state, perspectivePlayerId, perspectivePlayerId),
+    candidates: groupRecommendations(state, state?.activePlayer ?? state?.battle?.activePlayerId, perspectivePlayerId)
+      .filter(item => !currentTurnHistory.some(event => event.payload?.unitId === item.unit.unitId))
+      .filter(item => !state.history.some(event => event.type === "unit.fell_back" && event.payload?.unitId === item.unit.unitId && event.payload?.round === state.battle.round && event.payload?.turn === state.turn)),
     outcomes: currentTurnHistory.map((event) => ({
       ...event.payload,
       unit: describeUnit(state, event.payload.unitId, perspectivePlayerId),
@@ -75,7 +77,7 @@ export function getChargeViewModel(
     })),
     canComplete:
       state?.phase === "charge" &&
-      (state?.activePlayer ?? state?.battle?.activePlayerId) === perspectivePlayerId
+      state?.battle?.status === "active"
   };
 }
 
