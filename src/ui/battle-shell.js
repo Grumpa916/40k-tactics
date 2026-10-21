@@ -230,7 +230,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   setupWorkspaceTab = "saves",
   setupNavigationMessage = "",
   layoutMode = "tabletop",
-  scoreAdjustPlayerId = null
+  scoreAdjustPlayerId = null,
+  scoreAdjustCollapsed = false,
+  scoreAdjustMessage = ""
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -302,7 +304,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
     (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
   const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
-  const scoreAdjustOverlay = scorePlayer ? '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><button type="button" data-close-score-adjust aria-label="Close">×</button></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div></section></div>' : '';
+  const scoreAdjustOverlay = scorePlayer ? '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust' + (scoreAdjustCollapsed ? ' is-collapsed' : '') + '" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><div><button type="button" data-toggle-score-adjust-collapse aria-label="' + (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' + (scoreAdjustCollapsed ? '□' : '−') + '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>' : '';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
@@ -342,7 +344,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '. Selecting a phase changes the screen view, not the recorded game phase.</p>' +
     '<p role="status" class="battle-shell__faction-decision-message" data-faction-decision-message>' +
     escapeHtml(factionDecisionMessage) + '</p>' +
-    workspace + armyDock + armyOverlay + scoreAdjustOverlay + '<style>.battle-shell__player-summary{appearance:none;color:inherit;text-align:left;cursor:pointer}.battle-shell__score-adjust-backdrop{position:fixed;inset:0;z-index:10050;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px}.battle-shell__score-adjust{width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}.battle-shell__score-adjust header{display:flex;justify-content:space-between;align-items:center;gap:12px}.battle-shell__score-adjust header h2{margin:0}.battle-shell__score-adjust header button{font-size:24px;min-width:46px}.battle-shell__score-adjust-current{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.battle-shell__score-adjust-current strong{font-size:24px;padding:12px;border:1px solid #44505c;border-radius:10px;text-align:center}.battle-shell__score-adjust-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.battle-shell__score-adjust-grid button{min-width:76px;min-height:52px;font-size:20px;font-weight:800}</style></main>';
+    workspace + armyDock + armyOverlay + scoreAdjustOverlay + '<style>.battle-shell__player-summary{appearance:none;color:inherit;text-align:left;cursor:pointer}.battle-shell__score-adjust-backdrop{position:fixed;inset:0;z-index:10050;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px}.battle-shell__score-adjust{width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}.battle-shell__score-adjust header{display:flex;justify-content:space-between;align-items:center;gap:12px}.battle-shell__score-adjust header>div{display:flex;gap:8px}.battle-shell__score-adjust header h2{margin:0}.battle-shell__score-adjust header button{font-size:24px;min-width:46px}.battle-shell__score-adjust-current{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.battle-shell__score-adjust-current strong{font-size:24px;padding:12px;border:1px solid #44505c;border-radius:10px;text-align:center}.battle-shell__score-adjust-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.battle-shell__score-adjust-grid button{min-width:76px;min-height:52px;font-size:20px;font-weight:800}.battle-shell__score-adjust-message{min-height:1.3em;margin:10px 0 0}.battle-shell__score-adjust.is-collapsed{width:min(360px,86vw);padding:10px 12px}.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-current,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-grid,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-message{display:none}</style></main>';
 }
 
 export function createBattleShell(container, {
@@ -398,6 +400,8 @@ export function createBattleShell(container, {
   let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
   let missionOpenStates = {};
   let scoreAdjustPlayerId = null;
+  let scoreAdjustCollapsed = false;
+  let scoreAdjustMessage = "";
 
   function setSetupWorkspaceTab(tab) {
     if (!["army-builder", "army-selection", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
@@ -539,6 +543,9 @@ export function createBattleShell(container, {
       scoringReviewCheckpoint = null;
       scoringReviewActivePlayerId = null;
       scoringReviewPlayerId = null;
+      scoreAdjustPlayerId = null;
+      scoreAdjustCollapsed = false;
+      scoreAdjustMessage = "";
       const nextReminder = getScoringCheckpointReminder(state, {previousPhase, missionDefinitions, perspectivePlayerId});
       if (nextReminder) scoringReminder = {...nextReminder, id:++reminderSequence};
       else scoringReminder = null;
@@ -568,7 +575,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
@@ -649,20 +656,35 @@ export function createBattleShell(container, {
 
   function handleScoreAdjust(event) {
     const open = event.target?.closest?.("[data-open-score-adjust]");
-    if (open && container.contains(open)) { scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); render(); return; }
+    if (open && container.contains(open)) {
+      event.preventDefault?.(); event.stopPropagation?.();
+      scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
+    }
+    const collapse = event.target?.closest?.("[data-toggle-score-adjust-collapse]");
+    if (collapse && container.contains(collapse) && scoreAdjustPlayerId) {
+      event.preventDefault?.(); event.stopPropagation?.();
+      scoreAdjustCollapsed = !scoreAdjustCollapsed; render(); return;
+    }
     const close = event.target?.closest?.("[data-close-score-adjust]");
     const backdrop = event.target?.closest?.("[data-score-adjust-backdrop]");
-    if (close || (backdrop && event.target === backdrop)) { scoreAdjustPlayerId = null; render(); return; }
+    if (close || (backdrop && event.target === backdrop)) {
+      event.preventDefault?.(); event.stopPropagation?.();
+      scoreAdjustPlayerId = null; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
+    }
     const adjust = event.target?.closest?.("[data-score-adjust-kind]");
     if (!adjust || !container.contains(adjust) || !scoreAdjustPlayerId) return;
+    event.preventDefault?.(); event.stopPropagation?.();
     const state = session.getState();
     const amount = Number(adjust.getAttribute("data-score-adjust-amount"));
     const kind = adjust.getAttribute("data-score-adjust-kind");
-    if (!Number.isFinite(amount) || !["vp","cp"].includes(kind)) return;
+    if (!Number.isInteger(amount) || !["vp","cp"].includes(kind)) return;
     try {
       if (kind === "vp") session.dispatch({ type: COMMAND_TYPES.ADJUST_VICTORY_POINTS, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
       else session.dispatch({ type: COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", note: "Scoreboard popup", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
-    } catch (error) { console.error(error); }
+      scoreAdjustMessage = (amount > 0 ? "+" : "") + amount + " " + kind.toUpperCase() + " recorded.";
+    } catch (error) {
+      scoreAdjustMessage = error?.message ?? String(error);
+    }
     render();
   }
 

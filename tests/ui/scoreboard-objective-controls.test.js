@@ -29,3 +29,11 @@ test('canonical objectives default to uncontrolled',()=>{
  const src=fs.readFileSync(new URL('../../src/engine/battlefield-map-transitions.js',import.meta.url),'utf8');
  assert.match(src,/controlState: \"uncontrolled\"/);
 });
+
+
+test('score adjustment can collapse and reports adjustment results',()=>{
+ const src=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
+ assert.match(src,/data-toggle-score-adjust-collapse/);
+ assert.match(src,/scoreAdjustMessage/);
+ assert.match(src,/stopPropagation/);
+});

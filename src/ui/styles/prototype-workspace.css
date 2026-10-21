@@ -128,3 +128,14 @@
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .battlefield-map__board { min-height:0; height:100%; }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=movement] .battlefield-map__legend { margin:2px 0 0; padding:2px 0; }
 }
+
+/* Setup consistency: dark army assignment and compact A/B/C layout diagrams. */
+.battle-shell__setup-tools [data-setup-workspace-panel="army-selection"] { background:#101820; color:#edf4f7; }
+.event-companion-layout-buttons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:8px 0 10px; }
+.event-companion-layout-diagrams { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:start; margin:0 0 14px; }
+.event-companion-layout-diagrams .event-companion-layout-preview { margin:0; padding:6px; min-width:0; }
+.event-companion-layout-diagrams figcaption { margin:0 0 5px; font-weight:800; font-size:13px; text-align:center; }
+.event-companion-layout-diagrams .event-companion-layout-thumbnail { min-width:0; overflow:hidden; }
+.event-companion-layout-diagrams .event-companion-layout-thumbnail [data-battlefield-map] { min-width:0 !important; width:100% !important; }
+.event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__board { width:100% !important; min-width:0 !important; min-height:0 !important; height:auto !important; max-height:none !important; aspect-ratio:15/11; }
+@media (max-width:760px), (orientation:portrait) { .event-companion-layout-buttons,.event-companion-layout-diagrams { grid-template-columns:1fr; } }
