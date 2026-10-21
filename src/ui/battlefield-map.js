@@ -99,10 +99,14 @@ function perspectiveObjectiveName(name, state, perspectivePlayerId) {
   const homeOwner = name === "Attacker Home" ? attacker : name === "Defender Home" ? defender : null;
   if (homeOwner) return homeOwner === perspectivePlayerId ? "My Home" : "Opponent Home";
   if (name === "Expansion 1" || name === "Expansion 2") {
-    const position = selectedLayoutGeometry(state)?.objectivePositions?.[name];
-    if (position && perspectivePlayerId) {
-      const myEdgeIsBottom = defender === perspectivePlayerId ? name === "Expansion 1" : name === "Expansion 2";
-      return myEdgeIsBottom ? "My Expansion" : "Opponent Expansion";
+    const positions = selectedLayoutGeometry(state)?.objectivePositions ?? {};
+    const position = positions[name];
+    const attackerHome = positions["Attacker Home"];
+    const defenderHome = positions["Defender Home"];
+    if (position && attackerHome && defenderHome && perspectivePlayerId) {
+      const distance = (a,b) => (a.x-b.x)**2 + (a.y-b.y)**2;
+      const expansionOwner = distance(position, attackerHome) < distance(position, defenderHome) ? attacker : defender;
+      return expansionOwner === perspectivePlayerId ? "My Expansion" : "Opponent Expansion";
     }
   }
   if (name === "Central 1") return "Center 1";
@@ -211,6 +215,6 @@ export function renderBattlefieldMap(state, {
     (showCoordinateMeasurements ? '<div class="battlefield-map__ruler battlefield-map__ruler--top" aria-label="Horizontal inch measurements">' + [0,10,20,30,40,50,60].map((inch) => '<span style="left:' + (inch / 60 * 100) + '%">' + inch + '″</span>').join("") + '</div><div class="battlefield-map__ruler battlefield-map__ruler--left" aria-label="Vertical inch measurements">' + [0,10,20,30,40,44].map((inch) => '<span style="top:' + ((44 - inch) / 44 * 100) + '%">' + inch + '″</span>').join("") + '</div>' : '') +
     geometryOverlay(layoutGeometry, showTerrainEdgeMeasurements) + terrainMeasurementOverlay + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
     (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') + '</div>' +
-    (showUnits ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span><span><i class="opponent"></i> Opponent</span><span><i class="objective"></i> Objective</span></div>' : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
+    (showUnits ? '<div class="battlefield-map__legend"><span><i class="friendly"></i> Your army</span><span><i class="opponent"></i> Opponent</span><span><i class="objective" style="background:#17496b;border-color:#7ec8ff"></i> My control</span><span><i class="objective" style="background:#6b2727;border-color:#ff9c93"></i> Opponent control</span><span><i class="objective" style="background:#66521c;border-color:#f6d783"></i> Contested</span></div>' : (layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '')) +
     '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements ? "Printed Event Companion terrain dimensions are attached to reproducible V2 terrain corners. Values are copied from the official diagram; the drawn guides are placement references, not calculated measurements." : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p></div>';
 }

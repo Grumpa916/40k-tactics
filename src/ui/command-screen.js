@@ -696,7 +696,7 @@ export function createCommandScreen(container, {
       secondaryRedrawMarkup +
       secondaryVpForm +
       '<section><h2>Live battlefield map</h2>' +
-      renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: playerId }) +
+      renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
       '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
   }
