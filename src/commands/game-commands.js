@@ -23,6 +23,7 @@ export const COMMAND_TYPES = Object.freeze({
   RESOLVE_ADVANCE: "unit.advance",
   RECORD_STATIONARY: "unit.record_stationary",
   RECORD_FALL_BACK: "unit.record_fall_back",
+  UNDO_MOVEMENT_ACTION: "unit.undo_movement_action",
   RECORD_CHARGE_OUTCOME: "charge.record_outcome",
   RECORD_SHOOTING_ACTIVATION: "shooting.record_activation",
   COMPLETE_SHOOTING_PHASE: "shooting.complete_phase",
