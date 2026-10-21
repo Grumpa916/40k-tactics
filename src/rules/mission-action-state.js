@@ -33,16 +33,13 @@ function getPrimaryMissionActionOption(state, playerId) {
 
 export function getMissionActionOptions(state, playerId = state.activePlayer) {
   const mode = getSecondaryMissionMode(state, playerId);
-  const secondary = getSecondaryMissionHistory(state, playerId)
-    .filter(item => item.status === SECONDARY_MISSION_STATUS.ACTIVE)
-    .filter(item => item.definition?.action || item.definition?.missionAction || item.definition?.referenceNotes?.some?.(note => /action/i.test(note)))
-    .map(item => {
-      const windows = (item.definition.scoringWindows ?? []).filter(window => !window.modes?.length || window.modes.includes(mode));
-      return { id:item.instanceId, instanceId:item.instanceId, definitionId:item.definitionId, name:item.definition.name,
-        missionKind:'secondary', timings:[...new Set(windows.map(window=>window.timing).filter(t=>ACTION_REVIEW_TIMINGS.includes(t)))],
-        notes:item.definition.referenceNotes ?? [], rulesVerified:item.definition.rulesVerified === true,
-        fallbackTiming:ACTION_REVIEW_TIMINGS.includes(item.definition.timing) ? item.definition.timing : 'end-of-turn' };
-    });
+  const secondary = getSecondaryMissionHistory(state, playerId).filter(item => item.status === SECONDARY_MISSION_STATUS.ACTIVE).map(item => {
+    const windows = (item.definition.scoringWindows ?? []).filter(window => !window.modes?.length || window.modes.includes(mode));
+    return { id:item.instanceId, instanceId:item.instanceId, definitionId:item.definitionId, name:item.definition.name,
+      missionKind:'secondary', timings:[...new Set(windows.map(window=>window.timing).filter(t=>ACTION_REVIEW_TIMINGS.includes(t)))],
+      notes:item.definition.referenceNotes ?? [], rulesVerified:item.definition.rulesVerified === true,
+      fallbackTiming:ACTION_REVIEW_TIMINGS.includes(item.definition.timing) ? item.definition.timing : 'end-of-turn' };
+  });
   const primary = getPrimaryMissionActionOption(state, playerId);
   return primary ? [primary, ...secondary] : secondary;
 }
