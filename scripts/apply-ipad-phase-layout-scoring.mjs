@@ -6,7 +6,6 @@ function replaceOnce(path,before,after,label){
   fs.writeFileSync(path,text.replace(before,after));
 }
 
-// Compact deployment unit rows to one line each.
 fs.appendFileSync('src/ui/styles/deploy-begin.css', `
 
 /* Compact deployment roster: one line per unit on iPad landscape. */
@@ -24,7 +23,6 @@ fs.appendFileSync('src/ui/styles/deploy-begin.css', `
 }
 `);
 
-// Remove the crossed-out Movement heading/instructions from the phase side panel only.
 replaceOnce(
   'src/ui/movement-screen.js',
   '<div class="movement-screen"><h1>Movement</h1><p>Drag an active player\'s marker to refine its approximate position. The first drag records a Normal Move unless another movement choice was recorded first. Later drags only refine map position.</p>',
@@ -32,7 +30,6 @@ replaceOnce(
   'movement side-panel intro'
 );
 
-// Make Command secondary controls fit within the narrow phase panel; maximize Shooting map.
 fs.appendFileSync('src/ui/styles/prototype-workspace.css', `
 
 /* iPad phase-panel fit and Shooting map refinements. */
@@ -54,7 +51,6 @@ fs.appendFileSync('src/ui/styles/prototype-workspace.css', `
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .battlefield-map__legend { margin:2px 0 0 !important; padding:2px 0 !important; }
 `);
 
-// Mark selected-target state and auto-scroll the right panel to Tactical Advisor.
 replaceOnce(
   'src/ui/shooting-screen.js',
   'container.innerHTML = `<main class="shoot-screen shoot-screen--tabletop">',
@@ -72,33 +68,3 @@ replaceOnce(
       container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {`,
   'shooting advisor auto-scroll'
 );
-
-fs.writeFileSync('tests/ui/ipad-phase-layout-scoring.test.js', `import test from 'node:test';
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-
-test('movement tabletop panel omits duplicated instructional heading text',()=>{
- const src=fs.readFileSync(new URL('../../src/ui/movement-screen.js',import.meta.url),'utf8');
- assert.doesNotMatch(src,/controls:\\`<div class="movement-screen"><h1>Movement/);
-});
-
-test('shooting tabletop view auto-scrolls Tactical Advisor after target selection',()=>{
- const src=fs.readFileSync(new URL('../../src/ui/shooting-screen.js',import.meta.url),'utf8');
- assert.match(src,/scroll\.scrollTop = Math\.max\(0, advisor\.offsetTop - 8\)/);
-});
-
-test('checkpoint rendering names Primary missions and shows due windows',()=>{
- const src=fs.readFileSync(new URL('../../src/ui/scoring-checkpoint-review.js',import.meta.url),'utf8');
- assert.match(src,/primaryReference\?\.name/);
- assert.match(src,/primaryScoringWindows/);
- assert.match(src,/score now/);
-});
-
-test('tablet CSS compacts deployment rows and hides shooting map chrome',()=>{
- const deploy=fs.readFileSync(new URL('../../src/ui/styles/deploy-begin.css',import.meta.url),'utf8');
- const proto=fs.readFileSync(new URL('../../src/ui/styles/prototype-workspace.css',import.meta.url),'utf8');
- assert.match(deploy,/grid-template-columns:minmax\(0,1fr\) auto/);
- assert.match(proto,/shoot-screen--tabletop \.live-map > nav/);
- assert.match(proto,/command-vp-form/);
-});
-`);
