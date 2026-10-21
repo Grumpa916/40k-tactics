@@ -1,0 +1,100 @@
+/* Approved tabletop prototype: map first, one collapsible phase/advisor column.
+   This layer changes presentation; real terrain, state and phase guards stay authoritative. */
+.battle-shell.is-tabletop-experiment { --prototype-bg:#10191f; --prototype-panel:#19262d; --prototype-line:#304149; --prototype-accent:#c4e99b; background:var(--prototype-bg); color:#f1f3e9; font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.battle-shell.is-tabletop-experiment .battle-shell__status-summary,
+.battle-shell.is-tabletop-experiment .battle-mission-summary__section,
+.battle-shell.is-tabletop-experiment .battle-shell__player-summary,
+.battle-shell.is-tabletop-experiment .battle-phase__button,
+.battle-shell.is-tabletop-experiment .battle-shell__army-dock button { background:#19262d; border-color:#304149; color:#f1f3e9; }
+.battle-shell.is-tabletop-experiment .battle-shell__player-summary.is-active { background:#c4e99b; color:#17212b; border-color:#c4e99b; }
+.battle-shell.is-tabletop-experiment .battle-shell__round-summary strong { font-size:18px; }
+.prototype-workspace-tools { display:flex; align-items:center; gap:8px; flex:none; min-height:48px; }
+.prototype-workspace-tools[hidden] { display:none; }
+.prototype-workspace-tools strong { margin-right:auto; text-transform:capitalize; }
+.prototype-workspace-tools button,.prototype-unit-dialog button { min-height:44px; padding:8px 12px; border:1px solid #53676a; border-radius:9px; background:#19262d; color:#f1f3e9; font:inherit; touch-action:manipulation; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop,
+.battle-shell.is-tabletop-experiment .combat-workspace { grid-template-columns:minmax(0,1fr) 330px; gap:10px; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-panel,
+.battle-shell.is-tabletop-experiment .combat-workspace__map,
+.battle-shell.is-tabletop-experiment .shoot-tabletop__control-panel,
+.battle-shell.is-tabletop-experiment .combat-workspace__panel { background:#19262d; border:1px solid #304149; border-radius:12px; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-heading h1 { font-size:18px; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__phase-heading h1 { font-size:20px; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__phase-heading .kicker,
+.battle-shell.is-tabletop-experiment .shoot-tabletop__advisor-heading .kicker { color:#a7b7ba; letter-spacing:.14em; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__advisor { background:#202d26; border:1px solid #465840; border-radius:10px; padding:10px; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__advisor h2 { color:#c4e99b; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__record,
+.battle-shell.is-tabletop-experiment .shoot-tabletop__finish,
+.battle-shell.is-tabletop-experiment .combat-workspace__panel footer button { background:#c4e99b; border-color:#c4e99b; color:#17212b; }
+.battle-shell.is-tabletop-experiment .shoot-tabletop__control-panel button,
+.battle-shell.is-tabletop-experiment .shoot-tabletop__control-panel select { min-height:44px; }
+.battle-shell.is-tabletop-experiment .live-map { gap:5px; }
+.battle-shell.is-tabletop-experiment .live-map > nav small { display:none; }
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__legend { font-size:11px; padding:5px 0; }
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__notice { display:none; }
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-compact { width:36px; height:36px; border-width:2px; font-size:11px; font-weight:750; box-shadow:none; overflow:visible; }
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.friendly { background:#213f60; border-color:#79bbff; color:#e1efff; }
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.opponent { background:#602e34; border-color:#ff8585; color:#ffe1e1; }
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-selected { outline:3px solid #c4e99b; outline-offset:3px; }
+.unit-activation-badge { position:absolute; right:-6px; top:-7px; width:18px; height:18px; border-radius:50%; display:grid; place-items:center; background:#c4e99b; color:#17212b; font-size:13px; font-weight:900; border:1px solid #10191f; pointer-events:none; }
+.battle-shell.is-tabletop-experiment .battle-shell__army-dock { grid-template-columns:1fr 1fr auto; background:#10191f; border-color:#304149; gap:10px; }
+.battle-shell.is-tabletop-experiment .battle-shell__army-dock button { min-height:58px; border-radius:11px; }
+.battle-shell__army-dialog { background:#19262d; color:#f1f3e9; border-color:#53676a; width:min(1100px,96vw); }
+.prototype-roster-row { display:grid; grid-template-columns:minmax(150px,1fr) 280px minmax(0,.5fr) 65px 65px 130px; align-items:center; gap:12px; width:100%; min-height:74px; padding:12px; background:#19262d; color:#f1f3e9; border:1px solid #304149; border-radius:9px; font:inherit; text-align:left; touch-action:manipulation; cursor:pointer; }
+.prototype-unit-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+.prototype-unit-stats span,.prototype-counter { display:flex; flex-direction:column; gap:5px; }
+.prototype-roster-row small { color:#a7b7ba; font-size:10px; letter-spacing:.08em; }
+.prototype-roster-row b { font-size:13px; }
+.prototype-unit-status { font-size:12px; color:#c4e99b; text-transform:uppercase; }
+.prototype-roster-row:hover,.prototype-roster-row:focus-visible { background:#24363d; outline:2px solid #c4e99b; }
+.prototype-unit-dialog { max-height:90dvh; overflow:auto; }
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] { position:fixed; inset:0; width:100%; height:100dvh; min-height:0; padding:8px 10px 76px; overflow:hidden; display:flex; flex-direction:column; gap:8px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] > .battle-shell__tabletop-header { display:none; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] [data-phase-progression-host] { flex:none; max-width:55%; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress { margin:0; padding:4px; background:#19262d; border-color:#53676a; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress > div { display:none; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress button { background:#c4e99b; color:#17212b; border-color:#c4e99b; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress [role=status] { max-width:400px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-shell__workspace { flex:1; min-height:0; height:auto; overflow:hidden; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-shell__content,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] [data-battle-screen] { height:100%; min-height:0; overflow:hidden; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .shoot-screen--tabletop,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace { height:100%; min-height:0; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .shoot-tabletop__control-scroll,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace__scroll { min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; }
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-screen--tabletop,
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace { grid-template-columns:minmax(0,1fr); }
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-tabletop__control-panel,
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace__panel { display:none; }
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true][data-battle-focus=true] [data-phase-progression-host] { max-width:55%; }
+}
+@media (min-width:1400px) { .battle-shell.is-tabletop-experiment .shoot-screen--tabletop,.battle-shell.is-tabletop-experiment .combat-workspace { grid-template-columns:minmax(0,1fr) 360px; } }
+@media (max-width:950px) { .prototype-roster-row { grid-template-columns:minmax(130px,1fr) 250px 60px 60px 100px; gap:6px; } .prototype-roster-spacer { display:none; } }
+@media (max-width:760px), (orientation:portrait) {
+  .battle-shell.is-tabletop-experiment .shoot-screen--tabletop,.battle-shell.is-tabletop-experiment .combat-workspace { grid-template-columns:minmax(0,1fr); height:auto; }
+  .prototype-roster-row { grid-template-columns:1fr auto auto; }
+  .prototype-roster-row > strong { grid-column:1/-1; }
+  .prototype-unit-stats { grid-column:1/-1; }
+  .prototype-workspace-tools { flex-wrap:wrap; }
+  [data-workspace-panel] { display:none; }
+}
+
+.prototype-workspace-tools .battle-phase-progress button { font-size:12px; }
+.prototype-workspace-tools .battle-phase-progress [role=status] { font-size:11px; margin:0; }
+
+.battle-shell.is-tabletop-experiment .battle-shell__army-dialog { box-sizing:border-box; max-width:100%; }
+.battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=movement] .battlefield-map__unit[role=button] { touch-action:none; }
+.battle-shell.is-tabletop-experiment .prototype-roster-row { display:grid; }
+.prototype-roster-row > strong small { display:block; margin-top:5px; }
+/* Overview retains the prototype's readable score cards and mission strip. */
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=false] .battle-shell__tabletop-topline { grid-template-columns:minmax(0,1fr); }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=false] .battle-shell__status-summary { min-height:76px; padding:8px 12px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=false] .battle-shell__player-summaries { display:grid; grid-template-columns:1fr 1fr; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=false] .battle-shell__player-summary { padding:12px 16px; font-size:18px; gap:14px; border-radius:12px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=false] .battle-shell__player-summary strong { max-width:none; margin-right:auto; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=false] .battle-mission-summary__section > summary { min-height:44px; font-size:13px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] { padding-top:calc(8px + env(safe-area-inset-top,0px)); padding-bottom:calc(76px + env(safe-area-inset-bottom,0px)); }
+}

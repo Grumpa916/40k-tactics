@@ -1,3 +1,4 @@
+import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
 import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
 import { getPhaseProgressionAction, renderPhaseProgressionPanel } from "./phase-progression-panel.js";
@@ -298,7 +299,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<button type="button" data-open-army-roster="' + escapeHtml(yourPlayerId ?? "") + '"' +
     (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong><span>' + escapeHtml(myName) + '</span></button>' +
     '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
-    (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button></nav>';
+    (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
@@ -313,7 +314,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
 
   container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
-    shellLiveHeader +
+    shellLiveHeader + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
@@ -380,6 +381,7 @@ export function createBattleShell(container, {
   let reminderSequence = 0;
   let leftPanelCollapsed = true;
   let rightPanelCollapsed = false;
+  const prototypeWorkspace = createPrototypeWorkspace(container, { session, gameData });
   let armyRosterPlayerId = null;
   let battleShockMessage = "";
   let battleShockReminder = null;
@@ -477,6 +479,7 @@ export function createBattleShell(container, {
     if (overlay && armyRosterPlayerId && !overlay.hidden) {
       overlay.innerHTML = renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {});
     }
+    prototypeWorkspace.refresh();
   }
 
   function refreshClockDisplay() {
@@ -636,6 +639,7 @@ export function createBattleShell(container, {
     }
 
     refreshPersistentPanels();
+    prototypeWorkspace.refresh();
     return state;
   }
 
@@ -926,6 +930,7 @@ export function createBattleShell(container, {
     render,
     destroy: () => {
       unsubscribe();
+      prototypeWorkspace.destroy();
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
       container.removeEventListener?.("click", handleSetupWorkspaceNavigation);

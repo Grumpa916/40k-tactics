@@ -5,6 +5,7 @@ import {
   renderUnitStatusPanel,
   renderReferencePanel,
   renderArmyRosterOverlay,
+  renderArmyUnitDialog,
   summarizeGameEvent
 } from "../../src/ui/battle-context-panels.js";
 
@@ -157,7 +158,7 @@ test("Army roster overlay opens a unit reference with recorded characteristics, 
       }
     }]
   };
-  const html = renderArmyRosterOverlay(referenceState, "p1", {
+  const html = renderArmyUnitDialog(referenceState, "unit-1", {
     weapons: [{
       id: "bolt-rifle",
       name: "Bolt Rifle",

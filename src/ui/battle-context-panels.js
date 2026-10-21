@@ -1,3 +1,4 @@
+import { getArmyUnitReference, renderArmyUnitSummary } from './army-unit-summary.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { getBattleShockEligibility, getUnitStrengthAssessment, isUnitBattleShocked } from "../rules/unit-status-summary.js";
 
@@ -352,40 +353,26 @@ export function renderArmyRosterOverlay(state = {}, playerId = null, gameData = 
   const selectedPlayer = players.find((player) => player.id === playerId);
   const units = (Array.isArray(state.units) ? state.units : []).filter((unit) => unit.ownerId === playerId);
   if (!selectedPlayer) return '<p>No player roster is available.</p>';
-  const rows = units.map((unit) => {
-    const badges = [unit.status ?? "unknown"];
-    if (isUnitBattleShocked(unit)) badges.push("Battle-shocked");
-    const strength = getUnitStrengthAssessment(unit);
-    const strengthText = strength.known && Number.isFinite(strength.currentStrength) &&
-      Number.isFinite(strength.startingStrength)
-      ? strength.currentStrength + "/" + strength.startingStrength + " models"
-      : "Model count not fully tracked";
-    const points = Number.isFinite(unit.points) ? unit.points :
-      Number.isFinite(unit.metadata?.points) ? unit.metadata.points : null;
-    if (points != null) badges.push(points + " pts");
-    const characteristics = unit.profile?.characteristics ?? unit.characteristics ?? null;
-    const relationship = unit.attachedTo
-      ? state.units?.find((item) => item.id === unit.attachedTo)
-      : null;
-    const attachmentText = relationship
-      ? '<p class="battle-shell__army-attachment">Attached to: ' + escapeHtml(relationship.name ?? relationship.id) + '</p>'
-      : "";
-    return '<li><details class="battle-shell__army-unit"><summary><strong>' +
-      escapeHtml(unit.name ?? unit.id) + '</strong><span>' + escapeHtml(badges.join(" · ")) +
-      '</span></summary><div class="battle-shell__army-unit-detail">' +
-      '<p class="battle-shell__army-state">' + escapeHtml(playerName(state, unit.ownerId)) +
-      ' · ' + escapeHtml(unit.status ?? "unknown") +
-      (Number.isFinite(unit.wounds) ? ' · ' + escapeHtml(unit.wounds) + ' Wounds remaining' : "") +
-      '</p>' + attachmentText +
-      '<section><h3>Characteristics</h3>' + renderCharacteristics(characteristics) + '</section>' +
-      '<section><h3>Weapons</h3>' + renderUnitWeapons(unit, gameData) + '</section>' +
-      '<section><h3>Abilities</h3>' + renderUnitAbilities(unit) + '</section>' +
-      '<p class="battle-context__note">' + escapeHtml(strengthText) + '</p></div></details></li>';
-  }).join("");
+  const rows = units.map(unit => '<li>' + renderArmyUnitSummary(state,unit) + '</li>').join('');
   return '<section class="battle-shell__army-dialog" role="dialog" aria-modal="true" aria-labelledby="battle-shell-army-title">' +
     '<div class="battle-shell__army-dialog-header"><h2 id="battle-shell-army-title">' +
     escapeHtml(selectedPlayer.name ?? selectedPlayer.id) +
     ' Army</h2><button type="button" data-close-army-roster>Close</button></div>' +
     (rows ? '<ul class="battle-shell__army-roster">' + rows + '</ul>' : '<p>No units are currently recorded for this player.</p>') +
     '</section>';
+}
+
+export function renderArmyUnitDialog(state, unitId, gameData = {}) {
+  const original = state.units?.find(unit => unit.id === unitId);
+  if (!original) return '<p>Unit no longer available.</p><button data-army-back>Back to army</button>';
+  const unit = getArmyUnitReference(state, original);
+  const shocked = isUnitBattleShocked(unit);
+  // The weapon and ability reference renderers accept embedded datasheet data.
+  const weapons = (unit.profile?.weapons ?? []).map(weapon => ({ ...weapon, characteristics:weapon.characteristics ?? Object.fromEntries(Object.entries(weapon).filter(([key]) => ['range','attacks','skill','strength','ap','damage','abilities'].includes(key))) }));
+  return '<section class="battle-shell__army-dialog prototype-unit-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-unit-title"><header class="battle-shell__army-dialog-header"><button type="button" data-army-back>← Army list</button><h2 id="prototype-unit-title">' + escapeHtml(unit.name ?? unit.id) + '</h2><button type="button" data-close-army-roster>Close</button></header>' +
+    '<p>' + (Number.isFinite(unit.points ?? unit.metadata?.points) ? escapeHtml(unit.points ?? unit.metadata.points) + ' pts · ' : '') + escapeHtml(unit.status) + ' · ' + escapeHtml(unit.wounds ?? '—') + ' Wounds remaining</p>' +
+    '<button type="button" data-manual-battle-shock="' + escapeHtml(unit.id) + '" aria-pressed="' + shocked + '">' + (shocked ? 'Clear Battle-shock' : '+ Battle-shock') + '</button><p data-army-status role="status"></p>' +
+    '<h3>Characteristics</h3>' + renderCharacteristics(unit.profile?.characteristics) +
+    '<h3>Weapons</h3>' + renderUnitWeapons({...unit,profile:{...unit.profile,weapons}},gameData) +
+    '<h3>Abilities</h3>' + renderUnitAbilities(unit) + '</section>';
 }

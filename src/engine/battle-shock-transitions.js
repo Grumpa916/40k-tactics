@@ -61,6 +61,7 @@ export function recordBattleShockTest(state, {
   const unitAfter = {
     ...unit,
     battleShocked: battleShockedAfter,
+    battleShock: { ...unit.battleShock, active:battleShockedAfter, status:battleShockedAfter ? "battle-shocked" : "clear" },
     battleShockLastTest: {
       result,
       round,
