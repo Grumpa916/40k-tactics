@@ -44,7 +44,8 @@ test('army rows expose real catalog stats and separate full unit detail, with un
   const detail=renderArmyUnitDialog(initial,'shooter');
   assert.match(detail,/Monstrous bonesword/);
   assert.match(detail,/Shadow in the Warp/);
-  assert.match(detail,/data-manual-battle-shock="shooter"/);
+  assert.doesNotMatch(detail,/data-manual-battle-shock="shooter"/);
+  assert.match(renderArmyRosterOverlay(initial,'p1'),/data-manual-battle-shock="shooter"/);
   assert.doesNotMatch(renderArmyRosterOverlay(initial,'p2'),/undefined\/undefined/);
 });
 function workspaceFixture(session) {
