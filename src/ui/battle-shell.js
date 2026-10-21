@@ -24,6 +24,8 @@ import { renderPersistentMissionSummary } from "./mission-summary-panel.js";
 import { getBattleShockEligibility, isUnitBattleShocked } from "../rules/unit-status-summary.js";
 import { getTyranidDecisionReminders, TYRANID_DECISION_IDS } from "../rules/tyranid-decision-reminders.js";
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
+import { getCommandPointBalance } from "../engine/command-points-ledger.js";
+import { getVictoryPointScore } from "../engine/victory-points-ledger.js";
 
 const PHASES = Object.freeze([
   { id: "command", label: "Command", status: "live" },
@@ -182,14 +184,12 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
     ? formatElapsedTime(getTurnClockElapsedMs(state, clockPlayerId))
     : "--:--";
   const playerSummary = players.map((player) => {
-    const vp = Number.isFinite(state.victoryPoints?.[player.id]) ? state.victoryPoints[player.id] : 0;
-    const cpValue = state.commandPoints?.[player.id];
-    const cp = Number.isFinite(cpValue) ? cpValue :
-      Number.isFinite(cpValue?.current) ? cpValue.current : "—";
+    const vp = getVictoryPointScore(state, player.id);
+    const cp = getCommandPointBalance(state, player.id);
     const active = player.id === activePlayerId ? " is-active" : "";
-    return '<div class="battle-shell__player-summary' + active + '">' +
+    return '<button type="button" class="battle-shell__player-summary' + active + '" data-open-score-adjust="' + escapeHtml(player.id) + '" aria-label="Adjust score for ' + escapeHtml(player.name ?? player.id) + '">' +
       '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
-      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span></div>';
+      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span></button>';
   }).join("");
   return '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
     '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
@@ -229,7 +229,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   missionOpenStates = {},
   setupWorkspaceTab = "saves",
   setupNavigationMessage = "",
-  layoutMode = "tabletop"
+  layoutMode = "tabletop",
+  scoreAdjustPlayerId = null
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -300,6 +301,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong><span>' + escapeHtml(myName) + '</span></button>' +
     '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
     (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
+  const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
+  const scoreAdjustOverlay = scorePlayer ? '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><button type="button" data-close-score-adjust aria-label="Close">×</button></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div></section></div>' : '';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
@@ -339,7 +342,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '. Selecting a phase changes the screen view, not the recorded game phase.</p>' +
     '<p role="status" class="battle-shell__faction-decision-message" data-faction-decision-message>' +
     escapeHtml(factionDecisionMessage) + '</p>' +
-    workspace + armyDock + armyOverlay + '</main>';
+    workspace + armyDock + armyOverlay + scoreAdjustOverlay + '<style>.battle-shell__player-summary{appearance:none;color:inherit;text-align:left;cursor:pointer}.battle-shell__score-adjust-backdrop{position:fixed;inset:0;z-index:10050;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px}.battle-shell__score-adjust{width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}.battle-shell__score-adjust header{display:flex;justify-content:space-between;align-items:center;gap:12px}.battle-shell__score-adjust header h2{margin:0}.battle-shell__score-adjust header button{font-size:24px;min-width:46px}.battle-shell__score-adjust-current{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.battle-shell__score-adjust-current strong{font-size:24px;padding:12px;border:1px solid #44505c;border-radius:10px;text-align:center}.battle-shell__score-adjust-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.battle-shell__score-adjust-grid button{min-width:76px;min-height:52px;font-size:20px;font-weight:800}</style></main>';
 }
 
 export function createBattleShell(container, {
@@ -394,6 +397,7 @@ export function createBattleShell(container, {
   let contextOpenStates = { "unit-status": true, "event-log": true, "older-events": false };
   let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
   let missionOpenStates = {};
+  let scoreAdjustPlayerId = null;
 
   function setSetupWorkspaceTab(tab) {
     if (!["army-builder", "army-selection", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
@@ -564,7 +568,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
@@ -641,6 +645,49 @@ export function createBattleShell(container, {
     refreshPersistentPanels();
     prototypeWorkspace.refresh();
     return state;
+  }
+
+  function handleScoreAdjust(event) {
+    const open = event.target?.closest?.("[data-open-score-adjust]");
+    if (open && container.contains(open)) { scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); render(); return; }
+    const close = event.target?.closest?.("[data-close-score-adjust]");
+    const backdrop = event.target?.closest?.("[data-score-adjust-backdrop]");
+    if (close || (backdrop && event.target === backdrop)) { scoreAdjustPlayerId = null; render(); return; }
+    const adjust = event.target?.closest?.("[data-score-adjust-kind]");
+    if (!adjust || !container.contains(adjust) || !scoreAdjustPlayerId) return;
+    const state = session.getState();
+    const amount = Number(adjust.getAttribute("data-score-adjust-amount"));
+    const kind = adjust.getAttribute("data-score-adjust-kind");
+    if (!Number.isFinite(amount) || !["vp","cp"].includes(kind)) return;
+    try {
+      if (kind === "vp") session.dispatch({ type: COMMAND_TYPES.ADJUST_VICTORY_POINTS, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
+      else session.dispatch({ type: COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", note: "Scoreboard popup", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
+    } catch (error) { console.error(error); }
+    render();
+  }
+
+  function handleMapObjectiveToggle(event) {
+    const marker = event.target?.closest?.("[data-map-objective-id]");
+    if (!marker || !container.contains(marker)) return;
+    const state = session.getState();
+    if (state.battle?.status !== "active") return;
+    const objectiveId = marker.getAttribute("data-map-objective-id");
+    const objective = (state.objectives ?? []).find((item) => item?.id === objectiveId);
+    if (!objective) return;
+    const players = Array.isArray(state.players) ? state.players : [];
+    const me = perspectivePlayerId ?? players[0]?.id ?? state.activePlayer ?? null;
+    const opponent = players.find((player) => player.id !== me)?.id ?? null;
+    const control = objective.control ?? { controlState: "uncontrolled" };
+    let next = "mine";
+    if (control.controlState === "controlled" && control.controllerId === me) next = "opponent";
+    else if (control.controlState === "controlled" && control.controllerId !== me) next = "contested";
+    else if (control.controlState === "contested") next = "uncontrolled";
+    const payload = { objectiveId, controllerId: null, contestingPlayerIds: [], controlState: "uncontrolled" };
+    if (next === "mine") { payload.controlState = "controlled"; payload.controllerId = me; }
+    else if (next === "opponent") { payload.controlState = "controlled"; payload.controllerId = opponent; }
+    else if (next === "contested") { payload.controlState = "contested"; payload.contestingPlayerIds = players.map((player) => player.id); }
+    try { session.dispatch({ type: COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, payload }); } catch (error) { console.error(error); }
+    render();
   }
 
   function handleToggleTurnClock(event) {
@@ -905,6 +952,8 @@ export function createBattleShell(container, {
     render();
   }
 
+  container.addEventListener?.("click", handleScoreAdjust);
+  container.addEventListener?.("click", handleMapObjectiveToggle);
   container.addEventListener?.("click", handleSetupWorkspaceNavigation);
   container.addEventListener?.("click", handlePhaseNavigation);
   container.addEventListener?.("click", handlePhaseProgression);
@@ -933,6 +982,8 @@ export function createBattleShell(container, {
       prototypeWorkspace.destroy();
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
+      container.removeEventListener?.("click", handleScoreAdjust);
+      container.removeEventListener?.("click", handleMapObjectiveToggle);
       container.removeEventListener?.("click", handleSetupWorkspaceNavigation);
       container.removeEventListener?.("click", handlePhaseNavigation);
       container.removeEventListener?.("click", handlePhaseProgression);

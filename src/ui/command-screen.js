@@ -696,24 +696,9 @@ export function createCommandScreen(container, {
       secondaryRedrawMarkup +
       secondaryVpForm +
       '<section><h2>Live battlefield map</h2>' +
-      renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: playerId }) +
-      '<p>Map positions are approximate references. Objective control is recorded manually below and is not inferred from marker positions.</p></section>' +
-      '<section><h2>Objective control</h2><p>Tap the result that matches the table. This records your assessment; the app does not determine control from map coordinates.</p>' +
-      (objectiveMessage ? '<p role="status">' + escapeHtml(objectiveMessage) + '</p>' : '') +
-      '<div class="command-objectives">' + objectiveCards + '</div></section>' +
-      '<section><h2>Victory Point score</h2><div class="command-scoreboard">' + (scoreCards || '<p>Add players to the battle to track scores.</p>') + '</div>' +
-      '<p>Use mission Confirm buttons for capped Primary and Secondary scoring. Manual adjustments can add or subtract VP without consuming mission caps; deductions cannot reduce a score below zero.</p>' +
-      (players.length ? '<form class="command-vp-form" data-vp-form><label>Player<select name="vp-player" required>' + playerOptions +
-      '</select></label><label>Adjustment<select name="vp-direction" required><option value="add" selected>Add VP</option><option value="deduct">Subtract VP</option></select></label>' +
-      '<label>VP amount<input name="vp-amount" type="number" min="1" step="1" value="5" required></label>' +
-      '<label>Manual adjustment reason<input name="vp-reason" type="text" maxlength="160" placeholder="e.g. Correct an entry error" required></label>' +
-      '<button type="submit">Confirm VP adjustment</button></form>' : '<p>Configure both players before recording adjustments.</p>') +
-      undoVpMarkup + (vpMessage ? '<p role="status">' + escapeHtml(vpMessage) + '</p>' : '') + '<h3>Recent confirmed awards</h3><ol class="command-ledger-history">' + vpHistoryMarkup + '</ol></section>' +
-      '<section><h2>Command Point ledger</h2><p>Select either player to record actual CP gains, spending, or corrections. Entries update only the selected player.</p>' +
-      '<label>Adjust Command Points for<select data-cp-player>' + players.map((player) => '<option value="' + escapeHtml(player.id) + '"' + (player.id === cpPlayerId ? ' selected' : '') + '>' + escapeHtml(player.name ?? player.id) + '</option>').join("") + '</select></label>' +
-      '<p><strong>Current balance:</strong> ' + escapeHtml(commandPointsFor(state, cpPlayerId)) + ' CP</p>' +
-      '<div class="command-ledger-actions"><button type="button" data-cp-gain>Record +1 CP</button><button type="button" data-cp-spend>Record −1 CP</button></div>' +
-      '<ol class="command-ledger-history">' + cpHistoryMarkup + '</ol></section>' +      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
+      renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
+      '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +
+      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
   }
 
   container.addEventListener?.("click", handleClick);
