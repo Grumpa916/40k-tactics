@@ -69,7 +69,12 @@ export function createEventPreparationScreen(container, options = {}) {
         catch(err) {message=err.message;render();}
       } else {
         send({action:'confirm'});
-        if(stage==='formations'&&preparationStep(session.getState())==='deployment') {
+        if(stage==='secondaries'&&preparationStep(session.getState())==='formations') {
+          try {
+            session.dispatch({type:COMMAND_TYPES.UPDATE_PREPARATION,payload:{action:'confirm'}});
+            session.dispatch({type:COMMAND_TYPES.ENTER_DEPLOYMENT});
+          } catch(err) { message=err.message; render(); }
+        } else if(stage==='formations'&&preparationStep(session.getState())==='deployment') {
           try{session.dispatch({type:COMMAND_TYPES.ENTER_DEPLOYMENT});}catch(err){message=err.message;render();}
         }
       }

@@ -28,10 +28,7 @@ function objectiveStatus(objective, state, playerId) {
 }
 
 function commandPointsFor(state, playerId) {
-  const value = state.commandPoints?.[playerId];
-  if (Number.isFinite(value)) return String(value);
-  if (Number.isFinite(value?.current)) return String(value.current);
-  return "Not tracked";
+  return playerId ? String(getCommandPointBalance(state, playerId)) : "0";
 }
 
 function vpCapDescription(cap) {
@@ -60,7 +57,6 @@ export function createCommandScreen(container, {
     throw new TypeError("A game session is required.");
   }
 
-  let selectedSecondaryPlayerId = null;
   let secondaryMissionMessage = "";
   let vpMessage = "";
   let objectiveMessage = "";
@@ -169,8 +165,7 @@ export function createCommandScreen(container, {
         render();
         return;
       }
-      const playerId = container.querySelector("[data-secondary-player]")?.value ||
-        perspectivePlayerId || state.activePlayer;
+      const playerId = state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
       const missionMode = getSecondaryMissionMode(state, playerId);
       if (!missionMode) {
         secondaryMissionMessage = "Choose Fixed or Tactical mode for this player before entering secondary cards.";
@@ -299,7 +294,6 @@ export function createCommandScreen(container, {
         session.dispatch({ type: COMMAND_TYPES.DRAW_SECONDARY_MISSION, payload: {
           definition, playerId, round, turn
         }});
-        selectedSecondaryPlayerId = playerId;
         secondaryMissionMessage = "Mission added to the selected player's active secondary missions.";
         render();
       } catch (error) {
@@ -334,12 +328,6 @@ export function createCommandScreen(container, {
 
   function handleChange(event) {
     const target = event.target;
-    if (target?.matches?.("[data-secondary-player]")) {
-      selectedSecondaryPlayerId = target.value;
-      secondaryMissionMessage = "";
-      render();
-      return;
-    }
     if (target?.matches?.("[data-secondary-mode]")) {
       secondaryMissionMessage = "Set each player's mode in Mission & Map setup.";
       render();
@@ -430,11 +418,9 @@ export function createCommandScreen(container, {
 
   function render() {
     const state = session.getState();
-    const playerId = scoringCheckpointPlayerId ?? perspectivePlayerId ?? state.activePlayer;
+    const playerId = scoringCheckpointPlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
     const players = Array.isArray(state.players) ? state.players : [];
-    if (!selectedSecondaryPlayerId || !players.some((player) => player.id === selectedSecondaryPlayerId)) {
-      selectedSecondaryPlayerId = scoringCheckpointPlayerId ?? perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
-    }
+    const selectedSecondaryPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId ?? players[0]?.id ?? null;
     const objectives = Array.isArray(state.objectives) ? state.objectives : [];
     const objectiveCards = objectives.length ? objectives.map((objective) => {
       const objectiveId = escapeHtml(objective.id);
@@ -622,11 +608,6 @@ export function createCommandScreen(container, {
         '<label>VP actually scored<input name="secondary-vp-amount" type="number" min="1" step="1" value="3" required></label>' +
         '<button type="submit">Confirm secondary VP</button></form></section>'
       : "";
-    const secondaryPlayerOptions = players.map((player) =>
-      '<option value="' + escapeHtml(player.id) + '"' +
-      (player.id === selectedSecondaryPlayerId ? ' selected' : '') + '>' +
-      escapeHtml(player.name ?? player.id) + '</option>'
-    ).join("");
     const secondaryDefinitionOptions = '<option value="">Enter a mission manually</option>' +
       selectableSecondaryDefinitions.map((definition) =>
         '<option value="' + escapeHtml(definition.id) + '">' + escapeHtml(definition.name ?? definition.id) + '</option>'
@@ -650,12 +631,9 @@ export function createCommandScreen(container, {
       : !players.length
         ? '<p>Add players before entering secondary missions.</p>'
         : '<form data-secondary-mission-form><div class="command-vp-form">' +
-          '<p>Secondary mode for ' + escapeHtml(playerName(state, selectedSecondaryPlayerId)) + ': <strong>' +
-           escapeHtml(secondaryMissionMode || "Not set") + '</strong>. Set each player’s mode in Mission &amp; Map setup.</p>' +
-          '<label>Player<select data-secondary-player>' + secondaryPlayerOptions + '</select></label>' +
+          '<p><strong>Secondary mode:</strong> ' + escapeHtml(secondaryMissionMode || "Not set") + '</p>' +
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<label>Or enter card name<input data-secondary-name type="text" maxlength="160" placeholder="Name printed on your card"></label>' +
-          '<label>Card scoring checkpoint<select data-secondary-timing>' + manualTimingOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>Record secondary card</button>' +
           secondaryModeStatusMarkup + '</div></form>';
     const secondaryMissionManager = state.phase === "command"

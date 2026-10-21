@@ -75,9 +75,7 @@ export function createDeploymentScreen(container, {
       item.unaccounted + ' unaccounted</li>'
     ).join("");
 
-    let markup = '<main class="deployment-screen"><header><div class="command-kicker">BATTLE SETUP</div>' +
-      '<h1>Actual Deployment</h1><p>Record where both armies actually deploy. Planned positions are a guide only and are not copied automatically.</p></header>' +
-      '<p class="battlefield-map__notice">The map is approximate context, not a measurement tool. Follow the mission pack and tabletop rules for legal deployment, terrain, and reserve restrictions.</p>' +
+    let markup = '<main class="deployment-screen">' +
       '<section class="battlefield-map-section"><h2>Deployment Map</h2>' +
       renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId }) +
       '<p>Drag any unit marker to its actual starting location. Tap a marker to select it, then tap an empty point as a fallback. Dashed markers are awaiting placement; planned positions are not copied automatically.</p>' +
