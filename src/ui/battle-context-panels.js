@@ -366,12 +366,10 @@ export function renderArmyUnitDialog(state, unitId, gameData = {}) {
   const original = state.units?.find(unit => unit.id === unitId);
   if (!original) return '<p>Unit no longer available.</p><button data-army-back>Back to army</button>';
   const unit = getArmyUnitReference(state, original);
-  const shocked = isUnitBattleShocked(unit);
   // The weapon and ability reference renderers accept embedded datasheet data.
   const weapons = (unit.profile?.weapons ?? []).map(weapon => ({ ...weapon, characteristics:weapon.characteristics ?? Object.fromEntries(Object.entries(weapon).filter(([key]) => ['range','attacks','skill','strength','ap','damage','abilities'].includes(key))) }));
   return '<section class="battle-shell__army-dialog prototype-unit-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-unit-title"><header class="battle-shell__army-dialog-header"><button type="button" data-army-back>← Army list</button><h2 id="prototype-unit-title">' + escapeHtml(unit.name ?? unit.id) + '</h2><button type="button" data-close-army-roster>Close</button></header>' +
     '<p>' + (Number.isFinite(unit.points ?? unit.metadata?.points) ? escapeHtml(unit.points ?? unit.metadata.points) + ' pts · ' : '') + escapeHtml(unit.status) + ' · ' + escapeHtml(unit.wounds ?? '—') + ' Wounds remaining</p>' +
-    '<button type="button" data-manual-battle-shock="' + escapeHtml(unit.id) + '" aria-pressed="' + shocked + '">' + (shocked ? 'Clear Battle-shock' : '+ Battle-shock') + '</button><p data-army-status role="status"></p>' +
     '<h3>Characteristics</h3>' + renderCharacteristics(unit.profile?.characteristics) +
     '<h3>Weapons</h3>' + renderUnitWeapons({...unit,profile:{...unit.profile,weapons}},gameData) +
     '<h3>Abilities</h3>' + renderUnitAbilities(unit) + '</section>';
