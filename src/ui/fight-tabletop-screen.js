@@ -31,7 +31,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     let advice = '';
     try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId); }
     catch { advice = '<p>Combat profile incomplete. Check unit details; record the physical result below.</p>'; }
-    const controls = `<h1>${esc(unit?.name ?? 'Select a fighter')}</h1>
+    const unitNameColor = unit ? (unit.ownerId === perspectivePlayerId ? '#79bbff' : '#ff8585') : '';
+    const controls = `${unitNameColor ? `<style>.combat-workspace[data-combat-phase="fight"] .combat-workspace__panel h1{color:${unitNameColor}}</style>` : ''}<h1>${esc(unit?.name ?? 'Select a fighter')}</h1>
       <p>Round ${esc(model.round)} · ${model.candidates.fightsFirst.length ? 'Fights First' : 'Remaining combats'} · either army</p>
       <small>Follow tabletop activation order. The app enforces Fights First priority; alternating players remains a table-side decision.</small>
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
