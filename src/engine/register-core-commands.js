@@ -1,3 +1,4 @@
+import { reviewMissionAction } from "./mission-action-transitions.js";
 import { finishCombatActivation } from "./combat-activation-transitions.js";
 import { updatePreparation } from "./event-preparation-transitions.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
@@ -71,6 +72,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, (state, command) => recordFightActivation(state, command.payload)],
     [COMMAND_TYPES.COMPLETE_FIGHT_PHASE, (state, command) => completeFightPhase(state, command.payload)],
     [COMMAND_TYPES.FINISH_COMBAT_ACTIVATION, (state, command) => finishCombatActivation(state, command.payload)],
+    [COMMAND_TYPES.REVIEW_MISSION_ACTION, (state, command) => reviewMissionAction(state, command.payload)],
     [COMMAND_TYPES.RESOLVE_ATTACK, (state, command, context) =>
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ],

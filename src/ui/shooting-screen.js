@@ -1,3 +1,4 @@
+import { createMissionActionPicker } from "./mission-action-picker.js";
 import {
   getShootingViewModel,
   getShootingWeaponOptions,
@@ -24,7 +25,7 @@ function ownerLabel(unit) {
 
 function actionLabel(activation) {
   if (activation.actionType === "not_shoot") return "Did not shoot";
-  if (activation.actionType === "mission_action") return `Action: ${activation.actionId ?? "Mission Action"}`;
+  if (activation.actionType === "mission_action") return `Action: ${activation.missionName ?? activation.actionId ?? "Mission Action"}`;
   if (activation.actionType === "special_action") return `Special Action: ${activation.actionId ?? "Special Action"}`;
   return "Shoot";
 }
@@ -165,6 +166,7 @@ export function createShootingScreen(container, {
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") throw new TypeError("A game session is required.");
 
   const mapView = createLiveMapView();
+  const missionActionPicker = createMissionActionPicker();
   let pendingUnitId = null;
   let selectedAttackerId = null;
   let selectedWeaponId = null;
@@ -283,7 +285,7 @@ export function createShootingScreen(container, {
               <button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Action</button>
               <button type="button" data-choice-not-shoot>Skip</button>
             </div>
-            ${actionPickerOpen ? `<div class="shoot-tabletop__action-picker"><label>Mission action<select data-choice-action><option value="">Choose action…</option>${missionActionOptions}</select></label><button type="button" data-choice-action-confirm disabled>Record Action</button></div>` : ""}` : ""}
+            ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, missionActions) : ""}` : ""}
 
             ${selectedAttackerId && activeActivation ? `<div class="shoot-tabletop__attack-controls">
               <label>Ranged weapon<select data-weapon><option value="" ${selectedWeaponId ? "" : "selected"}>Choose weapon…</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
@@ -490,19 +492,21 @@ export function createShootingScreen(container, {
       render();
     });
 
-    container.querySelector("[data-choice-action]")?.addEventListener("change", (event) => {
-      const button = container.querySelector("[data-choice-action-confirm]");
-      if (button) button.disabled = !event.target.value;
-    });
-
-    container.querySelector("[data-choice-action-confirm]")?.addEventListener("click", () => {
-      const actionId = container.querySelector("[data-choice-action]")?.value;
-      if (!pendingUnitId || !actionId) return;
-      if (!tryActivate({ unitId: pendingUnitId, actionType: "mission_action", actionId })) return;
-      actionPickerOpen = false;
-      clearPending();
-      render();
-    });
+    if (layoutMode === "tabletop" && actionPickerOpen) {
+      missionActionPicker.bind(container, payload => {
+        if (!pendingUnitId || !tryActivate({unitId:pendingUnitId,actionType:"mission_action",...payload})) return;
+        actionPickerOpen=false; clearPending(); render();
+      }, render);
+    } else {
+      container.querySelector("[data-choice-action]")?.addEventListener("change", event => {
+        const button=container.querySelector("[data-choice-action-confirm]"); if (button) button.disabled=!event.target.value;
+      });
+      container.querySelector("[data-choice-action-confirm]")?.addEventListener("click", () => {
+        const actionId=container.querySelector("[data-choice-action]")?.value;
+        if (!pendingUnitId||!actionId||!tryActivate({unitId:pendingUnitId,actionType:"mission_action",actionId})) return;
+        actionPickerOpen=false; clearPending(); render();
+      });
+    }
 
     container.querySelector("[data-choice-cancel]")?.addEventListener("click", () => {
       actionPickerOpen = false;

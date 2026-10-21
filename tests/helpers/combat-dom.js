@@ -10,7 +10,7 @@ export function fakeDom() {
   let nodes = [];
   const rebuild = (value) => {
     html = value;
-    nodes = [...value.matchAll(/<(button|select|div|details|summary)([^>]*)>/g)].map((match) => {
+    nodes = [...value.matchAll(/<(button|select|input|div|details|summary)([^>]*)>/g)].map((match) => {
       const attrs = parseAttrs(match[2]);
       return {
         attrs,
