@@ -1,4 +1,5 @@
 import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
+import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
@@ -80,6 +81,16 @@ export function resolveUnitAttack(state, {
     throw new Error("Attacker and target units must be deployed.");
   }
 
+  const sourceAttacker = weapon?.sourceUnitId
+    ? state.units.find((unit) => unit.id === weapon.sourceUnitId)
+    : attacker;
+  if (!sourceAttacker || sourceAttacker.status !== UNIT_STATUS.DEPLOYED) {
+    throw new Error("The selected weapon source must be deployed.");
+  }
+  if (sourceAttacker.ownerId !== attacker.ownerId || getCombatFormationRoot(state, sourceAttacker)?.id !== attacker.id) {
+    throw new Error("The selected weapon does not belong to this combat formation.");
+  }
+
   if (state.phase === "fight" && hasFightEngagementHistory(state) && !areUnitsEngaged(state, attackerId, targetId)) {
     throw new Error("Fight attacks require the attacker and target to be engaged.");
   }
@@ -90,14 +101,16 @@ export function resolveUnitAttack(state, {
   let profile = null;
   let result = null;
   let expectedDamage = null;
+  const attackerProfile = getProbabilisticUnitProfile(state, sourceAttacker);
+  const targetProfile = getProbabilisticUnitProfile(state, target);
   try {
     profile = buildAttackProfile({
-      attacker: getProbabilisticUnitProfile(state, attacker),
-      target: getProbabilisticUnitProfile(state, target),
+      attacker: attackerProfile,
+      target: targetProfile,
       weapon
     });
     if (actualDamage === null) result = resolveAttack({ ...profile, random });
-    expectedDamage = getDamageOutcomeDistribution({ attacker: getProbabilisticUnitProfile(state, attacker), target: getProbabilisticUnitProfile(state, target), weapon }).expectedDamage;
+    expectedDamage = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon }).expectedDamage;
   } catch (error) {
     // Live battles deliberately allow incomplete saved-roster profiles. When the
     // player supplies actual damage, preserve that authoritative table result
@@ -116,8 +129,11 @@ export function resolveUnitAttack(state, {
     : previousStatus;
   const event = createEvent("combat.attack_resolved", {
     attackerId,
+    sourceAttackerId: sourceAttacker.id,
+    sourceAttackerName: sourceAttacker.name ?? sourceAttacker.id,
     targetId,
     weaponId: weapon.id,
+    weaponName: weapon.name ?? weapon.id,
     phase: state.phase,
     round: state.battle.round,
     turn: state.turn,

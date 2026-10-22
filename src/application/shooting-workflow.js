@@ -3,7 +3,8 @@ import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getShootingState } from "../rules/shooting-state.js";
-import { getDatasheetWeaponOptions } from "../rules/saved-roster-combat-profile.js";
+import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
+import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -129,6 +130,12 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
   if (!wasActivatedToShootThisTurn(state, attackerId) || isCombatActivationFinished(state, attackerId, "shooting")) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
+
+  const formationMembers = getCombatFormationMembers(state, attacker);
+  if (formationMembers.length > 1) {
+    return getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
+  }
+
   const weaponIds = Array.isArray(attacker.profile?.weaponIds)
     ? attacker.profile.weaponIds
     : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
@@ -139,10 +146,14 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
     .map((weapon) => ({
       id: weapon.id,
       name: weapon.name ?? weapon.id,
+      displayName: weapon.name ?? weapon.id,
       type: weapon.type,
+      sourceUnitId: attacker.id,
+      sourceUnitName: attacker.name ?? attacker.id,
+      formationUnitId: attacker.id,
       characteristics: { ...(weapon.characteristics ?? {}) }
     }));
-  return linkedWeapons.length ? linkedWeapons : getDatasheetWeaponOptions(state, attacker, { type: "ranged" });
+  return linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
 }
 
 export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {
@@ -153,7 +164,8 @@ export function getShootingTargetOptions(state, { attackerId, perspectivePlayerI
     .filter((unit) =>
       unit?.status === "deployed" &&
       unit?.id !== attackerId &&
-      unit?.ownerId !== attacker.ownerId
+      unit?.ownerId !== attacker.ownerId &&
+      getCombatFormationRoot(state, unit)?.id === unit.id
     )
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 }

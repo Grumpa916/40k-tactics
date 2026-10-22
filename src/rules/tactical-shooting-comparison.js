@@ -1,4 +1,5 @@
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
+import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
 
@@ -67,6 +68,7 @@ export function getShootingTargetComparison(state, {
   weapon = null
 } = {}) {
   const attacker = unitById(state, attackerId);
+  const sourceAttacker = weapon?.sourceUnitId ? unitById(state, weapon.sourceUnitId) ?? attacker : attacker;
   const base = getShootingTargetPriorities(state, { playerId, attackerId, weapon });
 
   const comparisons = base.priorities.map((item) => {
@@ -77,11 +79,13 @@ export function getShootingTargetComparison(state, {
     });
 
     let distribution = null;
-    if (target && weapon?.characteristics &&
-        (attacker?.characteristics ?? attacker?.profile?.characteristics) &&
-        (target?.characteristics ?? target?.profile?.characteristics)) {
+    if (target && weapon?.characteristics && sourceAttacker) {
       try {
-        distribution = getDamageOutcomeDistribution({ attacker, target, weapon });
+        distribution = getDamageOutcomeDistribution({
+          attacker: getProbabilisticUnitProfile(state, sourceAttacker),
+          target: getProbabilisticUnitProfile(state, target),
+          weapon
+        });
       } catch {
         distribution = null;
       }
@@ -91,8 +95,9 @@ export function getShootingTargetComparison(state, {
     const expectedDamageThreshold = Number.isFinite(expectedDamage) && expectedDamage > 0
       ? Math.max(1, Math.ceil(expectedDamage))
       : 1;
-    const severeDamageThreshold = Number.isFinite(target?.wounds) && target.wounds > 0
-      ? Math.max(1, Math.ceil(target.wounds * 0.5))
+    const targetProfile = target ? getProbabilisticUnitProfile(state, target) : null;
+    const severeDamageThreshold = Number.isFinite(targetProfile?.wounds) && targetProfile.wounds > 0
+      ? Math.max(1, Math.ceil(targetProfile.wounds * 0.5))
       : null;
     const probabilityAnyDamageValue = probabilityAnyDamage(distribution);
     const probabilityAtLeastExpectedDamage = probabilityAtLeast(distribution, expectedDamageThreshold);
@@ -144,6 +149,7 @@ export function getShootingTargetComparison(state, {
       assumptions: Object.freeze([
         "Battlefield distances are approximate and tabletop measurement remains authoritative.",
         "Probabilities use saved profiles and known weapon characteristics only.",
+        ...(weapon?.quantityUncertain ? ["Remaining models are known, but the surviving mixed-weapon models are not; probability is withheld until weapon casualties are known."] : []),
         "Mission impact never awards VP automatically.",
         "Unverified secondary-card text is not used to change target ranking."
       ])
@@ -157,6 +163,7 @@ export function getShootingTargetComparison(state, {
   return Object.freeze({
     playerId,
     attackerId,
+    sourceUnitId: sourceAttacker?.id ?? attackerId,
     weaponId: weapon?.id ?? null,
     comparisons: Object.freeze(comparisons.map((item, index) => Object.freeze({
       ...item,

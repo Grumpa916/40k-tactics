@@ -9,6 +9,58 @@ export function getBattleRosterUnit(state, unit) {
   return state?.armyRosters?.[unit?.ownerId]?.units?.find(item => item.id === unit?.metadata?.rosterUnitId) ?? null;
 }
 
+function findBattleUnitForRosterId(state, ownerId, rosterUnitId) {
+  if (!rosterUnitId) return null;
+  return (state?.units ?? []).find((unit) =>
+    unit?.ownerId === ownerId &&
+    (unit?.metadata?.rosterUnitId === rosterUnitId || unit?.id === rosterUnitId)
+  ) ?? null;
+}
+
+/**
+ * Attached Leaders and their Bodyguard are one unit for normal combat activation.
+ * The Bodyguard battle unit is the stable formation root while it remains deployed.
+ * If the Bodyguard is destroyed or otherwise absent, a surviving Leader becomes its
+ * own combat unit, matching the tabletop split after the Bodyguard is gone.
+ */
+export function getCombatFormationRoot(state, unit) {
+  if (!unit) return null;
+  const rosterUnit = getBattleRosterUnit(state, unit);
+  const parentId = rosterUnit?.attachedToBodyguardId;
+  if (!parentId) return unit;
+  const parent = findBattleUnitForRosterId(state, unit.ownerId, parentId);
+  return parent?.status === "deployed" ? parent : unit;
+}
+
+export function getCombatFormationMembers(state, unit) {
+  const root = getCombatFormationRoot(state, unit);
+  if (!root) return [];
+  const rosterRoot = getBattleRosterUnit(state, root);
+  const rosterUnits = state?.armyRosters?.[root.ownerId]?.units ?? [];
+  const leaderIds = new Set([
+    ...(Array.isArray(rosterRoot?.attachedLeaderIds) ? rosterRoot.attachedLeaderIds : []),
+    ...rosterUnits.filter((item) => item?.attachedToBodyguardId === rosterRoot?.id).map((item) => item.id)
+  ]);
+  const members = [root];
+  for (const leaderId of leaderIds) {
+    const leader = findBattleUnitForRosterId(state, root.ownerId, leaderId);
+    if (leader?.status === "deployed" && leader.id !== root.id) members.push(leader);
+  }
+  return members;
+}
+
+export function getCombatFormationRootId(state, unitOrId) {
+  const unit = typeof unitOrId === "string"
+    ? (state?.units ?? []).find((item) => item?.id === unitOrId)
+    : unitOrId;
+  return getCombatFormationRoot(state, unit)?.id ?? (typeof unitOrId === "string" ? unitOrId : null);
+}
+
+export function isAttachedCombatMember(state, unit) {
+  const root = getCombatFormationRoot(state, unit);
+  return Boolean(root && unit && root.id !== unit.id);
+}
+
 export function hasSourceInvalidWargear(state, unit) {
   return getBattleRosterUnit(state, unit)?.loadoutValidation?.status === "source-invalid";
 }
@@ -69,4 +121,9 @@ export function hasConfirmedNoRangedWeapons(state, unit) {
   }
 
   return weapons.every(weapon => weapon?.type === 'melee' || String(weapon?.range ?? weapon?.characteristics?.range ?? '').trim().toLowerCase() === 'melee');
+}
+
+export function hasConfirmedNoRangedWeaponsForFormation(state, unit) {
+  const members = getCombatFormationMembers(state, unit);
+  return members.length > 0 && members.every((member) => hasConfirmedNoRangedWeapons(state, member));
 }
