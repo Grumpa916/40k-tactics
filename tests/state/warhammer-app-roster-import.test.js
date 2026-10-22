@@ -21,3 +21,31 @@ test('keeps unpriced roster units marked unknown instead of estimating a cost',(
  const unknown=importWarhammerAppRoster({text:'Captain',faction:'Space Marines',name:'Unknown cost',id:'r2'});
  assert.equal(unknown.roster.units[0].points,null);
 });
+
+test('real App v2.8.1 export imports 16 entries, 2000 points and both attached pairs', async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const text=await readFile(new URL('../fixtures/warhammer-app-triple-norn.txt',import.meta.url),'utf8');
+ const result=importWarhammerAppRoster({text,faction:'Tyranids',name:'triple norn 11th',pointsLimit:2000,id:'real'});
+ const {roster}=result;
+ assert.equal(roster.units.length,16);
+ assert.equal(result.totalPoints,2000);assert.equal(result.declaredPoints,2000);
+ assert.deepEqual(result.unrecognized,[]);assert.deepEqual(result.warnings,[]);
+ assert.equal(roster.detachment,'Crusher Stampede and Talons of the Norn Queen');
+ assert.deepEqual(roster.units.filter(u=>u.name==='Hormagaunts').map(u=>u.modelCount),[20,20,20]);
+ assert.equal(roster.units.reduce((n,u)=>n+u.modelCount,0),73);
+ const primes=roster.units.filter(u=>u.name==='Tyranid Prime with Lash Whip');
+ assert.equal(primes.length,2);
+ assert.notEqual(primes[0].attachedToBodyguardId,primes[1].attachedToBodyguardId);
+ for(const prime of primes){assert.deepEqual(roster.units.find(u=>u.id===prime.attachedToBodyguardId).attachedLeaderIds,[prime.id]);assert.match(prime.notes,/1x Lash whip/);}
+ assert.equal(roster.units.filter(u=>u.name==='Lictor').length,2);
+ assert.equal(roster.units.filter(u=>u.name==='Norn Emissary').length,1);
+ assert.equal(roster.units.find(u=>u.name==='Hive Tyrant').isWarlord,true);
+ assert.match(roster.units.find(u=>u.name==='Norn Emissary').notes,/Psychic Tendril/);
+ assert.equal(roster.notes.endsWith(text),true);
+});
+test('weapon lines cannot create units and an incomplete group or points mismatch is flagged',()=>{
+ const {roster,warnings,unrecognized}=importWarhammerAppRoster({text:'Example (100 Points)\nATTACHED UNITS\nAttached unit 1\nLictor (60 Points)\n  • Attached as: Leader (Character)\n  • 1x Lictor claws and talons\nUncataloged bodyguard (40 Points)\n  • Attached as: Bodyguard (Battleline)',faction:'Tyranids',name:'Example',id:'r'});
+ assert.equal(roster.units.length,1);assert.equal(roster.units[0].attachedToBodyguardId,undefined);
+ assert.deepEqual(unrecognized,['Uncataloged bodyguard (40 Points)']);
+ assert.ok(warnings.some(w=>w.includes('pairing')));assert.ok(warnings.some(w=>w.includes('100')));
+});
