@@ -4,12 +4,15 @@ import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 export function getAttackDamageForecast(state, { attackerId, targetId, weapon } = {}) {
   if (!attackerId || !targetId || !weapon) return null;
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
+  const sourceAttacker = weapon?.sourceUnitId
+    ? state?.units?.find((unit) => unit?.id === weapon.sourceUnitId)
+    : attacker;
   const target = state?.units?.find((unit) => unit?.id === targetId);
-  if (!attacker || !target) return null;
+  if (!attacker || !sourceAttacker || !target) return null;
 
   try {
     const distribution = getDamageOutcomeDistribution({
-      attacker: getProbabilisticUnitProfile(state, attacker),
+      attacker: getProbabilisticUnitProfile(state, sourceAttacker),
       target: getProbabilisticUnitProfile(state, target),
       weapon
     });
