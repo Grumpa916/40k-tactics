@@ -27,6 +27,7 @@ export function createArmyRoster({
   detachment = null,
   units = [],
   notes = "",
+  rulesDataRevision = null,
   createdAt = null,
   updatedAt = createdAt
 } = {}) {
@@ -41,6 +42,7 @@ export function createArmyRoster({
     detachment: detachment == null ? null : String(detachment).trim() || null,
     units: units.map(normalizeUnit),
     notes: String(notes ?? ""),
+    rulesDataRevision: rulesDataRevision && typeof rulesDataRevision === "object" ? cloneData(rulesDataRevision) : null,
     createdAt,
     updatedAt
   };
@@ -177,4 +179,3 @@ export function assertRoster(roster) {
   }
   return true;
 }
-
