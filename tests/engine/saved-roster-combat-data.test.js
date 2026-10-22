@@ -115,3 +115,17 @@ test('source-invalid imported wargear is unresolved and cannot feed combat optio
  assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}),[]);
  assert.equal(hasConfirmedNoRangedWeapons(state,unit),false);
 });
+
+test('rules-invalid reviewed wargear is unresolved and cannot feed combat options',()=>{
+ let state=createGameState({phase:'setup',battle:{id:'b3',status:'setup',round:0},players:[{id:'p1'}]});
+ const roster=createArmyRoster({id:'rules-invalid',name:'Invalid reviewed loadout',faction:'Tyranids',units:[{
+  id:'ht',name:'Hive Tyrant',modelCount:1,datasheetId:'tyranids:hive-tyrant',
+  equippedWeapons:[{name:'Heavy venom cannon',quantity:1},{name:'Stranglethorn cannon',quantity:1}],
+  loadoutValidation:{status:'rules-invalid',reviewedRules:true,errors:['Heavy venom cannon and Stranglethorn cannon cannot be equipped together.']}
+ }]});
+ state=applyArmyRosterToBattle(state,{playerId:'p1',roster});
+ const unit=state.units[0];
+ assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'ranged'}),[]);
+ assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}),[]);
+ assert.equal(hasConfirmedNoRangedWeapons(state,unit),false);
+});
