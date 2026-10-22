@@ -128,6 +128,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   } else warnings.push('Review Attached unit ' + number + ': leader/bodyguard pairing could not be resolved.');
  }
  attachSourceValidationErrors(units, sourceErrors);
+ warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
