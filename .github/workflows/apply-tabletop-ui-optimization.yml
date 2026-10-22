@@ -19,6 +19,13 @@ jobs:
       - name: Apply optimization pass
         run: |
           node scripts/apply-tabletop-ui-optimization.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/finalize-tabletop-ui-optimization.mjs')
+          s = p.read_text()
+          s = s.replace("assert.equal(src.includes('Battlefield · ${phase'), false);", "assert.equal(src.includes('Battlefield · ' + '$' + '{phase'), false);")
+          p.write_text(s)
+          PY
           node scripts/finalize-tabletop-ui-optimization.mjs
       - name: Verify
         run: npm run verify
