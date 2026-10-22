@@ -29,7 +29,7 @@ test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and ma
  const {roster}=result;
  assert.equal(roster.units.length,16);
  assert.equal(result.totalPoints,2000);assert.equal(result.declaredPoints,2000);
- assert.deepEqual(result.unrecognized,[]);assert.deepEqual(result.warnings,[]);
+ assert.deepEqual(result.unrecognized,[]);assert.deepEqual(result.warnings,[]);assert.deepEqual(result.sourceErrors,[]);
  assert.equal(roster.detachment,'Crusher Stampede and Talons of the Norn Queen');
  assert.deepEqual(roster.units.filter(u=>u.name==='Hormagaunts').map(u=>u.modelCount),[20,20,20]);
  assert.equal(roster.units.reduce((n,u)=>n+u.modelCount,0),73);
@@ -55,6 +55,43 @@ test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and ma
  assert.match(roster.units.find(u=>u.name==='Norn Emissary').notes,/Psychic Tendril/);
  assert.equal(roster.notes.endsWith(text),true);
 });
+
+test('large App validation roster preserves source errors and marks affected wargear invalid', async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const text=await readFile(new URL('../fixtures/warhammer-app-large-validation-roster.txt',import.meta.url),'utf8');
+ const result=importWarhammerAppRoster({text,faction:'Tyranids',name:'test import army',pointsLimit:3000,id:'large'});
+ const {roster}=result;
+ assert.equal(roster.units.length,52);
+ assert.equal(result.declaredPoints,7025);
+ assert.equal(result.totalPoints,7025);
+ assert.deepEqual(result.unrecognized,[]);
+ assert.equal(result.sourceErrors.length,5);
+ assert.match(result.sourceErrors[0],/Invalid wargear configuration for Termagants/);
+ assert.equal(result.sourceErrors.filter(error=>/Carnifex model in Carnifexes/i.test(error)).length,2);
+ assert.ok(result.sourceErrors.some(error=>/WARLORD/i.test(error)));
+ assert.ok(result.sourceErrors.some(error=>/more points \(7,025\)/i.test(error)));
+ assert.equal(roster.detachment,'Ambush Predators and Assimilation Swarm');
+ const termagants=roster.units.find(unit=>unit.name==='Termagants');
+ assert.equal(termagants.loadoutValidation.status,'source-invalid');
+ assert.equal(termagants.loadoutValidation.errors.length,1);
+ assert.deepEqual(termagants.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
+  {name:'Chitinous claws and teeth',quantity:10},
+  {name:'Fleshborer',quantity:7},
+  {name:'Spike rifle',quantity:1},
+  {name:'Termagant devourer',quantity:1},
+  {name:'Termagant spinefists',quantity:1}
+ ]);
+ const carnifexes=roster.units.find(unit=>unit.name==='Carnifexes');
+ assert.equal(carnifexes.loadoutValidation.status,'source-invalid');
+ assert.equal(carnifexes.sourceValidationErrors.length,2);
+ const hiveTyrant=roster.units.find(unit=>unit.name==='Hive Tyrant');
+ assert.equal(hiveTyrant.loadoutValidation,undefined);
+ assert.deepEqual(hiveTyrant.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
+  {name:'Monstrous bonesword and lash whip',quantity:1},
+  {name:'Monstrous scything talons',quantity:1}
+ ]);
+});
+
 test('weapon lines cannot create units and an incomplete group or points mismatch is flagged',()=>{
  const {roster,warnings,unrecognized}=importWarhammerAppRoster({text:'Example (100 Points)\nATTACHED UNITS\nAttached unit 1\nLictor (60 Points)\n  • Attached as: Leader (Character)\n  • 1x Lictor claws and talons\nUncataloged bodyguard (40 Points)\n  • Attached as: Bodyguard (Battleline)',faction:'Tyranids',name:'Example',id:'r'});
  assert.equal(roster.units.length,1);assert.equal(roster.units[0].attachedToBodyguardId,undefined);
