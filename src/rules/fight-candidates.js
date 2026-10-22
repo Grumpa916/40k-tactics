@@ -1,4 +1,5 @@
 import { UNIT_STATUS } from "../state/unit.js";
+import { getCombatFormationRoot, getCombatFormationRootId } from "./battle-unit-reference.js";
 import {
   getFightEngagementState,
   getFightStepStartEngagementState
@@ -8,7 +9,7 @@ const CHARGE_EVENT = "charge.outcome_recorded";
 const FIGHT_ACTIVATION_EVENT = "fight.unit_activated";
 
 function currentTurnEvents(state, type) {
-  return state.history.filter((event) =>
+  return (state.history ?? []).filter((event) =>
     event?.type === type &&
     event?.payload?.turn === state.turn
   );
@@ -20,6 +21,10 @@ function hasEngagementAwareHistory(state) {
     event?.type === "combat.attack_resolved" && event?.payload?.phase === "fight" ||
     event?.type === CHARGE_EVENT && Array.isArray(event?.payload?.targetIds)
   );
+}
+
+function canonicalSet(state, ids) {
+  return new Set([...ids].map((id) => getCombatFormationRootId(state, id)).filter(Boolean));
 }
 
 function getEligibility(state, units) {
@@ -34,7 +39,7 @@ function getEligibility(state, units) {
   const current = getFightEngagementState(state);
   const start = getFightStepStartEngagementState(state);
 
-  const chargedThisTurn = new Set(
+  const chargedThisTurn = canonicalSet(state,
     currentTurnEvents({ ...state, history: state.history }, CHARGE_EVENT)
       .filter((event) =>
         event?.payload?.outcome === "successful" &&
@@ -43,24 +48,22 @@ function getEligibility(state, units) {
       .map((event) => event.payload.unitId)
   );
 
+  const engagedNow = canonicalSet(state, current.engagedUnitIds);
+  const wasEngagedAtFightStepStart = canonicalSet(state, start.engagedUnitIds);
   const eligible = new Set([
-    ...current.engagedUnitIds,
-    ...start.engagedUnitIds,
+    ...engagedNow,
+    ...wasEngagedAtFightStepStart,
     ...chargedThisTurn
   ]);
 
-  return {
-    eligible,
-    engagedNow: new Set(current.engagedUnitIds),
-    wasEngagedAtFightStepStart: new Set(start.engagedUnitIds)
-  };
+  return { eligible, engagedNow, wasEngagedAtFightStepStart };
 }
 
 export function getFightCandidates(state) {
   const units = Array.isArray(state?.units) ? state.units : [];
   const history = Array.isArray(state?.history) ? state.history : [];
 
-  const activated = new Set(
+  const activated = canonicalSet(state,
     history
       .filter((event) =>
         event?.type === FIGHT_ACTIVATION_EVENT &&
@@ -70,7 +73,7 @@ export function getFightCandidates(state) {
       .filter(Boolean)
   );
 
-  const fightsFirst = new Set(
+  const fightsFirst = canonicalSet(state,
     currentTurnEvents({ ...state, history }, CHARGE_EVENT)
       .filter((event) =>
         event?.payload?.outcome === "successful" &&
@@ -81,7 +84,8 @@ export function getFightCandidates(state) {
 
   const deployed = units.filter((unit) =>
     unit?.status === UNIT_STATUS.DEPLOYED &&
-    unit?.id
+    unit?.id &&
+    getCombatFormationRoot(state, unit)?.id === unit.id
   );
 
   const available = deployed.filter((unit) => !activated.has(unit.id));
@@ -100,4 +104,3 @@ export function getFightCandidates(state) {
       .map((unit) => unit.id)
   };
 }
-
