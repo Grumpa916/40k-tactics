@@ -35,7 +35,10 @@ function attackCountValues(attacks) {
   const count = Number(match[1] || 1);
   const sides = Number(match[2]);
   const modifier = Number(match[3] || 0);
-  return Array.from({ length: sides }, (_, index) => [count ? count * (index + 1) + modifier : index + 1 + modifier, 1 / sides]);
+  let distribution = new Map([[modifier, 1]]);
+  const die = new Map(Array.from({ length: sides }, (_, index) => [index + 1, 1 / sides]));
+  for (let i = 0; i < count; i++) distribution = convolve(distribution, die);
+  return [...distribution];
 }
 
 function addProbability(map, value, probability) {
@@ -85,6 +88,7 @@ function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) 
 }
 
 function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
+  if (profile.torrent) return oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure);
   const result = new Map();
   const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier);
   const critical = 1 / 6;

@@ -1,3 +1,4 @@
+import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getBattleUnitDatasheet } from "./battle-unit-reference.js";
 
 export function parseCombatCharacteristic(value) {
@@ -10,6 +11,8 @@ function weaponAbilityCharacteristics(abilities) {
   const text = String(abilities ?? "");
   const sustained = text.match(/Sustained Hits\s+(\d+)/i);
   return {
+    ...(/\bTorrent\b/i.test(text) ? { torrent: true } : {}),
+    ...(/\bIgnores Cover\b/i.test(text) ? { ignoresCover: true } : {}),
     ...(sustained ? { sustainedHits: Number(sustained[1]) } : {}),
     ...(/\bLethal Hits\b/i.test(text) ? { lethalHits: true } : {}),
     ...(/\bDevastating Wounds\b/i.test(text) ? { devastatingWounds: true } : {})
@@ -66,11 +69,10 @@ export function getProbabilisticUnitProfile(state, unit) {
   const invulnerableSave = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "invulnerableSave", ["Invulnerable save", "Invulnerable Save", "invulnerableSave"]));
   const ballisticSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "ballisticSkill", ["Ballistic Skill", "ballisticSkill"]));
   const weaponSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "weaponSkill", ["Weapon Skill", "weaponSkill"]));
-  const startingWounds = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "wounds", ["Wounds", "wounds"]));
 
   return {
     ...unit,
-    wounds: Number.isFinite(unit?.wounds) ? unit.wounds : startingWounds,
+    wounds: getLiveUnitVitals(state, unit).wounds,
     characteristics: {
       ...(unit?.profile?.characteristics ?? {}),
       ...(unit?.characteristics ?? {}),

@@ -11,7 +11,7 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
   const weaponSkill = weaponCharacteristics.skill;
   const hitTarget = Number.isInteger(weaponSkill) ? weaponSkill : attackerCharacteristics[hitTargetKey];
 
-  if (hitTarget === undefined) {
+  if (hitTarget === undefined && !weaponCharacteristics.torrent) {
     throw new Error("Attack profile is missing characteristic: " + hitTargetKey);
   }
 
@@ -27,6 +27,7 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
   }
 
   return Object.freeze({
+    torrent: weaponCharacteristics.torrent === true,
     attacks: characteristics.attacks,
     hitTarget,
     hitTargetKey,
@@ -36,7 +37,7 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     woundModifier: characteristics.woundModifier ?? 0,
     save: characteristics.save,
     invulnerableSave: characteristics.invulnerableSave ?? null,
-    cover: characteristics.cover ?? false,
+    cover: weaponCharacteristics.ignoresCover ? false : characteristics.cover ?? false,
     saveReroll: characteristics.saveReroll ?? "none",
     saveRerollCount: characteristics.saveRerollCount ?? null,
     ap: characteristics.ap ?? 0,

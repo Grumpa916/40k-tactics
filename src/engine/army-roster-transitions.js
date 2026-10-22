@@ -1,3 +1,5 @@
+import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
+import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { createUnit, UNIT_STATUS } from "../state/unit.js";
@@ -48,6 +50,13 @@ export function applyArmyRosterToBattle(state, { roster, playerId, snapshotId = 
       [playerId]: snapshot
     }
   };
+  next.units = next.units.map(unit => {
+    if (unit.ownerId !== playerId) return unit;
+    const profile = getProbabilisticUnitProfile(next, unit);
+    const vitals = getLiveUnitVitals(next, unit);
+    return { ...unit, wounds: vitals.wounds, startingWounds: vitals.startingWounds,
+      profile: { characteristics: { ...profile.characteristics } } };
+  });
   return appendHistoryEntry(next, createEvent("battle.army_roster_assigned", {
     playerId, rosterId: roster.id, rosterName: roster.name,
     snapshotId, unitCount: units.length

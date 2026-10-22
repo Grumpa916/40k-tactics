@@ -1,3 +1,5 @@
+import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
+import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
@@ -90,12 +92,12 @@ export function resolveUnitAttack(state, {
   let expectedDamage = null;
   try {
     profile = buildAttackProfile({
-      attacker: attacker.profile ?? attacker,
-      target: target.profile ?? target,
+      attacker: getProbabilisticUnitProfile(state, attacker),
+      target: getProbabilisticUnitProfile(state, target),
       weapon
     });
-    result = resolveAttack({ ...profile, random });
-    expectedDamage = getDamageOutcomeDistribution({ attacker, target, weapon }).expectedDamage;
+    if (actualDamage === null) result = resolveAttack({ ...profile, random });
+    expectedDamage = getDamageOutcomeDistribution({ attacker: getProbabilisticUnitProfile(state, attacker), target: getProbabilisticUnitProfile(state, target), weapon }).expectedDamage;
   } catch (error) {
     // Live battles deliberately allow incomplete saved-roster profiles. When the
     // player supplies actual damage, preserve that authoritative table result
@@ -103,7 +105,7 @@ export function resolveUnitAttack(state, {
     if (actualDamage === null) throw error;
   }
   const recordedDamage = actualDamage ?? result.damage.totalDamage;
-  const previousWounds = target.wounds;
+  const previousWounds = getLiveUnitVitals(state, target).wounds;
   const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
   const nextWounds = tracksWounds
     ? Math.max(0, previousWounds - recordedDamage)
