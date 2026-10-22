@@ -1,0 +1,306 @@
+name: Apply requested UI cleanup and charge scoring updates
+
+on:
+  push:
+    branches:
+      - feature/ui-cleanup-charge-scoring
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ui-cleanup-charge-scoring
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply requested changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              text = path.read_text()
+              if old not in text:
+                  raise SystemExit(f'anchor not found in {path}: {old[:100]!r}')
+              path.write_text(text.replace(old, new, 1))
+
+          # 1) Remove the marked setup instructional text.
+          p = Path('src/ui/army-selection-panel.js')
+          replace_once(p,
+              "        '<p>Choose the agreed battle size before continuing. Limits shown here follow the published 11th-edition muster table.</p>') +",
+              "        '') +")
+          replace_once(p,
+              '<section class="army-selection" aria-labelledby="army-selection-title">\' +',
+              '<section class="army-selection" aria-label="Army selection">\' +')
+          replace_once(p,
+              "      '<header><h2 id=\"army-selection-title\">Select Armies for This Battle</h2>' +\n      '<p>Choose a saved roster for each side. Army lists stay reusable; this step assigns them to this battle only.</p></header>' +\n",
+              "")
+
+          # 2) Remove the layout switch and make the top-level mission boxes explicitly toggle/persist.
+          p = Path('src/ui/battle-shell.js')
+          replace_once(p,
+              "  const layoutSwitch = viewedPhase === \"setup\" ? \"\" : '<nav class=\"battle-shell__layout-switch\" aria-label=\"Battle interface layout\"><a href=\"' +\n    (layoutMode === \"tabletop\" ? '?ui=classic' : '?ui=tabletop') + '\">' +\n    (layoutMode === \"tabletop\" ? 'Current layout' : 'Test tabletop layout') + '</a></nav>';",
+              "  const layoutSwitch = \"\";")
+          text = p.read_text()
+          anchor = "  function handleToggleTurnClock(event) {"
+          handler = '''  function handleMissionSummaryToggle(event) {\n    const summary = event.target?.closest?.(\".battle-mission-summary__section > summary\");\n    if (!summary || !container.contains(summary)) return;\n    const details = summary.parentElement;\n    const key = details?.getAttribute?.(\"data-mission-summary-key\");\n    if (!details || !key) return;\n    event.preventDefault?.();\n    details.open = !details.open;\n    missionOpenStates = { ...missionOpenStates, [key]: details.open };\n  }\n\n'''
+          if 'function handleMissionSummaryToggle(event)' not in text:
+              if anchor not in text:
+                  raise SystemExit('mission toggle insertion anchor not found')
+              text = text.replace(anchor, handler + anchor, 1)
+          if 'container.addEventListener?.("click", handleMissionSummaryToggle);' not in text:
+              text = text.replace('  container.addEventListener?.("click", handleScoreAdjust);',
+                                  '  container.addEventListener?.("click", handleMissionSummaryToggle);\n  container.addEventListener?.("click", handleScoreAdjust);', 1)
+          if 'container.removeEventListener?.("click", handleMissionSummaryToggle);' not in text:
+              text = text.replace('      container.removeEventListener?.("click", handleScoreAdjust);',
+                                  '      container.removeEventListener?.("click", handleMissionSummaryToggle);\n      container.removeEventListener?.("click", handleScoreAdjust);', 1)
+          p.write_text(text)
+
+          # 3) Hide zoom controls in Charge only; preserve them in other live-map phases.
+          p = Path('src/ui/live-map-view.js')
+          text = p.read_text()
+          replace_once(p,
+              "      const href = new URL('./styles/live-map.css', import.meta.url).href;",
+              "      const href = new URL('./styles/live-map.css', import.meta.url).href;\n      const showZoomControls = options?.showZoomControls !== false;")
+          text = p.read_text()
+          old_return = "      return `<link rel=\"stylesheet\" href=\"${esc(href)}\"><div class=\"live-map\"><nav aria-label=\"Map zoom\"><button type=\"button\" data-map-zoom=\"out\" aria-label=\"Zoom out\">−</button><span data-map-zoom-value>${Math.round(zoom*100)}%</span><button type=\"button\" data-map-zoom=\"in\" aria-label=\"Zoom in\">+</button><button type=\"button\" data-map-zoom=\"fit\">Fit</button><small>Zoom and scroll for crowded units · full names in unit/target selectors</small></nav>${map}</div>`;"
+          new_return = "      const zoomControls = showZoomControls ? `<nav aria-label=\"Map zoom\"><button type=\"button\" data-map-zoom=\"out\" aria-label=\"Zoom out\">−</button><span data-map-zoom-value>${Math.round(zoom*100)}%</span><button type=\"button\" data-map-zoom=\"in\" aria-label=\"Zoom in\">+</button><button type=\"button\" data-map-zoom=\"fit\">Fit</button><small>Zoom and scroll for crowded units · full names in unit/target selectors</small></nav>` : '';\n      return `<link rel=\"stylesheet\" href=\"${esc(href)}\"><div class=\"live-map\">${zoomControls}${map}</div>`;"
+          if old_return not in text:
+              raise SystemExit('live map return anchor not found')
+          p.write_text(text.replace(old_return, new_return, 1))
+
+          p = Path('src/ui/combat-workspace.js')
+          replace_once(p,
+              "${mapView.render(state, { mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId })}",
+              "${mapView.render(state, { mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: phase !== 'charge' })}")
+
+          # 4) Add a real per-unit "Do not charge" outcome.
+          p = Path('src/commands/game-commands.js')
+          replace_once(p,
+              '  RECORD_CHARGE_OUTCOME: "charge.record_outcome",',
+              '  RECORD_CHARGE_OUTCOME: "charge.record_outcome",\n  RECORD_CHARGE_DECLINED: "charge.decline",')
+
+          p = Path('src/engine/register-core-commands.js')
+          replace_once(p,
+              'import { recordChargeOutcome } from "./charge-transitions.js";',
+              'import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.js";')
+          replace_once(p,
+              '    [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],',
+              '    [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],\n    [COMMAND_TYPES.RECORD_CHARGE_DECLINED, (state, command) => recordChargeDeclined(state, command.payload)],')
+
+          p = Path('src/engine/charge-transitions.js')
+          text = p.read_text()
+          if 'export function recordChargeDeclined' not in text:
+              text += '''\nexport function recordChargeDeclined(state, { unitId } = {}) {\n  if (!unitId) throw new TypeError(\"Charging unit id is required.\");\n  if (!state.battle || state.battle.status !== \"active\") throw new Error(\"Battle must be active.\");\n  if (state.phase !== \"charge\") throw new Error(\"Charge decisions may only be recorded in the Charge phase.\");\n\n  const charger = state.units.find((unit) => unit.id === unitId);\n  if (!charger) throw new Error(\"Charging unit not found: \" + unitId);\n  if (charger.ownerId !== state.activePlayer) throw new Error(\"Only the active player's units may make a Charge decision.\");\n  if (charger.status !== UNIT_STATUS.DEPLOYED) throw new Error(\"Charging unit must be deployed.\");\n  if (state.history.some((event) =>\n    event.type === \"unit.fell_back\" && event.payload?.unitId === unitId &&\n    event.payload?.round === state.battle.round && event.payload?.turn === state.turn\n  )) throw new Error(\"A unit that Fell Back cannot declare a charge this turn.\");\n  if (state.history.some((event) =>\n    event.type === \"charge.outcome_recorded\" && event.payload?.unitId === unitId && event.payload?.turn === state.turn\n  )) throw new Error(\"A unit can make only one Charge decision per turn.\");\n\n  return appendHistoryEntry(state, createEvent(\"charge.outcome_recorded\", {\n    unitId, playerId: state.activePlayer, outcome: \"declined\", targetIds: [], measuredDistances: {},\n    round: state.battle.round, turn: state.turn\n  }));\n}\n'''
+          p.write_text(text)
+
+          p = Path('src/application/charge-workflow.js')
+          text = p.read_text()
+          anchor = 'export function finishChargePhase(session, context = {}) {'
+          helper = '''export function recordChargeDeclinedForSession(\n  session,\n  { unitId } = {},\n  context = {}\n) {\n  if (!session || typeof session.dispatch !== \"function\") {\n    throw new TypeError(\"A game session is required.\");\n  }\n  return session.dispatch(\n    createCommand(COMMAND_TYPES.RECORD_CHARGE_DECLINED, { unitId }),\n    context\n  );\n}\n\n'''
+          if 'recordChargeDeclinedForSession' not in text:
+              if anchor not in text:
+                  raise SystemExit('charge workflow insertion anchor not found')
+              text = text.replace(anchor, helper + anchor, 1)
+          p.write_text(text)
+
+          p = Path('src/ui/charge-tabletop-screen.js')
+          replace_once(p,
+              "import { getChargeViewModel, recordChargeOutcomeForSession, finishChargePhase } from '../application/charge-workflow.js';",
+              "import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';")
+          replace_once(p,
+              "        <div class=\"combat-workspace__choices\"><button type=\"button\" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type=\"button\" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button></div>` : ''}",
+              "        <div class=\"combat-workspace__choices\"><button type=\"button\" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type=\"button\" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button><button type=\"button\" data-charge-decline>Do not charge</button></div>` : ''}")
+          text = p.read_text()
+          anchor = "    container.querySelector('[data-charge-complete]')?.addEventListener('click', () => {"
+          decline = '''    container.querySelector('[data-charge-decline]')?.addEventListener('click', () => {\n      if (!selectedUnitId) return;\n      try { recordChargeDeclinedForSession(session, { unitId:selectedUnitId }); clearSelection(); error = ''; }\n      catch (cause) { error = cause?.message ?? String(cause); }\n      render();\n    });\n'''
+          if 'recordChargeDeclinedForSession(session' not in text:
+              if anchor not in text:
+                  raise SystemExit('tabletop decline handler anchor not found')
+              text = text.replace(anchor, decline + anchor, 1)
+          p.write_text(text)
+
+          p = Path('src/ui/charge-screen.js')
+          replace_once(p,
+              "  recordChargeOutcomeForSession,\n  finishChargePhase",
+              "  recordChargeOutcomeForSession,\n  recordChargeDeclinedForSession,\n  finishChargePhase")
+          replace_once(p,
+              "          '>Charge failed</button></div></section>'",
+              "          '>Charge failed</button><button type=\"button\" data-charge-decline>Do not charge</button></div></section>'")
+          text = p.read_text()
+          anchor = "    container.querySelector('[data-charge-complete]')?.addEventListener('click', () => {"
+          decline = '''    container.querySelector('[data-charge-decline]')?.addEventListener('click', () => {\n      if (!selectedUnitId) return;\n      recordChargeDeclinedForSession(session, { unitId: selectedUnitId });\n      selectedUnitId = null;\n      selectedTargetIds = new Set();\n      measuredDistances = new Map();\n      render();\n    });\n\n'''
+          if 'recordChargeDeclinedForSession(session' not in text:
+              if anchor not in text:
+                  raise SystemExit('classic decline handler anchor not found')
+              text = text.replace(anchor, decline + anchor, 1)
+          p.write_text(text)
+
+          # 5) Mission-specific VP choices instead of hard-coded 1-15.
+          Path('src/ui/checkpoint-score-controls.js').write_text(r'''import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
+import { getSecondaryMissionHistory } from '../rules/secondary-mission-lifecycle.js';
+import { missionConditionEvidence } from '../rules/checkpoint-mission-evidence.js';
+const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+export const checkpointScoreKey = (state, playerId, checkpoint) => [state.battle?.round ?? 0, state.turn ?? 0, playerId, checkpoint].join(':');
+
+export function renderConditionEvidence(state, playerId, item) {
+  const evidence = missionConditionEvidence(state, playerId, item.summary);
+  return `<p>${esc(item.vp)} VP · ${esc(item.summary)}<br><strong>${esc(evidence.status)}</strong>${evidence.detail ? `<br>${esc(evidence.detail)}` : ''}</p>`;
+}
+
+function positiveVp(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
+function scoreWindowsFor(mission) {
+  if (Array.isArray(mission?.scoringWindows) && mission.scoringWindows.length) return mission.scoringWindows;
+  if (Array.isArray(mission?.result?.scoringWindows) && mission.result.scoringWindows.length) return mission.result.scoringWindows;
+  return mission?.result?.scoringWindow ? [mission.result.scoringWindow] : [];
+}
+
+export function getMissionVpOptions(mission = {}) {
+  const windows = scoreWindowsFor(mission);
+  if (mission.category === 'secondary' || mission.instanceId) {
+    const tierValues = windows.flatMap(window => (window.tiers ?? []).map(tier => positiveVp(tier.vp))).filter(Boolean);
+    const configured = positiveVp(mission.victoryPoints ?? mission.result?.victoryPoints);
+    if (!tierValues.length && configured) tierValues.push(configured);
+    return [...new Set(tierValues)].sort((a,b) => a-b);
+  }
+
+  const items = windows.flatMap(window => window.items ?? []);
+  if (!items.length) {
+    const configured = positiveVp(mission.victoryPoints ?? mission.result?.victoryPoints);
+    return configured ? [configured] : [];
+  }
+
+  let totals = new Set([0]);
+  for (const item of items) {
+    const base = positiveVp(item.vp);
+    if (!base) continue;
+    const values = [0];
+    if (/\bper\b/i.test(String(item.summary ?? ''))) {
+      for (let value = base; value <= 15; value += base) values.push(value);
+    } else {
+      values.push(base);
+    }
+    const next = new Set();
+    for (const total of totals) {
+      for (const value of values) {
+        if (total + value <= 15) next.add(total + value);
+      }
+    }
+    totals = next;
+  }
+  return [...totals].filter(value => value > 0).sort((a,b) => a-b);
+}
+
+export function renderCheckpointScore(state, group, mission) {
+  const { definitionId, definitionName, instanceId, category } = mission;
+  const card = instanceId ? getSecondaryMissionHistory(state, group.playerId).find(c => c.instanceId === instanceId) : null;
+  const key = instanceId ? [instanceId, state.battle?.round ?? 0, state.turn ?? 0, group.checkpoint].join(':') : checkpointScoreKey(state, group.playerId, group.checkpoint);
+  if (hasEffectiveVictoryPointOpportunity(state, group.playerId, definitionId, key)) {
+    return `<p role="status"><strong>VP recorded.</strong> ${category === 'secondary' ? 'Card removed from active missions.' : 'Primary remains active for later checkpoints.'}</p>`;
+  }
+  if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
+  const vpOptions = getMissionVpOptions(mission);
+  const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
+  return `<form data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}">
+    <label>Confirm VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}" ${vpOptions.length ? '' : 'disabled'}><option value="">${vpOptions.length ? 'Choose VP…' : 'No configured VP value'}</option>${optionMarkup}</select></label>
+    <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Confirm score${category === 'secondary' ? ' & remove card' : ''}</button>
+    <p>Confirm against the tabletop before awarding. Existing VP caps apply.</p>
+  </form>`;
+}
+
+export function bindCheckpointScores(container, session, onError) {
+  container.querySelectorAll?.('[data-checkpoint-score]').forEach(form => form.addEventListener('submit', event => {
+    event.preventDefault();
+    try {
+      const state = session.getState();
+      const playerId = form.getAttribute('data-player');
+      const scoringTiming = form.getAttribute('data-checkpoint');
+      const instanceId = form.getAttribute('data-instance');
+      const payload = { playerId, amount: Number(form.querySelector('[name="vp"]').value), scoringTiming,
+        round: state.battle?.round ?? 0, turn: state.turn ?? 0 };
+      if (instanceId) session.dispatch({type:'secondary_mission.record_score',payload:{...payload,instanceId,retireAfterScoring:true}});
+      else session.dispatch({type:'victory_points.record_award',payload:{...payload,
+        category:'primary', reason:form.getAttribute('data-name'), missionDefinitionId:form.getAttribute('data-mission'),
+        opportunityKey:checkpointScoreKey(state,playerId,scoringTiming)}});
+    } catch (error) { onError(error?.message ?? String(error)); }
+  }));
+}
+''')
+
+          p = Path('src/ui/scoring-checkpoint-review.js')
+          replace_once(p,
+              "${renderCheckpointScore(state,group,{category:'primary',definitionId:group.primaryReference.id,definitionName:primaryName})}",
+              "${renderCheckpointScore(state,group,{category:'primary',definitionId:group.primaryReference.id,definitionName:primaryName,scoringWindows:primaryWindows,victoryPoints:group.primaryReference?.victoryPoints})}")
+
+          # Regression tests for this request.
+          Path('tests/ui/requested-ui-cleanup-charge-scoring.test.js').write_text(r'''import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { recordChargeDeclined } from '../../src/engine/charge-transitions.js';
+import { getMissionVpOptions, renderCheckpointScore } from '../../src/ui/checkpoint-score-controls.js';
+
+test('marked setup instructions and layout switch are removed', () => {
+  const army = fs.readFileSync(new URL('../../src/ui/army-selection-panel.js', import.meta.url), 'utf8');
+  const shell = fs.readFileSync(new URL('../../src/ui/battle-shell.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(army, /Select Armies for This Battle/);
+  assert.doesNotMatch(army, /Army lists stay reusable/);
+  assert.doesNotMatch(army, /published 11th-edition muster table/);
+  assert.doesNotMatch(shell, /Current layout/);
+  assert.match(shell, /handleMissionSummaryToggle/);
+});
+
+test('charge tabletop supports declining a charge and hides charge zoom controls', () => {
+  const tabletop = fs.readFileSync(new URL('../../src/ui/charge-tabletop-screen.js', import.meta.url), 'utf8');
+  const workspace = fs.readFileSync(new URL('../../src/ui/combat-workspace.js', import.meta.url), 'utf8');
+  assert.match(tabletop, /data-charge-decline/);
+  assert.match(tabletop, /Do not charge/);
+  assert.match(workspace, /showZoomControls: phase !== 'charge'/);
+});
+
+test('declining a charge records a non-charge decision and resolves that unit for the phase', () => {
+  const state = {
+    phase: 'charge', turn: 1, activePlayer: 'p1', battle: { status: 'active', round: 1 },
+    units: [{ id: 'u1', ownerId: 'p1', status: 'deployed' }], history: []
+  };
+  const next = recordChargeDeclined(state, { unitId: 'u1' });
+  const event = next.history.at(-1);
+  assert.equal(event.type, 'charge.outcome_recorded');
+  assert.equal(event.payload.outcome, 'declined');
+  assert.deepEqual(event.payload.targetIds, []);
+  assert.throws(() => recordChargeDeclined(next, { unitId: 'u1' }), /one Charge decision per turn/);
+});
+
+test('VP choices come from mission scoring values instead of 1 through 15', () => {
+  const secondary = { category:'secondary', instanceId:'card', result:{scoringWindows:[{tiers:[{vp:3},{vp:5}]}]} };
+  assert.deepEqual(getMissionVpOptions(secondary), [3,5]);
+  const primary = { category:'primary', scoringWindows:[{items:[{vp:2,summary:'Per enemy unit destroyed this turn.'}]}] };
+  assert.deepEqual(getMissionVpOptions(primary), [2,4,6,8,10,12,14]);
+  const state = { battle:{round:1}, turn:1, history:[], scoring:{secondaryMissions:[{instanceId:'card',playerId:'p1',status:'active'}]} };
+  const html = renderCheckpointScore(state,{playerId:'p1',checkpoint:'end-of-turn'},
+    { ...secondary, definitionId:'centre-ground', definitionName:'Centre Ground' });
+  assert.match(html, /<option value="3">3 VP<\/option>/);
+  assert.match(html, /<option value="5">5 VP<\/option>/);
+  assert.doesNotMatch(html, /<option value="1">1 VP<\/option>/);
+});
+''')
+          PY
+      - name: Verify
+        run: npm run verify
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src tests
+          git diff --cached --quiet && exit 0
+          git commit -m 'Simplify live UI and add charge decline scoring choices'
+          git push origin HEAD:feature/ui-cleanup-charge-scoring
