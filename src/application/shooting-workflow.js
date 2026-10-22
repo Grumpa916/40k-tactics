@@ -4,7 +4,7 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getShootingState } from "../rules/shooting-state.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
-import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
+import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -131,14 +131,16 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
 
-  const formationWeapons = getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
-  if (formationWeapons.length) return formationWeapons;
+  const formationMembers = getCombatFormationMembers(state, attacker);
+  if (formationMembers.length > 1) {
+    return getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
+  }
 
   const weaponIds = Array.isArray(attacker.profile?.weaponIds)
     ? attacker.profile.weaponIds
     : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
   const weapons = Array.isArray(gameData?.weapons) ? gameData.weapons : [];
-  return weaponIds
+  const linkedWeapons = weaponIds
     .map((weaponId) => weapons.find((weapon) => weapon?.id === weaponId))
     .filter((weapon) => weapon?.type === "ranged")
     .map((weapon) => ({
@@ -151,6 +153,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
       formationUnitId: attacker.id,
       characteristics: { ...(weapon.characteristics ?? {}) }
     }));
+  return linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
 }
 
 export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {
