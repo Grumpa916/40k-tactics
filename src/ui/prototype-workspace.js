@@ -33,7 +33,7 @@ export function renderPrototypeWorkspaceTools() {
   </style><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
     <div class="tabletop-live-strip" data-workspace-live-strip></div>
     <details class="prototype-phase-menu"><summary>Phases</summary><div>${phases}</div></details>
-    <button type="button" data-workspace-focus>Review</button>
+    <button type="button" data-workspace-focus>Overview</button>
     <button type="button" data-workspace-panel aria-expanded="true">Hide panel ⇥</button>
   </nav>`;
 }
@@ -75,7 +75,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
 
     const focusButton = container.querySelector('[data-workspace-focus]');
     if (focusButton) {
-      focusButton.textContent = focus ? 'Review' : 'Tabletop';
+      focusButton.textContent = focus ? 'Overview' : 'Tabletop';
       focusButton.setAttribute('aria-pressed', String(focus));
     }
     const panelButton = container.querySelector('[data-workspace-panel]');
