@@ -194,13 +194,20 @@ export function getCombatFormationWeaponOptions(state, unit, { type = null } = {
   if (!root) return [];
   const members = getCombatFormationMembers(state, root);
   const combined = members.length > 1;
-  return members.flatMap((member) => getDatasheetWeaponOptions(state, member, { type }).map((weapon) => ({
-    ...weapon,
-    formationUnitId: root.id,
-    sourceUnitId: member.id,
-    sourceUnitName: member.name ?? member.id,
-    displayName: combined ? `${member.name ?? member.id} · ${weapon.name}` : weapon.name
-  })));
+  return members.flatMap((member) => getDatasheetWeaponOptions(state, member, { type }).map((weapon) => {
+    const profileName = weapon.name;
+    const sourceUnitName = member.name ?? member.id;
+    const displayName = combined ? `${sourceUnitName} · ${profileName}` : profileName;
+    return {
+      ...weapon,
+      name: displayName,
+      profileName,
+      formationUnitId: root.id,
+      sourceUnitId: member.id,
+      sourceUnitName,
+      displayName
+    };
+  }));
 }
 
 function firstCombatValue(unit, datasheet, liveKey, datasheetKeys) {
