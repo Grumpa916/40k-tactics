@@ -1,10 +1,41 @@
 import { getLiveUnitVitals } from './live-unit-vitals.js';
-import { getBattleUnitDatasheet } from "./battle-unit-reference.js";
+import { getBattleRosterUnit, getBattleUnitDatasheet } from "./battle-unit-reference.js";
 
 export function parseCombatCharacteristic(value) {
   if (Number.isFinite(value)) return Number(value);
   const match = String(value ?? "").trim().match(/^(\d+(?:\.\d+)?)\s*(?:[+"″]|in)?$/i);
   return match ? Number(match[1]) : null;
+}
+
+function normalizeWeaponName(value) {
+  return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function explicitWeaponLoadout(state, unit) {
+  const equipped = getBattleRosterUnit(state, unit)?.equippedWeapons;
+  if (!Array.isArray(equipped) || !equipped.length) return null;
+  const loadout = new Map();
+  for (const item of equipped) {
+    const key = normalizeWeaponName(item?.name);
+    if (!key) continue;
+    const quantity = Number.isInteger(item?.quantity) && item.quantity > 0 ? item.quantity : 1;
+    const current = loadout.get(key);
+    loadout.set(key, { ...item, quantity: (current?.quantity ?? 0) + quantity });
+  }
+  return loadout.size ? loadout : null;
+}
+
+function scaleAttackCount(attacks, quantity) {
+  if (!Number.isInteger(quantity) || quantity <= 1) return attacks;
+  if (Number.isInteger(attacks) && attacks >= 0) return attacks * quantity;
+  const text = String(attacks ?? "").trim();
+  if (/^\d+$/.test(text)) return Number(text) * quantity;
+  const dice = text.match(/^(\d*)D([36])(?:\+(\d+))?$/i);
+  if (!dice) return attacks;
+  const count = Number(dice[1] || 1) * quantity;
+  const modifier = Number(dice[3] || 0) * quantity;
+  return `${count}D${dice[2]}${modifier ? `+${modifier}` : ""}`;
 }
 
 function weaponAbilityCharacteristics(abilities) {
@@ -22,8 +53,12 @@ function weaponAbilityCharacteristics(abilities) {
 export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
+  const loadout = explicitWeaponLoadout(state, unit);
 
   return weapons.flatMap((weapon, index) => {
+    const loadoutEntry = loadout?.get(normalizeWeaponName(weapon?.name)) ?? null;
+    if (loadout && !loadoutEntry) return [];
+
     const rawRange = weapon?.range ?? weapon?.characteristics?.range;
     const isMelee = String(rawRange ?? "").trim().toLowerCase() === "melee";
     const weaponType = isMelee ? "melee" : "ranged";
@@ -34,13 +69,16 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
 
     const skill = parseCombatCharacteristic(weapon?.skill ?? weapon?.characteristics?.skill);
     const name = weapon?.name ?? `${weaponType === "melee" ? "Melee" : "Ranged"} weapon ${index + 1}`;
+    const equippedQuantity = loadoutEntry?.quantity ?? 1;
+    const attacks = weapon?.attacks ?? weapon?.characteristics?.attacks;
     return [{
       id: `datasheet:${unit.id}:${index}`,
       name,
       type: weaponType,
+      equippedQuantity,
       characteristics: {
         ...(range == null ? {} : { range }),
-        attacks: weapon?.attacks ?? weapon?.characteristics?.attacks,
+        attacks: scaleAttackCount(attacks, equippedQuantity),
         strength: weapon?.strength ?? weapon?.characteristics?.strength,
         ap: weapon?.ap ?? weapon?.characteristics?.ap ?? 0,
         damage: weapon?.damage ?? weapon?.characteristics?.damage,
