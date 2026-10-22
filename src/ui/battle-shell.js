@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 15314)
+Total output lines: 1064
+
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
 import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
@@ -309,11 +312,6 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
     renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
-  const armyDock = '<nav class="battle-shell__army-dock" aria-label="Open army rosters">' +
-    '<button type="button" data-open-army-roster="' + escapeHtml(yourPlayerId ?? "") + '"' +
-    (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong></button>' +
-    '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
-    (opponentPlayerId ? "" : " disabled") + '><strong>Opponent</strong></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
   const scoreAdjustOverlay = '<div data-score-adjust-host>' + renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind) + '</div>';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
@@ -354,7 +352,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '. Selecting a phase changes the screen view, not the recorded game phase.</p>' +
     '<p role="status" class="battle-shell__faction-decision-message" data-faction-decision-message>' +
     escapeHtml(factionDecisionMessage) + '</p>' +
-    workspace + armyDock + armyOverlay + scoreAdjustOverlay + '<style>.battle-shell__player-summary{appearance:none;color:inherit;text-align:left;cursor:pointer}.battle-shell__score-adjust-backdrop{position:fixed;inset:0;z-index:10050;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px}.battle-shell__score-adjust{width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}.battle-shell__score-adjust header{display:flex;justify-content:space-between;align-items:center;gap:12px}.battle-shell__score-adjust header>div{display:flex;gap:8px}.battle-shell__score-adjust header h2{margin:0}.battle-shell__score-adjust header button{font-size:24px;min-width:46px}.battle-shell__score-adjust-current{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.battle-shell__score-adjust-current strong{font-size:24px;padding:12px;border:1px solid #44505c;border-radius:10px;text-align:center}.battle-shell__score-adjust-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.battle-shell__score-adjust-grid button{min-width:76px;min-height:52px;font-size:20px;font-weight:800}.battle-shell__score-adjust-message{min-height:1.3em;margin:10px 0 0}.battle-shell__score-adjust.is-collapsed{width:min(360px,86vw);padding:10px 12px}.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-current,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-grid,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-message{display:none}</style></main>';
+    workspace + armyOverlay + scoreAdjustOverlay + '<style>.battle-shell__player-summary{appearance:none;color:inherit;text-align:left;cursor:pointer}.battle-shell__score-adjust-backdrop{position:fixed;inset:0;z-index:10050;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px}.battle-shell__score-adjust{width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}.battle-shell__score-adjust header{display:flex;justify-content:space-between;align-items:center;gap:12px}.battle-shell__score-adjust header>div{display:flex;gap:8px}.battle-shell__score-adjust header h2{margin:0}.battle-shell__score-adjust header button{font-size:24px;min-width:46px}.battle-shell__score-adjust-current{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.battle-shell__score-adjust-current strong{font-size:24px;padding:12px;border:1px solid #44505c;border-radius:10px;text-align:center}.battle-shell__score-adjust-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.battle-shell__score-adjust-grid button{min-width:76px;min-height:52px;font-size:20px;font-weight:800}.battle-shell__score-adjust-message{min-height:1.3em;margin:10px 0 0}.battle-shell__score-adjust.is-collapsed{width:min(360px,86vw);padding:10px 12px}.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-current,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-grid,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-message{display:none}</style></main>';
 }
 
 export function createBattleShell(container, {
@@ -430,35 +428,7 @@ export function createBattleShell(container, {
     if (label) label.textContent = setupTabLabel(tab);
     const status = container.querySelector?.("[data-setup-navigation-message]");
     if (status) status.textContent = "";
-    const next = container.querySelector?.("[data-setup-workspace-continue]");
-    if (next) next.textContent = setupContinueLabel(tab);
-    mountedScreen?.setTab?.(tab === "battlefield" ? "battlefield" : tab === "mission-map" ? "mission-map" : "pre-game");
-  }
-
-  function destroyMountedScreen() {
-    if (mountedScreen?.destroy) mountedScreen.destroy();
-    mountedScreen = null;
-    mountedPhase = null;
-  }
-
-  function readOpenStates(element, selector, attribute) {
-    const openStates = {};
-    if (typeof element?.querySelectorAll !== "function") return openStates;
-    element.querySelectorAll(selector).forEach((item) => {
-      const key = item.getAttribute(attribute);
-      if (key) openStates[key] = Boolean(item.open);
-    });
-    return openStates;
-  }
-
-  function refreshPersistentPanels() {
-    const phaseHost = container.querySelector?.("[data-phase-progression-host]");
-    if (phaseHost) phaseHost.innerHTML = renderPhaseProgressionPanel(session.getState(), viewedPhase, phaseProgressionMessage);
-    const state = session.getState();
-    refreshScoringCheckpointDialog(container, state, scoringReminder, session);
-    const decisionHost = container.querySelector?.("[data-decision-reminder-host]");
-    if (decisionHost) {
-      decisionHost.innerHTML = renderDecisionReminderHost(state, {
+    const next = container.querySelecto…314 tokens truncated…derHost(state, {
         perspectivePlayerId,
         battleShockReminder,
         dismissedTyranidDecisionContextKey

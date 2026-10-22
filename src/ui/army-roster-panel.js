@@ -101,12 +101,16 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment]");
+    const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-roster-save], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment]");
     if (!button || !container.contains(button) || busy) return;
     if (button.matches("[data-builder-page]")) { page = button.getAttribute("data-builder-page"); render(); return; }
     if (button.matches("[data-preview-unit]")) { previewId = button.getAttribute("data-preview-unit"); openUnitDetailId = ""; render(); return; }
     if (button.matches("[data-builder-browse]")) { previewId = ""; openUnitDetailId = ""; render(); return; }
     if (button.matches("[data-points-preset]")) { container.querySelector('[name="pointsLimit"]').value = button.getAttribute("data-points-preset"); return; }
+    if (button.matches("[data-roster-save]")) {
+      const snapshot=structuredClone(current);
+      await action(async()=>{ if(!snapshot) throw new Error("Open a list before saving."); snapshot.updatedAt=now(); await store.save({id:snapshot.id,roster:snapshot}); current=snapshot; },"Army list saved."); return;
+    }
     if (button.matches("[data-roster-export]")) {
       const url = URL.createObjectURL(new Blob([JSON.stringify(current, null, 2)], {type:"application/json"}));
       const link = document.createElement("a"); link.href=url; link.download="army-list.json"; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); return;
@@ -251,11 +255,14 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       return;
     }
     if (button.matches("[data-roster-delete]")) {
+      const rosterId=button.getAttribute("data-roster-delete") || current?.id;
+      const roster=rosterCache.get(rosterId) ?? (current?.id===rosterId?current:null);
       await action(async () => {
-        if (!current) throw new Error("Open a roster first.");
-        if (!window.confirm('Delete "' + current.name + '"? This cannot be undone.')) return;
-        await store.remove(current.id); selectedId = ""; current = null; page = "library";
-      }, "Roster deleted.");
+        if (!rosterId) throw new Error("Choose an army list first.");
+        if (!window.confirm('Delete "' + (roster?.name ?? "this army list") + '"? This cannot be undone.')) return;
+        await store.remove(rosterId); rosterCache.delete(rosterId);
+        if(current?.id===rosterId){selectedId="";current=null;page="library";}
+      }, "Army list deleted.");
       return;
     }
     if (button.matches("[data-remove-unit]")) {
