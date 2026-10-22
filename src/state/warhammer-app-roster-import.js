@@ -1,6 +1,7 @@
 import { createArmyRoster } from './army-roster-library.js';
 import { ARMY_UNIT_CATALOG } from '../data/army-unit-catalog.js';
 import { resolveInitialUnitPoints } from './army-roster-unit-costs.js';
+import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout } from '../rules/wargear-loadout-validation.js';
 
 const pointsPattern = /\b(\d[\d,]*)\s*(?:pts?\.?|points?)\b/i;
 const sections = /^(?:ATTACHED UNITS|CHARACTERS|BATTLELINE|OTHER DATASHEETS|DEDICATED TRANSPORTS|ALLIED UNITS)$/i;
@@ -18,21 +19,38 @@ function modelCount(line, candidate) {
  const match = line.match(/\b(\d+)\s+models?\b/i) ?? line.match(/^\s*(\d+)\s*[x×]\s*/i);
  return match ? Number(match[1]) : candidate.defaultModelCount ?? 1;
 }
-function captureEquippedWeapon(unit, line) {
- const match = line.match(/^[•◦*]\s*(?:(\d+)\s*[x×]\s+)?(.+)$/i);
- if (!match || !Array.isArray(unit?.datasheet?.weapons)) return;
- const sourceName = match[2].trim();
- const weapon = unit.datasheet.weapons.find(item => normalize(item?.name) === normalize(sourceName));
- if (!weapon?.name) return;
- const quantity = match[1] ? Number(match[1]) : 1;
- if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) return;
+function addSelection(unit, match, quantity, sourceName) {
+ if (!Array.isArray(unit.equippedWargear)) unit.equippedWargear = [];
+ const selected = unit.equippedWargear.find(item => normalize(item.name) === normalize(match.name));
+ if (selected) selected.quantity += quantity;
+ else unit.equippedWargear.push({ name: match.name, quantity, sourceName, profileNames: match.profileNames.slice(), match: match.match });
+
  if (!Array.isArray(unit.equippedWeapons)) unit.equippedWeapons = [];
- const existing = unit.equippedWeapons.find(item => normalize(item.name) === normalize(weapon.name));
- if (existing) {
-  existing.quantity += quantity;
-  return;
+ for (const profileName of match.profileNames) {
+  const existing = unit.equippedWeapons.find(item => normalize(item.name) === normalize(profileName));
+  if (existing) existing.quantity += quantity;
+  else unit.equippedWeapons.push({ name: profileName, quantity, sourceName, selectionName: match.name });
  }
- unit.equippedWeapons.push({ name: weapon.name, quantity, sourceName });
+}
+function addUnmatched(unit, sourceName, quantity) {
+ if (!Array.isArray(unit.unmatchedWargear)) unit.unmatchedWargear = [];
+ const existing = unit.unmatchedWargear.find(item => normalize(item.sourceName) === normalize(sourceName));
+ if (existing) existing.quantity += quantity;
+ else unit.unmatchedWargear.push({ sourceName, quantity });
+}
+function captureEquipmentLine(unit, line) {
+ const match = line.match(/^([•◦*])\s*(?:(\d+)\s*[x×]\s+)?(.+)$/i);
+ if (!match || !unit) return;
+ const marker = match[1];
+ const sourceName = match[3].trim();
+ if (/^(?:Attached as:|Warlord\b)/i.test(sourceName)) return;
+ const quantity = match[2] ? Number(match[2]) : 1;
+ if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) return;
+ const resolved = matchWargearSelection({ datasheetId: unit.datasheetId, datasheet: unit.datasheet, sourceName });
+ if (resolved) { addSelection(unit, resolved, quantity, sourceName); return; }
+ // Multi-model App exports use a top-level bullet for model groups and nested
+ // circles for their equipment. Single-model top-level bullets are equipment.
+ if (marker === '◦' || unit.modelCount === 1) addUnmatched(unit, sourceName, quantity);
 }
 function attachSourceValidationErrors(units, sourceErrors) {
  for (const unit of units) {
@@ -50,6 +68,25 @@ function attachSourceValidationErrors(units, sourceErrors) {
    };
   }
  }
+}
+function finalizeLoadoutValidation(unit) {
+ const reviewed = validateWargearLoadout(unit);
+ const unmatched = unit.unmatchedWargear ?? [];
+ if (unit.loadoutValidation?.status === 'source-invalid') {
+  unit.loadoutValidation.reviewedRuleValidation = reviewed;
+  if (unmatched.length) unit.loadoutValidation.unmatchedWargear = unmatched.slice();
+  return;
+ }
+ if (!unit.equippedWargear?.length && !unmatched.length) return;
+ if (unmatched.length && reviewed.status !== 'rules-invalid') {
+  unit.loadoutValidation = {
+   ...reviewed,
+   status: 'unverified',
+   errors: [...(reviewed.errors ?? []), ...unmatched.map(item => `No combat profile matched imported wargear: ${item.quantity}x ${item.sourceName}.`)]
+  };
+  return;
+ }
+ unit.loadoutValidation = reviewed;
 }
 
 /** Read unit blocks so model, weapon and attachment lines never become extra units. */
@@ -92,7 +129,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
     if (count >= 1 && count <= 500) current.modelCount = count;
     else warnings.push('Review model count for ' + current.name + ': ' + model[1]);
    }
-   captureEquippedWeapon(current, line);
+   captureEquipmentLine(current, line);
    continue;
   }
   if (/\(\d+\s+Detachment Points?\)/i.test(line) || /^(?:army )?detachment\s*[:–-]/i.test(line)) {
@@ -128,10 +165,12 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   } else warnings.push('Review Attached unit ' + number + ': leader/bodyguard pairing could not be resolved.');
  }
  attachSourceValidationErrors(units, sourceErrors);
+ units.forEach(finalizeLoadoutValidation);
  warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
- return {roster: createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment, units,
-  notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text, createdAt, updatedAt}), unrecognized, warnings, sourceErrors, declaredPoints, totalPoints};
+ const roster = createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment, units,
+  notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text, createdAt, updatedAt});
+ return {roster, unrecognized, warnings, sourceErrors, wargearAudit: summarizeWargearAudit(roster), declaredPoints, totalPoints};
 }
