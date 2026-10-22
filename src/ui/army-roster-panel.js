@@ -5,7 +5,9 @@ import { renderArmyBuilder, renderCatalogResults } from "./army-builder-view.js"
 import { detachmentOptions } from "./army-builder-options.js";
 import { createArmyRoster, duplicateArmyRoster, remapRosterUnitIds, removeUnitFromRoster } from "../state/army-roster-library.js";
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
+import { createRulesDataRevisionStamp } from "../data/rules-data-revisions.js";
 import { getTyranidWargearRuleSet } from "../data/tyranid-wargear-rules.js";
+import { assessRosterRulesData, revalidateRosterRulesData } from "../rules/roster-rules-data-validation.js";
 import { attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
 import { buildManualWargearLoadout } from "../rules/wargear-loadout-validation.js";
@@ -107,7 +109,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
           id: newId(), name: values.rosterName, faction: values.faction || null,
           detachment: (values.detachment === "__custom__" ? values.customDetachment : values.detachment)?.trim() || null,
           pointsLimit: values.pointsLimit === "" ? null : Number(values.pointsLimit),
-          units: [], createdAt: timestamp, updatedAt: timestamp
+          units: [], rulesDataRevision: createRulesDataRevisionStamp(values.faction), createdAt: timestamp, updatedAt: timestamp
         });
         await store.save({ roster });
         selectedId = roster.id;
@@ -127,12 +129,25 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
-    const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-roster-save], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment]");
+    const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-roster-save], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment], [data-revalidate-rules]");
     if (!button || !container.contains(button) || busy) return;
     if (button.matches("[data-builder-page]")) { page = button.getAttribute("data-builder-page"); render(); return; }
     if (button.matches("[data-preview-unit]")) { previewId = button.getAttribute("data-preview-unit"); openUnitDetailId = ""; render(); return; }
     if (button.matches("[data-builder-browse]")) { previewId = ""; openUnitDetailId = ""; render(); return; }
     if (button.matches("[data-points-preset]")) { container.querySelector('[name="pointsLimit"]').value = button.getAttribute("data-points-preset"); return; }
+    if (button.matches("[data-revalidate-rules]")) {
+      await action(async () => {
+        if (!current) throw new Error("Open a roster before revalidating it.");
+        const result = revalidateRosterRulesData(current, { updatedAt: now() });
+        if (result.status !== "current") {
+          const details = result.issues?.length ? result.issues.slice(0, 4).join(" ") : "This roster could not be revalidated automatically.";
+          throw new Error(details);
+        }
+        await store.save({ id: result.roster.id, roster: result.roster });
+        current = result.roster;
+      }, "Roster revalidated against the current tracked rules and points data.");
+      return;
+    }
     if (button.matches("[data-roster-save]")) {
       const snapshot=structuredClone(current);
       await action(async()=>{ if(!snapshot) throw new Error("Open a list before saving."); snapshot.updatedAt=now(); await store.save({id:snapshot.id,roster:snapshot}); current=snapshot; },"Army list saved."); return;
@@ -159,7 +174,9 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
           points: resolveInitialUnitPoints(candidate, resolvedModelCount), pointsOptions: candidate.pointsOptions ?? [], notes: "",
           datasheet: candidate.datasheet ?? null, datasheetId: candidate.id,
           dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
-            reviewedAt: candidate.reviewedAt ?? null, officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" },
+            reviewedAt: candidate.reviewedAt ?? null, pointsSourceName: candidate.pointsSourceName ?? null,
+            pointsSourceUrl: candidate.pointsSourceUrl ?? null, rulesDataRevisionId: candidate.rulesDataRevisionId ?? null,
+            officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" },
           ...(ruleSet ? { loadoutValidation: pendingManualWargearValidation(ruleSet) } : {})
         };
         const updated = { ...current, units: [...current.units, rosterUnit], updatedAt: now() };
@@ -265,6 +282,10 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       await action(async () => {
         if (!rosterToApply || !onApplyRoster) throw new Error("Open a roster before assigning it.");
         if (!playerId) throw new Error("Choose Your army or Opponent army before assigning this roster.");
+        const rulesAssessment = assessRosterRulesData(rosterToApply);
+        if (rulesAssessment.status === "review-required") {
+          throw new Error("This roster's tracked rules data is out of date. Revalidate it before assigning it to a battle.");
+        }
         await onApplyRoster(rosterToApply, playerId);
       }, "Roster assigned to the selected side. Its units are now available for deployment planning.");
       return;
