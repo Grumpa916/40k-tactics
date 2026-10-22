@@ -1,0 +1,7 @@
+.map-reserve-tray { flex:none; padding:6px 8px; border:1px solid #718896; border-radius:9px; background:#172b34; margin-top:6px; cursor:pointer; }
+.map-reserve-tray button { min-height:44px; padding:6px 10px; border:1px solid #7d959c; border-radius:7px; background:#21353e; color:#f1f5f2; font:inherit; touch-action:manipulation; }
+.map-reserve-tray button:disabled { opacity:.65; }
+.map-reserve-tray button[aria-pressed=true] { outline:2px solid #c6e99e; background:#354a35; }
+.map-reserve-tray__units { display:flex; gap:6px; overflow-x:auto; padding:4px 0; }
+.map-reserve-tray__units button { flex:none; }
+.map-reserve-tray small { display:block; font-size:12px; }

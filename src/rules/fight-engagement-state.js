@@ -56,6 +56,12 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
     const event = history[index];
     if (!event?.type) continue;
 
+    if (event.type === 'unit.entered_reserves') {
+      for (const [key, relationship] of relationships) {
+        if (relationship.unitIds.includes(event.payload?.unitId)) relationships.delete(key);
+      }
+      continue;
+    }
     if (event.type === FALL_BACK_EVENT && event.payload?.unitId) {
       fallBacks.add(event.payload.unitId);
       fallBackIndexes.set(event.payload.unitId, index);

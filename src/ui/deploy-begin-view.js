@@ -1,3 +1,4 @@
+import { renderMapReserveTray } from './map-reserve-tray.js';
 import { deploymentUnits, formationFor, attachmentParent } from '../rules/event-preparation.js';
 import { deploymentWorkspaceSummary, deploymentWorkspaceIssues } from '../rules/deployment-workspace.js';
 import { getSecondaryMissionMode } from '../rules/secondary-mission-lifecycle.js';
@@ -21,7 +22,7 @@ export function renderDeployBeginView(state,{selectedUnitId=null,message='',role
   const playerName=id=>players.find(player=>player.id===id)?.name??'Not recorded';
   const style=new URL('./styles/deploy-begin.css',import.meta.url).href;
   return `<link rel="stylesheet" href="${style}"><main class="deploy-begin"><header class="deploy-begin__heading"><div><h1>Deploy &amp; Begin</h1><p>Both armies · deployment and reserves in one place</p></div><button type="button" data-deploy-reference="terrain">View terrain setup</button></header>
-    <div class="deploy-begin__workspace"><section class="deploy-begin__map"><div data-deploy-map></div><section class="deploy-reserve-tray" aria-label="Reserves tray"><strong>Reserves · ${reserved.length}</strong>${reserved.map(unit=>`<button type="button" data-deploy-select="${esc(unit.id)}">${esc(unit.name)}<small>${esc(playerName(unit.ownerId))}</small></button>`).join('')||'<span>No units in reserves</span>'}<small>Select a reserved unit, then choose Battlefield to return it.</small></section></section>
+    <div class="deploy-begin__workspace"><section class="deploy-begin__map"><div data-deploy-map></div>${renderMapReserveTray(state,{selectedUnitId})}</section>
     <aside class="deploy-begin__panel"><div class="deploy-begin__scroll">
     <details data-deploy-roles${rolesOpen||rolesMissing?' open':''}><summary>Attacker &amp; first player</summary><p>Attacker: ${esc(playerName(state.preGameSetup?.attackerPlayerId))}<br>First player: ${esc(playerName(state.preparation?.firstPlayerId))}</p><p>Record the tabletop roll results when resolved.</p>${[['attacker','Attacker',state.preGameSetup?.attackerPlayerId],['first-player','First player',state.preparation?.firstPlayerId]].map(([action,label,selected])=>`<fieldset><legend>${label}</legend>${players.map(player=>`<button type="button" data-deploy-role="${action}" data-deploy-player="${esc(player.id)}" aria-pressed="${selected===player.id}">${esc(player.name)}</button>`).join('')}</fieldset>`).join('')}<small>Defender is the other army. First turn is recorded separately.</small></details>
     <button type="button" data-deploy-reference="secondaries">Secondary choices · ${players.map(player=>esc(getSecondaryMissionMode(state,player.id)??'Choose mode')).join(' / ')}</button>

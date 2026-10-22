@@ -1,4 +1,5 @@
 export const COMMAND_TYPES = Object.freeze({
+  TRANSFER_MAP_RESERVE: "unit.transfer_map_reserve",
   UPDATE_DEPLOYMENT_WORKSPACE: "battle.deployment_workspace",
   UPDATE_PREPARATION: "battle.update_preparation",
   START_BATTLE: "battle.start",
