@@ -19,6 +19,34 @@ function modelCount(line, candidate) {
  const match = line.match(/\b(\d+)\s+models?\b/i) ?? line.match(/^\s*(\d+)\s*[x×]\s*/i);
  return match ? Number(match[1]) : candidate.defaultModelCount ?? 1;
 }
+function singularModelName(value) {
+ const name = normalize(value);
+ if (name.endsWith('ies')) return name.slice(0, -3) + 'y';
+ if (/(?:xes|ches|shes|sses|zes)$/.test(name)) return name.slice(0, -2);
+ return name.endsWith('s') ? name.slice(0, -1) : name;
+}
+function indentation(raw) {
+ return String(raw ?? '').length - String(raw ?? '').trimStart().length;
+}
+function nextNonblankRaw(lines, index) {
+ for (let next = index + 1; next < lines.length; next += 1) {
+  if (lines[next].trim()) return lines[next];
+ }
+ return '';
+}
+function parseModelGroupLine({ raw, line, current, nextRaw }) {
+ const match = line.match(/^[•*]\s*(\d+)\s*[x×]\s+(.+)$/i);
+ if (!match || !current) return null;
+ const quantity = Number(match[1]);
+ const sourceName = match[2].trim();
+ if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) return null;
+ // A matched combat profile is equipment, never a model-group label.
+ if (matchWargearSelection({ datasheetId: current.datasheetId, datasheet: current.datasheet, sourceName })) return null;
+ const nextLine = String(nextRaw ?? '').trim();
+ const hasNestedEquipment = /^◦\s*/.test(nextLine) && indentation(nextRaw) > indentation(raw);
+ const matchesUnitModelName = singularModelName(sourceName) === singularModelName(current.name);
+ return hasNestedEquipment || matchesUnitModelName ? { quantity, sourceName } : null;
+}
 function addSelection(unit, match, quantity, sourceName) {
  if (!Array.isArray(unit.equippedWargear)) unit.equippedWargear = [];
  const selected = unit.equippedWargear.find(item => normalize(item.name) === normalize(match.name));
@@ -100,8 +128,10 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const firstLine = lines.find(line => line.trim())?.trim() ?? '';
  const units = [], unrecognized = [], warnings = [], sourceErrors = [];
  const groups = new Map();
+ const modelGroupTotals = new Map();
  let current = null, group = null, detachment = null, inErrors = false;
- for (const raw of lines) {
+ for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+  const raw = lines[lineIndex];
   const line = raw.trim();
   if (!line) continue;
   if (/^ERRORS$/i.test(line)) {
@@ -122,13 +152,15 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    const role = line.match(/Attached as:\s*(Leader|Bodyguard)\b/i);
    if (role) current.importedAttachmentRole = role[1].toLowerCase();
    if (/^[•*]\s*Warlord$/i.test(line)) current.isWarlord = true;
-   const model = line.match(/^[•*]\s*(\d+)\s*[x×]\s+(.+)$/i);
-   // Only an exact unit/model name can set model count; weapon quantities cannot.
-   if (model && normalize(model[2]).replace(/s$/, '') === normalize(current.name).replace(/s$/, '')) {
-    const count = Number(model[1]);
-    if (count >= 1 && count <= 500) current.modelCount = count;
-    else warnings.push('Review model count for ' + current.name + ': ' + model[1]);
+
+   const modelGroup = parseModelGroupLine({ raw, line, current, nextRaw: nextNonblankRaw(lines, lineIndex) });
+   if (modelGroup) {
+    const total = (modelGroupTotals.get(current.id) ?? 0) + modelGroup.quantity;
+    modelGroupTotals.set(current.id, total);
+    current.modelCount = total;
+    continue;
    }
+
    captureEquipmentLine(current, line);
    continue;
   }
