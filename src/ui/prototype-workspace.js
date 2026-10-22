@@ -33,6 +33,7 @@ export function renderPrototypeWorkspaceTools() {
   </style><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
     <div class="tabletop-live-strip" data-workspace-live-strip></div>
     <details class="prototype-phase-menu"><summary>Phases</summary><div>${phases}</div></details>
+    <button type="button" data-workspace-next-phase data-advance-game-phase hidden>Next phase → Movement</button>
     <button type="button" data-workspace-focus>Overview</button>
     <button type="button" data-workspace-panel aria-expanded="true">Hide panel ⇥</button>
   </nav>`;
@@ -73,6 +74,11 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
         `<span class="tabletop-live-phase">${esc(phase)}</span>${playerMarkup}`;
     }
 
+    const nextPhaseButton = container.querySelector('[data-workspace-next-phase]');
+    if (nextPhaseButton) {
+      nextPhaseButton.hidden = !(combat && state.phase === 'command');
+      nextPhaseButton.textContent = 'Next phase → Movement';
+    }
     const focusButton = container.querySelector('[data-workspace-focus]');
     if (focusButton) {
       focusButton.textContent = focus ? 'Overview' : 'Tabletop';
