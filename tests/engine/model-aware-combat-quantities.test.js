@@ -12,6 +12,7 @@ import {
 import { getShootingCandidates } from '../../src/rules/shooting-candidates.js';
 import { getFightCandidates } from '../../src/rules/fight-candidates.js';
 import { getShootingWeaponOptions } from '../../src/application/shooting-workflow.js';
+import { getFightWeaponOptions } from '../../src/application/fight-workflow.js';
 import { resolveUnitAttack } from '../../src/engine/combat-transitions.js';
 
 function termagantState({ mixed = false, currentStrength = 6, explicit = true } = {}) {
@@ -127,7 +128,7 @@ function attachedState() {
   };
 }
 
-test('attached Leader and Bodyguard expose one activation with distinct weapon sources', () => {
+test('attached Leader and Bodyguard expose one activation with source-qualified weapon labels', () => {
   const state = attachedState();
   const body = state.units[0], leader = state.units[1];
   assert.equal(getCombatFormationRoot(state, leader).id, body.id);
@@ -137,16 +138,16 @@ test('attached Leader and Bodyguard expose one activation with distinct weapon s
   assert.ok(!getShootingCandidates(state).available.includes(leader.id));
 
   const ranged = getCombatFormationWeaponOptions(state, body, { type: 'ranged' });
-  assert.deepEqual(ranged.map((weapon) => [weapon.name, weapon.sourceUnitId]), [
+  assert.deepEqual(ranged.map((weapon) => [weapon.profileName, weapon.sourceUnitId]), [
     ['Bodyguard gun', body.id], ['Leader gun', leader.id]
   ]);
-  assert.match(ranged[0].displayName, /Bodyguard/);
-  assert.match(ranged[1].displayName, /Leader/);
+  assert.equal(ranged[0].name, 'Bodyguard · Bodyguard gun');
+  assert.equal(ranged[1].name, 'Leader · Leader gun');
 
   state.history.push({ type: 'shooting.unit_activated', payload: { unitId: body.id, round: 1, turn: 1, actionType: 'shoot' } });
   const workflowWeapons = getShootingWeaponOptions(state, { attackerId: body.id });
   assert.equal(workflowWeapons.length, 2);
-  assert.equal(workflowWeapons.find((weapon) => weapon.name === 'Leader gun').sourceUnitId, leader.id);
+  assert.equal(workflowWeapons.find((weapon) => weapon.sourceUnitId === leader.id).profileName, 'Leader gun');
 });
 
 test('attached source weapon resolves under the Bodyguard activation and records the real attack source', () => {
@@ -159,6 +160,7 @@ test('attached source weapon resolves under the Bodyguard activation and records
   assert.equal(next.history.at(-1).payload.attackerId, body.id);
   assert.equal(next.history.at(-1).payload.sourceAttackerId, leader.id);
   assert.equal(next.history.at(-1).payload.sourceAttackerName, 'Leader');
+  assert.equal(next.history.at(-1).payload.weaponName, 'Leader · Leader gun');
 });
 
 test('fight candidates collapse an attached formation, then release the Leader after Bodyguard destruction', () => {
@@ -173,4 +175,17 @@ test('fight candidates collapse an attached formation, then release the Leader a
   const after = getFightCandidates(state);
   assert.ok(after.normal.includes('p1:leader'));
   assert.equal(getCombatFormationRoot(state, state.units[1]).id, 'p1:leader');
+});
+
+test('unattached units preserve legacy linked gameData weapon priority', () => {
+  const state = termagantState({ currentStrength: 10 });
+  const unit = state.units[0];
+  unit.profile = { weaponIds: ['legacy-rifle', 'legacy-blade'] };
+  state.history.push({ type: 'shooting.unit_activated', payload: { unitId: unit.id, round: 1, turn: 1, actionType: 'shoot' } });
+  const gameData = { weapons: [
+    { id: 'legacy-rifle', name: 'Legacy Rifle', type: 'ranged', characteristics: { attacks: 2, range: 24, skill: 4, strength: 4, ap: 0, damage: 1 } },
+    { id: 'legacy-blade', name: 'Legacy Blade', type: 'melee', characteristics: { attacks: 3, skill: 4, strength: 4, ap: 0, damage: 1 } }
+  ] };
+  assert.deepEqual(getShootingWeaponOptions(state, { attackerId: unit.id, gameData }).map((weapon) => weapon.id), ['legacy-rifle']);
+  assert.deepEqual(getFightWeaponOptions(state, { attackerId: unit.id, gameData }).map((weapon) => weapon.id), ['legacy-blade']);
 });
