@@ -3,6 +3,7 @@ import { getSpatialContext } from "./spatial-context.js";
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getPostFightTargetStates } from "./post-fight-target-states.js";
 import { evaluateShootingOpportunity } from "./tactical-shooting-opportunity.js";
+import { getCombatFormationRoot } from "./battle-unit-reference.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 
 function unitById(state, unitId) {
@@ -74,6 +75,7 @@ export function getShootingTargetPriorities(state, {
   for (const proximity of proximities) {
     const target = unitById(state, proximity.otherUnitId);
     if (!target || target.ownerId === playerId || target.status === "destroyed") continue;
+    if (getCombatFormationRoot(state, target)?.id !== target.id) continue;
 
     const engaged = attackerSummary?.engagedWith?.includes(target.id) ?? false;
 
@@ -116,11 +118,12 @@ export function getShootingTargetPriorities(state, {
 
     const reasons = [];
     const rangeStatus = range == null ? "unknown" : proximity.distance <= range ? "within" : "borderline";
+    const targetProfile = getProbabilisticUnitProfile(state, target);
     const opportunity = evaluateShootingOpportunity({
       expectedDamage,
       destructionProbability,
       survivalProbability,
-      targetWounds: getProbabilisticUnitProfile(state, target)?.wounds,
+      targetWounds: targetProfile?.wounds,
       impactClassification,
       rangeStatus
     });
@@ -182,4 +185,3 @@ export function getShootingTargetPriorities(state, {
     priorities
   };
 }
-
