@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 15314)
-Total output lines: 1064
-
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
 import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
@@ -428,7 +425,35 @@ export function createBattleShell(container, {
     if (label) label.textContent = setupTabLabel(tab);
     const status = container.querySelector?.("[data-setup-navigation-message]");
     if (status) status.textContent = "";
-    const next = container.querySelecto…314 tokens truncated…derHost(state, {
+    const next = container.querySelector?.("[data-setup-workspace-continue]");
+    if (next) next.textContent = setupContinueLabel(tab);
+    mountedScreen?.setTab?.(tab === "battlefield" ? "battlefield" : tab === "mission-map" ? "mission-map" : "pre-game");
+  }
+
+  function destroyMountedScreen() {
+    if (mountedScreen?.destroy) mountedScreen.destroy();
+    mountedScreen = null;
+    mountedPhase = null;
+  }
+
+  function readOpenStates(element, selector, attribute) {
+    const openStates = {};
+    if (typeof element?.querySelectorAll !== "function") return openStates;
+    element.querySelectorAll(selector).forEach((item) => {
+      const key = item.getAttribute(attribute);
+      if (key) openStates[key] = Boolean(item.open);
+    });
+    return openStates;
+  }
+
+  function refreshPersistentPanels() {
+    const phaseHost = container.querySelector?.("[data-phase-progression-host]");
+    if (phaseHost) phaseHost.innerHTML = renderPhaseProgressionPanel(session.getState(), viewedPhase, phaseProgressionMessage);
+    const state = session.getState();
+    refreshScoringCheckpointDialog(container, state, scoringReminder, session);
+    const decisionHost = container.querySelector?.("[data-decision-reminder-host]");
+    if (decisionHost) {
+      decisionHost.innerHTML = renderDecisionReminderHost(state, {
         perspectivePlayerId,
         battleShockReminder,
         dismissedTyranidDecisionContextKey
