@@ -8,6 +8,7 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
 import { setPreGameRoles, setBattleSize } from "./battle-setup-transitions.js";
 import { registerCommandHandler } from "./command-engine.js";
+import { recordUnitCasualty, undoUnitCasualty } from './unit-casualty-transitions.js';
 import {
   startBattle,
   enterDeployment,
@@ -72,6 +73,8 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RESOLVE_ADVANCE, (state, command) => resolveAdvance(state, command.payload)],
     [COMMAND_TYPES.RECORD_STATIONARY, (state, command) => recordStationary(state, command.payload)],
     [COMMAND_TYPES.UNDO_MOVEMENT_ACTION, (state, command) => undoMovementAction(state, command.payload)],
+    [COMMAND_TYPES.RECORD_UNIT_CASUALTY, (state, command) => recordUnitCasualty(state, command.payload)],
+    [COMMAND_TYPES.UNDO_UNIT_CASUALTY, (state, command) => undoUnitCasualty(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_DECLINED, (state, command) => recordChargeDeclined(state, command.payload)],
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) => recordShootingActivation(state, command.payload)],
@@ -101,4 +104,3 @@ export function registerCoreCommandHandlers() {
 
   for (const [type, handler] of handlers) registerCommandHandler(type, handler);
 }
-
