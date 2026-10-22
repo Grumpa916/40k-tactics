@@ -1,5 +1,5 @@
 import { createLiveMapView } from './live-map-view.js';
-import { getChargeViewModel, recordChargeOutcomeForSession, finishChargePhase } from '../application/charge-workflow.js';
+import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 
 export function createChargeTabletopScreen(container, { session, perspectivePlayerId = null }) {
@@ -31,7 +31,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
           <small>Map ≈ ${esc(item.targetDistance)}″ · ${esc(item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
           ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${distances.has(item.targetUnitId) ? distances.get(item.targetUnitId) + '″' : 'choose distance'}</small>` : ''}
         </section>`).join('')}
-        <div class="combat-workspace__choices"><button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button></div>` : ''}
+        <div class="combat-workspace__choices"><button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button><button type="button" data-charge-decline>Do not charge</button></div>` : ''}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor"><h2>Tactical Advisor</h2>
         ${targetIds.size ? targets.filter(item => targetIds.has(item.targetUnitId)).map(item => `<p><strong>${esc(item.target.name)}</strong><br>${esc(item.reason)}</p>`).join('') : '<p>Select a charger and targets to review approximate range context.</p>'}
         <small>Map uncertainty ±3″. Physical charge roll, movement and legal declaration are resolved on the table.</small>
@@ -67,6 +67,12 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     };
     container.querySelector('[data-charge-success]')?.addEventListener('click', () => record(true));
     container.querySelector('[data-charge-failed]')?.addEventListener('click', () => record(false));
+    container.querySelector('[data-charge-decline]')?.addEventListener('click', () => {
+      if (!selectedUnitId) return;
+      try { recordChargeDeclinedForSession(session, { unitId:selectedUnitId }); clearSelection(); error = ''; }
+      catch (cause) { error = cause?.message ?? String(cause); }
+      render();
+    });
     container.querySelector('[data-charge-complete]')?.addEventListener('click', () => {
       try { finishChargePhase(session); } catch (cause) { error = cause?.message ?? String(cause); render(); }
     });

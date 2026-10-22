@@ -2,6 +2,7 @@ import { createChargeTabletopScreen } from './charge-tabletop-screen.js';
 import {
   getChargeViewModel,
   recordChargeOutcomeForSession,
+  recordChargeDeclinedForSession,
   finishChargePhase
 } from '../application/charge-workflow.js';
 
@@ -133,7 +134,7 @@ export function createChargeScreen(
           (hasCompleteMeasurements ? '' : 'disabled') +
           '>Charge successful</button><button type="button" data-charge-failed ' +
           (hasCompleteMeasurements ? '' : 'disabled') +
-          '>Charge failed</button></div></section>'
+          '>Charge failed</button><button type="button" data-charge-decline>Do not charge</button></div></section>'
         : '',
       '<section class="charge-section"><div class="charge-section__heading"><h2>Charge history</h2><span>',
       model.outcomes.length, ' recorded</span></div><ol class="charge-history">',
@@ -215,6 +216,15 @@ export function createChargeScreen(
         targetIds: [...selectedTargetIds],
         measuredDistances: Object.fromEntries([...selectedTargetIds].map(id => [id, measuredDistances.get(id)]))
       });
+      selectedUnitId = null;
+      selectedTargetIds = new Set();
+      measuredDistances = new Map();
+      render();
+    });
+
+    container.querySelector('[data-charge-decline]')?.addEventListener('click', () => {
+      if (!selectedUnitId) return;
+      recordChargeDeclinedForSession(session, { unitId: selectedUnitId });
       selectedUnitId = null;
       selectedTargetIds = new Set();
       measuredDistances = new Map();

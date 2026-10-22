@@ -14,7 +14,7 @@ export function renderScoringCheckpointGroups(state, reminder) {
       : group.primaryReference?.name??group.primaryReference?.title??null;
     const primaryWindows=group.primaryScoringWindows??[];
     const primaryDue=primaryName&&primaryWindows.length
-      ? `<details open class="checkpoint-mission checkpoint-mission--primary"><summary>Primary · ${esc(primaryName)} · score now</summary>${primaryWindows.map(window=>`<p><strong>${esc(window.when)}</strong></p>${(window.items??[]).map(item=>renderConditionEvidence(state,group.playerId,item)).join('')}`).join('')}${renderCheckpointScore(state,group,{category:'primary',definitionId:group.primaryReference.id,definitionName:primaryName})}</details>`
+      ? `<details open class="checkpoint-mission checkpoint-mission--primary"><summary>Primary · ${esc(primaryName)} · score now</summary>${primaryWindows.map(window=>`<p><strong>${esc(window.when)}</strong></p>${(window.items??[]).map(item=>renderConditionEvidence(state,group.playerId,item)).join('')}`).join('')}${renderCheckpointScore(state,group,{category:'primary',definitionId:group.primaryReference.id,definitionName:primaryName,scoringWindows:primaryWindows,victoryPoints:group.primaryReference?.victoryPoints})}</details>`
       : '';
     const scoredCards=getSecondaryMissionHistory(state,group.playerId).filter(card=>card.status==='scored' && card.scoredTurn===state.turn && card.scoredRound===state.battle?.round);
     const receipts=scoredCards.map(card=>`<p role="status"><strong>${esc(card.definition?.name??card.definitionId)}: VP recorded.</strong> Removed from active missions.</p>`).join('');

@@ -93,3 +93,31 @@ export function recordChargeOutcome(state, {
   return appendHistoryEntry(state, event);
 }
 
+
+export function recordChargeDeclined(state, { unitId } = {}) {
+  if (!unitId) throw new TypeError("Charging unit id is required.");
+  if (!state.battle || state.battle.status !== "active") throw new Error("Battle must be active.");
+  if (state.phase !== "charge") throw new Error("Charge decisions may only be recorded in the Charge phase.");
+
+  const charger = state.units.find((unit) => unit.id === unitId);
+  if (!charger) throw new Error("Charging unit not found: " + unitId);
+  if (charger.ownerId !== state.activePlayer) throw new Error("Only the active player's units may make a Charge decision.");
+  if (charger.status !== UNIT_STATUS.DEPLOYED) throw new Error("Charging unit must be deployed.");
+  if (state.history.some((event) =>
+    event.type === "unit.fell_back" && event.payload?.unitId === unitId &&
+    event.payload?.round === state.battle.round && event.payload?.turn === state.turn
+  )) throw new Error("A unit that Fell Back cannot declare a charge this turn.");
+  if (state.history.some((event) =>
+    event.type === "charge.outcome_recorded" && event.payload?.unitId === unitId && event.payload?.turn === state.turn
+  )) throw new Error("A unit can make only one Charge decision per turn.");
+
+  return appendHistoryEntry(state, createEvent("charge.outcome_recorded", {
+    unitId,
+    playerId: state.activePlayer,
+    outcome: "declined",
+    targetIds: [],
+    measuredDistances: {},
+    round: state.battle.round,
+    turn: state.turn
+  }));
+}

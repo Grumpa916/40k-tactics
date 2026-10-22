@@ -20,7 +20,7 @@ import {
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
 import { resolveNormalMove, resolveAdvance, recordFallBack, recordStationary, undoMovementAction } from "./movement-transitions.js";
-import { recordChargeOutcome } from "./charge-transitions.js";
+import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
@@ -71,6 +71,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_STATIONARY, (state, command) => recordStationary(state, command.payload)],
     [COMMAND_TYPES.UNDO_MOVEMENT_ACTION, (state, command) => undoMovementAction(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],
+    [COMMAND_TYPES.RECORD_CHARGE_DECLINED, (state, command) => recordChargeDeclined(state, command.payload)],
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) => recordShootingActivation(state, command.payload)],
     [COMMAND_TYPES.COMPLETE_SHOOTING_PHASE, (state) => completeShootingPhase(state)],
     [COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, (state, command) => recordFightActivation(state, command.payload)],

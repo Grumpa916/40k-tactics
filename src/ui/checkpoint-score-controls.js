@@ -9,6 +9,53 @@ export function renderConditionEvidence(state, playerId, item) {
   return `<p>${esc(item.vp)} VP · ${esc(item.summary)}<br><strong>${esc(evidence.status)}</strong>${evidence.detail ? `<br>${esc(evidence.detail)}` : ''}</p>`;
 }
 
+function positiveVp(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
+function scoreWindowsFor(mission) {
+  if (Array.isArray(mission?.scoringWindows) && mission.scoringWindows.length) return mission.scoringWindows;
+  if (Array.isArray(mission?.result?.scoringWindows) && mission.result.scoringWindows.length) return mission.result.scoringWindows;
+  return mission?.result?.scoringWindow ? [mission.result.scoringWindow] : [];
+}
+
+export function getMissionVpOptions(mission = {}) {
+  const windows = scoreWindowsFor(mission);
+  if (mission.category === 'secondary' || mission.instanceId) {
+    const tierValues = windows.flatMap(window => (window.tiers ?? []).map(tier => positiveVp(tier.vp))).filter(Boolean);
+    const configured = positiveVp(mission.victoryPoints ?? mission.result?.victoryPoints);
+    if (!tierValues.length && configured) tierValues.push(configured);
+    return [...new Set(tierValues)].sort((a,b) => a-b);
+  }
+
+  const items = windows.flatMap(window => window.items ?? []);
+  if (!items.length) {
+    const configured = positiveVp(mission.victoryPoints ?? mission.result?.victoryPoints);
+    return configured ? [configured] : [];
+  }
+
+  let totals = new Set([0]);
+  for (const item of items) {
+    const base = positiveVp(item.vp);
+    if (!base) continue;
+    const values = [0];
+    if (/\bper\b/i.test(String(item.summary ?? ''))) {
+      for (let value = base; value <= 15; value += base) values.push(value);
+    } else {
+      values.push(base);
+    }
+    const next = new Set();
+    for (const total of totals) {
+      for (const value of values) {
+        if (total + value <= 15) next.add(total + value);
+      }
+    }
+    totals = next;
+  }
+  return [...totals].filter(value => value > 0).sort((a,b) => a-b);
+}
+
 export function renderCheckpointScore(state, group, mission) {
   const { definitionId, definitionName, instanceId, category } = mission;
   const card = instanceId ? getSecondaryMissionHistory(state, group.playerId).find(c => c.instanceId === instanceId) : null;
@@ -17,9 +64,11 @@ export function renderCheckpointScore(state, group, mission) {
     return `<p role="status"><strong>VP recorded.</strong> ${category === 'secondary' ? 'Card removed from active missions.' : 'Primary remains active for later checkpoints.'}</p>`;
   }
   if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
+  const vpOptions = getMissionVpOptions(mission);
+  const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
   return `<form data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}">
-    <label>Confirm VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}"><option value="">Choose VP…</option>${Array.from({length:15},(_,i)=>`<option value="${i+1}">${i+1} VP</option>`).join('')}</select></label>
-    <button type="submit">Confirm score${category === 'secondary' ? ' & remove card' : ''}</button>
+    <label>Confirm VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}" ${vpOptions.length ? '' : 'disabled'}><option value="">${vpOptions.length ? 'Choose VP…' : 'No configured VP value'}</option>${optionMarkup}</select></label>
+    <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Confirm score${category === 'secondary' ? ' & remove card' : ''}</button>
     <p>Confirm against the tabletop before awarding. Existing VP caps apply.</p>
   </form>`;
 }

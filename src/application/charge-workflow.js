@@ -117,6 +117,20 @@ export function recordChargeOutcomeForSession(
   );
 }
 
+export function recordChargeDeclinedForSession(
+  session,
+  { unitId } = {},
+  context = {}
+) {
+  if (!session || typeof session.dispatch !== "function") {
+    throw new TypeError("A game session is required.");
+  }
+  return session.dispatch(
+    createCommand(COMMAND_TYPES.RECORD_CHARGE_DECLINED, { unitId }),
+    context
+  );
+}
+
 export function finishChargePhase(session, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
