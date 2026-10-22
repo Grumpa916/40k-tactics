@@ -5,21 +5,41 @@ export function normalizeWargearName(value) {
     .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function singularToken(token) {
+  if (token.length < 4) return token;
+  if (token.endsWith("ies")) return token.slice(0, -3) + "y";
+  if (/(?:ches|shes|xes|zes|sses)$/.test(token)) return token.slice(0, -2);
+  if (token.endsWith("s") && !token.endsWith("ss")) return token.slice(0, -1);
+  return token;
+}
+function pluralFlexibleKey(value) {
+  return normalizeWargearName(value).split(" ").filter(Boolean).map(singularToken).join(" ");
+}
 function profileBaseName(value) {
   return normalizeWargearName(String(value ?? "").replace(/\s*\([^)]*\)\s*$/, ""));
+}
+function uniqueFlexibleMatch(items, sourceName, getName = (item) => item?.name) {
+  const sourceKey = pluralFlexibleKey(sourceName);
+  if (!sourceKey) return null;
+  const matches = items.filter((item) => pluralFlexibleKey(getName(item)) === sourceKey);
+  return matches.length === 1 ? matches[0] : null;
 }
 
 export function matchWargearSelection({ datasheetId, datasheet, sourceName } = {}) {
   const sourceKey = normalizeWargearName(sourceName);
   if (!sourceKey) return null;
 
-  const reviewed = getTyranidWargearSelections(datasheetId)
-    .find((item) => normalizeWargearName(item.name) === sourceKey);
+  const reviewedSelections = getTyranidWargearSelections(datasheetId);
+  const reviewed = reviewedSelections.find((item) => normalizeWargearName(item.name) === sourceKey)
+    ?? uniqueFlexibleMatch(reviewedSelections, sourceName);
   if (reviewed) return { name: reviewed.name, profileNames: [...reviewed.profiles], match: "reviewed-rule" };
 
   const weapons = Array.isArray(datasheet?.weapons) ? datasheet.weapons : [];
   const exact = weapons.find((weapon) => normalizeWargearName(weapon?.name) === sourceKey);
   if (exact?.name) return { name: exact.name, profileNames: [exact.name], match: "exact-profile" };
+
+  const flexible = uniqueFlexibleMatch(weapons, sourceName);
+  if (flexible?.name) return { name: flexible.name, profileNames: [flexible.name], match: "singular-plural-profile" };
 
   const grouped = weapons.filter((weapon) => profileBaseName(weapon?.name) === sourceKey);
   if (grouped.length) return {
