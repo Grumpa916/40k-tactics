@@ -128,7 +128,11 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
     assert.equal(selectedMarker.getAttribute('aria-pressed'), 'true');
     assert.equal(selectedMarker.style.outline, '3px solid #ffd36a');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
-    assert.match(root.innerHTML, /shoot-advisory__details" open/);
+    assert.doesNotMatch(root.innerHTML, /shoot-advisory__details" open/);
+    const footer = root.innerHTML.split('<footer class="shoot-tabletop__footer">')[1].split('</footer>')[0];
+    assert.match(footer, /data-shoot-damage-plus/);
+    assert.match(footer, /data-attack/);
+    assert.match(footer, /data-finish-unit/);
     assert.match(root.innerHTML, /Primary impact/);
     assert.match(root.innerHTML, /Secondary impact/);
     assert.match(root.innerHTML, /recent threat/);

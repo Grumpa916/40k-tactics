@@ -8,6 +8,7 @@ function validateExtraHits(value, name) {
 
 export function resolveAttackRoll({
   attacks,
+  torrent = false,
   hitTarget,
   hitModifier = 0,
   sustainedHits = 0,
@@ -21,7 +22,7 @@ export function resolveAttackRoll({
   if (attackDice && attackDice[1] && Number(attackDice[1]) < 1) {
     throw new RangeError("Attack count dice must roll at least one die.");
   }
-  if (!Number.isInteger(hitTarget) || hitTarget < 2 || hitTarget > 6) throw new RangeError("Hit target must be an integer from 2 to 6.");
+  if (!torrent && (!Number.isInteger(hitTarget) || hitTarget < 2 || hitTarget > 6)) throw new RangeError("Hit target must be an integer from 2 to 6.");
   if (!Number.isInteger(hitModifier)) throw new TypeError("Hit modifier must be an integer.");
   validateExtraHits(sustainedHits, "Sustained hits");
   if (typeof lethalHits !== "boolean") throw new TypeError("Lethal hits must be boolean.");
@@ -40,6 +41,7 @@ export function resolveAttackRoll({
     modifier: attackCountModifier,
     total: resolvedAttacks
   });
+  if (torrent) return Object.freeze({ attackCount, rolls: [], criticalHits: 0, sustainedHitCount: 0, regularHits: resolvedAttacks, hits: resolvedAttacks, lethalHitWounds: 0, normalHitsForWounds: resolvedAttacks });
   const baseTarget = hitTarget;
   const modifiedTarget = applyRollModifier(baseTarget, hitModifier);
   const rolls = Array.from({ length: resolvedAttacks }, () => Math.floor(random() * 6) + 1);

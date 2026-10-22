@@ -85,8 +85,8 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   const attacks = expectedDice(profile.attacks);
 
   const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier + woundBracket.hitModifier);
-  const criticalHits = attacks / 6;
-  const regularHits = attacks * successProbability(hitTarget);
+  const criticalHits = profile.torrent ? 0 : attacks / 6;
+  const regularHits = attacks * (profile.torrent ? 1 : successProbability(hitTarget));
   const sustainedHits = criticalHits * profile.sustainedHits;
   const lethalHitWounds = profile.lethalHits ? criticalHits : 0;
   const normalHits = Math.max(0, regularHits + sustainedHits - lethalHitWounds);
@@ -117,7 +117,7 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   return Object.freeze({
     expectedDamage,
     attacks,
-    hitProbability: successProbability(hitTarget),
+    hitProbability: profile.torrent ? 1 : successProbability(hitTarget),
     woundProbability,
     saveFailureProbability: saveFailure,
     normalWounds,
