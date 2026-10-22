@@ -101,3 +101,17 @@ test('legacy or manual roster without explicit loadout keeps full datasheet weap
  assert.deepEqual(ranged,['Heavy venom cannon','Stranglethorn cannon']);
  assert.equal(hasConfirmedNoRangedWeapons(state,tyrant),false);
 });
+
+test('source-invalid imported wargear is unresolved and cannot feed combat options',()=>{
+ let state=createGameState({phase:'setup',battle:{id:'b2',status:'setup',round:0},players:[{id:'p1'}]});
+ const roster=createArmyRoster({id:'invalid',name:'Invalid import',faction:'Tyranids',units:[{
+  id:'termagants',name:'Termagants',modelCount:10,datasheetId:'tyranids:termagants',
+  equippedWeapons:[{name:'Fleshborer',quantity:7},{name:'Spike rifle',quantity:1}],
+  loadoutValidation:{status:'source-invalid',source:'warhammer-app-export',errors:['Invalid wargear configuration for Termagants']}
+ }]});
+ state=applyArmyRosterToBattle(state,{playerId:'p1',roster});
+ const unit=state.units[0];
+ assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'ranged'}),[]);
+ assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}),[]);
+ assert.equal(hasConfirmedNoRangedWeapons(state,unit),false);
+});

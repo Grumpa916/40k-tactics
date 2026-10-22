@@ -1,0 +1,262 @@
+test import army (7,025 Points)
+
+Tyranids
+Ambush Predators and Assimilation Swarm (3 Detachment Points)
+Priority Assets
+Onslaught (3,000 Points)
+
+ERRORS
+  • Invalid wargear configuration for Termagants
+  • Invalid wargear selected for Carnifex model in Carnifexes
+  • Invalid wargear selected for Carnifex model in Carnifexes
+  • You must select one CHARACTER model from your army to be your WARLORD.
+  • You are using more points (7,025) than your Battle Size allows (3,000).
+
+CHARACTERS
+
+Broodlord (80 Points)
+  • 1x Broodlord claws and talons
+
+Hive Tyrant (195 Points)
+  • 1x Monstrous bonesword and lash whip
+  • 1x Monstrous scything talons
+
+Hyperadapted Raveners (165 Points)
+  • 1x Ravener Prime
+     ◦ 1x Prime claws and talons
+  • 4x Raveners
+     ◦ 4x Ravener heavy claws and talons
+     ◦ 1x Venom bolt
+
+Neurotyrant (120 Points)
+  • 1x Neurotyrant claws and lashes
+  • 1x Psychic scream
+
+Old One Eye (130 Points)
+  • 1x Old One Eye’s claws and talons
+
+Parasite of Mortrex (65 Points)
+  • 1x Barbed ovipositor
+  • 1x Clawed limbs
+
+Tervigon (150 Points)
+  • 1x Massive scything talons
+  • 1x Stinger salvoes
+
+The Red Terror (120 Points)
+  • 1x Gaping maw
+  • 1x Scything talons
+
+The Swarmlord (210 Points)
+  • 1x Bone sabres
+  • 1x Synaptic pulse
+
+Tyranid Prime with Lash Whip (75 Points)
+  • 1x Lash whip
+  • 1x Rending claw
+  • 1x Scything talons
+
+Winged Hive Tyrant (185 Points)
+  • 1x Monstrous bonesword and lash whip
+  • 1x Tyrant talons
+
+Winged Tyranid Prime (65 Points)
+  • 1x Prime talons
+
+BATTLELINE
+
+Gargoyles (75 Points)
+  • 10x Gargoyle
+     ◦ 10x Blinding venom
+     ◦ 10x Fleshborer
+
+Hormagaunts (70 Points)
+  • 10x Hormagaunt
+     ◦ 10x Hormagaunt talons
+
+Termagants (55 Points)
+  • 10x Termagant
+     ◦ 10x Chitinous claws and teeth
+     ◦ 7x Fleshborer
+     ◦ 1x Spike rifle
+     ◦ 1x Termagant devourer
+     ◦ 1x Termagant spinefists
+
+DEDICATED TRANSPORTS
+
+Tyrannocyte (80 Points)
+  • 1x Flensing whips
+  • 1x Tyrannocyte bio-weapons
+
+OTHER DATASHEETS
+
+Barbgaunts (50 Points)
+  • 5x Barbgaunt
+     ◦ 5x Barblauncher
+     ◦ 5x Chitinous claws and teeth
+
+Biovores (60 Points)
+  • 1x Chitin-barbed limbs
+  • 1x Spore Mine launcher
+
+Carnifexes (180 Points)
+  • 2x Carnifex
+     ◦ 1x Bio-plasma
+     ◦ 1x Carnifex crushing claws
+     ◦ 1x Carnifex extra scything talons
+     ◦ 2x Carnifex scything talons
+     ◦ 2x Chitinous claws and teeth
+     ◦ 1x Deathspitters with slimer maggots
+     ◦ 1x Devourers with brainleech worms
+     ◦ 1x Heavy venom cannon
+     ◦ 1x Spine banks
+
+Exocrine (135 Points)
+  • 1x Bio-plasmic cannon
+  • 1x Powerful limbs
+
+Genestealers (75 Points)
+  • 5x Genestealer
+     ◦ 5x Genestealers claws and talons
+
+Harpy (185 Points)
+  • 1x Scything wings
+  • 1x Stinger salvoes
+  • 1x Twin stranglethorn cannon
+
+Harridan (610 Points)
+  • 2x Dire bio-cannon
+  • 1x Gargantuan scything talons
+
+Haruspex (125 Points)
+  • 1x Grasping tongue
+  • 1x Ravenous maw
+  • 1x Shovelling claws
+
+Hierophant (810 Points)
+  • 1x Bio-plasma torrent
+  • 2x Dire bio-cannon
+  • 1x Lashwhip pods
+  • 1x Titanic scything talons
+
+Hive Crone (170 Points)
+  • 1x Drool cannon
+  • 1x Scything wings
+  • 1x Stinger salvoes
+  • 1x Tentaclids
+  • 1x Thorax spur
+
+Hive Guard (80 Points)
+  • 3x Hive Guard
+     ◦ 3x Chitinous claws and teeth 
+     ◦ 3x Shockcannon
+
+Lictor (60 Points)
+  • 1x Lictor claws and talons
+
+Maleceptor (180 Points)
+  • 1x Massive scything talons
+  • 1x Psychic overload
+
+Mawloc (130 Points)
+  • 1x Distensible jaw
+  • 1x Mawloc scything talons
+
+Mucolid Spores (30 Points)
+
+Neurogaunts (45 Points)
+  • 1x Neurogaunt Nodebeast
+     ◦ 1x Chitinous claws and teeth
+  • 10x Neurogaunt
+     ◦ 10x Chitinous claws and teeth
+
+Neurolictor (80 Points)
+  • 1x Piercing claws and talons
+
+Norn Assimilator (250 Points)
+  • 1x Monstrous scything talons
+  • 1x Toxinjector Harpoon
+
+Norn Emissary (250 Points)
+  • 1x Monstrous rending claws
+  • 1x Monstrous scything talons
+  • 1x Psychic Tendril
+
+Psychophage (110 Points)
+  • 1x Psychoclastic torrent
+  • 1x Talons and betentacled maw
+
+Pyrovores (40 Points)
+  • 1x Chitin-barbed limbs
+  • 1x Flamespurt
+
+Raveners (125 Points)
+  • 5x Ravener
+     ◦ 5x Ravener claws and talons
+
+Ripper Swarms (30 Points)
+  • 1x Chitinous claws and teeth
+
+Screamer-Killer (125 Points)
+  • 1x Bio-plasmic scream
+  • 1x Screamer-Killer talons
+
+Spore Mines (55 Points)
+  • 3x Spore Mine
+
+Sporocyst (145 Points)
+  • 1x Flensing whips
+  • 1x Sporocyst bio-weapons
+
+Toxicrene (120 Points)
+  • 1x Massive toxic lashes
+
+Trygon (135 Points)
+  • 1x Bio-electric pulse
+  • 1x Trygon scything talons
+
+Tyranid Warriors with Melee Bio-weapons (75 Points)
+  • 1x Tyranid Prime
+     ◦ 1x Tyranid Warrior claws and talons
+  • 2x Tyranid Warrior
+     ◦ 2x Tyranid Warrior claws and talons
+
+Tyranid Warriors with Ranged Bio-weapons (60 Points)
+  • 1x Tyranid Prime
+     ◦ 1x Devourer
+     ◦ 1x Tyranid Warrior claws and talons
+  • 2x Tyranid Warrior
+     ◦ 2x Devourer
+     ◦ 2x Tyranid Warrior claws and talons
+
+Tyrannofex (190 Points)
+  • 1x Powerful limbs
+  • 1x Rupture cannon
+  • 1x Stinger salvoes
+
+Tyrannofex (190 Points)
+  • 1x Powerful limbs
+  • 1x Rupture cannon
+  • 1x Stinger salvoes
+
+Tyrant Guard (80 Points)
+  • 3x Tyrant Guard
+     ◦ 3x Scything talons and rending claws
+
+Venomthropes (55 Points)
+  • 3x Venomthrope
+     ◦ 3x Toxic lashes
+
+Von Ryan’s Leapers (55 Points)
+  • 3x Von Ryan’s Leaper
+     ◦ 3x Leaper’s talons
+
+Zoanthropes (90 Points)
+  • 1x Neurothrope
+     ◦ 1x Chitinous claws and teeth
+     ◦ 1x Warp Blast
+  • 2x Zoanthrope
+     ◦ 2x Chitinous claws and teeth
+     ◦ 2x Warp Blast
+
+Exported with App Version: v2.8.1 (1), Data Version: v995
