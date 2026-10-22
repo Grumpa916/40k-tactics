@@ -210,3 +210,16 @@
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .battlefield-map { height:100%; min-height:0; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .battlefield-map__board { min-height:0 !important; height:100% !important; max-height:none !important; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .battlefield-map__legend { margin:2px 0 0 !important; padding:2px 0 !important; }
+
+
+/* Battlefield layout selection: tiny reference diagrams beneath the A/B/C controls. */
+.event-companion-layout-diagrams .event-companion-layout-thumbnail {
+  width:10% !important;
+  max-width:10% !important;
+  margin:0 auto !important;
+}
+.event-companion-layout-diagrams .event-companion-layout-thumbnail [data-battlefield-map],
+.event-companion-layout-diagrams .event-companion-layout-thumbnail .battlefield-map__board {
+  width:100% !important;
+  max-width:100% !important;
+}

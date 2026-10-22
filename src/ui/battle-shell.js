@@ -722,11 +722,14 @@ export function createBattleShell(container, {
   }
 
   function handleMissionSummaryToggle(event) {
+    const primaryWindow = event.target?.closest?.('.battle-mission-summary__section[data-mission-summary-key="mission-section-primary"]');
     const summary = event.target?.closest?.(".battle-mission-summary__section > summary");
-    if (!summary || !container.contains(summary)) return;
-    const details = summary.parentElement;
-    const key = details?.getAttribute?.("data-mission-summary-key");
-    if (!details || !key) return;
+    const details = primaryWindow && !event.target?.closest?.('.battle-mission-summary__section-content')
+      ? primaryWindow
+      : summary?.parentElement;
+    if (!details || !container.contains(details)) return;
+    const key = details.getAttribute?.("data-mission-summary-key");
+    if (!key) return;
     event.preventDefault?.();
     details.open = !details.open;
     missionOpenStates = { ...missionOpenStates, [key]: details.open };
