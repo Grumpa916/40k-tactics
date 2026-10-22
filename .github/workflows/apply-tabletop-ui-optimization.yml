@@ -1,0 +1,29 @@
+name: Apply tabletop UI optimization
+on:
+  push:
+    branches:
+      - feature/tabletop-ui-optimization-pass
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/tabletop-ui-optimization-pass
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply optimization pass
+        run: node scripts/apply-tabletop-ui-optimization.mjs
+      - name: Verify
+        run: npm run verify
+      - name: Commit implementation
+        run: |
+          git config user.name '40K Tactics Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src tests
+          git commit -m 'Optimize tabletop live UI for iPad play'
+          git push origin HEAD:feature/tabletop-ui-optimization-pass
