@@ -1,0 +1,80 @@
+name: Apply score adjustment refresh fix
+
+on:
+  push:
+    branches:
+      - fix/score-adjust-overlay-refresh
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/score-adjust-overlay-refresh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Patch score adjustment overlay refresh
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/ui/battle-shell.js')
+          src = path.read_text()
+
+          anchor = '''function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) {'''
+          helper = r'''function renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed = false, scoreAdjustMessage = "") {
+            const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
+            if (!scorePlayer) return "";
+            return '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust' + (scoreAdjustCollapsed ? ' is-collapsed' : '') + '" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><div><button type="button" data-toggle-score-adjust-collapse aria-label="' + (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' + (scoreAdjustCollapsed ? '□' : '−') + '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>';
+          }
+
+          '''
+          if helper.strip() not in src:
+              if anchor not in src:
+                  raise SystemExit('status summary anchor not found')
+              src = src.replace(anchor, helper + anchor, 1)
+
+          old_overlay_start = '''  const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);\n  const scoreAdjustOverlay = scorePlayer ? '''
+          start = src.find(old_overlay_start)
+          if start == -1:
+              raise SystemExit('old score overlay block start not found')
+          end_marker = ''' : '';\n  const armyOverlay = '''
+          end = src.find(end_marker, start)
+          if end == -1:
+              raise SystemExit('old score overlay block end not found')
+          replacement = '''  const scoreAdjustOverlay = '<div data-score-adjust-host>' + renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage) + '</div>';\n  const armyOverlay = '''
+          src = src[:start] + replacement + src[end + len(end_marker):]
+
+          refresh_anchor = '''    const clockHost = container.querySelector?.("[data-turn-clock-panel-host]");\n    if (clockHost) clockHost.innerHTML = renderTurnClockPanel(state, { open: clockPanelOpen, message: clockMessage });\n'''
+          refresh_insert = refresh_anchor + '''    const scoreAdjustHost = container.querySelector?.("[data-score-adjust-host]");\n    if (scoreAdjustHost) {\n      const players = Array.isArray(state.players) ? state.players : [];\n      scoreAdjustHost.innerHTML = renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage);\n    }\n'''
+          if 'scoreAdjustHost.innerHTML = renderScoreAdjustOverlay' not in src:
+              if refresh_anchor not in src:
+                  raise SystemExit('persistent refresh anchor not found')
+              src = src.replace(refresh_anchor, refresh_insert, 1)
+
+          path.write_text(src)
+
+          test_path = Path('tests/ui/scoreboard-objective-controls.test.js')
+          tests = test_path.read_text()
+          old_test = '''test('score adjustment can collapse and reports adjustment results',()=>{\n const src=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');\n assert.match(src,/data-toggle-score-adjust-collapse/);\n assert.match(src,/scoreAdjustMessage/);\n assert.match(src,/stopPropagation/);\n});\n'''
+          new_test = '''test('score adjustment can collapse, refresh in place, and report adjustment results',()=>{\n const src=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');\n assert.match(src,/data-toggle-score-adjust-collapse/);\n assert.match(src,/data-score-adjust-host/);\n assert.match(src,/scoreAdjustHost\.innerHTML = renderScoreAdjustOverlay/);\n assert.match(src,/scoreAdjustMessage/);\n assert.match(src,/stopPropagation/);\n});\n'''
+          if old_test not in tests:
+              raise SystemExit('score adjustment test anchor not found')
+          test_path.write_text(tests.replace(old_test, new_test, 1))
+          PY
+      - name: Verify
+        run: npm run verify
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/ui/battle-shell.js tests/ui/scoreboard-objective-controls.test.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'Refresh score adjustment popup in place'
+          git push origin HEAD:fix/score-adjust-overlay-refresh
