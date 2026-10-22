@@ -84,9 +84,15 @@ test('large App validation roster preserves source errors and marks affected war
   {name:'Termagant spinefists',quantity:1}
  ]);
  const carnifexes=roster.units.find(unit=>unit.name==='Carnifexes');
+ assert.equal(carnifexes.modelCount,2);
  assert.equal(carnifexes.loadoutValidation.status,'source-invalid');
  assert.equal(carnifexes.sourceValidationErrors.length,2);
  assert.equal(carnifexes.loadoutValidation.reviewedRuleValidation.status,'rules-invalid');
+ assert.equal(roster.units.find(unit=>unit.name==='Neurogaunts').modelCount,11);
+ assert.equal(roster.units.find(unit=>unit.name==='Zoanthropes').modelCount,3);
+ assert.equal(roster.units.find(unit=>unit.name==='Hyperadapted Raveners').modelCount,5);
+ assert.equal(roster.units.find(unit=>unit.name==='Tyranid Warriors with Melee Bio-weapons').modelCount,3);
+ assert.equal(roster.units.find(unit=>unit.name==='Tyranid Warriors with Ranged Bio-weapons').modelCount,3);
  const hiveTyrant=roster.units.find(unit=>unit.name==='Hive Tyrant');
  assert.equal(hiveTyrant.loadoutValidation.status,'rules-reviewed-valid');
  assert.deepEqual(hiveTyrant.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
