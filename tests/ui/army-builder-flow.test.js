@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { importArmyRoster } from '../../src/state/army-roster-import.js';
+import { createRulesDataRevisionStamp } from '../../src/data/rules-data-revisions.js';
 import { filterCatalog, renderArmyBuilder } from '../../src/ui/army-builder-view.js';
 import { createArmyRosterPanel } from '../../src/ui/army-roster-panel.js';
 const roster={schemaVersion:1,id:'r',name:'Swarm',faction:'Tyranids',pointsLimit:2000,units:[]};
@@ -39,6 +40,18 @@ test('saved list cards offer delete and editor exposes explicit save controls',a
  const creation=renderArmyBuilder({page:'new',records:[],busy:false,players:[]});assert.match(creation,/Create &amp; Save List/);
  const shell=await readFile(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
  assert.doesNotMatch(shell,/battle-shell__army-dock|data-open-battle-log/);
+});
+test('Army Builder visibly distinguishes stale legacy Tyranid lists from current stamped lists',()=>{
+ const legacyEditor=renderArmyBuilder({page:'editor',current:roster,records:[],busy:false,players:[]});
+ assert.match(legacyEditor,/Rules review needed/);
+ assert.match(legacyEditor,/data-revalidate-rules/);
+ const current={...roster,rulesDataRevision:createRulesDataRevisionStamp('Tyranids')};
+ const currentEditor=renderArmyBuilder({page:'editor',current,records:[],busy:false,players:[]});
+ assert.match(currentEditor,/Rules data current/);
+ assert.doesNotMatch(currentEditor,/data-revalidate-rules/);
+ const library=renderArmyBuilder({page:'library',records:[{id:'legacy',name:'Legacy',roster},{id:'current',name:'Current',roster:current}],busy:false,players:[]});
+ assert.match(library,/rules review needed/);
+ assert.match(library,/rules current/);
 });
 test('Warhammer App import screen limits choices to catalog factions and previews before saving',()=>{
  const html=renderArmyBuilder({page:'import',records:[],busy:false,players:[]});

@@ -1,5 +1,6 @@
 import { createArmyRoster } from './army-roster-library.js';
 import { ARMY_UNIT_CATALOG } from '../data/army-unit-catalog.js';
+import { createRulesDataRevisionStamp } from '../data/rules-data-revisions.js';
 import { resolveInitialUnitPoints } from './army-roster-unit-costs.js';
 import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout } from '../rules/wargear-loadout-validation.js';
 
@@ -180,7 +181,9 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    points: getPoints(line), pointsOptions: candidate.pointsOptions ?? [], notes: line,
    datasheet: candidate.datasheet ? structuredClone(candidate.datasheet) : null, datasheetId: candidate.id,
    dataSource: {status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
-    reviewedAt: candidate.reviewedAt ?? null, officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? 'pending', rosterImport: 'warhammer-app-text'}};
+    reviewedAt: candidate.reviewedAt ?? null, pointsSourceName: candidate.pointsSourceName ?? null,
+    pointsSourceUrl: candidate.pointsSourceUrl ?? null, rulesDataRevisionId: candidate.rulesDataRevisionId ?? null,
+    officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? 'pending', rosterImport: 'warhammer-app-text'}};
   units.push(current);
   if (group) groups.get(group).push(current);
  }
@@ -203,6 +206,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
  const roster = createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment, units,
-  notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text, createdAt, updatedAt});
+  notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text,
+  rulesDataRevision: createRulesDataRevisionStamp(selectedFaction), createdAt, updatedAt});
  return {roster, unrecognized, warnings, sourceErrors, wargearAudit: summarizeWargearAudit(roster), declaredPoints, totalPoints};
 }

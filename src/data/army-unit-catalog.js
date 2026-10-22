@@ -1,5 +1,8 @@
 import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
 import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
+import { getRulesDataRevisionForFaction } from "./rules-data-revisions.js";
+
+const TYRANID_RULES_REVISION = getRulesDataRevisionForFaction("Tyranids");
 
 function applyReviewedTyranidCorrections(id, details) {
   if (!details) return details;
@@ -85,8 +88,11 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
       sourceName: reviewedSource?.sourceName ?? "Candidate unit name; verify against current datasheet",
       sourceUrl: reviewedSource?.sourceUrl ?? "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
       reviewedAt: reviewedSource?.reviewedAt ?? null,
-      pointsSourceName: reviewedSource?.pointsSourceName ?? null,
-      pointsSourceUrl: reviewedSource?.pointsSourceUrl ?? null,
+      pointsSourceName: TYRANID_RULES_REVISION?.points
+        ? `${TYRANID_RULES_REVISION.points.name} (${TYRANID_RULES_REVISION.points.revisionLabel})`
+        : reviewedSource?.pointsSourceName ?? null,
+      pointsSourceUrl: TYRANID_RULES_REVISION?.points?.sourceUrl ?? reviewedSource?.pointsSourceUrl ?? null,
+      rulesDataRevisionId: TYRANID_RULES_REVISION?.revisionId ?? null,
       officialRulesCrossCheck: reviewedSource?.officialRulesCrossCheck ?? "pending",
       verificationStatus: reviewedSource?.status ?? "name-only-unverified",
       ...(defaultModelCount != null ? { defaultModelCount } : {}),
