@@ -174,10 +174,16 @@ function renderDecisionReminderHost(state, {
   return renderBattleShockReminder(state, battleShockReminder);
 }
 
-function renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed = false, scoreAdjustMessage = "") {
+function renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed = false, scoreAdjustMessage = "", scoreAdjustKind = "both") {
   const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
   if (!scorePlayer) return "";
-  return '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust' + (scoreAdjustCollapsed ? ' is-collapsed' : '') + '" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><div><button type="button" data-toggle-score-adjust-collapse aria-label="' + (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' + (scoreAdjustCollapsed ? '□' : '−') + '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>';
+  const showVp = scoreAdjustKind === "both" || scoreAdjustKind === "vp";
+  const showCp = scoreAdjustKind === "both" || scoreAdjustKind === "cp";
+  const current = (showVp ? '<strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong>' : '') +
+    (showCp ? '<strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong>' : '');
+  const controls = (showVp ? '<span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button>' : '') +
+    (showCp ? '<span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button>' : '');
+  return '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust' + (scoreAdjustCollapsed ? ' is-collapsed' : '') + '" data-score-adjust-view="' + escapeHtml(scoreAdjustKind) + '" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><div><button type="button" data-toggle-score-adjust-collapse aria-label="' + (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' + (scoreAdjustCollapsed ? '□' : '−') + '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current">' + current + '</div><div class="battle-shell__score-adjust-grid">' + controls + '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>';
 }
 
 function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) {
@@ -194,16 +200,15 @@ function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) 
     const cp = getCommandPointBalance(state, player.id);
     const elapsed = formatElapsedTime(getTurnClockElapsedMs(state, player.id));
     const active = player.id === activePlayerId ? " is-active" : "";
-    return '<button type="button" class="battle-shell__player-summary' + active + '" data-open-score-adjust="' + escapeHtml(player.id) + '" aria-label="Adjust score for ' + escapeHtml(player.name ?? player.id) + '">' +
+    return '<div class="battle-shell__player-summary' + active + '">' +
       '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
-      '<span>' + vp + ' VP</span><span>' + cp + ' CP</span><time data-clock-player-elapsed="' + escapeHtml(player.id) + '">' + elapsed + '</time></button>';
+      '<button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) + '" data-open-score-adjust-kind="vp" aria-label="Adjust Victory Points for ' + escapeHtml(player.name ?? player.id) + '">' + vp + ' VP</button>' +
+      '<button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) + '" data-open-score-adjust-kind="cp" aria-label="Adjust Command Points for ' + escapeHtml(player.name ?? player.id) + '">' + cp + ' CP</button>' +
+      '<button type="button" class="battle-shell__summary-time" data-toggle-turn-clock aria-label="Open turn clock"><time data-clock-player-elapsed="' + escapeHtml(player.id) + '">' + elapsed + '</time></button></div>';
   }).join("");
   return '<div class="battle-shell__round-summary"><strong>Round ' + (round || "—") + '</strong>' +
     '<span>' + escapeHtml(phaseLabel(state.phase ?? viewedPhase)) + '</span></div>' +
-    '<div class="battle-shell__player-summaries">' + playerSummary + '</div>' +
-    '<button type="button" class="battle-shell__clock-button" data-toggle-turn-clock ' +
-    'aria-expanded="' + String(clockPanelOpen) + '" aria-controls="battle-turn-clock-panel">' +
-    '<span>Clock</span><time data-turn-clock-header-time>' + clockTime + '</time></button>';
+    '<div class="battle-shell__player-summaries">' + playerSummary + '</div>';
 }
 
 function setupTabLabel(tab) {
@@ -239,7 +244,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   layoutMode = "tabletop",
   scoreAdjustPlayerId = null,
   scoreAdjustCollapsed = false,
-  scoreAdjustMessage = ""
+  scoreAdjustMessage = "",
+  scoreAdjustKind = "both"
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -305,10 +311,10 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
   const armyDock = '<nav class="battle-shell__army-dock" aria-label="Open army rosters">' +
     '<button type="button" data-open-army-roster="' + escapeHtml(yourPlayerId ?? "") + '"' +
-    (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong><span>' + escapeHtml(myName) + '</span></button>' +
+    (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong></button>' +
     '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
-    (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
-  const scoreAdjustOverlay = '<div data-score-adjust-host>' + renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage) + '</div>';
+    (opponentPlayerId ? "" : " disabled") + '><strong>Opponent</strong></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
+  const scoreAdjustOverlay = '<div data-score-adjust-host>' + renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind) + '</div>';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
@@ -406,6 +412,7 @@ export function createBattleShell(container, {
   let scoreAdjustPlayerId = null;
   let scoreAdjustCollapsed = false;
   let scoreAdjustMessage = "";
+  let scoreAdjustKind = "both";
 
   function setSetupWorkspaceTab(tab) {
     if (!["army-builder", "army-selection", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
@@ -464,7 +471,7 @@ export function createBattleShell(container, {
     const scoreAdjustHost = container.querySelector?.("[data-score-adjust-host]");
     if (scoreAdjustHost) {
       const players = Array.isArray(state.players) ? state.players : [];
-      scoreAdjustHost.innerHTML = renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage);
+      scoreAdjustHost.innerHTML = renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind);
     }
     refreshClockDisplay();
     ensureClockTicker();
@@ -584,7 +591,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
       });
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
@@ -667,7 +674,7 @@ export function createBattleShell(container, {
     const open = event.target?.closest?.("[data-open-score-adjust]");
     if (open && container.contains(open)) {
       event.preventDefault?.(); event.stopPropagation?.();
-      scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
+      scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); scoreAdjustKind = open.getAttribute("data-open-score-adjust-kind") || "both"; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
     }
     const collapse = event.target?.closest?.("[data-toggle-score-adjust-collapse]");
     if (collapse && container.contains(collapse) && scoreAdjustPlayerId) {
@@ -678,7 +685,7 @@ export function createBattleShell(container, {
     const backdrop = event.target?.closest?.("[data-score-adjust-backdrop]");
     if (close || (backdrop && event.target === backdrop)) {
       event.preventDefault?.(); event.stopPropagation?.();
-      scoreAdjustPlayerId = null; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
+      scoreAdjustPlayerId = null; scoreAdjustKind = "both"; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
     }
     const adjust = event.target?.closest?.("[data-score-adjust-kind]");
     if (!adjust || !container.contains(adjust) || !scoreAdjustPlayerId) return;

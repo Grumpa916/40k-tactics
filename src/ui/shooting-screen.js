@@ -277,7 +277,7 @@ export function createShootingScreen(container, {
             ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
               <button type="button" data-choice-shoot ${actionOnly.some((unit) => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
               <button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Action</button>
-              <button type="button" data-choice-not-shoot>Skip</button>
+              <button type="button" data-choice-not-shoot>Do not shoot</button>
             </div>
             ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, missionActions) : ""}` : ""}
 
@@ -285,15 +285,14 @@ export function createShootingScreen(container, {
               <label>Ranged weapon<select data-weapon><option value="" ${selectedWeaponId ? "" : "selected"}>Choose weapon…</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
               <label>Target · tap an enemy marker or choose below<select data-target><option value="" ${selectedTargetId ? "" : "selected"}>Choose target…</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)}</option>`).join("")}</select></label>
 
-            </div>` : (!pendingUnit ? `<p class="shoot-tabletop__selection-help">Select one of the active army's eligible units on the battlefield to choose Shoot, Action, or Skip.</p>` : "")}
+            </div>` : ""}
 
             <section class="shoot-tabletop__advisor" aria-label="Tactical Advisor">
               <div class="shoot-tabletop__advisor-heading"><div><span class="kicker">TACTICAL ADVISOR</span><h2>Compare your targets</h2></div><span>${selectedTargetId ? "Selected target" : "Choose target"}</span></div>
-              <details class="shoot-tabletop__target-comparisons"><summary>Compare other targets</summary>${targetComparison}</details>
-              ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<div class="shoot-tabletop__advisor-scroll">
-
+              <div class="shoot-tabletop__target-comparisons">${targetComparison}</div>
+              ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<details class="shoot-tabletop__selected-target" open><summary>Selected target details</summary><div class="shoot-tabletop__advisor-scroll">
                 ${shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, { openDetails: false })}
-              </div>` : '<p class="shoot-tabletop__empty-advice">Select a target to show probability, Primary/Secondary impact, recent threat, recommendation and assumptions.</p>'}
+              </div></details>` : ''}
             </section>
 
             <details class="shoot-tabletop__history"><summary>Phase history · ${model.attacks.length} attacks</summary>

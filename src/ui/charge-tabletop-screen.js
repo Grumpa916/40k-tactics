@@ -20,12 +20,11 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     for (const id of targetIds) if (!valid.has(id)) { targetIds.delete(id); distances.delete(id); }
     const targets = candidate?.targets ?? [];
     const controls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
-      <p>Round ${esc(model.round)} · Charge · active army</p>
       ${state.phase !== 'charge' ? '<p class="combat-workspace__error" role="status">Viewing Charge. Return to the current game phase and advance to Charge to record an outcome.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
-      ${candidate ? `<h2>Declare targets</h2><p>Tap enemy markers to add or remove targets. Measure every declared target before recording the result.</p>
+      ${candidate ? `<h2>Targets</h2>
         ${targets.map(item => `<section class="combat-workspace__card">
           <button type="button" data-charge-target-toggle="${esc(item.targetUnitId)}" aria-pressed="${targetIds.has(item.targetUnitId)}">${targetIds.has(item.targetUnitId) ? '✓ ' : '+ '}${esc(item.target.name)}</button>
           <small>Map ≈ ${esc(item.targetDistance)}″ · ${esc(item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
@@ -34,7 +33,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
         <div class="combat-workspace__choices"><button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button><button type="button" data-charge-decline>Do not charge</button></div>` : ''}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor"><h2>Tactical Advisor</h2>
         ${targetIds.size ? targets.filter(item => targetIds.has(item.targetUnitId)).map(item => `<p><strong>${esc(item.target.name)}</strong><br>${esc(item.reason)}</p>`).join('') : '<p>Select a charger and targets to review approximate range context.</p>'}
-        <small>Map uncertainty ±3″. Physical charge roll, movement and legal declaration are resolved on the table.</small>
+
       </aside>
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
     container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });

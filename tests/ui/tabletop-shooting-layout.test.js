@@ -111,9 +111,9 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
   });
   try {
     assert.match(root.innerHTML, /shoot-screen--tabletop/);
-    assert.match(root.innerHTML, /Battlefield · Shooting/);
+    assert.match(root.innerHTML, /data-tabletop-map-phase="shooting"/);
     assert.match(root.innerHTML, /TACTICAL ADVISOR/);
-    assert.match(root.innerHTML, /Tabletop measurements and eligibility take priority/);
+    assert.doesNotMatch(root.innerHTML, /Battlefield · Shooting|Tabletop measurements and eligibility take priority/);
 
     root.click('[data-map-unit-id]', 'exo');
     assert.match(root.innerHTML, /data-choice-shoot/);

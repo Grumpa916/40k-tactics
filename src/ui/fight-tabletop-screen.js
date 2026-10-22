@@ -26,18 +26,17 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const unit = state.units.find(unit => unit.id === attackerId);
     const active = model.activations.some(item => item.unitId === attackerId && item.actionType !== 'not_fight');
     const available = [...model.candidates.fightsFirst, ...model.candidates.normal];
-    const chooseButtons = (units, blocked = false) => units.map(item => `<button type="button" data-fight-select="${esc(item.unitId)}" aria-pressed="${item.unitId === attackerId}" ${blocked ? 'disabled' : ''}>${esc(item.name)} · ${item.ownerId === perspectivePlayerId ? 'You' : 'Opponent'}</button>`).join('');
+    const chooseButtons = (units, blocked = false) => units.map(item => `<button type="button" class="fight-order__unit ${item.ownerId === perspectivePlayerId ? 'is-friendly' : 'is-opponent'}" data-fight-select="${esc(item.unitId)}" aria-pressed="${item.unitId === attackerId}" ${blocked ? 'disabled' : ''}>${esc(item.name)}</button>`).join('');
     const adviceState = unit && targetId && weaponId ? getFightAdvisorContext(state, gameData) : state;
     let advice = '';
     try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId); }
     catch { advice = '<p>Combat profile incomplete. Check unit details; record the physical result below.</p>'; }
     const unitNameColor = unit ? (unit.ownerId === perspectivePlayerId ? '#79bbff' : '#ff8585') : '';
     const controls = `${unitNameColor ? `<style>.combat-workspace[data-combat-phase="fight"] .combat-workspace__panel h1{color:${unitNameColor}}</style>` : ''}<h1>${esc(unit?.name ?? 'Select a fighter')}</h1>
-      <p>Round ${esc(model.round)} · ${model.candidates.fightsFirst.length ? 'Fights First' : 'Remaining combats'} · either army</p>
-      <small>Follow tabletop activation order. The app enforces Fights First priority; alternating players remains a table-side decision.</small>
+
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
-      <details ${attackerId ? '' : 'open'}><summary>Fighters · ${available.length} available</summary>
+      <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} available</summary>
         <h3>Fights First</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
         <h3>Remaining combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal, model.candidates.fightsFirst.length > 0) || '<small>None remaining</small>'}</div>
         ${model.activations.some(item => item.actionType !== 'not_fight') ? `<h3>Unfinished activations</h3><div class="combat-workspace__choices">${chooseButtons(options.attackers.filter(item => !available.some(c => c.unitId === item.unitId)))}</div>` : ''}
@@ -46,13 +45,13 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         <label>Melee weapon<select data-fight-weapon><option value="">Choose weapon…</option>${weapons.map(weapon => `<option value="${esc(weapon.id)}" ${weapon.id === weaponId ? 'selected' : ''}>${esc(weapon.name)}</option>`).join('')}</select></label>
         <label>Target · tap an enemy marker<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
         ${!options.targets.length ? '<p>No eligible targets remain in the recorded engagement context.</p>' : ''}
-        <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-begin>Begin Fight</button><button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish activation</button>'}</div>` : '<p>Tap a fighter, then an enemy. Target comparison does not record an activation.</p>'}
+        <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-begin>Begin Fight</button><button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish activation</button>'}</div>` : ''}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Fight Tactical Advisor"><h2>Tactical Advisor</h2>
         ${advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
         <details><summary>Advisor assumptions</summary><p>Uses known weapon profiles, wounds and recorded engagements. Return damage is the strongest known eligible retaliation estimate across possible target survival outcomes, not the sum of every enemy attack. Unknown profiles or abilities can change the result.</p></details>
       </aside>
       ${unit ? `<div class="combat-workspace__damage"><span>Actual damage</span><div><button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button><strong data-fight-damage-value>${damage}</strong><button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button></div></div>
-        <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button><p>Record another weapon or target within this activation as needed.</p>` : ''}
+        <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button>` : ''}
       <details><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining units as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${endPrompt}<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>` });
