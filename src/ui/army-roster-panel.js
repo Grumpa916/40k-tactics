@@ -296,7 +296,8 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if(!text.trim()){host.textContent="Paste the export to preview detected units.";return;}
     try {
       const parsed=importWarhammerAppRoster({text,faction,name:"Preview",pointsLimit:null,id:"preview",createdAt:null});
-      host.innerHTML=`<strong>${parsed.roster.units.length} detected unit(s)</strong><ul>${parsed.roster.units.map(unit=>`<li>${escapeHtml(unit.modelCount)} × ${escapeHtml(unit.name)} · ${escapeHtml(unit.points??"points unknown")} pts${unit.dataSource.officialRulesCrossCheck==="verified"?"":" · source review pending"}</li>`).join("")}</ul>${parsed.unrecognized.length?`<p role="alert">${parsed.unrecognized.length} point line(s) were not matched. They will be preserved in the list notes.</p><ul>${parsed.unrecognized.map(line=>`<li>${escapeHtml(line)}</li>`).join("")}</ul>`:""}`;
+      const detailed=parsed.roster.units.filter(unit=>unit.datasheet?.characteristics&&unit.datasheet?.weapons?.length).length;
+      host.innerHTML=`<strong>${parsed.roster.units.length} detected unit(s) · ${detailed} with stats and weapon profiles</strong><ul>${parsed.roster.units.map(unit=>`<li>${escapeHtml(unit.modelCount)} × ${escapeHtml(unit.name)} · ${escapeHtml(unit.points??"points unknown")} pts${unit.datasheet?.characteristics&&unit.datasheet?.weapons?.length?"":" · full profile unavailable"}${unit.dataSource.officialRulesCrossCheck==="verified"?"":" · source review pending"}</li>`).join("")}</ul>${parsed.unrecognized.length?`<p role="alert">${parsed.unrecognized.length} point line(s) were not matched. They will be preserved in the list notes.</p><ul>${parsed.unrecognized.map(line=>`<li>${escapeHtml(line)}</li>`).join("")}</ul>`:""}`;
     } catch(error) {host.textContent=error?.message??String(error);}
   }
   function handleInput(event) {
