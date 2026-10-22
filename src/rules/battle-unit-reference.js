@@ -14,7 +14,7 @@ export function hasSourceInvalidWargear(state, unit) {
 }
 
 export function hasInvalidWargear(state, unit) {
-  return ["source-invalid", "rules-invalid"].includes(getBattleRosterUnit(state, unit)?.loadoutValidation?.status);
+  return ["source-invalid", "rules-invalid", "manual-selection-required", "unverified"].includes(getBattleRosterUnit(state, unit)?.loadoutValidation?.status);
 }
 
 // Saved battle roster data can fill missing live profiles, including older saves.
@@ -50,15 +50,14 @@ export function getBattleUnitMovement(state, unit, model = {}) {
 }
 
 // Missing/unresolved weapon data remains unknown; it never means no ranged weapons.
-// When an imported loadout is valid, its matched equipped-weapon list is authoritative
-// for candidate eligibility and optional datasheet weapons that were not selected do
-// not create a false Shooting candidate.
+// A valid explicit loadout is authoritative for candidate eligibility. Unresolved,
+// invalid, or unverified loadouts cannot be used to infer Shooting eligibility.
 export function hasConfirmedNoRangedWeapons(state, unit) {
   const datasheetWeapons = unit?.profile?.weapons ?? unit?.weapons ?? getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(datasheetWeapons) || datasheetWeapons.length === 0) return false;
 
   const rosterUnit = getBattleRosterUnit(state, unit);
-  if (["source-invalid", "rules-invalid"].includes(rosterUnit?.loadoutValidation?.status)) return false;
+  if (["source-invalid", "rules-invalid", "manual-selection-required", "unverified"].includes(rosterUnit?.loadoutValidation?.status)) return false;
 
   const equipped = Array.isArray(rosterUnit?.equippedWeapons) ? rosterUnit.equippedWeapons : null;
   let weapons = datasheetWeapons;

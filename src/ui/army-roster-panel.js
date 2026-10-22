@@ -5,8 +5,11 @@ import { renderArmyBuilder, renderCatalogResults } from "./army-builder-view.js"
 import { detachmentOptions } from "./army-builder-options.js";
 import { createArmyRoster, duplicateArmyRoster, remapRosterUnitIds, removeUnitFromRoster } from "../state/army-roster-library.js";
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
+import { getTyranidWargearRuleSet } from "../data/tyranid-wargear-rules.js";
 import { attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
+import { buildManualWargearLoadout } from "../rules/wargear-loadout-validation.js";
+import { readWargearSelections } from "./army-wargear-editor.js";
 
 function newId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -16,6 +19,18 @@ function newId() {
   });
 }
 function now() { return new Date().toISOString(); }
+function pendingManualWargearValidation(ruleSet) {
+  if (!ruleSet) return null;
+  return {
+    status: "manual-selection-required",
+    reviewedRules: true,
+    source: "manual-army-builder",
+    sourceName: ruleSet.sourceName,
+    sourceUrl: ruleSet.sourceUrl,
+    reviewedAt: ruleSet.reviewedAt,
+    errors: ["Choose and save this unit's actual wargear before using combat advice."]
+  };
+}
 
 /** Small-screen-friendly CRUD UI for the reusable roster library. */
 export function createArmyRosterPanel(container, { store, players = [], onApplyRoster = null, canApply = true } = {}) {
@@ -131,8 +146,6 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       await action(async()=>{ const imported = importArmyRoster(raw, newId, now()); await store.save({roster:imported}); selectedId=imported.id; current=imported; page="editor"; }, "Independent army list imported."); return;
     }
     if (button.matches("[data-add-catalog-unit]")) {
-      // Capture the selected values before action() re-renders the panel in its busy state.
-      // Rendering replaces the select element, which otherwise resets the chosen unit to the placeholder.
       const catalogId = button.getAttribute("data-add-catalog-unit") || container.querySelector("[data-catalog-unit]")?.value;
       const modelCount = button.getAttribute("data-add-catalog-unit") ? 1 : Math.max(1, Number(container.querySelector('[name="modelCount"]')?.value) || 1);
       await action(async () => {
@@ -140,15 +153,18 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         const candidate = findArmyUnitCandidates({ faction: current.faction }).find((unit) => unit.id === catalogId);
         if (!candidate) throw new Error("Choose a unit from the catalog first.");
         const resolvedModelCount = modelCount > 1 ? modelCount : (candidate.defaultModelCount ?? modelCount);
-        const updated = { ...current, units: [...current.units, {
+        const ruleSet = getTyranidWargearRuleSet(candidate.id);
+        const rosterUnit = {
           id: newId(), name: candidate.name, modelCount: resolvedModelCount,
           points: resolveInitialUnitPoints(candidate, resolvedModelCount), pointsOptions: candidate.pointsOptions ?? [], notes: "",
           datasheet: candidate.datasheet ?? null, datasheetId: candidate.id,
           dataSource: { status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
-            reviewedAt: candidate.reviewedAt ?? null, officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" }
-        }], updatedAt: now() };
+            reviewedAt: candidate.reviewedAt ?? null, officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" },
+          ...(ruleSet ? { loadoutValidation: pendingManualWargearValidation(ruleSet) } : {})
+        };
+        const updated = { ...current, units: [...current.units, rosterUnit], updatedAt: now() };
         await store.save({ id: updated.id, roster: updated }); current = updated;
-      }, "Catalog candidate added. Verify its current datasheet before use.");
+      }, "Catalog candidate added. Select and save its reviewed wargear before battle use.");
       return;
     }
     if (button.matches("[data-view-unit-detail]")) {
@@ -180,7 +196,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         const updated = detachLeaderFromBodyguard(current, leaderId, { updatedAt: now() });
         await store.save({ id: updated.id, roster: updated });
         current = updated;
-      }, "Leader detached and roster saved.");
+      }, "Leader detached from Bodyguard and roster saved.");
       return;
     }
     if (button.matches("[data-save-unit]")) {
@@ -188,16 +204,33 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       const pointsText = container.querySelector('[data-unit-points="' + unitId + '"]')?.value ?? "";
       const modelsText = container.querySelector('[data-unit-models="' + unitId + '"]')?.value;
       const notes = container.querySelector('[data-unit-notes="' + unitId + '"]')?.value ?? "";
+      const existingUnit = current?.units?.find((unit) => unit.id === unitId) ?? null;
+      const requestedModelCount = Number(modelsText);
+      const modelCountChanged = existingUnit && requestedModelCount !== existingUnit.modelCount;
+      const wargearSelections = existingUnit && !modelCountChanged ? readWargearSelections(container, existingUnit) : null;
       await action(async () => {
-        if (!current) throw new Error("Open a roster before editing a unit.");
+        if (!current || !existingUnit) throw new Error("Open a roster before editing a unit.");
         const points = pointsText.trim() === "" ? null : Number(pointsText);
         if (points !== null && (!Number.isFinite(points) || points < 0)) throw new Error("Enter a valid non-negative points value, or leave it blank.");
-        const modelCount = Number(modelsText);
+        const modelCount = requestedModelCount;
         if (!Number.isInteger(modelCount) || modelCount < 1) throw new Error("Model count must be a positive whole number.");
-        const updated = { ...current, units: current.units.map((unit) => unit.id === unitId ? { ...unit, modelCount, points, notes: notes.trim() } : unit), updatedAt: now() };
+        let nextUnit = { ...existingUnit, modelCount, points, notes: notes.trim() };
+        const ruleSet = getTyranidWargearRuleSet(nextUnit.datasheetId);
+        if (ruleSet && modelCountChanged) {
+          nextUnit = { ...nextUnit, equippedWargear: [], equippedWeapons: [], loadoutValidation: pendingManualWargearValidation(ruleSet) };
+        } else if (ruleSet && wargearSelections) {
+          const loadout = buildManualWargearLoadout(nextUnit, wargearSelections);
+          if (loadout.loadoutValidation.status !== "rules-reviewed-valid") {
+            throw new Error(loadout.loadoutValidation.errors?.join(" ") || "Choose a legal wargear configuration.");
+          }
+          nextUnit = { ...nextUnit, ...loadout };
+        }
+        const updated = { ...current, units: current.units.map((unit) => unit.id === unitId ? nextUnit : unit), updatedAt: now() };
         await store.save({ id: updated.id, roster: updated });
         current = updated;
-      }, "Unit points and notes saved.");
+      }, () => modelCountChanged && getTyranidWargearRuleSet(existingUnit?.datasheetId)
+        ? "Model count saved. Review and save the wargear choices for the new unit size."
+        : "Unit and selected wargear saved.");
       return;
     }
     if (button.matches("[data-save-detachment]")) {
@@ -227,8 +260,6 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       return;
     }
     if (button.matches("[data-roster-apply]")) {
-      // Capture the selected side before action() renders its busy state.
-      // Rendering replaces the select element and otherwise resets it to the first player.
       const playerId = container.querySelector("[data-roster-player]")?.value;
       const rosterToApply = current;
       await action(async () => {
