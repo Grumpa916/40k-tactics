@@ -1,3 +1,4 @@
+import { primaryWindowDue } from '../rules/checkpoint-mission-evidence.js';
 import { evaluateScoringCheckpoint } from '../engine/scoring-check-coordinator.js';
 import { getMissionActionReviews } from '../rules/mission-action-state.js';
 import { getBattlePrimaryMissionDefinitions } from '../data/primary-mission-catalog.js';
@@ -20,13 +21,8 @@ export function getScoringCheckpointReminder(state, { previousPhase, missionDefi
   const myPlayer=perspectivePlayerId??players[0]?.id;
   for (const group of groups) {
     group.primaryReference=primaries?(group.playerId===myPlayer?primaries.myMission:primaries.opponentMission):null;
-    group.primaryScoringWindows=(group.primaryReference?.scoring??[]).filter(window=>{
-      const when=String(window.when??'').toLowerCase();
-      if (group.checkpoint==='command-phase') return when.includes('command');
-      if (group.checkpoint==='end-of-opponent-turn') return when.includes('either player')||when.includes("opponent");
-      if (group.checkpoint==='end-of-turn') return when.includes('end of your turn')||when.includes('either player')||when.includes('r5 end of turn');
-      return false;
-    });
+    group.primaryScoringWindows=(group.primaryReference?.scoring??[]).filter(window =>
+      primaryWindowDue(window.when, group.checkpoint, state.battle?.round));
   }
   const activeName=players.find(p=>p.id===activePlayerId)?.name??'active player';
   return {timing,label:`End of ${activeName}'s ${timing==='command-phase'?'Command phase':'turn'}`,
@@ -36,3 +32,4 @@ export function getScoringCheckpointReminder(state, { previousPhase, missionDefi
       ...[...group.review.primary,...group.review.secondary].map(item=>`${group.playerName}: ${item.definitionName??item.definitionId}`)
     ])};
 }
+
