@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { importWarhammerAppRoster } from '../../src/state/warhammer-app-roster-import.js';
 import { matchWargearSelection, validateWargearLoadout } from '../../src/rules/wargear-loadout-validation.js';
 import { getTyranidDatasheetDetails } from '../../src/data/tyranid-datasheet-details.js';
+import { findArmyUnitCandidates } from '../../src/data/army-unit-catalog.js';
 
 function unit(datasheetId, modelCount, entries) {
   return {
@@ -50,6 +51,23 @@ test('reviewed rules validate common Hive Tyrant, Tyrannofex and ranged Warrior 
   ])).status, 'rules-reviewed-valid');
 });
 
+test('Sky-slasher Spinemaws are optional per model, not default all-or-none equipment', () => {
+  for (let spinemaws = 0; spinemaws <= 3; spinemaws += 1) {
+    const entries = [['Claws and teeth', 3]];
+    if (spinemaws) entries.push(['Spinemaws', spinemaws]);
+    assert.equal(validateWargearLoadout(unit('tyranids:sky-slasher-swarms', 3, entries)).status, 'rules-reviewed-valid');
+  }
+  const tooMany = validateWargearLoadout(unit('tyranids:sky-slasher-swarms', 3, [
+    ['Claws and teeth', 3], ['Spinemaws', 4]
+  ]));
+  assert.equal(tooMany.status, 'rules-invalid');
+  assert.ok(tooMany.errors.some((error) => /Spinemaws.*maximum 3/i.test(error)));
+
+  const skySlashers = findArmyUnitCandidates({ faction: 'Tyranids' }).find((candidate) => candidate.id === 'tyranids:sky-slasher-swarms');
+  assert.equal(skySlashers.datasheet.weapons.find((weapon) => weapon.name === 'Spinemaws').equipment, 'Wargear option');
+  assert.equal(skySlashers.datasheet.weapons.find((weapon) => weapon.name === 'Claws and teeth').equipment, 'Default');
+});
+
 test('one imported equipment selection can map to multiple attack profiles', () => {
   const tervigon = getTyranidDatasheetDetails('tyranids:tervigon');
   const talons = matchWargearSelection({ datasheetId: 'tyranids:tervigon', datasheet: tervigon, sourceName: 'Massive scything talons' });
@@ -69,6 +87,18 @@ test('one imported equipment selection can map to multiple attack profiles', () 
   assert.equal(blast.profileNames.length, 2);
 });
 
+test('Warhammer App plural Genestealers weapon name maps to canonical profile', () => {
+  const genestealers = getTyranidDatasheetDetails('tyranids:genestealers');
+  const matched = matchWargearSelection({
+    datasheetId: 'tyranids:genestealers',
+    datasheet: genestealers,
+    sourceName: 'Genestealers claws and talons'
+  });
+  assert.equal(matched.name, 'Genestealer claws and talons');
+  assert.deepEqual(matched.profileNames, ['Genestealer claws and talons']);
+  assert.equal(matched.match, 'singular-plural-profile');
+});
+
 test('large Warhammer App fixture produces a persistent wargear audit and reviewed valid loadouts', async () => {
   const { readFile } = await import('node:fs/promises');
   const text = await readFile(new URL('../fixtures/warhammer-app-large-validation-roster.txt', import.meta.url), 'utf8');
@@ -77,6 +107,7 @@ test('large Warhammer App fixture produces a persistent wargear audit and review
   assert.equal(result.sourceErrors.length, 5);
   assert.equal(result.wargearAudit.totals.units, 52);
   assert.equal(result.wargearAudit.totals['source-invalid'], 2);
+  assert.equal(result.wargearAudit.totals.unverified ?? 0, 0);
 
   const termagants = result.roster.units.find((item) => item.name === 'Termagants');
   assert.equal(termagants.loadoutValidation.status, 'source-invalid');
