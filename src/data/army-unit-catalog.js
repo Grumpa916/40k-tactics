@@ -1,6 +1,19 @@
 import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
 import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 
+function applyReviewedTyranidCorrections(id, details) {
+  if (!details) return details;
+  if (id !== "tyranids:sky-slasher-swarms") return details;
+  // Current 11th-edition Legends data: claws and teeth are fixed; Spinemaws
+  // are optional for any number of models, rather than default equipment.
+  return {
+    ...details,
+    weapons: (details.weapons ?? []).map((weapon) =>
+      weapon.name === "Spinemaws" ? { ...weapon, equipment: "Wargear option" } : weapon
+    )
+  };
+}
+
 // Tyranid roster catalog. Full profiles are source-reviewed from linked datasheet references;
 // official GW cross-check remains explicit metadata and may still be pending.
 export const ARMY_UNIT_CATALOG = Object.freeze([
@@ -60,7 +73,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
   ].map((name) => {
     const id = "tyranids:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const attachmentMetadata = getTyranidAttachmentMetadata(id);
-    const details = getTyranidDatasheetDetails(id);
+    const details = applyReviewedTyranidCorrections(id, getTyranidDatasheetDetails(id));
     const {
       defaultModelCount, defaultPoints, pointsOptions, dataSource: reviewedSource,
       ...datasheetProfile
@@ -119,4 +132,3 @@ export function findArmyUnitCandidates({ faction, query = "" } = {}) {
     (!normalizedQuery || unit.name.toLowerCase().includes(normalizedQuery))
   );
 }
-
