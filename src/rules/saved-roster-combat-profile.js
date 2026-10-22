@@ -13,7 +13,7 @@ function normalizeWeaponName(value) {
 }
 
 function isInvalidLoadout(rosterUnit) {
-  return ["source-invalid", "rules-invalid"].includes(rosterUnit?.loadoutValidation?.status);
+  return ["source-invalid", "rules-invalid", "manual-selection-required", "unverified"].includes(rosterUnit?.loadoutValidation?.status);
 }
 
 function explicitWeaponLoadout(state, unit) {
@@ -58,8 +58,6 @@ function weaponAbilityCharacteristics(abilities) {
 
 export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const rosterUnit = getBattleRosterUnit(state, unit);
-  // Invalid source or reviewed-rule loadouts must not become authoritative
-  // Shooting/Fight/Tactical Advisor choices.
   if (isInvalidLoadout(rosterUnit)) return [];
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
