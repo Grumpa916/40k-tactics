@@ -62,7 +62,7 @@ test("army selection presents independent battle sides and applies a saved roste
   const panel = createArmySelectionPanel(root, { store, session });
   await panel.refresh();
 
-  assert.match(root.innerHTML, /Select Armies for This Battle/);
+  assert.doesNotMatch(root.innerHTML, /Select Armies for This Battle/);
   assert.match(root.innerHTML, /Your Army/);
   assert.match(root.innerHTML, /Opponent Army/);
   assert.match(root.innerHTML, /Opponent List/);

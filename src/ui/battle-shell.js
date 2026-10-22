@@ -289,9 +289,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const isScrollableLiveView = ["command", "movement", "charge", "fight"].includes(viewedPhase);
   const tabletopExperiment = layoutMode === "tabletop" && !isSetupView;
   const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
-  const layoutSwitch = viewedPhase === "setup" ? "" : '<nav class="battle-shell__layout-switch" aria-label="Battle interface layout"><a href="' +
-    (layoutMode === "tabletop" ? '?ui=classic' : '?ui=tabletop') + '">' +
-    (layoutMode === "tabletop" ? 'Current layout' : 'Test tabletop layout') + '</a></nav>';
+  const layoutSwitch = "";
   const workspace = '<section class="battle-shell__workspace' + (isSetupView ? ' is-setup-view' : '') + '" data-battle-workspace' +
     (viewedPhase === "setup" && (setupWorkspaceTab === "army-builder" || setupWorkspaceTab === "army-selection" || setupWorkspaceTab === "saves") ? ' hidden' : '') +
     ' data-left-collapsed="' + String(leftPanelCollapsed) + '" data-right-collapsed="' + String(rightPanelCollapsed) + '">' +
@@ -723,6 +721,17 @@ export function createBattleShell(container, {
     render();
   }
 
+  function handleMissionSummaryToggle(event) {
+    const summary = event.target?.closest?.(".battle-mission-summary__section > summary");
+    if (!summary || !container.contains(summary)) return;
+    const details = summary.parentElement;
+    const key = details?.getAttribute?.("data-mission-summary-key");
+    if (!details || !key) return;
+    event.preventDefault?.();
+    details.open = !details.open;
+    missionOpenStates = { ...missionOpenStates, [key]: details.open };
+  }
+
   function handleToggleTurnClock(event) {
     const button = event.target?.closest?.("[data-toggle-turn-clock]");
     if (!button || !container.contains(button)) return;
@@ -985,6 +994,7 @@ export function createBattleShell(container, {
     render();
   }
 
+  container.addEventListener?.("click", handleMissionSummaryToggle);
   container.addEventListener?.("click", handleScoreAdjust);
   container.addEventListener?.("click", handleMapObjectiveToggle);
   container.addEventListener?.("click", handleSetupWorkspaceNavigation);
@@ -1015,6 +1025,7 @@ export function createBattleShell(container, {
       prototypeWorkspace.destroy();
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
+      container.removeEventListener?.("click", handleMissionSummaryToggle);
       container.removeEventListener?.("click", handleScoreAdjust);
       container.removeEventListener?.("click", handleMapObjectiveToggle);
       container.removeEventListener?.("click", handleSetupWorkspaceNavigation);
