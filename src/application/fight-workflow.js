@@ -5,7 +5,7 @@ import { executeCommand } from "../engine/command-engine.js";
 import { getFightState } from "../rules/fight-state.js";
 import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
-import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
+import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -99,15 +99,17 @@ export function getFightWeaponOptions(state, { attackerId, gameData = null } = {
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
 
-  const formationWeapons = getCombatFormationWeaponOptions(state, attacker, { type: "melee" });
-  if (formationWeapons.length) return formationWeapons;
+  const formationMembers = getCombatFormationMembers(state, attacker);
+  if (formationMembers.length > 1) {
+    return getCombatFormationWeaponOptions(state, attacker, { type: "melee" });
+  }
 
   const weaponIds = Array.isArray(attacker.profile?.weaponIds)
     ? attacker.profile.weaponIds
     : Array.isArray(attacker.weaponIds) ? attacker.weaponIds : [];
   const weapons = Array.isArray(gameData?.weapons) ? gameData.weapons : [];
 
-  return weaponIds
+  const linkedWeapons = weaponIds
     .map((weaponId) => weapons.find((weapon) => weapon?.id === weaponId))
     .filter((weapon) => weapon?.type === "melee")
     .map((weapon) => ({
@@ -120,6 +122,7 @@ export function getFightWeaponOptions(state, { attackerId, gameData = null } = {
       formationUnitId: attacker.id,
       characteristics: { ...(weapon.characteristics ?? {}) }
     }));
+  return linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "melee" });
 }
 
 export function resolveFightAttack(session, {
