@@ -14,6 +14,13 @@ test('Tabletop HUD exposes compact scores, phases, Overview and separate timer c
   assert.ok(src.includes("focus ? 'Overview' : 'Tabletop'"));
 });
 
+test('Command battle view exposes a guarded next-phase button for Movement', () => {
+  const src = read('src/ui/prototype-workspace.js');
+  assert.ok(src.includes('data-workspace-next-phase data-advance-game-phase hidden'));
+  assert.ok(src.includes("nextPhaseButton.hidden = !(combat && state.phase === 'command')"));
+  assert.ok(src.includes("Next phase → Movement"));
+});
+
 test('shared Tabletop maps omit repeated banners and zoom controls', () => {
   const src = read('src/ui/combat-workspace.js');
   assert.equal(src.includes('Battlefield · ' + '$' + '{phase'), false);
