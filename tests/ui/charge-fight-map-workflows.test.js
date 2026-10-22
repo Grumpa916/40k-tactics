@@ -164,17 +164,13 @@ test('End Fight reviews remaining units and explicitly records skips before adva
   } finally { x.screen.destroy(); }
 });
 
-test('map zoom and Fit preserve unit coordinates and the selected fighter', () => {
+test('Fight map keeps unit coordinates and selected fighter without zoom controls', () => {
   const initial=engage(state('fight'),['enemy']), positions=JSON.stringify(initial.units.map(u=>u.position));
   const x=setup('fight',initial);
   try {
     click(x,'data-map-unit-id','fighter');
-    click(x,'data-map-zoom','in'); click(x,'data-map-zoom','in');
-    assert.equal(x.root.node('[data-live-map-canvas]').style.width,'200%');
+    assert.equal(x.root.querySelector('[data-map-zoom]'),null);
     x.root.change('[data-fight-weapon]','blade');
-    assert.match(x.root.innerHTML,/width:200%;height:200%/);
-    click(x,'data-map-zoom','fit');
-    assert.equal(x.root.node('[data-live-map-canvas]').style.width,'100%');
     assert.equal(JSON.stringify(x.session.getState().units.map(u=>u.position)),positions);
     assert.match(x.root.innerHTML,/<h1>fighter<\/h1>/);
   } finally { x.screen.destroy(); }
