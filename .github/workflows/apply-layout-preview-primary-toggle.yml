@@ -1,0 +1,29 @@
+name: Apply layout preview primary toggle
+on:
+  push:
+    branches:
+      - feature/layout-preview-primary-toggle
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/layout-preview-primary-toggle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply requested changes
+        run: node scripts/apply-layout-preview-primary-toggle.mjs
+      - name: Test
+        run: npm test
+      - name: Commit implementation
+        run: |
+          git config user.name '40K Tactics Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src tests
+          git commit -m 'Shrink layout previews and expand primary mission toggle target'
+          git push origin HEAD:feature/layout-preview-primary-toggle
