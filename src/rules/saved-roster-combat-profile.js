@@ -71,8 +71,12 @@ function reviewedQuantityContext(rosterUnit, profileName, loadoutEntry) {
   const optional = (ruleSet.optional ?? []).find((item) =>
     normalizeWeaponName(item.name) === selectionKey || profileIsSelection(profileName, item)
   );
-  if (optional?.perModel && optional.allOrNone) {
-    return { exactPerModel: true, perModel: optional.perModel, kind: 'all-or-none-per-model' };
+  if (optional?.perModel) {
+    return {
+      exactPerModel: optional.allOrNone === true,
+      perModel: optional.perModel,
+      kind: optional.allOrNone ? 'all-or-none-per-model' : 'optional-per-model'
+    };
   }
 
   const slot = (ruleSet.slots ?? []).find((candidate) =>
