@@ -127,6 +127,11 @@ export const TYRANID_WARGEAR_RULES = Object.freeze({
   "tyranids:ripper-swarms": rule("https://www.40k.app/factions/tyranids/units/ripper-swarms", {
     fixed: Object.freeze([fixed("Chitinous claws and teeth", { perModel: 1 })]),
     optional: Object.freeze([optional("Spinemaws", { allOrNone: true })])
+  }),
+  "tyranids:sky-slasher-swarms": rule("https://www.wahapedia.ru/wh40k11ed/factions/tyranids/Sky-slasher-Swarms", {
+    sourceName: "Current 11th-edition Tyranids Legends datasheet wargear options",
+    fixed: Object.freeze([fixed("Claws and teeth", { perModel: 1 })]),
+    optional: Object.freeze([optional("Spinemaws")])
   })
 });
 
