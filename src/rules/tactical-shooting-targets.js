@@ -3,6 +3,7 @@ import { getSpatialContext } from "./spatial-context.js";
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getPostFightTargetStates } from "./post-fight-target-states.js";
 import { evaluateShootingOpportunity } from "./tactical-shooting-opportunity.js";
+import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
@@ -59,6 +60,7 @@ export function getShootingTargetPriorities(state, {
   if (!attacker || attacker.ownerId !== playerId) {
     throw new Error("Shooting attacker must belong to playerId.");
   }
+  const sourceAttacker = weapon?.sourceUnitId ? unitById(state, weapon.sourceUnitId) ?? attacker : attacker;
 
   const combat = getCombatHistorySummary(state, { playerId });
   const attackerSummary = combat.units.find((unit) => unit.unitId === attackerId);
@@ -90,19 +92,21 @@ export function getShootingTargetPriorities(state, {
     let survivalProbability = null;
     let mostLikelyRemainingWounds = null;
     let impactClassification = "unknown";
-    if (weapon?.characteristics && (attacker.characteristics ?? attacker.profile?.characteristics) && (target.characteristics ?? target.profile?.characteristics)) {
+    if (weapon?.characteristics) {
       try {
-        const distribution = getDamageOutcomeDistribution({ attacker, target, weapon });
-        const postTarget = getPostFightTargetStates({ target, attacker, weapon, distribution });
+        const attackerProfile = getProbabilisticUnitProfile(state, sourceAttacker);
+        const targetProfile = getProbabilisticUnitProfile(state, target);
+        const distribution = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon });
+        const postTarget = getPostFightTargetStates({ target: targetProfile, attacker: attackerProfile, weapon, distribution });
         expectedDamage = distribution.expectedDamage;
         destructionProbability = postTarget.destructionProbability;
         survivalProbability = postTarget.survivalProbability;
-        const mostLikelyState = postTarget.states.reduce((best, state) =>
-          !best || state.probability > best.probability ? state : best,
+        const mostLikelyState = postTarget.states.reduce((best, item) =>
+          !best || item.probability > best.probability ? item : best,
           null
         );
         mostLikelyRemainingWounds = mostLikelyState?.remainingWounds ?? null;
-        impactClassification = classifyShootingImpact({ expectedDamage, destructionProbability, targetWounds: target.wounds });
+        impactClassification = classifyShootingImpact({ expectedDamage, destructionProbability, targetWounds: targetProfile?.wounds });
         priority += Math.min(3, expectedDamage);
         priority += Math.min(2, destructionProbability * 2);
       } catch {
@@ -116,7 +120,7 @@ export function getShootingTargetPriorities(state, {
       expectedDamage,
       destructionProbability,
       survivalProbability,
-      targetWounds: target.wounds,
+      targetWounds: getProbabilisticUnitProfile(state, target)?.wounds,
       impactClassification,
       rangeStatus
     });
@@ -144,6 +148,7 @@ export function getShootingTargetPriorities(state, {
       type: "shooting-target",
       priority,
       unitId: attackerId,
+      sourceUnitId: sourceAttacker?.id ?? attackerId,
       targetUnitId: target.id,
       targetDistance: proximity.distance,
       targetBand: proximity.band,
@@ -172,6 +177,7 @@ export function getShootingTargetPriorities(state, {
   return {
     playerId,
     attackerId,
+    sourceUnitId: sourceAttacker?.id ?? attackerId,
     weaponId: weapon?.id ?? null,
     priorities
   };
