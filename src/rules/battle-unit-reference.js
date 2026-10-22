@@ -9,6 +9,10 @@ export function getBattleRosterUnit(state, unit) {
   return state?.armyRosters?.[unit?.ownerId]?.units?.find(item => item.id === unit?.metadata?.rosterUnitId) ?? null;
 }
 
+export function hasSourceInvalidWargear(state, unit) {
+  return getBattleRosterUnit(state, unit)?.loadoutValidation?.status === "source-invalid";
+}
+
 // Saved battle roster data can fill missing live profiles, including older saves.
 // Older in-progress battles can lack the embedded roster snapshot, so fall back to
 // the reviewed unit catalog using the battle unit's stable datasheet ID or name.
@@ -50,6 +54,10 @@ export function hasConfirmedNoRangedWeapons(state, unit) {
   if (!Array.isArray(datasheetWeapons) || datasheetWeapons.length === 0) return false;
 
   const rosterUnit = getBattleRosterUnit(state, unit);
+  // An export that explicitly reports invalid wargear is unresolved. Do not infer
+  // either shooting eligibility or "no ranged weapons" from that invalid loadout.
+  if (rosterUnit?.loadoutValidation?.status === "source-invalid") return false;
+
   const equipped = Array.isArray(rosterUnit?.equippedWeapons) ? rosterUnit.equippedWeapons : null;
   let weapons = datasheetWeapons;
   if (equipped?.length) {
