@@ -45,6 +45,8 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
   const panel = createArmyRosterPanel(root, { store });
   await new Promise((resolve) => setImmediate(resolve));
 
+  const newButton={matches:selector=>selector==='[data-builder-page]',getAttribute:()=>"new"};
+  root.emit("click",{target:{closest:()=>newButton}});
   assert.match(root.innerHTML, /data-roster-create-faction/);
   assert.match(root.innerHTML, /data-roster-detachment-select/);
   assert.match(root.innerHTML, /data-roster-custom-detachment/);
@@ -108,6 +110,7 @@ test("roster assignment preserves the selected opponent target across rerenders"
 
   root.rosterSelect.value = roster.id;
   const loadButton = {
+    getAttribute() { return roster.id; },
     matches(selector) { return selector.includes("[data-roster-load]"); }
   };
   root.emit("click", { target: { closest(selector) {
