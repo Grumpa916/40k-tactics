@@ -29,3 +29,14 @@ test('one-tap catalog addition persists an independent entry and reports failure
  assert.equal(saved.units.length,1);assert.equal(saved.units[0].name,candidate.name);assert.equal(saved.units[0].modelCount,candidate.defaultModelCount);
  fail=true;await click('data-add-catalog-unit',candidate.id);assert.equal(saved.units.length,1);assert.match(root.innerHTML,/Save unavailable/);panel.destroy();
 });
+test('saved list cards offer delete and editor exposes explicit save controls',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const {renderArmyBuilder}=await import('../../src/ui/army-builder-view.js');
+ const library=renderArmyBuilder({page:'library',records:[{id:'r',name:'Hive',roster:{...roster,faction:'Tyranids'}}],busy:false,players:[]});
+ assert.match(library,/data-roster-delete="r"/);assert.match(library,/Delete list/);
+ const editor=renderArmyBuilder({page:'editor',current:roster,records:[],busy:false,players:[]});
+ assert.match(editor,/data-roster-save/);assert.match(editor,/data-save-points-limit/);
+ const creation=renderArmyBuilder({page:'new',records:[],busy:false,players:[]});assert.match(creation,/Create &amp; Save List/);
+ const shell=await readFile(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
+ assert.doesNotMatch(shell,/battle-shell__army-dock|data-open-battle-log/);
+});
