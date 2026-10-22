@@ -4,6 +4,7 @@ import { createGameSession } from "../application/game-session.js";
 import { registerCoreCommandHandlers } from "../engine/register-core-commands.js";
 import { clearCommandHandlers } from "../engine/command-engine.js";
 import { createBattleShell } from "./battle-shell.js";
+import { bindLiveCasualtyControls } from './live-casualty-controls.js';
 import { COMPLETE_SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-complete-catalog.js";
 import { installV2SupabasePublicConfig } from "../persistence/supabase-runtime-config.js";
 import { createSupabaseClientFromPublicConfig } from "../persistence/supabase-client.js";
@@ -86,10 +87,6 @@ const state = createGameState({
 
 const session = createGameSession(state);
 
-// The full battle shell already owns the auth-to-cloud-save lifecycle. This demo
-// now supplies the public Supabase client so those existing controls can mount.
-// The root index.html remains on the isolated Fight Phase demo until integration
-// is ready for the main application entry point.
 async function initializeBattleDemo() {
   let supabaseClient = null;
   try {
@@ -102,8 +99,8 @@ async function initializeBattleDemo() {
   const layoutMode = new URLSearchParams(window.location.search).get("ui") === "classic"
     ? "classic"
     : "tabletop";
-
-  createBattleShell(document.getElementById("battle-app"), {
+  const root = document.getElementById("battle-app");
+  createBattleShell(root, {
     session,
     perspectivePlayerId: "p1",
     gameData,
@@ -111,6 +108,7 @@ async function initializeBattleDemo() {
     supabaseClient,
     layoutMode
   });
+  bindLiveCasualtyControls(root, { session });
 }
 
 void initializeBattleDemo();
