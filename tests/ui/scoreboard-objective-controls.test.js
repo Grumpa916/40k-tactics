@@ -31,9 +31,11 @@ test('canonical objectives default to uncontrolled',()=>{
 });
 
 
-test('score adjustment can collapse and reports adjustment results',()=>{
+test('score adjustment can collapse, refresh in place, and report adjustment results',()=>{
  const src=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
  assert.match(src,/data-toggle-score-adjust-collapse/);
+ assert.match(src,/data-score-adjust-host/);
+ assert.match(src,/scoreAdjustHost\.innerHTML = renderScoreAdjustOverlay/);
  assert.match(src,/scoreAdjustMessage/);
  assert.match(src,/stopPropagation/);
 });

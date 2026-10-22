@@ -174,6 +174,12 @@ function renderDecisionReminderHost(state, {
   return renderBattleShockReminder(state, battleShockReminder);
 }
 
+function renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed = false, scoreAdjustMessage = "") {
+  const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
+  if (!scorePlayer) return "";
+  return '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust' + (scoreAdjustCollapsed ? ' is-collapsed' : '') + '" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><div><button type="button" data-toggle-score-adjust-collapse aria-label="' + (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' + (scoreAdjustCollapsed ? '□' : '−') + '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>';
+}
+
 function renderStatusSummaryContent(state, viewedPhase, clockPanelOpen = false) {
   const round = state.battle?.round ?? 0;
   const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
@@ -304,8 +310,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (yourPlayerId ? "" : " disabled") + '><strong>My Army</strong><span>' + escapeHtml(myName) + '</span></button>' +
     '<button type="button" data-open-army-roster="' + escapeHtml(opponentPlayerId ?? "") + '"' +
     (opponentPlayerId ? "" : " disabled") + '><strong>Opponent Army</strong><span>' + escapeHtml(opponentName) + '</span></button><button type="button" data-open-battle-log>☷ Log</button></nav>';
-  const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
-  const scoreAdjustOverlay = scorePlayer ? '<div class="battle-shell__score-adjust-backdrop" data-score-adjust-backdrop><section class="battle-shell__score-adjust' + (scoreAdjustCollapsed ? ' is-collapsed' : '') + '" role="dialog" aria-modal="true"><header><h2>' + escapeHtml(scorePlayer.name ?? scorePlayer.id) + '</h2><div><button type="button" data-toggle-score-adjust-collapse aria-label="' + (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' + (scoreAdjustCollapsed ? '□' : '−') + '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current"><strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong><strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong></div><div class="battle-shell__score-adjust-grid"><span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button><span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button></div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>' : '';
+  const scoreAdjustOverlay = '<div data-score-adjust-host>' + renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage) + '</div>';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
@@ -458,6 +463,11 @@ export function createBattleShell(container, {
     if (summaryContainer) summaryContainer.innerHTML = renderStatusSummaryContent(state, viewedPhase, clockPanelOpen);
     const clockHost = container.querySelector?.("[data-turn-clock-panel-host]");
     if (clockHost) clockHost.innerHTML = renderTurnClockPanel(state, { open: clockPanelOpen, message: clockMessage });
+    const scoreAdjustHost = container.querySelector?.("[data-score-adjust-host]");
+    if (scoreAdjustHost) {
+      const players = Array.isArray(state.players) ? state.players : [];
+      scoreAdjustHost.innerHTML = renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage);
+    }
     refreshClockDisplay();
     ensureClockTicker();
     const statusContainer = container.querySelector?.("[data-battle-context-body]");
