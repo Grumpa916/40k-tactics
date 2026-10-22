@@ -5,6 +5,7 @@ import { createArmyRoster } from '../../src/state/army-roster-library.js';
 import { applyArmyRosterToBattle } from '../../src/engine/army-roster-transitions.js';
 import { getDatasheetWeaponOptions, getProbabilisticUnitProfile } from '../../src/rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../../src/rules/live-unit-vitals.js';
+import { hasConfirmedNoRangedWeapons } from '../../src/rules/battle-unit-reference.js';
 import { getAttackDamageForecast } from '../../src/rules/attack-damage-forecast.js';
 import { getDamageOutcomeDistribution } from '../../src/rules/damage-outcome-distribution.js';
 import { getExpectedDamage } from '../../src/rules/expected-damage.js';
@@ -61,4 +62,42 @@ test('manual shooting records expected and actual damage and updates legacy targ
  assert.equal(getLiveUnitVitals(next,next.units[1]).wounds,before-2);
  assert.ok(next.history.at(-1).payload.expectedDamage>0);
  assert.equal(next.history.at(-1).payload.actualDamage,2);
+});
+
+test('explicit imported loadout hides unselected optional weapons and can confirm no ranged weapon',()=>{
+ let state=createGameState({phase:'setup',battle:{id:'loadout',status:'setup',round:0},players:[{id:'p1'},{id:'p2'}]});
+ const roster=createArmyRoster({id:'r',name:'Melee Tyrant',faction:'Tyranids',units:[{
+  id:'ht',name:'Hive Tyrant',modelCount:1,datasheetId:'tyranids:hive-tyrant',
+  equippedWeapons:[
+   {name:'Monstrous bonesword and lash whip',quantity:1},
+   {name:'Monstrous scything talons',quantity:1}
+  ]
+ }]});
+ state=applyArmyRosterToBattle(state,{playerId:'p1',roster});
+ const unit=state.units.find(item=>item.ownerId==='p1');
+ assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'ranged'}),[]);
+ assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}).map(item=>item.name),[
+  'Monstrous bonesword and lash whip','Monstrous scything talons'
+ ]);
+ assert.equal(hasConfirmedNoRangedWeapons(state,unit),true);
+});
+
+test('explicit equipped quantity scales unit-level attacks for Tactical Advisor forecasts',()=>{
+ const state={
+  armyRosters:{p1:{units:[{id:'r1',equippedWeapons:[{name:'Volley gun',quantity:3}],datasheet:{weapons:[{
+   name:'Volley gun',range:'18"',attacks:'D6+1',skill:'3+',strength:6,ap:-1,damage:1
+  }]}}]}},
+  units:[{id:'u1',ownerId:'p1',metadata:{rosterUnitId:'r1'}}]
+ };
+ const [weapon]=getDatasheetWeaponOptions(state,state.units[0],{type:'ranged'});
+ assert.equal(weapon.equippedQuantity,3);
+ assert.equal(weapon.characteristics.attacks,'3D6+3');
+});
+
+test('legacy or manual roster without explicit loadout keeps full datasheet weapon choices',()=>{
+ const state=fixture();
+ const tyrant=state.units.find(unit=>unit.name==='Hive Tyrant');
+ const ranged=getDatasheetWeaponOptions(state,tyrant,{type:'ranged'}).map(item=>item.name);
+ assert.deepEqual(ranged,['Heavy venom cannon','Stranglethorn cannon']);
+ assert.equal(hasConfirmedNoRangedWeapons(state,tyrant),false);
 });
