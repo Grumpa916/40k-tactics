@@ -13,6 +13,10 @@ export function hasSourceInvalidWargear(state, unit) {
   return getBattleRosterUnit(state, unit)?.loadoutValidation?.status === "source-invalid";
 }
 
+export function hasInvalidWargear(state, unit) {
+  return ["source-invalid", "rules-invalid"].includes(getBattleRosterUnit(state, unit)?.loadoutValidation?.status);
+}
+
 // Saved battle roster data can fill missing live profiles, including older saves.
 // Older in-progress battles can lack the embedded roster snapshot, so fall back to
 // the reviewed unit catalog using the battle unit's stable datasheet ID or name.
@@ -46,17 +50,15 @@ export function getBattleUnitMovement(state, unit, model = {}) {
 }
 
 // Missing/unresolved weapon data remains unknown; it never means no ranged weapons.
-// When a Warhammer App import supplied a matched equipped-weapon list, that explicit
-// loadout is authoritative for candidate eligibility and optional datasheet weapons
-// that were not selected do not create a false Shooting candidate.
+// When an imported loadout is valid, its matched equipped-weapon list is authoritative
+// for candidate eligibility and optional datasheet weapons that were not selected do
+// not create a false Shooting candidate.
 export function hasConfirmedNoRangedWeapons(state, unit) {
   const datasheetWeapons = unit?.profile?.weapons ?? unit?.weapons ?? getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(datasheetWeapons) || datasheetWeapons.length === 0) return false;
 
   const rosterUnit = getBattleRosterUnit(state, unit);
-  // An export that explicitly reports invalid wargear is unresolved. Do not infer
-  // either shooting eligibility or "no ranged weapons" from that invalid loadout.
-  if (rosterUnit?.loadoutValidation?.status === "source-invalid") return false;
+  if (["source-invalid", "rules-invalid"].includes(rosterUnit?.loadoutValidation?.status)) return false;
 
   const equipped = Array.isArray(rosterUnit?.equippedWeapons) ? rosterUnit.equippedWeapons : null;
   let weapons = datasheetWeapons;
