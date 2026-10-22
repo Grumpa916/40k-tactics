@@ -40,3 +40,11 @@ test('saved list cards offer delete and editor exposes explicit save controls',a
  const shell=await readFile(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
  assert.doesNotMatch(shell,/battle-shell__army-dock|data-open-battle-log/);
 });
+test('Warhammer App import screen limits choices to catalog factions and previews before saving',()=>{
+ const html=renderArmyBuilder({page:'import',records:[],busy:false,players:[]});
+ assert.match(html,/data-warhammer-import/);
+ assert.match(html,/data-warhammer-import-preview/);
+ assert.match(html,/Space Marines/);assert.match(html,/Tyranids/);
+ assert.doesNotMatch(html,/<option>Aeldari<\/option>/);
+ assert.match(html,/Check the import preview and points/);
+});

@@ -1,3 +1,5 @@
+import { importWarhammerAppRoster } from "../state/warhammer-app-roster-import.js";
+import { escapeHtml } from "./army-builder-html.js";
 import { importArmyRoster } from "../state/army-roster-import.js";
 import { renderArmyBuilder, renderCatalogResults } from "./army-builder-view.js";
 import { detachmentOptions } from "./army-builder-options.js";
@@ -57,14 +59,14 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   async function action(fn, success) {
     if (busy || destroyed) return;
     busy = true; message = "Working…"; render();
-    try { await fn(); message = success; }
+    try { await fn(); message = typeof success === "function" ? success() : success; }
     catch (error) { message = error?.message ?? String(error); }
     finally { busy = false; }
     await refresh();
   }
   function formValues(form) { return Object.fromEntries(new FormData(form).entries()); }
   async function handleSubmit(event) {
-    const form = event.target?.closest?.("[data-roster-create], [data-roster-unit]");
+    const form = event.target?.closest?.("[data-roster-create], [data-roster-unit], [data-warhammer-import]");
     if (!form || !container.contains(form)) return;
     event.preventDefault();
     const values = formValues(form);
@@ -73,6 +75,15 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       message = "Choose a catalog unit above, or enter a manual unit name.";
       render();
       return;
+    }
+    if (form.matches("[data-warhammer-import]")) {
+      let importedSummary="Army list imported and saved.";
+      await action(async()=>{
+        const imported=importWarhammerAppRoster({text:values.rosterText,faction:values.faction,name:values.rosterName,pointsLimit:values.pointsLimit===""?null:Number(values.pointsLimit),id:newId(),createdAt:now(),updatedAt:now()});
+        if(imported.unrecognized.length && values.acknowledgeUnmatched!=="yes") throw new Error("Review the unrecognized point lines below, then confirm they are preserved in the saved list notes.");
+        await store.save({roster:imported.roster}); selectedId=imported.roster.id; current=(await store.load(selectedId)).roster; page="editor";
+        importedSummary=imported.unrecognized.length?`${imported.roster.units.length} units imported. ${imported.unrecognized.length} unrecognized point line(s) remain in list notes for review.`:`${imported.roster.units.length} units imported and saved.`;
+      }, ()=>importedSummary); return;
     }
     if (form.matches("[data-roster-create]")) {
       await action(async () => {
@@ -278,10 +289,22 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     const results=container.querySelector("[data-catalog-results]");
     if(results) results.innerHTML=renderCatalogResults({current, unitSearch, category, sort, fits, busy});
   }
+  function updateWarhammerImportPreview() {
+    const host=container.querySelector("[data-warhammer-import-preview]"); if(!host) return;
+    const text=container.querySelector("[data-warhammer-import-text]")?.value??"";
+    const faction=container.querySelector("[data-warhammer-faction]")?.value??"";
+    if(!text.trim()){host.textContent="Paste the export to preview detected units.";return;}
+    try {
+      const parsed=importWarhammerAppRoster({text,faction,name:"Preview",pointsLimit:null,id:"preview",createdAt:null});
+      host.innerHTML=`<strong>${parsed.roster.units.length} detected unit(s)</strong><ul>${parsed.roster.units.map(unit=>`<li>${escapeHtml(unit.modelCount)} × ${escapeHtml(unit.name)} · ${escapeHtml(unit.points??"points unknown")} pts${unit.dataSource.officialRulesCrossCheck==="verified"?"":" · source review pending"}</li>`).join("")}</ul>${parsed.unrecognized.length?`<p role="alert">${parsed.unrecognized.length} point line(s) were not matched. They will be preserved in the list notes.</p><ul>${parsed.unrecognized.map(line=>`<li>${escapeHtml(line)}</li>`).join("")}</ul>`:""}`;
+    } catch(error) {host.textContent=error?.message??String(error);}
+  }
   function handleInput(event) {
+    if(event.target?.matches?.("[data-warhammer-import-text], [data-warhammer-import] input[name='rosterName'], [data-warhammer-import] input[name='pointsLimit']")) updateWarhammerImportPreview();
     if(event.target?.matches?.("[data-unit-search]")) { unitSearch=event.target.value; updateCatalog(); }
   }
   function handleChange(event) {
+    if(event.target?.matches?.("[data-warhammer-faction]")) { updateWarhammerImportPreview(); return; }
     if(event.target?.matches?.("[data-catalog-category]")) { category=event.target.value; updateCatalog(); return; }
     if(event.target?.matches?.("[data-catalog-sort]")) { sort=event.target.value; updateCatalog(); return; }
     if(event.target?.matches?.("[data-catalog-fits]")) { fits=event.target.checked; updateCatalog(); return; }
