@@ -1,5 +1,11 @@
+import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
-import { getBattleRosterUnit, getBattleUnitDatasheet } from "./battle-unit-reference.js";
+import {
+  getBattleRosterUnit,
+  getBattleUnitDatasheet,
+  getCombatFormationMembers,
+  getCombatFormationRoot
+} from "./battle-unit-reference.js";
 
 export function parseCombatCharacteristic(value) {
   if (Number.isFinite(value)) return Number(value);
@@ -44,6 +50,88 @@ function scaleAttackCount(attacks, quantity) {
   return `${count}D${dice[2]}${modifier ? `+${modifier}` : ""}`;
 }
 
+function profileIsSelection(profileName, selection) {
+  return (selection?.profiles ?? [selection?.name]).some((name) => normalizeWeaponName(name) === normalizeWeaponName(profileName));
+}
+
+function reviewedQuantityContext(rosterUnit, profileName, loadoutEntry) {
+  const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
+  if (!ruleSet) return null;
+  const selectionName = loadoutEntry?.selectionName ?? loadoutEntry?.name ?? profileName;
+  const selectionKey = normalizeWeaponName(selectionName);
+
+  const fixed = (ruleSet.fixed ?? []).find((item) =>
+    normalizeWeaponName(item.name) === selectionKey || profileIsSelection(profileName, item)
+  );
+  if (fixed?.perModel) return { exactPerModel: true, perModel: fixed.perModel, kind: 'fixed-per-model' };
+
+  const optional = (ruleSet.optional ?? []).find((item) =>
+    normalizeWeaponName(item.name) === selectionKey || profileIsSelection(profileName, item)
+  );
+  if (optional?.perModel && optional.allOrNone) {
+    return { exactPerModel: true, perModel: optional.perModel, kind: 'all-or-none-per-model' };
+  }
+
+  const slot = (ruleSet.slots ?? []).find((candidate) =>
+    (candidate.choices ?? []).some((choice) =>
+      normalizeWeaponName(choice.name) === selectionKey || profileIsSelection(profileName, choice)
+    )
+  );
+  if (!slot?.perModel) return null;
+
+  const equippedSelections = new Set((rosterUnit?.equippedWeapons ?? [])
+    .map((item) => item?.selectionName ?? item?.name)
+    .filter(Boolean)
+    .map(normalizeWeaponName)
+    .filter((name) => (slot.choices ?? []).some((choice) => normalizeWeaponName(choice.name) === name)));
+  const homogeneous = equippedSelections.size === 1;
+  return {
+    exactPerModel: homogeneous,
+    perModel: slot.perModel,
+    kind: homogeneous ? 'homogeneous-slot' : 'mixed-slot'
+  };
+}
+
+function inferReviewedLegacyQuantity(rosterUnit, profileName, startingModels) {
+  if (!rosterUnit || !Number.isInteger(startingModels) || startingModels < 1) return null;
+  const ruleSet = getTyranidWargearRuleSet(rosterUnit.datasheetId);
+  const fixed = (ruleSet?.fixed ?? []).find((item) => profileIsSelection(profileName, item));
+  if (!fixed?.perModel) return null;
+  return fixed.perModel * startingModels;
+}
+
+function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
+  const rosterUnit = getBattleRosterUnit(state, unit);
+  const vitals = getLiveUnitVitals(state, unit);
+  const startingModels = Number.isInteger(vitals.startingModels) ? vitals.startingModels : null;
+  const currentModels = Number.isInteger(vitals.models) ? vitals.models : null;
+  const explicit = loadoutEntry?.quantity ?? null;
+  const inferred = explicit == null ? inferReviewedLegacyQuantity(rosterUnit, profileName, startingModels) : null;
+  const startingQuantity = explicit ?? inferred ?? 1;
+  const context = reviewedQuantityContext(rosterUnit, profileName, loadoutEntry);
+
+  if (currentModels === 0) {
+    return { startingQuantity, activeQuantity: 0, quantityBasis: context?.kind ?? (explicit != null ? 'explicit' : inferred != null ? 'reviewed-fixed' : 'unit-profile'), quantityUncertain: false };
+  }
+  if (currentModels == null || startingModels == null || currentModels >= startingModels || !context?.perModel) {
+    return { startingQuantity, activeQuantity: startingQuantity, quantityBasis: context?.kind ?? (explicit != null ? 'explicit' : inferred != null ? 'reviewed-fixed' : 'unit-profile'), quantityUncertain: false };
+  }
+  if (context.exactPerModel) {
+    return {
+      startingQuantity,
+      activeQuantity: Math.min(startingQuantity, currentModels * context.perModel),
+      quantityBasis: context.kind,
+      quantityUncertain: false
+    };
+  }
+  return {
+    startingQuantity,
+    activeQuantity: startingQuantity,
+    quantityBasis: context.kind,
+    quantityUncertain: true
+  };
+}
+
 function weaponAbilityCharacteristics(abilities) {
   const text = String(abilities ?? "");
   const sustained = text.match(/Sustained Hits\s+(\d+)/i);
@@ -78,16 +166,19 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
 
     const skill = parseCombatCharacteristic(weapon?.skill ?? weapon?.characteristics?.skill);
     const name = weapon?.name ?? `${weaponType === "melee" ? "Melee" : "Ranged"} weapon ${index + 1}`;
-    const equippedQuantity = loadoutEntry?.quantity ?? 1;
+    const quantity = resolveEquippedQuantity(state, unit, name, loadoutEntry);
     const attacks = weapon?.attacks ?? weapon?.characteristics?.attacks;
     return [{
       id: `datasheet:${unit.id}:${index}`,
       name,
       type: weaponType,
-      equippedQuantity,
+      equippedQuantity: quantity.startingQuantity,
+      activeQuantity: quantity.activeQuantity,
+      quantityBasis: quantity.quantityBasis,
+      quantityUncertain: quantity.quantityUncertain,
       characteristics: {
         ...(range == null ? {} : { range }),
-        attacks: scaleAttackCount(attacks, equippedQuantity),
+        ...(!quantity.quantityUncertain ? { attacks: scaleAttackCount(attacks, quantity.activeQuantity) } : {}),
         strength: weapon?.strength ?? weapon?.characteristics?.strength,
         ap: weapon?.ap ?? weapon?.characteristics?.ap ?? 0,
         damage: weapon?.damage ?? weapon?.characteristics?.damage,
@@ -96,6 +187,20 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
       }
     }];
   });
+}
+
+export function getCombatFormationWeaponOptions(state, unit, { type = null } = {}) {
+  const root = getCombatFormationRoot(state, unit);
+  if (!root) return [];
+  const members = getCombatFormationMembers(state, root);
+  const combined = members.length > 1;
+  return members.flatMap((member) => getDatasheetWeaponOptions(state, member, { type }).map((weapon) => ({
+    ...weapon,
+    formationUnitId: root.id,
+    sourceUnitId: member.id,
+    sourceUnitName: member.name ?? member.id,
+    displayName: combined ? `${member.name ?? member.id} · ${weapon.name}` : weapon.name
+  })));
 }
 
 function firstCombatValue(unit, datasheet, liveKey, datasheetKeys) {
