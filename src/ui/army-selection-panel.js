@@ -50,21 +50,12 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     }).join("");
     const battleSetup = state.battleSetup ?? {};
     const selectedSize = battleSetup.battleSize ?? "";
-    const sizeRules = {
-      incursion: { label: "Incursion", points: 1000, dp: 2, enhancements: 2, units: 2 },
-      strike_force: { label: "Strike Force", points: 2000, dp: 3, enhancements: 4, units: 3 }
-    };
-    const selectedRules = sizeRules[selectedSize] ?? null;
     const sizeMarkup = '<section class="army-selection__battle-size"><h3>Battle size</h3>' +
       '<label>Agreed game size<select data-battle-size' + (!currentCanApply ? " disabled" : "") + '>' +
       '<option value="">Choose battle size…</option>' +
       '<option value="incursion"' + (selectedSize === "incursion" ? " selected" : "") + '>Incursion · 1,000 points</option>' +
       '<option value="strike_force"' + (selectedSize === "strike_force" ? " selected" : "") + '>Strike Force · 2,000 points</option>' +
       '</select></label>' +
-      (selectedRules ? '<p><strong>' + selectedRules.label + ' limits:</strong> ' + selectedRules.points +
-        ' points per army · ' + selectedRules.dp + ' Detachment Points · ' + selectedRules.enhancements +
-        ' enhancements · ' + selectedRules.units + ' copies per datasheet (BATTLELINE and Dedicated Transports double; EPIC HERO limit remains 1).</p>' :
-        '') +
       '</section>';
     container.innerHTML = '<style>.army-selection{display:grid;gap:14px;background:#101820;color:#edf4f7}.army-selection header h2{margin:0 0 8px}.army-selection{color:#edf4f7}.army-selection__battle-size,.army-selection-card{padding:14px;border:1px solid #43535c;border-radius:9px;background:#172129;color:#edf4f7}.army-selection__battle-size label,.army-selection-card label{display:grid;gap:7px;margin:10px 0;font-weight:700}.army-selection select{box-sizing:border-box;width:100%;min-height:44px;padding:9px 10px;font-size:14px;border:1px solid #536987;border-radius:6px;background:#101820;color:#edf4f7}.army-selection button{width:100%;min-height:44px;padding:10px 12px;border:1px solid #536987;border-radius:6px;background:#202b33;color:#edf4f7;font-size:14px;font-weight:700;cursor:pointer}.army-selection__sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.army-selection-card h3{margin:0 0 8px}.army-selection-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.army-selection-card dl div{padding:8px;background:#202d36;border-radius:6px;min-width:0}.army-selection-card dt{font-size:11px;color:#aebbc5}.army-selection-card dd{margin:3px 0 0;font-weight:700;overflow-wrap:anywhere}.army-selection__message{margin:0;padding:8px 10px;border-radius:6px;background:#202d36;color:#edf4f7}@media(max-width:700px){.army-selection__sides{grid-template-columns:1fr}.army-selection__battle-size,.army-selection-card{padding:12px}}</style><section class="army-selection" aria-label="Army selection">' +
       sizeMarkup +
