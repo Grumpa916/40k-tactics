@@ -128,6 +128,27 @@ export function validateWargearLoadout(unit) {
   };
 }
 
+export function buildManualWargearLoadout(unit, selections = []) {
+  const equippedWargear = [];
+  const equippedWeapons = [];
+  for (const raw of selections) {
+    const quantity = Number(raw?.quantity ?? 0);
+    if (!Number.isInteger(quantity) || quantity < 0) throw new Error(`${raw?.name ?? "Wargear"}: quantity must be a non-negative whole number.`);
+    if (!quantity) continue;
+    const resolved = matchWargearSelection({ datasheetId: unit?.datasheetId, datasheet: unit?.datasheet, sourceName: raw?.name });
+    if (!resolved) throw new Error(`${raw?.name ?? "Wargear"}: no reviewed combat profile matched this selection.`);
+    equippedWargear.push({ name: resolved.name, quantity, sourceName: 'Army Builder', profileNames: resolved.profileNames.slice(), match: resolved.match });
+    for (const profileName of resolved.profileNames) {
+      const existing = equippedWeapons.find((item) => normalizeWargearName(item.name) === normalizeWargearName(profileName));
+      if (existing) existing.quantity += quantity;
+      else equippedWeapons.push({ name: profileName, quantity, sourceName: 'Army Builder', selectionName: resolved.name });
+    }
+  }
+  const draft = { ...unit, equippedWargear, equippedWeapons, unmatchedWargear: [] };
+  const loadoutValidation = { ...validateWargearLoadout(draft), source: 'manual-army-builder' };
+  return { equippedWargear, equippedWeapons, loadoutValidation };
+}
+
 export function summarizeWargearAudit(roster) {
   const units = (roster?.units ?? []).map((unit) => ({
     unitId: unit.id,
