@@ -39,9 +39,6 @@ export function assessRosterRulesData(roster) {
       reasons: ["This saved roster predates rules-data revision tracking and must be revalidated once before battle use."]
     };
   }
-  if (sameValue(saved.revisionId, current.revisionId)) {
-    return { status: "current", current, saved, reasons: [] };
-  }
   const reasons = [];
   if (!sameValue(saved.edition, current.edition)) reasons.push(`Edition changed from ${saved.edition ?? "unknown"} to ${current.edition}.`);
   if (!sameValue(saved.factionRules?.version, current.factionRules?.version)) {
@@ -52,6 +49,9 @@ export function assessRosterRulesData(roster) {
   }
   if (!sameValue(saved.catalog?.revision, current.catalog?.revision)) {
     reasons.push(`Local reviewed catalog changed from ${saved.catalog?.revision ?? "unknown"} to ${current.catalog?.revision}.`);
+  }
+  if (!reasons.length && sameValue(saved.revisionId, current.revisionId)) {
+    return { status: "current", current, saved, reasons: [] };
   }
   if (!reasons.length) reasons.push("Rules-data revision changed and this roster should be revalidated.");
   return { status: "review-required", current, saved, reasons };
