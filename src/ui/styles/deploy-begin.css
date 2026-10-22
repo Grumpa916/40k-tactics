@@ -50,7 +50,7 @@
 .deploy-reference-overlay > section { width:min(1200px,100%); max-height:95dvh; overflow:auto; background:#10191f; border:1px solid #53676a; border-radius:12px; padding:12px; }
 .deploy-reference-overlay > section > header { display:flex; justify-content:space-between; align-items:center; gap:12px; position:sticky; top:-12px; padding:10px 0; background:#10191f; z-index:2; }
 @media (orientation:landscape) and (min-width:761px) {
-  .battle-shell.is-tabletop-experiment.is-deploy-begin { position:fixed; inset:0; height:100dvh; min-height:0; padding:10px 10px calc(76px + env(safe-area-inset-bottom,0px)); overflow:hidden; }
+  .battle-shell.is-tabletop-experiment.is-deploy-begin { position:fixed; inset:0; height:100dvh; min-height:0; padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px)); overflow:hidden; }
   .battle-shell.is-deploy-begin > .battle-shell__tabletop-header,.battle-shell.is-deploy-begin > [data-phase-progression-host],.battle-shell.is-deploy-begin > [data-prototype-tools] { display:none; }
   .battle-shell.is-tabletop-experiment.is-deploy-begin .battle-shell__workspace { flex:1; height:auto; min-height:0; overflow:hidden; }
   .battle-shell.is-tabletop-experiment.is-deploy-begin .battle-shell__content,.battle-shell.is-tabletop-experiment.is-deploy-begin [data-battle-screen],.battle-shell.is-deploy-begin [data-live-deploy-begin],.battle-shell.is-deploy-begin .deploy-begin { height:100%; min-height:0; }
