@@ -34,6 +34,23 @@ function captureEquippedWeapon(unit, line) {
  }
  unit.equippedWeapons.push({ name: weapon.name, quantity, sourceName });
 }
+function attachSourceValidationErrors(units, sourceErrors) {
+ for (const unit of units) {
+  const key = normalize(unit?.name);
+  if (!key) continue;
+  const matching = sourceErrors.filter(error => normalize(error).includes(key));
+  if (!matching.length) continue;
+  unit.sourceValidationErrors = matching.slice();
+  const wargearErrors = matching.filter(error => /\bwargear\b/i.test(error));
+  if (wargearErrors.length) {
+   unit.loadoutValidation = {
+    status: 'source-invalid',
+    source: 'warhammer-app-export',
+    errors: wargearErrors.slice()
+   };
+  }
+ }
+}
 
 /** Read unit blocks so model, weapon and attachment lines never become extra units. */
 export function importWarhammerAppRoster({text, faction, name, pointsLimit = null, id, createdAt = null, updatedAt = createdAt} = {}) {
@@ -44,15 +61,24 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  if (!available.length) throw new Error('The catalog has no unit names for ' + selectedFaction + ' yet.');
  const lines = text.split(/\r?\n/);
  const firstLine = lines.find(line => line.trim())?.trim() ?? '';
- const units = [], unrecognized = [], warnings = [];
+ const units = [], unrecognized = [], warnings = [], sourceErrors = [];
  const groups = new Map();
- let current = null, group = null, detachment = null;
+ let current = null, group = null, detachment = null, inErrors = false;
  for (const raw of lines) {
   const line = raw.trim();
   if (!line) continue;
+  if (/^ERRORS$/i.test(line)) {
+   current = null; group = null; inErrors = true;
+   continue;
+  }
   const groupMatch = line.match(/^Attached unit\s+(\d+)$/i);
-  if (groupMatch) { group = groupMatch[1]; current = null; groups.set(group, []); continue; }
-  if (sections.test(line)) { group = null; current = null; continue; }
+  if (groupMatch) { group = groupMatch[1]; current = null; inErrors = false; groups.set(group, []); continue; }
+  if (sections.test(line)) { group = null; current = null; inErrors = false; continue; }
+  if (inErrors) {
+   const errorText = line.replace(/^[•◦*]\s*/, '').trim();
+   if (errorText) sourceErrors.push(errorText);
+   continue;
+  }
   if (/^[•◦*]/.test(line) || /^\s+/.test(raw)) {
    if (!current) continue;
    current.notes += '\n' + raw;
@@ -101,9 +127,10 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    leaders.forEach(u => { u.attachedToBodyguardId = bodyguards[0].id; });
   } else warnings.push('Review Attached unit ' + number + ': leader/bodyguard pairing could not be resolved.');
  }
+ attachSourceValidationErrors(units, sourceErrors);
  const declaredPoints = getPoints(firstLine);
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
  return {roster: createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment, units,
-  notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text, createdAt, updatedAt}), unrecognized, warnings, declaredPoints, totalPoints};
+  notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text, createdAt, updatedAt}), unrecognized, warnings, sourceErrors, declaredPoints, totalPoints};
 }
