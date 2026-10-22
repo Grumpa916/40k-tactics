@@ -17,7 +17,9 @@ jobs:
         with:
           node-version: 22
       - name: Apply optimization pass
-        run: node scripts/apply-tabletop-ui-optimization.mjs
+        run: |
+          node scripts/apply-tabletop-ui-optimization.mjs
+          node scripts/finalize-tabletop-ui-optimization.mjs
       - name: Verify
         run: npm run verify
       - name: Commit implementation
