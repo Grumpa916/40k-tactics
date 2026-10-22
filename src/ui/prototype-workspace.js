@@ -20,10 +20,11 @@ const esc = value => String(value ?? '')
 
 export function renderPrototypeWorkspaceTools() {
   const href = new URL('./styles/prototype-workspace.css', import.meta.url).href;
+  const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const phases = LIVE_PHASES.map(([id, label]) =>
     `<button type="button" data-battle-phase-button="${id}">${label}</button>`
   ).join('');
-  return `<link rel="stylesheet" href="${href}"><style>
+  return `<link rel="stylesheet" href="${href}"><link rel="stylesheet" href="${navigationHref}"><style>
     .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header .battle-shell__status-summary,
     .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
     .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header{display:block!important;min-height:0!important}

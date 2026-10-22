@@ -1,0 +1,40 @@
+/* Army Builder setup navigation: keep the back control accessible without covering the roster browser. */
+.battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: auto;
+  left: auto;
+  transform: none;
+  z-index: 950;
+  width: auto;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav > div {
+  display: none;
+}
+.battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav [data-setup-workspace-continue] {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  min-height: 44px;
+  padding: 8px 12px;
+  white-space: nowrap;
+  opacity: .9;
+}
+@media (max-width: 760px), (orientation: portrait) {
+  .battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav {
+    top: calc(env(safe-area-inset-top, 0px) + 6px);
+    right: max(8px, env(safe-area-inset-right, 0px));
+  }
+  .battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav [data-setup-workspace-continue] {
+    min-height: 40px;
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+}
