@@ -18,6 +18,22 @@ function modelCount(line, candidate) {
  const match = line.match(/\b(\d+)\s+models?\b/i) ?? line.match(/^\s*(\d+)\s*[x×]\s*/i);
  return match ? Number(match[1]) : candidate.defaultModelCount ?? 1;
 }
+function captureEquippedWeapon(unit, line) {
+ const match = line.match(/^[•◦*]\s*(?:(\d+)\s*[x×]\s+)?(.+)$/i);
+ if (!match || !Array.isArray(unit?.datasheet?.weapons)) return;
+ const sourceName = match[2].trim();
+ const weapon = unit.datasheet.weapons.find(item => normalize(item?.name) === normalize(sourceName));
+ if (!weapon?.name) return;
+ const quantity = match[1] ? Number(match[1]) : 1;
+ if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) return;
+ if (!Array.isArray(unit.equippedWeapons)) unit.equippedWeapons = [];
+ const existing = unit.equippedWeapons.find(item => normalize(item.name) === normalize(weapon.name));
+ if (existing) {
+  existing.quantity += quantity;
+  return;
+ }
+ unit.equippedWeapons.push({ name: weapon.name, quantity, sourceName });
+}
 
 /** Read unit blocks so model, weapon and attachment lines never become extra units. */
 export function importWarhammerAppRoster({text, faction, name, pointsLimit = null, id, createdAt = null, updatedAt = createdAt} = {}) {
@@ -50,6 +66,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
     if (count >= 1 && count <= 500) current.modelCount = count;
     else warnings.push('Review model count for ' + current.name + ': ' + model[1]);
    }
+   captureEquippedWeapon(current, line);
    continue;
   }
   if (/\(\d+\s+Detachment Points?\)/i.test(line) || /^(?:army )?detachment\s*[:–-]/i.test(line)) {

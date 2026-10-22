@@ -22,7 +22,7 @@ test('keeps unpriced roster units marked unknown instead of estimating a cost',(
  assert.equal(unknown.roster.units[0].points,null);
 });
 
-test('real App v2.8.1 export imports 16 entries, 2000 points and both attached pairs', async()=>{
+test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and matched equipped weapons', async()=>{
  const {readFile}=await import('node:fs/promises');
  const text=await readFile(new URL('../fixtures/warhammer-app-triple-norn.txt',import.meta.url),'utf8');
  const result=importWarhammerAppRoster({text,faction:'Tyranids',name:'triple norn 11th',pointsLimit:2000,id:'real'});
@@ -36,10 +36,22 @@ test('real App v2.8.1 export imports 16 entries, 2000 points and both attached p
  const primes=roster.units.filter(u=>u.name==='Tyranid Prime with Lash Whip');
  assert.equal(primes.length,2);
  assert.notEqual(primes[0].attachedToBodyguardId,primes[1].attachedToBodyguardId);
- for(const prime of primes){assert.deepEqual(roster.units.find(u=>u.id===prime.attachedToBodyguardId).attachedLeaderIds,[prime.id]);assert.match(prime.notes,/1x Lash whip/);}
+ for(const prime of primes){
+  assert.deepEqual(roster.units.find(u=>u.id===prime.attachedToBodyguardId).attachedLeaderIds,[prime.id]);
+  assert.match(prime.notes,/1x Lash whip/);
+  assert.deepEqual(prime.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
+   {name:'Lash whip',quantity:1},{name:'Rending claw',quantity:1},{name:'Scything talons',quantity:1}
+  ]);
+ }
+ const hiveTyrant=roster.units.find(u=>u.name==='Hive Tyrant');
+ assert.deepEqual(hiveTyrant.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
+  {name:'Monstrous bonesword and lash whip',quantity:1},{name:'Monstrous scything talons',quantity:1}
+ ]);
+ assert.equal(hiveTyrant.equippedWeapons.some(item=>item.name==='Heavy venom cannon'),false);
+ assert.equal(hiveTyrant.equippedWeapons.some(item=>item.name==='Stranglethorn cannon'),false);
  assert.equal(roster.units.filter(u=>u.name==='Lictor').length,2);
  assert.equal(roster.units.filter(u=>u.name==='Norn Emissary').length,1);
- assert.equal(roster.units.find(u=>u.name==='Hive Tyrant').isWarlord,true);
+ assert.equal(hiveTyrant.isWarlord,true);
  assert.match(roster.units.find(u=>u.name==='Norn Emissary').notes,/Psychic Tendril/);
  assert.equal(roster.notes.endsWith(text),true);
 });
