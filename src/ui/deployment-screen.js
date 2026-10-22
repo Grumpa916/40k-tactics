@@ -12,6 +12,7 @@ export function createDeploymentScreen(container, {
   guidedPreparation = false,
   mapOnly = false,
   initialSelectedUnitId = null,
+  onSelectionChange = () => {},
   perspectivePlayerId = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
@@ -131,7 +132,7 @@ export function createDeploymentScreen(container, {
   }
   function handleDeploymentPointerUp(e) {
     const d=deploymentPointerDrag;if(!d||d.pointerId!==e.pointerId)return;deploymentPointerDrag=null;d.marker.classList?.remove?.("is-dragging");
-    if(!d.moved){render();return;}const p=mapCoordinates(d.board,e.clientX,e.clientY);if(!p){render();return;}
+    if(!d.moved){render();onSelectionChange(selectedUnitId);return;}const p=mapCoordinates(d.board,e.clientX,e.clientY);if(!p){render();return;}
     try{session.dispatch({type:COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId:d.unitId,playerId:d.playerId,position:p}});
       selectedPlayerId=d.playerId;selectedUnitId=d.unitId;message="Actual deployment position saved";}
     catch(err){message=err?.message??String(err);}render();
@@ -178,6 +179,7 @@ export function createDeploymentScreen(container, {
       if (selectedUnit?.ownerId) selectedPlayerId = selectedUnit.ownerId;
       message = selectedUnitId ? "Selected unit. Drag it to place or reposition it." : "";
       render();
+      onSelectionChange(selectedUnitId);
       return;
     }
 
@@ -208,9 +210,9 @@ export function createDeploymentScreen(container, {
         return;
       }
       try {
-        session.dispatch({ type: COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION, payload: {
-          unitId: selectedUnitId, playerId, position
-        }});
+        session.dispatch(state.preparation?.mode==='combined'
+          ? {type:COMMAND_TYPES.TRANSFER_MAP_RESERVE,payload:{unitId:selectedUnitId,destination:'battlefield',position}}
+          : { type: COMMAND_TYPES.SET_ACTUAL_DEPLOYMENT_POSITION, payload: {unitId:selectedUnitId,playerId,position} });
         message = "Actual deployment position recorded.";
       } catch (error) {
         message = error?.message ?? String(error);

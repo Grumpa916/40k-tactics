@@ -1,3 +1,5 @@
+import { renderMapReserveTray, tappedMapPosition } from './map-reserve-tray.js';
+import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
@@ -56,7 +58,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const state = session.getState();
     const playerId = state.activePlayer ?? state.battle?.activePlayerId;
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
-    if (!eligible.some((unit) => unit.id === selectedUnitId)) selectedUnitId = eligible[0]?.id ?? null;
+    const selectable=state.units.filter(unit=>unit.ownerId===playerId && ['deployed','reserves'].includes(unit.status) && !attachmentParent(state,unit));
+    if (!selectable.some((unit) => unit.id === selectedUnitId)) selectedUnitId = eligible[0]?.id ?? null;
     const selected = eligible.find((unit) => unit.id === selectedUnitId) ?? null;
 
     const unitCards = eligible.length ? eligible.map((unit) => {
@@ -90,9 +93,12 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       </div>`;
     }
 
+    const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
+    if(reserved)editor=`<h2>${escapeHtml(reserved.name)}</h2><p>In reserves · tap an empty map position to place this unit when its tabletop arrival is permitted.</p>`;
+    const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId});
     if (layoutMode === 'tabletop') {
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});
+        mapExtra:reserveTray,controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});
       mapView.bind(container);
       return;
     }
@@ -102,6 +108,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       <section class="battlefield-map-section">
         <div class="move-heading"><h2>Live Battlefield</h2><span>Recorded positions · both armies</span></div>
         ${renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId, interactivePlayerId: playerId, selectedUnitId })}
+        ${reserveTray}
         <p>Drag an active player’s marker to place or refine its approximate position. If no movement choice has been recorded yet, the first drag records a Normal Move. Later drags only refine map position.</p>
       </section>
       ${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ""}
@@ -191,6 +198,21 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   function handleClick(event) {
+    const reserve=event.target?.closest?.('[data-map-reserve-select]');
+    if(reserve){selectedUnitId=reserve.getAttribute('data-map-reserve-select');errorMessage='';render();return;}
+    const area=event.target?.closest?.('[data-map-reserve-area]');
+    const board=event.target?.closest?.('[data-battlefield-map-board]');
+    const state=session.getState();
+    const selected=state.units.find(unit=>unit.id===selectedUnitId);
+    if(area || (board && selected?.status==='reserves' && !event.target?.closest?.('[data-map-unit-id]') && !event.target?.closest?.('[data-map-objective-id]'))) {
+      if(area && selected?.status==='reserves')return;
+      try {
+        const position=board?tappedMapPosition(event,board):null;
+        errorMessage='';
+        session.dispatch({type:COMMAND_TYPES.TRANSFER_MAP_RESERVE,payload:{unitId:selectedUnitId,destination:area?'reserves':'battlefield',...(board?{position}:{})}});
+      }catch(error){errorMessage=error.message;}
+      render();return;
+    }
     const mapMarker = event.target?.closest?.("[data-map-unit-id]");
     if (mapMarker && mapMarker.closest?.('[data-map-mode="live"]')) {
       const unitId = mapMarker.getAttribute("data-map-unit-id");

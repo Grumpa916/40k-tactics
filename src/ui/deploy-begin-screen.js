@@ -16,7 +16,7 @@ export function createDeployBeginScreen(container,options={}) {
     map?.destroy();referenceScreen?.destroy();map=null;referenceScreen=null;
     container.innerHTML=renderDeployBeginView(session.getState(),{selectedUnitId,message,rolesOpen,transportsOpen,checklistOpen,reference});
     const mapHost=container.querySelector('[data-deploy-map]');
-    if(mapHost)map=createDeploymentScreen(mapHost,{...options,mapOnly:true,guidedPreparation:true,initialSelectedUnitId:selectedUnitId});
+    if(mapHost)map=createDeploymentScreen(mapHost,{...options,mapOnly:true,guidedPreparation:true,initialSelectedUnitId:selectedUnitId,onSelectionChange:id=>{selectedUnitId=id;render();}});
     const refHost=container.querySelector('[data-deploy-reference-content]');
     if(reference&&refHost)referenceScreen=createBattleSetupScreen(refHost,{...options,eventStage:reference});
   }
@@ -25,10 +25,22 @@ export function createDeployBeginScreen(container,options={}) {
     catch(error){message=error.message;render();}
   }
   function click(event) {
+    const reserve=event.target?.closest?.('[data-map-reserve-select]');
+    if(reserve) {
+      selectedUnitId=reserve.getAttribute('data-map-reserve-select');map?.selectUnit(selectedUnitId);render();return;
+    }
+    if(event.target?.closest?.('[data-map-reserve-area]')) {
+      const id=map?.getSelectedUnitId?.()??selectedUnitId;
+      const state=session.getState();
+      if(!id || state.battlefieldMap?.declaredReserves?.[id])return;
+      try {message='';session.dispatch({type:COMMAND_TYPES.TRANSFER_MAP_RESERVE,payload:{unitId:id,destination:'reserves'}});}
+      catch(error){message=error.message;render();}
+      return;
+    }
     const button=event.target?.closest?.('button');if(!button)return;
     if(button.hasAttribute('data-deploy-select')) {
       selectedUnitId=button.getAttribute('data-deploy-select');map?.selectUnit(selectedUnitId);
-      container.querySelectorAll?.('[data-deploy-select]').forEach(item=>item.setAttribute('aria-pressed',String(item.getAttribute('data-deploy-select')===selectedUnitId)));
+      render();
     } else if(button.hasAttribute('data-deploy-location'))send({action:'location',unitId:button.getAttribute('data-deploy-unit'),kind:button.getAttribute('data-deploy-location')});
     else if(button.hasAttribute('data-deploy-role'))send({action:button.getAttribute('data-deploy-role'),playerId:button.getAttribute('data-deploy-player')});
     else if(button.hasAttribute('data-deploy-review'))send({action:'reserve-review',playerId:button.getAttribute('data-deploy-review')});

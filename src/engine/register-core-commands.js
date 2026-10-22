@@ -1,3 +1,4 @@
+import { transferMapReserve } from './map-reserve-transitions.js';
 import { updateDeploymentWorkspace } from './deployment-workspace-transitions.js';
 import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
 import { reviewMissionAction } from "./mission-action-transitions.js";
@@ -44,6 +45,7 @@ import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondar
 
 export function registerCoreCommandHandlers() {
   const handlers = [
+    [COMMAND_TYPES.TRANSFER_MAP_RESERVE, (state, command) => transferMapReserve(state, command.payload)],
     [COMMAND_TYPES.UPDATE_DEPLOYMENT_WORKSPACE, (state, command) => updateDeploymentWorkspace(state, command.payload)],
     [COMMAND_TYPES.UPDATE_PREPARATION, (state, command) => updatePreparation(state, command.payload)],
     [COMMAND_TYPES.START_BATTLE, (state, command) => startBattle(state, command.payload)],
