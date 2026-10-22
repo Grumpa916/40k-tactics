@@ -1,5 +1,6 @@
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
+import { getLiveSelectionQuantity } from './live-casualty-loadout.js';
 import {
   getBattleRosterUnit,
   getBattleUnitDatasheet,
@@ -39,7 +40,9 @@ function explicitWeaponLoadout(state, unit) {
 }
 
 function scaleAttackCount(attacks, quantity) {
-  if (!Number.isInteger(quantity) || quantity <= 1) return attacks;
+  if (!Number.isInteger(quantity)) return attacks;
+  if (quantity === 0) return 0;
+  if (quantity === 1) return attacks;
   if (Number.isInteger(attacks) && attacks >= 0) return attacks * quantity;
   const text = String(attacks ?? "").trim();
   if (/^\d+$/.test(text)) return Number(text) * quantity;
@@ -68,8 +71,12 @@ function reviewedQuantityContext(rosterUnit, profileName, loadoutEntry) {
   const optional = (ruleSet.optional ?? []).find((item) =>
     normalizeWeaponName(item.name) === selectionKey || profileIsSelection(profileName, item)
   );
-  if (optional?.perModel && optional.allOrNone) {
-    return { exactPerModel: true, perModel: optional.perModel, kind: 'all-or-none-per-model' };
+  if (optional?.perModel) {
+    return {
+      exactPerModel: optional.allOrNone === true,
+      perModel: optional.perModel,
+      kind: optional.allOrNone ? 'all-or-none-per-model' : 'optional-per-model'
+    };
   }
 
   const slot = (ruleSet.slots ?? []).find((candidate) =>
@@ -109,9 +116,19 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
   const inferred = explicit == null ? inferReviewedLegacyQuantity(rosterUnit, profileName, startingModels) : null;
   const startingQuantity = explicit ?? inferred ?? 1;
   const context = reviewedQuantityContext(rosterUnit, profileName, loadoutEntry);
+  const selectionName = loadoutEntry?.selectionName ?? loadoutEntry?.name ?? profileName;
+  const trackedQuantity = context?.perModel ? getLiveSelectionQuantity(state, unit, selectionName) : null;
 
   if (currentModels === 0) {
     return { startingQuantity, activeQuantity: 0, quantityBasis: context?.kind ?? (explicit != null ? 'explicit' : inferred != null ? 'reviewed-fixed' : 'unit-profile'), quantityUncertain: false };
+  }
+  if (Number.isInteger(trackedQuantity) && trackedQuantity >= 0) {
+    return {
+      startingQuantity,
+      activeQuantity: trackedQuantity,
+      quantityBasis: `tracked-${context?.kind ?? 'per-model'}`,
+      quantityUncertain: false
+    };
   }
   if (currentModels == null || startingModels == null || currentModels >= startingModels || !context?.perModel) {
     return { startingQuantity, activeQuantity: startingQuantity, quantityBasis: context?.kind ?? (explicit != null ? 'explicit' : inferred != null ? 'reviewed-fixed' : 'unit-profile'), quantityUncertain: false };
@@ -167,6 +184,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
     const skill = parseCombatCharacteristic(weapon?.skill ?? weapon?.characteristics?.skill);
     const name = weapon?.name ?? `${weaponType === "melee" ? "Melee" : "Ranged"} weapon ${index + 1}`;
     const quantity = resolveEquippedQuantity(state, unit, name, loadoutEntry);
+    if (quantity.activeQuantity === 0) return [];
     const attacks = weapon?.attacks ?? weapon?.characteristics?.attacks;
     return [{
       id: `datasheet:${unit.id}:${index}`,

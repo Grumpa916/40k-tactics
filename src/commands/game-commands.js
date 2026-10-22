@@ -26,6 +26,8 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_STATIONARY: "unit.record_stationary",
   RECORD_FALL_BACK: "unit.record_fall_back",
   UNDO_MOVEMENT_ACTION: "unit.undo_movement_action",
+  RECORD_UNIT_CASUALTY: "unit.record_casualty",
+  UNDO_UNIT_CASUALTY: "unit.undo_casualty",
   RECORD_CHARGE_OUTCOME: "charge.record_outcome",
   RECORD_CHARGE_DECLINED: "charge.decline",
   RECORD_SHOOTING_ACTIVATION: "shooting.record_activation",
@@ -52,4 +54,3 @@ export const COMMAND_TYPES = Object.freeze({
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));
-
