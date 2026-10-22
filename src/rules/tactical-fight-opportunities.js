@@ -1,4 +1,5 @@
 import { getExpectedDamage } from "./expected-damage.js";
+import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { evaluateFightOpportunity } from "./tactical-fight-opportunity.js";
 import { getBestFightRetaliation } from "./tactical-fight-retaliation.js";
 import { getProbabilisticFightRetaliation } from "./probabilistic-fight-retaliation.js";
@@ -35,15 +36,20 @@ export function getFightOpportunityRecommendations(
     .map((option) => {
       const attacker = unitById(state, option?.unitId);
       const target = unitById(state, option?.targetUnitId);
+      const sourceAttacker = option?.weapon?.sourceUnitId
+        ? unitById(state, option.weapon.sourceUnitId) ?? attacker
+        : attacker;
 
-      if (!attacker || !target) return null;
-      if (attacker.ownerId !== playerId || target.ownerId === playerId) return null;
-      if (attacker.status === "destroyed" || target.status === "destroyed") return null;
+      if (!attacker || !target || !sourceAttacker) return null;
+      if (attacker.ownerId !== playerId || target.ownerId === playerId || sourceAttacker.ownerId !== playerId) return null;
+      if (attacker.status === "destroyed" || target.status === "destroyed" || sourceAttacker.status === "destroyed") return null;
 
+      const sourceProfile = getProbabilisticUnitProfile(state, sourceAttacker);
+      const targetProfile = getProbabilisticUnitProfile(state, target);
       const expectedDamage =
         Number.isFinite(option?.expectedDamage)
           ? option.expectedDamage
-          : expectedDamageForOption(attacker, target, option?.weapon);
+          : expectedDamageForOption(sourceProfile, targetProfile, option?.weapon);
 
       // Expected damage is an average, not a guaranteed result. Do not
       // convert it into a deterministic kill. Retaliation therefore remains
@@ -56,6 +62,7 @@ export function getFightOpportunityRecommendations(
                 return getProbabilisticFightRetaliation(state, {
                   playerId,
                   attackerId: attacker.id,
+                  sourceAttackerId: sourceAttacker.id,
                   targetId: target.id,
                   weapon: option.weapon
                 });
@@ -88,13 +95,14 @@ export function getFightOpportunityRecommendations(
         retaliationExpectedDamage,
         remainingWounds: option?.remainingWounds ?? attacker.wounds ?? 0,
         maxWounds: option?.maxWounds ?? attacker.maxWounds ?? null,
-        targetWounds: option?.targetWounds ?? target.wounds ?? null,
+        targetWounds: option?.targetWounds ?? targetProfile?.wounds ?? target.wounds ?? null,
         retaliationConfidence
       });
 
       return {
         type: "fight-opportunity",
         unitId: attacker.id,
+        sourceUnitId: sourceAttacker.id,
         targetUnitId: target.id,
         weaponId: option?.weapon?.id ?? option?.weaponId ?? null,
         expectedDamage: evaluation.expectedDamage,
@@ -121,4 +129,3 @@ export function getFightOpportunityRecommendations(
       a.targetUnitId.localeCompare(b.targetUnitId)
     );
 }
-
