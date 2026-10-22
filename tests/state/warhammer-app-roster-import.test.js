@@ -49,6 +49,7 @@ test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and ma
  ]);
  assert.equal(hiveTyrant.equippedWeapons.some(item=>item.name==='Heavy venom cannon'),false);
  assert.equal(hiveTyrant.equippedWeapons.some(item=>item.name==='Stranglethorn cannon'),false);
+ assert.equal(hiveTyrant.loadoutValidation.status,'rules-reviewed-valid');
  assert.equal(roster.units.filter(u=>u.name==='Lictor').length,2);
  assert.equal(roster.units.filter(u=>u.name==='Norn Emissary').length,1);
  assert.equal(hiveTyrant.isWarlord,true);
@@ -74,6 +75,7 @@ test('large App validation roster preserves source errors and marks affected war
  const termagants=roster.units.find(unit=>unit.name==='Termagants');
  assert.equal(termagants.loadoutValidation.status,'source-invalid');
  assert.equal(termagants.loadoutValidation.errors.length,1);
+ assert.equal(termagants.loadoutValidation.reviewedRuleValidation.status,'rules-invalid');
  assert.deepEqual(termagants.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
   {name:'Chitinous claws and teeth',quantity:10},
   {name:'Fleshborer',quantity:7},
@@ -84,8 +86,9 @@ test('large App validation roster preserves source errors and marks affected war
  const carnifexes=roster.units.find(unit=>unit.name==='Carnifexes');
  assert.equal(carnifexes.loadoutValidation.status,'source-invalid');
  assert.equal(carnifexes.sourceValidationErrors.length,2);
+ assert.equal(carnifexes.loadoutValidation.reviewedRuleValidation.status,'rules-invalid');
  const hiveTyrant=roster.units.find(unit=>unit.name==='Hive Tyrant');
- assert.equal(hiveTyrant.loadoutValidation,undefined);
+ assert.equal(hiveTyrant.loadoutValidation.status,'rules-reviewed-valid');
  assert.deepEqual(hiveTyrant.equippedWeapons.map(({name,quantity})=>({name,quantity})),[
   {name:'Monstrous bonesword and lash whip',quantity:1},
   {name:'Monstrous scything talons',quantity:1}

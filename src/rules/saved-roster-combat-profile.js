@@ -12,9 +12,13 @@ function normalizeWeaponName(value) {
     .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function isInvalidLoadout(rosterUnit) {
+  return ["source-invalid", "rules-invalid"].includes(rosterUnit?.loadoutValidation?.status);
+}
+
 function explicitWeaponLoadout(state, unit) {
   const rosterUnit = getBattleRosterUnit(state, unit);
-  if (rosterUnit?.loadoutValidation?.status === "source-invalid") return null;
+  if (isInvalidLoadout(rosterUnit)) return null;
   const equipped = rosterUnit?.equippedWeapons;
   if (!Array.isArray(equipped) || !equipped.length) return null;
   const loadout = new Map();
@@ -54,10 +58,9 @@ function weaponAbilityCharacteristics(abilities) {
 
 export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const rosterUnit = getBattleRosterUnit(state, unit);
-  // Never turn a loadout that the source application itself marks invalid into
-  // authoritative Shooting/Fight/Tactical Advisor choices. The user can correct
-  // the roster or use a validated import; silent guessing would corrupt advice.
-  if (rosterUnit?.loadoutValidation?.status === "source-invalid") return [];
+  // Invalid source or reviewed-rule loadouts must not become authoritative
+  // Shooting/Fight/Tactical Advisor choices.
+  if (isInvalidLoadout(rosterUnit)) return [];
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
