@@ -17,6 +17,7 @@ export function recordSecondaryMissionScore(state, {
   playerId,
   amount,
   scoringTiming = null,
+  retireAfterScoring = false,
   round = state?.battle?.round ?? 0,
   turn = state?.turn ?? 0
 } = {}) {
@@ -45,12 +46,17 @@ export function recordSecondaryMissionScore(state, {
     round,
     turn
   });
-  const award = awarded.history?.at(-1)?.payload;
-  return recordSecondaryMissionScored(awarded, {
+  // Keep the prior card with the award so undo restores both VP and lifecycle.
+  const awardEvent = awarded.history.at(-1);
+  const reversibleAward = { ...awarded, history: [...awarded.history.slice(0,-1),
+    { ...awardEvent, payload: { ...awardEvent.payload, secondaryMissionBefore: entry } }] };
+  const award = awardEvent.payload;
+  return recordSecondaryMissionScored(reversibleAward, {
     instanceId,
     playerId,
     round,
     turn,
+    retireAfterScoring,
     notes: "Confirmed " + (award?.amount ?? amount) + " VP"
   });
 }

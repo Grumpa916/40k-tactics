@@ -221,7 +221,11 @@ export function undoLatestVictoryPointsAward(state, {
 
   const updated = {
     ...state,
-    victoryPoints: { ...(state.victoryPoints ?? {}), [playerId]: award.scoreBefore }
+    victoryPoints: { ...(state.victoryPoints ?? {}), [playerId]: award.scoreBefore },
+    ...(award.secondaryMissionBefore ? { scoring: { ...state.scoring,
+      secondaryMissions: (state.scoring?.secondaryMissions ?? []).map(card =>
+        card.instanceId === award.secondaryMissionBefore.instanceId ? award.secondaryMissionBefore : card)
+    } } : {})
   };
   return appendHistoryEntry(updated, createEvent(latest.type === "victory_points.adjusted"
     ? "victory_points.adjustment_undone" : "victory_points.award_undone", {

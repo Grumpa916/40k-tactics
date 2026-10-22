@@ -28,7 +28,7 @@ export function renderScoringCheckpointDialog(state,scoringReminder) {
       '<li>Review your mission cards and confirm any points earned.</li>') + '</ul>') +
     tacticalDiscardForm +
     '<div class="battle-scoring-reminder__actions">' + (scoringReminder.groups ? '' : '<button type="button" data-review-scoring>Review scoring</button>') +
-    '<button type="button" data-dismiss-scoring-reminder>Remind me later</button></div></section></div>' : "";
+    '<button type="button" data-dismiss-scoring-reminder>Done / continue</button></div></section></div>' : "";
   return reminderMarkup;
 }
 export function refreshScoringCheckpointDialog(container,state,reminder,session) {

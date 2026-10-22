@@ -195,6 +195,7 @@ export function recordSecondaryMissionScored(state, {
   playerId,
   round = state?.battle?.round ?? 0,
   turn = state?.turn ?? 0,
+  retireAfterScoring = false,
   notes = null
 } = {}) {
   requireTurnPosition(round, turn);
@@ -203,7 +204,7 @@ export function recordSecondaryMissionScored(state, {
   const isFixed = (getSecondaryMissionMode(state, playerId) ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED;
   const updated = Object.freeze({
     ...entry,
-    status: isFixed ? SECONDARY_MISSION_STATUS.ACTIVE : SECONDARY_MISSION_STATUS.SCORED,
+    status: isFixed && !retireAfterScoring ? SECONDARY_MISSION_STATUS.ACTIVE : SECONDARY_MISSION_STATUS.SCORED,
     scoredRound: round,
     scoredTurn: turn,
     scoringHistory: [...(entry.scoringHistory ?? []), scoringEvent]

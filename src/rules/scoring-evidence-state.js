@@ -43,7 +43,7 @@ export function getScoringEventsForTurn(state, turn) {
     .filter((event) => event?.payload?.turn === turn);
 }
 
-function destructionFromEvent(event) {
+function destructionFromEvent(event, state) {
   if (event?.type === "unit.destroyed") {
     return event.payload?.unitId
       ? { unitId: event.payload.unitId, ownerId: event.payload.ownerId ?? null, source: event.type }
@@ -64,7 +64,7 @@ function destructionFromEvent(event) {
 }
 
 export function getUnitDestructionsForTurn(state, turn) {
-  return getScoringEventsForTurn(state, turn).map(destructionFromEvent).filter(Boolean);
+  return getScoringEventsForTurn(state, turn).map(event => destructionFromEvent(event, state)).filter(Boolean);
 }
 
 export function getFriendlyUnitDestructionsForTurn(state, playerId, turn) {
