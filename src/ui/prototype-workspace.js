@@ -23,7 +23,13 @@ export function renderPrototypeWorkspaceTools() {
   const phases = LIVE_PHASES.map(([id, label]) =>
     `<button type="button" data-battle-phase-button="${id}">${label}</button>`
   ).join('');
-  return `<link rel="stylesheet" href="${href}"><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
+  return `<link rel="stylesheet" href="${href}"><style>
+    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header .battle-shell__status-summary,
+    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
+    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header{display:block!important;min-height:0!important}
+    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-topline{display:block!important;min-height:0!important}
+    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-missions{width:100%;min-width:0}
+  </style><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
     <div class="tabletop-live-strip" data-workspace-live-strip></div>
     <details class="prototype-phase-menu"><summary>Phases</summary><div>${phases}</div></details>
     <button type="button" data-workspace-focus>Review</button>
