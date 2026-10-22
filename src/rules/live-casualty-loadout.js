@@ -18,8 +18,6 @@ function startingSelectionQuantities(rosterUnit) {
     const key = normalizeCasualtySelectionName(name);
     if (!key) continue;
     const quantity = Number.isInteger(item?.quantity) && item.quantity > 0 ? item.quantity : 1;
-    // Multiple combat profiles may come from one selected wargear item. Keep
-    // the selected quantity once rather than summing strike/sweep profiles.
     values[key] = Math.max(values[key] ?? 0, quantity);
     names[key] = name;
   }
@@ -104,7 +102,7 @@ export function getCasualtyLoadoutState(state, unit) {
     unitId: unit.id,
     startingModels,
     currentModels,
-    canRecordCasualty: unit.status !== 'destroyed' && Number.isInteger(currentModels) && currentModels > 1,
+    canRecordCasualty: unit.status !== 'destroyed' && Number.isInteger(startingModels) && startingModels > 1 && Number.isInteger(currentModels) && currentModels > 0,
     canUndo: Boolean(unit?.liveWargear?.undoSnapshot),
     activeSelections: Object.freeze({ ...values }),
     selectionNames: Object.freeze({ ...names }),
