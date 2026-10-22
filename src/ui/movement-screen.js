@@ -32,7 +32,7 @@ const MOVEMENT_LABELS = {
   "unit.normal_move_resolved": "Normal Move recorded",
   "unit.fell_back": "Fall Back recorded",
   "unit.advanced": "Advance recorded",
-  "unit.stationary_recorded": "Remained stationary"
+  "unit.stationary_recorded": "Did Not Move"
 };
 
 export function createMovementScreen(container, { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}) {
@@ -77,28 +77,27 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       editor = `<div class="move-editor">
         <h2>${escapeHtml(selected.name)}</h2>
         ${action
-          ? `<p><strong>${escapeHtml(MOVEMENT_LABELS[action.type] ?? "Movement recorded")}</strong>. Drag this unit on the map as often as needed to refine its approximate position.</p>
-             <div class="move-actions"><button type="button" data-reset-position>Undo Movement / Reset Position</button></div>`
-          : `<p>Record the tabletop movement choice. Position is handled only by dragging the map marker; no X/Y coordinate entry is required.</p>
-             <div class="move-actions">
-               <button type="button" data-move-save>Record Normal Move</button>
+          ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(MOVEMENT_LABELS[action.type] ?? "Movement recorded")}</strong></p>
+             <div class="move-actions"><button type="button" data-reset-position>Undo</button></div>`
+          : `<div class="move-actions">
+               <button type="button" data-move-stationary>Did Not Move</button>
+               <button type="button" data-move-save>Normal Move</button>
                <div class="advance-choice">
                  <span>Advance roll</span>
                  <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" class="${value === advanceRoll ? "is-selected" : ""}">${value}</button>`).join("")}</div>
-                 <button type="button" data-move-advance>Record Advance</button>
+                 <button type="button" data-move-advance>Advance</button>
                </div>
-               <button type="button" data-move-fallback>Record Fall Back</button>
-               <button type="button" data-move-stationary>Did Not Move · Heavy</button>
+               <button type="button" data-move-fallback>Fall Back</button>
              </div>`}
       </div>`;
     }
 
     const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
-    if(reserved)editor=`<h2>${escapeHtml(reserved.name)}</h2><p>In reserves · tap an empty map position to place this unit when its tabletop arrival is permitted.</p>`;
+    if(reserved)editor=`<h2>${escapeHtml(reserved.name)}</h2><p>In reserves</p>`;
     const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId});
     if (layoutMode === 'tabletop') {
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        mapExtra:reserveTray,controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Select another unit · ${eligible.length} units</summary><div class="move-units">${unitCards}</div></details></div>`,footer:'<small>Use End Movement above when tabletop movement is complete.</small>'});
+        mapExtra:reserveTray,controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Units · ${eligible.length}</summary><div class="move-units">${unitCards}</div></details></div>`,footer:''});
       mapView.bind(container);
       return;
     }

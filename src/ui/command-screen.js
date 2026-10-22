@@ -692,11 +692,11 @@ export function createCommandScreen(container, {
     const commandControls = '<div class="command-screen command-screen--tabletop"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
-      '</p></div><div class="command-points"><span>Command Points</span><strong>' +
+      '</p></div><div class="command-points"><span>CP</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
-      '<p class="command-note">Tap objective labels on the live map to update control. Review cards and scoring here without shrinking the battlefield.</p>' +
-      secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm +
-      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</div>';
+      '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
+      secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm + '</details>' +
+      '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details></div>';
     if (layoutMode === "tabletop") {
       container.innerHTML = renderCombatWorkspace({
         state,
@@ -706,7 +706,7 @@ export function createCommandScreen(container, {
         interactivePlayerId: null,
         mapView,
         controls: commandControls,
-        footer: '<small>Objective control, secondary cards and scoring controls remain available in this panel.</small>'
+        footer: ''
       });
       mapView.bind(container);
       return;

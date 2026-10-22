@@ -135,6 +135,11 @@ export function renderPersistentMissionSummary(state = {}, {
     item.playerId === playerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE).length;
   const mySecondaryCount = activeCount(primary.myPlayerId);
   const opponentSecondaryCount = activeCount(primary.opponentPlayerId);
+  const activeNames = (playerId) => secondaryHistory.filter((item) =>
+    item.playerId === playerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE)
+    .map((item) => item.definition?.name ?? item.definitionId);
+  const mySecondaryNames = activeNames(primary.myPlayerId);
+  const opponentSecondaryNames = activeNames(primary.opponentPlayerId);
 
   const primaryContent = renderPrimaryPlayer(state, yourPlayer, primary.myPlayerId, primary.myName,
     primary.myDefinition, "You", openStates, setup) +
@@ -146,13 +151,13 @@ export function renderPersistentMissionSummary(state = {}, {
   const secondaryKey = "mission-section-secondary";
   return '<section class="battle-mission-summary" aria-label="Persistent mission summary">' +
     '<details class="battle-mission-summary__section" data-mission-summary-key="' + primaryKey + '"' +
-    openAttribute(openStates, primaryKey) + '><summary><span>Primary Missions</span><span class="battle-context__count">' +
-    knownPrimaryCount + ' assigned</span></summary><div class="battle-mission-summary__section-content">' +
+    openAttribute(openStates, primaryKey) + '><summary><span>Primary Missions</span><span class="battle-context__count battle-mission-summary__active-names">You: ' +
+    escapeHtml(primary.myName ?? '—') + ' · Opp: ' + escapeHtml(primary.opponentName ?? '—') + '</span></summary><div class="battle-mission-summary__section-content">' +
     (primaryContent || '<p class="battle-context__empty">Add players to review Primary Missions.</p>') + '</div></details>' +
     '<details class="battle-mission-summary__section" data-mission-summary-key="' + secondaryKey + '"' +
     openAttribute(openStates, secondaryKey) + '><summary><span>Secondary Missions</span>' +
-    '<span class="battle-context__count">You ' + mySecondaryCount + ' · Opponent ' + opponentSecondaryCount +
-    '</span></summary><div class="battle-mission-summary__section-content">' +
+    '<span class="battle-context__count battle-mission-summary__active-names">You: ' + escapeHtml(mySecondaryNames.join(', ') || '—') +
+    ' · Opp: ' + escapeHtml(opponentSecondaryNames.join(', ') || '—') + '</span></summary><div class="battle-mission-summary__section-content">' +
     (secondaryContent || '<p class="battle-context__empty">Add players to review Secondary Missions.</p>') + '</div></details>' +
     '</section>';
 }

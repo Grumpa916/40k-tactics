@@ -19,7 +19,7 @@ test('charge tabletop supports declining a charge and hides charge zoom controls
   const workspace = fs.readFileSync(new URL('../../src/ui/combat-workspace.js', import.meta.url), 'utf8');
   assert.match(tabletop, /data-charge-decline/);
   assert.match(tabletop, /Do not charge/);
-  assert.match(workspace, /showZoomControls: phase !== 'charge'/);
+  assert.match(workspace, /showZoomControls: false/);
 });
 
 test('declining a charge records a non-charge decision and resolves that unit for the phase', () => {

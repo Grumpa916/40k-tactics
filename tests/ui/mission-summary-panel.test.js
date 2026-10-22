@@ -93,7 +93,7 @@ test("each player's secondary list and individual card details can expand indepe
   const html = renderPersistentMissionSummary(state, { perspectivePlayerId: "p1" });
   assert.match(html, /Behind Enemy Lines/);
   assert.match(html, /Display of Might/);
-  assert.match(html, /You 1 · Opponent 1/);
+  assert.match(html, /You: Behind Enemy Lines · Opp: Display of Might/);
   assert.match(html, /data-mission-summary-key="mission-secondary-player-p1"/);
   assert.match(html, /data-mission-summary-key="mission-secondary-player-p2"/);
   assert.match(html, /data-mission-summary-key="mission-secondary-card-p1:behind-enemy-lines"/);
