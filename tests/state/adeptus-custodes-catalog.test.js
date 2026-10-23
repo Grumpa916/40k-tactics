@@ -30,11 +30,17 @@ test('Adeptus Custodes catalog has full current and Legends profile coverage', (
   assert.equal(telemon.datasheet.characteristics.Toughness,11);
   assert.equal(telemon.datasheet.characteristics.Wounds,14);
   assert.equal(telemon.defaultPoints,280);
+  const ares=candidates.find(unit=>unit.name==='Ares Gunship');
+  assert.equal(ares.datasheet.weapons.find(w=>w.name==='Arachnus Magna-blaze Cannon')?.ap,-3);
+  assert.equal(ares.datasheet.weapons.find(w=>w.name==='Arachnus Heavy Blaze Cannon')?.damage,'D3+3');
+  const orion=candidates.find(unit=>unit.name==='Orion Assault Dropship');
+  assert.equal(orion.defaultPoints,690);
+  assert.equal(orion.datasheet.weapons.find(w=>w.name==='Spiculus Heavy Bolt Launcher')?.attacks,8);
   const prosecutors=candidates.find(unit=>unit.name==='Prosecutor Squad');
   assert.ok(prosecutors.pointsOptions.some(option=>option.models===4&&option.points===45));
 });
 
-test('current Custodes rules track Codex, October MFM, six katahs and 13 detachments',()=>{
+test('current Custodes rules track Codex, October MFM, six katahs and complete 13-detachment rules',()=>{
   const revision=getRulesDataRevisionForFaction('Adeptus Custodes');
   assert.equal(revision.factionRules.publicationType,'Codex');
   assert.equal(revision.points.revision,'2026-10-14');
@@ -42,9 +48,13 @@ test('current Custodes rules track Codex, October MFM, six katahs and 13 detachm
   assert.equal(ADEPTUS_CUSTODES_KATAH.length,6);
   assert.deepEqual(new Set(ADEPTUS_CUSTODES_KATAH.map(item=>item.name)),new Set(['Conservai','Calistus','Salvus','Dacatarai','Kaptaris','Rendax']));
   assert.equal(ADEPTUS_CUSTODES_DETACHMENTS.length,13);
+  assert.equal(ADEPTUS_CUSTODES_DETACHMENTS.reduce((sum,item)=>sum+item.enhancements.length,0),29);
+  assert.equal(ADEPTUS_CUSTODES_DETACHMENTS.reduce((sum,item)=>sum+item.stratagems.length,0),41);
+  assert.equal(ADEPTUS_CUSTODES_DETACHMENTS.filter(item=>item.uniqueTag==='Shield Host').length,6);
   const guardians=ADEPTUS_CUSTODES_DETACHMENTS.find(item=>item.name==='Guardians of the Throne');
   assert.equal(guardians.detachmentPoints,3);
   assert.equal(guardians.forceDisposition,'Priority Assets and Purge the Foe');
+  assert.equal(guardians.stratagems.length,6);
   const solar=ADEPTUS_CUSTODES_DETACHMENTS.find(item=>item.name==='Solar Watch');
   assert.equal(solar.uniqueShieldHost,true);
   assert.equal(solar.forceDisposition,'Reconnaissance');
@@ -60,6 +70,7 @@ test('Adeptus Custodes import resolves current selected combat profiles and revi
   assert.equal(result.roster.units[0].points, 175);
   assert.equal(result.unrecognized.length,0);
   assert.equal(result.roster.rulesDataRevision?.faction,'Adeptus Custodes');
+  assert.deepEqual(result.roster.detachments,['Guardians of the Throne']);
   for(const unit of result.roster.units) assert.equal(unit.unmatchedWargear?.length??0,0,unit.name);
   const blade=result.roster.units.find(unit=>unit.name==='Blade Champion');
   assert.deepEqual(new Set(blade.equippedWeapons.map(item=>item.name)),new Set(['Vaultswords – Behemor','Vaultswords – Hurricanis','Vaultswords – Victus']));
