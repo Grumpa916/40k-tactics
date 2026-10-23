@@ -1,4 +1,5 @@
 import { escapeHtml } from "./army-builder-html.js";
+import { SPACE_MARINES_DETACHMENTS } from "../data/space-marines-rules.js";
 function normalizedFaction(value) { return String(value ?? "").trim().toLowerCase(); }
 
 const TYRANID_DETACHMENTS = Object.freeze([
@@ -19,9 +20,19 @@ const TYRANID_DETACHMENT_SOURCE = "https://www.warhammer-community.com/en-gb/art
 export function detachmentOptions(faction, selected = null) {
   const options = ['<option value="">Choose a detachment…</option>'];
   const isTyranids = normalizedFaction(faction) === "tyranids";
-  const knownNames = isTyranids ? TYRANID_DETACHMENTS.map((item) => item.name) : [];
+  const isSpaceMarines = normalizedFaction(faction) === "space marines";
+  const knownNames = isTyranids ? TYRANID_DETACHMENTS.map((item) => item.name)
+    : isSpaceMarines ? SPACE_MARINES_DETACHMENTS.map((item) => item.name) : [];
   if (isTyranids) {
     for (const detachment of TYRANID_DETACHMENTS) {
+      options.push('<option value="' + escapeHtml(detachment.name) + '"' +
+        (selected === detachment.name ? ' selected' : '') + '>' +
+        escapeHtml(detachment.name + ' · ' + detachment.forceDisposition + ' · ' + detachment.detachmentPoints + ' DP') +
+        '</option>');
+    }
+  }
+  if (isSpaceMarines) {
+    for (const detachment of SPACE_MARINES_DETACHMENTS) {
       options.push('<option value="' + escapeHtml(detachment.name) + '"' +
         (selected === detachment.name ? ' selected' : '') + '>' +
         escapeHtml(detachment.name + ' · ' + detachment.forceDisposition + ' · ' + detachment.detachmentPoints + ' DP') +
