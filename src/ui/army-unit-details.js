@@ -42,7 +42,7 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  const safeSource=typeof source==='string' && /^https?:\/\//i.test(source);
  const weapons=unit.datasheet?.weapons ?? [];
  const abilities=orderAbilitiesForDisplay(unit.datasheet?.abilities ?? []);
- return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button><h3>${e(unit.name)}</h3>${unitStats(unit)}
+ return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button>${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}<h3>${e(unit.name)}</h3>${unitStats(unit)}
  ${editable?`<div class="ab-fields"><label>Models<input type="number" min="1" step="1" data-unit-models="${e(unit.id)}" value="${e(unit.modelCount ?? 1)}"></label><label>Unit points<input type="number" min="0" data-unit-points="${e(unit.id)}" value="${e(unit.points ?? '')}"></label></div><p>Check the published cost when changing model count or equipment.</p>${renderWargearEditor(unit)}<label>Enhancements / notes<textarea data-unit-notes="${e(unit.id)}" maxlength="2000">${e(unit.notes ?? '')}</textarea></label><button data-save-unit="${e(unit.id)}" ${d}>Save unit changes</button>${renderAttachmentControls(unit,current,busy)}`:`<button class="ab-primary" data-add-catalog-unit="${e(unit.id)}" ${d}>+ Add to list · ${e(unit.defaultPoints ?? 'Unknown')} pts</button>`}
  ${['Ranged','Melee'].map(kind=>{const list=weapons.filter(w=>(String(w.range).toLowerCase()==='melee')===(kind==='Melee'));return `<h4>${kind} weapons</h4>${list.length?`<div class="ab-table"><table><thead><tr><th>Weapon</th><th>Range</th><th>A</th><th>Skill</th><th>S</th><th>AP</th><th>D</th></tr></thead><tbody>${list.map(w=>`<tr><th>${e(w.name)}${w.abilities?`<small>${e(w.abilities)}</small>`:''}</th>${['range','attacks','skill','strength','ap','damage'].map(k=>`<td>${e(w[k] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<p>Profiles unavailable.</p>'}`}).join('')}
  <h4>Abilities</h4>${abilities.map(a=>`<details><summary>${e(a.name)}</summary><p>${e(a.description)}</p></details>`).join('')||'<p>Ability text unavailable.</p>'}
@@ -50,5 +50,5 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  <h4>Published model / points options</h4>${(unit.pointsOptions ?? []).map(o=>`<p>${e(o.models)} models · ${e(o.points)} pts ${e(o.condition ?? '')}</p>`).join('')||'<p>No cost options available.</p>'}
  <p class="ab-muted">Data status: ${e(unit.dataSource?.status ?? unit.verificationStatus ?? 'manual-entry')}. Check current source rules; missing values are not treated as zero.</p>
  ${safeSource?`<p><a href="${e(source)}" target="_blank" rel="noopener noreferrer">Open datasheet source</a></p>`:''}
- ${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}</section>`;
+ </section>`;
 }
