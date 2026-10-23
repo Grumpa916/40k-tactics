@@ -23,7 +23,7 @@ test('Carnifex size prices and independent replacement groups save legal combat 
  const options=getDatasheetWeaponOptions({armyRosters:{p1:{units:[saved]}}},battleUnit,{type:'ranged'});
  assert.deepEqual(options.map(x=>x.name).sort(),['Bio-plasma','Heavy venom cannon','Stranglethorn cannon'].sort());
  const html=renderWargearEditor({...u,builderWargearState:state});
- assert.match(html,/Carnifex 1/);assert.match(html,/Carnifex 2/);assert.doesNotMatch(html,/type="number"/);
+ assert.match(html,/Carnifex 1/);assert.match(html,/Carnifex 2/);assert.match(html,/>WS\/BS<\/th>/);assert.match(html,/>4\+<\/td>/);assert.match(html,/>9<\/td>/);assert.match(html,/>-2<\/td>/);assert.match(html,/>3<\/td>/);assert.doesNotMatch(html,/type="number"/);
 });
 test('Hive Tyrant mutually exclusive cannons and duplicate limits are blocked before saving',()=>{
  const u=unit('hive-tyrant');let state=createWargearChoiceState(u);
