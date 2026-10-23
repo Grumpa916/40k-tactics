@@ -37,6 +37,17 @@ test('special unit abilities render before common abilities under one Abilities 
  assert.ok(html.indexOf('Onslaught \(Aura, Psychic\)') < html.indexOf('Synapse'));
 });
 
+test('editable unit details keep remove-unit access at the top of the display',()=>{
+ const html=renderUnitDetails(hiveTyrant,{editable:true});
+ const browseIndex=html.indexOf('data-builder-browse');
+ const removeIndex=html.indexOf('data-remove-unit');
+ const headingIndex=html.indexOf('<h3>Hive Tyrant</h3>');
+ assert.ok(browseIndex >= 0);
+ assert.ok(removeIndex > browseIndex);
+ assert.ok(removeIndex < headingIndex);
+ assert.equal((html.match(/data-remove-unit/g)??[]).length,1);
+});
+
 test('common ability classifier recognizes core and repeated faction abilities',()=>{
  for(const name of ['Leader','Deadly Demise 1','Deadly Demise D6','Shadow in the Warp','Synapse','Deep Strike','Scouts 8 inches','Infiltrators','Lone Operative','Stealth','Fights First','Feel No Pain 5+']) {
   assert.equal(isCommonAbilityName(name),true,name);
