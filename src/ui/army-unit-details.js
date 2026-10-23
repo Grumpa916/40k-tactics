@@ -35,10 +35,11 @@ export function orderAbilitiesForDisplay(abilities=[]) {
 
 export function unitStats(unit) {
  const c=unit.datasheet?.characteristics ?? {};
- const stats=[['M','Move'],['T','Toughness'],['Sv','Save'],['W','Wounds'],['Ld','Leadership'],['OC','Objective Control']];
  const invulnerable=c['Invulnerable save'] ?? c.invulnerableSave ?? c.invulnerable;
- if(invulnerable != null && invulnerable !== '') stats.push(['Inv','Invulnerable save']);
- return '<div class="ab-stats">'+stats.map(([label,key])=>`<span><small>${label}</small><strong>${e(c[key] ?? c.invulnerableSave ?? c.invulnerable ?? '—')}</strong></span>`).join('')+'</div>';
+ const stats=[['M','Move'],['T','Toughness'],['Sv','Save'],['W','Wounds'],['Ld','Leadership'],['OC','Objective Control']];
+ return '<div class="ab-stats">'+stats.map(([label,key])=>label==='Sv'
+  ? `<span class="ab-save-stat"><small>${label}</small><strong>${e(c[key] ?? '—')}</strong>${invulnerable != null && invulnerable !== '' ? `<em>Inv ${e(invulnerable)}</em>` : ''}</span>`
+  : `<span><small>${label}</small><strong>${e(c[key] ?? '—')}</strong></span>`).join('')+'</div>';
 }
 export function renderUnitDetails(unit, {current=null,busy=false,editable=false}={}) {
  if(!unit) return '';
