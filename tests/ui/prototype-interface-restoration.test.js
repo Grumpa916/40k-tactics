@@ -48,6 +48,14 @@ test('army rows expose real catalog stats and separate full unit detail, with un
   assert.match(renderArmyRosterOverlay(initial,'p1'),/data-manual-battle-shock="shooter"/);
   assert.doesNotMatch(renderArmyRosterOverlay(initial,'p2'),/undefined\/undefined/);
 });
+
+test('unit detail stats include an invulnerable save only when the datasheet provides one', async()=>{
+  const {unitStats}=await import('../../src/ui/army-unit-details.js');
+  const withSave=unitStats({datasheet:{characteristics:{Move:'8"',Toughness:10,Save:'2+',Wounds:10,Leadership:'7+', 'Objective Control':3, 'Invulnerable save':'4+'}}});
+  const withoutSave=unitStats({datasheet:{characteristics:{Move:'8"',Toughness:9,Save:'2+',Wounds:8,Leadership:'8+', 'Objective Control':3}}});
+  assert.match(withSave,/>Inv<\/small><strong>4\+<\/strong>/);
+  assert.doesNotMatch(withoutSave,/>Inv<\/small>/);
+});
 function workspaceFixture(session) {
   const handlers={};
   const node=()=>({attrs:{},hidden:false,setAttribute(key,val){this.attrs[key]=val;},focus(){},append(child){child.parentElement=this;}});

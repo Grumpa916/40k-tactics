@@ -11,6 +11,8 @@ export function renderArmyUnitSummary(state, unit) {
   const ref = getArmyUnitReference(state, unit), c = ref.profile.characteristics;
   const value = (...keys) => keys.map(key => c[key]).find(item => item != null && item !== '') ?? '—';
   const stats = [['M',value('movement','Move')],['T',value('toughness','Toughness')],['S','Weapon'],['SV',value('save','Save')],['LD',value('leadership','Leadership')],['OC',value('objectiveControl','Objective Control','oc')]];
+  const invulnerable = value('invulnerableSave','Invulnerable save','invulnerableSave','invulnerable');
+  if (invulnerable !== '—') stats.push(['INV', invulnerable]);
   const vitals = getLiveUnitVitals(state, unit);
   const strength = getUnitStrengthAssessment(unit);
   const models = Number.isFinite(vitals.models) && Number.isFinite(vitals.startingModels) ? `${vitals.models}/${vitals.startingModels}` : '—';
