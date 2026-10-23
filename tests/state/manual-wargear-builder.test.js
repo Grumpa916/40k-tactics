@@ -69,7 +69,7 @@ test('reviewed Army Builder UI renders structured choices instead of a free-text
   assert.match(html, /data-wargear-single="main-gun"/);
   assert.match(html, /Rupture cannon/);
   assert.match(html, /Acid spray/);
-  assert.match(html, /selection required|Combat advice stays unresolved/i);
+  assert.match(html, /Save unit changes to apply this loadout/i);
 });
 
 test('Army Builder control reader includes fixed equipment plus the selected single-slot weapon', () => {

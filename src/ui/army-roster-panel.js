@@ -11,7 +11,7 @@ import { assessRosterRulesData, revalidateRosterRulesData } from "../rules/roste
 import { attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
 import { buildManualWargearLoadout } from "../rules/wargear-loadout-validation.js";
-import { readWargearSelections } from "./army-wargear-editor.js";
+import { createArmyUnitEditorController } from "./army-unit-editor-controller.js";
 
 function newId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -55,9 +55,12 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   let sort = "name";
   let fits = false;
   let previewId = "";
+  const unitEditor=createArmyUnitEditorController(container,{
+    getUnit:()=>current?.units?.find(unit=>unit.id===openUnitDetailId),getRoster:()=>current,render
+  });
   function render() {
     if (destroyed) return;
-    container.innerHTML = renderArmyBuilder({records, current, page, busy, message, unitSearch, category, sort, fits, previewId, openUnitDetailId, players, canApply, onApplyRoster});
+    container.innerHTML = renderArmyBuilder({records, current, unitDraft:unitEditor.getDraft(current?.units?.find(unit=>unit.id===openUnitDetailId)), page, busy, message, unitSearch, category, sort, fits, previewId, openUnitDetailId, players, canApply, onApplyRoster});
   }
   async function refresh() {
     try {
@@ -129,6 +132,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }, "Unit added and roster saved.");
   }
   async function handleClick(event) {
+    if(!busy&&unitEditor.handleClick(event))return;
     const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-roster-save], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment], [data-revalidate-rules]");
     if (!button || !container.contains(button) || busy) return;
     if (button.matches("[data-builder-page]")) { page = button.getAttribute("data-builder-page"); render(); return; }
@@ -218,37 +222,20 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }
     if (button.matches("[data-save-unit]")) {
       const unitId = button.getAttribute("data-save-unit");
-      const pointsText = container.querySelector('[data-unit-points="' + unitId + '"]')?.value ?? "";
-      const modelsText = container.querySelector('[data-unit-models="' + unitId + '"]')?.value;
-      const notes = container.querySelector('[data-unit-notes="' + unitId + '"]')?.value ?? "";
-      const existingUnit = current?.units?.find((unit) => unit.id === unitId) ?? null;
-      const requestedModelCount = Number(modelsText);
-      const modelCountChanged = existingUnit && requestedModelCount !== existingUnit.modelCount;
-      const wargearSelections = existingUnit && !modelCountChanged ? readWargearSelections(container, existingUnit) : null;
-      await action(async () => {
-        if (!current || !existingUnit) throw new Error("Open a roster before editing a unit.");
-        const points = pointsText.trim() === "" ? null : Number(pointsText);
-        if (points !== null && (!Number.isFinite(points) || points < 0)) throw new Error("Enter a valid non-negative points value, or leave it blank.");
-        const modelCount = requestedModelCount;
-        if (!Number.isInteger(modelCount) || modelCount < 1) throw new Error("Model count must be a positive whole number.");
-        let nextUnit = { ...existingUnit, modelCount, points, notes: notes.trim() };
-        const ruleSet = getTyranidWargearRuleSet(nextUnit.datasheetId);
-        if (ruleSet && modelCountChanged) {
-          nextUnit = { ...nextUnit, equippedWargear: [], equippedWeapons: [], loadoutValidation: pendingManualWargearValidation(ruleSet) };
-        } else if (ruleSet && wargearSelections) {
-          const loadout = buildManualWargearLoadout(nextUnit, wargearSelections);
-          if (loadout.loadoutValidation.status !== "rules-reviewed-valid") {
-            throw new Error(loadout.loadoutValidation.errors?.join(" ") || "Choose a legal wargear configuration.");
-          }
-          nextUnit = { ...nextUnit, ...loadout };
+      let prepared;
+      try { prepared=unitEditor.prepareSave(current?.units?.find(unit=>unit.id===unitId)); }
+      catch(error) { message=error.message;render();return; }
+      await action(async()=>{
+        if(!current||!prepared.unit)throw new Error("Open a unit first.");
+        let nextUnit=prepared.unit;
+        if(prepared.selections){
+          const loadout=buildManualWargearLoadout(nextUnit,prepared.selections);
+          if(loadout.loadoutValidation.status!=="rules-reviewed-valid")throw new Error(loadout.loadoutValidation.errors.join(" "));
+          nextUnit={...nextUnit,...loadout};
         }
-        const updated = { ...current, units: current.units.map((unit) => unit.id === unitId ? nextUnit : unit), updatedAt: now() };
-        await store.save({ id: updated.id, roster: updated });
-        current = updated;
-      }, () => modelCountChanged && getTyranidWargearRuleSet(existingUnit?.datasheetId)
-        ? "Model count saved. Review and save the wargear choices for the new unit size."
-        : "Unit and selected wargear saved.");
-      return;
+        const updated={...current,units:current.units.map(unit=>unit.id===unitId?nextUnit:unit),updatedAt:now()};
+        await store.save({id:updated.id,roster:updated});current=updated;unitEditor.reset(unitId);
+      },"Unit size, points and selected wargear saved.");return;
     }
     if (button.matches("[data-save-detachment]")) {
       const selected = container.querySelector("[data-roster-detachment-select]")?.value ?? "";
@@ -357,6 +344,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if(event.target?.matches?.("[data-unit-search]")) { unitSearch=event.target.value; updateCatalog(); }
   }
   function handleChange(event) {
+    if(!busy&&unitEditor.handleChange(event))return;
     if(event.target?.matches?.("[data-warhammer-faction]")) { updateWarhammerImportPreview(); return; }
     if(event.target?.matches?.("[data-catalog-category]")) { category=event.target.value; updateCatalog(); return; }
     if(event.target?.matches?.("[data-catalog-sort]")) { sort=event.target.value; updateCatalog(); return; }
