@@ -45,7 +45,8 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     damagePrevention: characteristics.damagePrevention ?? 0,
     sustainedHits: characteristics.sustainedHits ?? 0,
     lethalHits: characteristics.lethalHits ?? false,
-    devastatingWounds: characteristics.devastatingWounds ?? false
+    devastatingWounds: characteristics.devastatingWounds ?? false,
+    twinLinked: characteristics.twinLinked ?? false
   });
 }
 
