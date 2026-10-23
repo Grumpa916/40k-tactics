@@ -19,19 +19,21 @@ test('default catalog order is Epic Heroes, Characters, Battleline, Monsters, Tr
   assert.equal(getCatalogRoleGroup(hiveTyrant),'character');
 });
 
-test('catalog renders role headings in priority order and retains alternate sort choices',()=>{
+test('catalog renders fixed role headings and omits search/category/sort controls',()=>{
   const html=renderCatalogResults({current:roster,sort:'name',busy:false});
   const positions=['Epic Heroes','Characters','Battleline','Monsters','Transports','Other'].map(label=>html.indexOf(`>${label}</h4>`));
   const present=positions.filter(position=>position>=0);
   assert.ok(present.length>=4);
   assert.deepEqual([...present].sort((a,b)=>a-b),present);
   const builder=renderArmyBuilder({current:roster,page:'editor',records:[],players:[],unitSearch:'',category:'',sort:'name',fits:false,busy:false});
-  assert.match(builder,/<option value="name">Role<\/option>/);
-  assert.match(builder,/<option value="alpha"/);
-  assert.match(builder,/<option value="points"/);
+  assert.doesNotMatch(builder,/data-unit-search/);
+  assert.doesNotMatch(builder,/data-catalog-category/);
+  assert.doesNotMatch(builder,/data-catalog-sort/);
+  assert.match(builder,/data-catalog-fits/);
+  assert.match(builder,/grouped by battlefield role/);
 });
 
-test('alphabetical and points sorting remain available explicitly',()=>{
+test('internal alphabetical and points sorting remain available for non-UI callers',()=>{
   const alpha=filterCatalog({current:roster,sort:'alpha'});
   const names=alpha.map(unit=>unit.name);
   assert.deepEqual(names,[...names].sort((a,b)=>a.localeCompare(b)));
