@@ -13,5 +13,5 @@ test('Space Marines catalog units expose datasheet characteristics in Army Build
   const stats = unitStats(captain);
   assert.match(stats, /5&quot;/);
   assert.match(stats, /Inv 4\+/);
-  assert.match(renderUnitDetails(captain), /Toughness/);
+  assert.match(renderUnitDetails(captain), /<small>T<\/small><strong>6<\/strong>/);
 });
