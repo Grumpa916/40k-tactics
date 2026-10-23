@@ -1,3 +1,5 @@
+import { getAdeptusCustodesWargearRuleSet, getAdeptusCustodesWargearSelections } from './adeptus-custodes-wargear-rules.js';
+
 const REVIEWED_AT = "2026-10-22";
 
 function selection(name, profiles = [name]) {
@@ -135,13 +137,18 @@ export const TYRANID_WARGEAR_RULES = Object.freeze({
   })
 });
 
+/**
+ * Historical name retained for compatibility with existing callers. It now
+ * routes every faction that has reviewed structured loadout rules so the same
+ * Army Builder / import / casualty pipeline can safely consume Custodes data.
+ */
 export function getTyranidWargearRuleSet(datasheetId) {
-  return TYRANID_WARGEAR_RULES[datasheetId] ?? null;
+  return TYRANID_WARGEAR_RULES[datasheetId] ?? getAdeptusCustodesWargearRuleSet(datasheetId) ?? null;
 }
 
 export function getTyranidWargearSelections(datasheetId) {
-  const ruleSet = getTyranidWargearRuleSet(datasheetId);
-  if (!ruleSet) return [];
+  if (!TYRANID_WARGEAR_RULES[datasheetId]) return getAdeptusCustodesWargearSelections(datasheetId);
+  const ruleSet = TYRANID_WARGEAR_RULES[datasheetId];
   const values = [
     ...(ruleSet.fixed ?? []),
     ...(ruleSet.optional ?? []),
