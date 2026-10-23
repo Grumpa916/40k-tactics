@@ -1,6 +1,7 @@
 import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
 import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 import { getRulesDataRevisionForFaction } from "./rules-data-revisions.js";
+import { ADEPTUS_CUSTODES_ARMY_CATALOG } from "./adeptus-custodes-army-catalog.js";
 
 const TYRANID_RULES_REVISION = getRulesDataRevisionForFaction("Tyranids");
 
@@ -20,6 +21,7 @@ function applyReviewedTyranidCorrections(id, details) {
 // Tyranid roster catalog. Full profiles are source-reviewed from linked datasheet references;
 // official GW cross-check remains explicit metadata and may still be pending.
 export const ARMY_UNIT_CATALOG = Object.freeze([
+  ...ADEPTUS_CUSTODES_ARMY_CATALOG,
   ...[
     "Hive Tyrant",
     "Winged Hive Tyrant",
