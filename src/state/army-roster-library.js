@@ -17,6 +17,13 @@ function normalizeUnit(unit) {
   }
   return cloneData(unit);
 }
+function normalizeDetachments(detachments, detachment) {
+  const values=Array.isArray(detachments)?detachments:[];
+  const names=[...new Set(values.map(value=>String(value??'').trim()).filter(Boolean))];
+  const legacy=detachment==null?'':String(detachment).trim();
+  if(!names.length&&legacy)names.push(legacy);
+  return names;
+}
 
 export function createArmyRoster({
   id,
@@ -25,6 +32,7 @@ export function createArmyRoster({
   pointsLimit = null,
   battleSize = null,
   detachment = null,
+  detachments = null,
   units = [],
   notes = "",
   rulesDataRevision = null,
@@ -32,6 +40,7 @@ export function createArmyRoster({
   updatedAt = createdAt
 } = {}) {
   if (!Array.isArray(units)) throw new TypeError("Roster units must be an array.");
+  const normalizedDetachments=normalizeDetachments(detachments,detachment);
   return {
     schemaVersion: ARMY_ROSTER_SCHEMA_VERSION,
     id: requireText(id, "Roster id"),
@@ -39,7 +48,8 @@ export function createArmyRoster({
     faction: faction == null ? null : String(faction).trim() || null,
     pointsLimit: Number.isFinite(pointsLimit) && pointsLimit >= 0 ? pointsLimit : null,
     battleSize: battleSize == null ? null : String(battleSize).trim() || null,
-    detachment: detachment == null ? null : String(detachment).trim() || null,
+    detachment: normalizedDetachments[0] ?? null,
+    detachments: normalizedDetachments,
     units: units.map(normalizeUnit),
     notes: String(notes ?? ""),
     rulesDataRevision: rulesDataRevision && typeof rulesDataRevision === "object" ? cloneData(rulesDataRevision) : null,
@@ -79,8 +89,6 @@ export function removeUnitFromRoster(roster, unitId, { updatedAt = roster?.updat
   if (!roster.units.some((item) => item.id === unitId)) {
     throw new RangeError("Roster unit not found: " + unitId);
   }
-  // Remove attachment references from either side before dropping the unit. This
-  // keeps library callers and UI callers from leaving dangling Leader/Bodyguard IDs.
   const units = cloneData(roster.units)
     .filter((item) => item.id !== unitId)
     .map((item) => {
@@ -113,11 +121,6 @@ export function duplicateArmyRoster(roster, { id, name, createdAt = null, update
   };
 }
 
-/**
- * Give every unit in a duplicated roster a new ID and update attachment references
- * to point at the corresponding duplicated units. References to missing units are
- * left untouched for diagnostics rather than silently guessed.
- */
 export function remapRosterUnitIds(roster, { createId } = {}) {
   assertRoster(roster);
   if (typeof createId !== "function") throw new TypeError("A createId function is required.");
