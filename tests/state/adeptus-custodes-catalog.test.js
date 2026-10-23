@@ -81,3 +81,37 @@ test('reviewed Custodes loadout rules and attachments are exposed to shared syst
   const prosecutors=candidates.find(unit=>unit.name==='Prosecutor Squad');
   assert.equal(prosecutors.datasheet.bodyguard.maxAttachedLeaders,2);
 });
+
+test('multi-piece Custodes loadouts accept exact legal bundles and reject invented combinations',()=>{
+  const candidates=findArmyUnitCandidates({faction:'Adeptus Custodes'});
+  const make=(name,equippedWargear)=>{
+    const catalog=candidates.find(unit=>unit.name===name);
+    return {...catalog,id:`test-${name}`,modelCount:catalog.defaultModelCount,datasheetId:catalog.id,datasheet:catalog.datasheet,equippedWargear};
+  };
+  const telemonValid=validateWargearLoadout(make('Telemon Heavy Dreadnought',[
+    {name:'Spiculus Bolt Launcher',quantity:1},{name:'Dual Caestus Fists',quantity:1},{name:'Twin Neutronium Cascade Projectors',quantity:2}
+  ]));
+  assert.equal(telemonValid.status,'rules-reviewed-valid');
+  const telemonInvalid=validateWargearLoadout(make('Telemon Heavy Dreadnought',[
+    {name:'Spiculus Bolt Launcher',quantity:1},{name:'Dual Caestus Fists',quantity:1},{name:'Arachnus Storm Cannon',quantity:1},{name:'Twin Neutronium Cascade Projectors',quantity:2}
+  ]));
+  assert.equal(telemonInvalid.status,'rules-invalid');
+
+  const achillusValid=validateWargearLoadout(make('Contemptor-Achillus Dreadnought',[
+    {name:'Dreadspear',quantity:1},{name:'Adrathic Combi-destructor',quantity:2}
+  ]));
+  assert.equal(achillusValid.status,'rules-reviewed-valid');
+  const achillusInvalid=validateWargearLoadout(make('Contemptor-Achillus Dreadnought',[
+    {name:'Dreadspear',quantity:1},{name:'Adrathic Combi-destructor',quantity:1},{name:'Lastrum Storm Bolter',quantity:1}
+  ]));
+  assert.equal(achillusInvalid.status,'rules-invalid');
+
+  const captainValid=validateWargearLoadout(make('Shield-Captain',[
+    {name:'Pyrithite Spear',quantity:1},{name:'Praesidium Shield',quantity:1}
+  ]));
+  assert.equal(captainValid.status,'rules-reviewed-valid');
+  const captainInvalid=validateWargearLoadout(make('Shield-Captain',[
+    {name:'Guardian Spear',quantity:1},{name:'Praesidium Shield',quantity:1}
+  ]));
+  assert.equal(captainInvalid.status,'rules-invalid');
+});
