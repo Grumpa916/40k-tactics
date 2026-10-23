@@ -290,3 +290,4 @@
 
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace__map .battlefield-map__meta,
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace__map .battlefield-map__notice{display:none!important}
+.prototype-unit-stats em{color:#c8e99c;font-size:.82em;font-style:normal}
