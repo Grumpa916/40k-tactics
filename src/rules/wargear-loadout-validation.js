@@ -90,6 +90,12 @@ function canAssignToSlots(ruleSet, modelCount, counts) {
   return place(0) ? { ok: true } : { ok: false, reason: "Selected weapons cannot be assigned to the datasheet's legal replacement slots." };
 }
 
+function matchesAllowedCombination(counts, constraint) {
+  const combinations = Array.isArray(constraint?.combinations) ? constraint.combinations : [];
+  const names = [...new Set(combinations.flatMap((combo) => Object.keys(combo ?? {})))];
+  return combinations.some((combo) => names.every((name) => quantity(counts, name) === Number(combo?.[name] ?? 0)));
+}
+
 export function validateWargearLoadout(unit) {
   const ruleSet = getTyranidWargearRuleSet(unit?.datasheetId);
   if (!ruleSet) return { status: "profile-matched", reviewedRules: false, errors: [] };
@@ -126,6 +132,10 @@ export function validateWargearLoadout(unit) {
     } else if (constraint.type === "mutually-exclusive") {
       const used = constraint.selections.filter((name) => quantity(counts, name) > 0);
       if (used.length > 1) addError(errors, `${used.join(" and ")} cannot be equipped together.`);
+    } else if (constraint.type === "allowed-combinations") {
+      if (!matchesAllowedCombination(counts, constraint)) {
+        addError(errors, constraint.message ?? "Selected wargear does not match a legal reviewed equipment combination.");
+      }
     }
   }
 
