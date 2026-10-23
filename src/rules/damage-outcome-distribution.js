@@ -77,8 +77,13 @@ function singleSaveFailureProbability(profile, saveModifier = 0) {
 function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) {
   const result = new Map();
   const woundProbability = successProbability(woundTargetValue);
-  const criticalWoundProbability = profile.devastatingWounds ? 1 / 6 : 0;
-  const normalWoundProbability = Math.max(0, woundProbability - criticalWoundProbability);
+  const rerolledWoundProbability = profile.twinLinked
+    ? woundProbability + ((1 - woundProbability) * woundProbability)
+    : woundProbability;
+  const criticalWoundProbability = profile.devastatingWounds
+    ? (profile.twinLinked ? (1 + (1 - woundProbability)) / 6 : 1 / 6)
+    : 0;
+  const normalWoundProbability = Math.max(0, rerolledWoundProbability - criticalWoundProbability);
   addProbability(result, 0, 1 - (normalWoundProbability * saveFailure + criticalWoundProbability));
   for (const [damage, probability] of damageValues(profile.damage)) {
     addProbability(result, damage, normalWoundProbability * saveFailure * probability);

@@ -96,8 +96,14 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     profile.woundModifier
   );
   const woundProbability = successProbability(woundTargetValue);
-  const criticalWounds = normalHits / 6;
-  const normalWoundsTotal = normalHits * woundProbability;
+  const rerolledWoundProbability = profile.twinLinked
+    ? woundProbability + ((1 - woundProbability) * woundProbability)
+    : woundProbability;
+  const criticalWoundProbability = profile.twinLinked
+    ? (1 + (1 - woundProbability)) / 6
+    : 1 / 6;
+  const criticalWounds = normalHits * criticalWoundProbability;
+  const normalWoundsTotal = normalHits * rerolledWoundProbability;
   const devastatingWounds = profile.devastatingWounds
     ? criticalWounds
     : 0;

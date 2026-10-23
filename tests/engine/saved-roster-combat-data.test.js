@@ -50,6 +50,15 @@ test('2D6 attack counts use independent dice; Torrent never generates critical-h
  assert.equal(hits.hits,5);assert.equal(hits.criticalHits,0);assert.equal(hits.lethalHitWounds,0);
 });
 
+test('selected Twin-linked wargear improves the wound forecast',()=>{
+ const attacker={characteristics:{weaponSkill:3,toughness:5,save:3}};
+ const target={characteristics:{toughness:8,save:3}};
+ const weapon={type:'melee',characteristics:{attacks:6,skill:3,strength:8,ap:-2,damage:2,twinLinked:true}};
+ const baseline=getExpectedDamage({attacker,target,weapon:{...weapon,characteristics:{...weapon.characteristics,twinLinked:false}}});
+ const twinLinked=getExpectedDamage({attacker,target,weapon});
+ assert.ok(twinLinked.expectedDamage>baseline.expectedDamage);
+});
+
 test('manual shooting records expected and actual damage and updates legacy target wounds once', async()=>{
  const { resolveUnitAttack }=await import('../../src/engine/combat-transitions.js');
  let state=fixture();state={...state,phase:'shooting',turn:1,battle:{...state.battle,status:'active',round:1},units:state.units.map(u=>({...u,status:'deployed',wounds:null}))};

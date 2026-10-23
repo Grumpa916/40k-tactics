@@ -157,7 +157,8 @@ function weaponAbilityCharacteristics(abilities) {
     ...(/\bIgnores Cover\b/i.test(text) ? { ignoresCover: true } : {}),
     ...(sustained ? { sustainedHits: Number(sustained[1]) } : {}),
     ...(/\bLethal Hits\b/i.test(text) ? { lethalHits: true } : {}),
-    ...(/\bDevastating Wounds\b/i.test(text) ? { devastatingWounds: true } : {})
+    ...(/\bDevastating Wounds\b/i.test(text) ? { devastatingWounds: true } : {}),
+    ...(/\bTwin-linked\b/i.test(text) ? { twinLinked: true } : {})
   };
 }
 
