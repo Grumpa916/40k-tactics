@@ -15,7 +15,7 @@ function row(unit,name,control,reason='') {
  const blocked=control.startsWith('<input')&&/\sdisabled\b/.test(control);
  return `<tr class="${blocked?'ab-choice-blocked':''}"><th scope="row"><${wrapper} class="ab-weapon-choice">${control}<span>${e(name)}${reason?`<small>${e(reason)}</small>`:''}</span></${wrapper}></th>${profileCells(unit,name)}</tr>`;
 }
-const table=body=>`<div class="ab-table ab-choice-table"><table><thead><tr><th>Weapon / equipment</th><th>Range</th><th>A</th><th>Skill</th><th>S</th><th>AP</th><th>D</th></tr></thead><tbody>${body}</tbody></table></div>`;
+const table=body=>`<div class="ab-table ab-choice-table"><table><thead><tr><th>Weapon / equipment</th><th>Range</th><th>A</th><th>WS/BS</th><th>S</th><th>AP</th><th>D</th></tr></thead><tbody>${body}</tbody></table></div>`;
 function choiceControl(slot,name,selected,reason,extra='') {
  return `<input type="radio" name="wargear-${e(slot)}" data-wargear-choice="${e(slot)}" value="${e(name)}" aria-label="${e(name)}" ${selected?'checked':''} ${reason?'disabled':''} ${extra}>`;
 }
