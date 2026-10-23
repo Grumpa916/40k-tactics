@@ -5970,5 +5970,148 @@ export const SPACE_MARINES_DATASHEET_DATA = Object.freeze({
     "sourceUrl": "https://github.com/EshanPrakash/openhammer-api",
     "verificationStatus": "community-reference",
     "officialRulesCrossCheck": "pending"
+  },
+  "Adrax Agatone": {
+    "name": "Adrax Agatone",
+    "characteristics": {
+      "Move": "6\"",
+      "Toughness": "4",
+      "Save": "2+",
+      "Wounds": "5",
+      "Leadership": "6+",
+      "Objective Control": "1",
+      "Invulnerable save": "4+"
+    },
+    "weapons": [
+      {
+        "name": "Drakkis",
+        "range": "12\"",
+        "attacks": "D6+3",
+        "skill": "N/A",
+        "strength": "4",
+        "ap": "-1",
+        "damage": "1",
+        "abilities": "Ignores Cover, Pistol, Torrent"
+      },
+      {
+        "name": "Malleus Noctum",
+        "range": "Melee",
+        "attacks": "5",
+        "skill": "2+",
+        "strength": "10",
+        "ap": "-2",
+        "damage": "3",
+        "abilities": ""
+      }
+    ],
+    "abilities": [
+      {
+        "name": "Unto the Anvil",
+        "description": "While this model is leading a unit, each time a model in that unit makes a melee attack, you can re-roll the Wound roll."
+      },
+      {
+        "name": "Lord of the Pyroclasts",
+        "description": "While an enemy unit is within Engagement Range of this model, halve the Objective Control characteristic of models in that enemy unit"
+      },
+      {
+        "name": "Leader",
+        "description": "This model can be attached to the following units:\n\n- ASSAULT INTERCESSOR SQUAD\n- BLADEGUARD VETERAN SQUAD\n- COMPANY HEROES\n- INFERNUS SQUAD\n- INTERCESSOR SQUAD\n- STERNGUARD VETERAN SQUAD\n- TACTICAL SQUAD"
+      }
+    ],
+    "keywords": [
+      "Epic Hero",
+      "Character",
+      "Infantry",
+      "Captain",
+      "Adrax Agatone",
+      "Faction: Adeptus Astartes",
+      "Faction: Salamanders",
+      "Imperium",
+      "Tacticus",
+      "Leader"
+    ],
+    "sourceName": "OpenHammer API · BSData Warhammer 40,000 11th Edition",
+    "sourceUrl": "https://github.com/EshanPrakash/openhammer-api",
+    "verificationStatus": "community-reference",
+    "officialRulesCrossCheck": "pending"
+  },
+  "Vulkan He’stan": {
+    "name": "Vulkan He’stan",
+    "characteristics": {
+      "Move": "6\"",
+      "Toughness": "4",
+      "Save": "2+",
+      "Wounds": "5",
+      "Leadership": "6+",
+      "Objective Control": "1",
+      "Invulnerable save": "4+"
+    },
+    "weapons": [
+      {
+        "name": "Bolt pistol",
+        "range": "12\"",
+        "attacks": "1",
+        "skill": "2+",
+        "strength": "4",
+        "ap": "0",
+        "damage": "1",
+        "abilities": "Pistol"
+      },
+      {
+        "name": "Gauntlet of the Forge",
+        "range": "12\"",
+        "attacks": "D6+3",
+        "skill": "N/A",
+        "strength": "6",
+        "ap": "-1",
+        "damage": "1",
+        "abilities": "Ignores Cover, Pistol, Torrent"
+      },
+      {
+        "name": "Spear of Vulkan",
+        "range": "Melee",
+        "attacks": "6",
+        "skill": "2+",
+        "strength": "6",
+        "ap": "-2",
+        "damage": "2",
+        "abilities": "Devastating Wounds"
+      }
+    ],
+    "abilities": [
+      {
+        "name": "Forgefather",
+        "description": "In your Shooting phase, select one enemy unit within 24\" of and visible to this model. Until the end of the phase, each time a friendly Adeptus Astartes model makes a ranged attack with a Torrent or Melta weapon that targets that enemy unit, you can re-roll the Wound roll"
+      },
+      {
+        "name": "Seeker of the Unfound",
+        "description": "The first time this model is set up on the battlefield, select one objective marker on the battlefield. While this model is within range of that objective marker, it has an Objective Control characteristic of 10, a Leadership characteristic of 5+ and the Feel No Pain 4+ ability."
+      },
+      {
+        "name": "Leader",
+        "description": "This model can be attached to the following units:\n\n- ASSAULT INTERCESSOR SQUAD\n- COMPANY HEROES\n- INFERNUS SQUAD\n- TACTICAL SQUAD"
+      },
+      {
+        "name": "Inspiring Commander",
+        "description": "If you include this model in your army, until the end of the battle, non-Character models in Infernus Squad units from your army have an Objective Control characteristic of 2 while they are not Battle-shocked."
+      }
+    ],
+    "keywords": [
+      "Epic Hero",
+      "Character",
+      "Infantry",
+      "Captain",
+      "Imperium",
+      "Grenades",
+      "Vulkan He'stan",
+      "Faction: Adeptus Astartes",
+      "Faction: Salamanders",
+      "Tacticus",
+      "Leader"
+    ],
+    "sourceName": "OpenHammer API · BSData Warhammer 40,000 11th Edition",
+    "sourceUrl": "https://github.com/EshanPrakash/openhammer-api",
+    "verificationStatus": "community-reference",
+    "officialRulesCrossCheck": "pending"
   }
 });
