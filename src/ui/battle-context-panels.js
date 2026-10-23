@@ -290,9 +290,11 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
   });
   const detachments = [...(Array.isArray(gameData.detachments) ? gameData.detachments : []), ...rosterDetachments];
   const myDetachmentRules = detachments.filter((item) =>
-    item?.playerId === yourPlayerId || item?.name === detachmentFor(yourPlayerId));
+    item?.playerId === yourPlayerId ||
+    (!item?.playerId && !item?.ownerId && item?.name === detachmentFor(yourPlayerId)));
   const opponentDetachmentRules = detachments.filter((item) =>
-    item?.playerId === opponentPlayerId || item?.name === detachmentFor(opponentPlayerId));
+    item?.playerId === opponentPlayerId ||
+    (!item?.playerId && !item?.ownerId && item?.name === detachmentFor(opponentPlayerId)));
   const terrainLabel = state.battlefieldMap?.terrainLayout?.name ??
     state.battlefieldMap?.missionSetup?.layout ?? state.battle?.terrainLayout?.name ?? null;
   const terrainDescription = state.battlefieldMap?.terrainLayout?.description ??
