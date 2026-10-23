@@ -6,15 +6,25 @@ const slot=(id,{count=0,perModel=0,choices=[]}={})=>Object.freeze({id,count,perM
 const optional=(name,{perModel=1,allOrNone=false,profiles=[name]}={})=>Object.freeze({...selection(name,profiles),perModel,allOrNone});
 const rule=(body)=>Object.freeze({reviewedAt:REVIEWED_AT,sourceName:'October 2026 Adeptus Custodes codex/app-derived wargear options',sourceUrl:SOURCE,...body});
 const pair=(name,ranged,melee)=>({name,profiles:[ranged,melee]});
+const combos=(combinations,message='Selected wargear does not match a legal reviewed equipment combination.')=>Object.freeze({type:'allowed-combinations',combinations:Object.freeze(combinations.map(item=>Object.freeze(item))),message});
 
 export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
  'adeptus-custodes:blade-champion':rule({fixed:Object.freeze([fixed('Vaultswords',{count:1,profiles:['Vaultswords – Behemor','Vaultswords – Hurricanis','Vaultswords – Victus']})])}),
- 'adeptus-custodes:shield-captain':rule({slots:Object.freeze([slot('weapon-loadout',{count:1,choices:[
-  {name:'Pyrithite Spear & Praesidium Shield',profiles:['Pyrithite Spear (ranged)','Pyrithite Spear']},
-  {name:'Eternity-pattern Paragon Blade & Praesidium Shield',profiles:['Eternity-pattern Paragon Blade']},
-  pair('Castellan Axe','Castellan Axe (ranged)','Castellan Axe'),
-  pair('Guardian Spear','Guardian Spear (ranged)','Guardian Spear')
- ]})])}),
+ 'adeptus-custodes:shield-captain':rule({
+  optional:Object.freeze([
+   optional('Guardian Spear',{profiles:['Guardian Spear (ranged)','Guardian Spear']}),
+   optional('Castellan Axe',{profiles:['Castellan Axe (ranged)','Castellan Axe']}),
+   optional('Pyrithite Spear',{profiles:['Pyrithite Spear (ranged)','Pyrithite Spear']}),
+   optional('Eternity-pattern Paragon Blade'),
+   optional('Praesidium Shield',{profiles:[]})
+  ]),
+  constraints:Object.freeze([combos([
+   {'Guardian Spear':1},
+   {'Castellan Axe':1},
+   {'Pyrithite Spear':1,'Praesidium Shield':1},
+   {'Eternity-pattern Paragon Blade':1,'Praesidium Shield':1}
+  ],'Shield-Captain wargear must match one legal weapon/shield loadout.')])
+ }),
  'adeptus-custodes:shield-captain-in-allarus-terminator-armour':rule({
   fixed:Object.freeze([fixed('Balistus Grenade Launcher',{count:1})]),
   slots:Object.freeze([slot('main-weapon',{count:1,choices:[pair('Guardian Spear','Guardian Spear (ranged)','Guardian Spear'),pair('Castellan Axe','Castellan Axe (ranged)','Castellan Axe')]})])
@@ -56,20 +66,33 @@ export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
  }),
  'adeptus-custodes:contemptor-achillus-dreadnought':rule({
   fixed:Object.freeze([fixed('Dreadspear',{count:1,profiles:['Dreadspear (ranged)','Dreadspear']})]),
-  slots:Object.freeze([slot('paired-arm-weapons',{count:1,choices:[
-   {name:'2 Lastrum Storm Bolter',profiles:['Lastrum Storm Bolter','Lastrum Storm Bolter']},
-   {name:'2 Adrathic Combi-destructor',profiles:['Adrathic Combi-destructor','Adrathic Combi-destructor']},
-   {name:'2 Twin Infernus Incinerator',profiles:['Twin Infernus Incinerator','Twin Infernus Incinerator']}
-  ]})])
+  optional:Object.freeze([
+   optional('Lastrum Storm Bolter',{perModel:2}),
+   optional('Adrathic Combi-destructor',{perModel:2}),
+   optional('Twin Infernus Incinerator',{perModel:2})
+  ]),
+  constraints:Object.freeze([combos([
+   {'Lastrum Storm Bolter':2},
+   {'Adrathic Combi-destructor':2},
+   {'Twin Infernus Incinerator':2}
+  ],'Achillus arm weapons must be two matching reviewed weapons.')])
  }),
  'adeptus-custodes:telemon-heavy-dreadnought':rule({
   fixed:Object.freeze([fixed('Spiculus Bolt Launcher',{count:1})]),
-  slots:Object.freeze([slot('arm-loadout',{count:1,choices:[
-   {name:'Dual Caestus Fists & 2 Twin Neutronium Cascade Projectors',profiles:['Dual Caestus Fists','Twin Neutronium Cascade Projectors','Twin Neutronium Cascade Projectors']},
-   {name:'Adrathic Desolator & Caestus Fist',profiles:['Adrathic Desolator','Caestus Fist','Twin Neutronium Cascade Projectors']},
-   {name:'Arachnus Storm Cannon & Caestus Fist',profiles:['Arachnus Storm Cannon','Caestus Fist','Twin Neutronium Cascade Projectors']},
-   {name:'Iliastus Accelerator Culverin & Caestus Fist',profiles:['Iliastus Accelerator Culverin','Caestus Fist','Twin Neutronium Cascade Projectors']}
-  ]})])
+  optional:Object.freeze([
+   optional('Dual Caestus Fists'),
+   optional('Caestus Fist'),
+   optional('Twin Neutronium Cascade Projectors',{perModel:2}),
+   optional('Adrathic Desolator'),
+   optional('Arachnus Storm Cannon'),
+   optional('Iliastus Accelerator Culverin')
+  ]),
+  constraints:Object.freeze([combos([
+   {'Dual Caestus Fists':1,'Twin Neutronium Cascade Projectors':2},
+   {'Caestus Fist':1,'Twin Neutronium Cascade Projectors':1,'Adrathic Desolator':1},
+   {'Caestus Fist':1,'Twin Neutronium Cascade Projectors':1,'Arachnus Storm Cannon':1},
+   {'Caestus Fist':1,'Twin Neutronium Cascade Projectors':1,'Iliastus Accelerator Culverin':1}
+  ],'Telemon arm weapons must match one legal reviewed paired loadout.')])
  }),
  'adeptus-custodes:pallas-grav-attack':rule({fixed:Object.freeze([fixed('Armoured Hull',{count:1})]),slots:Object.freeze([slot('main-gun',{count:1,choices:['Twin Arachnus Blaze Cannon','Twin Iliastus Accelerator Fusil']})])}),
  'adeptus-custodes:caladius-grav-tank':rule({
@@ -84,11 +107,16 @@ export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
   fixed:Object.freeze([fixed('Armoured Hull',{count:1}),fixed('Twin Arachnus Blaze Cannon',{count:1})]),
   slots:Object.freeze([slot('secondary-gun',{count:1,choices:['Twin Lastrum Bolt Cannon','Twin Neutronium Cascade Projectors']})])
  }),
- 'adeptus-custodes:knight-centura':rule({slots:Object.freeze([slot('weapon-loadout',{count:1,choices:[
-  'Executioner Greatblade',
-  {name:'Master-crafted Boltgun & Gun Stock',profiles:['Master-crafted Boltgun','Gun Stock']},
-  {name:'Master-crafted Flamer & Gun Stock',profiles:['Master-crafted Flamer','Gun Stock']}
- ]})])}),
+ 'adeptus-custodes:knight-centura':rule({
+  optional:Object.freeze([
+   optional('Executioner Greatblade'),optional('Master-crafted Boltgun'),optional('Master-crafted Flamer'),optional('Gun Stock')
+  ]),
+  constraints:Object.freeze([combos([
+   {'Executioner Greatblade':1},
+   {'Master-crafted Boltgun':1,'Gun Stock':1},
+   {'Master-crafted Flamer':1,'Gun Stock':1}
+  ],'Knight-Centura wargear must match one legal reviewed weapon loadout.')])
+ }),
  'adeptus-custodes:anathema-psykana-rhino':rule({
   fixed:Object.freeze([fixed('Armoured Tracks',{count:1}),fixed('Storm Bolter',{count:1})]),
   optional:Object.freeze([optional('Hunter-killer Missile',{perModel:1})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Hunter-killer Missile',max:1})])
