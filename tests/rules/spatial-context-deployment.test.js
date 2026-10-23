@@ -52,7 +52,8 @@ test('recorded movement replaces deployment position for spatial advice', () => 
 
   const spatial = getSpatialContext(state, { playerId: 'p2' });
   const proximity = spatial.unitProximity.find(item => item.unitId === 'eg1' && item.otherUnitId === 'is1');
-  assert.equal(proximity?.distance, 45);
+  // EG1 uses its moved model position; IS1 still uses its visible deployment position.
+  assert.equal(proximity?.distance, 48);
 
   const charge = getTacticalCombatRecommendations(state, { playerId: 'p2' }).charge;
   assert.equal(charge.some(item => item.unitId === 'eg1'), false);
