@@ -1,8 +1,14 @@
 import { escapeHtml as e } from './army-builder-html.js';
 import { unitStats } from './army-unit-details.js';
+import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
+
+function resolveRosterUnit(unit, faction = null) {
+ if (unit?.datasheet || !faction) return unit;
+ return findArmyUnitCandidates({ faction }).find(candidate => candidate.id === unit.datasheetId || candidate.name === unit.name) ?? unit;
+}
 
 /** Group saved attachment IDs for display without changing the roster or stat lines. */
-export function renderRosterRows(units, selectedId) {
+export function renderRosterRows(units, selectedId, faction = null) {
  const byId = new Map(units.map(unit => [unit.id, unit]));
  const leadersByBodyguard = new Map();
  for (const unit of units) {
@@ -13,7 +19,8 @@ export function renderRosterRows(units, selectedId) {
  }
  const rendered = new Set();
  let groupNumber = 0;
- function row(unit, role = '') {
+ function row(rawUnit, role = '') {
+  const unit = resolveRosterUnit(rawUnit, faction);
   const models = unit.modelCount ?? 1;
   return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''}</small>${unitStats(unit)}</button>`;
  }

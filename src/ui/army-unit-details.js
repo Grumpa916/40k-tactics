@@ -3,6 +3,12 @@ import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { escapeHtml as e } from './army-builder-html.js';
 import { renderAttachmentControls } from './army-builder-attachments.js';
 import { renderWargearEditor } from './army-wargear-editor.js';
+import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
+
+function resolveUnitProfile(unit, faction = null) {
+ if (unit?.datasheet || !faction) return unit;
+ return findArmyUnitCandidates({ faction }).find(candidate => candidate.id === unit.datasheetId || candidate.name === unit.name) ?? unit;
+}
 
 const COMMON_ABILITY_PATTERNS = Object.freeze([
  /^Leader$/i,
@@ -43,7 +49,9 @@ export function unitStats(unit) {
 }
 export function renderUnitDetails(unit, {current=null,busy=false,editable=false}={}) {
  if(!unit) return '';
+ const displayUnit = resolveUnitProfile(unit, current?.faction);
  const d=busy?'disabled':'';
+ unit = { ...displayUnit, ...unit, datasheet: displayUnit.datasheet ?? unit.datasheet };
  const source=unit.dataSource?.sourceUrl ?? unit.sourceUrl;
  const safeSource=typeof source==='string' && /^https?:\/\//i.test(source);
  const weapons=unit.datasheet?.weapons ?? [];
