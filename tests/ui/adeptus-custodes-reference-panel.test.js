@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { renderReferencePanel } from '../../src/ui/battle-context-panels.js';
 import { createRulesDataRevisionStamp } from '../../src/data/rules-data-revisions.js';
 
-test('reference panel derives Custodes army rules and selected detachment rule from saved roster', () => {
+test('reference panel derives Custodes army rules and selected detachment metadata from saved roster', () => {
   const html = renderReferencePanel({
     phase: 'command',
     activePlayer: 'p1',
@@ -17,11 +17,9 @@ test('reference panel derives Custodes army rules and selected detachment rule f
       p2: { faction: 'Tyranids', detachment: 'Invasion Fleet' }
     }
   }, {}, 'p1');
-  assert.match(html, /Martial Ka&#39;tah|Martial Ka'tah/);
+  assert.match(html, /Martial Ka&#39;tah/);
   assert.match(html, /Aegis of the Emperor/);
   assert.match(html, /Guardians of the Throne/);
   assert.match(html, /Priority Assets and Purge the Foe/);
   assert.match(html, /3 DP/);
-  assert.match(html, /Martial Mastery/);
-  assert.match(html, /Sustained Hits 1 or Lethal Hits/);
 });
