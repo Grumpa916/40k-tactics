@@ -15,11 +15,11 @@ test('reports unmatched point lines and refuses unsupported faction or empty mat
  assert.throws(()=>importWarhammerAppRoster({text:'Some army 100 points',faction:'Space Wolves',id:'r'}),/no unit names/i);
  assert.throws(()=>importWarhammerAppRoster({text:'Termagants 60 points',faction:'Space Marines',id:'r'}),/No unit names matched/);
 });
-test('keeps unpriced roster units marked unknown instead of estimating a cost',()=>{
+test('uses catalog points for newly supported Space Marine units',()=>{
  const parsed=importWarhammerAppRoster({text:'Neurotyrant',faction:'Tyranids',name:'Known cost',id:'r'});
  assert.equal(parsed.roster.units[0].points,120); // The exact catalog cost matches the catalog's default model count.
- const unknown=importWarhammerAppRoster({text:'Captain',faction:'Space Marines',name:'Unknown cost',id:'r2'});
- assert.equal(unknown.roster.units[0].points,null);
+ const supported=importWarhammerAppRoster({text:'Captain',faction:'Space Marines',name:'Catalog cost',id:'r2'});
+ assert.equal(supported.roster.units[0].points,90);
 });
 
 test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and matched equipped weapons', async()=>{

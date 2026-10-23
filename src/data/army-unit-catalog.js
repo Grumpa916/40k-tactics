@@ -2,6 +2,7 @@ import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compati
 import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 import { getRulesDataRevisionForFaction } from "./rules-data-revisions.js";
 import { ADEPTUS_CUSTODES_ARMY_CATALOG } from "./adeptus-custodes-army-catalog.js";
+import { SPACE_MARINES_ARMY_CATALOG } from "./space-marines-army-catalog.js";
 
 const TYRANID_RULES_REVISION = getRulesDataRevisionForFaction("Tyranids");
 
@@ -22,6 +23,7 @@ function applyReviewedTyranidCorrections(id, details) {
 // official GW cross-check remains explicit metadata and may still be pending.
 export const ARMY_UNIT_CATALOG = Object.freeze([
   ...ADEPTUS_CUSTODES_ARMY_CATALOG,
+  ...SPACE_MARINES_ARMY_CATALOG,
   ...[
     "Hive Tyrant",
     "Winged Hive Tyrant",
@@ -104,10 +106,9 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
     });
   }),
   ...[
-    "Captain", "Lieutenant", "Librarian", "Chaplain", "Intercessor Squad",
-    "Assault Intercessor Squad", "Infernus Squad", "Hellblaster Squad",
-    "Terminator Squad", "Aggressor Squad", "Redemptor Dreadnought",
-    "Gladiator Lancer", "Repulsor", "Scout Squad", "Eliminator Squad"
+    // Remaining generic entries are intentionally kept as name-only candidates
+    // for future factions; Space Marines are supplied by the reviewed import
+    // catalog above.
   ].map((name) => Object.freeze({
     id: "space-marines:" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     name,

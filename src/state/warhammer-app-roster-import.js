@@ -14,7 +14,7 @@ function getPoints(line) {
  return match ? Number(match[1].replaceAll(',', '')) : null;
 }
 function headerName(line) {
- return normalize(line.replace(/\(?\d[\d,]*\s*(?:pts?\.?|points?)\)?/gi, '').replace(/^\s*\d+\s*[x×]\s*/i, '').replace(/\b\d+\s+models?\b/i, ''));
+ return normalize(line.replace(/\(?\d[\d,]*\s*(?:pts?\.?|points?)\)?/gi, '').replace(/^\s*\d+\s*[x×]\s*/i, '').replace(/\s*[x×]\s*\d+\s*$/i, '').replace(/\b\d+\s+models?\b/i, ''));
 }
 function modelCount(line, candidate) {
  const match = line.match(/\b(\d+)\s+models?\b/i) ?? line.match(/^\s*(\d+)\s*[x×]\s*/i);
@@ -68,7 +68,7 @@ function addUnmatched(unit, sourceName, quantity) {
  else unit.unmatchedWargear.push({ sourceName, quantity });
 }
 function captureEquipmentLine(unit, line) {
- const match = line.match(/^([•◦*])\s*(?:(\d+)\s*[x×]\s+)?(.+)$/i);
+ const match = line.match(/^([•◦·*])\s*(?:(\d+)\s*[x×]\s+)?(.+)$/i);
  if (!match || !unit) return;
  const marker = match[1];
  const sourceName = match[3].trim();
@@ -79,7 +79,7 @@ function captureEquipmentLine(unit, line) {
  if (resolved) { addSelection(unit, resolved, quantity, sourceName); return; }
  // Multi-model App exports use a top-level bullet for model groups and nested
  // circles for their equipment. Single-model top-level bullets are equipment.
- if (marker === '◦' || unit.modelCount === 1) addUnmatched(unit, sourceName, quantity);
+ if (marker === '◦' || marker === '·' || unit.modelCount === 1) addUnmatched(unit, sourceName, quantity);
 }
 function attachSourceValidationErrors(units, sourceErrors) {
  for (const unit of units) {
@@ -147,7 +147,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    if (errorText) sourceErrors.push(errorText);
    continue;
   }
-  if (/^[•◦*]/.test(line) || /^\s+/.test(raw)) {
+ if (/^[•◦·*]/.test(line) || /^\s+/.test(raw)) {
    if (!current) continue;
    current.notes += '\n' + raw;
    const role = line.match(/Attached as:\s*(Leader|Bodyguard)\b/i);
