@@ -20,6 +20,27 @@ function centroid(unit) {
   };
 }
 
+function hasRecordedMovement(state, unitId) {
+  return (Array.isArray(state?.history) ? state.history : []).some((event) =>
+    ["unit.normal_move_resolved", "unit.advanced"].includes(event?.type) &&
+    event.payload?.unitId === unitId &&
+    Array.isArray(event.payload?.moves) && event.payload.moves.length > 0
+  );
+}
+
+function liveUnitPosition(state, unit) {
+  // The battlefield map displays the recorded deployment position until a
+  // gameplay move replaces it. Tactical range/charge advice must use that same
+  // source or a unit can appear close on the map while being evaluated from an
+  // older model position.
+  const initialDeployment = state?.battlefieldMap?.actualDeployment?.[unit.id];
+  if (initialDeployment && !hasRecordedMovement(state, unit.id)) {
+    const position = initialDeployment.position ?? initialDeployment;
+    if (validPosition(position)) return position;
+  }
+  return centroid(unit);
+}
+
 function roughDistance(first, second) {
   if (!validPosition(first) || !validPosition(second)) return null;
   const distance = Math.hypot(second.x - first.x, second.y - first.y);
@@ -47,7 +68,7 @@ export function getSpatialContext(state, { playerId } = {}) {
 
   const units = Array.isArray(state?.units) ? state.units : [];
   const positions = new Map(
-    units.map((unit) => [unit.id, centroid(unit)])
+    units.map((unit) => [unit.id, liveUnitPosition(state, unit)])
   );
 
   const ownedUnits = units.filter((unit) => unit.ownerId === playerId);
@@ -101,4 +122,3 @@ export function getSpatialContext(state, { playerId } = {}) {
     objectiveProximity
   };
 }
-
