@@ -1,3 +1,6 @@
+import { SPACE_MARINES_RULES_DATA } from "./space-marines-rules.js";
+import { ADEPTUS_CUSTODES_RULES_DATA } from "./adeptus-custodes-faction-rules.js";
+
 const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
   schemaVersion: 1,
   faction: "Tyranids",
@@ -7,6 +10,7 @@ const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
   factionRules: Object.freeze({
     name: "Games Workshop Tyranids Faction Pack",
     version: "1.0",
+    publicationType: "Faction Pack",
     legalFrom: "2026-06-20",
     sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf"
   }),
@@ -24,6 +28,24 @@ const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
 
 const BY_FACTION = Object.freeze({
   tyranids: TYRANIDS_RULES_DATA_REVISION,
+  "adeptus custodes": Object.freeze({
+    schemaVersion: 1,
+    faction: "Adeptus Custodes",
+    edition: "11th",
+    revisionId: "adeptus-custodes-11e-codex-2026-10-mfm-2026-10-14-catalog-2026-10-23.1",
+    reviewedAt: "2026-10-23",
+    factionRules: ADEPTUS_CUSTODES_RULES_DATA,
+    points: Object.freeze({
+      name: "Games Workshop Munitorum Field Manual",
+      revision: "2026-10-14",
+      revisionLabel: "v1.6 · updated 14/10/2026",
+      sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
+    }),
+    catalog: Object.freeze({
+      revision: "2026-10-23.1",
+      description: "October 2026 Custodes Codex profiles, MFM points, attachments, detachments and reviewed loadout mappings"
+    })
+  }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
     revisionId: "space-marines-11e-faction-pack-2026-06-catalog-2026-10-23",
@@ -57,9 +79,10 @@ export function createRulesDataRevisionStamp(faction) {
 
 export function formatRulesDataRevision(revision) {
   if (!revision) return "Rules data not tracked";
-  const pack = revision.factionRules?.version ? `Faction Pack v${revision.factionRules.version}` : "Faction rules";
+  const rules = revision.factionRules ?? {};
+  const pack = rules.publicationType === "Codex"
+    ? `${rules.name ?? "Codex"} · ${rules.version ?? "current"}`
+    : rules.version ? `Faction Pack v${rules.version}` : (rules.name ?? "Faction rules");
   const points = revision.points?.revisionLabel ?? revision.points?.revision ?? "points revision unknown";
   return `${revision.faction} · ${pack} · MFM ${points}`;
 }
-import { SPACE_MARINES_RULES_DATA } from "./space-marines-rules.js";
-
