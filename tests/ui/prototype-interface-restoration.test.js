@@ -53,7 +53,7 @@ test('unit detail stats include an invulnerable save only when the datasheet pro
   const {unitStats}=await import('../../src/ui/army-unit-details.js');
   const withSave=unitStats({datasheet:{characteristics:{Move:'8"',Toughness:10,Save:'2+',Wounds:10,Leadership:'7+', 'Objective Control':3, 'Invulnerable save':'4+'}}});
   const withoutSave=unitStats({datasheet:{characteristics:{Move:'8"',Toughness:9,Save:'2+',Wounds:8,Leadership:'8+', 'Objective Control':3}}});
-  assert.match(withSave,/>Inv<\/small><strong>4\+<\/strong>/);
+  assert.match(withSave,/<small>Sv<\/small><strong>2\+<\/strong><em>Inv 4\+<\/em>/);
   assert.doesNotMatch(withoutSave,/>Inv<\/small>/);
 });
 function workspaceFixture(session) {
