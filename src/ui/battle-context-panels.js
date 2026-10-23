@@ -270,8 +270,25 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
   const detachmentFor = (playerId) =>
     state.armyRosters?.[playerId]?.detachment ?? state.armyRosters?.[playerId]?.detachmentName ?? null;
   const stratagems = Array.isArray(gameData.stratagems) ? gameData.stratagems : [];
-  const armyRules = Array.isArray(gameData.armyRules) ? gameData.armyRules : [];
-  const detachments = Array.isArray(gameData.detachments) ? gameData.detachments : [];
+  const rosterRules = players.flatMap((player) => {
+    const revision = state.armyRosters?.[player.id]?.rulesDataRevision;
+    const rules = revision?.factionRules?.armyRules;
+    return Array.isArray(rules) ? rules.map((rule) => ({
+      ...rule,
+      playerId: player.id,
+      description: rule.description ?? rule.effect ?? rule.summary ?? ""
+    })) : [];
+  });
+  const armyRules = [...(Array.isArray(gameData.armyRules) ? gameData.armyRules : []), ...rosterRules];
+  const rosterDetachments = players.flatMap((player) => {
+    const roster = state.armyRosters?.[player.id];
+    const selectedName = roster?.detachment ?? roster?.detachmentName;
+    const catalog = roster?.rulesDataRevision?.factionRules?.detachments;
+    if (!selectedName || !Array.isArray(catalog)) return [];
+    const match = catalog.find((item) => item?.name === selectedName);
+    return match ? [{ ...match, playerId: player.id, description: `${match.forceDisposition} · ${match.detachmentPoints} DP` }] : [];
+  });
+  const detachments = [...(Array.isArray(gameData.detachments) ? gameData.detachments : []), ...rosterDetachments];
   const myDetachmentRules = detachments.filter((item) =>
     item?.playerId === yourPlayerId || item?.name === detachmentFor(yourPlayerId));
   const opponentDetachmentRules = detachments.filter((item) =>
