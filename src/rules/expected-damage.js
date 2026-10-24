@@ -75,6 +75,20 @@ function damagePreventionMultiplier(prevention) {
   return 1 - ((7 - prevention) / 6);
 }
 
+function woundProbabilities(profile, woundTargetValue) {
+  const normalBase = successProbability(woundTargetValue);
+  const criticalBase = successProbability(profile.criticalWoundTarget);
+  const successBase = Math.max(normalBase, criticalBase);
+  if (!profile.twinLinked) {
+    return { success: successBase, critical: criticalBase };
+  }
+  const failedFirstRoll = 1 - successBase;
+  return {
+    success: successBase + (failedFirstRoll * successBase),
+    critical: criticalBase + (failedFirstRoll * criticalBase)
+  };
+}
+
 /**
  * Calculate a baseline expected damage value for one weapon profile against
  * one target profile.
@@ -101,16 +115,9 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     woundTarget(profile.strength, profile.toughness),
     profile.woundModifier
   );
-  const woundProbability = successProbability(woundTargetValue);
-  const rerolledWoundProbability = profile.twinLinked
-    ? woundProbability + ((1 - woundProbability) * woundProbability)
-    : woundProbability;
-  const criticalBaseProbability = successProbability(profile.criticalWoundTarget);
-  const criticalWoundProbability = profile.twinLinked
-    ? criticalBaseProbability + ((1 - woundProbability) * criticalBaseProbability)
-    : criticalBaseProbability;
-  const criticalWounds = normalHits * Math.min(rerolledWoundProbability, criticalWoundProbability);
-  const normalWoundsTotal = normalHits * rerolledWoundProbability;
+  const woundRoll = woundProbabilities(profile, woundTargetValue);
+  const criticalWounds = normalHits * woundRoll.critical;
+  const normalWoundsTotal = normalHits * woundRoll.success;
   const devastatingWounds = profile.devastatingWounds ? criticalWounds : 0;
   const normalWounds = Math.max(0, normalWoundsTotal - devastatingWounds);
 
@@ -129,8 +136,8 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     expectedDamage,
     attacks,
     hitProbability: profile.torrent ? 1 : successProbability(hitTarget),
-    woundProbability,
-    criticalWoundProbability,
+    woundProbability: woundRoll.success,
+    criticalWoundProbability: woundRoll.critical,
     saveFailureProbability: saveFailure,
     normalWounds,
     lethalWounds: lethalHitWounds,
