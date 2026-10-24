@@ -54,6 +54,23 @@ test("Shadow in the Warp can remind during either player's Command phase", () =>
   assert.deepEqual(shadow.carriers, ["Hive Tyrant"]);
 });
 
+test("Shadow in the Warp becomes high priority before an opponent scoring window with meaningful objective OC", () => {
+  const state = activeState({
+    battle: { id: "b1", status: "active", round: 3, activePlayerId: "p2" },
+    victoryPoints: { p1: 15, p2: 22 },
+    objectives: [{ id: "mid", position: { x: 30, y: 22 }, control: { controlState: "controlled", controllerId: "p2", contestingPlayerIds: [] } }],
+    units: [
+      { id: "p1:hive", ownerId: "p1", name: "Hive Tyrant", status: "deployed", position: { x: 10, y: 10 }, metadata: { datasheetId: "tyranids:hive-tyrant" } },
+      { id: "p2:scorer", ownerId: "p2", name: "Scoring Unit", status: "deployed", position: { x: 30, y: 22 }, startingStrength: 5, currentStrength: 5, profile: { characteristics: { objectiveControl: 2 } } }
+    ]
+  });
+  const shadow = getTyranidDecisionReminders(state, "p1").find((item) => item.id === "tyranids.shadow-in-the-warp");
+  assert.ok(shadow);
+  assert.equal(shadow.priority, "high");
+  assert.equal(shadow.estimatedEnemyObjectiveOc, 10);
+  assert.match(shadow.description, /before confirming that scoring/i);
+});
+
 test("Shadow reminder requires a deployed unit with the documented ability", () => {
   assert.equal(getTyranidShadowInTheWarpCarriers(activeState(), "p1").length, 1);
   assert.equal(getTyranidDecisionReminders(activeState({
