@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { resolveUnitAttack } from '../../src/engine/combat-transitions.js';
 import { getPrecisionAllocationOptions } from '../../src/rules/precision-allocation.js';
+import { getUnitDestructionsForTurn } from '../../src/rules/scoring-evidence-state.js';
 
 const precisionClaws = {
   id:'precision-claws', name:'Precision claws', type:'melee',
@@ -50,6 +52,16 @@ test('Precision keeps the formation root as target while applying actual damage 
   assert.equal(event.payload.stateDelta.target.unitId,'leader');
 });
 
+test('Precision Leader destruction is credited to the Leader for scoring evidence',()=>{
+  const state=attachedFightState();
+  const result=resolveUnitAttack(state,{attackerId:'attacker',targetId:'bodyguard',allocationTargetId:'leader',weapon:precisionClaws,actualDamage:5});
+  assert.equal(result.units.find(unit=>unit.id==='bodyguard').status,'deployed');
+  assert.equal(result.units.find(unit=>unit.id==='leader').status,'destroyed');
+  assert.deepEqual(getUnitDestructionsForTurn(result,1),[
+    {unitId:'leader',ownerId:'p2',source:'combat.attack_resolved',attackerId:'attacker',phase:'fight'}
+  ]);
+});
+
 test('non-Precision weapons cannot allocate damage directly to an attached Leader',()=>{
   const state=attachedFightState();
   assert.throws(()=>resolveUnitAttack(state,{
@@ -61,4 +73,15 @@ test('non-Precision weapons cannot allocate damage directly to an attached Leade
 test('Extra Attacks remains a supplemental weapon flag alongside Precision',()=>{
   assert.equal(precisionClaws.characteristics.extraAttacks,true);
   assert.equal(precisionClaws.characteristics.precision,true);
+});
+
+test('Shooting and Fight UIs keep Precision allocation conditional and pass it through attacks',()=>{
+  const shooting=fs.readFileSync(new URL('../../src/ui/shooting-screen.js',import.meta.url),'utf8');
+  const fight=fs.readFileSync(new URL('../../src/ui/fight-tabletop-screen.js',import.meta.url),'utf8');
+  assert.match(shooting,/getPrecisionAllocationOptions/);
+  assert.match(shooting,/data-shoot-precision/);
+  assert.match(shooting,/allocationTargetId: precisionAllocationId/);
+  assert.match(fight,/data-fight-precision/);
+  assert.match(fight,/allocationTargetId: precisionAllocationId/);
+  assert.match(fight,/Extra Attacks:/);
 });
