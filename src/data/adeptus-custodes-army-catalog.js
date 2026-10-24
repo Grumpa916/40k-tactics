@@ -1,30 +1,73 @@
-// Custodes names and published points captured from the user's Warhammer App
-// export.  Datasheet combat profiles are intentionally absent until each unit
-// is cross-checked; imports therefore preserve wargear as reviewable text.
-const entries = [
-  ['Blade Champion', 175, 1], ['Knight-Centura', 55, 1], ['Shield-Captain', 205, 1],
-  ['Shield-Captain in Allarus Terminator Armour', 185, 1], ['Shield-Captain on Dawneagle Jetbike', 205, 1],
-  ['Trajann Valoris', 265, 1], ['Custodian Guard Sodality', 240, 3], ['Sentinel Guard Sodality', 240, 3],
-  ['Anathema Psykana Rhino', 70, 1], ['Allarus Custodians', 180, 2],
-  ['Aquilon Terminators with Solarite Power Gauntlets', 285, 3], ['Aquilon Terminators with Solarite Power Talons', 275, 3],
-  ['Ares Gunship', 580, 1], ['Caladius Annihilator Grav-Tank', 250, 1], ['Caladius Grav-Tank', 230, 1],
-  ['Contemptor-Achillus Dreadnought', 230, 1], ['Contemptor-Galatus Dreadnought', 220, 1], ['Coronus Grav-Carrier', 225, 1],
-  ['Custodian Wardens', 200, 2], ['Gyrfalcon Jetbike Sodality', 260, 2], ['Orion Assault Dropship', 690, 1],
-  ['Pallas Grav-Attack', 135, 1], ['Prosecutor Squad', 45, 4], ['Telemon Heavy Dreadnought', 280, 1],
-  ['Venatari with Kinetic Destroyers', 255, 3], ['Venatari with Verutum Lances', 270, 3],
-  ['Vertus Praetors', 220, 2], ['Vigilator Squad', 50, 4], ['Witchseeker Squad', 55, 4]
-];
+import { getAdeptusCustodesDatasheetDetails } from './adeptus-custodes-datasheet-details.js';
+import { getAdeptusCustodesAttachmentMetadata } from './adeptus-custodes-leader-bodyguard-compatibility.js';
+import { getRulesDataRevisionForFaction } from './rules-data-revisions.js';
 
-const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-export const ADEPTUS_CUSTODES_ARMY_CATALOG = Object.freeze(entries.map(([name, points, models]) => Object.freeze({
-  id: `adeptus-custodes:${slug(name)}`,
-  name,
-  faction: 'Adeptus Custodes',
-  defaultModelCount: models,
-  defaultPoints: points,
-  pointsOptions: [{ models, points }],
-  sourceName: 'Warhammer App export supplied for 40K Tactics Custodes expansion',
-  sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
-  verificationStatus: 'points-reviewed',
-  officialRulesCrossCheck: 'pending'
-})));
+const RULES_REVISION = getRulesDataRevisionForFaction('Adeptus Custodes');
+
+const units = Object.freeze([
+  ['Trajann Valoris','trajann-valoris'],
+  ['Blade Champion','blade-champion'],
+  ['Shield-Captain','shield-captain'],
+  ['Shield-Captain in Allarus Terminator Armour','shield-captain-in-allarus-terminator-armour'],
+  ['Shield-Captain on Dawneagle Jetbike','shield-captain-on-dawneagle-jetbike'],
+  ['Custodian Guard Sodality','custodian-guard-sodality'],
+  ['Sentinel Guard Sodality','sentinel-guard-sodality'],
+  ['Custodian Wardens','custodian-wardens'],
+  ['Allarus Custodians','allarus-custodians'],
+  ['Aquilon Terminators with Solarite Power Gauntlets','aquilon-terminators-with-solarite-power-gauntlets'],
+  ['Aquilon Terminators with Solarite Power Talons','aquilon-terminators-with-solarite-power-talons'],
+  ['Venatari with Kinetic Destroyers','venatari-with-kinetic-destroyers'],
+  ['Venatari with Verutum Lances','venatari-with-verutum-lances'],
+  ['Vertus Praetors','vertus-praetors'],
+  ['Gyrfalcon Jetbike Sodality','gyrfalcon-jetbike-sodality'],
+  ['Contemptor-Galatus Dreadnought','contemptor-galatus-dreadnought'],
+  ['Contemptor-Achillus Dreadnought','contemptor-achillus-dreadnought'],
+  ['Telemon Heavy Dreadnought','telemon-heavy-dreadnought'],
+  ['Pallas Grav-Attack','pallas-grav-attack'],
+  ['Caladius Grav-Tank','caladius-grav-tank'],
+  ['Caladius Annihilator Grav-Tank','caladius-annihilator-grav-tank'],
+  ['Coronus Grav-Carrier','coronus-grav-carrier'],
+  ['Knight-Centura','knight-centura'],
+  ['Prosecutor Squad','prosecutor-squad'],
+  ['Witchseeker Squad','witchseeker-squad'],
+  ['Vigilator Squad','vigilator-squad'],
+  ['Anathema Psykana Rhino','anathema-psykana-rhino'],
+  ['Ares Gunship','ares-gunship'],
+  ['Orion Assault Dropship','orion-assault-dropship'],
+  ['Aleya','aleya'],
+  ['Valerian','valerian'],
+  ['Custodian Guard Sodality with Adrasite Spears','custodian-guard-sodality-with-adrasite-spears'],
+  ['Custodian Guard Sodality with Pyrithite Spears','custodian-guard-sodality-with-pyrithite-spears'],
+  ['Sagittarum Custodians Sodality','sagittarum-custodians-sodality'],
+  ['Venerable Land Raider','venerable-land-raider'],
+  ['Venerable Contemptor Dreadnought','venerable-contemptor-dreadnought']
+]);
+
+export const ADEPTUS_CUSTODES_ARMY_CATALOG = Object.freeze(units.map(([name,slug]) => {
+  const id=`adeptus-custodes:${slug}`;
+  const details=getAdeptusCustodesDatasheetDetails(id);
+  if(!details) throw new Error(`Missing reviewed Adeptus Custodes datasheet details for ${id}.`);
+  const attachmentMetadata=getAdeptusCustodesAttachmentMetadata(id);
+  const {defaultModelCount,defaultPoints,pointsOptions,dataSource,...datasheetProfile}=details;
+  return Object.freeze({
+    id,
+    name,
+    faction:'Adeptus Custodes',
+    defaultModelCount,
+    defaultPoints,
+    pointsOptions,
+    sourceName:dataSource?.sourceName ?? 'October 2026 Codex: Adeptus Custodes',
+    sourceUrl:dataSource?.sourceUrl ?? RULES_REVISION?.factionRules?.sourceUrl,
+    reviewedAt:dataSource?.reviewedAt ?? RULES_REVISION?.reviewedAt ?? null,
+    pointsSourceName:RULES_REVISION?.points ? `${RULES_REVISION.points.name} (${RULES_REVISION.points.revisionLabel})` : dataSource?.pointsSourceName,
+    pointsSourceUrl:RULES_REVISION?.points?.sourceUrl ?? dataSource?.pointsSourceUrl,
+    rulesDataRevisionId:RULES_REVISION?.revisionId ?? null,
+    officialRulesCrossCheck:dataSource?.officialRulesCrossCheck ?? 'partial',
+    verificationStatus:dataSource?.status ?? 'source-reviewed',
+    ...(dataSource?.legends ? { legends:true } : {}),
+    datasheet:Object.freeze({
+      ...datasheetProfile,
+      ...(attachmentMetadata ?? {})
+    })
+  });
+}));
