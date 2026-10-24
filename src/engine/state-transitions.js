@@ -104,7 +104,7 @@ export function recordObjectiveControl(state, {
   return transition(state, "objective.control_recorded", control, (current) => ({
     ...current,
     objectives: current.objectives.map((item) =>
-      item.id === objectiveId ? { ...item, control } : item
+      item.id === objectiveId ? { ...item, control, controlRecordedAt: { round: state.battle?.round ?? 0, turn: state.turn ?? 0, phase: state.phase } } : item
     )
   }));
 }

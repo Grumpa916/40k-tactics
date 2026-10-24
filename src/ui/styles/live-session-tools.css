@@ -1,0 +1,12 @@
+[data-live-session-tools] { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:4px 0; }
+[data-live-session-tools] button { min-height:44px; padding:6px 10px; background:#19262d; color:#f1f3e9; border:1px solid #53676a; border-radius:8px; font:inherit; font-size:12px; touch-action:manipulation; }
+.prototype-workspace-tools [data-live-session-tools] { margin:0; }
+.prototype-phase-menu [data-live-session-tools] { grid-column:1/-1; }
+.live-session-overlay { position:fixed; inset:0; z-index:12000; display:grid; place-items:center; padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); background:#000b; }
+.live-session-overlay[hidden] { display:none; }
+.live-session-dialog { box-sizing:border-box; width:min(600px,100%); max-height:85dvh; overflow:auto; padding:20px; border:1px solid #53676a; border-radius:12px; background:#19262d; color:#f1f3e9; font-family:system-ui,sans-serif; }
+.live-session-dialog button { min-height:44px; margin:5px; padding:8px 12px; border:1px solid #53676a; border-radius:8px; background:#c4e99b; color:#17212b; font:inherit; }
+.live-session-dialog li { margin-bottom:8px; }
+.live-action-receipt { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:12px; }
+.live-action-receipt button { min-height:44px; flex:none; }
+.combat-workspace__panel footer .combat-workspace__damage button { width:44px; }

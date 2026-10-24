@@ -8,6 +8,9 @@ import { bindLiveCasualtyControls } from './live-casualty-controls.js';
 import { COMPLETE_SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-complete-catalog.js";
 import { installV2SupabasePublicConfig } from "../persistence/supabase-runtime-config.js";
 import { createSupabaseClientFromPublicConfig } from "../persistence/supabase-client.js";
+import { startLiveApp } from '../application/live-startup.js';
+import { createLocalBattleStore } from '../persistence/local-battle-store.js';
+import { mountLiveSessionTools } from './live-session-tools.js';
 
 clearCommandHandlers();
 registerCoreCommandHandlers();
@@ -87,26 +90,31 @@ const state = createGameState({
 
 const session = createGameSession(state);
 
-async function initializeBattleDemo() {
-  let supabaseClient = null;
-  try {
-    installV2SupabasePublicConfig(window);
-    supabaseClient = await createSupabaseClientFromPublicConfig();
-  } catch (error) {
-    console.error("Supabase cloud controls could not be initialized:", error);
-  }
-
+function initializeBattleDemo() {
   const layoutMode = new URLSearchParams(window.location.search).get("ui") === "classic"
     ? "classic"
     : "tabletop";
   const root = document.getElementById("battle-app");
-  createBattleShell(root, {
+  let tools;
+  const app = startLiveApp({
+    mount() {
+      const shell = createBattleShell(root, {
     session,
     perspectivePlayerId: "p1",
     gameData,
     secondaryMissionCatalog: COMPLETE_SECONDARY_MISSION_CATALOG,
-    supabaseClient,
-    layoutMode
+    layoutMode,
+    onRender: () => tools?.refresh()
+      });
+      tools = mountLiveSessionTools({ root, session, store: createLocalBattleStore(), onRetryCloud: () => app.retryCloud() });
+      return { connectCloud(client) { shell.connectCloud(client); tools.setCloudStatus('Cloud available'); } };
+    },
+    loadCloud() {
+      tools.setCloudStatus('Cloud connecting…');
+      installV2SupabasePublicConfig(window);
+      return createSupabaseClientFromPublicConfig();
+    },
+    onCloudError() { tools.setCloudStatus('Cloud unavailable · local battle play remains available'); }
   });
   bindLiveCasualtyControls(root, { session });
 }
