@@ -30,10 +30,10 @@ function fakeContainer() {
   };
 }
 
-test("army selection presents independent battle sides and applies a saved roster only to the chosen side", async () => {
+test("army selection hydrates saved roster metadata, shows detachments, and applies only to the chosen side", async () => {
   const roster = {
     id: "tyranids-2000", name: "Tyranid Test List", faction: "Tyranids",
-    detachment: "Invasion Fleet", pointsLimit: 2000,
+    detachment: "Invasion Fleet", detachments: ["Invasion Fleet", "Crusher Stampede"], pointsLimit: 2000,
     units: [{ id: "hive-tyrant", name: "Hive Tyrant", points: 195 }]
   };
   let state = {
@@ -55,7 +55,9 @@ test("army selection presents independent battle sides and applies a saved roste
     }
   };
   const store = {
-    async list() { return [{ id: roster.id, name: roster.name, faction: roster.faction, detachment: roster.detachment }]; },
+    async list() {
+      return [{ id: roster.id, name: roster.name, schema_version: 1, updated_at: "2026-10-24T00:00:00Z" }];
+    },
     async load(id) { return id === roster.id ? { id, roster } : null; }
   };
   const root = fakeContainer();
@@ -66,7 +68,9 @@ test("army selection presents independent battle sides and applies a saved roste
   assert.match(root.innerHTML, /Your Army/);
   assert.match(root.innerHTML, /Opponent Army/);
   assert.match(root.innerHTML, /Opponent List/);
-  assert.match(root.innerHTML, /Invasion Fleet/);
+  assert.match(root.innerHTML, /Tyranids/);
+  assert.match(root.innerHTML, /Invasion Fleet \+ Crusher Stampede/);
+  assert.doesNotMatch(root.innerHTML, /Tyranid Test List · Faction not set · Detachment not set/);
 
   root.chooseRoster(roster.id);
   root.clickApply("p1");
@@ -78,5 +82,6 @@ test("army selection presents independent battle sides and applies a saved roste
   assert.equal(state.armyRosters.p1.id, roster.id);
   assert.equal(state.armyRosters.p2.id, "opponent-roster");
   assert.match(root.innerHTML, /Tyranid Test List/);
+  assert.match(root.innerHTML, /Invasion Fleet \+ Crusher Stampede/);
   panel.destroy();
 });
