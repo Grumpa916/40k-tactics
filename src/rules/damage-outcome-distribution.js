@@ -88,20 +88,25 @@ function oneSavedWoundDamageDistribution(profile, saveFailure) {
   return result;
 }
 
+function woundProbabilities(profile, woundTargetValue) {
+  const normalBase = successProbability(woundTargetValue);
+  const criticalBase = successProbability(profile.criticalWoundTarget);
+  const successBase = Math.max(normalBase, criticalBase);
+  if (!profile.twinLinked) {
+    return { success: successBase, critical: criticalBase };
+  }
+  const failedFirstRoll = 1 - successBase;
+  return {
+    success: successBase + (failedFirstRoll * successBase),
+    critical: criticalBase + (failedFirstRoll * criticalBase)
+  };
+}
+
 function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) {
   const result = new Map();
-  const woundProbability = successProbability(woundTargetValue);
-  const rerolledWoundProbability = profile.twinLinked
-    ? woundProbability + ((1 - woundProbability) * woundProbability)
-    : woundProbability;
-  const criticalBaseProbability = successProbability(profile.criticalWoundTarget);
-  const criticalWoundProbability = profile.devastatingWounds
-    ? (profile.twinLinked
-      ? criticalBaseProbability + ((1 - woundProbability) * criticalBaseProbability)
-      : criticalBaseProbability)
-    : 0;
-  const critical = Math.min(rerolledWoundProbability, criticalWoundProbability);
-  const normalWoundProbability = Math.max(0, rerolledWoundProbability - critical);
+  const woundRoll = woundProbabilities(profile, woundTargetValue);
+  const critical = profile.devastatingWounds ? woundRoll.critical : 0;
+  const normalWoundProbability = Math.max(0, woundRoll.success - critical);
   addProbability(result, 0, 1 - (normalWoundProbability * saveFailure + critical));
   for (const [damage, probability] of damageValues(profile.damage)) {
     addProbability(result, damage, normalWoundProbability * saveFailure * probability);
