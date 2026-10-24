@@ -1,4 +1,5 @@
 import { buildAttackProfile } from "./combat-profile.js";
+import { getContextualWeaponProfile } from "./contextual-weapon-abilities.js";
 import { getWoundBracketModifiers } from "./wound-bracket.js";
 
 function expectedDice(expression) {
@@ -35,9 +36,13 @@ function successProbability(target) {
 
 function expectedDamageValue(damage) {
   if (Number.isInteger(damage) && damage >= 1) return damage;
-  if (damage === "D3") return 2;
-  if (damage === "D6") return 3.5;
-  throw new RangeError("Damage must be a positive integer, D3, or D6.");
+  const text = String(damage ?? '').trim().toUpperCase();
+  if (/^\d+$/.test(text)) return Number(text);
+  const match = text.match(/^D([36])(?:\+(\d+))?$/);
+  if (!match) throw new RangeError("Damage must be a positive integer or supported D3/D6 expression.");
+  const sides = Number(match[1]);
+  const modifier = Number(match[2] || 0);
+  return ((sides + 1) / 2) + modifier;
 }
 
 function saveFailureProbability(profile, saveModifier = 0) {
@@ -74,12 +79,13 @@ function damagePreventionMultiplier(prevention) {
  * Calculate a baseline expected damage value for one weapon profile against
  * one target profile.
  *
- * This is advisory infrastructure, not an exact battlefield prediction.
- * It uses the supplied profiles and known modifiers, but does not model
- * hidden cover, future abilities, positioning, or limited-count save rerolls.
+ * Contextual weapon abilities use known battle state only. Range-dependent
+ * bonuses are deliberately withheld inside the established ±3" approximate
+ * map uncertainty band, so tabletop measurement remains authoritative.
  */
 export function getExpectedDamage({ attacker, target, weapon, attackerRemainingWounds = attacker?.wounds } = {}) {
-  const profile = buildAttackProfile({ attacker, target, weapon });
+  const baseProfile = buildAttackProfile({ attacker, target, weapon });
+  const profile = getContextualWeaponProfile({ attacker, target, profile: baseProfile });
   const saveModifier = target?.characteristics?.saveModifier ?? target?.profile?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
   const woundBracket = getWoundBracketModifiers(attacker, { remainingWounds: attackerRemainingWounds });
   const attacks = expectedDice(profile.attacks);
@@ -99,24 +105,23 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   const rerolledWoundProbability = profile.twinLinked
     ? woundProbability + ((1 - woundProbability) * woundProbability)
     : woundProbability;
+  const criticalBaseProbability = successProbability(profile.criticalWoundTarget);
   const criticalWoundProbability = profile.twinLinked
-    ? (1 + (1 - woundProbability)) / 6
-    : 1 / 6;
-  const criticalWounds = normalHits * criticalWoundProbability;
+    ? criticalBaseProbability + ((1 - woundProbability) * criticalBaseProbability)
+    : criticalBaseProbability;
+  const criticalWounds = normalHits * Math.min(rerolledWoundProbability, criticalWoundProbability);
   const normalWoundsTotal = normalHits * rerolledWoundProbability;
-  const devastatingWounds = profile.devastatingWounds
-    ? criticalWounds
-    : 0;
+  const devastatingWounds = profile.devastatingWounds ? criticalWounds : 0;
   const normalWounds = Math.max(0, normalWoundsTotal - devastatingWounds);
-  const lethalWounds = lethalHitWounds;
 
   const saveFailure = saveFailureProbability(profile, saveModifier);
   const unsavedNormalWounds = normalWounds * saveFailure;
+  const unsavedLethalWounds = lethalHitWounds * saveFailure;
   const damagePerUnsavedWound = expectedDamageValue(profile.damage);
   const preventionMultiplier = damagePreventionMultiplier(profile.damagePrevention);
 
   const expectedDamage =
-    (unsavedNormalWounds + lethalWounds + devastatingWounds) *
+    (unsavedNormalWounds + unsavedLethalWounds + devastatingWounds) *
     damagePerUnsavedWound *
     preventionMultiplier;
 
@@ -125,12 +130,23 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     attacks,
     hitProbability: profile.torrent ? 1 : successProbability(hitTarget),
     woundProbability,
+    criticalWoundProbability,
     saveFailureProbability: saveFailure,
     normalWounds,
-    lethalWounds,
+    lethalWounds: lethalHitWounds,
     devastatingWounds,
     damagePerUnsavedWound,
-    damagePreventionMultiplier: preventionMultiplier
+    damagePreventionMultiplier: preventionMultiplier,
+    contextualAbilities: Object.freeze({
+      blastBonus: profile.blastBonus,
+      rapidFireBonus: profile.rapidFireBonus,
+      meltaBonus: profile.meltaBonus,
+      antiMatched: profile.antiMatched,
+      criticalWoundTarget: profile.criticalWoundTarget,
+      halfRangeStatus: profile.halfRangeStatus,
+      approximateDistance: profile.approximateDistance,
+      precision: profile.precision,
+      extraAttacks: profile.extraAttacks
+    })
   });
 }
-
