@@ -90,11 +90,23 @@ const state = createGameState({
 
 const session = createGameSession(state);
 
+function bindNativeMissionSummaryToggle(root) {
+  root?.addEventListener?.("click", (event) => {
+    const summary = event.target?.closest?.(".battle-mission-summary__section > summary");
+    if (!summary || !root.contains?.(summary)) return;
+    // Let <details>/<summary> perform its native open/close behavior. This listener
+    // is registered before the battle shell so Safari does not also hit the older
+    // manual details.open click workaround and immediately undo the native toggle.
+    event.stopImmediatePropagation?.();
+  });
+}
+
 function initializeBattleDemo() {
   const layoutMode = new URLSearchParams(window.location.search).get("ui") === "classic"
     ? "classic"
     : "tabletop";
   const root = document.getElementById("battle-app");
+  bindNativeMissionSummaryToggle(root);
   let tools;
   const app = startLiveApp({
     mount() {
