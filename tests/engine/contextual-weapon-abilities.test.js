@@ -65,8 +65,8 @@ test('Rapid Fire and Melta apply only when approximate half-range is clear of th
 
 test('Anti-X lowers the critical wound threshold only against matching target keywords',()=>{
   const attacker=profile();
-  const infantry=profile({keywords:['Infantry'],toughness:10});
-  const monster=profile({keywords:['Monster'],toughness:10});
+  const infantry=profile({keywords:['Infantry'],toughness:10,save:2});
+  const monster=profile({keywords:['Monster'],toughness:10,save:2});
   const weapon=ranged({strength:5,anti:[{keyword:'infantry',threshold:4}],devastatingWounds:true});
   const anti=getExpectedDamage({attacker,target:infantry,weapon});
   const baseline=getExpectedDamage({attacker,target:monster,weapon});
