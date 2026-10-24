@@ -1,0 +1,8 @@
+/* Step 2 planning map: keep the selected Event Companion layout visible in one tablet landscape view. */
+@media (min-width: 760px) and (orientation: landscape) {
+  [data-map-mode="planning"] .battlefield-map__board {
+    width: min(100%, calc((100dvh - 285px) * 15 / 11));
+    max-width: 100%;
+    margin-inline: auto;
+  }
+}
