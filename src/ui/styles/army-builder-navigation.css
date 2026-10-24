@@ -1,16 +1,14 @@
-/* Army Builder setup navigation: keep the back control accessible without covering the roster browser. */
+/* Army Builder setup navigation: keep the back control in normal flow so it never covers roster content. */
 .battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav {
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 10px);
-  right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: auto;
-  left: auto;
-  transform: none;
-  z-index: 950;
-  width: auto;
-  max-width: none;
-  padding: 0;
+  position: static;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 16px 0 0;
+  padding: 10px 0 0;
   border: 0;
+  border-top: 1px solid rgba(143, 158, 172, .35);
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
@@ -29,8 +27,8 @@
 }
 @media (max-width: 760px), (orientation: portrait) {
   .battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav {
-    top: calc(env(safe-area-inset-top, 0px) + 6px);
-    right: max(8px, env(safe-area-inset-right, 0px));
+    margin-top: 12px;
+    padding-top: 8px;
   }
   .battle-shell:has([data-setup-workspace-panel="army-builder"]:not([hidden])) .battle-shell__setup-bottom-nav [data-setup-workspace-continue] {
     min-height: 40px;
