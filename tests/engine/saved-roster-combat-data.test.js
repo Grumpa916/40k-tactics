@@ -138,3 +138,16 @@ test('rules-invalid reviewed wargear is unresolved and cannot feed combat option
  assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}),[]);
  assert.equal(hasConfirmedNoRangedWeapons(state,unit),false);
 });
+
+
+test('battle snapshots preserve roster unit enhancements and notes',()=>{
+ const state=applyArmyRosterToBattle(createGameState({phase:'setup',battle:{id:'notes-battle',status:'setup',round:0},players:[{id:'p1'}]}),{
+  playerId:'p1',
+  roster:createArmyRoster({id:'notes-roster',name:'Notes roster',faction:'Tyranids',units:[{
+   id:'unit-1',name:'Annotated unit',modelCount:1,datasheetId:'tyranids:neurotyrant',
+   notes:'Enhancement: Synaptic control. Keep near the objective.'
+  }]})
+ });
+ assert.equal(state.units[0].metadata.notes,'Enhancement: Synaptic control. Keep near the objective.');
+ assert.equal(state.armyRosters.p1.units[0].notes,'Enhancement: Synaptic control. Keep near the objective.');
+});
