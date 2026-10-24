@@ -1,5 +1,6 @@
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { summarizeRosterPoints } from "../state/army-roster-points-summary.js";
+import { assessRosterDetachmentSelection, getRosterDetachmentNames } from "./roster-detachment-selection.js";
 
 const text = (value) => String(value ?? "").trim().toLowerCase();
 const keywords = (unit) => (unit?.datasheet?.keywords ?? []).map(text);
@@ -11,7 +12,13 @@ export function validateArmyRoster(roster = {}) {
   const ids = new Set(units.map((unit) => unit?.id).filter(Boolean));
   if (!text(roster.name)) issues.push("Army list needs a name.");
   if (!text(roster.faction)) issues.push("Choose a faction before using this list.");
-  if (!text(roster.detachment)) warnings.push("Choose a detachment before battle preparation.");
+  const detachmentNames=getRosterDetachmentNames(roster);
+  if (!detachmentNames.length) warnings.push("Choose at least one detachment before battle preparation.");
+  else {
+    const detachmentAssessment=assessRosterDetachmentSelection(roster.faction,detachmentNames);
+    issues.push(...detachmentAssessment.issues);
+    if(!detachmentAssessment.tracked) warnings.push("Detachment DP costs for this faction are not loaded, so the 3 DP budget cannot be verified automatically.");
+  }
   if (!Number.isFinite(roster.pointsLimit) || roster.pointsLimit <= 0) warnings.push("Set a points limit to validate the army budget.");
   const summary = summarizeRosterPoints(roster);
   if (summary.overLimit) issues.push(`Army is ${Math.abs(summary.remainingPoints)} points over its ${roster.pointsLimit}-point limit.`);
