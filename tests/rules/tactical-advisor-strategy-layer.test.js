@@ -84,8 +84,8 @@ function coordinationState() {
     scoring:{turnSnapshots:[],secondaryMissions:[]},
     armyRosters:{
       p1:{units:[
-        {id:"r-weak",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Weak gun",range:24,attacks:2,strength:4,ap:0,damage:1}]}},
-        {id:"r-strong",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Heavy gun",range:24,attacks:20,strength:12,ap:-4,damage:4}]}}
+        {id:"r-weak",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Weak gun",range:24,attacks:2,skill:"4+",strength:4,ap:0,damage:1}]}},
+        {id:"r-strong",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Heavy gun",range:24,attacks:20,skill:"2+",strength:12,ap:-4,damage:4}]}}
       ]},
       p2:{units:[{id:"r-target",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[]}}]}
     }
