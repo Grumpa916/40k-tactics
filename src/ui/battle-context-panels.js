@@ -246,8 +246,10 @@ function renderDataList(items, emptyText) {
     const costText = cost == null ? "" : '<span class="battle-context__badge">' + escapeHtml(cost) + ' CP</span>';
     const unavailable = item?.available === false
       ? '<span class="battle-context__badge battle-context__badge--muted">Unavailable</span>' : "";
+    const context = [item?.timing, item?.detachmentName].filter(Boolean).map(escapeHtml).join(" · ");
     return '<li><div class="battle-context__reference-title"><strong>' + escapeHtml(name) + '</strong>' +
-      costText + unavailable + '</div>' + (detail ? '<span>' + escapeHtml(detail) + '</span>' : '') + '</li>';
+      costText + unavailable + '</div>' + (context ? '<small class="battle-context__reference-meta">' + context + '</small>' : '') +
+      (detail ? '<span>' + escapeHtml(detail) + '</span>' : '') + '</li>';
   }).join("") + '</ul>';
 }
 
@@ -269,7 +271,29 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
   };
   const detachmentFor = (playerId) =>
     state.armyRosters?.[playerId]?.detachment ?? state.armyRosters?.[playerId]?.detachmentName ?? null;
-  const stratagems = Array.isArray(gameData.stratagems) ? gameData.stratagems : [];
+  const selectedDetachmentNames = (roster) => [...new Set([
+    ...(Array.isArray(roster?.detachments) ? roster.detachments : []),
+    roster?.detachment,
+    roster?.detachmentName
+  ].map((name) => String(name ?? "").trim()).filter(Boolean))];
+  const rosterStratagemCatalogs = players.map((player) => {
+    const roster = state.armyRosters?.[player.id];
+    const catalog = roster?.rulesDataRevision?.factionRules?.detachments;
+    const selected = selectedDetachmentNames(roster);
+    const matched = Array.isArray(catalog)
+      ? selected.map((name) => catalog.find((entry) => entry?.name === name)).filter(Boolean)
+      : [];
+    return { playerId: player.id, hasCatalog: matched.length > 0,
+      stratagems: matched.flatMap((detachment) => (Array.isArray(detachment.stratagems) ? detachment.stratagems : [])
+        .map((stratagem) => ({ ...stratagem, playerId: player.id, detachmentName: detachment.name }))) };
+  });
+  const stratagems = [
+    ...(Array.isArray(gameData.stratagems) ? gameData.stratagems : []),
+    ...rosterStratagemCatalogs.flatMap((entry) => entry.stratagems)
+  ];
+  const stratagemEmptyText = (playerId) => rosterStratagemCatalogs.find((entry) => entry.playerId === playerId)?.hasCatalog
+    ? "No stratagem entries are recorded for the selected detachment yet."
+    : "No stratagem catalog is connected to this battle yet.";
   const rosterRules = players.flatMap((player) => {
     const revision = state.armyRosters?.[player.id]?.rulesDataRevision;
     const rules = revision?.factionRules?.armyRules;
@@ -305,9 +329,9 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
     : '<p class="battle-context__empty">No terrain layout is recorded for this battle yet.</p>';
 
   const groups = '<section class="battle-context__reference-group"><h3>Your stratagems</h3>' +
-    renderDataList(rulesFor(stratagems, yourPlayerId), "No stratagem catalog is connected to this battle yet.") +
+    renderDataList(rulesFor(stratagems, yourPlayerId), stratagemEmptyText(yourPlayerId)) +
     '</section><section class="battle-context__reference-group"><h3>Opponent stratagems</h3>' +
-    renderDataList(rulesFor(stratagems, opponentPlayerId), "No opponent stratagem catalog is connected to this battle yet.") +
+    renderDataList(rulesFor(stratagems, opponentPlayerId), stratagemEmptyText(opponentPlayerId)) +
     '</section>';
   return '<section class="battle-context__references" aria-label="Rules and tactical references">' +
     '<h2 class="battle-context__section-heading">Rules & References</h2>' +
