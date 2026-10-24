@@ -85,7 +85,7 @@ function coordinationState() {
     armyRosters:{
       p1:{units:[
         {id:"r-weak",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Weak gun",range:24,attacks:2,strength:4,ap:0,damage:1}]}},
-        {id:"r-strong",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Heavy gun",range:24,attacks:8,strength:10,ap:-3,damage:3}]}}
+        {id:"r-strong",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[{name:"Heavy gun",range:24,attacks:20,strength:12,ap:-4,damage:4}]}}
       ]},
       p2:{units:[{id:"r-target",loadoutValidation:{status:"valid"},datasheet:{characteristics:{Toughness:5,Save:3,Wounds:10},weapons:[]}}]}
     }
@@ -96,7 +96,7 @@ test("fire coordination identifies a substantially better remaining shooter", ()
   const state=coordinationState();
   const context=getFireCoordinationContext(state,{
     playerId:"p1",attackerId:"weak",targetUnitId:"target",
-    currentExpectedDamage:0.6,currentDestructionProbability:0.02
+    currentExpectedDamage:0.1,currentDestructionProbability:0
   });
   assert.equal(context.betterMatch,true);
   assert.equal(context.bestAlternative.unitId,"strong");
