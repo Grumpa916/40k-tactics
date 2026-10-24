@@ -128,6 +128,7 @@ export function getFightWeaponOptions(state, { attackerId, gameData = null } = {
 export function resolveFightAttack(session, {
   attackerId,
   targetId,
+  allocationTargetId = null,
   weapon,
   actualDamage = null
 } = {}, context = {}) {
@@ -139,6 +140,7 @@ export function resolveFightAttack(session, {
     createCommand(COMMAND_TYPES.RESOLVE_ATTACK, {
       attackerId,
       targetId,
+      allocationTargetId,
       weapon,
       actualDamage
     }),
@@ -212,4 +214,3 @@ export function finishFightPhase(session, { confirmRemaining = false } = {}, con
     context
   );
 }
-

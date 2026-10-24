@@ -37,6 +37,8 @@ function getCurrentTurnFightAttacks(state) {
     .map((event) => ({
       attackerId: event.payload.attackerId,
       targetId: event.payload.targetId,
+      allocationTargetId: event.payload.allocationTargetId ?? null,
+      allocationTargetName: event.payload.allocationTargetName ?? null,
       weaponId: event.payload.weaponId ?? null,
       round: event.payload.round,
       turn: event.payload.turn,
@@ -44,7 +46,8 @@ function getCurrentTurnFightAttacks(state) {
       actualDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       totalDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       targetWoundsAfter: event.payload.stateDelta?.target?.woundsAfter ?? null,
-      targetStatusAfter: event.payload.stateDelta?.target?.statusAfter ?? null
+      targetStatusAfter: event.payload.stateDelta?.target?.statusAfter ?? null,
+      damageTargetId: event.payload.stateDelta?.target?.unitId ?? event.payload.allocationTargetId ?? event.payload.targetId
     }));
 }
 
@@ -108,4 +111,3 @@ export function getFightState(state) {
     canComplete
   };
 }
-
