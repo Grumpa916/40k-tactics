@@ -1,4 +1,6 @@
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
+import { captureViewContinuity } from './view-continuity.js';
+import { renderActionReceipt } from './action-receipt.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
 import { renderCombatMapPanel } from './combat-workspace.js';
@@ -11,8 +13,8 @@ import {
   resolveShootingAttack,
   finishShootingPhase
 } from "../application/shooting-workflow.js";
-import { getShootingTargetComparison } from "../rules/tactical-shooting-comparison.js";
-import { getAttackDamageForecast } from "../rules/attack-damage-forecast.js";
+import { createShootingComparisonCache } from "../rules/tactical-shooting-comparison.js";
+import { shootingTargetComparisonCards, shootingAdvisory, shootingDamageForecast } from './shooting-advisor-view.js';
 import { createLiveMapView } from "./live-map-view.js";
 import { finishCombatUnit } from "../application/combat-activation-workflow.js";
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
@@ -50,103 +52,6 @@ function tabletopUnitSummary(state, unitId) {
   return { unit, wounds, models: String(models), status };
 }
 
-function shootingTargetComparisonCards(attackerId, weaponId, selectedTargetId, state, weapons, perspectivePlayerId) {
-  if (!attackerId || !weaponId || !perspectivePlayerId) return '<p class="shoot-tabletop__empty-advice">Choose a shooter and weapon to compare targets.</p>';
-  const weapon = weapons.find((item) => item.id === weaponId);
-  if (!weapon) return '<p class="shoot-tabletop__empty-advice">Choose a valid ranged weapon to compare targets.</p>';
-  const result = getShootingTargetComparison(state, { playerId: state.units.find(unit => unit.id === attackerId)?.ownerId ?? perspectivePlayerId, attackerId, weapon });
-  if (!result.comparisons.length) return '<p class="shoot-tabletop__empty-advice">No eligible targets are available for comparison.</p>';
-  return '<div class="shoot-tabletop__comparison-list">' + result.comparisons.slice(0, 5).map((item) => {
-    const destroy = Number.isFinite(item.destructionProbability) ? Math.round(item.destructionProbability * 100) + '%' : '—';
-    const expected = Number.isFinite(item.expectedDamage) ? item.expectedDamage.toFixed(1) : '—';
-    const mission = item.secondaryMissionImpact?.score >= item.primaryMissionImpact?.score
-      ? item.secondaryMissionImpact?.label ?? 'none'
-      : item.primaryMissionImpact?.label ?? 'none';
-    return `<button type="button" class="shoot-tabletop__comparison${item.targetUnitId === selectedTargetId ? ' is-selected' : ''}" data-advisor-target="${escapeHtml(item.targetUnitId)}">
-      <span><strong>#${item.rank} ${escapeHtml(item.targetName)}</strong><small>${escapeHtml(item.recommendation)}</small></span>
-      <span class="shoot-tabletop__comparison-stats"><b>${expected}</b><small>mean</small><b>${destroy}</b><small>destroy</small><b>${escapeHtml(mission)}</b><small>mission</small></span>
-    </button>`;
-  }).join('') + '</div>';
-}
-
-function shootingAdvisory(attackerId, weaponId, targetId, state, weapons, perspectivePlayerId, { openDetails = false } = {}) {
-  if (!attackerId || !weaponId || !targetId || !perspectivePlayerId) return "";
-  const weapon = weapons.find((item) => item.id === weaponId);
-  if (!weapon) return "";
-  const result = getShootingTargetComparison(state, { playerId: state.units.find(unit => unit.id === attackerId)?.ownerId ?? perspectivePlayerId, attackerId, weapon });
-  const recommendation = result.comparisons.find((item) => item.targetUnitId === targetId);
-  if (!recommendation) return "";
-  const expected = Number.isFinite(recommendation.expectedDamage) ? recommendation.expectedDamage.toFixed(1) : "—";
-  const expectedOrMore = Number.isFinite(recommendation.probabilityAtLeastExpectedDamage)
-    ? Math.round(recommendation.probabilityAtLeastExpectedDamage * 100) + "%"
-    : "—";
-  const destruction = Number.isFinite(recommendation.destructionProbability)
-    ? Math.round(recommendation.destructionProbability * 100) + "%"
-    : "—";
-  const primaryImpact = recommendation.primaryMissionImpact?.label ?? "none";
-  const secondaryImpact = recommendation.secondaryMissionImpact?.label ?? "none";
-  const threat = recommendation.recentThreat?.label ?? "none";
-  const impact = recommendation.impactClassification === "unknown"
-    ? "Unknown"
-    : recommendation.impactClassification.replaceAll("-", " ");
-  const confidence = recommendation.confidence ? recommendation.confidence : "low";
-  const rangeConfidence = recommendation.rangeConfidence ? recommendation.rangeConfidence : "low";
-  const unresolved = recommendation.secondaryMissionImpact?.unresolvedMissions ?? [];
-  return `
-    <aside class="shoot-advisory" data-shoot-advisory>
-      <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>${escapeHtml(recommendation.rangeStatus)} range</span></div>
-      <div class="shoot-advisory__grid">
-        <div><strong>${expected}</strong><span>expected damage</span></div>
-        <div><strong>${expectedOrMore}</strong><span>chance of ${escapeHtml(recommendation.expectedDamageThreshold ?? "expected")}+ damage</span></div>
-        <div><strong>${destruction}</strong><span>destruction chance</span></div>
-      </div>
-      <details class="shoot-advisory__details" ${openDetails ? "open" : ""}><summary>Advisor assumptions &amp; detail</summary>
-      <div class="shoot-advisory__grid">        <div><strong>${escapeHtml(primaryImpact)}</strong><span>Primary impact</span></div>
-        <div><strong>${escapeHtml(secondaryImpact)}</strong><span>Secondary impact</span></div>
-        <div><strong>${escapeHtml(threat)}</strong><span>recent threat</span></div>
-        <div><strong>${escapeHtml(impact)}</strong><span>outcome profile</span></div>
-      </div>
-      <p>${escapeHtml(recommendation.recommendation)}</p>
-
-        <p>${escapeHtml(recommendation.primaryMissionImpact?.reason ?? "")}</p>
-        <p>${escapeHtml(recommendation.secondaryMissionImpact?.reason ?? "")}</p>
-        <p>${escapeHtml(recommendation.recentThreat?.reason ?? "")}</p>
-        ${unresolved.length ? `<p>Not used for ranking until verified: ${escapeHtml(unresolved.join(", "))}.</p>` : ""}
-        <small>${recommendation.assumptions.map(escapeHtml).join(" · ")}</small>
-      </details>
-      <small>Advisor confidence: ${escapeHtml(confidence)} · Range confidence: ${escapeHtml(rangeConfidence)}</small>
-    </aside>
-  `;
-}
-
-function shootingDamageForecast(attackerId, weaponId, targetId, state, weapons) {
-  if (!attackerId || !weaponId || !targetId) return "";
-  const weapon = weapons.find((item) => item.id === weaponId);
-  if (!weapon) return "";
-  const forecast = getAttackDamageForecast(state, { attackerId, targetId, weapon });
-  if (!forecast) {
-    return `
-      <aside class="shoot-advisory" data-shoot-damage-forecast>
-        <div class="shoot-advisory__heading"><h3>Damage outlook</h3><span>table result remains authoritative</span></div>
-        <p>Expected damage is unavailable because one or more saved combat characteristics are incomplete.</p>
-      </aside>
-    `;
-  }
-  const expected = forecast.expectedDamage.toFixed(1);
-  const thresholdChance = Math.round(forecast.probabilityAtLeastThreshold * 100) + "%";
-  const anyDamageChance = Math.round(forecast.probabilityAnyDamage * 100) + "%";
-  return `
-    <aside class="shoot-advisory" data-shoot-damage-forecast>
-      <div class="shoot-advisory__heading"><h3>Damage outlook</h3><span>baseline probability</span></div>
-      <div class="shoot-advisory__grid">
-        <div><strong>${escapeHtml(expected)}</strong><span>expected damage</span></div>
-        <div><strong>${escapeHtml(thresholdChance)}</strong><span>chance of ${escapeHtml(forecast.thresholdDamage)}+ damage</span></div>
-        <div><strong>${escapeHtml(anyDamageChance)}</strong><span>chance to cause any damage</span></div>
-      </div>
-      <small>Uses saved profiles and known weapon characteristics. Exact tabletop modifiers and dice remain authoritative.</small>
-    </aside>
-  `;
-}
 function historyRow(item, state, gameData) {
   const attacker = state.units.find((unit) => unit?.id === item.attackerId);
   const target = state.units.find((unit) => unit?.id === item.targetId);
@@ -177,6 +82,7 @@ export function createShootingScreen(container, {
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") throw new TypeError("A game session is required.");
 
   const mapView = createLiveMapView();
+  const compareTargets = createShootingComparisonCache();
   const missionActionPicker = createMissionActionPicker();
   let pendingUnitId = null;
   let selectedAttackerId = null;
@@ -232,6 +138,7 @@ export function createShootingScreen(container, {
   }
 
   function render() {
+    const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const model = getShootingViewModel(state, { perspectivePlayerId });
     const phaseNotice = state.phase !== "shooting"
@@ -270,8 +177,9 @@ export function createShootingScreen(container, {
       const activeActivation = selectedAttackerId
         ? model.activations.find((activation) => activation.unitId === selectedAttackerId && activation.actionType === "shoot")
         : null;
+      const comparison = selectedAttackerId && selectedWeaponId ? compareTargets(state, { playerId: activeUnit.ownerId, attackerId: selectedAttackerId, weapon: weapons.find(w => w.id === selectedWeaponId) }) : null;
       const targetComparison = shootingTargetComparisonCards(
-        selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId
+        selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison
       );
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop${selectedTargetId ? ' is-target-selected' : ''}">
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
@@ -308,7 +216,7 @@ export function createShootingScreen(container, {
               <div class="shoot-tabletop__advisor-heading"><div><span class="kicker">TACTICAL ADVISOR</span><h2>Compare your targets</h2></div><span>${selectedTargetId ? "Selected target" : "Choose target"}</span></div>
               <div class="shoot-tabletop__target-comparisons">${targetComparison}</div>
               ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<details class="shoot-tabletop__selected-target" open><summary>Selected target details</summary><div class="shoot-tabletop__advisor-scroll">
-                ${shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, { openDetails: false })}
+                ${shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, { openDetails: false, comparison })}
               </div></details>` : ''}
             </section>
 
@@ -316,7 +224,7 @@ export function createShootingScreen(container, {
               <ol class="history">${model.attacks.length ? model.attacks.map((item) => historyRow(item, state, gameData)).join("") : "<li>No attacks recorded yet.</li>"}</ol>
             </details>
           </div>
-          <footer class="shoot-tabletop__footer">${selectedAttackerId && activeActivation ? `              <div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
+          <footer class="shoot-tabletop__footer">${renderActionReceipt(session)}${selectedAttackerId && activeActivation ? `              <div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
               <button class="shoot-tabletop__record" type="button" data-attack ${selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record shooting attack →</button>
               <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>` : `<button class="complete" type="button" data-complete ${model.canComplete ? "" : "disabled"}>${model.canComplete ? "Next phase →" : "Finish remaining units"}</button>`}</footer>
         </section>
@@ -383,6 +291,7 @@ export function createShootingScreen(container, {
     </main>`;
     }
 
+    restoreView();
     if (layoutMode === "tabletop" && selectedTargetId) {
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         if (marker.getAttribute?.("data-map-unit-id") === selectedTargetId) {

@@ -26,7 +26,7 @@
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;min-height:42px;padding:5px 7px}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison>span:first-child{min-width:0}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison strong{font-size:12px}
-.battle-shell.is-tabletop-experiment .shoot-tabletop__comparison small{font-size:9px;line-height:1.1}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__comparison small{font-size:11px;line-height:1.25}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-stats{display:grid;grid-template-columns:repeat(3,auto);gap:2px 5px;text-align:center}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-stats b{font-size:11px}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-stats small{grid-row:2}

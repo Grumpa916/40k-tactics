@@ -94,11 +94,13 @@ export function getShootingTargetPriorities(state, {
     let survivalProbability = null;
     let mostLikelyRemainingWounds = null;
     let impactClassification = "unknown";
+    let damageDistribution = null;
     if (weapon?.characteristics) {
       try {
         const attackerProfile = getProbabilisticUnitProfile(state, sourceAttacker);
         const targetProfile = getProbabilisticUnitProfile(state, target);
         const distribution = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon });
+        damageDistribution = distribution;
         const postTarget = getPostFightTargetStates({ target: targetProfile, attacker: attackerProfile, weapon, distribution });
         expectedDamage = distribution.expectedDamage;
         destructionProbability = postTarget.destructionProbability;
@@ -161,6 +163,7 @@ export function getShootingTargetPriorities(state, {
       destructionProbability,
       survivalProbability,
       mostLikelyRemainingWounds,
+      damageDistribution,
       impactClassification,
       targetImpact: opportunity.targetImpact,
       normalizedImpact: opportunity.normalizedImpact,

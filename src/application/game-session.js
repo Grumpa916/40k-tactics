@@ -1,5 +1,6 @@
 import { executeCommand } from "../engine/command-engine.js";
 import { GAME_STATE_VERSION } from "../state/version.js";
+import { describeSessionCorrection } from './session-correction.js';
 
 export function createGameSession(initialState, { commandExecutor = executeCommand } = {}) {
   if (!initialState || typeof initialState !== "object") {
@@ -10,6 +11,7 @@ export function createGameSession(initialState, { commandExecutor = executeComma
   }
 
   let state = initialState;
+  let correction = null;
   const subscribers = new Set();
 
   const notify = () => {
@@ -41,18 +43,35 @@ export function createGameSession(initialState, { commandExecutor = executeComma
         throw new TypeError("The restored game state must be a JSON object.");
       }
       state = snapshot;
+      correction = null;
       notify();
       return state;
     },
 
     dispatch(command, context = {}) {
+      const previous = state;
       const nextState = commandExecutor(state, command, context);
       if (!nextState || typeof nextState !== "object") {
         throw new TypeError("A command executor must return a game state.");
       }
+      const description = describeSessionCorrection(command, previous);
+      correction = description && nextState !== previous ? { previous, after: nextState, ...description } : null;
       state = nextState;
       notify();
       return state;
+    },
+
+    getLastCorrection() {
+      return correction ? { label: correction.label, detail: correction.detail } : null;
+    },
+
+    undoLastAction() {
+      if (!correction || correction.after !== state) return false;
+      // Correct only the immediately preceding action; clocks never run backwards.
+      state = { ...correction.previous, timers: state.timers };
+      correction = null;
+      notify();
+      return true;
     },
 
     subscribe(listener) {
