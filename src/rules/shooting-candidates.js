@@ -1,8 +1,11 @@
 import {
+  getCombatFormationMembers,
   getCombatFormationRoot,
   getCombatFormationRootId,
-  hasConfirmedNoRangedWeaponsForFormation
+  hasConfirmedNoRangedWeaponsForFormation,
+  hasInvalidWargear
 } from "./battle-unit-reference.js";
+import { getCombatFormationWeaponOptions } from "./saved-roster-combat-profile.js";
 import { UNIT_STATUS } from "../state/unit.js";
 
 const SHOOTING_ACTIVATION_EVENT = "shooting.unit_activated";
@@ -13,6 +16,20 @@ function currentTurnEvents(state, type) {
     event?.payload?.round === state?.battle?.round &&
     event?.payload?.turn === state?.turn
   );
+}
+
+function isActionOnlyCandidate(state, unit) {
+  if (hasConfirmedNoRangedWeaponsForFormation(state, unit)) return true;
+
+  const members = getCombatFormationMembers(state, unit);
+  const hasInvalidSavedLoadout = members.some((member) => hasInvalidWargear(state, member));
+
+  // Invalid or unverified saved wargear is deliberately excluded from combat
+  // weapon options. If that leaves the formation with no usable ranged weapon,
+  // do not offer Shoot and strand the player in an empty weapon selector. Keep
+  // generic missing/mixed legacy weapon data unresolved as before.
+  return hasInvalidSavedLoadout &&
+    getCombatFormationWeaponOptions(state, unit, { type: "ranged" }).length === 0;
 }
 
 export function getShootingCandidates(state) {
@@ -35,8 +52,8 @@ export function getShootingCandidates(state) {
   );
 
   return {
-    available: unresolved.filter((unit) => !hasConfirmedNoRangedWeaponsForFormation(state, unit)).map((unit) => unit.id),
-    actionOnly: unresolved.filter((unit) => hasConfirmedNoRangedWeaponsForFormation(state, unit)).map((unit) => unit.id),
+    available: unresolved.filter((unit) => !isActionOnlyCandidate(state, unit)).map((unit) => unit.id),
+    actionOnly: unresolved.filter((unit) => isActionOnlyCandidate(state, unit)).map((unit) => unit.id),
     activated: deployedRoots
       .filter((unit) => activated.has(unit.id))
       .map((unit) => unit.id)
