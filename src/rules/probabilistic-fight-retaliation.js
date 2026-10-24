@@ -44,17 +44,10 @@ export function getProbabilisticFightRetaliation(
   });
 
   const outcomes = postAttack.states.map((postState) => {
-    if (postState.destroyed) {
-      return Object.freeze({
-        ...postState,
-        retaliationExpectedDamage: 0,
-        retaliation: null
-      });
-    }
-
     const retaliation = getBestFightRetaliation(state, {
       playerId,
       attackerId,
+      destroyedUnitIds: postState.destroyed ? [target.id] : [],
       remainingWoundsByUnit: {
         [target.id]: postState.remainingWounds
       }

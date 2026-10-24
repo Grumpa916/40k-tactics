@@ -1,6 +1,7 @@
 import { getShootingTargetComparison } from '../rules/tactical-shooting-comparison.js';
 import { getAttackDamageForecast } from '../rules/attack-damage-forecast.js';
 import { escapeHtml } from './combat-workspace.js';
+import { renderAdvisorDecisionSummary } from './advisor-decision-summary.js';
 
 export function shootingTargetComparisonCards(attackerId, weaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison = null) {
   if (!attackerId || !weaponId || !perspectivePlayerId) return '<p class="shoot-tabletop__empty-advice">Choose a shooter and weapon to compare targets.</p>';
@@ -54,19 +55,19 @@ export function shootingAdvisory(attackerId, weaponId, targetId, state, weapons,
         <div><strong>${expectedOrMore}</strong><span>chance of ${escapeHtml(recommendation.expectedDamageThreshold ?? "expected")}+ damage</span></div>
         <div><strong>${destruction}</strong><span>destruction chance</span></div>
       </div>
-      <details class="shoot-advisory__details" ${openDetails ? "open" : ""}><summary>Advisor assumptions &amp; detail</summary>
+      ${renderAdvisorDecisionSummary(recommendation)}
+      <details class="shoot-advisory__details" data-view-key="shoot-assumptions" ${openDetails ? "open" : ""}><summary>Advisor assumptions &amp; detail</summary>
       <div class="shoot-advisory__grid">        <div><strong>${escapeHtml(primaryImpact)}</strong><span>Primary impact</span></div>
         <div><strong>${escapeHtml(secondaryImpact)}</strong><span>Secondary impact</span></div>
         <div><strong>${escapeHtml(threat)}</strong><span>recent threat</span></div>
         <div><strong>${escapeHtml(impact)}</strong><span>outcome profile</span></div>
       </div>
-      <p>${escapeHtml(recommendation.recommendation)}</p>
-
+        ${recommendation.gameStrategy?.reason ? `<p>${escapeHtml(recommendation.gameStrategy.reason)}</p>` : ''}
         <p>${escapeHtml(recommendation.primaryMissionImpact?.reason ?? "")}</p>
         <p>${escapeHtml(recommendation.secondaryMissionImpact?.reason ?? "")}</p>
         <p>${escapeHtml(recommendation.recentThreat?.reason ?? "")}</p>
         ${unresolved.length ? `<p>Not used for ranking until verified: ${escapeHtml(unresolved.join(", "))}.</p>` : ""}
-        <small>${recommendation.assumptions.map(escapeHtml).join(" · ")}</small>
+        <small>${(recommendation.assumptions ?? []).map(escapeHtml).join(" · ")}</small>
       </details>
       <small>Advisor confidence: ${escapeHtml(confidence)} · Range confidence: ${escapeHtml(rangeConfidence)}</small>
     </aside>
