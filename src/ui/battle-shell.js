@@ -263,6 +263,7 @@ export function createBattleShell(container, {
   let mountedArmySelectionPanel = null;
   let cloudStore = battleStore ?? (supabaseClient ? createSupabaseBattleStore(supabaseClient) : null);
   let showCloud = Boolean(supabaseClient || cloudStore);
+  let cloudPanelsPending = false;
   let setupWorkspaceTab = "saves";
   let setupNavigationMessage = "";
   let phaseProgressionMessage = "";
@@ -296,6 +297,12 @@ export function createBattleShell(container, {
   function setSetupWorkspaceTab(tab) {
     if (!["army-builder", "army-selection", "saves", "pre-game", "mission-map", "battlefield", "deployment"].includes(tab)) return;
     setupWorkspaceTab = tab;
+    if (cloudPanelsPending && viewedPhase === 'setup' && ['saves', 'army-builder', 'army-selection'].includes(tab)) {
+      cloudPanelsPending = false;
+      destroyMountedScreen();
+      render();
+      return;
+    }
     setupNavigationMessage = "";
     container.querySelectorAll?.("[data-setup-workspace-tab]").forEach((button) => {
       button.setAttribute("aria-pressed", String(button.getAttribute("data-setup-workspace-tab") === tab));
@@ -472,6 +479,7 @@ export function createBattleShell(container, {
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
         gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
       });
+      if (viewedPhase === 'setup') cloudPanelsPending = false;
 
       const persistenceContainer = container.querySelector("[data-battle-persistence-panel]");
       const rosterContainer = container.querySelector("[data-army-roster-panel]");
@@ -912,6 +920,7 @@ export function createBattleShell(container, {
       supabaseClient = client;
       cloudStore = battleStore ?? createSupabaseBattleStore(client);
       showCloud = true;
+      cloudPanelsPending = true;
       // Do not remount a live phase or interrupt setup input outside the account tab.
       if (viewedPhase === 'setup' && setupWorkspaceTab === 'saves') {
         destroyMountedScreen();

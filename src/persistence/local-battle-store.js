@@ -5,16 +5,27 @@ export function createLocalBattleStore(database) {
     try { if (database === undefined) database = globalThis.indexedDB; }
     catch (error) { return Promise.reject(error); }
     if (!database) return Promise.reject(new Error('Device storage is unavailable. Use cloud saves before closing.'));
-    return opened ??= new Promise((resolve, reject) => {
+    if (opened) return opened;
+    let abandoned = false;
+    const attempt = new Promise((resolve, reject) => {
       const request = database.open('40k-tactics-recovery', 1);
-      request.onupgradeneeded = () => request.result.createObjectStore('snapshots');
+      request.onupgradeneeded = () => {
+        if (abandoned) { request.transaction?.abort(); return; }
+        request.result.createObjectStore('snapshots');
+      };
       request.onsuccess = () => {
-        request.result.onversionchange = () => request.result.close();
+        if (abandoned) { request.result.close(); return; }
+        request.result.onversionchange = () => { request.result.close(); if (opened === attempt) opened = null; };
         resolve(request.result);
       };
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => reject(new Error('Device storage is busy in another app window.'));
+      request.onerror = () => { abandoned = true; reject(request.error); };
+      request.onblocked = () => { abandoned = true; reject(new Error('Device storage is busy in another app window.')); };
+    }).catch(error => {
+      if (opened === attempt) opened = null;
+      throw error;
     });
+    opened = attempt;
+    return attempt;
   }
   return {
     async load() {

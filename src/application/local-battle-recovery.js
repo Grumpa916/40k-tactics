@@ -40,13 +40,22 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
       }
     }
   }
+  function startWrite() {
+    if (writing || !pending) return;
+    writing = drain().finally(() => {
+      writing = null;
+      // A change can arrive after drain's last iteration but before this
+      // completion callback. Start that pending write rather than stranding it.
+      startWrite();
+    });
+  }
   function save() {
     if (destroyed) return;
     if (!enabled) { if (status.mode === 'loading') dirtyBeforeReady = true; return; }
     try { pending = createRecoveryRecord(session.getState(), now()); }
     catch (error) { publish({ mode: 'error', message: 'Device save failed: ' + error.message }); return; }
     publish({ mode: 'saving', message: 'Saving on device…' });
-    if (!writing) writing = drain().finally(() => { writing = null; });
+    startWrite();
   }
   const unsubscribe = session.subscribe(save);
   const ready = (async () => {
