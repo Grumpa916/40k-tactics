@@ -83,8 +83,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
                <button type="button" data-move-stationary>Did Not Move</button>
                <button type="button" data-move-save>Normal Move</button>
                <div class="advance-choice">
-                 <span>Advance roll</span>
-                 <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" class="${value === advanceRoll ? "is-selected" : ""}">${value}</button>`).join("")}</div>
+                 <span>Advance roll: <strong data-advance-roll-value>${advanceRoll}</strong></span>
+                 <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" aria-pressed="${value === advanceRoll}" class="${value === advanceRoll ? "is-selected" : ""}"${value === advanceRoll ? ' style="background:#c4e99b;color:#17212b;border-color:#c4e99b;font-weight:800"' : ""}>${value}</button>`).join("")}</div>
                  <button type="button" data-move-advance>Advance</button>
                </div>
                <button type="button" data-move-fallback>Fall Back</button>
@@ -234,8 +234,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         render();
         return;
       }
-      if (button.dataset.advanceRoll) {
-        advanceRoll = Number(button.dataset.advanceRoll);
+      if (button.hasAttribute("data-advance-roll")) {
+        advanceRoll = Number(button.getAttribute("data-advance-roll"));
         render();
         return;
       }
