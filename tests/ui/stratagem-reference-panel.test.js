@@ -34,6 +34,8 @@ test('all ten Tyranid detachments have complete 40K.app stratagem coverage', () 
   };
   assert.equal(detachments.length, 10);
   assert.equal(detachments.reduce((sum, detachment) => sum + detachment.stratagems.length, 0), 51);
+  const crusher = detachments.find((detachment) => detachment.name === 'Crusher Stampede');
+  assert.match(crusher.stratagems.find((stratagem) => stratagem.name === 'Untrammelled Ferocity').description, /non-TITANIC/);
   for (const detachment of detachments) {
     assert.equal(detachment.stratagemCatalogStatus, 'complete', detachment.name);
     assert.equal(detachment.stratagems.length, expectedCounts[detachment.name], detachment.name);
@@ -60,7 +62,6 @@ test('selected Tyranid stratagems are filtered to the current phase without inco
   assert.match(html, /Lesser Prey/);
   assert.match(html, /instead of the army's currently active imperative/);
   assert.match(html, /attacks against that enemy gain \+1 to Hit/);
-  assert.match(html, /non-TITANIC models/);
   assert.doesNotMatch(html, /Tanglestrike Rounds/);
   assert.doesNotMatch(html, /partial catalog|not been imported yet/);
 });
