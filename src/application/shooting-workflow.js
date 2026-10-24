@@ -99,6 +99,7 @@ export function activateShootingUnit(session, {
 export function resolveShootingAttack(session, {
   attackerId,
   targetId,
+  allocationTargetId = null,
   weapon,
   actualDamage = null
 } = {}, context = {}) {
@@ -109,6 +110,7 @@ export function resolveShootingAttack(session, {
     createCommand(COMMAND_TYPES.RESOLVE_ATTACK, {
       attackerId,
       targetId,
+      allocationTargetId,
       weapon,
       actualDamage
     }),
@@ -169,4 +171,3 @@ export function getShootingTargetOptions(state, { attackerId, perspectivePlayerI
     )
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 }
-
