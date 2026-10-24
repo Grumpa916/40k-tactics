@@ -14,11 +14,25 @@ export function detachmentOptions(faction, selected = null) {
   return options.join('');
 }
 
+function renderDetachmentDetails(detachment){
+  const ruleName=String(detachment.ruleName??'').trim();
+  const rule=String(detachment.rule??detachment.description??'').trim();
+  const katah=String(detachment.favouredKatah??'').trim();
+  const katahEffect=String(detachment.favouredKatahEffect??'').trim();
+  const ruleHtml=rule
+    ? `<p class="ab-detachment-rule">${ruleName?`<strong>${escapeHtml(ruleName)}</strong><br>`:''}${escapeHtml(rule)}</p>`
+    : '<p class="ab-muted">Detachment rules text has not been loaded into the app yet.</p>';
+  const katahHtml=katah
+    ? `<p><strong>Favoured Ka'tah: ${escapeHtml(katah)}</strong>${katahEffect?`<br>${escapeHtml(katahEffect)}`:''}</p>`
+    : '';
+  return `<div class="ab-detachment-rule-body"><p class="ab-muted">${escapeHtml(detachment.detachmentPoints)} DP · ${escapeHtml(detachment.forceDisposition)}${detachment.uniqueShieldHost?' · Unique Shield Host':''}</p>${ruleHtml}${katahHtml}</div>`;
+}
+
 export function renderDetachmentChecklist(faction, selected = []) {
   const chosen=selectedSet(selected);
   const detachments=getFactionDetachments(faction);
   if(!detachments.length) return '<p class="ab-muted">Detachment data for this faction is not loaded yet.</p>';
   const used=detachments.filter(d=>chosen.has(d.name)).reduce((sum,d)=>sum+(d.detachmentPoints??0),0);
-  const rows=detachments.map(d=>`<label class="ab-check"><input type="checkbox" data-roster-detachment-checkbox value="${escapeHtml(d.name)}" ${chosen.has(d.name)?'checked':''}> <span><strong>${escapeHtml(d.name)}</strong> · ${escapeHtml(d.detachmentPoints)} DP · ${escapeHtml(d.forceDisposition)}${d.uniqueShieldHost?' · Unique Shield Host':''}</span></label>`).join('');
-  return `<div class="ab-detachment-picker"><p><strong>Detachments · ${used}/${DETACHMENT_POINT_BUDGET} DP used</strong></p>${rows}</div>`;
+  const rows=detachments.map(d=>`<div class="ab-detachment-choice"><label class="ab-detachment-select"><input type="checkbox" data-roster-detachment-checkbox value="${escapeHtml(d.name)}" ${chosen.has(d.name)?'checked':''} aria-label="Select ${escapeHtml(d.name)}"></label><details class="ab-detachment-details"><summary><span><strong>${escapeHtml(d.name)}</strong><small>${escapeHtml(d.detachmentPoints)} DP · ${escapeHtml(d.forceDisposition)}${d.uniqueShieldHost?' · Unique Shield Host':''}</small></span></summary>${renderDetachmentDetails(d)}</details></div>`).join('');
+  return `<div class="ab-detachment-picker"><p><strong>Detachments · ${used}/${DETACHMENT_POINT_BUDGET} DP used</strong></p><p class="ab-muted">Tap a detachment name to view its rules.</p>${rows}</div>`;
 }
