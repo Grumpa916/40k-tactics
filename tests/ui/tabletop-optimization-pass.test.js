@@ -4,14 +4,14 @@ import fs from 'node:fs';
 
 const read = path => fs.readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
 
-test('Tabletop HUD exposes compact scores, phases, Overview and separate timer controls', () => {
+test('Tabletop HUD exposes compact phase controls without duplicating scoreboard controls', () => {
   const src = read('src/ui/prototype-workspace.js');
   assert.ok(src.includes('tabletop-live-strip'));
-  assert.ok(src.includes('data-open-score-adjust-kind="vp"'));
-  assert.ok(src.includes('data-open-score-adjust-kind="cp"'));
-  assert.ok(src.includes('data-toggle-turn-clock'));
   assert.ok(src.includes('<summary>Phases</summary>'));
   assert.ok(src.includes("focus ? 'Overview' : 'Tabletop'"));
+  assert.equal(src.includes('data-open-score-adjust-kind="vp"'), false);
+  assert.equal(src.includes('data-open-score-adjust-kind="cp"'), false);
+  assert.equal(src.includes('data-toggle-turn-clock'), false);
 });
 
 test('Command battle view exposes a guarded next-phase button for Movement', () => {
