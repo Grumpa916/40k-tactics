@@ -14,7 +14,7 @@ function setup({ phase = 'command', rejected = false } = {}) {
   const listeners = new Set(), host = { innerHTML: '' }, screen = { innerHTML: '', replaceChildren() {} };
   const root = { innerHTML: '', replaceChildren() {}, contains: () => true, querySelector(selector) { return selector === '[data-phase-progression-host]' ? host : selector === '[data-battle-screen]' ? screen : null; }, addEventListener(type, fn) { if (type === 'click') listeners.add(fn); }, removeEventListener(type, fn) { listeners.delete(fn); } };
   const shell = createBattleShell(root, { session, screenFactories: {} });
-  const click = (selector, phase) => { const button = { getAttribute: name => name === 'data-battle-phase-button' ? phase : null }; const event = { target: { closest: value => value === selector ? button : null } }; for (const fn of [...listeners]) fn(event); };
+  const click = (selector, phase) => { const button = { getAttribute: name => ['data-battle-phase-button','data-setup-workspace-tab'].includes(name) ? phase : null }; const event = { target: { closest: value => value === selector ? button : null } }; for (const fn of [...listeners]) fn(event); };
   return { state, session, root, host, shell, click };
 }
 
@@ -67,4 +67,27 @@ test('setup and completed battles do not offer phase advancement', () => {
     assert.equal(getPhaseProgressionAction(state), null);
     assert.equal(renderPhaseProgressionPanel(state, 'command'), '');
   }
+});
+
+test('delayed cloud connection preserves setup input, then mounts cloud containers on returning to account or army tabs', () => {
+  for (const tab of ['saves','army-selection','army-builder']) {
+    const x=setup({phase:'setup'});
+    try {
+      x.click('[data-setup-workspace-tab]','pre-game');
+      const before=x.root.innerHTML;
+      x.shell.connectCloud({auth:{getUser:async()=>({data:{user:null}})},from(){}});
+      assert.equal(x.root.innerHTML,before);
+      x.click('[data-setup-workspace-tab]',tab);
+      assert.match(x.root.innerHTML,/data-supabase-auth-panel/);
+      assert.match(x.root.innerHTML,/data-army-selection-panel/);
+    } finally {x.shell.destroy();}
+  }
+});
+test('cloud arrival never remounts the current live phase', () => {
+  const x=setup();
+  try {
+    const before=x.root.innerHTML;
+    x.shell.connectCloud({auth:{getUser:async()=>({data:{user:null}})},from(){}});
+    assert.equal(x.root.innerHTML,before);
+  } finally {x.shell.destroy();}
 });

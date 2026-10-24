@@ -1,4 +1,3 @@
-import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
@@ -6,6 +5,20 @@ import { getTargetStrategicContext } from "./tactical-target-context.js";
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
     .find((unit) => unit?.id === unitId) ?? null;
+}
+
+// The engine replaces state after accepted actions. Target browsing changes UI
+// selection only, so reuse the last weapon comparison until state or weapon changes.
+export function createShootingComparisonCache(compare = getShootingTargetComparison) {
+  let priorState, priorKey, result;
+  return (state, options) => {
+    const key = JSON.stringify(options);
+    if (state !== priorState || key !== priorKey) {
+      result = compare(state, options);
+      priorState = state; priorKey = key;
+    }
+    return result;
+  };
 }
 
 function probabilityAtLeast(distribution, threshold) {
@@ -78,18 +91,7 @@ export function getShootingTargetComparison(state, {
       targetUnitId: item.targetUnitId
     });
 
-    let distribution = null;
-    if (target && weapon?.characteristics && sourceAttacker) {
-      try {
-        distribution = getDamageOutcomeDistribution({
-          attacker: getProbabilisticUnitProfile(state, sourceAttacker),
-          target: getProbabilisticUnitProfile(state, target),
-          weapon
-        });
-      } catch {
-        distribution = null;
-      }
-    }
+    const distribution = item.damageDistribution;
 
     const expectedDamage = item.expectedDamage;
     const expectedDamageThreshold = Number.isFinite(expectedDamage) && expectedDamage > 0

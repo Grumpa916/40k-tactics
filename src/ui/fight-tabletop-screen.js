@@ -1,4 +1,6 @@
 import { createLiveMapView } from './live-map-view.js';
+import { captureViewContinuity } from './view-continuity.js';
+import { renderActionReceipt } from './action-receipt.js';
 import { finishCombatUnit } from '../application/combat-activation-workflow.js';
 import { isCombatActivationFinished } from '../rules/combat-activation-state.js';
 import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
@@ -16,6 +18,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
 
   function render() {
     if (dispatching) return;
+    const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const model = getFightViewModel(state, { perspectivePlayerId });
     let options = getFightAttackOptions(state, { attackerId, perspectivePlayerId, includeCandidates:true });
@@ -38,6 +41,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId); }
     catch { advice = '<p>Combat profile incomplete. Check unit details; record the physical result below.</p>'; }
     const unitNameColor = unit ? (unit.ownerId === perspectivePlayerId ? '#79bbff' : '#ff8585') : '';
+    const attackControls = `${unit ? `<div class="combat-workspace__damage"><span>Actual damage</span><div><button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button><strong data-fight-damage-value>${damage}</strong><button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button></div></div>
+        <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button>` : ''}`;
     const controls = `${unitNameColor ? `<style>.combat-workspace[data-combat-phase="fight"] .combat-workspace__panel h1{color:${unitNameColor}}</style>` : ''}<h1>${esc(unit?.name ?? 'Select a fighter')}</h1>
 
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
@@ -58,12 +63,11 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         ${advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
         <details><summary>Advisor assumptions</summary><p>Uses known weapon profiles, wounds and recorded engagements. Return damage is the strongest known eligible retaliation estimate across possible target survival outcomes, not the sum of every enemy attack. Unknown profiles or abilities can change the result.</p></details>
       </aside>
-      ${unit ? `<div class="combat-workspace__damage"><span>Actual damage</span><div><button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button><strong data-fight-damage-value>${damage}</strong><button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button></div></div>
-        <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button>` : ''}
       <details><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(attack.allocationTargetName ? `${state.units.find(unit => unit.id === attack.targetId)?.name} (${attack.allocationTargetName})` : state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining units as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${endPrompt}<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>` });
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${renderActionReceipt(session)}${attackControls}${endPrompt}<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>` });
 
+    restoreView();
     mapView.bind(container);
     const choose = id => {
       if (!options.attackers.some(unit => unit.unitId === id)) {

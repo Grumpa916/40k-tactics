@@ -5,7 +5,7 @@ const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<',
 export const checkpointScoreKey = (state, playerId, checkpoint) => [state.battle?.round ?? 0, state.turn ?? 0, playerId, checkpoint].join(':');
 
 export function renderConditionEvidence(state, playerId, item) {
-  const evidence = missionConditionEvidence(state, playerId, item.summary);
+  const evidence = missionConditionEvidence(state, playerId, item);
   return `<p>${esc(item.vp)} VP · ${esc(item.summary)}<br><strong>${esc(evidence.status)}</strong>${evidence.detail ? `<br>${esc(evidence.detail)}` : ''}</p>`;
 }
 
