@@ -1,6 +1,7 @@
 import { createLiveMapView } from './live-map-view.js';
 import { finishCombatUnit } from '../application/combat-activation-workflow.js';
 import { isCombatActivationFinished } from '../rules/combat-activation-state.js';
+import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
 import { getFightViewModel, getFightAttackOptions, getFightWeaponOptions, activateFightUnit, resolveFightAttack, finishFightPhase } from '../application/fight-workflow.js';
 import { getFightAdvisorContext } from '../application/fight-advisor-context.js';
 import { fightAdvisory } from './fight-advisor.js';
@@ -9,9 +10,9 @@ import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './comba
 export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null }) {
   const mapView = createLiveMapView();
   let endReview = false;
-  let attackerId = null, weaponId = null, targetId = null;
+  let attackerId = null, weaponId = null, targetId = null, precisionAllocationId = null;
   let damage = 0, error = '', dispatching = false;
-  const reset = () => { attackerId = weaponId = targetId = null; damage = 0; };
+  const reset = () => { attackerId = weaponId = targetId = precisionAllocationId = null; damage = 0; };
 
   function render() {
     if (dispatching) return;
@@ -22,7 +23,12 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     options = getFightAttackOptions(state, { attackerId, perspectivePlayerId, includeCandidates:true });
     const weapons = getFightWeaponOptions(state, { attackerId, gameData });
     if (!weapons.some(weapon => weapon.id === weaponId)) weaponId = weapons.length === 1 ? weapons[0].id : null;
-    if (!options.targets.some(unit => unit.unitId === targetId)) targetId = null;
+    if (!options.targets.some(unit => unit.unitId === targetId)) { targetId = null; precisionAllocationId = null; }
+    const selectedWeapon = weapons.find(weapon => weapon.id === weaponId) ?? null;
+    const precisionOptions = selectedWeapon?.characteristics?.precision === true && targetId
+      ? getPrecisionAllocationOptions(state, targetId)
+      : [];
+    if (!precisionOptions.some(option => option.unitId === precisionAllocationId)) precisionAllocationId = null;
     const unit = state.units.find(unit => unit.id === attackerId);
     const active = model.activations.some(item => item.unitId === attackerId && item.actionType !== 'not_fight');
     const available = [...model.candidates.fightsFirst, ...model.candidates.normal];
@@ -42,8 +48,10 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         ${model.activations.some(item => item.actionType !== 'not_fight') ? `<h3>Unfinished activations</h3><div class="combat-workspace__choices">${chooseButtons(options.attackers.filter(item => !available.some(c => c.unitId === item.unitId)))}</div>` : ''}
       </details>
       ${unit ? `<p>${active ? 'Fight activation recorded · add weapon/target results below.' : 'Compare targets, then record the first attack to begin this activation.'}</p>
-        <label>Melee weapon<select data-fight-weapon><option value="">Choose weapon…</option>${weapons.map(weapon => `<option value="${esc(weapon.id)}" ${weapon.id === weaponId ? 'selected' : ''}>${esc(weapon.name)}</option>`).join('')}</select></label>
+        <label>Melee weapon<select data-fight-weapon><option value="">Choose weapon…</option>${weapons.map(weapon => `<option value="${esc(weapon.id)}" ${weapon.id === weaponId ? 'selected' : ''}>${esc(weapon.name)}${weapon.characteristics?.extraAttacks ? ' · Extra Attacks' : ''}</option>`).join('')}</select></label>
+        ${selectedWeapon?.characteristics?.extraAttacks ? '<p><strong>Extra Attacks:</strong> record this weapon in addition to the model’s main melee weapon during the same activation.</p>' : ''}
         <label>Target · tap an enemy marker<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
+        ${precisionOptions.length ? `<label>Precision allocation · optional<select data-fight-precision><option value="">Normal allocation</option>${precisionOptions.map(option => `<option value="${esc(option.unitId)}" ${option.unitId === precisionAllocationId ? 'selected' : ''}>${esc(option.name)}</option>`).join('')}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ''}
         ${!options.targets.length ? '<p>No eligible targets remain in the recorded engagement context.</p>' : ''}
         <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-begin>Begin Fight</button><button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish activation</button>'}</div>` : ''}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Fight Tactical Advisor"><h2>Tactical Advisor</h2>
@@ -52,7 +60,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       </aside>
       ${unit ? `<div class="combat-workspace__damage"><span>Actual damage</span><div><button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button><strong data-fight-damage-value>${damage}</strong><button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button></div></div>
         <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button>` : ''}
-      <details><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
+      <details><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(attack.allocationTargetName ? `${state.units.find(unit => unit.id === attack.targetId)?.name} (${attack.allocationTargetName})` : state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining units as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${endPrompt}<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>` });
 
@@ -64,14 +72,15 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       if (id !== attackerId) { reset(); attackerId = id; }
       error = ''; render();
     };
-    const chooseTarget = id => { targetId = id; damage = 0; error = ''; render(); };
+    const chooseTarget = id => { targetId = id; precisionAllocationId = null; damage = 0; error = ''; render(); };
     bindCombatMap(container, { selectedUnitId:attackerId, targetIds:targetId ? [targetId] : [], selectableIds:options.attackers.map(unit => unit.unitId), onSelect:id => {
       if (attackerId && options.targets.some(unit => unit.unitId === id)) chooseTarget(id);
       else choose(id);
     } });
     container.querySelectorAll('[data-fight-select]').forEach(button => button.addEventListener('click', () => choose(button.getAttribute('data-fight-select'))));
-    container.querySelector('[data-fight-weapon]')?.addEventListener('change', event => { weaponId = event.target.value || null; damage = 0; error = ''; render(); });
+    container.querySelector('[data-fight-weapon]')?.addEventListener('change', event => { weaponId = event.target.value || null; precisionAllocationId = null; damage = 0; error = ''; render(); });
     container.querySelector('[data-fight-target]')?.addEventListener('change', event => chooseTarget(event.target.value || null));
+    container.querySelector('[data-fight-precision]')?.addEventListener('change', event => { precisionAllocationId = event.target.value || null; damage = 0; error = ''; render(); });
     const begin = (actionType = 'fight') => {
       if (!attackerId || active) return;
       try {
@@ -100,8 +109,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       try {
         dispatching = true;
         if (!active) activateFightUnit(session, { unitId:attackerId, actionType:'fight' });
-        resolveFightAttack(session, { attackerId, targetId, weapon, actualDamage:damage });
-        targetId = null; damage = 0; error = '';
+        resolveFightAttack(session, { attackerId, targetId, allocationTargetId: precisionAllocationId, weapon, actualDamage:damage });
+        targetId = null; precisionAllocationId = null; damage = 0; error = '';
       } catch (cause) { error = cause?.message ?? String(cause); }
       finally { dispatching = false; }
       render();
