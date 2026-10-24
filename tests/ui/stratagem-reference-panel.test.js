@@ -60,7 +60,7 @@ test('selected Tyranid stratagems are filtered to the current phase without inco
   assert.match(html, /Rampaging Monstrosities/);
   assert.match(html, /Savage Roar/);
   assert.match(html, /Lesser Prey/);
-  assert.match(html, /instead of the army's currently active imperative/);
+  assert.match(html, /instead of the army&#039;s currently active imperative/);
   assert.match(html, /attacks against that enemy gain \+1 to Hit/);
   assert.doesNotMatch(html, /Tanglestrike Rounds/);
   assert.doesNotMatch(html, /partial catalog|not been imported yet/);
