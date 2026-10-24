@@ -1,5 +1,13 @@
 import { getExpectedDamage } from "./expected-damage.js";
 import { getFightEngagementState } from "./fight-engagement-state.js";
+import { isCombatActivationFinished } from "./combat-activation-state.js";
+
+function hasFinishedFighting(state, unitId) {
+  return isCombatActivationFinished(state, unitId, "fight") || (state.history ?? []).some(event =>
+    event.type === "fight.unit_activated" && event.payload?.unitId === unitId &&
+    event.payload?.actionType === "not_fight" && event.payload?.turn === state.turn &&
+    event.payload?.round === state.battle?.round);
+}
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
@@ -78,7 +86,7 @@ export function getBestFightRetaliation(
     const enemy = unitById(state, option?.unitId);
     const weapon = option?.weapon;
 
-    if (!enemy || enemy.ownerId === playerId || enemy.status === "destroyed" || destroyed.has(enemy.id)) continue;
+    if (!enemy || enemy.ownerId === playerId || enemy.status === "destroyed" || destroyed.has(enemy.id) || hasFinishedFighting(state, enemy.id)) continue;
     if (!weapon || weapon.type !== "melee") continue;
 
     const damage = Number.isFinite(option?.expectedDamage)
@@ -98,8 +106,8 @@ export function getBestFightRetaliation(
 
   for (const enemyId of engagedOpponents(state, playerId, attackerId)) {
     const enemy = unitById(state, enemyId);
+    if (destroyed.has(enemy.id) || hasFinishedFighting(state, enemy.id)) continue;
     for (const weapon of availableMeleeWeapons(enemy)) {
-      if (destroyed.has(enemy.id)) continue;
       const damage = expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds);
       if (!Number.isFinite(damage)) continue;
 

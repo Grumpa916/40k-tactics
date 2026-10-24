@@ -30,6 +30,28 @@ test('top three comparisons remain compact while all additional targets stay rea
   assert.equal((html.slice(detail).match(/data-advisor-target/g)??[]).length,2);
   assert.match(html,/More targets \(2\)/);
 });
+test('target cycling retains keyed disclosures and restores the active selector without scrolling', () => {
+  const detail = open => ({ open, getAttribute: () => 'shoot-assumptions' });
+  const previous = { disabled: false };
+  let current = previous, section = detail(true), focusOptions = null;
+  const container = { ownerDocument: { activeElement: previous },
+    querySelector: selector => selector === '[data-target]' ? current : null,
+    querySelectorAll: selector => selector === '[data-view-key]' ? [section] : [] };
+  const restore = captureViewContinuity(container);
+  current = { focus: options => { focusOptions = options; } }; section = detail(false);
+  restore();
+  assert.equal(section.open, true);
+  assert.deepEqual(focusOptions, { preventScroll: true });
+});
+test('removed target comparison focus does not jump to another target', () => {
+  const previous = { getAttribute: () => 'removed-target' };
+  let nodes = [previous], focused = false;
+  const container = { ownerDocument: { activeElement: previous }, querySelector: () => null,
+    querySelectorAll: selector => selector === '[data-advisor-target]' ? nodes : [] };
+  const restore = captureViewContinuity(container);
+  nodes = [{ getAttribute: () => 'other', focus: () => { focused = true; } }];
+  restore(); assert.equal(focused, false);
+});
 test('attack receipt escapes imported names and offers one immediate correction', () => {
   const html=renderActionReceipt({getLastCorrection:()=>({label:'attack',detail:'<Shooter> → Target · 3 damage'})});
   assert.match(html,/&lt;Shooter&gt;/);assert.match(html,/data-live-undo/);

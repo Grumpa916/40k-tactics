@@ -90,6 +90,9 @@ export function getFightOpportunityRecommendations(
         automaticRetaliation?.confidence ??
         "low";
 
+      const retaliationEstimateAvailable = Number.isFinite(option?.retaliationExpectedDamage) ||
+        probabilisticRetaliation?.confidence === "moderate" || Number.isFinite(automaticRetaliation?.expectedDamage);
+
       const evaluation = evaluateFightOpportunity({
         expectedDamage,
         retaliationExpectedDamage,
@@ -107,6 +110,7 @@ export function getFightOpportunityRecommendations(
         weaponId: option?.weapon?.id ?? option?.weaponId ?? null,
         expectedDamage: evaluation.expectedDamage,
         retaliationExpectedDamage: evaluation.retaliationExpectedDamage,
+        retaliationEstimateAvailable,
         targetImpact: evaluation.targetImpact,
         retaliationRisk: evaluation.retaliationRisk,
         preservationRisk: evaluation.preservationRisk,
@@ -119,7 +123,9 @@ export function getFightOpportunityRecommendations(
           ? "Strong offensive opportunity, but expected retaliation creates significant preservation risk."
           : evaluation.retaliationExpectedDamage > 0
             ? "Fight opportunity has measurable retaliation risk."
-            : "Fight opportunity can be evaluated offensively; retaliation data is not available."
+            : retaliationEstimateAvailable
+              ? "No expected damage from the modeled response; tabletop rules and unmodeled effects still apply."
+              : "Fight opportunity can be evaluated offensively; retaliation data is not available."
       };
     })
     .filter(Boolean)

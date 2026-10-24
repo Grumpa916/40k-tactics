@@ -21,7 +21,7 @@ export function fightAdvisory(attackerId, weaponId, targetId, state, weapons, pe
   const expectedDamage = Number.isFinite(recommendation.expectedDamage)
     ? recommendation.expectedDamage.toFixed(1)
     : "—";
-  const retaliation = Number.isFinite(recommendation.retaliationExpectedDamage)
+  const retaliation = recommendation.retaliationEstimateAvailable && Number.isFinite(recommendation.retaliationExpectedDamage)
     ? recommendation.retaliationExpectedDamage.toFixed(1)
     : "—";
   const survival = Number.isFinite(recommendation.targetSurvivalProbability)

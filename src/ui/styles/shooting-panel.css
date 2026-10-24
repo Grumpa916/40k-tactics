@@ -31,3 +31,6 @@
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-stats b{font-size:11px}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__comparison-stats small{grid-row:2}
 .battle-shell.is-tabletop-experiment .shoot-tabletop__selected-target{margin-top:6px;border-top:1px solid #465840}
+.shoot-advisory__decision { border-left:2px solid #bddf91; padding-left:8px; margin:8px 0; }
+.shoot-advisory__decision p { margin:5px 0; }
+.shoot-advisory__decision li { margin:8px 0; }

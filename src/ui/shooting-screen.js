@@ -215,12 +215,12 @@ export function createShootingScreen(container, {
             <section class="shoot-tabletop__advisor" aria-label="Tactical Advisor">
               <div class="shoot-tabletop__advisor-heading"><div><span class="kicker">TACTICAL ADVISOR</span><h2>Compare your targets</h2></div><span>${selectedTargetId ? "Selected target" : "Choose target"}</span></div>
               <div class="shoot-tabletop__target-comparisons">${targetComparison}</div>
-              ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<details class="shoot-tabletop__selected-target" open><summary>Selected target details</summary><div class="shoot-tabletop__advisor-scroll">
+              ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<details class="shoot-tabletop__selected-target" data-view-key="shoot-selected-target" open><summary>Selected target details</summary><div class="shoot-tabletop__advisor-scroll">
                 ${shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, { openDetails: false, comparison })}
               </div></details>` : ''}
             </section>
 
-            <details class="shoot-tabletop__history"><summary>Phase history · ${model.attacks.length} attacks</summary>
+            <details class="shoot-tabletop__history" data-view-key="shoot-history"><summary>Phase history · ${model.attacks.length} attacks</summary>
               <ol class="history">${model.attacks.length ? model.attacks.map((item) => historyRow(item, state, gameData)).join("") : "<li>No attacks recorded yet.</li>"}</ol>
             </details>
           </div>
