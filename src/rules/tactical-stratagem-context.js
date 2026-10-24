@@ -46,6 +46,43 @@ function roleFor(stratagem) {
   return roles.length ? roles : ["other"];
 }
 
+function detachmentRuleReferences(detachments) {
+  return detachments.flatMap((detachment) => {
+    const references = [];
+    if (detachment?.rule || detachment?.ruleName) {
+      references.push(Object.freeze({
+        detachmentName: detachment.name ?? null,
+        name: detachment.ruleName ?? `${detachment.name ?? "Detachment"} rule`,
+        text: detachment.rule ?? "",
+        kind: "detachment-rule",
+        implementationStatus: "reference-only"
+      }));
+    }
+    if (detachment?.favouredKatahEffect) {
+      references.push(Object.freeze({
+        detachmentName: detachment.name ?? null,
+        name: detachment.favouredKatah ? `${detachment.favouredKatah} favoured ka'tah` : "Favoured ka'tah effect",
+        text: detachment.favouredKatahEffect,
+        kind: "detachment-rule",
+        implementationStatus: "reference-only"
+      }));
+    }
+    return references;
+  });
+}
+
+function armyRuleReferences(state, playerId) {
+  const rules = state?.armyRosters?.[playerId]?.rulesDataRevision?.factionRules?.armyRules;
+  const list = Array.isArray(rules) ? rules : rules ? [rules] : [];
+  return list.map((rule) => Object.freeze({
+    name: rule?.name ?? "Army rule",
+    text: rule?.effect ?? rule?.description ?? "",
+    timing: rule?.timing ?? "",
+    implementationStatus: rule?.implementationStatus ?? "reference-only",
+    kind: "army-rule"
+  }));
+}
+
 function playerContext(state, playerId) {
   const cp = cpBalance(state, playerId);
   const detachments = selectedDetachmentRecords(state, playerId);
@@ -69,12 +106,16 @@ function playerContext(state, playerId) {
   const fallback = state?.armyRosters?.[playerId]?.detachment ?? state?.armyRosters?.[playerId]?.detachmentName ?? null;
   const detachmentNames = detachments.length ? detachments.map((item) => item.name).filter(Boolean) : fallback ? [fallback] : [];
   const statuses = detachments.map((item) => item?.stratagemCatalogStatus).filter(Boolean);
+  const detachmentRules = detachmentRuleReferences(detachments);
+  const armyRules = armyRuleReferences(state, playerId);
   return Object.freeze({
     playerId,
     cp,
     detachmentName: detachmentNames[0] ?? null,
     detachmentNames: Object.freeze(detachmentNames),
     catalogStatus: statuses.length && statuses.every((status) => status === "complete") ? "complete" : statuses[0] ?? null,
+    detachmentRules: Object.freeze(detachmentRules),
+    armyRules: Object.freeze(armyRules),
     phaseRelevant: Object.freeze(relevant),
     affordable: Object.freeze(relevant.filter((item) => item.affordable)),
     combat: Object.freeze(relevant.filter((item) => item.affordable && item.roles.includes("combat"))),
@@ -84,9 +125,9 @@ function playerContext(state, playerId) {
 }
 
 /**
- * Surface CP and selected-detachment opportunities without assuming a Stratagem
- * will be used. Target-specific defensive access is suppressed for a currently
- * Battle-shocked enemy unit, matching the recorded battle-shock state.
+ * Surface CP, selected-detachment Stratagem opportunities and rule references
+ * without inventing an effect from free-form rule text. Target-specific defensive
+ * Stratagem access is suppressed for a currently Battle-shocked enemy unit.
  */
 export function getStratagemResourceContext(state, { playerId, targetUnitId = null } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
@@ -104,6 +145,9 @@ export function getStratagemResourceContext(state, { playerId, targetUnitId = nu
   } else if (own.cp <= 0) {
     reasonParts.push("No friendly CP is currently available for a Stratagem investment.");
   }
+  if (own.detachmentRules.length || own.armyRules.length) {
+    reasonParts.push(`${own.detachmentRules.length + own.armyRules.length} selected army/detachment rule reference${own.detachmentRules.length + own.armyRules.length === 1 ? " is" : "s are"} available for review; unmodeled rule prose does not silently change target ranking.`);
+  }
   if (targetBattleShocked) {
     reasonParts.push("The target is Battle-shocked, so its controlling player cannot target it with Stratagems while that status applies.");
   } else if (opponent?.defence.length) {
@@ -116,6 +160,6 @@ export function getStratagemResourceContext(state, { playerId, targetUnitId = nu
     targetBattleShocked,
     opponentCanAffectTarget,
     reason: reasonParts.join(" ") || "No phase-relevant CP/Stratagem leverage is established from the connected detachment catalogs.",
-    assumption: "Stratagem availability is surfaced from CP, phase and all selected detachment catalogs; target eligibility and timing remain governed by the actual Stratagem text."
+    assumption: "Stratagem availability is surfaced from CP, phase and all selected detachment catalogs. Army/detachment rule text is exposed as reference-only unless a dedicated rules implementation exists; target eligibility and timing remain governed by the actual rule text."
   });
 }
