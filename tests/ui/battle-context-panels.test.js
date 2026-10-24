@@ -178,3 +178,40 @@ test("Army roster overlay opens a unit reference with recorded characteristics, 
   assert.match(html, /Oathbound/);
   assert.match(html, /Recorded ability description/);
 });
+
+
+test("Reference panel loads stratagems from each player's selected detachment catalog", () => {
+  const current = {
+    ...state,
+    armyRosters: {
+      p1: {
+        detachment: "Spearhead",
+        rulesDataRevision: { factionRules: { detachments: [
+          { name: "Spearhead", stratagems: [
+            { name: "Advance the Line", cpCost: 1, timing: "Your Movement phase", description: "A friendly unit may move." },
+            { name: "Hold Fast", cpCost: 2, timing: "Opponent Shooting phase", description: "Protect an objective." }
+          ] },
+          { name: "Unselected Detachment", stratagems: [
+            { name: "Wrong Catalog", cpCost: 3, timing: "Any phase", description: "Must not appear." }
+          ] }
+        ] } }
+      },
+      p2: {
+        detachment: "Counterstrike",
+        rulesDataRevision: { factionRules: { detachments: [
+          { name: "Counterstrike", stratagems: [
+            { name: "Enemy Response", cpCost: 1, timing: "Opponent Charge phase", description: "Opponent response." }
+          ] }
+        ] } }
+      }
+    }
+  };
+  const html = renderReferencePanel(current, {}, "p1");
+  assert.match(html, /Advance the Line/);
+  assert.match(html, /Your Movement phase/);
+  assert.match(html, /Spearhead/);
+  assert.match(html, /Hold Fast/);
+  assert.match(html, /Enemy Response/);
+  assert.match(html, /Counterstrike/);
+  assert.doesNotMatch(html, /Wrong Catalog/);
+});
