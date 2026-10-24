@@ -151,14 +151,28 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
 
 function weaponAbilityCharacteristics(abilities) {
   const text = String(abilities ?? "");
+  const tokens = text.split(/[,;\n]+/).map((token) => token.trim()).filter(Boolean);
   const sustained = text.match(/Sustained Hits\s+(\d+)/i);
+  const rapidFire = text.match(/Rapid Fire\s+(\d+)/i);
+  const melta = text.match(/\bMelta\s+(\d+)/i);
+  const blast = text.match(/\bBlast(?:\s+(\d+))?\b/i);
+  const anti = tokens.flatMap((token) => {
+    const match = token.match(/^Anti[-\s]+(.+?)\s+([2-6])\+$/i);
+    return match ? [{ keyword: match[1].trim().toLowerCase(), threshold: Number(match[2]) }] : [];
+  });
   return {
     ...(/\bTorrent\b/i.test(text) ? { torrent: true } : {}),
     ...(/\bIgnores Cover\b/i.test(text) ? { ignoresCover: true } : {}),
     ...(sustained ? { sustainedHits: Number(sustained[1]) } : {}),
     ...(/\bLethal Hits\b/i.test(text) ? { lethalHits: true } : {}),
     ...(/\bDevastating Wounds\b/i.test(text) ? { devastatingWounds: true } : {}),
-    ...(/\bTwin-linked\b/i.test(text) ? { twinLinked: true } : {})
+    ...(/\bTwin-linked\b/i.test(text) ? { twinLinked: true } : {}),
+    ...(blast ? { blast: Number(blast[1] || 1) } : {}),
+    ...(rapidFire ? { rapidFire: Number(rapidFire[1]) } : {}),
+    ...(melta ? { melta: Number(melta[1]) } : {}),
+    ...(anti.length ? { anti } : {}),
+    ...(/\bPrecision\b/i.test(text) ? { precision: true } : {}),
+    ...(/\bExtra Attacks\b/i.test(text) ? { extraAttacks: true } : {})
   };
 }
 
@@ -247,10 +261,19 @@ export function getProbabilisticUnitProfile(state, unit) {
   const invulnerableSave = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "invulnerableSave", ["Invulnerable save", "Invulnerable Save", "invulnerableSave"]));
   const ballisticSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "ballisticSkill", ["Ballistic Skill", "ballisticSkill"]));
   const weaponSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "weaponSkill", ["Weapon Skill", "weaponSkill"]));
+  const vitals = getLiveUnitVitals(state, unit);
+  const keywords = [...new Set([
+    ...(Array.isArray(unit?.keywords) ? unit.keywords : []),
+    ...(Array.isArray(unit?.profile?.keywords) ? unit.profile.keywords : []),
+    ...(Array.isArray(datasheet?.keywords) ? datasheet.keywords : [])
+  ].map((keyword) => String(keyword).trim()).filter(Boolean))];
 
   return {
     ...unit,
-    wounds: getLiveUnitVitals(state, unit).wounds,
+    wounds: vitals.wounds,
+    modelCount: vitals.models,
+    startingModelCount: vitals.startingModels,
+    keywords,
     characteristics: {
       ...(unit?.profile?.characteristics ?? {}),
       ...(unit?.characteristics ?? {}),
