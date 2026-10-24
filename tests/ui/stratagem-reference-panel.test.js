@@ -17,7 +17,31 @@ test('selected Space Marine detachment stratagems appear with phase filtering', 
   assert.doesNotMatch(html, /Advanced Deployment/);
 });
 
-test('Tyranid stratagem coverage is surfaced as partial and filtered to the current phase', () => {
+test('all ten Tyranid detachments have complete 40K.app stratagem coverage', () => {
+  const revision = createRulesDataRevisionStamp('Tyranids');
+  const detachments = revision.factionRules.detachments;
+  const expectedCounts = {
+    'Ambush Predators': 3,
+    'Assimilation Swarm': 6,
+    'Crusher Stampede': 6,
+    'Invasion Fleet': 6,
+    'Subterranean Assault': 6,
+    'Synaptic Nexus': 6,
+    'Talons of the Norn Queen': 3,
+    'Unending Swarm': 6,
+    'Vanguard Onslaught': 6,
+    'Warrior Bioform Onslaught': 3
+  };
+  assert.equal(detachments.length, 10);
+  assert.equal(detachments.reduce((sum, detachment) => sum + detachment.stratagems.length, 0), 51);
+  for (const detachment of detachments) {
+    assert.equal(detachment.stratagemCatalogStatus, 'complete', detachment.name);
+    assert.equal(detachment.stratagems.length, expectedCounts[detachment.name], detachment.name);
+    assert.equal(detachment.stratagemSource.sourceName, '40K.app', detachment.name);
+  }
+});
+
+test('selected Tyranid stratagems are filtered to the current phase without incomplete-catalog warnings', () => {
   const html = renderReferencePanel({
     phase: 'fight',
     activePlayer: 'p1',
@@ -31,9 +55,9 @@ test('Tyranid stratagem coverage is surfaced as partial and filtered to the curr
       }
     }
   }, {}, 'p1');
+  assert.match(html, /Rampaging Monstrosities/);
+  assert.match(html, /Savage Roar/);
   assert.match(html, /Lesser Prey/);
-  assert.match(html, /Catalytic Biofortification/);
   assert.doesNotMatch(html, /Tanglestrike Rounds/);
-  assert.match(html, /Talons of the Norn Queen: partial catalog/);
-  assert.match(html, /Crusher Stampede: stratagem entries have not been imported yet/);
+  assert.doesNotMatch(html, /partial catalog|not been imported yet/);
 });
