@@ -1,6 +1,6 @@
 import { escapeHtml as e } from './army-builder-html.js';
 import { detachmentOptions, renderDetachmentChecklist } from './army-builder-options.js';
-import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
+import { ARMY_UNIT_CATALOG, findArmyUnitCandidates } from '../data/army-unit-catalog.js';
 import { formatRulesDataRevision } from '../data/rules-data-revisions.js';
 import { assessRosterRulesData } from '../rules/roster-rules-data-validation.js';
 import { getRosterDetachmentNames } from '../rules/roster-detachment-selection.js';
@@ -9,7 +9,7 @@ import { renderUnitDetails } from './army-unit-details.js';
 import { renderRosterRows } from './army-roster-rows.js';
 import { compareCatalogRoleOrder, getCatalogRoleGroup, getCatalogRoleGroups } from './army-builder-catalog-order.js';
 import { validateArmyRoster } from '../rules/army-roster-validation.js';
-const factions=['Adeptus Custodes','Adeptus Mechanicus','Aeldari','Agents of the Imperium','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari','Emperor’s Children','Genestealer Cults','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines','Space Wolves','T’au Empire','Thousand Sons','Tyranids','World Eaters','Other / custom'];
+const factions=[...new Set(ARMY_UNIT_CATALOG.map(unit=>unit.faction))].sort((a,b)=>a.localeCompare(b));
 const categories=['Character','Battleline','Infantry','Beast','Monster','Vehicle','Transport','Swarm'];
 export function filterCatalog({current,unitSearch='',category='',sort='name',fits=false}) {
  const remaining=summarizeRosterPoints(current).remainingPoints;
