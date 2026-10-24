@@ -53,7 +53,9 @@ test('Movement UI hides model IDs and X/Y coordinate entry', () => {
     assert.doesNotMatch(root.innerHTML, /p1:|p2:/);
     assert.match(root.innerHTML, /data-move-stationary>Did Not Move<\/button>/);
     assert.match(root.innerHTML, /data-move-save>Normal Move<\/button>/);
-    assert.match(root.innerHTML, /data-move-advance>Advance<\/button>/);
+    assert.match(root.innerHTML, /data-advance-roll="1"/);
+    assert.match(root.innerHTML, /data-advance-roll="6"/);
+    assert.match(root.innerHTML, /data-move-advance disabled>Select roll first<\/button>/);
     assert.match(root.innerHTML, /data-move-fallback>Fall Back<\/button>/);
   } finally {
     screen.destroy();
