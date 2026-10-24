@@ -2,9 +2,6 @@ import { renderArmyUnitDialog, renderEventLogPanel } from './battle-context-pane
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { createCommand } from '../commands/command.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
-import { getVictoryPointScore } from '../engine/victory-points-ledger.js';
-import { getCommandPointBalance } from '../engine/command-points-ledger.js';
-import { formatElapsedTime, getTurnClockElapsedMs } from '../state/turn-clock.js';
 
 const LIVE_PHASES = Object.freeze([
   ['command', 'Command'],
@@ -25,8 +22,8 @@ export function renderPrototypeWorkspaceTools() {
     `<button type="button" data-battle-phase-button="${id}">${label}</button>`
   ).join('');
   return `<link rel="stylesheet" href="${href}"><link rel="stylesheet" href="${navigationHref}"><style>
-    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header .battle-shell__status-summary,
-    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
+    .battle-shell.is-tabletop-experiment .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
+    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header .battle-shell__status-summary{display:none!important}
     .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header{display:block!important;min-height:0!important}
     .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-topline{display:block!important;min-height:0!important}
     .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-missions{width:100%;min-width:0}
@@ -56,22 +53,11 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     if (combat && focus && tools && progression && progression.parentElement !== tools) tools.append?.(progression);
     else if ((!combat || !focus) && progression?.parentElement === tools) shell.insertBefore?.(progression, container.querySelector('[data-battle-workspace]'));
 
-    const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
     const strip = container.querySelector('[data-workspace-live-strip]');
     if (strip) {
-      const playerMarkup = (state.players ?? []).map(player => {
-        const active = player.id === activePlayerId ? ' is-active' : '';
-        const vp = getVictoryPointScore(state, player.id);
-        const cp = getCommandPointBalance(state, player.id);
-        const elapsed = formatElapsedTime(getTurnClockElapsedMs(state, player.id));
-        return `<span class="tabletop-live-player${active}"><strong>${esc(player.name ?? player.id)}</strong>` +
-          `<button type="button" data-open-score-adjust="${esc(player.id)}" data-open-score-adjust-kind="vp">${vp} VP</button>` +
-          `<button type="button" data-open-score-adjust="${esc(player.id)}" data-open-score-adjust-kind="cp">${cp} CP</button>` +
-          `<button type="button" data-toggle-turn-clock aria-label="Open turn clock for ${esc(player.name ?? player.id)}"><time data-clock-player-elapsed="${esc(player.id)}">${elapsed}</time></button></span>`;
-      }).join('');
       const phase = String(state.phase ?? '').replaceAll('_', ' ');
       strip.innerHTML = `<span class="tabletop-live-round">R${esc(state.battle?.round ?? '—')}</span>` +
-        `<span class="tabletop-live-phase">${esc(phase)}</span>${playerMarkup}`;
+        `<span class="tabletop-live-phase">${esc(phase)}</span>`;
     }
 
     const nextPhaseButton = container.querySelector('[data-workspace-next-phase]');
