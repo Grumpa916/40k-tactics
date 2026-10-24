@@ -34,7 +34,7 @@ export function mountLiveSessionTools({ root, session, store, onRetryCloud = () 
       (report.ready ? '<p>No missing fields found by the baseline checks. Special rules and tabletop modifiers still need confirmation.</p>' :
       '<p>These items can limit Advisor estimates. Recording actual results remains available.</p><ul>' + report.issues.map(i => '<li>' + esc(i.name) + ': ' + esc(i.detail) + '</li>').join('') + '</ul>') +
       (correction ? '<p>Last action: ' + esc(correction.detail) + '</p><button type="button" data-live-undo>Undo ' + esc(correction.label) + '</button>' : '') +
-      (status.mode === 'incompatible' ? '<button type="button" data-live-new>Use new session</button>' : '<button type="button" data-live-save>Save on device now</button>') + '<button type="button" data-live-close>Close</button>') + '</section>';
+      (status.mode === 'incompatible' ? '<button type="button" data-live-new>Use new session</button>' : status.conflict ? '<button type="button" data-live-use-window>Use this window for device recovery</button>' : '<button type="button" data-live-save>Save on device now</button>') + '<button type="button" data-live-close>Close</button>') + '</section>';
   }
   recovery = createLocalBattleRecovery({ session, store, onChange: refresh });
   const unsubscribe = session.subscribe(() => refresh());
@@ -44,6 +44,7 @@ export function mountLiveSessionTools({ root, session, store, onRetryCloud = () 
     if (event.target.closest?.('[data-live-resume]')) { recovery.resume(); details = false; refresh(); }
     if (event.target.closest?.('[data-live-new]')) { recovery.startFresh(); details = false; refresh(); }
     if (event.target.closest?.('[data-live-save]')) recovery.save();
+    if (event.target.closest?.('[data-live-use-window]')) void recovery.useThisWindow();
     if (event.target.closest?.('[data-live-undo]')) session.undoLastAction?.();
     if (event.target.closest?.('[data-live-retry-cloud]')) onRetryCloud();
   };

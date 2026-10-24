@@ -18,6 +18,10 @@ snapshot is preserved until the player explicitly chooses a new session.
 Restored clocks pause at their saved elapsed time; time away from the app is
 not charged. Visibility/pagehide events request a final save, but a device crash
 can still interrupt a pending transaction.
+Concurrent windows cannot silently overwrite one another's recovery slot. If
+another window writes first, saving reports a conflict until the player explicitly
+chooses Use this window for device recovery. The other window will then see a
+conflict on its next save.
 
 This is recovery for the current session, not a permanent library of battles.
 Keep important games in named cloud saves. There is no service worker or full

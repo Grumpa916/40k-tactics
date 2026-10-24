@@ -102,3 +102,18 @@ test('an unserializable state reports save failure without throwing through an a
   assert.doesNotThrow(()=>s.dispatch({type:'advance'}));
   assert.equal(s.getState().turn,1);assert.equal(recovery.getStatus().mode,'error');recovery.destroy();
 });
+test('two windows cannot silently overwrite recovery; explicit takeover transfers the write lease', async () => {
+  let latest=null;
+  const store={load:async()=>({latest}),save:async(record,{expectedRevision})=>{
+    if((latest?.revision??null)!==expectedRevision)throw Object.assign(Error('Other window'),{code:'RECOVERY_CONFLICT'});
+    latest=record;
+  }};
+  const a=session(),b=session(),ra=createLocalBattleRecovery({session:a,store}),rb=createLocalBattleRecovery({session:b,store});
+  await Promise.all([ra.ready,rb.ready]);
+  a.dispatch({type:'advance'});await ra.flush();const savedByA=latest.revision;
+  b.dispatch({type:'advance'});await rb.flush();
+  assert.equal(rb.getStatus().conflict,true);assert.equal(latest.revision,savedByA);
+  await rb.useThisWindow();await rb.flush();assert.equal(rb.getStatus().mode,'saved');
+  a.dispatch({type:'advance'});await ra.flush();assert.equal(ra.getStatus().conflict,true);
+  ra.destroy();rb.destroy();
+});

@@ -27,18 +27,23 @@ export function createLocalBattleStore(database) {
         tx.onabort = () => reject(tx.error ?? new Error('Recovery read failed.'));
       });
     },
-    async save(record) {
+    async save(record, { expectedRevision = null } = {}) {
       const db = await open();
       return new Promise((resolve, reject) => {
         const tx = db.transaction('snapshots', 'readwrite');
+        let failure = null;
         const store = tx.objectStore('snapshots');
         const old = store.get('latest');
         old.onsuccess = () => {
+          if ((old.result?.revision ?? old.result?.savedAt ?? null) !== expectedRevision) {
+            failure = Object.assign(new Error('Another window updated device recovery. Choose which window should save this battle.'), { code: 'RECOVERY_CONFLICT' });
+            tx.abort(); return;
+          }
           if (old.result) store.put(old.result, 'previous');
           store.put(record, 'latest');
         };
         tx.oncomplete = () => resolve(record);
-        tx.onabort = () => reject(tx.error ?? new Error('Recovery save failed.'));
+        tx.onabort = () => reject(failure ?? tx.error ?? new Error('Recovery save failed.'));
       });
     }
   };

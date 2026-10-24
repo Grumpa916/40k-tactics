@@ -18,22 +18,24 @@ export function createRecoveryRecord(state, now = Date.now()) {
     clock.running = false;
     clock.startedAtMs = null;
   }
-  return { schemaVersion: 1, savedAt: new Date(now).toISOString(), state: snapshot };
+  return { schemaVersion: 1, revision: globalThis.crypto?.randomUUID?.() ?? String(now) + '-' + Math.random(), savedAt: new Date(now).toISOString(), state: snapshot };
 }
 
 // Subscribe independently of UI rendering. Coalesce changes while a write is in flight.
 export function createLocalBattleRecovery({ session, store, onChange = () => {}, now = Date.now }) {
   let status = { mode: 'loading', message: 'Checking device recovery…' };
   let pending = null, writing = null, enabled = false, destroyed = false, dirtyBeforeReady = false;
+  let expectedRevision = null;
   const publish = next => { status = { ...status, ...next }; if (!destroyed) onChange(status); };
   async function drain() {
     while (pending) {
       const record = pending; pending = null;
       try {
-        await store.save(record);
-        publish({ mode: pending ? 'saving' : 'saved', savedAt: record.savedAt, message: pending ? 'Saving on device…' : 'Saved on this device' });
+        await store.save(record, { expectedRevision });
+        expectedRevision = record.revision;
+        publish({ mode: pending ? 'saving' : 'saved', conflict: false, savedAt: record.savedAt, message: pending ? 'Saving on device…' : 'Saved on this device' });
       } catch (error) {
-        publish({ mode: 'error', message: 'Device save failed: ' + error.message });
+        publish({ mode: 'error', conflict: error.code === 'RECOVERY_CONFLICT', message: 'Device save failed: ' + error.message });
         // Retry the latest state on the next accepted action; never claim it was saved.
       }
     }
@@ -50,6 +52,7 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
   const ready = (async () => {
     try {
       const records = await store.load();
+      expectedRevision = records.latest?.revision ?? records.latest?.savedAt ?? null;
       const record = [records.latest, records.previous].find(validateRecoveryRecord);
       if (record) publish({ mode: 'resume', record, message: 'A saved battle is available on this device.' });
       else if (records.latest || records.previous) publish({ mode: 'incompatible', message: 'The saved recovery file cannot be loaded by this app version. It has been preserved. Use a compatible cloud save.' });
@@ -70,6 +73,14 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
     getStatus: () => status,
     save,
     async flush() { save(); while (writing) await writing; },
+    async useThisWindow() {
+      while (writing) await writing;
+      try {
+        const records = await store.load();
+        expectedRevision = records.latest?.revision ?? records.latest?.savedAt ?? null;
+        enabled = true; save();
+      } catch (error) { publish({ mode: 'error', message: 'Device recovery unavailable: ' + error.message }); }
+    },
     resume() {
       if (status.mode !== 'resume' || !validateRecoveryRecord(status.record)) return false;
       // Enable only after replacement so no fresh setup can overwrite the recovery slot.
