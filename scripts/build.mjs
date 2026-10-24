@@ -7,7 +7,7 @@ const outDir = join(repoRoot, 'dist');
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
 
-for (const name of ['index.html', 'account.html', 'battle.html', 'charge.html', 'shooting.html', 'supabase-cloud-check.html', 'terrain-preview.html', '_headers']) {
+for (const name of ['index.html', 'account.html', 'battle.html', 'charge.html', 'shooting.html', 'supabase-cloud-check.html', 'terrain-preview.html', '_headers', 'manifest.webmanifest']) {
   await cp(join(repoRoot, name), join(outDir, name));
 }
 
@@ -23,4 +23,5 @@ async function copyTree(src, dest) {
 }
 
 await copyTree(join(repoRoot, 'src'), join(outDir, 'src'));
+await copyTree(join(repoRoot, 'icons'), join(outDir, 'icons'));
 console.log('Built static Cloudflare Pages bundle in dist/');

@@ -7,6 +7,21 @@
 }
 
 @media (display-mode: standalone) {
+  html { background: #0b1115; }
+  body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: var(--pwa-safe-top) var(--pwa-safe-right) var(--pwa-safe-bottom) var(--pwa-safe-left);
+  }
+
+  .battle-shell.is-tabletop-experiment .battle-shell__army-dock {
+    bottom: var(--pwa-safe-bottom);
+    width: calc(100vw - var(--pwa-safe-left) - var(--pwa-safe-right) - 16px);
+  }
+}
+
+/* Match the landscape workspace breakpoint. Portrait and preparation must scroll. */
+@media (display-mode: standalone) and (orientation: landscape) and (min-width: 761px) {
   html:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
   body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)),
   body:has(.battle-shell.is-tabletop-experiment:not(.is-scrollable-preparation)) #battle-app {
@@ -38,8 +53,15 @@
     overflow: hidden;
   }
 
-  .battle-shell.is-tabletop-experiment .battle-shell__army-dock {
-    bottom: var(--pwa-safe-bottom);
-    width: calc(100vw - var(--pwa-safe-left) - var(--pwa-safe-right) - 16px);
+  /* Focus mode fixes the shell to the viewport, bypassing the body's padding.
+     Apply the insets here too, with enough specificity for the later workspace CSS. */
+  .battle-shell.is-tabletop-experiment[data-battle-focus="true"]:not(.is-scrollable-preparation) {
+    inset: var(--pwa-safe-top) var(--pwa-safe-right) var(--pwa-safe-bottom) var(--pwa-safe-left);
+    width: auto;
+    height: auto;
+    max-height: none;
+    /* Insets already reserve the system areas. Keep only the compact dock gap. */
+    padding-top: 8px;
+    padding-bottom: 52px;
   }
 }
