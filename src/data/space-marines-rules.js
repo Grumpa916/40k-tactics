@@ -19,7 +19,7 @@ export const SPACE_MARINES_ARMY_RULES = Object.freeze({
 export const ARMOURED_SPEARTIP_STRATAGEMS = Object.freeze([
   Object.freeze({
     name: "Machine Wrath", cpCost: 1, category: "Epic Deed",
-    timing: "Any phase, after a Heavy Transport with Deadly Demise is destroyed",
+    timing: "Any phase, after a Heavy Transport with Deadly Demise is destroyed and you roll a 6 for Deadly Demise",
     phases: Object.freeze(["command", "movement", "shooting", "charge", "fight", "end"]),
     description: "The destroyed Heavy Transport can make a Normal or Fall Back move before resolving Deadly Demise and Emergency Disembarkation; special passage and Desperate Escape rules apply."
   }),
@@ -45,7 +45,7 @@ export const ARMOURED_SPEARTIP_STRATAGEMS = Object.freeze([
     name: "Rapid Embarkation", cpCost: 1, category: "Wargear",
     timing: "End of the Fight phase",
     phases: Object.freeze(["fight"]),
-    description: "An eligible Adeptus Astartes Infantry unit not within Engagement Range can embark within 6 inches of an eligible Heavy Transport."
+    description: "An Adeptus Astartes Infantry unit not within Engagement Range can embark in an eligible Heavy Transport if it is wholly within 6 inches."
   }),
   Object.freeze({
     name: "Purgation Doctrine", cpCost: 1, category: "Battle Tactic",
