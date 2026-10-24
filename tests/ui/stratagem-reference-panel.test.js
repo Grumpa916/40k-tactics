@@ -39,7 +39,7 @@ test('all ten Tyranid detachments have complete 40K.app stratagem coverage', () 
   const synaptic = detachments.find((detachment) => detachment.name === 'Synaptic Nexus');
   assert.match(synaptic.stratagems.find((stratagem) => stratagem.name === 'Imperative Dominance').description, /instead of the army's currently active imperative/i);
   const vanguard = detachments.find((detachment) => detachment.name === 'Vanguard Onslaught');
-  assert.match(vanguard.stratagems.find((stratagem) => stratagem.name === 'Surprise Assault').description, /selected enemy/);
+  assert.ok(vanguard.stratagems.find((stratagem) => stratagem.name === 'Surprise Assault').description.includes('attacks against that enemy gain +1 to Hit'));
   for (const detachment of detachments) {
     assert.equal(detachment.stratagemCatalogStatus, 'complete', detachment.name);
     assert.equal(detachment.stratagems.length, expectedCounts[detachment.name], detachment.name);
