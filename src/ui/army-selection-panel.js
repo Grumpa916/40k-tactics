@@ -5,6 +5,24 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
+function rosterValue(record) {
+  return record?.roster && typeof record.roster === "object" ? record.roster : record;
+}
+
+function rosterFaction(record) {
+  return rosterValue(record)?.faction ?? null;
+}
+
+function rosterDetachmentLabel(record) {
+  const roster = rosterValue(record);
+  const names = [...new Set([
+    ...(Array.isArray(roster?.detachments) ? roster.detachments : []),
+    roster?.detachment,
+    roster?.detachmentName
+  ].map((name) => String(name ?? "").trim()).filter(Boolean))];
+  return names.length ? names.join(" + ") : null;
+}
+
 /**
  * Battle-specific roster assignment. The saved roster library remains editable
  * only in Army Builder; this screen applies a saved snapshot to one battle side.
@@ -34,8 +52,8 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       return '<article class="army-selection-card" data-army-selection-side="' + escapeHtml(player.id) + '">' +
         '<h3>' + escapeHtml(label) + '</h3>' +
         (roster ? '<p class="army-selection-card__name"><strong>' + escapeHtml(roster.name ?? "Unnamed roster") + '</strong></p>' +
-          '<dl><div><dt>Faction</dt><dd>' + escapeHtml(roster.faction ?? "Not set") + '</dd></div>' +
-          '<div><dt>Detachment</dt><dd>' + escapeHtml(roster.detachment ?? "Not set") + '</dd></div>' +
+          '<dl><div><dt>Faction</dt><dd>' + escapeHtml(rosterFaction(roster) ?? "Not set") + '</dd></div>' +
+          '<div><dt>Detachment</dt><dd>' + escapeHtml(rosterDetachmentLabel(roster) ?? "Not set") + '</dd></div>' +
           '<div><dt>Units</dt><dd>' + escapeHtml(roster.units?.length ?? 0) + '</dd></div>' +
           '<div><dt>Unit points total</dt><dd>' + (points === null ? "Not set" : escapeHtml(points) + " pts") + '</dd></div></dl>' +
           (unsetPoints ? '<p class="army-selection-card__note">' + unsetPoints + ' unit(s) still need points checked.</p>' : '') :
@@ -43,8 +61,8 @@ export function createArmySelectionPanel(container, { store, session, canApply =
         '<label>Saved roster<select data-army-selection-roster="' + escapeHtml(player.id) + '"' +
         (!currentCanApply || busyPlayerId ? " disabled" : "") + '><option value="">Choose a saved roster…</option>' +
         records.map(record => '<option value="' + escapeHtml(record.id) + '"' + (record.id === rosterId ? " selected" : "") + '>' +
-          escapeHtml(record.name) + ' · ' + escapeHtml(record.faction ?? "Faction not set") + ' · ' +
-          escapeHtml(record.detachment ?? "Detachment not set") + '</option>').join("") +
+          escapeHtml(record.name) + ' · ' + escapeHtml(rosterFaction(record) ?? "Faction not set") + ' · ' +
+          escapeHtml(rosterDetachmentLabel(record) ?? "Detachment not set") + '</option>').join("") +
         '</select></label><button type="button" data-army-selection-apply="' + escapeHtml(player.id) + '"' +
         (!currentCanApply || busyPlayerId ? " disabled" : "") + '>Use selected roster</button></article>';
     }).join("");
@@ -67,7 +85,16 @@ export function createArmySelectionPanel(container, { store, session, canApply =
   async function refresh() {
     try {
       if (!store || typeof store.list !== "function") throw new Error("Sign in to access saved army lists.");
-      records = await store.list();
+      const listed = await store.list();
+      records = await Promise.all((Array.isArray(listed) ? listed : []).map(async (record) => {
+        if (record?.roster || !record?.id || typeof store.load !== "function") return record;
+        try {
+          const loaded = await store.load(record.id);
+          return loaded?.roster ? { ...record, roster: loaded.roster } : record;
+        } catch {
+          return record;
+        }
+      }));
       message = records.length ? "" : "No saved lists found. Open Army Builder to create your first list.";
     } catch (error) {
       message = error?.message ?? String(error);
