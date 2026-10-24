@@ -35,6 +35,16 @@ const MOVEMENT_LABELS = {
   "unit.stationary_recorded": "Did Not Move"
 };
 
+function movementActionLabel(action) {
+  if (!action) return "Select movement";
+  const base = MOVEMENT_LABELS[action.type] ?? "Movement recorded";
+  const roll = Number(action.payload?.advanceRoll);
+  if (action.type === "unit.advanced" && Number.isInteger(roll) && roll >= 1 && roll <= 6) {
+    return `${base} · +${roll}\"`;
+  }
+  return base;
+}
+
 export function createMovementScreen(container, { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function" || typeof session.dispatch !== "function") {
@@ -44,7 +54,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   const mapView = createLiveMapView();
   let selectedUnitId = null;
   let errorMessage = "";
-  let advanceRoll = 1;
+  let advanceRoll = null;
   let livePointerDrag = null;
 
   function movementAction(state, unitId) {
@@ -54,12 +64,21 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     ) ?? null;
   }
 
+  function selectUnit(unitId) {
+    if (unitId !== selectedUnitId) advanceRoll = null;
+    selectedUnitId = unitId;
+    errorMessage = "";
+  }
+
   function render() {
     const state = session.getState();
     const playerId = state.activePlayer ?? state.battle?.activePlayerId;
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
     const selectable=state.units.filter(unit=>unit.ownerId===playerId && ['deployed','reserves'].includes(unit.status) && !attachmentParent(state,unit));
-    if (!selectable.some((unit) => unit.id === selectedUnitId)) selectedUnitId = eligible[0]?.id ?? null;
+    if (!selectable.some((unit) => unit.id === selectedUnitId)) {
+      selectedUnitId = eligible[0]?.id ?? null;
+      advanceRoll = null;
+    }
     const selected = eligible.find((unit) => unit.id === selectedUnitId) ?? null;
 
     const unitCards = eligible.length ? eligible.map((unit) => {
@@ -67,25 +86,26 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       return `<button type="button" class="move-unit${unit.id === selectedUnitId ? " is-selected" : ""}" data-move-unit="${escapeHtml(unit.id)}">
         <strong>${escapeHtml(unit.name)}</strong>
         <span>${escapeHtml(ownerLabel(unit, state, perspectivePlayerId))}</span>
-        <small>${escapeHtml(action ? (MOVEMENT_LABELS[action.type] ?? "Movement recorded") : "Select movement")}</small>
+        <small>${escapeHtml(movementActionLabel(action))}</small>
       </button>`;
     }).join("") : "<p>No deployed units are available to move.</p>";
 
     let editor = "<p>Select a deployed unit to record its movement choice.</p>";
     if (selected) {
       const action = movementAction(state, selected.id);
+      const advanceReady = Number.isInteger(advanceRoll) && advanceRoll >= 1 && advanceRoll <= 6;
       editor = `<div class="move-editor">
         <h2>${escapeHtml(selected.name)}</h2>
         ${action
-          ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(MOVEMENT_LABELS[action.type] ?? "Movement recorded")}</strong></p>
+          ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(movementActionLabel(action))}</strong></p>
              <div class="move-actions"><button type="button" data-reset-position>Undo</button></div>`
           : `<div class="move-actions">
                <button type="button" data-move-stationary>Did Not Move</button>
                <button type="button" data-move-save>Normal Move</button>
                <div class="advance-choice">
-                 <span>Advance roll: <strong data-advance-roll-value>${advanceRoll}</strong></span>
+                 <span>Advance roll: <strong data-advance-roll-value>${advanceReady ? advanceRoll : "—"}</strong></span>
                  <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" aria-pressed="${value === advanceRoll}" class="${value === advanceRoll ? "is-selected" : ""}"${value === advanceRoll ? ' style="background:#c4e99b;color:#17212b;border-color:#c4e99b;font-weight:800"' : ""}>${value}</button>`).join("")}</div>
-                 <button type="button" data-move-advance>Advance</button>
+                 <button type="button" data-move-advance${advanceReady ? "" : " disabled"}>${advanceReady ? `Advance +${advanceRoll}\"` : "Select roll first"}</button>
                </div>
                <button type="button" data-move-fallback>Fall Back</button>
              </div>`}
@@ -132,7 +152,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       markerY: 44 - parseFloat(marker.style.top) / 100 * 44,
       left: marker.style.left, top: marker.style.top, moved: false
     };
-    selectedUnitId = unitId;
+    selectUnit(unitId);
     marker.classList?.add?.("is-dragging");
     try { marker.setPointerCapture?.(event.pointerId); } catch {}
   }
@@ -198,7 +218,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
   function handleClick(event) {
     const reserve=event.target?.closest?.('[data-map-reserve-select]');
-    if(reserve){selectedUnitId=reserve.getAttribute('data-map-reserve-select');errorMessage='';render();return;}
+    if(reserve){selectUnit(reserve.getAttribute('data-map-reserve-select'));render();return;}
     const area=event.target?.closest?.('[data-map-reserve-area]');
     const board=event.target?.closest?.('[data-battlefield-map-board]');
     const state=session.getState();
@@ -218,8 +238,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const state = session.getState();
       const unit = state.units.find((item) => item.id === unitId);
       if (unit?.ownerId === (state.activePlayer ?? state.battle?.activePlayerId) && unit.status === "deployed") {
-        selectedUnitId = unitId;
-        errorMessage = "";
+        selectUnit(unitId);
         render();
       }
       return;
@@ -229,13 +248,15 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     if (!button || button.hasAttribute("data-map-zoom")) return;
     try {
       if (button.dataset.moveUnit) {
-        selectedUnitId = button.dataset.moveUnit;
-        errorMessage = "";
+        selectUnit(button.dataset.moveUnit);
         render();
         return;
       }
       if (button.hasAttribute("data-advance-roll")) {
-        advanceRoll = Number(button.getAttribute("data-advance-roll"));
+        const nextRoll = Number(button.getAttribute("data-advance-roll"));
+        if (!Number.isInteger(nextRoll) || nextRoll < 1 || nextRoll > 6) throw new Error("Choose an Advance roll from 1 to 6.");
+        advanceRoll = nextRoll;
+        errorMessage = "";
         render();
         return;
       }
@@ -248,14 +269,20 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
       if (button.hasAttribute("data-reset-position")) {
         session.dispatch({ type: COMMAND_TYPES.UNDO_MOVEMENT_ACTION, payload: { unitId: unit.id } });
+        advanceRoll = null;
       } else if (button.hasAttribute("data-move-save")) {
         session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
+        advanceRoll = null;
       } else if (button.hasAttribute("data-move-advance")) {
+        if (!Number.isInteger(advanceRoll) || advanceRoll < 1 || advanceRoll > 6) throw new Error("Select the Advance roll (1–6) first.");
         session.dispatch({ type: COMMAND_TYPES.RESOLVE_ADVANCE, payload: { unitId: unit.id, moves, advanceRoll } });
+        advanceRoll = null;
       } else if (button.hasAttribute("data-move-stationary")) {
         session.dispatch({ type: COMMAND_TYPES.RECORD_STATIONARY, payload: { unitId: unit.id } });
+        advanceRoll = null;
       } else if (button.hasAttribute("data-move-fallback")) {
         session.dispatch({ type: COMMAND_TYPES.RECORD_FALL_BACK, payload: { unitId: unit.id } });
+        advanceRoll = null;
       } else {
         return;
       }
