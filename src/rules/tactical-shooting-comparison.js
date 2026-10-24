@@ -2,6 +2,7 @@ import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
+import { getFireCoordinationContext } from "./tactical-fire-coordination.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
@@ -23,24 +24,41 @@ function probabilityAnyDamage(distribution) {
   return Math.max(0, Math.min(1, 1 - noDamage));
 }
 
-function strategicRecommendation({ strategicContext, impactClassification, destructionProbability, expectedDamage }) {
+function strategicRecommendation({ strategicContext, fireCoordination, impactClassification, destructionProbability, expectedDamage }) {
+  const killChance = Number.isFinite(destructionProbability) ? destructionProbability : 0;
+  if (strategicContext.battleShock.active && strategicContext.objectiveSwing.targetNominalOc > 0 && strategicContext.objectiveSwing.targetOc === 0 && strategicContext.threat.score < 0.4 && strategicContext.retaliation.score < 0.4) {
+    return "Lower marginal kill value: Battle-shock is already suppressing this unit's OC and Stratagem access. Prefer another target unless removing it serves the mission or prevents meaningful damage.";
+  }
+  if (strategicContext.objectiveSwing.potentialFlip && killChance >= 0.5) {
+    return `Priority target: a successful kill could flip ${strategicContext.objectiveSwing.objectiveId} based on recorded OC and control context.`;
+  }
+  if ((strategicContext.secondary.potentialVp >= 3 || strategicContext.secondary.denialVp >= 3) && killChance >= 0.5) {
+    const vp = Math.max(strategicContext.secondary.potentialVp, strategicContext.secondary.denialVp);
+    return `Priority target: this attack can directly support or deny about ${vp} verified Secondary VP if the card conditions are met.`;
+  }
   if (strategicContext.secondary.score >= 0.7) {
     return "Priority target: destroying or degrading this unit has strong verified active-secondary impact in addition to its combat value.";
   }
-  if (strategicContext.primary.score >= 0.7) {
-    return "Priority target: this unit has strong objective-linked Primary scoring or denial value; confirm actual OC and mission conditions at the table.";
+  if (strategicContext.primary.score >= 0.7 || strategicContext.scoringRole.role === "key-scoring-unit") {
+    return "Priority target: this is a key scoring piece with strong objective-linked Primary or OC leverage; confirm exact contesting models at the table.";
   }
-  if (strategicContext.threat.score >= 0.7) {
-    return "Priority target: recorded combat history identifies this unit as a proven threat worth suppressing.";
+  if (strategicContext.retaliation.score >= 0.7 || strategicContext.threat.score >= 0.7) {
+    return "Priority target: recorded history or saved-profile retaliation identifies this unit as a major damage threat worth suppressing.";
+  }
+  if (fireCoordination.betterMatch && !fireCoordination.concentratedFireViable) {
+    return `Consider another target for this weapon: ${fireCoordination.bestAlternative?.unitName ?? "another friendly unit"} has a substantially better saved-profile match into this enemy.`;
+  }
+  if (fireCoordination.concentratedFireViable && strategicContext.score >= 0.45) {
+    return "High-value target but likely a multi-activation problem: plan concentrated fire rather than expecting this weapon to solve it alone.";
   }
   if (destructionProbability >= 0.8) {
-    return "Strong offensive opportunity with a likely destruction result; compare its mission value before committing the activation.";
+    return "Strong offensive opportunity with a likely destruction result; compare mission value and overkill risk before committing the activation.";
   }
-  if (strategicContext.primary.score >= 0.4 || strategicContext.secondary.score >= 0.4) {
+  if (strategicContext.primary.score >= 0.4 || strategicContext.secondary.score >= 0.4 || strategicContext.objectiveSwing.score >= 0.4) {
     return "Mission-relevant target: its scoring impact may justify attacking it even if another target offers slightly better raw damage.";
   }
-  if (strategicContext.threat.score >= 0.4) {
-    return "Threat-suppression candidate: this unit has meaningful recorded combat impact.";
+  if (strategicContext.threat.score >= 0.4 || strategicContext.retaliation.score >= 0.4) {
+    return "Threat-suppression candidate: this unit has meaningful recorded or projected combat impact.";
   }
   if (impactClassification === "possible-destruction") {
     return "Possible destruction opportunity; weigh the kill chance against mission value and other available targets.";
@@ -58,9 +76,9 @@ function strategicRecommendation({ strategicContext, impactClassification, destr
  * Stable view-model contract for the tablet "Compare your targets" surface.
  *
  * The existing Shooting target resolver remains untouched. This decision layer
- * enriches its candidates with mission context, active verified secondaries,
- * recorded opponent threat and probability detail, then ranks the candidates
- * for advice. The UI can render this without duplicating Tactical Advisor math.
+ * enriches candidates with mission, OC/control swing, active secondaries,
+ * historical and projected threat, CP/Stratagem context and remaining-friendly
+ * fire allocation before ranking the candidates for advice.
  */
 export function getShootingTargetComparison(state, {
   playerId,
@@ -104,12 +122,47 @@ export function getShootingTargetComparison(state, {
     const severeDamageProbability = severeDamageThreshold == null
       ? null
       : probabilityAtLeast(distribution, severeDamageThreshold);
+    const destructionProbability = Number.isFinite(item.destructionProbability) ? item.destructionProbability : 0;
+    const killLeverage = Number.isFinite(item.destructionProbability)
+      ? Math.max(0.15, Math.min(1, item.destructionProbability))
+      : Number.isFinite(expectedDamage) && Number.isFinite(targetProfile?.wounds) && targetProfile.wounds > 0
+        ? Math.max(0.15, Math.min(1, expectedDamage / targetProfile.wounds))
+        : 0.2;
+    const degradationLeverage = Number.isFinite(expectedDamage) && Number.isFinite(targetProfile?.wounds) && targetProfile.wounds > 0
+      ? Math.min(1, expectedDamage / targetProfile.wounds)
+      : killLeverage;
 
-    const primaryMissionPoints = strategicContext.primary.score * 3.5;
-    const secondaryMissionPoints = strategicContext.secondary.score * 3.5;
-    const threatPoints = strategicContext.threat.score * 2.25;
+    const fireCoordination = getFireCoordinationContext(state, {
+      playerId,
+      attackerId,
+      targetUnitId: item.targetUnitId,
+      currentWeapon: weapon,
+      currentExpectedDamage: expectedDamage,
+      currentDestructionProbability: item.destructionProbability
+    });
+    const strategyWeights = strategicContext.gameStrategy.weights;
+    const primaryMissionPoints = strategicContext.primary.score * 3.5 * strategyWeights.primary * Math.max(killLeverage, degradationLeverage * 0.7);
+    const secondaryMissionPoints = strategicContext.secondary.score * 3.5 * strategyWeights.secondary * killLeverage;
+    const objectiveSwingPoints = strategicContext.objectiveSwing.score * 4.25 * strategyWeights.objectiveSwing * killLeverage;
+    const threatPoints = strategicContext.threat.score * 2.0 * strategyWeights.threat * Math.max(killLeverage, degradationLeverage);
+    const retaliationPoints = strategicContext.retaliation.score * 1.9 * strategyWeights.retaliation * Math.max(killLeverage, degradationLeverage * 0.8);
     const objectiveContextPoints = strategicContext.objective.score * 0.75;
-    const strategicPoints = primaryMissionPoints + secondaryMissionPoints + threatPoints + objectiveContextPoints;
+    const scoringRolePoints = strategicContext.scoringRole.score * 0.8 * killLeverage;
+    const verifiedVp = Math.max(strategicContext.secondary.potentialVp ?? 0, strategicContext.secondary.denialVp ?? 0);
+    const verifiedVpPoints = Math.min(3, verifiedVp * 0.55) * killLeverage;
+    const battleShockPenalty = strategicContext.battleShock.marginalKillPenalty * 2.25;
+    const betterMatchPenalty = fireCoordination.betterMatch
+      ? 1.5 * fireCoordination.score * strategyWeights.efficiency
+      : 0;
+    const overkillPenalty = fireCoordination.likelyOverkill ? 0.9 * strategyWeights.efficiency : 0;
+    const concentrationBonus = fireCoordination.concentratedFireViable && strategicContext.score >= 0.45
+      ? 0.75 * strategicContext.score
+      : 0;
+    const defenceUncertaintyPenalty = strategicContext.stratagems.opponentCanAffectTarget &&
+      (strategicContext.stratagems.opponent?.defence?.length ?? 0) > 0 ? 0.2 : 0;
+    const strategicPoints = primaryMissionPoints + secondaryMissionPoints + objectiveSwingPoints + threatPoints +
+      retaliationPoints + objectiveContextPoints + scoringRolePoints + verifiedVpPoints + concentrationBonus -
+      battleShockPenalty - betterMatchPenalty - overkillPenalty - defenceUncertaintyPenalty;
     const decisionScore = item.priority + strategicPoints;
 
     return {
@@ -124,34 +177,52 @@ export function getShootingTargetComparison(state, {
       primaryMissionImpact: strategicContext.primary,
       secondaryMissionImpact: strategicContext.secondary,
       recentThreat: strategicContext.threat,
+      objectiveSwing: strategicContext.objectiveSwing,
+      retaliationRisk: strategicContext.retaliation,
+      scoringRole: strategicContext.scoringRole,
+      battleShockTacticalValue: strategicContext.battleShock,
+      stratagemContext: strategicContext.stratagems,
+      gameStrategy: strategicContext.gameStrategy,
+      fireCoordination,
       strategicContext,
+      verifiedVpLeverage: verifiedVp,
       decisionScore,
       decisionBreakdown: Object.freeze({
         baselineTargetPriority: item.priority,
         primaryMissionPoints,
         secondaryMissionPoints,
+        objectiveSwingPoints,
         threatPoints,
+        retaliationPoints,
         objectiveContextPoints,
+        scoringRolePoints,
+        verifiedVpPoints,
+        concentrationBonus,
+        battleShockPenalty,
+        betterMatchPenalty,
+        overkillPenalty,
+        defenceUncertaintyPenalty,
         strategicPoints,
-        weights: Object.freeze({
-          primaryMission: 3.5,
-          secondaryMission: 3.5,
-          threat: 2.25,
-          objectiveContext: 0.75
-        })
+        killLeverage,
+        degradationLeverage,
+        strategyPosture: strategicContext.gameStrategy.posture
       }),
       recommendation: strategicRecommendation({
         strategicContext,
+        fireCoordination,
         impactClassification: item.impactClassification,
-        destructionProbability: item.destructionProbability,
+        destructionProbability,
         expectedDamage
       }),
       assumptions: Object.freeze([
-        "Battlefield distances are approximate and tabletop measurement remains authoritative.",
+        "Battlefield distances and objective proximity are approximate; tabletop measurement and actual contesting models remain authoritative.",
         "Probabilities use saved profiles and known weapon characteristics only.",
         ...(weapon?.quantityUncertain ? ["Remaining models are known, but the surviving mixed-weapon models are not; probability is withheld until weapon casualties are known."] : []),
         "Mission impact never awards VP automatically.",
-        "Unverified secondary-card text is not used to change target ranking."
+        "Only verified secondary-card rules alter target ranking; unverified VP references remain manual-review-only.",
+        fireCoordination.assumption,
+        strategicContext.retaliation.assumption,
+        strategicContext.stratagems.assumption
       ])
     };
   }).sort((a, b) =>
