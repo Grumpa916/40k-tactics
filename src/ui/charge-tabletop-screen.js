@@ -1,6 +1,13 @@
 import { createLiveMapView } from './live-map-view.js';
 import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
+import { COMMAND_TYPES } from '../commands/game-commands.js';
+
+function modelsFor(unit) {
+  return Array.isArray(unit.models) && unit.models.length
+    ? unit.models
+    : unit.position ? [{ id: unit.id, position: unit.position }] : [];
+}
 
 export function createChargeTabletopScreen(container, { session, perspectivePlayerId = null }) {
   const mapView = createLiveMapView();
@@ -8,11 +15,13 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
   let targetIds = new Set();
   let distances = new Map();
   let error = '';
+  let livePointerDrag = null;
   const clearSelection = () => { selectedUnitId = null; targetIds = new Set(); distances = new Map(); };
   const completeMeasurements = () => targetIds.size > 0 && [...targetIds].every(id => Number.isFinite(distances.get(id)));
 
   function render() {
     const state = session.getState();
+    const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
     const model = getChargeViewModel(state, { perspectivePlayerId: perspectivePlayerId ?? state.activePlayer });
     if (!model.candidates.some(item => item.unit.unitId === selectedUnitId)) clearSelection();
     const candidate = model.candidates.find(item => item.unit.unitId === selectedUnitId);
@@ -22,6 +31,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     const controls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
       ${state.phase !== 'charge' ? '<p class="combat-workspace__error" role="status">Viewing Charge. Return to the current game phase and advance to Charge to record an outcome.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
+      <p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
       ${candidate ? `<h2>Targets</h2>
@@ -36,7 +46,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
 
       </aside>
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
 
     mapView.bind(container);
     const chooseUnit = id => { selectedUnitId = id; targetIds = new Set(); distances = new Map(); error = ''; render(); };
@@ -77,7 +87,108 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     });
     return model;
   }
+
+  function handleLivePointerDown(event) {
+    const marker = event.target?.closest?.('[data-map-unit-id]');
+    if (!marker || !marker.closest?.('[data-map-mode="live"]')) return;
+    const state = session.getState();
+    const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
+    const unitId = marker.getAttribute('data-map-unit-id');
+    const unit = state.units.find(item => item.id === unitId);
+    if (state.phase !== 'charge' || state.battle?.status !== 'active') return;
+    if (!unit || unit.ownerId !== activePlayerId || unit.status !== 'deployed') return;
+    const board = marker.closest('[data-battlefield-map-board]');
+    if (!board) return;
+    livePointerDrag = {
+      unitId,
+      pointerId:event.pointerId,
+      startX:event.clientX,
+      startY:event.clientY,
+      board,
+      marker,
+      markerX:parseFloat(marker.style.left) / 100 * 60,
+      markerY:44 - parseFloat(marker.style.top) / 100 * 44,
+      left:marker.style.left,
+      top:marker.style.top,
+      moved:false
+    };
+    marker.classList?.add?.('is-dragging');
+    try { marker.setPointerCapture?.(event.pointerId); } catch {}
+  }
+
+  function handleLivePointerMove(event) {
+    const drag = livePointerDrag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 8) drag.moved = true;
+    if (!drag.moved) return;
+    const rect = drag.board.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return;
+    const x = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
+    const y = Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44));
+    event.preventDefault?.();
+    drag.marker.style.left = x / 60 * 100 + '%';
+    drag.marker.style.top = (44 - y) / 44 * 100 + '%';
+  }
+
+  function handleLivePointerUp(event) {
+    const drag = livePointerDrag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    livePointerDrag = null;
+    drag.marker.classList?.remove?.('is-dragging');
+    if (!drag.moved) return;
+    const rect = drag.board.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return;
+    const x = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
+    const y = Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44));
+    const dx = x - drag.markerX;
+    const dy = y - drag.markerY;
+    try {
+      const state = session.getState();
+      const unit = state.units.find(item => item.id === drag.unitId);
+      if (!unit) throw new Error('Selected unit is no longer available.');
+      const moves = modelsFor(unit).map(model => ({
+        modelId:model.id,
+        position:{
+          x:Math.round(Math.max(0, Math.min(60, model.position.x + dx)) * 10) / 10,
+          y:Math.round(Math.max(0, Math.min(44, model.position.y + dy)) * 10) / 10
+        }
+      }));
+      session.dispatch({
+        type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,
+        payload:{ unitId:unit.id, playerId:unit.ownerId, moves }
+      });
+      error = '';
+    } catch (cause) {
+      error = cause?.message ?? String(cause);
+      render();
+    }
+  }
+
+  function handleLivePointerCancel(event) {
+    const drag = livePointerDrag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    livePointerDrag = null;
+    drag.marker.classList?.remove?.('is-dragging');
+    drag.marker.style.left = drag.left;
+    drag.marker.style.top = drag.top;
+  }
+
+  container.addEventListener?.('pointerdown', handleLivePointerDown);
+  container.addEventListener?.('pointermove', handleLivePointerMove);
+  container.addEventListener?.('pointerup', handleLivePointerUp);
+  container.addEventListener?.('pointercancel', handleLivePointerCancel);
   const unsubscribe = session.subscribe(render);
   render();
-  return { getState:session.getState, render, destroy:() => { unsubscribe(); container.replaceChildren(); } };
+  return {
+    getState:session.getState,
+    render,
+    destroy:() => {
+      unsubscribe();
+      container.removeEventListener?.('pointerdown', handleLivePointerDown);
+      container.removeEventListener?.('pointermove', handleLivePointerMove);
+      container.removeEventListener?.('pointerup', handleLivePointerUp);
+      container.removeEventListener?.('pointercancel', handleLivePointerCancel);
+      container.replaceChildren();
+    }
+  };
 }

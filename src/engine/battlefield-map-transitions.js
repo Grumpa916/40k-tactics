@@ -122,8 +122,8 @@ export function adjustLiveMapPosition(state, { unitId, playerId, moves } = {}) {
   if (!state.battle || state.battle.status !== "active") {
     throw new Error("Live map positions can only be adjusted during an active battle.");
   }
-  if (state.phase !== "movement") {
-    throw new Error("Live map positions can only be adjusted in the Movement phase.");
+  if (!["movement", "charge"].includes(state.phase)) {
+    throw new Error("Live map positions can only be adjusted in the Movement or Charge phase.");
   }
   const unit = requirePlayerUnit(state, unitId, playerId);
   if (unit.status !== "deployed") throw new Error("Unit must be deployed before its map position can be adjusted.");
