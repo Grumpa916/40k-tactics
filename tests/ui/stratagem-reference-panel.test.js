@@ -50,7 +50,7 @@ test('selected Tyranid stratagems are filtered to the current phase without inco
       p1: {
         faction: 'Tyranids',
         detachment: 'Crusher Stampede',
-        detachments: ['Talons of the Norn Queen'],
+        detachments: ['Talons of the Norn Queen', 'Synaptic Nexus', 'Vanguard Onslaught'],
         rulesDataRevision: createRulesDataRevisionStamp('Tyranids')
       }
     }
@@ -58,6 +58,9 @@ test('selected Tyranid stratagems are filtered to the current phase without inco
   assert.match(html, /Rampaging Monstrosities/);
   assert.match(html, /Savage Roar/);
   assert.match(html, /Lesser Prey/);
+  assert.match(html, /instead of the army's currently active imperative/);
+  assert.match(html, /attacks against that enemy gain \+1 to Hit/);
+  assert.match(html, /non-TITANIC models/);
   assert.doesNotMatch(html, /Tanglestrike Rounds/);
   assert.doesNotMatch(html, /partial catalog|not been imported yet/);
 });
