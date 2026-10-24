@@ -28,7 +28,7 @@ test('current Tyranid rules revision tracks faction pack, live points revision a
   assert.equal(revision.edition, '11th');
   assert.equal(revision.factionRules.version, '1.3');
   assert.equal(revision.points.revision, '2026-10-14');
-  assert.equal(revision.catalog.revision, '2026-10-24.1');
+  assert.equal(revision.catalog.revision, '2026-10-24.2');
   assert.match(revision.revisionId, /mfm-2026-10-14/);
 });
 
