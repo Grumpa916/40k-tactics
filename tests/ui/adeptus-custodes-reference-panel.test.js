@@ -17,7 +17,7 @@ test('reference panel derives Custodes army rules and selected detachment metada
       p2: { faction: 'Tyranids', detachment: 'Invasion Fleet' }
     }
   }, {}, 'p1');
-  assert.match(html, /Martial Ka&#39;tah/);
+  assert.match(html, /Martial Ka&#0?39;tah/);
   assert.match(html, /Aegis of the Emperor/);
   assert.match(html, /Guardians of the Throne/);
   assert.match(html, /Priority Assets and Purge the Foe/);
