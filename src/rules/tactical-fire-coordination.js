@@ -6,6 +6,7 @@ import { getSpatialContext } from "./spatial-context.js";
 import { clamp01, unitById } from "./tactical-context-utils.js";
 
 const RANGE_MARGIN = 3;
+const MAX_COORDINATION_CANDIDATES = 12;
 
 function weaponRange(weapon) {
   const value = weapon?.characteristics?.range ?? weapon?.range;
@@ -58,6 +59,18 @@ function bestOptionForUnit(state, unit, target, spatial) {
   return options[0] ?? null;
 }
 
+function boundedCandidates(state, candidateIds, target, spatial) {
+  return candidateIds
+    .map((id) => ({ unit: unitById(state, id), distance: distanceFor(spatial, id, target.id) }))
+    .filter((entry) => entry.unit)
+    .sort((a, b) =>
+      (Number.isFinite(a.distance) ? a.distance : Infinity) - (Number.isFinite(b.distance) ? b.distance : Infinity) ||
+      a.unit.id.localeCompare(b.unit.id)
+    )
+    .slice(0, MAX_COORDINATION_CANDIDATES)
+    .map((entry) => entry.unit);
+}
+
 /**
  * Compare the selected weapon with unresolved friendly shooting activations.
  * The combined-fire estimate adds expected damage; it does not pretend separate
@@ -82,16 +95,15 @@ export function getFireCoordinationContext(state, {
   let candidates;
   let spatial;
   try {
-    candidates = getShootingCandidates(state).available.filter((id) => id !== attackerId);
+    const available = getShootingCandidates(state).available.filter((id) => id !== attackerId);
     spatial = getSpatialContext(state, { playerId });
+    candidates = boundedCandidates(state, available, target, spatial);
   } catch {
     candidates = [];
     spatial = null;
   }
 
   const alternatives = candidates
-    .map((id) => unitById(state, id))
-    .filter(Boolean)
     .map((unit) => bestOptionForUnit(state, unit, target, spatial))
     .filter(Boolean)
     .sort((a, b) =>
@@ -150,7 +162,9 @@ export function getFireCoordinationContext(state, {
     bestAlternative: best,
     contributors: Object.freeze(topContributors),
     alternatives: Object.freeze(alternatives),
+    consideredCandidateCount: candidates.length,
+    candidateLimit: MAX_COORDINATION_CANDIDATES,
     reason,
-    assumption: "Combined-fire planning sums expected damage from separate unresolved activations; it is not an exact combined destruction probability."
+    assumption: `Combined-fire planning sums expected damage from separate unresolved activations; it is not an exact combined destruction probability. To keep live-play ranking responsive, at most ${MAX_COORDINATION_CANDIDATES} unresolved friendly activations are compared, prioritizing approximate proximity to the target.`
   });
 }
