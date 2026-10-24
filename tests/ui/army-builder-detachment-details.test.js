@@ -9,7 +9,7 @@ test('Army Builder detachment names expand to loaded rules text', () => {
   assert.match(html, /Solar Watch/);
   assert.match(html, /Talon Sortie/);
   assert.match(html, /Falls Back can remain eligible to charge/);
-  assert.match(html, /Favoured Ka&#0?39;tah: Calistus/);
+  assert.match(html, /Favoured Ka'tah: Calistus/);
 });
 
 test('detachment details never invent missing rule text', () => {
