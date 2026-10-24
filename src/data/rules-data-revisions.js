@@ -7,7 +7,7 @@ const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
   schemaVersion: 1,
   faction: "Tyranids",
   edition: "11th",
-  revisionId: "tyranids-11e-fp1.3-mfm-2026-10-14-catalog-2026-10-24.1",
+  revisionId: "tyranids-11e-fp1.3-mfm-2026-10-14-catalog-2026-10-24.2",
   reviewedAt: "2026-10-24",
   factionRules: Object.freeze({
     name: "Games Workshop Tyranids Faction Pack",
@@ -39,8 +39,8 @@ const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
     sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
   }),
   catalog: Object.freeze({
-    revision: "2026-10-24.1",
-    description: "Tyranid roster profiles, points options, reviewed wargear mappings and detachment stratagem references"
+    revision: "2026-10-24.2",
+    description: "Tyranid roster profiles, points options, reviewed wargear mappings and complete 40K.app detachment stratagem references"
   })
 });
 
