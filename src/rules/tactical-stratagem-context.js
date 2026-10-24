@@ -10,17 +10,20 @@ function cpBalance(state, playerId) {
   return Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
 }
 
-function selectedDetachmentRecord(state, playerId) {
+function selectedDetachmentRecords(state, playerId) {
   const roster = state?.armyRosters?.[playerId];
-  if (!roster) return null;
-  const selected = [
+  if (!roster) return [];
+  const names = [
+    ...(Array.isArray(roster.detachments) ? roster.detachments : []),
     roster.detachment,
-    roster.detachmentName,
-    ...(Array.isArray(roster.detachments) ? roster.detachments : [])
-  ].map((name) => String(name ?? "").trim()).filter(Boolean);
+    roster.detachmentName
+  ].map((name) => typeof name === "string" ? name : name?.name)
+    .map((name) => String(name ?? "").trim())
+    .filter(Boolean);
+  const selected = [...new Set(names)];
   const catalog = roster?.rulesDataRevision?.factionRules?.detachments;
-  if (!Array.isArray(catalog)) return null;
-  return selected.map((name) => catalog.find((entry) => entry?.name === name)).find(Boolean) ?? null;
+  if (!Array.isArray(catalog)) return [];
+  return selected.map((name) => catalog.find((entry) => entry?.name === name)).filter(Boolean);
 }
 
 function phaseRelevant(stratagem, phase) {
@@ -45,25 +48,33 @@ function roleFor(stratagem) {
 
 function playerContext(state, playerId) {
   const cp = cpBalance(state, playerId);
-  const detachment = selectedDetachmentRecord(state, playerId);
-  const stratagems = Array.isArray(detachment?.stratagems) ? detachment.stratagems : [];
+  const detachments = selectedDetachmentRecords(state, playerId);
   const phase = state?.phase ?? null;
-  const relevant = stratagems.filter((item) => phaseRelevant(item, phase)).map((item) => {
-    const cost = Number.isFinite(item?.cpCost) ? Number(item.cpCost) : 1;
-    return Object.freeze({
-      name: item?.name ?? "Unnamed Stratagem",
-      cpCost: cost,
-      timing: item?.timing ?? "",
-      description: item?.description ?? "",
-      roles: Object.freeze(roleFor(item)),
-      affordable: cost <= cp
-    });
-  });
+  const relevant = detachments.flatMap((detachment) =>
+    (Array.isArray(detachment?.stratagems) ? detachment.stratagems : [])
+      .filter((item) => phaseRelevant(item, phase))
+      .map((item) => {
+        const cost = Number.isFinite(item?.cpCost) ? Number(item.cpCost) : 1;
+        return Object.freeze({
+          name: item?.name ?? "Unnamed Stratagem",
+          detachmentName: detachment.name ?? null,
+          cpCost: cost,
+          timing: item?.timing ?? "",
+          description: item?.description ?? "",
+          roles: Object.freeze(roleFor(item)),
+          affordable: cost <= cp
+        });
+      })
+  );
+  const fallback = state?.armyRosters?.[playerId]?.detachment ?? state?.armyRosters?.[playerId]?.detachmentName ?? null;
+  const detachmentNames = detachments.length ? detachments.map((item) => item.name).filter(Boolean) : fallback ? [fallback] : [];
+  const statuses = detachments.map((item) => item?.stratagemCatalogStatus).filter(Boolean);
   return Object.freeze({
     playerId,
     cp,
-    detachmentName: detachment?.name ?? state?.armyRosters?.[playerId]?.detachment ?? state?.armyRosters?.[playerId]?.detachmentName ?? null,
-    catalogStatus: detachment?.stratagemCatalogStatus ?? null,
+    detachmentName: detachmentNames[0] ?? null,
+    detachmentNames: Object.freeze(detachmentNames),
+    catalogStatus: statuses.length && statuses.every((status) => status === "complete") ? "complete" : statuses[0] ?? null,
     phaseRelevant: Object.freeze(relevant),
     affordable: Object.freeze(relevant.filter((item) => item.affordable)),
     combat: Object.freeze(relevant.filter((item) => item.affordable && item.roles.includes("combat"))),
@@ -88,7 +99,8 @@ export function getStratagemResourceContext(state, { playerId, targetUnitId = nu
 
   const reasonParts = [];
   if (own.combat.length) {
-    reasonParts.push(`${own.combat.length} affordable ${own.detachmentName ? own.detachmentName + " " : ""}combat Stratagem option${own.combat.length === 1 ? " is" : "s are"} relevant in this phase.`);
+    const names = own.detachmentNames.length ? ` across ${own.detachmentNames.join(" + ")}` : "";
+    reasonParts.push(`${own.combat.length} affordable combat Stratagem option${own.combat.length === 1 ? " is" : "s are"} relevant in this phase${names}.`);
   } else if (own.cp <= 0) {
     reasonParts.push("No friendly CP is currently available for a Stratagem investment.");
   }
@@ -104,6 +116,6 @@ export function getStratagemResourceContext(state, { playerId, targetUnitId = nu
     targetBattleShocked,
     opponentCanAffectTarget,
     reason: reasonParts.join(" ") || "No phase-relevant CP/Stratagem leverage is established from the connected detachment catalogs.",
-    assumption: "Stratagem availability is surfaced from CP, phase and connected detachment data; target eligibility and timing remain governed by the actual Stratagem text."
+    assumption: "Stratagem availability is surfaced from CP, phase and all selected detachment catalogs; target eligibility and timing remain governed by the actual Stratagem text."
   });
 }
