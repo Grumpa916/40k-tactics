@@ -37,6 +37,7 @@ export function applyArmyRosterToBattle(state, { roster, playerId, snapshotId = 
       rosterUnitId: unit.id,
       sourceRosterId: roster.id,
       sourceRosterName: roster.name,
+      notes: String(unit.notes ?? ""),
       datasheetId: unit.datasheetId ?? null,
       modelCount: Math.max(1, Number(unit.modelCount) || 1),
       dataSource: unit.dataSource ?? { status: unit.datasheetId ? "unverified" : "manual-entry" }
