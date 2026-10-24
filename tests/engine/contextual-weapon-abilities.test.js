@@ -91,7 +91,7 @@ test('Precision and Extra Attacks remain available as structured workflow flags'
 test('probabilistic unit profiles expose live model count and datasheet keywords for contextual rules',()=>{
   const state={
     armyRosters:{p2:{units:[{id:'r2',modelCount:10,datasheet:{characteristics:{Toughness:4,Save:'3+',Wounds:1},keywords:['Infantry','Faction: Test'],weapons:[]}}]}},
-    units:[{id:'target',ownerId:'p2,status:'deployed',metadata:{rosterUnitId:'r2',modelCount:10},position:{x:3,y:4}}],
+    units:[{id:'target',ownerId:'p2',status:'deployed',metadata:{rosterUnitId:'r2',modelCount:10},position:{x:3,y:4}}],
     history:[]
   };
   const target=getProbabilisticUnitProfile(state,state.units[0]);
