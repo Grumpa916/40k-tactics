@@ -11,6 +11,7 @@ import { assessRosterRulesData, revalidateRosterRulesData } from "../rules/roste
 import { attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
 import { buildManualWargearLoadout } from "../rules/wargear-loadout-validation.js";
+import { normalizeRosterDetachmentSelection } from "../rules/roster-detachment-selection.js";
 import { createArmyUnitEditorController } from "./army-unit-editor-controller.js";
 
 function newId() {
@@ -108,9 +109,10 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if (form.matches("[data-roster-create]")) {
       await action(async () => {
         const timestamp = now();
+        const initialDetachment=(values.detachment === "__custom__" ? values.customDetachment : values.detachment)?.trim() || null;
         const roster = createArmyRoster({
           id: newId(), name: values.rosterName, faction: values.faction || null,
-          detachment: (values.detachment === "__custom__" ? values.customDetachment : values.detachment)?.trim() || null,
+          detachment: initialDetachment, detachments: initialDetachment?[initialDetachment]:[],
           pointsLimit: values.pointsLimit === "" ? null : Number(values.pointsLimit),
           units: [], rulesDataRevision: createRulesDataRevisionStamp(values.faction), createdAt: timestamp, updatedAt: timestamp
         });
@@ -238,15 +240,13 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       },"Unit size, points and selected wargear saved.");return;
     }
     if (button.matches("[data-save-detachment]")) {
-      const selected = container.querySelector("[data-roster-detachment-select]")?.value ?? "";
-      const custom = container.querySelector("[data-roster-custom-detachment]")?.value ?? "";
+      const selected=[...container.querySelectorAll("[data-roster-detachment-checkbox]:checked")].map(input=>input.value);
       await action(async () => {
-        if (!current) throw new Error("Open a roster before changing its detachment.");
-        const detachment = (selected === "__custom__" ? custom : selected).trim() || null;
-        const updated = { ...current, detachment, updatedAt: now() };
+        if (!current) throw new Error("Open a roster before changing its detachments.");
+        const updated = {...normalizeRosterDetachmentSelection(current,selected), updatedAt: now()};
         await store.save({ id: updated.id, roster: updated });
         current = updated;
-      }, "Detachment saved to roster.");
+      }, "Detachments saved to roster.");
       return;
     }
     if (button.matches("[data-save-points-limit]")) {
