@@ -1,4 +1,5 @@
 import { buildAttackProfile } from "./combat-profile.js";
+import { getContextualWeaponProfile } from "./contextual-weapon-abilities.js";
 import { getWoundBracketModifiers } from "./wound-bracket.js";
 
 function targetAfterModifier(target, modifier = 0) {
@@ -20,9 +21,13 @@ function successProbability(target) {
 
 function damageValues(damage) {
   if (Number.isInteger(damage) && damage >= 1) return [[damage, 1]];
-  if (damage === "D3") return [[1, 1 / 3], [2, 1 / 3], [3, 1 / 3]];
-  if (damage === "D6") return Array.from({ length: 6 }, (_, index) => [index + 1, 1 / 6]);
-  throw new RangeError("Damage must be a positive integer, D3, or D6.");
+  const text = String(damage ?? '').trim().toUpperCase();
+  if (/^\d+$/.test(text)) return [[Number(text), 1]];
+  const match = text.match(/^D([36])(?:\+(\d+))?$/);
+  if (!match) throw new RangeError("Damage must be a positive integer or supported D3/D6 expression.");
+  const sides = Number(match[1]);
+  const modifier = Number(match[2] || 0);
+  return Array.from({ length: sides }, (_, index) => [index + 1 + modifier, 1 / sides]);
 }
 
 function attackCountValues(attacks) {
@@ -74,20 +79,33 @@ function singleSaveFailureProbability(profile, saveModifier = 0) {
   return failure;
 }
 
+function oneSavedWoundDamageDistribution(profile, saveFailure) {
+  const result = new Map();
+  addProbability(result, 0, 1 - saveFailure);
+  for (const [damage, probability] of damageValues(profile.damage)) {
+    addProbability(result, damage, saveFailure * probability);
+  }
+  return result;
+}
+
 function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) {
   const result = new Map();
   const woundProbability = successProbability(woundTargetValue);
   const rerolledWoundProbability = profile.twinLinked
     ? woundProbability + ((1 - woundProbability) * woundProbability)
     : woundProbability;
+  const criticalBaseProbability = successProbability(profile.criticalWoundTarget);
   const criticalWoundProbability = profile.devastatingWounds
-    ? (profile.twinLinked ? (1 + (1 - woundProbability)) / 6 : 1 / 6)
+    ? (profile.twinLinked
+      ? criticalBaseProbability + ((1 - woundProbability) * criticalBaseProbability)
+      : criticalBaseProbability)
     : 0;
-  const normalWoundProbability = Math.max(0, rerolledWoundProbability - criticalWoundProbability);
-  addProbability(result, 0, 1 - (normalWoundProbability * saveFailure + criticalWoundProbability));
+  const critical = Math.min(rerolledWoundProbability, criticalWoundProbability);
+  const normalWoundProbability = Math.max(0, rerolledWoundProbability - critical);
+  addProbability(result, 0, 1 - (normalWoundProbability * saveFailure + critical));
   for (const [damage, probability] of damageValues(profile.damage)) {
     addProbability(result, damage, normalWoundProbability * saveFailure * probability);
-    addProbability(result, damage, criticalWoundProbability * probability);
+    addProbability(result, damage, critical * probability);
   }
   return result;
 }
@@ -101,20 +119,16 @@ function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
   const nonCriticalHit = Math.max(0, regular - critical);
   const miss = Math.max(0, 1 - regular);
   const normalHit = oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure);
+  const lethalHit = oneSavedWoundDamageDistribution(profile, saveFailure);
 
   addProbability(result, 0, miss);
   for (const [damage, probability] of normalHit) {
     addProbability(result, damage, nonCriticalHit * probability);
   }
 
-  if (profile.lethalHits) {
-    for (const [damage, probability] of damageValues(profile.damage)) {
-      addProbability(result, damage, critical * probability);
-    }
-  } else {
-    for (const [damage, probability] of normalHit) {
-      addProbability(result, damage, critical * probability);
-    }
+  const criticalBase = profile.lethalHits ? lethalHit : normalHit;
+  for (const [damage, probability] of criticalBase) {
+    addProbability(result, damage, critical * probability);
   }
 
   if (profile.sustainedHits > 0) {
@@ -126,9 +140,6 @@ function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
       for (const [damage, probability] of next) sustainedDistribution.set(damage, probability);
     }
 
-    const criticalBase = profile.lethalHits
-      ? new Map(damageValues(profile.damage))
-      : normalHit;
     result.clear();
     addProbability(result, 0, miss);
     for (const [damage, probability] of normalHit) {
@@ -146,14 +157,12 @@ function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
 
 /**
  * Return the baseline probability distribution of damage outcomes for one
- * attack profile. This is intentionally separate from getExpectedDamage().
- *
- * The distribution uses the supplied profiles and known modifiers. It is
- * advisory infrastructure and does not model hidden cover, future abilities,
- * positioning, or limited-count rerolls.
+ * attack profile. Contextual abilities use known target model count, keywords
+ * and conservative approximate half-range context from the live map.
  */
 export function getDamageOutcomeDistribution({ attacker, target, weapon, attackerRemainingWounds = attacker?.wounds } = {}) {
-  const profile = buildAttackProfile({ attacker, target, weapon });
+  const baseProfile = buildAttackProfile({ attacker, target, weapon });
+  const profile = getContextualWeaponProfile({ attacker, target, profile: baseProfile });
   const saveModifier = target?.characteristics?.saveModifier ?? weapon?.characteristics?.saveModifier ?? 0;
   const woundBracket = getWoundBracketModifiers(attacker, { remainingWounds: attackerRemainingWounds });
   const woundTargetValue = targetAfterModifier(
@@ -182,7 +191,17 @@ export function getDamageOutcomeDistribution({ attacker, target, weapon, attacke
   return Object.freeze({
     outcomes: Object.freeze(entries),
     expectedDamage: entries.reduce((sum, outcome) => sum + outcome.damage * outcome.probability, 0),
-    totalProbability: entries.reduce((sum, outcome) => sum + outcome.probability, 0)
+    totalProbability: entries.reduce((sum, outcome) => sum + outcome.probability, 0),
+    contextualAbilities: Object.freeze({
+      blastBonus: profile.blastBonus,
+      rapidFireBonus: profile.rapidFireBonus,
+      meltaBonus: profile.meltaBonus,
+      antiMatched: profile.antiMatched,
+      criticalWoundTarget: profile.criticalWoundTarget,
+      halfRangeStatus: profile.halfRangeStatus,
+      approximateDistance: profile.approximateDistance,
+      precision: profile.precision,
+      extraAttacks: profile.extraAttacks
+    })
   });
 }
-
