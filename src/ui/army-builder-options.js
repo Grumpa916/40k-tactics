@@ -1,46 +1,24 @@
 import { escapeHtml } from "./army-builder-html.js";
-import { SPACE_MARINES_DETACHMENTS } from "../data/space-marines-rules.js";
-import { ADEPTUS_CUSTODES_DETACHMENTS } from "../data/adeptus-custodes-faction-rules.js";
-function normalizedFaction(value) { return String(value ?? "").trim().toLowerCase(); }
+import { DETACHMENT_POINT_BUDGET, getFactionDetachments } from "../data/faction-detachments.js";
 
-const TYRANID_DETACHMENTS = Object.freeze([
-  { name: "Ambush Predators", forceDisposition: "Disruption", detachmentPoints: 1 },
-  { name: "Assimilation Swarm", forceDisposition: "Priority Assets", detachmentPoints: 2 },
-  { name: "Crusher Stampede", forceDisposition: "Purge the Foe", detachmentPoints: 2 },
-  { name: "Invasion Fleet", forceDisposition: "Take and Hold", detachmentPoints: 3 },
-  { name: "Subterranean Assault", forceDisposition: "Disruption", detachmentPoints: 3 },
-  { name: "Synaptic Nexus", forceDisposition: "Disruption", detachmentPoints: 2 },
-  { name: "Talons of the Norn Queen", forceDisposition: "Take and Hold", detachmentPoints: 1 },
-  { name: "Unending Swarm", forceDisposition: "Take and Hold", detachmentPoints: 2 },
-  { name: "Vanguard Onslaught", forceDisposition: "Reconnaissance", detachmentPoints: 2 },
-  { name: "Warrior Bioform Onslaught", forceDisposition: "Take and Hold", detachmentPoints: 1 }
-]);
-
-function appendDetachmentOptions(options, detachments, selected) {
-  for (const detachment of detachments) {
-    const shieldHost = detachment.uniqueShieldHost ? ' · Unique Shield Host' : '';
-    options.push('<option value="' + escapeHtml(detachment.name) + '"' +
-      (selected === detachment.name ? ' selected' : '') + '>' +
-      escapeHtml(detachment.name + ' · ' + detachment.forceDisposition + ' · ' + detachment.detachmentPoints + ' DP' + shieldHost) +
-      '</option>');
-  }
-}
+function selectedSet(values){return new Set((Array.isArray(values)?values:[values]).map(v=>String(v??'').trim()).filter(Boolean));}
 
 export function detachmentOptions(faction, selected = null) {
+  const selectedNames=selectedSet(selected);
   const options = ['<option value="">Choose a detachment…</option>'];
-  const normalized = normalizedFaction(faction);
-  const isTyranids = normalized === "tyranids";
-  const isSpaceMarines = normalized === "space marines";
-  const isCustodes = normalized === "adeptus custodes";
-  const detachments = isTyranids ? TYRANID_DETACHMENTS
-    : isSpaceMarines ? SPACE_MARINES_DETACHMENTS
-      : isCustodes ? ADEPTUS_CUSTODES_DETACHMENTS : [];
-  const knownNames = detachments.map((item) => item.name);
-  appendDetachmentOptions(options, detachments, selected);
-  if (selected && !knownNames.includes(selected)) {
-    options.push('<option value="__custom__" selected>Other / custom (saved value)</option>');
-  } else {
-    options.push('<option value="__custom__">Other / enter manually</option>');
+  const detachments=getFactionDetachments(faction);
+  for(const detachment of detachments){
+    const shieldHost = detachment.uniqueShieldHost ? ' · Unique Shield Host' : '';
+    options.push('<option value="'+escapeHtml(detachment.name)+'"'+(selectedNames.has(detachment.name)?' selected':'')+'>'+escapeHtml(detachment.name+' · '+detachment.forceDisposition+' · '+detachment.detachmentPoints+' DP'+shieldHost)+'</option>');
   }
-  return options.join("");
+  return options.join('');
+}
+
+export function renderDetachmentChecklist(faction, selected = []) {
+  const chosen=selectedSet(selected);
+  const detachments=getFactionDetachments(faction);
+  if(!detachments.length) return '<p class="ab-muted">Detachment data for this faction is not loaded yet.</p>';
+  const used=detachments.filter(d=>chosen.has(d.name)).reduce((sum,d)=>sum+(d.detachmentPoints??0),0);
+  const rows=detachments.map(d=>`<label class="ab-check"><input type="checkbox" data-roster-detachment-checkbox value="${escapeHtml(d.name)}" ${chosen.has(d.name)?'checked':''}> <span><strong>${escapeHtml(d.name)}</strong> · ${escapeHtml(d.detachmentPoints)} DP · ${escapeHtml(d.forceDisposition)}${d.uniqueShieldHost?' · Unique Shield Host':''}</span></label>`).join('');
+  return `<div class="ab-detachment-picker"><p><strong>Detachments · ${used}/${DETACHMENT_POINT_BUDGET} DP used</strong></p>${rows}</div>`;
 }

@@ -34,12 +34,23 @@ function makeContainer() {
   };
 }
 
-test("Army Builder offers a reviewed Tyranid detachment and supports custom printed names", async () => {
+test("Army Builder uses the reviewed Tyranid detachment catalog and global three-DP workflow", async () => {
   const root = makeContainer();
+  const roster = {
+    id: "tyranid-roster",
+    name: "Tyranid DP test",
+    faction: "Tyranids",
+    pointsLimit: 2000,
+    detachment: "Ambush Predators",
+    detachments: ["Ambush Predators", "Talons of the Norn Queen"],
+    units: [],
+    createdAt: "2026-10-24T00:00:00.000Z",
+    updatedAt: "2026-10-24T00:00:00.000Z"
+  };
   const store = {
-    async list() { return []; },
+    async list() { return [{ id: roster.id, name: roster.name, faction: roster.faction, pointsLimit: roster.pointsLimit, roster }]; },
     async save() {},
-    async load() { return { roster: null }; },
+    async load(id) { assert.equal(id, roster.id); return { roster: structuredClone(roster) }; },
     async remove() {}
   };
   const panel = createArmyRosterPanel(root, { store });
@@ -49,7 +60,8 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
   root.emit("click",{target:{closest:()=>newButton}});
   assert.match(root.innerHTML, /data-roster-create-faction/);
   assert.match(root.innerHTML, /data-roster-detachment-select/);
-  assert.match(root.innerHTML, /data-roster-custom-detachment/);
+  assert.doesNotMatch(root.innerHTML, /data-roster-custom-detachment/);
+  assert.match(root.innerHTML, /additional detachments up to the 3 DP army limit/);
 
   root.emit("change", {
     target: {
@@ -74,8 +86,18 @@ test("Army Builder offers a reviewed Tyranid detachment and supports custom prin
     assert.ok(root.detachmentSelect.innerHTML.includes(disposition), `missing Force Disposition for ${name}`);
     assert.ok(root.detachmentSelect.innerHTML.includes(cost), `missing Detachment Point cost for ${name}`);
   }
-  assert.equal((root.detachmentSelect.innerHTML.match(/<option value="/g) ?? []).length, 12);
-  assert.match(root.detachmentSelect.innerHTML, /Other \/ enter manually/);
+  assert.equal((root.detachmentSelect.innerHTML.match(/<option value="/g) ?? []).length, 11);
+
+  root.rosterSelect.value = roster.id;
+  const loadButton={getAttribute:()=>roster.id,matches:selector=>selector.includes("[data-roster-load]")};
+  root.emit("click",{target:{closest:selector=>selector.includes("[data-roster-load]")?loadButton:null}});
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.match(root.innerHTML, /Detachments · 2\/3 DP used/);
+  assert.match(root.innerHTML, /data-roster-detachment-checkbox/);
+  assert.match(root.innerHTML, /Ambush Predators/);
+  assert.match(root.innerHTML, /Talons of the Norn Queen/);
+  assert.match(root.innerHTML, /Save detachments/);
   panel.destroy();
 });
 
