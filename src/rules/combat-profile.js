@@ -32,6 +32,7 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     hitTarget,
     hitTargetKey,
     hitModifier: characteristics.hitModifier ?? 0,
+    range: Number.isFinite(weaponCharacteristics.range) ? weaponCharacteristics.range : null,
     strength: characteristics.strength,
     toughness: characteristics.toughness,
     woundModifier: characteristics.woundModifier ?? 0,
@@ -46,7 +47,12 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     sustainedHits: characteristics.sustainedHits ?? 0,
     lethalHits: characteristics.lethalHits ?? false,
     devastatingWounds: characteristics.devastatingWounds ?? false,
-    twinLinked: characteristics.twinLinked ?? false
+    twinLinked: characteristics.twinLinked ?? false,
+    blast: characteristics.blast ?? 0,
+    rapidFire: characteristics.rapidFire ?? 0,
+    melta: characteristics.melta ?? 0,
+    anti: Array.isArray(characteristics.anti) ? characteristics.anti : [],
+    precision: characteristics.precision ?? false,
+    extraAttacks: characteristics.extraAttacks ?? false
   });
 }
-
