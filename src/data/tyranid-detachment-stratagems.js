@@ -36,7 +36,7 @@ export const TYRANID_DETACHMENT_STRATAGEM_DATA = Object.freeze({
     entry("Corrosive Viscera", 1, "Strategic Ploy", "Opponent's Shooting or Fight phase, when a non-Flying Monster with Deadly Demise is destroyed", ["shooting", "fight"], "Resolve that Monster's Deadly Demise mortal wounds automatically instead of rolling."),
     entry("Rampaging Monstrosities", 1, "Battle Tactic", "Fight phase, before an eligible Monster unit fights", ["fight"], "The unit can re-roll its melee Hit rolls for the phase."),
     entry("Savage Roar", 1, "Battle Tactic", "Fight phase, after an enemy unit targets a Monster", ["fight"], "The enemy takes a Battle-shock test and suffers -1 to Hit when attacking that Monster; if the test fails, it also suffers -1 to wound."),
-    entry("Untrammelled Ferocity", 1, "Strategic Ploy", "Your Movement phase, before an eligible Monster moves", ["movement"], "The Monster can move through models and terrain up to 4 inches high; moving through taller terrain risks Battle-shock. It cannot finish in Engagement Range."),
+    entry("Untrammelled Ferocity", 1, "Strategic Ploy", "Your Movement phase, before an eligible Monster moves", ["movement"], "The Monster can move through non-TITANIC models and terrain up to 4 inches high; it may also cross taller terrain at risk of Battle-shock. It can pass through Engagement Range but cannot finish there."),
     entry("Swarm-guided Salvoes", 1, "Battle Tactic", "Your Shooting phase, before an eligible Monster shoots", ["shooting"], "Its ranged weapons gain Ignores Cover, and its attacks can ignore modifiers to Ballistic Skill and Hit rolls."),
     entry("Massive Impact", 1, "Epic Deed", "Your Charge phase, after a Monster ends a Charge move", ["charge"], "Choose an enemy unit in Engagement Range; roll six D6 and inflict one mortal wound for each 4+.")
   ]),
@@ -61,7 +61,7 @@ export const TYRANID_DETACHMENT_STRATAGEM_DATA = Object.freeze({
     entry("Synaptic Channelling", 1, "Battle Tactic", "Command phase", ["command"], "Until turn end, Tyranids units within 9 inches of the selected Synapse unit count as within Synapse Range."),
     entry("Irresistible Will", 1, "Battle Tactic", "Your Shooting or Fight phase", ["shooting", "fight"], "Choose a visible enemy within 24 inches of an unactivated Synapse unit; nearby Tyranids attacks against it re-roll Hit and Wound rolls of 1."),
     entry("Reinforced Hive Node", 1, "Battle Tactic", "Opponent's Shooting or Fight phase, after targets are selected", ["shooting", "fight"], "Attacks against the selected Synapse unit have their AP worsened by 1 for the attack sequence."),
-    entry("Imperative Dominance", 1, "Strategic Ploy", "Your Command phase", ["command"], "A unit within Synapse Range can use a Synaptic Imperative already chosen earlier in the battle until your next Command phase."),
+    entry("Imperative Dominance", 1, "Strategic Ploy", "Your Command phase", ["command"], "Choose any Synaptic Imperative; until your next Command phase it applies to the selected unit instead of the army's currently active imperative."),
     entry("Override Instincts", 1, "Strategic Ploy", "Your Movement phase, after a unit in Synapse Range Falls Back", ["movement"], "The unit remains eligible to shoot and declare a charge this turn.")
   ]),
   "Talons of the Norn Queen": catalog("talons-of-the-norn-queen", [
@@ -78,7 +78,7 @@ export const TYRANID_DETACHMENT_STRATAGEM_DATA = Object.freeze({
     entry("Preservation Imperative", 1, "Strategic Ploy", "Opponent's Shooting phase, after targets are selected", ["shooting"], "For Blast targeting, the selected Endless Multitude unit counts as having fewer than five models.")
   ]),
   "Vanguard Onslaught": catalog("vanguard-onslaught", [
-    entry("Surprise Assault", 1, "Battle Tactic", "Your Shooting or Fight phase, after a Vanguard Invader unit selects targets", ["shooting", "fight"], "A targeted enemy takes a Battle-shock test; attacks by the Vanguard unit gain +1 to Hit, and +1 to Wound against it if the test fails."),
+    entry("Surprise Assault", 1, "Battle Tactic", "Your Shooting or Fight phase, after a Vanguard Invader unit selects targets", ["shooting", "fight"], "Choose one enemy targeted by the unit's attacks to take a Battle-shock test; until phase end, the unit's attacks against that enemy gain +1 to Hit and, if the test fails, +1 to Wound."),
     entry("Assassin Beasts", 1, "Battle Tactic", "Fight phase, before an unactivated Vanguard Invader Infantry unit fights", ["fight"], "The unit's melee weapons gain Precision for the phase."),
     entry("Seeded Broods", 1, "Strategic Ploy", "Your Movement phase", ["movement"], "Selected reserve units count the battle round as one higher when determining if they can arrive."),
     entry("Hypersensory Scillia", 2, "Strategic Ploy", "Opponent's Movement phase, after an enemy ends a Normal, Advance, or Fall Back move", ["movement"], "Nearby eligible units can make a Normal move up to 6 inches; they cannot be engaged."),
