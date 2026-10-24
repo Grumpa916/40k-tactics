@@ -1,6 +1,7 @@
 import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
 import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
+import { validatePrecisionAllocation } from '../rules/precision-allocation.js';
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
@@ -46,6 +47,7 @@ function wasActivatedToFightThisTurn(state, unitId) {
 export function resolveUnitAttack(state, {
   attackerId,
   targetId,
+  allocationTargetId = null,
   weapon,
   actualDamage = null,
   random
@@ -95,6 +97,12 @@ export function resolveUnitAttack(state, {
     throw new Error("Fight attacks require the attacker and target to be engaged.");
   }
 
+  const allocationTarget = validatePrecisionAllocation(state, { targetId, allocationTargetId, weapon });
+  const damageTarget = allocationTarget ?? target;
+  if (damageTarget.status !== UNIT_STATUS.DEPLOYED) {
+    throw new Error("The selected damage allocation target must be deployed.");
+  }
+
   if (actualDamage !== null && (!Number.isInteger(actualDamage) || actualDamage < 0)) {
     throw new TypeError("Actual damage must be a non-negative integer.");
   }
@@ -118,12 +126,12 @@ export function resolveUnitAttack(state, {
     if (actualDamage === null) throw error;
   }
   const recordedDamage = actualDamage ?? result.damage.totalDamage;
-  const previousWounds = getLiveUnitVitals(state, target).wounds;
+  const previousWounds = getLiveUnitVitals(state, damageTarget).wounds;
   const tracksWounds = Number.isFinite(previousWounds) && previousWounds >= 0;
   const nextWounds = tracksWounds
     ? Math.max(0, previousWounds - recordedDamage)
     : previousWounds;
-  const previousStatus = target.status;
+  const previousStatus = damageTarget.status;
   const nextStatus = tracksWounds && nextWounds === 0
     ? UNIT_STATUS.DESTROYED
     : previousStatus;
@@ -132,6 +140,8 @@ export function resolveUnitAttack(state, {
     sourceAttackerId: sourceAttacker.id,
     sourceAttackerName: sourceAttacker.name ?? sourceAttacker.id,
     targetId,
+    allocationTargetId: allocationTarget?.id ?? null,
+    allocationTargetName: allocationTarget ? (allocationTarget.name ?? allocationTarget.id) : null,
     weaponId: weapon.id,
     weaponName: weapon.name ?? weapon.id,
     phase: state.phase,
@@ -143,6 +153,7 @@ export function resolveUnitAttack(state, {
     actualDamage: recordedDamage,
     stateDelta: {
       target: {
+        unitId: damageTarget.id,
         woundsBefore: previousWounds,
         woundsAfter: nextWounds,
         statusBefore: previousStatus,
@@ -154,8 +165,7 @@ export function resolveUnitAttack(state, {
   return appendHistoryEntry({
     ...state,
     units: state.units.map((unit) =>
-      unit.id === targetId ? { ...unit, wounds: nextWounds, status: nextStatus } : unit
+      unit.id === damageTarget.id ? { ...unit, wounds: nextWounds, status: nextStatus } : unit
     )
   }, event);
 }
-

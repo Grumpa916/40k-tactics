@@ -52,15 +52,15 @@ function destructionFromEvent(event, state) {
   if (event?.type !== "combat.attack_resolved") return null;
   const delta = event.payload?.stateDelta?.target;
   if (!delta || delta.statusAfter !== "destroyed" || delta.statusBefore === "destroyed") return null;
-  return event.payload?.targetId
-    ? {
-        unitId: event.payload.targetId,
-        ownerId: event.payload.targetOwnerId ?? (Array.isArray(state?.units) ? state.units.find((unit) => unit.id === event.payload.targetId)?.ownerId ?? null : null),
-        source: event.type,
-        attackerId: event.payload.attackerId ?? null,
-        phase: event.payload.phase ?? null
-      }
-    : null;
+  const destroyedUnitId = delta.unitId ?? event.payload?.allocationTargetId ?? event.payload?.targetId ?? null;
+  if (!destroyedUnitId) return null;
+  return {
+    unitId: destroyedUnitId,
+    ownerId: event.payload?.targetOwnerId ?? (Array.isArray(state?.units) ? state.units.find((unit) => unit.id === destroyedUnitId)?.ownerId ?? null : null),
+    source: event.type,
+    attackerId: event.payload.attackerId ?? null,
+    phase: event.payload.phase ?? null
+  };
 }
 
 export function getUnitDestructionsForTurn(state, turn) {
@@ -90,4 +90,3 @@ export function getObjectiveStateAtTurnStart(state, objectiveId, turn) {
   const snapshot = getTurnSnapshot(state, turn);
   return snapshot?.objectives.find((objective) => objective.id === objectiveId) ?? null;
 }
-

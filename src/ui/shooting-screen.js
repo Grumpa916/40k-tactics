@@ -1,5 +1,6 @@
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
+import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
 import { renderCombatMapPanel } from './combat-workspace.js';
 import { createMissionActionPicker } from "./mission-action-picker.js";
 import {
@@ -149,6 +150,9 @@ function shootingDamageForecast(attackerId, weaponId, targetId, state, weapons) 
 function historyRow(item, state, gameData) {
   const attacker = state.units.find((unit) => unit?.id === item.attackerId);
   const target = state.units.find((unit) => unit?.id === item.targetId);
+  const allocation = item.allocationTargetId
+    ? state.units.find((unit) => unit?.id === item.allocationTargetId)
+    : null;
   const weapon = gameData?.weapons?.find((entry) => entry?.id === item.weaponId);
   const expectedDamage = Number.isFinite(item.expectedDamage)
     ? item.expectedDamage.toFixed(1)
@@ -156,7 +160,10 @@ function historyRow(item, state, gameData) {
   const result = item.targetStatusAfter === "destroyed"
     ? "Destroyed"
     : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected · ${item.targetWoundsAfter} wounds`;
-  return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(target?.name ?? item.targetId)}</strong><span>${escapeHtml(weapon?.name ?? item.weaponId ?? "Weapon")} · ${escapeHtml(result)}</span></li>`;
+  const targetLabel = allocation
+    ? `${target?.name ?? item.targetId} (${allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
+    : target?.name ?? item.targetId;
+  return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(targetLabel)}</strong><span>${escapeHtml(weapon?.name ?? item.weaponId ?? "Weapon")} · ${escapeHtml(result)}</span></li>`;
 }
 
 export function createShootingScreen(container, {
@@ -175,6 +182,7 @@ export function createShootingScreen(container, {
   let selectedAttackerId = null;
   let selectedWeaponId = null;
   let selectedTargetId = null;
+  let precisionAllocationId = null;
   let actualDamage = "0";
   let attackError = "";
   let actionPickerOpen = false;
@@ -200,6 +208,7 @@ export function createShootingScreen(container, {
     selectedAttackerId = unitId;
     selectedWeaponId = null;
     selectedTargetId = targetId;
+    precisionAllocationId = null;
     pendingUnitId = null;
     actualDamage = "0";
     attackError = "";
@@ -210,6 +219,7 @@ export function createShootingScreen(container, {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      precisionAllocationId = null;
       pendingUnitId = previousPendingUnitId ?? unitId;
       attackError = error?.message ?? String(error);
       render();
@@ -235,6 +245,7 @@ export function createShootingScreen(container, {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      precisionAllocationId = null;
     }
 
     const weapons = getShootingWeaponOptions(state, { attackerId: selectedAttackerId, gameData });
@@ -242,6 +253,11 @@ export function createShootingScreen(container, {
     const pendingUnit = [...model.candidates, ...actionOnly].find((unit) => unit.unitId === pendingUnitId);
     if (!weapons.some((weapon) => weapon.id === selectedWeaponId)) selectedWeaponId = null;
     if (!targets.some((target) => target.unitId === selectedTargetId)) selectedTargetId = null;
+    const selectedWeapon = weapons.find((weapon) => weapon.id === selectedWeaponId) ?? null;
+    const precisionOptions = selectedWeapon?.characteristics?.precision === true && selectedTargetId
+      ? getPrecisionAllocationOptions(state, selectedTargetId)
+      : [];
+    if (!precisionOptions.some((option) => option.unitId === precisionAllocationId)) precisionAllocationId = null;
 
     const missionActionOptions = missionActions
       .map((action) => `<option value="${escapeHtml(action.id)}">${escapeHtml(action.name ?? action.id)}</option>`)
@@ -284,6 +300,7 @@ export function createShootingScreen(container, {
             ${selectedAttackerId && activeActivation ? `<div class="shoot-tabletop__attack-controls">
               <label>Ranged weapon<select data-weapon><option value="" ${selectedWeaponId ? "" : "selected"}>Choose weapon…</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
               <label>Target · tap an enemy marker or choose below<select data-target><option value="" ${selectedTargetId ? "" : "selected"}>Choose target…</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)}</option>`).join("")}</select></label>
+              ${precisionOptions.length ? `<label>Precision allocation · optional<select data-shoot-precision><option value="">Normal allocation</option>${precisionOptions.map((option) => `<option value="${escapeHtml(option.unitId)}" ${option.unitId === precisionAllocationId ? "selected" : ""}>${escapeHtml(option.name)}</option>`).join("")}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ""}
 
             </div>` : ""}
 
@@ -337,6 +354,7 @@ export function createShootingScreen(container, {
             <div class="shoot-selected-shooter"><strong>${selectedAttackerId ? escapeHtml(model.activations.find((unit) => unit.unitId === selectedAttackerId)?.unit.name ?? selectedAttackerId) : "No shooter selected"}</strong><span>Selected shooter</span></div>
             <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedWeaponId ? "" : "selected"}>Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
             <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedTargetId ? "" : "selected"}>Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
+            ${precisionOptions.length ? `<label>Precision allocation · optional<select data-shoot-precision><option value="">Normal allocation</option>${precisionOptions.map((option) => `<option value="${escapeHtml(option.unitId)}" ${option.unitId === precisionAllocationId ? "selected" : ""}>${escapeHtml(option.name)}</option>`).join("")}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ""}
             <div class="damage-control">
               <span class="damage-control__label">Actual damage</span>
               <div class="damage-control__buttons">
@@ -383,6 +401,7 @@ export function createShootingScreen(container, {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      precisionAllocationId = null;
       actionPickerOpen = false;
       render();
     }));
@@ -400,6 +419,7 @@ export function createShootingScreen(container, {
         }
         if (selectedAttackerId && targets.some((target) => target.unitId === unitId)) {
           selectedTargetId = unitId;
+          precisionAllocationId = null;
           attackError = "";
           render();
           return;
@@ -409,6 +429,7 @@ export function createShootingScreen(container, {
           selectedAttackerId = null;
           selectedWeaponId = null;
           selectedTargetId = null;
+          precisionAllocationId = null;
           actualDamage = "0";
           attackError = "";
           actionPickerOpen = false;
@@ -421,6 +442,7 @@ export function createShootingScreen(container, {
           const availableWeapons = getShootingWeaponOptions(state, { attackerId: unitId, gameData });
           selectedWeaponId = availableWeapons.length === 1 ? availableWeapons[0].id : null;
           selectedTargetId = null;
+          precisionAllocationId = null;
           actualDamage = "0";
           attackError = "";
           actionPickerOpen = false;
@@ -447,6 +469,7 @@ export function createShootingScreen(container, {
       });
       container.querySelectorAll?.("[data-advisor-target]").forEach((button) => button.addEventListener?.("click", () => {
         selectedTargetId = button.getAttribute?.("data-advisor-target") || null;
+        precisionAllocationId = null;
         attackError = "";
         render();
       }));
@@ -466,6 +489,7 @@ export function createShootingScreen(container, {
         selectedAttackerId = null;
         selectedWeaponId = null;
         selectedTargetId = null;
+        precisionAllocationId = null;
         actualDamage = "0";
         attackError = "";
         actionPickerOpen = false;
@@ -484,6 +508,7 @@ export function createShootingScreen(container, {
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
+      precisionAllocationId = null;
       attackError = "";
       actionPickerOpen = false;
       clearPending();
@@ -514,11 +539,19 @@ export function createShootingScreen(container, {
 
     container.querySelector("[data-weapon]")?.addEventListener("change", (event) => {
       selectedWeaponId = event.target.value || null;
+      precisionAllocationId = null;
       attackError = "";
       render();
     });
     container.querySelector("[data-target]")?.addEventListener("change", (event) => {
       selectedTargetId = event.target.value || null;
+      precisionAllocationId = null;
+      attackError = "";
+      render();
+    });
+    container.querySelector("[data-shoot-precision]")?.addEventListener("change", (event) => {
+      precisionAllocationId = event.target.value || null;
+      actualDamage = "0";
       attackError = "";
       render();
     });
@@ -548,9 +581,10 @@ export function createShootingScreen(container, {
         return;
       }
       try {
-        resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId, weapon, actualDamage: damage });
+        resolveShootingAttack(session, { attackerId: selectedAttackerId, targetId, allocationTargetId: precisionAllocationId, weapon, actualDamage: damage });
         selectedWeaponId = weaponId;
         selectedTargetId = null;
+        precisionAllocationId = null;
         actualDamage = "0";
         attackError = "";
       } catch (error) {

@@ -36,12 +36,15 @@ export function getShootingState(state) {
     .map((event) => ({
       attackerId: event.payload.attackerId,
       targetId: event.payload.targetId,
+      allocationTargetId: event.payload.allocationTargetId ?? null,
+      allocationTargetName: event.payload.allocationTargetName ?? null,
       weaponId: event.payload.weaponId ?? null,
       expectedDamage: event.payload.expectedDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       actualDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       totalDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       targetWoundsAfter: event.payload.stateDelta?.target?.woundsAfter ?? null,
-      targetStatusAfter: event.payload.stateDelta?.target?.statusAfter ?? null
+      targetStatusAfter: event.payload.stateDelta?.target?.statusAfter ?? null,
+      damageTargetId: event.payload.stateDelta?.target?.unitId ?? event.payload.allocationTargetId ?? event.payload.targetId
     }));
 
   return {
@@ -55,4 +58,3 @@ export function getShootingState(state) {
     canComplete: candidates.available.length === 0
   };
 }
-
