@@ -1,10 +1,9 @@
 import {
-  getBattleRosterUnit,
-  getBattleUnitDatasheet,
   getCombatFormationMembers,
   getCombatFormationRoot,
   getCombatFormationRootId,
-  hasConfirmedNoRangedWeaponsForFormation
+  hasConfirmedNoRangedWeaponsForFormation,
+  hasInvalidWargear
 } from "./battle-unit-reference.js";
 import { getCombatFormationWeaponOptions } from "./saved-roster-combat-profile.js";
 import { UNIT_STATUS } from "../state/unit.js";
@@ -19,23 +18,17 @@ function currentTurnEvents(state, type) {
   );
 }
 
-function hasRosterBackedWeaponData(state, unit) {
-  return getCombatFormationMembers(state, unit).some((member) =>
-    Boolean(getBattleRosterUnit(state, member)) &&
-    Array.isArray(getBattleUnitDatasheet(state, member)?.weapons)
-  );
-}
-
 function isActionOnlyCandidate(state, unit) {
   if (hasConfirmedNoRangedWeaponsForFormation(state, unit)) return true;
 
-  // A saved roster can be present while its wargear is invalid/unverified. In
-  // that case the combat-profile resolver deliberately returns no weapon
-  // choices. Do not offer Shoot when the UI could only lead to an empty weapon
-  // picker; the unit may still perform an Action and it does not block phase
-  // completion. Legacy units without saved weapon data retain the conservative
-  // unresolved behavior until their profiles can be identified.
-  return hasRosterBackedWeaponData(state, unit) &&
+  const members = getCombatFormationMembers(state, unit);
+  const hasInvalidSavedLoadout = members.some((member) => hasInvalidWargear(state, member));
+
+  // Invalid or unverified saved wargear is deliberately excluded from combat
+  // weapon options. If that leaves the formation with no usable ranged weapon,
+  // do not offer Shoot and strand the player in an empty weapon selector. Keep
+  // generic missing/mixed legacy weapon data unresolved as before.
+  return hasInvalidSavedLoadout &&
     getCombatFormationWeaponOptions(state, unit, { type: "ranged" }).length === 0;
 }
 
