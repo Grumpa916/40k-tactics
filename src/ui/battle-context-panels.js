@@ -283,7 +283,13 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
     const matched = Array.isArray(catalog)
       ? selected.map((name) => catalog.find((entry) => entry?.name === name)).filter(Boolean)
       : [];
-    return { playerId: player.id, hasCatalog: matched.length > 0,
+    const catalogNotes = matched
+      .filter((detachment) => detachment.stratagemCatalogStatus === "partial" ||
+        detachment.stratagemCatalogStatus === "not-imported")
+      .map((detachment) => detachment.stratagemCatalogStatus === "partial"
+        ? detachment.name + ": partial catalog; only verified entries are shown."
+        : detachment.name + ": stratagem entries have not been imported yet.");
+    return { playerId: player.id, hasCatalog: matched.length > 0, catalogNotes,
       stratagems: matched.flatMap((detachment) => (Array.isArray(detachment.stratagems) ? detachment.stratagems : [])
         .map((stratagem) => ({ ...stratagem, playerId: player.id, detachmentName: detachment.name }))) };
   });
@@ -294,6 +300,12 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
   const stratagemEmptyText = (playerId) => rosterStratagemCatalogs.find((entry) => entry.playerId === playerId)?.hasCatalog
     ? "No stratagem entries are recorded for the selected detachment yet."
     : "No stratagem catalog is connected to this battle yet.";
+  const stratagemCatalogNote = (playerId) => {
+    const notes = rosterStratagemCatalogs.find((entry) => entry.playerId === playerId)?.catalogNotes ?? [];
+    return notes.length
+      ? '<p class="battle-context__empty">' + escapeHtml(notes.join(" ")) + '</p>'
+      : "";
+  };
   const rosterRules = players.flatMap((player) => {
     const revision = state.armyRosters?.[player.id]?.rulesDataRevision;
     const rules = revision?.factionRules?.armyRules;
@@ -329,8 +341,10 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
     : '<p class="battle-context__empty">No terrain layout is recorded for this battle yet.</p>';
 
   const groups = '<section class="battle-context__reference-group"><h3>Your stratagems</h3>' +
+    stratagemCatalogNote(yourPlayerId) +
     renderDataList(rulesFor(stratagems, yourPlayerId), stratagemEmptyText(yourPlayerId)) +
     '</section><section class="battle-context__reference-group"><h3>Opponent stratagems</h3>' +
+    stratagemCatalogNote(opponentPlayerId) +
     renderDataList(rulesFor(stratagems, opponentPlayerId), stratagemEmptyText(opponentPlayerId)) +
     '</section>';
   return '<section class="battle-context__references" aria-label="Rules and tactical references">' +

@@ -1,18 +1,36 @@
 import { SPACE_MARINES_RULES_DATA } from "./space-marines-rules.js";
 import { ADEPTUS_CUSTODES_RULES_DATA } from "./adeptus-custodes-faction-rules.js";
+import { TYRANID_DETACHMENTS } from "./faction-detachments.js";
+import { TYRANID_DETACHMENT_STRATAGEM_DATA } from "./tyranid-detachment-stratagems.js";
 
 const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
   schemaVersion: 1,
   faction: "Tyranids",
   edition: "11th",
-  revisionId: "tyranids-11e-fp1.0-mfm-2026-10-14-catalog-2026-10-22.1",
-  reviewedAt: "2026-10-22",
+  revisionId: "tyranids-11e-fp1.3-mfm-2026-10-14-catalog-2026-10-24.1",
+  reviewedAt: "2026-10-24",
   factionRules: Object.freeze({
     name: "Games Workshop Tyranids Faction Pack",
-    version: "1.0",
+    version: "1.3",
     publicationType: "Faction Pack",
-    legalFrom: "2026-06-20",
-    sourceUrl: "https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf"
+    legalFrom: "2026-10-14",
+    sourceUrl: "https://assets.warhammer-community.com/eng_14-10_wh40k_faction_pack_tyranids-an12izciwp-np2hnkcsje.pdf",
+    detachments: Object.freeze(TYRANID_DETACHMENTS.map((detachment) => {
+      const imported = TYRANID_DETACHMENT_STRATAGEM_DATA[detachment.name];
+      return Object.freeze({
+        ...detachment,
+        stratagemCatalogStatus: imported?.status ?? "not-imported",
+        ...(imported ? {
+          stratagems: imported.stratagems,
+          stratagemSource: Object.freeze({
+            sourceName: imported.sourceName,
+            sourceUrl: imported.sourceUrl,
+            reviewedAt: imported.reviewedAt,
+            version: imported.version
+          })
+        } : {})
+      });
+    }))
   }),
   points: Object.freeze({
     name: "Games Workshop Munitorum Field Manual",
@@ -21,8 +39,8 @@ const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
     sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
   }),
   catalog: Object.freeze({
-    revision: "2026-10-22.1",
-    description: "Tyranid roster profiles, points options and reviewed wargear mappings"
+    revision: "2026-10-24.1",
+    description: "Tyranid roster profiles, points options, reviewed wargear mappings and detachment stratagem references"
   })
 });
 
