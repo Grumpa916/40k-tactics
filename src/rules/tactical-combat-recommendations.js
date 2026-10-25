@@ -3,6 +3,7 @@ import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getChargeOpportunity } from "./tactical-charge-opportunity.js";
+import { getMovementStrategicRecommendations } from "./tactical-movement-opportunities.js";
 
 const CHARGE_MAX_DISTANCE = 12;
 const CHARGE_RANGE_UNCERTAINTY_MARGIN = 3;
@@ -132,13 +133,17 @@ export function getTacticalCombatRecommendations(
       }).priorities
     : [];
 
+  const movement = state?.phase === "movement"
+    ? getMovementStrategicRecommendations(state, { playerId }).recommendations
+    : [];
   const charge = chargeCandidates(state, { playerId });
   const fight = fightRecommendations(state);
 
   return {
     shooting,
+    movement,
     charge,
     fight,
-    recommendations: [...shooting, ...charge, ...fight]
+    recommendations: [...shooting, ...movement, ...charge, ...fight]
   };
 }
