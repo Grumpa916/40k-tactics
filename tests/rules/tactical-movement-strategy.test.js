@@ -80,6 +80,15 @@ test("Movement Advisor recognizes a unit already holding a friendly objective", 
   assert.match(holder.recommendation, /hold home/i);
 });
 
+test("Movement Advisor retains multiple ranked purposes for the selected formation", () => {
+  const result = getMovementStrategicRecommendations(state(), { playerId: "p1" });
+  const scorer = result.recommendations.find((item) => item.unitId === "scorer");
+  assert.equal(scorer.alternatives.length, 2);
+  assert.ok(scorer.alternatives.every((item) => typeof item.purpose === "string" && Number.isFinite(item.score)));
+  assert.ok(scorer.alternatives.every((item) => item.score <= scorer.score));
+  assert.ok(scorer.alternatives.some((item) => item.kind === "target" || item.kind === "position" || item.objectiveId !== scorer.objectiveId));
+});
+
 test("Battle-shock suppresses saved OC instead of crediting a shocked mover with control", () => {
   const current = state();
   current.units.find((item) => item.id === "scorer").battleShocked = true;
@@ -98,12 +107,19 @@ test("Movement recommendations are exposed through the shared tactical API", () 
   assert.equal(result.fight.length, 0);
 });
 
-test("Movement Advisor UI shows selected advice, priorities and map guardrails", () => {
+test("Movement Advisor UI shows selected advice, destination comparisons, priorities and map guardrails", () => {
   const current = state();
   const html = renderMovementAdvisor(current, { playerId: "p1", selectedUnitId: "scorer" });
   assert.match(html, /Movement Advisor/);
   assert.match(html, /move toward centre/i);
+  assert.match(html, /Possible destinations · 3/);
+  assert.match(html, /Objective · centre/);
+  assert.match(html, /data-movement-option-rank="2"/);
+  assert.match(html, /data-movement-option-rank="3"/);
+  assert.match(html, /relative fit/);
+  assert.match(html, /not a movement-success probability/);
   assert.match(html, /Move priorities/);
   assert.match(html, /Map distances are approximate/);
+  assert.match(html, /Destination options describe strategic purposes, not exact legal endpoints/);
   assert.match(html, /Only verified mission text changes movement ranking/);
 });
