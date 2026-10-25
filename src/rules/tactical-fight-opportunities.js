@@ -19,12 +19,18 @@ function expectedDamageForOption(attacker, target, weapon) {
   }
 }
 
-function strategicFightRecommendation(evaluation, strategicContext) {
+function strategicFightRecommendation(evaluation, strategicContext, retaliationEstimateAvailable) {
   const objectiveSwing = strategicContext?.objectiveSwing;
   const secondary = strategicContext?.secondary;
   const role = strategicContext?.scoringRole;
   const battleShock = strategicContext?.battleShock;
 
+  // Unknown return damage must stay visibly unknown. Strategic value can rank the
+  // target, but it must never turn missing retaliation data into an "acceptable"
+  // preservation-risk claim.
+  if (!retaliationEstimateAvailable) {
+    return "Fight opportunity can be evaluated offensively; retaliation data is not available. Mission value can still affect target priority, but confirm the enemy response at the table.";
+  }
   if (battleShock?.active && battleShock.marginalKillPenalty >= 0.5 && evaluation.targetImpact < 0.5) {
     return "Lower marginal kill value: Battle-shock is already suppressing part of this target's scoring value. Prefer a more important combat unless this Fight protects your position.";
   }
@@ -41,7 +47,7 @@ function strategicFightRecommendation(evaluation, strategicContext) {
     return "High preservation risk for limited strategic gain. Consider another eligible target or activation if the Fight order allows it.";
   }
   if (evaluation.targetImpact >= 0.5 && evaluation.risk !== "high") {
-    return "Strong Fight opportunity: projected damage is significant and the return-damage risk is acceptable relative to the target's value.";
+    return "Strong Fight opportunity: projected damage is significant and the modeled return-damage risk is acceptable relative to the target's value.";
   }
   if (evaluation.retaliationExpectedDamage > 0) {
     return "Fight opportunity has measurable retaliation risk; weigh that trade against the target's mission and threat value.";
@@ -152,7 +158,7 @@ export function getFightOpportunityRecommendations(
       const strategicPoints = strategicScore * 3 + objectiveSwingBonus + verifiedVpBonus - battleShockPenalty;
       const decisionScore = combatScore + strategicPoints;
       const recommendation = strategicContext
-        ? strategicFightRecommendation(evaluation, strategicContext)
+        ? strategicFightRecommendation(evaluation, strategicContext, retaliationEstimateAvailable)
         : evaluation.risk === "high"
           ? "Strong offensive opportunity, but expected retaliation creates significant preservation risk."
           : evaluation.retaliationExpectedDamage > 0
