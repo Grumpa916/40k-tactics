@@ -24,8 +24,9 @@ function datasheet(name, objectiveControl, damage = 2) {
     characteristics:{ Toughness:'5', Save:'3+', Wounds:'10', 'Objective Control':String(objectiveControl) },
     weapons:[{
       name:name + ' melee',
+      type:'melee',
       range:'Melee',
-      attacks:'4',
+      attacks:4,
       skill:'3+',
       strength:6,
       ap:-2,
