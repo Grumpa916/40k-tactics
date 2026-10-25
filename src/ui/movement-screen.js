@@ -2,6 +2,7 @@ import { renderMapReserveTray, tappedMapPosition } from './map-reserve-tray.js';
 import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
+import { renderMovementAdvisor } from './movement-advisor.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
@@ -115,9 +116,10 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
     if(reserved)editor=`<h2>${escapeHtml(reserved.name)}</h2><p>In reserves</p>`;
     const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId});
+    const advisor=renderMovementAdvisor(state,{playerId,selectedUnitId});
     if (layoutMode === 'tabletop') {
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        mapExtra:reserveTray,controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details><summary>Units · ${eligible.length}</summary><div class="move-units">${unitCards}</div></details></div>`,footer:''});
+        mapExtra:reserveTray,controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${advisor}${editor}<details><summary>Units · ${eligible.length}</summary><div class="move-units">${unitCards}</div></details></div>`,footer:''});
       mapView.bind(container);
       return;
     }
@@ -131,6 +133,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         <p>Drag an active player’s marker to place or refine its approximate position. If no movement choice has been recorded yet, the first drag records a Normal Move. Later drags only refine map position.</p>
       </section>
       ${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ""}
+      <section>${advisor}</section>
       <section><div class="move-heading"><h2>Eligible units</h2><span>Active player only</span></div><div class="move-units">${unitCards}</div></section>
       <section>${editor}</section>
     </main>`;
