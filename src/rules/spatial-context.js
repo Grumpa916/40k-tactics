@@ -28,11 +28,11 @@ function hasRecordedMovement(state, unitId) {
   );
 }
 
-function liveUnitPosition(state, unit) {
+export function getLiveUnitPosition(state, unit) {
   // The battlefield map displays the recorded deployment position until a
-  // gameplay move replaces it. Tactical range/charge advice must use that same
-  // source or a unit can appear close on the map while being evaluated from an
-  // older model position.
+  // gameplay move replaces it. Tactical range/charge/territory advice must use
+  // that same source or a unit can appear in one area on the map while being
+  // evaluated from an older model position.
   const initialDeployment = state?.battlefieldMap?.actualDeployment?.[unit.id];
   if (initialDeployment && !hasRecordedMovement(state, unit.id)) {
     const position = initialDeployment.position ?? initialDeployment;
@@ -68,7 +68,7 @@ export function getSpatialContext(state, { playerId } = {}) {
 
   const units = Array.isArray(state?.units) ? state.units : [];
   const positions = new Map(
-    units.map((unit) => [unit.id, liveUnitPosition(state, unit)])
+    units.map((unit) => [unit.id, getLiveUnitPosition(state, unit)])
   );
 
   const ownedUnits = units.filter((unit) => unit.ownerId === playerId);
