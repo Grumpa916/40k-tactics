@@ -1,6 +1,9 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-opportunities.js";
 
+let highlightEventsBound = false;
+let activeHighlight = null;
+
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -30,14 +33,97 @@ function strategicFitLabel(score) {
   return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
 }
 
-function renderMovementOption(option, index) {
+function highlightDescriptor(option) {
+  if (option?.objectiveId) return { kind: "objective", id: option.objectiveId };
+  if (option?.targetUnitId) return { kind: "unit", id: option.targetUnitId };
+  return { kind: "none", id: "" };
+}
+
+function renderMovementOption(option, index, selectedRank) {
   const recommended = index === 0;
-  return `<article class="move-unit movement-advisor__option${recommended ? " is-selected" : ""}" data-movement-option-rank="${index + 1}">
-    <strong>${index + 1}. ${escapeHtml(destinationLabel(option))}${recommended ? " · Recommended" : ""}</strong>
+  const rank = index + 1;
+  const descriptor = highlightDescriptor(option);
+  const selected = selectedRank === rank;
+  return `<a href="#movement-destination-${rank}" role="button" class="move-unit movement-advisor__option${selected ? " is-selected" : ""}" data-movement-option-rank="${rank}" data-movement-highlight-kind="${escapeHtml(descriptor.kind)}" data-movement-highlight-id="${escapeHtml(descriptor.id)}" aria-pressed="${selected}">
+    <strong>${rank}. ${escapeHtml(destinationLabel(option))}${recommended ? " · Recommended" : ""}</strong>
     <span>${escapeHtml(purposeLabel(option.purpose))} · ${escapeHtml(strategicFitLabel(option.score))} relative fit</span>
     <small>${escapeHtml(option.actionHint ?? "Reposition for this strategic purpose")}</small>
     ${option.reason ? `<small>${escapeHtml(option.reason)}</small>` : ""}
-  </article>`;
+  </a>`;
+}
+
+function mapRootForAdvisor(aside) {
+  return aside?.closest?.(".combat-workspace") ?? aside?.closest?.("main.movement-screen") ?? aside?.parentElement ?? null;
+}
+
+function clearHighlight(root) {
+  if (!root?.querySelectorAll) return;
+  for (const element of root.querySelectorAll(".is-advisor-highlight")) {
+    element.classList.remove("is-advisor-highlight");
+    element.removeAttribute("aria-current");
+  }
+}
+
+function findHighlightTarget(root, kind, id) {
+  if (!root?.querySelectorAll || !id) return null;
+  const attribute = kind === "objective" ? "data-map-objective-id" : kind === "unit" ? "data-map-unit-id" : null;
+  if (!attribute) return null;
+  return [...root.querySelectorAll(`[${attribute}]`)].find((element) => element.getAttribute(attribute) === id) ?? null;
+}
+
+function applyActiveHighlight(aside) {
+  if (!aside) return;
+  const root = mapRootForAdvisor(aside);
+  clearHighlight(root);
+  for (const option of aside.querySelectorAll?.("[data-movement-option-rank]") ?? []) {
+    const selected = Boolean(activeHighlight && activeHighlight.unitId === aside.getAttribute("data-movement-advisor-unit-id") && Number(option.getAttribute("data-movement-option-rank")) === activeHighlight.rank);
+    option.classList.toggle("is-selected", selected);
+    option.setAttribute("aria-pressed", String(selected));
+  }
+  if (!activeHighlight || activeHighlight.unitId !== aside.getAttribute("data-movement-advisor-unit-id")) return;
+  const target = findHighlightTarget(root, activeHighlight.kind, activeHighlight.id);
+  if (!target) return;
+  target.classList.add("is-advisor-highlight");
+  target.setAttribute("aria-current", "true");
+}
+
+function activateHighlightOption(option) {
+  const aside = option?.closest?.("[data-movement-advisor]");
+  if (!aside) return;
+  activeHighlight = {
+    unitId: aside.getAttribute("data-movement-advisor-unit-id"),
+    rank: Number(option.getAttribute("data-movement-option-rank")),
+    kind: option.getAttribute("data-movement-highlight-kind") ?? "none",
+    id: option.getAttribute("data-movement-highlight-id") ?? ""
+  };
+  applyActiveHighlight(aside);
+}
+
+function bindHighlightEvents() {
+  if (highlightEventsBound || typeof document === "undefined") return;
+  highlightEventsBound = true;
+  document.addEventListener("click", (event) => {
+    const option = event.target?.closest?.("[data-movement-highlight-kind]");
+    if (!option) return;
+    event.preventDefault();
+    activateHighlightOption(option);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== " ") return;
+    const option = event.target?.closest?.("[data-movement-highlight-kind]");
+    if (!option) return;
+    event.preventDefault();
+    activateHighlightOption(option);
+  });
+}
+
+function scheduleHighlightRestore(unitId) {
+  if (typeof document === "undefined" || typeof queueMicrotask !== "function") return;
+  queueMicrotask(() => {
+    const aside = [...document.querySelectorAll?.("[data-movement-advisor]") ?? []]
+      .find((element) => element.getAttribute("data-movement-advisor-unit-id") === unitId);
+    if (aside) applyActiveHighlight(aside);
+  });
 }
 
 export function renderMovementAdvisor(state, { playerId, selectedUnitId = null } = {}) {
@@ -57,13 +143,23 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
     return `<aside class="movement-advisor"><h2>Movement Advisor</h2><p>No deployed formation has a strategic movement recommendation.</p></aside>`;
   }
 
+  if (activeHighlight?.unitId && activeHighlight.unitId !== selected.unitId) activeHighlight = null;
+  bindHighlightEvents();
+  scheduleHighlightRestore(selected.unitId);
+
   const activeMissionText = context.activeSecondaries.length
     ? context.activeSecondaries.map((mission) => `${mission.name}${mission.verified ? "" : " (review only)"}`).join(" · ")
     : "No active secondary cards recorded";
   const top = context.recommendations.slice(0, 3);
   const selectedOptions = [selected, ...(selected.alternatives ?? [])].slice(0, 3);
+  const selectedRank = activeHighlight?.unitId === selected.unitId ? activeHighlight.rank : null;
 
-  return `<aside class="movement-advisor" data-movement-advisor>
+  return `<aside class="movement-advisor" data-movement-advisor data-movement-advisor-unit-id="${escapeHtml(selected.unitId)}">
+    <style>
+      [data-movement-advisor] .movement-advisor__option{color:inherit;text-decoration:none}
+      [data-movement-advisor] .movement-advisor__option.is-selected{outline:2px solid #f6d783;outline-offset:1px}
+      .battlefield-map__unit.is-advisor-highlight,.battlefield-map__objective.is-advisor-highlight{outline:4px solid #f6d783!important;outline-offset:3px;z-index:9;box-shadow:0 0 0 4px rgba(246,215,131,.28),0 1px 7px #000c!important}
+    </style>
     <div class="move-heading">
       <h2>Movement Advisor</h2>
       <span>${escapeHtml(context.strategy.posture)} · ${escapeHtml(priorityLabel(selected.priority))} priority</span>
@@ -79,7 +175,8 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
     <details open>
       <summary>Possible destinations · ${selectedOptions.length}</summary>
       <p><small>Ranked for ${escapeHtml(selected.unitName)}. Strategic fit is comparative guidance, not a movement-success probability.</small></p>
-      <div class="move-units movement-advisor__options">${selectedOptions.map(renderMovementOption).join("")}</div>
+      <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank)).join("")}</div>
+      <p><small>Tap a destination to highlight its objective or enemy on the battlefield. Highlight only — the unit is not moved and no movement choice is recorded.</small></p>
     </details>
     <details>
       <summary>Why this move?</summary>
