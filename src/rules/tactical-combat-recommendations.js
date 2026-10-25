@@ -2,6 +2,7 @@ import { getFightCandidates } from "./fight-candidates.js";
 import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getSpatialContext } from "./spatial-context.js";
+import { getChargeOpportunity } from "./tactical-charge-opportunity.js";
 
 const CHARGE_MAX_DISTANCE = 12;
 const CHARGE_RANGE_UNCERTAINTY_MARGIN = 3;
@@ -38,23 +39,47 @@ function chargeCandidates(state, { playerId }) {
       rangeStatus === "borderline" ? "low" :
       proximity.distance <= 6 ? "high" :
       "moderate";
+    const basePriority = confidence === "high" ? 3 : confidence === "moderate" ? 2 : 1;
+
+    let opportunity = null;
+    try {
+      opportunity = getChargeOpportunity(state, {
+        playerId,
+        attackerId: attacker.id,
+        targetUnitId: target.id,
+        mapDistance: proximity.distance
+      });
+    } catch {
+      opportunity = null;
+    }
+
+    const strategicBoost = opportunity?.strategicContext?.score >= 0.65 ? 1 : 0;
+    const fightBoost = opportunity?.projectedFight?.targetImpact >= 0.5 ? 1 : 0;
+    const priority = Math.min(5, basePriority + strategicBoost + fightBoost);
 
     candidates.push({
       type: "charge",
-      priority: confidence === "high" ? 3 : confidence === "moderate" ? 2 : 1,
+      priority,
       unitId: attacker.id,
       targetUnitId: target.id,
       targetDistance: proximity.distance,
       targetBand: proximity.band,
       confidence,
       rangeStatus,
-      reason: rangeStatus === "borderline"
+      mapSuccessProbability: opportunity?.mapSuccessProbability ?? null,
+      projectedFight: opportunity?.projectedFight ?? null,
+      projectedCounterFight: opportunity?.projectedCounterFight ?? null,
+      strategicContext: opportunity?.strategicContext ?? null,
+      decisionScore: opportunity?.decisionScore ?? basePriority,
+      recommendation: opportunity?.recommendation ?? null,
+      reason: opportunity?.recommendation ?? (rangeStatus === "borderline"
         ? "Enemy is just beyond the maximum charge distance; exact tabletop measurement is required."
-        : "Enemy is within the approximate maximum charge envelope."
+        : "Enemy is within the approximate maximum charge envelope.")
     });
   }
 
   return candidates.sort((a, b) =>
+    (b.decisionScore ?? b.priority) - (a.decisionScore ?? a.priority) ||
     b.priority - a.priority ||
     (a.targetDistance ?? Infinity) - (b.targetDistance ?? Infinity) ||
     a.unitId.localeCompare(b.unitId) ||
@@ -117,4 +142,3 @@ export function getTacticalCombatRecommendations(
     recommendations: [...shooting, ...charge, ...fight]
   };
 }
-
