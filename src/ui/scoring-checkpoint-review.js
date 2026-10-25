@@ -29,7 +29,7 @@ export function renderScoringCheckpointGroups(state, reminder) {
       ${receipts}${primaryDue}${secondaryDue}${!primaryDue&&!secondaryDue?'<p>No Primary or Secondary mission scores are due at this checkpoint.</p>':''}
       ${actions.length?`<h4>Verify recorded actions</h4>${actions.map(action=>`<article class="checkpoint-action"><strong>${esc(action.missionName)} · ${esc(action.unitName)}</strong><p>Unit: ${esc(action.unitStatus??'unknown')}${action.objective?' · Objective: '+esc(action.objective.name??action.objective.id):''}</p>
         ${action.review?`<p>Confirmed ${esc(action.review.outcome)}. ${action.review.outcome==='completed'?'Confirm VP on the mission card above.':'No completion claimed.'}</p>`:`<div><button type="button" data-action-review="${esc(action.actionKey)}" data-action-player="${esc(group.playerId)}" data-action-checkpoint="${group.checkpoint}" data-action-outcome="completed">Confirm completed</button><button type="button" data-action-review="${esc(action.actionKey)}" data-action-player="${esc(group.playerId)}" data-action-checkpoint="${group.checkpoint}" data-action-outcome="failed">Not completed</button></div>`}</article>`).join('')}`:''}
-      <button type="button" data-review-scoring data-scoring-player="${esc(group.playerId)}" data-scoring-checkpoint="${group.checkpoint}">Review ${esc(group.playerName)} scoring</button>
+      ${primaryDue || secondaryDue ? `<button type="button" data-review-scoring data-scoring-player="${esc(group.playerId)}" data-scoring-checkpoint="${group.checkpoint}">${group.playerName === 'You' ? 'Review my scoring' : 'Review ' + esc(group.playerName) + ' scoring'}</button>` : ''}
     </section>`;
   }).join('');
 }
