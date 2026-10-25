@@ -2,11 +2,16 @@ import { createLiveMapView } from './live-map-view.js';
 import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
+import { getChargeOpportunity } from '../rules/tactical-charge-opportunity.js';
 
 function modelsFor(unit) {
   return Array.isArray(unit.models) && unit.models.length
     ? unit.models
     : unit.position ? [{ id: unit.id, position: unit.position }] : [];
+}
+
+function percent(value) {
+  return Number.isFinite(value) ? Math.round(value * 100) + '%' : '—';
 }
 
 export function createChargeTabletopScreen(container, { session, perspectivePlayerId = null }) {
@@ -28,6 +33,22 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     const valid = new Set((candidate?.targets ?? []).map(item => item.targetUnitId));
     for (const id of targetIds) if (!valid.has(id)) { targetIds.delete(id); distances.delete(id); }
     const targets = candidate?.targets ?? [];
+    const selectedAdvice = targetIds.size && candidate ? targets.filter(item => targetIds.has(item.targetUnitId)).map(item => {
+      try {
+        return {
+          item,
+          advice:getChargeOpportunity(state, {
+            playerId:activePlayerId,
+            attackerId:candidate.unit.unitId,
+            targetUnitId:item.targetUnitId,
+            measuredDistance:distances.get(item.targetUnitId) ?? null,
+            mapDistance:item.targetDistance
+          })
+        };
+      } catch {
+        return { item, advice:null };
+      }
+    }) : [];
     const controls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
       ${state.phase !== 'charge' ? '<p class="combat-workspace__error" role="status">Viewing Charge. Return to the current game phase and advance to Charge to record an outcome.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
@@ -35,15 +56,43 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
       ${candidate ? `<h2>Targets</h2>
-        ${targets.map(item => `<section class="combat-workspace__card">
+        ${targets.map(item => {
+          const measured = distances.get(item.targetUnitId);
+          let exactChance = null;
+          if (Number.isFinite(measured)) {
+            try {
+              exactChance = getChargeOpportunity(state, {
+                playerId:activePlayerId,
+                attackerId:candidate.unit.unitId,
+                targetUnitId:item.targetUnitId,
+                measuredDistance:measured,
+                mapDistance:item.targetDistance
+              }).successProbability;
+            } catch {}
+          }
+          return `<section class="combat-workspace__card">
           <button type="button" data-charge-target-toggle="${esc(item.targetUnitId)}" aria-pressed="${targetIds.has(item.targetUnitId)}">${targetIds.has(item.targetUnitId) ? '✓ ' : '+ '}${esc(item.target.name)}</button>
           <small>Map ≈ ${esc(item.targetDistance)}″ · ${esc(item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
-          ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${distances.has(item.targetUnitId) ? distances.get(item.targetUnitId) + '″' : 'choose distance'}</small>` : ''}
-        </section>`).join('')}
+          ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${Number.isFinite(measured) ? measured + '″ · ' + percent(exactChance) + ' unmodified 2D6 success' : 'choose distance for exact 2D6 chance'}</small>` : ''}
+        </section>`;
+        }).join('')}
         <div class="combat-workspace__choices"><button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button><button type="button" data-charge-decline>Do not charge</button></div>` : ''}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor"><h2>Tactical Advisor</h2>
-        ${targetIds.size ? targets.filter(item => targetIds.has(item.targetUnitId)).map(item => `<p><strong>${esc(item.target.name)}</strong><br>${esc(item.reason)}</p>`).join('') : '<p>Select a charger and targets to review approximate range context.</p>'}
-
+        ${selectedAdvice.length ? selectedAdvice.map(({ item, advice }) => {
+          if (!advice) return `<p><strong>${esc(item.target.name)}</strong><br>${esc(item.reason)}</p>`;
+          const fight = advice.projectedFight?.available
+            ? `${advice.projectedFight.expectedDamage.toFixed(1)} expected Fight damage`
+            : 'Fight damage unavailable until a validated melee loadout is available';
+          const counter = advice.projectedCounterFight?.available
+            ? ` · target counter ≈ ${advice.projectedCounterFight.expectedDamage.toFixed(1)}`
+            : '';
+          const measured = Number.isFinite(advice.measuredDistance)
+            ? `${advice.measuredDistance}″ charge · ${percent(advice.successProbability)} success`
+            : 'Measure on table for exact 2D6 success chance';
+          const strategic = advice.strategicContext?.label ?? 'unknown';
+          const flip = advice.strategicContext?.objectiveSwing?.potentialFlip ? ' · objective swing possible' : '';
+          return `<section class="combat-workspace__card"><p><strong>${esc(item.target.name)}</strong><br>${esc(measured)}</p><p>${esc(fight + counter)}</p><p><strong>Strategic value: ${esc(strategic)}</strong>${esc(flip)}</p><p>${esc(advice.recommendation)}</p></section>`;
+        }).join('') : '<p>Select a charger and targets to review strategic value; choose the measured distance for the exact unmodified 2D6 success chance.</p>'}
       </aside>
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
     container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });

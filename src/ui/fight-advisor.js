@@ -30,6 +30,11 @@ export function fightAdvisory(attackerId, weaponId, targetId, state, weapons, pe
   const destruction = Number.isFinite(recommendation.targetDestructionProbability)
     ? Math.round(recommendation.targetDestructionProbability * 100) + "%"
     : "—";
+  const strategicLabel = recommendation.strategicContext?.label ?? "unknown";
+  const scoringRole = recommendation.strategicContext?.scoringRole?.role ?? null;
+  const objectiveSwing = recommendation.strategicContext?.objectiveSwing?.potentialFlip
+    ? " · objective swing possible"
+    : "";
 
   return `
     <aside class="fight-advisory" data-fight-advisory>
@@ -43,7 +48,8 @@ export function fightAdvisory(attackerId, weaponId, targetId, state, weapons, pe
         <div><strong>${survival}</strong><span>target survival</span></div>
         <div><strong>${destruction}</strong><span>target destruction</span></div>
       </div>
-      <p>${escapeHtml(recommendation.reason)}</p>
+      <p><strong>Strategic value: ${escapeHtml(strategicLabel)}</strong>${scoringRole ? ` · ${escapeHtml(scoringRole.replaceAll("-", " "))}` : ""}${escapeHtml(objectiveSwing)}</p>
+      <p>${escapeHtml(recommendation.recommendation ?? recommendation.reason)}</p>
     </aside>
   `;
 }
