@@ -4,7 +4,8 @@ import { getFormationObjectiveContribution } from "./tactical-objective-swing.js
 import { getObjectiveControlForPlayer } from "./objective-control-state.js";
 import { getGameStrategyContext } from "./tactical-game-strategy.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
-import { getSpatialContext } from "./spatial-context.js";
+import { getLiveUnitPosition, getSpatialContext } from "./spatial-context.js";
+import { getTerritoryStatusForPosition } from "./battlefield-territory.js";
 import { clamp01, unitById } from "./tactical-context-utils.js";
 
 const MAP_UNCERTAINTY = 3;
@@ -22,15 +23,22 @@ function activeSecondaries(state, playerId) {
     }));
 }
 
+function missionReferenceText(mission) {
+  const definition = mission?.definition ?? {};
+  return [
+    ...(definition.scoringWindows ?? []).flatMap((window) => (window?.tiers ?? []).map((tier) => tier?.summary ?? "")),
+    ...(definition.referenceNotes ?? []),
+    ...(definition.notes ?? []),
+    definition.whenDrawn ?? "",
+    definition.missionAction?.summary ?? ""
+  ].join(" ").toLowerCase();
+}
+
 function verifiedMovementMissionSignal(secondaries) {
   const relevant = [];
   for (const mission of secondaries) {
     if (!mission.verified) continue;
-    const text = (mission.definition?.scoringWindows ?? [])
-      .flatMap((window) => window?.tiers ?? [])
-      .map((tier) => tier?.summary ?? "")
-      .join(" ")
-      .toLowerCase();
+    const text = missionReferenceText(mission);
     if (/objective|deployment zone|territory|wholly within|battlefield quarter|centre|center/.test(text)) {
       relevant.push(mission.name);
     }
@@ -38,6 +46,38 @@ function verifiedMovementMissionSignal(secondaries) {
   return Object.freeze({
     score: Math.min(0.3, relevant.length * 0.15),
     missions: Object.freeze(relevant)
+  });
+}
+
+function territoryMissionSignal(secondaries) {
+  const verified = [];
+  const reviewOnly = [];
+  let directOutsideOwn = 0;
+  let forwardStaging = 0;
+
+  for (const mission of secondaries) {
+    const text = missionReferenceText(mission);
+    const outsideOwn = /not within your territory|outside your territory/.test(text);
+    const opponentDeployment = /opponent(?:'|’)?s deployment zone/.test(text);
+    const opponentHome = /opponent(?:'|’)?s home objective/.test(text);
+    if (!outsideOwn && !opponentDeployment && !opponentHome) continue;
+
+    if (!mission.verified) {
+      reviewOnly.push(mission.name);
+      continue;
+    }
+
+    verified.push(mission.name);
+    if (outsideOwn) directOutsideOwn += 0.24;
+    if (opponentDeployment || opponentHome) forwardStaging += 0.08;
+  }
+
+  return Object.freeze({
+    score: Math.min(0.32, directOutsideOwn + forwardStaging),
+    directOutsideOwn: Math.min(0.28, directOutsideOwn),
+    forwardStaging: Math.min(0.12, forwardStaging),
+    missions: Object.freeze(verified),
+    reviewOnlyMissions: Object.freeze(reviewOnly)
   });
 }
 
@@ -138,6 +178,80 @@ function objectiveOptions(state, { playerId, unit, movement, oc, spatial, strate
   });
 }
 
+function territoryMoveAction(status, movement) {
+  const distance = Number(status?.distanceToBoundary);
+  if (!Number.isFinite(distance) || !Number.isFinite(movement)) return "reposition";
+  if (distance <= movement + MAP_UNCERTAINTY) return "normal-move";
+  if (distance <= movement + MAX_ADVANCE_ROLL + MAP_UNCERTAINTY) return "advance-option";
+  return "reposition";
+}
+
+function territoryOptions(state, { playerId, unit, movement, strategy, territorySignal }) {
+  const position = getLiveUnitPosition(state, unit);
+  if (!position) return [];
+  const status = getTerritoryStatusForPosition(state, { playerId, position, uncertainty: MAP_UNCERTAINTY });
+  if (status.territory === "unknown") return [];
+
+  const missionBonus = territorySignal.score;
+  const genericForwardValue = clamp01(0.18 + strategy.urgency * 0.08);
+  const reviewText = territorySignal.reviewOnlyMissions.length
+    ? ` Review-only territory mission context: ${territorySignal.reviewOnlyMissions.join(", ")}; it does not change the numeric ranking.`
+    : "";
+  const verifiedText = territorySignal.missions.length
+    ? ` Verified territory-relevant secondary context: ${territorySignal.missions.join(", ")}.`
+    : "";
+
+  if (status.territory === "boundary") {
+    const score = clamp01(0.22 + missionBonus * 0.85 + strategy.urgency * 0.05);
+    return [Object.freeze({
+      kind: "territory",
+      purpose: "confirm-territory-boundary",
+      score,
+      territoryTarget: "boundary",
+      distance: status.distanceToBoundary,
+      actionHint: "Measure the final position from the dotted territory line before relying on a territory-dependent mission",
+      confidence: "low",
+      territoryStatus: status,
+      reason: `This formation is within the ±${MAP_UNCERTAINTY}\" advisory band of the territory boundary, so the map does not claim which territory it occupies.${verifiedText}${reviewText}`
+    })];
+  }
+
+  if (status.territory === "opponent") {
+    const score = clamp01(genericForwardValue + 0.12 + missionBonus);
+    return [Object.freeze({
+      kind: "territory",
+      purpose: "hold-opponent-territory",
+      score,
+      territoryTarget: "opponent",
+      distance: status.distanceToBoundary,
+      actionHint: "Preserve the opponent-territory position unless an objective or combat route has greater value",
+      confidence: status.confidence,
+      territoryStatus: status,
+      reason: `This formation is approximately ${Math.round(status.distanceToBoundary)}\" inside opponent territory on the advisory map.${verifiedText}${reviewText}`
+    })];
+  }
+
+  const action = territoryMoveAction(status, movement);
+  const reachBoost = action === "normal-move" ? 0.14 : action === "advance-option" ? 0.08 : 0;
+  const score = clamp01(genericForwardValue + reachBoost + missionBonus);
+  const actionHint = action === "normal-move"
+    ? "A Normal Move can plausibly cross the dotted territory boundary; confirm the final tabletop position"
+    : action === "advance-option"
+      ? "An Advance may be needed to cross the dotted territory boundary; confirm after the roll and final tabletop position"
+      : "Reposition toward the territory boundary; the current saved Move does not establish a crossing";
+  return [Object.freeze({
+    kind: "territory",
+    purpose: "enter-opponent-territory",
+    score,
+    territoryTarget: "opponent",
+    distance: status.distanceToBoundary,
+    actionHint,
+    confidence: Number.isFinite(movement) ? "moderate" : "low",
+    territoryStatus: status,
+    reason: `This formation is approximately ${Math.round(status.distanceToBoundary)}\" from the dotted territory boundary on your side.${verifiedText}${reviewText}`
+  })];
+}
+
 function targetOptions(state, { playerId, unit, movement, spatial, weapons }) {
   const entries = (spatial.unitProximity ?? []).filter((entry) => entry.unitId === unit.id);
   const options = [];
@@ -215,6 +329,9 @@ function recommendationText(unit, best) {
   if (best.purpose === "contest-objective") return `${name}: move toward ${best.objectiveId} to pressure enemy control.`;
   if (best.purpose === "swing-objective") return `${name}: prioritize ${best.objectiveId}; it is already contested and this move can improve the local scoring fight.`;
   if (best.purpose === "claim-objective") return `${name}: move toward ${best.objectiveId} to establish control.`;
+  if (best.purpose === "enter-opponent-territory") return `${name}: consider crossing into opponent territory for forward positioning and any verified territory-dependent secondary value.`;
+  if (best.purpose === "hold-opponent-territory") return `${name}: preserve the opponent-territory position unless another move has greater mission or combat value.`;
+  if (best.purpose === "confirm-territory-boundary") return `${name}: measure the territory line before relying on this position for a territory-dependent secondary.`;
   if (best.purpose === "enter-ranged-pressure") return `${name}: reposition to bring ${best.targetName} into stronger Shooting pressure.`;
   if (best.purpose === "stage-charge") return `${name}: reposition toward ${best.targetName} to improve the later Charge decision.`;
   if (best.purpose === "preserve-ranged-pressure") return `${name}: preserve pressure on ${best.targetName}; do not move without a better mission or positional gain.`;
@@ -232,6 +349,7 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
   const spatial = getSpatialContext(state, { playerId });
   const secondaries = activeSecondaries(state, playerId);
   const missionSignal = verifiedMovementMissionSignal(secondaries);
+  const territorySignal = territoryMissionSignal(secondaries);
   const roots = (state?.units ?? []).filter((unit) =>
     unit?.ownerId === playerId && unit?.status === "deployed" && getCombatFormationRoot(state, unit)?.id === unit.id
   );
@@ -240,8 +358,10 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
     const movement = getBattleUnitMovement(state, unit);
     const oc = getFormationObjectiveContribution(state, unit);
     const weapons = formationWeapons(state, unit);
+    const territory = territoryOptions(state, { playerId, unit, movement, strategy, territorySignal });
     const candidates = [
       ...objectiveOptions(state, { playerId, unit, movement, oc, spatial, strategy, missionSignal }),
+      ...territory,
       ...targetOptions(state, { playerId, unit, movement, spatial, weapons }),
       fallbackOption(unit, movement, strategy)
     ].sort((a, b) => b.score - a.score || a.kind.localeCompare(b.kind));
@@ -254,6 +374,7 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
       effectiveOc: oc.effectiveOc,
       battleShocked: oc.battleShocked,
       weapons,
+      territory: territory[0]?.territoryStatus ?? null,
       score: best.score,
       priority: best.score >= 0.8 ? 5 : best.score >= 0.65 ? 4 : best.score >= 0.48 ? 3 : best.score >= 0.3 ? 2 : 1,
       purpose: best.purpose,
@@ -262,6 +383,7 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
       objectiveId: best.objectiveId ?? null,
       targetUnitId: best.targetUnitId ?? null,
       targetName: best.targetName ?? null,
+      territoryTarget: best.territoryTarget ?? null,
       distance: best.distance ?? null,
       strategicContext: best.strategicContext ?? null,
       recommendation: recommendationText(unit, best),
@@ -275,6 +397,7 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
     strategy,
     activeSecondaries: Object.freeze(secondaries.map(({ id, name, verified }) => Object.freeze({ id, name, verified }))),
     missionSignal,
+    territorySignal,
     recommendations: Object.freeze(recommendations)
   });
 }

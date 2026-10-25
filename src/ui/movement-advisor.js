@@ -24,6 +24,8 @@ function purposeLabel(purpose) {
 function destinationLabel(option) {
   if (option?.objectiveId) return `Objective · ${option.objectiveId}`;
   if (option?.targetName) return `Enemy · ${option.targetName}`;
+  if (option?.territoryTarget === "boundary") return "Territory · Boundary";
+  if (option?.territoryTarget === "opponent") return "Territory · Opponent";
   return "Flexible board position";
 }
 
@@ -150,6 +152,12 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
   const activeMissionText = context.activeSecondaries.length
     ? context.activeSecondaries.map((mission) => `${mission.name}${mission.verified ? "" : " (review only)"}`).join(" · ")
     : "No active secondary cards recorded";
+  const territoryVerifiedText = context.territorySignal?.missions?.length
+    ? `Verified territory ranking: ${context.territorySignal.missions.join(", ")}.`
+    : "No verified active secondary currently adds territory-ranking value.";
+  const territoryReviewText = context.territorySignal?.reviewOnlyMissions?.length
+    ? `Review-only territory context: ${context.territorySignal.reviewOnlyMissions.join(", ")}. These cards do not change the numeric ranking until verified.`
+    : "";
   const top = context.recommendations.slice(0, 3);
   const selectedOptions = [selected, ...(selected.alternatives ?? [])].slice(0, 3);
   const selectedRank = activeHighlight?.unitId === selected.unitId ? activeHighlight.rank : null;
@@ -176,7 +184,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
       <summary>Possible destinations · ${selectedOptions.length}</summary>
       <p><small>Ranked for ${escapeHtml(selected.unitName)}. Strategic fit is comparative guidance, not a movement-success probability.</small></p>
       <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank)).join("")}</div>
-      <p><small>Tap a destination to highlight its objective or enemy on the battlefield. Highlight only — the unit is not moved and no movement choice is recorded.</small></p>
+      <p><small>Tap an objective or enemy option to highlight it. Territory options use the dotted boundary already shown on the map. Highlight only — the unit is not moved and no movement choice is recorded.</small></p>
     </details>
     <details>
       <summary>Why this move?</summary>
@@ -194,8 +202,10 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
     <details>
       <summary>Mission context</summary>
       <p>${escapeHtml(activeMissionText)}</p>
-      <small>Only verified mission text changes movement ranking. Review-only cards remain visible but are not silently scored.</small>
+      <small>${escapeHtml(territoryVerifiedText)}</small>
+      ${territoryReviewText ? `<br><small>${escapeHtml(territoryReviewText)}</small>` : ""}
+      <br><small>Only verified mission text changes movement ranking. Review-only cards remain visible but are not silently scored.</small>
     </details>
-    <small>Map distances are approximate. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
+    <small>Map distances are approximate; territory classification is also advisory. Positions within ±3\" of the dotted territory line remain uncertain. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
   </aside>`;
 }
