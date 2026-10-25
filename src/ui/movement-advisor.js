@@ -206,6 +206,6 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
       ${territoryReviewText ? `<br><small>${escapeHtml(territoryReviewText)}</small>` : ""}
       <br><small>Only verified mission text changes movement ranking. Review-only cards remain visible but are not silently scored.</small>
     </details>
-    <small>Map distances and territory classification are approximate. Positions within ±3\" of the dotted territory line remain uncertain. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
+    <small>Map distances are approximate; territory classification is also advisory. Positions within ±3\" of the dotted territory line remain uncertain. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
   </aside>`;
 }
