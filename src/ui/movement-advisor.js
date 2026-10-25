@@ -18,6 +18,28 @@ function purposeLabel(purpose) {
   return String(purpose ?? "reposition").replaceAll("-", " ");
 }
 
+function destinationLabel(option) {
+  if (option?.objectiveId) return `Objective · ${option.objectiveId}`;
+  if (option?.targetName) return `Enemy · ${option.targetName}`;
+  return "Flexible board position";
+}
+
+function strategicFitLabel(score) {
+  const value = Number(score);
+  if (!Number.isFinite(value)) return "—";
+  return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
+function renderMovementOption(option, index) {
+  const recommended = index === 0;
+  return `<article class="move-unit movement-advisor__option${recommended ? " is-selected" : ""}" data-movement-option-rank="${index + 1}">
+    <strong>${index + 1}. ${escapeHtml(destinationLabel(option))}${recommended ? " · Recommended" : ""}</strong>
+    <span>${escapeHtml(purposeLabel(option.purpose))} · ${escapeHtml(strategicFitLabel(option.score))} relative fit</span>
+    <small>${escapeHtml(option.actionHint ?? "Reposition for this strategic purpose")}</small>
+    ${option.reason ? `<small>${escapeHtml(option.reason)}</small>` : ""}
+  </article>`;
+}
+
 export function renderMovementAdvisor(state, { playerId, selectedUnitId = null } = {}) {
   if (!playerId || state?.phase !== "movement") return "";
 
@@ -39,6 +61,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
     ? context.activeSecondaries.map((mission) => `${mission.name}${mission.verified ? "" : " (review only)"}`).join(" · ")
     : "No active secondary cards recorded";
   const top = context.recommendations.slice(0, 3);
+  const selectedOptions = [selected, ...(selected.alternatives ?? [])].slice(0, 3);
 
   return `<aside class="movement-advisor" data-movement-advisor>
     <div class="move-heading">
@@ -53,6 +76,11 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
       <div><strong>${escapeHtml(selected.confidence)}</strong><span>confidence</span></div>
     </div>
     <p>${escapeHtml(selected.actionHint)}</p>
+    <details open>
+      <summary>Possible destinations · ${selectedOptions.length}</summary>
+      <p><small>Ranked for ${escapeHtml(selected.unitName)}. Strategic fit is comparative guidance, not a movement-success probability.</small></p>
+      <div class="move-units movement-advisor__options">${selectedOptions.map(renderMovementOption).join("")}</div>
+    </details>
     <details>
       <summary>Why this move?</summary>
       <p>${escapeHtml(selected.reason)}</p>
@@ -71,6 +99,6 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null }
       <p>${escapeHtml(activeMissionText)}</p>
       <small>Only verified mission text changes movement ranking. Review-only cards remain visible but are not silently scored.</small>
     </details>
-    <small>Map distances are approximate. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
+    <small>Map distances are approximate. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
   </aside>`;
 }
