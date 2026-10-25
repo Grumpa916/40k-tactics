@@ -36,3 +36,26 @@ test('selected full name is visible and escaped; activation badge and unit ident
   assert.match(html, /Activation complete/);
   assert.doesNotMatch(html, /<Emissary>/);
 });
+
+test('live map closes zoom wrappers before selected names, legends and notices', async () => {
+  const { createLiveMapView } = await import('../../src/ui/live-map-view.js');
+  const state = { units:[unit('a','p1')] };
+  for (const options of [{}, {selectedUnitId:'a'}, {selectedUnitId:'a',showUnits:false}]) {
+    const html = createLiveMapView().render(state, options);
+    const stack = [];
+    for (const token of html.matchAll(/<div\b[^>]*>|<\/div>|<p\b[^>]*>/g)) {
+      if (token[0].startsWith('<div')) {
+        if (token[0].includes('battlefield-map__legend')) {
+          assert.ok(!stack.some(tag => /live-map__(canvas|viewport)/.test(tag)));
+        }
+        stack.push(token[0]);
+      } else if (token[0] === '</div>') {
+        assert.ok(stack.length > 0);
+        stack.pop();
+      } else {
+        assert.ok(!stack.some(tag => /live-map__(canvas|viewport)/.test(tag)));
+      }
+    }
+    assert.equal(stack.length, 0);
+  }
+});
