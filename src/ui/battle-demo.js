@@ -5,6 +5,7 @@ import { registerCoreCommandHandlers } from "../engine/register-core-commands.js
 import { clearCommandHandlers } from "../engine/command-engine.js";
 import { createBattleShell } from "./battle-shell.js";
 import { bindLiveCasualtyControls } from './live-casualty-controls.js';
+import { installTerritoryMapOverlay } from './territory-map-overlay.js';
 import { COMPLETE_SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-complete-catalog.js";
 import { installV2SupabasePublicConfig } from "../persistence/supabase-runtime-config.js";
 import { createSupabaseClientFromPublicConfig } from "../persistence/supabase-client.js";
@@ -107,6 +108,7 @@ function initializeBattleDemo() {
     : "tabletop";
   const root = document.getElementById("battle-app");
   bindNativeMissionSummaryToggle(root);
+  installTerritoryMapOverlay(root, { session, perspectivePlayerId: "p1" });
   let tools;
   const app = startLiveApp({
     mount() {
