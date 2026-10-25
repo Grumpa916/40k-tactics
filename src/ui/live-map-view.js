@@ -11,7 +11,7 @@ export function createLiveMapView() {
       const showZoomControls = options?.showZoomControls !== false;
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, activationForUnit:id => getUnitActivationPresentation(state,id) });
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${zoom*100}%"><div class="battlefield-map__board"`);
-      map = map.replace('</div><div class="battlefield-map__legend"', '</div></div></div><div class="battlefield-map__legend"');
+      map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
       const zoomControls = showZoomControls ? `<nav aria-label="Map zoom"><button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><span data-map-zoom-value>${Math.round(zoom*100)}%</span><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="fit">Fit</button><small>Zoom and scroll for crowded units · full names in unit/target selectors</small></nav>` : '';
       return `<link rel="stylesheet" href="${esc(href)}"><div class="live-map">${zoomControls}${map}</div>`;
     },
