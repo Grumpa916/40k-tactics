@@ -104,19 +104,24 @@ function objectiveOptions(state, { playerId, unit, movement, oc, spatial, strate
   return entries.map((entry) => {
     const control = getObjectiveControlForPlayer(state, { playerId, objectiveId: entry.objectiveId });
     const action = objectiveAction({ control, distance: entry.distance, movement });
+    const purpose = objectivePurpose(control, action);
     const ocValue = Number.isFinite(oc.effectiveOc) ? clamp01(oc.effectiveOc / 8) : 0.35;
     const usableOcFactor = oc.battleShocked ? 0.35 : 0.58 + 0.42 * ocValue;
     const urgency = Math.min(1.35, (strategy.weights.primary + strategy.weights.objectiveSwing) / 2);
+    const holdBonus = purpose === "hold-objective" && Number(oc.effectiveOc) > 0
+      ? 0.18 + Math.min(0.12, Number(oc.effectiveOc) * 0.02)
+      : 0;
     const score = clamp01(
       objectiveBase(control) *
       reachFactor(entry.distance, movement, action) *
       usableOcFactor *
       urgency +
-      missionSignal.score
+      missionSignal.score +
+      holdBonus
     );
-    const purpose = objectivePurpose(control, action);
     let reason = `${entry.objectiveId} is ${control ?? "uncontrolled"} and about ${entry.distance}\" away on the approximate map.`;
     if (Number.isFinite(oc.effectiveOc)) reason += ` This formation currently contributes about ${oc.effectiveOc} usable OC.`;
+    if (holdBonus > 0) reason += " Holding receives extra value because this formation is already contributing usable OC near a friendly-controlled objective.";
     if (oc.battleShocked) reason += " It is Battle-shocked, so its saved OC is treated as suppressed for this recommendation.";
     if (missionSignal.missions.length) reason += ` Verified active movement-relevant secondary context: ${missionSignal.missions.join(", ")}.`;
     return Object.freeze({
