@@ -4,6 +4,7 @@ import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getChargeOpportunity } from "./tactical-charge-opportunity.js";
 import { getMovementStrategicRecommendations } from "./tactical-movement-opportunities.js";
+import { getCustodesPhaseRecommendations } from "./custodes-tactical-advisor.js";
 
 const CHARGE_MAX_DISTANCE = 12;
 const CHARGE_RANGE_UNCERTAINTY_MARGIN = 3;
@@ -68,6 +69,8 @@ function chargeCandidates(state, { playerId }) {
       confidence,
       rangeStatus,
       mapSuccessProbability: opportunity?.mapSuccessProbability ?? null,
+      unmodifiedMapSuccessProbability: opportunity?.unmodifiedMapSuccessProbability ?? null,
+      custodesCharge: opportunity?.custodesCharge ?? null,
       projectedFight: opportunity?.projectedFight ?? null,
       projectedCounterFight: opportunity?.projectedCounterFight ?? null,
       strategicContext: opportunity?.strategicContext ?? null,
@@ -138,12 +141,14 @@ export function getTacticalCombatRecommendations(
     : [];
   const charge = chargeCandidates(state, { playerId });
   const fight = fightRecommendations(state);
+  const custodes = getCustodesPhaseRecommendations(state, { playerId });
 
   return {
     shooting,
     movement,
     charge,
     fight,
-    recommendations: [...shooting, ...movement, ...charge, ...fight]
+    custodes,
+    recommendations: [...shooting, ...movement, ...charge, ...fight, ...custodes]
   };
 }
