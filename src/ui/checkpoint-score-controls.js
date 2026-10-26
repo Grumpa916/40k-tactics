@@ -66,7 +66,7 @@ export function renderCheckpointScore(state, group, mission) {
   }
   if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
   const vpOptions = getMissionVpOptions(mission);
-  const estimate = estimateCheckpointVp(state, group.playerId, mission);
+  const estimate = estimateCheckpointVp(state, group.playerId, mission, group.checkpoint);
   const estimateMarkup = estimate ? `<p class="checkpoint-vp-estimate" role="status"><strong>Estimated from recorded state: ${estimate.points} VP</strong>${estimate.partial ? ' · Partial evidence; other conditions or unrecorded control may change this.' : ''}${estimate.capped ? ' · Limited by remaining Primary VP cap.' : ''} Verify on the tabletop before choosing VP.</p>` : '';
   const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
   return `<form data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}">
