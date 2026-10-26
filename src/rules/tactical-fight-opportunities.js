@@ -4,6 +4,7 @@ import { evaluateFightOpportunity } from "./tactical-fight-opportunity.js";
 import { getBestFightRetaliation } from "./tactical-fight-retaliation.js";
 import { getProbabilisticFightRetaliation } from "./probabilistic-fight-retaliation.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
+import { getCustodesFightAdvisorContext } from "./custodes-tactical-advisor.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : [])
@@ -84,10 +85,31 @@ export function getFightOpportunityRecommendations(
 
       const sourceProfile = getProbabilisticUnitProfile(state, sourceAttacker);
       const targetProfile = getProbabilisticUnitProfile(state, target);
-      const expectedDamage =
+      const baselineExpectedDamage =
         Number.isFinite(option?.expectedDamage)
           ? option.expectedDamage
           : expectedDamageForOption(sourceProfile, targetProfile, option?.weapon);
+
+      let custodesFight = null;
+      if (option?.weapon) {
+        try {
+          custodesFight = getCustodesFightAdvisorContext(state, {
+            playerId,
+            unitId: attacker.id,
+            sourceUnitId: sourceAttacker.id,
+            targetUnitId: target.id,
+            weapon: option.weapon
+          });
+        } catch {
+          custodesFight = null;
+        }
+      }
+      const automaticCustodesOption = custodesFight?.options
+        ?.filter((item) => item?.requiresKatahUse !== true)
+        ?.sort((a, b) => b.expectedDamage - a.expectedDamage)?.[0] ?? null;
+      const expectedDamage = Number.isFinite(automaticCustodesOption?.expectedDamage)
+        ? Math.max(baselineExpectedDamage ?? 0, automaticCustodesOption.expectedDamage)
+        : baselineExpectedDamage;
 
       // Expected damage is an average, not a guaranteed result. Do not
       // convert it into a deterministic kill. Retaliation therefore remains
@@ -154,10 +176,13 @@ export function getFightOpportunityRecommendations(
       );
       const verifiedVpBonus = Math.min(1.5, verifiedVp * 0.25);
       const battleShockPenalty = (strategicContext?.battleShock?.marginalKillPenalty ?? 0) * 1.5;
+      const katahPotentialBonus = custodesFight?.bestOption?.requiresKatahUse && custodesFight.expectedDamageGain > 0
+        ? Math.min(0.6, custodesFight.expectedDamageGain / Math.max(1, targetProfile?.wounds ?? 1))
+        : 0;
       const combatScore = evaluation.targetImpact * 3 - evaluation.preservationRisk * 2;
-      const strategicPoints = strategicScore * 3 + objectiveSwingBonus + verifiedVpBonus - battleShockPenalty;
+      const strategicPoints = strategicScore * 3 + objectiveSwingBonus + verifiedVpBonus - battleShockPenalty + katahPotentialBonus;
       const decisionScore = combatScore + strategicPoints;
-      const recommendation = strategicContext
+      const baseRecommendation = strategicContext
         ? strategicFightRecommendation(evaluation, strategicContext, retaliationEstimateAvailable)
         : evaluation.risk === "high"
           ? "Strong offensive opportunity, but expected retaliation creates significant preservation risk."
@@ -166,6 +191,9 @@ export function getFightOpportunityRecommendations(
             : retaliationEstimateAvailable
               ? "No expected damage from the modeled response; tabletop rules and unmodeled effects still apply."
               : "Fight opportunity can be evaluated offensively; retaliation data is not available.";
+      const recommendation = custodesFight?.recommendation
+        ? `${baseRecommendation} ${custodesFight.recommendation}`
+        : baseRecommendation;
 
       return {
         type: "fight-opportunity",
@@ -173,7 +201,9 @@ export function getFightOpportunityRecommendations(
         sourceUnitId: sourceAttacker.id,
         targetUnitId: target.id,
         weaponId: option?.weapon?.id ?? option?.weaponId ?? null,
+        baselineExpectedDamage,
         expectedDamage: evaluation.expectedDamage,
+        custodesFight,
         retaliationExpectedDamage: evaluation.retaliationExpectedDamage,
         retaliationEstimateAvailable,
         targetImpact: evaluation.targetImpact,
@@ -193,7 +223,8 @@ export function getFightOpportunityRecommendations(
           strategicPoints,
           objectiveSwingBonus,
           verifiedVpBonus,
-          battleShockPenalty
+          battleShockPenalty,
+          katahPotentialBonus
         }),
         recommendation,
         reason: recommendation
