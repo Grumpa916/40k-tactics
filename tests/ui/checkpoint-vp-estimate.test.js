@@ -39,6 +39,12 @@ test('estimate respects remaining Primary VP allowance and undone awards', () =>
   assert.deepEqual(estimateCheckpointVp(game,'p1',mission),{points:5,partial:false,capped:false});
 });
 
+test('end-of-battle estimate observes the game cap without the turn cap', () => {
+  const game=state([controlled('centre','Central 1','p1'),controlled('other','Expansion 1','p1')]);
+  game.history=[{type:'victory_points.awarded',id:'old',payload:{playerId:'p1',category:'primary',amount:12,turn:3,round:2}}];
+  assert.deepEqual(estimateCheckpointVp(game,'p1',mission,'end-of-battle'),{points:10,partial:false,capped:false});
+});
+
 test('unsupported mission conditions have no numeric estimate and dialog omits crossed-out introduction', () => {
   const unsupported={...mission,scoringWindows:[{items:[{vp:4,summary:'Perform an unrecorded mission action.'}]}]};
   assert.equal(estimateCheckpointVp(state([]),'p1',unsupported),null);
