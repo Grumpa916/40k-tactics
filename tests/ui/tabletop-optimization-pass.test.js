@@ -4,21 +4,23 @@ import fs from 'node:fs';
 
 const read = path => fs.readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
 
-test('Tabletop HUD exposes compact phase controls without duplicating scoreboard controls', () => {
+test('Tabletop HUD exposes visible phase chips and reuses the score controls', () => {
   const src = read('src/ui/prototype-workspace.js');
-  assert.ok(src.includes('tabletop-live-strip'));
-  assert.ok(src.includes('<summary>Phases</summary>'));
+  assert.ok(src.includes('prototype-phase-chips'));
+  assert.ok(src.includes('data-workspace-score-host'));
+  assert.ok(src.includes('scoreHost.append?.(summary)'));
   assert.ok(src.includes("focus ? 'Overview' : 'Tabletop'"));
   assert.equal(src.includes('data-open-score-adjust-kind="vp"'), false);
   assert.equal(src.includes('data-open-score-adjust-kind="cp"'), false);
   assert.equal(src.includes('data-toggle-turn-clock'), false);
 });
 
-test('Command battle view exposes a guarded next-phase button for Movement', () => {
+test('live view keeps one phase advance action at the bottom', () => {
   const src = read('src/ui/prototype-workspace.js');
-  assert.ok(src.includes('data-workspace-next-phase data-advance-game-phase hidden'));
-  assert.ok(src.includes("nextPhaseButton.hidden = !(combat && state.phase === 'command')"));
-  assert.ok(src.includes("Next phase → Movement"));
+  const css = read('src/ui/styles/prototype-workspace.css');
+  assert.equal(src.includes('data-advance-game-phase'), false);
+  assert.ok(css.includes('> [data-phase-progression-host]'));
+  assert.ok(read('src/ui/phase-progression-panel.js').includes('data-advance-game-phase'));
 });
 
 test('shared Tabletop maps omit repeated banners and zoom controls', () => {
