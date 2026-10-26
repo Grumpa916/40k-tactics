@@ -14,7 +14,15 @@ function unitById(state, unitId) {
  */
 export function getProbabilisticFightRetaliation(
   state,
-  { playerId, attackerId, sourceAttackerId = null, targetId, weapon, distribution = null } = {}
+  {
+    playerId,
+    attackerId,
+    sourceAttackerId = null,
+    targetId,
+    weapon,
+    distribution = null,
+    targetHitModifier = 0
+  } = {}
 ) {
   if (!playerId) throw new TypeError("playerId is required.");
   if (!attackerId || !targetId) throw new TypeError("attackerId and targetId are required.");
@@ -50,7 +58,8 @@ export function getProbabilisticFightRetaliation(
       destroyedUnitIds: postState.destroyed ? [target.id] : [],
       remainingWoundsByUnit: {
         [target.id]: postState.remainingWounds
-      }
+      },
+      targetHitModifier
     });
 
     return Object.freeze({
@@ -70,6 +79,7 @@ export function getProbabilisticFightRetaliation(
     expectedRetaliationDamage,
     survivalProbability: postAttack.survivalProbability,
     destructionProbability: postAttack.destructionProbability,
+    targetHitModifier,
     confidence: outcomes.some((outcome) => outcome.retaliation !== null) ? "moderate" : "low"
   });
 }

@@ -4,7 +4,8 @@ import { getExpectedDamage } from "./expected-damage.js";
 import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getRosterDetachmentNames, isAdeptusCustodesFaction } from "./roster-detachment-selection.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
-import { isUnitBattleShocked } from "./unit-status-summary.js";
+import { getSpatialContext } from "./spatial-context.js";
+import { getUnitStrengthAssessment, isUnitBattleShocked } from "./unit-status-summary.js";
 
 const KATAH_BY_NAME = new Map(ADEPTUS_CUSTODES_KATAH.map((item) => [item.name, item]));
 const DETACHMENT_BY_NAME = new Map(ADEPTUS_CUSTODES_DETACHMENTS.map((item) => [item.name, item]));
@@ -26,6 +27,12 @@ export function hasCustodesDetachment(state, playerId, detachmentName) {
 function hasNamedAbility(datasheet, abilityName) {
   return (Array.isArray(datasheet?.abilities) ? datasheet.abilities : []).some((ability) =>
     String(ability?.name ?? ability ?? "").trim().toLowerCase() === abilityName.toLowerCase()
+  );
+}
+
+function hasKeyword(profileOrDatasheet, keyword) {
+  return (Array.isArray(profileOrDatasheet?.keywords) ? profileOrDatasheet.keywords : []).some((item) =>
+    String(item).trim().toLowerCase() === keyword.toLowerCase()
   );
 }
 
@@ -111,9 +118,7 @@ export function isCustodesKatahTimingAvailable(state, katahName, playerId) {
 }
 
 function targetHasKeyword(targetProfile, keyword) {
-  return (Array.isArray(targetProfile?.keywords) ? targetProfile.keywords : []).some((item) =>
-    String(item).trim().toLowerCase() === keyword.toLowerCase()
-  );
+  return hasKeyword(targetProfile, keyword);
 }
 
 function weaponWith(weapon, changes) {
@@ -132,6 +137,120 @@ function expectedDamage(attacker, target, weapon) {
   } catch {
     return null;
   }
+}
+
+function isCustodesDreadnought(state, unit) {
+  const datasheet = getBattleUnitDatasheet(state, unit);
+  return Boolean(
+    /dreadnought/i.test(String(datasheet?.name ?? unit?.name ?? "")) ||
+    hasKeyword(datasheet, "Dreadnought")
+  );
+}
+
+function belowStartingStrength(state, unit) {
+  const assessment = getUnitStrengthAssessment(unit);
+  if (Number.isFinite(assessment?.currentStrength) && Number.isFinite(assessment?.startingStrength)) {
+    return assessment.currentStrength < assessment.startingStrength;
+  }
+  const profile = getProbabilisticUnitProfile(state, unit);
+  const startingWounds = Number(unit?.maxWounds ?? unit?.startingWounds ?? profile?.wounds);
+  const currentWounds = Number(unit?.wounds);
+  if (Number.isFinite(startingWounds) && startingWounds > 0 && Number.isFinite(currentWounds)) {
+    return currentWounds < startingWounds;
+  }
+  return null;
+}
+
+export function getCustodesMoritoiContext(state, { playerId, unitId } = {}) {
+  const unit = unitById(state, unitId);
+  const active = Boolean(
+    unit && unit.ownerId === playerId && unit.status === "deployed" &&
+    hasCustodesDetachment(state, playerId, "Might of the Moritoi") &&
+    isCustodesDreadnought(state, unit)
+  );
+  if (!active) {
+    return Object.freeze({ active: false, belowStartingStrength: null, belowHalfStrength: null, objectiveControlBonus: 0, hitReroll: "none", woundReroll: "none" });
+  }
+
+  const belowStarting = belowStartingStrength(state, unit);
+  const strength = getUnitStrengthAssessment(unit);
+  let belowHalf = strength.known ? strength.belowHalfStrength : null;
+  if (belowHalf == null) {
+    const profile = getProbabilisticUnitProfile(state, unit);
+    const startingWounds = Number(unit?.maxWounds ?? unit?.startingWounds ?? profile?.wounds);
+    const currentWounds = Number(unit?.wounds);
+    if (Number.isFinite(startingWounds) && startingWounds > 0 && Number.isFinite(currentWounds)) {
+      belowHalf = currentWounds * 2 <= startingWounds;
+    }
+  }
+
+  return Object.freeze({
+    active: true,
+    belowStartingStrength: belowStarting,
+    belowHalfStrength: belowHalf,
+    objectiveControlBonus: belowStarting === false ? 2 : 0,
+    hitReroll: belowStarting === true ? "ones" : "none",
+    woundReroll: belowHalf === true ? "ones" : "none",
+    reason: belowStarting === false
+      ? "Moritoi Ancients grants this Dreadnought +2 OC while it remains at starting strength."
+      : belowHalf === true
+        ? "Moritoi Ancients lets this below-half-strength Dreadnought re-roll Hit rolls of 1 and Wound rolls of 1."
+        : belowStarting === true
+          ? "Moritoi Ancients lets this damaged Dreadnought re-roll Hit rolls of 1."
+          : "Moritoi Ancients is selected, but current strength is not tracked precisely enough to apply a strength-state bonus."
+  });
+}
+
+export function getCustodesObjectiveControlBonus(state, unitOrId) {
+  const unit = typeof unitOrId === "string" ? unitById(state, unitOrId) : unitOrId;
+  if (!unit) return 0;
+  return getCustodesMoritoiContext(state, { playerId: unit.ownerId, unitId: unit.id }).objectiveControlBonus;
+}
+
+function trustedSentinel(state, unit) {
+  const datasheet = getBattleUnitDatasheet(state, unit);
+  const profile = getProbabilisticUnitProfile(state, unit);
+  return hasKeyword(datasheet, "Trusted Sentinel") || hasKeyword(profile, "Trusted Sentinel");
+}
+
+export function getHonouredCompanionsContext(state, { playerId, unitId } = {}) {
+  const unit = unitById(state, unitId);
+  if (!unit || unit.ownerId !== playerId || unit.status !== "deployed" || !hasCustodesDetachment(state, playerId, "Honoured Companions") || !trustedSentinel(state, unit)) {
+    return Object.freeze({ available: false, approximateObjectiveId: null, approximateDistance: null, woundReroll: "none", requiresTableConfirmation: false });
+  }
+  let nearest = null;
+  try {
+    const spatial = getSpatialContext(state, { playerId });
+    nearest = (spatial.objectiveProximity ?? [])
+      .filter((entry) => entry.unitId === getCombatFormationRoot(state, unit)?.id)
+      .sort((a, b) => a.distance - b.distance || String(a.objectiveId).localeCompare(String(b.objectiveId)))[0] ?? null;
+  } catch {
+    nearest = null;
+  }
+  const possible = Boolean(nearest && Number.isFinite(nearest.distance) && nearest.distance <= 6);
+  return Object.freeze({
+    available: possible,
+    approximateObjectiveId: nearest?.objectiveId ?? null,
+    approximateDistance: Number.isFinite(nearest?.distance) ? nearest.distance : null,
+    woundReroll: possible ? "ones" : "none",
+    requiresTableConfirmation: possible,
+    reason: possible
+      ? `Honoured Companions may allow this Trusted Sentinel to re-roll Wound rolls of 1 near ${nearest.objectiveId}; the map distance is approximate, so confirm the unit is actually within objective range before applying it.`
+      : "No approximate objective-range Honoured Companions opportunity is established for this Trusted Sentinel."
+  });
+}
+
+function automaticCustodesWeapon(state, playerId, sourceUnit, weapon) {
+  const moritoi = getCustodesMoritoiContext(state, { playerId, unitId: sourceUnit.id });
+  return {
+    weapon: moritoi.active
+      ? weaponWith(weapon, {
+          hitReroll: moritoi.hitReroll,
+          woundReroll: moritoi.woundReroll
+        })
+      : weapon,
+    moritoi
+  };
 }
 
 export function getCustodesFightAdvisorContext(state, {
@@ -153,7 +272,9 @@ export function getCustodesFightAdvisorContext(state, {
 
   const attackerProfile = getProbabilisticUnitProfile(state, sourceUnit);
   const targetProfile = getProbabilisticUnitProfile(state, target);
-  const baseline = expectedDamage(attackerProfile, targetProfile, weapon);
+  const automatic = automaticCustodesWeapon(state, playerId, sourceUnit, weapon);
+  const baselineWeapon = automatic.weapon;
+  const baseline = expectedDamage(attackerProfile, targetProfile, baselineWeapon);
   if (!Number.isFinite(baseline)) {
     return Object.freeze({ available: false, options: Object.freeze([]), bestOption: null });
   }
@@ -162,12 +283,13 @@ export function getCustodesFightAdvisorContext(state, {
   const options = [];
   const guardians = hasCustodesDetachment(state, playerId, "Guardians of the Throne");
   const monsterVehicle = targetHasKeyword(targetProfile, "Monster") || targetHasKeyword(targetProfile, "Vehicle");
+  const honoured = getHonouredCompanionsContext(state, { playerId, unitId: sourceUnit.id });
 
   if (guardians) {
-    const sustained = weaponWith(weapon, {
-      sustainedHits: Math.max(1, Number(weapon?.characteristics?.sustainedHits) || 0)
+    const sustained = weaponWith(baselineWeapon, {
+      sustainedHits: Math.max(1, Number(baselineWeapon?.characteristics?.sustainedHits) || 0)
     });
-    const lethal = weaponWith(weapon, { lethalHits: true });
+    const lethal = weaponWith(baselineWeapon, { lethalHits: true });
     const sustainedDamage = expectedDamage(attackerProfile, targetProfile, sustained);
     const lethalDamage = expectedDamage(attackerProfile, targetProfile, lethal);
     if (Number.isFinite(sustainedDamage)) options.push(Object.freeze({ id: "guardians-sustained", label: "Martial Mastery: Sustained Hits 1", expectedDamage: sustainedDamage, requiresKatahUse: false }));
@@ -175,36 +297,69 @@ export function getCustodesFightAdvisorContext(state, {
   }
 
   if (katah.readied && monsterVehicle) {
-    const rendax = weaponWith(weapon, { lethalHits: true });
+    const rendax = weaponWith(baselineWeapon, { lethalHits: true });
     const rendaxDamage = expectedDamage(attackerProfile, targetProfile, rendax);
     if (Number.isFinite(rendaxDamage)) options.push(Object.freeze({ id: "rendax", label: "Rendax", katahName: "Rendax", expectedDamage: rendaxDamage, requiresKatahUse: true }));
 
     if (guardians) {
-      const combined = weaponWith(weapon, {
+      const combined = weaponWith(baselineWeapon, {
         lethalHits: true,
-        sustainedHits: Math.max(1, Number(weapon?.characteristics?.sustainedHits) || 0)
+        sustainedHits: Math.max(1, Number(baselineWeapon?.characteristics?.sustainedHits) || 0)
       });
       const combinedDamage = expectedDamage(attackerProfile, targetProfile, combined);
       if (Number.isFinite(combinedDamage)) options.push(Object.freeze({ id: "guardians-sustained-rendax", label: "Martial Mastery: Sustained Hits 1 + Rendax", katahName: "Rendax", expectedDamage: combinedDamage, requiresKatahUse: true }));
     }
   }
 
+  if (katah.readied && !monsterVehicle) {
+    const dacatarai = weaponWith(baselineWeapon, { hitReroll: "ones" });
+    const dacataraiDamage = expectedDamage(attackerProfile, targetProfile, dacatarai);
+    if (Number.isFinite(dacataraiDamage)) options.push(Object.freeze({ id: "dacatarai", label: "Dacatarai", katahName: "Dacatarai", expectedDamage: dacataraiDamage, requiresKatahUse: true }));
+    if (guardians) {
+      const sustainedDacatarai = weaponWith(dacatarai, {
+        sustainedHits: Math.max(1, Number(dacatarai?.characteristics?.sustainedHits) || 0)
+      });
+      const lethalDacatarai = weaponWith(dacatarai, { lethalHits: true });
+      const sustainedDamage = expectedDamage(attackerProfile, targetProfile, sustainedDacatarai);
+      const lethalDamage = expectedDamage(attackerProfile, targetProfile, lethalDacatarai);
+      if (Number.isFinite(sustainedDamage)) options.push(Object.freeze({ id: "guardians-sustained-dacatarai", label: "Martial Mastery: Sustained Hits 1 + Dacatarai", katahName: "Dacatarai", expectedDamage: sustainedDamage, requiresKatahUse: true }));
+      if (Number.isFinite(lethalDamage)) options.push(Object.freeze({ id: "guardians-lethal-dacatarai", label: "Martial Mastery: Lethal Hits + Dacatarai", katahName: "Dacatarai", expectedDamage: lethalDamage, requiresKatahUse: true }));
+    }
+  }
+
+  if (honoured.available) {
+    const honouredWeapon = weaponWith(baselineWeapon, { woundReroll: "ones" });
+    const honouredDamage = expectedDamage(attackerProfile, targetProfile, honouredWeapon);
+    if (Number.isFinite(honouredDamage)) options.push(Object.freeze({
+      id: "honoured-companions",
+      label: "Honoured Companions (if within objective range)",
+      expectedDamage: honouredDamage,
+      requiresKatahUse: false,
+      requiresTableConfirmation: true
+    }));
+  }
+
   const bestOption = options.slice().sort((a, b) => b.expectedDamage - a.expectedDamage || a.label.localeCompare(b.label))[0] ?? null;
   const gain = bestOption ? bestOption.expectedDamage - baseline : 0;
   const recommendation = bestOption && gain > 0.01
-    ? `${bestOption.label} improves projected melee damage from ${baseline.toFixed(2)} to ${bestOption.expectedDamage.toFixed(2)} against this target${bestOption.requiresKatahUse ? "; confirm the Ka'tah only if you choose to spend this unit's readiness" : ""}.`
+    ? `${bestOption.label} improves projected melee damage from ${baseline.toFixed(2)} to ${bestOption.expectedDamage.toFixed(2)} against this target${bestOption.requiresKatahUse ? "; confirm the Ka'tah only if you choose to spend this unit's readiness" : ""}${bestOption.requiresTableConfirmation ? "; confirm objective range at the table before applying the reroll" : ""}.`
     : guardians
       ? "Guardians of the Throne is active, but the modeled Martial Mastery choices do not improve this weapon's baseline damage against this target."
       : katah.readied && monsterVehicle
         ? "Rendax is available against this Monster/Vehicle, but it does not improve the modeled baseline for this weapon."
-        : null;
+        : katah.readied && !monsterVehicle
+          ? "Dacatarai is available against this non-Monster/Vehicle target, but it does not improve the modeled baseline for this weapon."
+          : null;
 
   return Object.freeze({
-    available: Boolean(guardians || katah.readied && monsterVehicle),
+    available: Boolean(guardians || katah.readied || honoured.available || automatic.moritoi.active),
     baselineExpectedDamage: baseline,
     katah,
     guardiansOfTheThrone: guardians,
     rendaxEligible: katah.readied && monsterVehicle,
+    dacataraiEligible: katah.readied && !monsterVehicle,
+    moritoi: automatic.moritoi,
+    honouredCompanions: honoured,
     options: Object.freeze(options),
     bestOption,
     expectedDamageGain: Math.max(0, gain),

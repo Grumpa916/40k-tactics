@@ -30,9 +30,28 @@ function availableMeleeWeapons(unit) {
   });
 }
 
-function expectedDamage(attacker, target, weapon, attackerRemainingWounds = attacker?.wounds) {
+function targetWithHitModifier(target, hitModifier = 0) {
+  const modifier = Number(hitModifier) || 0;
+  if (!modifier) return target;
+  const characteristics = target?.characteristics ?? target?.profile?.characteristics ?? {};
+  const current = Number(characteristics?.hitModifier) || 0;
+  return {
+    ...target,
+    characteristics: {
+      ...characteristics,
+      hitModifier: current + modifier
+    }
+  };
+}
+
+function expectedDamage(attacker, target, weapon, attackerRemainingWounds = attacker?.wounds, targetHitModifier = 0) {
   try {
-    return getExpectedDamage({ attacker, target, weapon, attackerRemainingWounds }).expectedDamage;
+    return getExpectedDamage({
+      attacker,
+      target: targetWithHitModifier(target, targetHitModifier),
+      weapon,
+      attackerRemainingWounds
+    }).expectedDamage;
   } catch {
     return null;
   }
@@ -64,12 +83,20 @@ function engagedOpponents(state, playerId, attackerId) {
  * known melee weapon profiles. It does not use map coordinates, invent future
  * charges, or assume hidden abilities/stratagems.
  *
- * Explicit retaliationOptions can be supplied by a Fight UI when the available
- * enemy weapon/loadout context is richer than the stored unit profile.
+ * targetHitModifier represents a modifier imposed on attacks targeting the
+ * friendly unit (for example Kaptaris -1 to Hit). The normal ±1 roll-modifier
+ * cap remains enforced by the damage engine.
  */
 export function getBestFightRetaliation(
   state,
-  { playerId, attackerId, retaliationOptions = [], remainingWoundsByUnit = {}, destroyedUnitIds = [] } = {}
+  {
+    playerId,
+    attackerId,
+    retaliationOptions = [],
+    remainingWoundsByUnit = {},
+    destroyedUnitIds = [],
+    targetHitModifier = 0
+  } = {}
 ) {
   if (!playerId) throw new TypeError("playerId is required.");
   if (!attackerId) throw new TypeError("attackerId is required.");
@@ -89,9 +116,9 @@ export function getBestFightRetaliation(
     if (!enemy || enemy.ownerId === playerId || enemy.status === "destroyed" || destroyed.has(enemy.id) || hasFinishedFighting(state, enemy.id)) continue;
     if (!weapon || weapon.type !== "melee") continue;
 
-    const damage = Number.isFinite(option?.expectedDamage)
+    const damage = Number.isFinite(option?.expectedDamage) && !targetHitModifier
       ? option.expectedDamage
-      : expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds);
+      : expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds, targetHitModifier);
 
     if (!Number.isFinite(damage)) continue;
 
@@ -100,7 +127,8 @@ export function getBestFightRetaliation(
       weaponId: weapon.id ?? null,
       expectedDamage: damage,
       confidence: option?.confidence ?? "moderate",
-      source: "explicit"
+      source: "explicit",
+      targetHitModifier
     });
   }
 
@@ -108,7 +136,7 @@ export function getBestFightRetaliation(
     const enemy = unitById(state, enemyId);
     if (destroyed.has(enemy.id) || hasFinishedFighting(state, enemy.id)) continue;
     for (const weapon of availableMeleeWeapons(enemy)) {
-      const damage = expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds);
+      const damage = expectedDamage(enemy, attacker, weapon, remainingWoundsByUnit[enemy.id] ?? enemy.wounds, targetHitModifier);
       if (!Number.isFinite(damage)) continue;
 
       candidates.push({
@@ -116,7 +144,8 @@ export function getBestFightRetaliation(
         weaponId: weapon.id ?? null,
         expectedDamage: damage,
         confidence: "moderate",
-        source: "engagement"
+        source: "engagement",
+        targetHitModifier
       });
     }
   }
@@ -129,4 +158,3 @@ export function getBestFightRetaliation(
 
   return candidates[0] ?? null;
 }
-

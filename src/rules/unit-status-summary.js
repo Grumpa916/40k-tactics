@@ -32,14 +32,16 @@ export function getUnitStrengthAssessment(unit) {
     return { known: true, belowHalfStrength: unit.belowHalfStrength, source: "explicit" };
   }
 
-
-  // A one-model unit uses remaining Wounds, not a one-model count, to assess
-  // its strength. This must be checked before the generic model-count branch.
+  // A one-model unit uses remaining Wounds, not its unchanged one-model count,
+  // for strength-state rules. Expose those wound values as the effective
+  // starting/current strength so callers can also distinguish "damaged" from
+  // "at starting strength" without inventing a destroyed-model transition.
   const isSingleModel = startingStrength === 1 ||
     (startingStrength == null && unit?.metadata?.modelCount === 1);
   if (isSingleModel) {
     const startingWounds = firstFinite([
       unit?.startingWounds,
+      unit?.maxWounds,
       unit?.profile?.characteristics?.wounds,
       unit?.profile?.wounds
     ]);
@@ -48,8 +50,10 @@ export function getUnitStrengthAssessment(unit) {
       return {
         known: true,
         belowHalfStrength: unit.wounds * 2 <= startingWounds,
-        startingStrength: 1,
-        currentStrength: unit.wounds > 0 ? 1 : 0,
+        startingStrength: startingWounds,
+        currentStrength: unit.wounds,
+        startingModels: 1,
+        currentModels: unit.wounds > 0 ? 1 : 0,
         startingWounds,
         currentWounds: unit.wounds,
         source: "single-model-wounds"

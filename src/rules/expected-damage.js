@@ -1,6 +1,7 @@
 import { buildAttackProfile } from "./combat-profile.js";
 import { getContextualWeaponProfile } from "./contextual-weapon-abilities.js";
 import { getWoundBracketModifiers } from "./wound-bracket.js";
+import { getRollSuccessProbabilities, strongestReroll } from "./attack-roll-probabilities.js";
 
 function expectedDice(expression) {
   if (Number.isInteger(expression) && expression >= 0) return expression;
@@ -76,17 +77,11 @@ function damagePreventionMultiplier(prevention) {
 }
 
 function woundProbabilities(profile, woundTargetValue) {
-  const normalBase = successProbability(woundTargetValue);
-  const criticalBase = successProbability(profile.criticalWoundTarget);
-  const successBase = Math.max(normalBase, criticalBase);
-  if (!profile.twinLinked) {
-    return { success: successBase, critical: criticalBase };
-  }
-  const failedFirstRoll = 1 - successBase;
-  return {
-    success: successBase + (failedFirstRoll * successBase),
-    critical: criticalBase + (failedFirstRoll * criticalBase)
-  };
+  return getRollSuccessProbabilities({
+    successTarget: woundTargetValue,
+    criticalTarget: profile.criticalWoundTarget,
+    reroll: strongestReroll(profile.woundReroll, profile.twinLinked ? "failed" : "none")
+  });
 }
 
 /**
@@ -105,8 +100,11 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   const attacks = expectedDice(profile.attacks);
 
   const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier + woundBracket.hitModifier);
-  const criticalHits = profile.torrent ? 0 : attacks / 6;
-  const regularHits = attacks * (profile.torrent ? 1 : successProbability(hitTarget));
+  const hitRoll = profile.torrent
+    ? Object.freeze({ success: 1, critical: 0, nonCritical: 1, failure: 0, reroll: "none" })
+    : getRollSuccessProbabilities({ successTarget: hitTarget, criticalTarget: 6, reroll: profile.hitReroll });
+  const criticalHits = attacks * hitRoll.critical;
+  const regularHits = attacks * hitRoll.success;
   const sustainedHits = criticalHits * profile.sustainedHits;
   const lethalHitWounds = profile.lethalHits ? criticalHits : 0;
   const normalHits = Math.max(0, regularHits + sustainedHits - lethalHitWounds);
@@ -135,9 +133,12 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   return Object.freeze({
     expectedDamage,
     attacks,
-    hitProbability: profile.torrent ? 1 : successProbability(hitTarget),
+    hitProbability: hitRoll.success,
+    criticalHitProbability: hitRoll.critical,
+    hitReroll: hitRoll.reroll,
     woundProbability: woundRoll.success,
     criticalWoundProbability: woundRoll.critical,
+    woundReroll: woundRoll.reroll,
     saveFailureProbability: saveFailure,
     normalWounds,
     lethalWounds: lethalHitWounds,
