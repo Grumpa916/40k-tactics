@@ -13,7 +13,7 @@ const LIVE_PHASES = Object.freeze([
 
 export function renderPrototypeWorkspaceTools() {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
-  stylesheet.searchParams.set('v', 'compact-live-2');
+  stylesheet.searchParams.set('v', 'compact-markers-3');
   const href = stylesheet.href;
   const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const planningMapHref = new URL('./styles/planning-map-fit.css', import.meta.url).href;
