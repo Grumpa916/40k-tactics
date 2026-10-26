@@ -291,3 +291,51 @@
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace__map .battlefield-map__meta,
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace__map .battlefield-map__notice{display:none!important}
 .prototype-unit-stats em{color:#c8e99c;font-size:.82em;font-style:normal}
+
+/* Live battle: one score row, visible phase chips, and a map-sized workspace. */
+.battle-shell.is-tabletop-experiment .prototype-workspace-tools[hidden] { display:none!important; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] > .battle-shell__tabletop-header { display:none!important; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools {
+  display:grid; grid-template-columns:minmax(0,1fr); gap:4px; min-height:0;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host { min-width:0; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__status-summary {
+  display:flex; min-height:44px; margin:0; padding:2px 8px; flex-wrap:nowrap; gap:8px;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__round-summary {
+  flex-direction:row; align-items:center; gap:6px; white-space:nowrap;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__round-summary strong { font-size:13px; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__round-summary span { font-size:12px; opacity:1; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summaries { display:flex; min-width:0; flex:1; gap:5px; flex-wrap:nowrap; justify-content:flex-end; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary { min-width:0; padding:2px 5px; gap:4px; font-size:12px; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary strong { max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__summary-value,
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__summary-time { min-height:40px; padding:3px 6px; white-space:nowrap; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary:not(.is-active) .battle-shell__summary-time { display:none; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-row { display:flex; align-items:center; gap:5px; min-width:0; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips { display:flex; flex:1; gap:5px; min-width:0; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { flex:1; min-width:0; min-height:40px; padding:4px 8px; font-size:12px; font-weight:750; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button[aria-pressed=true] { background:#c4e99b; border-color:#c4e99b; color:#17212b; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > summary { min-height:40px; width:44px; justify-content:center; padding:0; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div { grid-template-columns:1fr; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] {
+  position:fixed; right:calc(10px + env(safe-area-inset-right,0px)); bottom:calc(66px + env(safe-area-inset-bottom,0px)); z-index:1100;
+  min-width:68px; min-height:48px; padding:5px 8px; font-size:12px;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] > [data-phase-progression-host] {
+  position:fixed; left:10px; right:calc(88px + env(safe-area-inset-right,0px)); bottom:calc(66px + env(safe-area-inset-bottom,0px)); z-index:1090;
+  max-width:none; margin:0;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress { padding:0; margin:0; border:0; background:transparent; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress > div { display:none; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress button { width:100%; min-height:48px; }
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-screen--tabletop,
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace { grid-template-columns:minmax(0,1fr); }
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-tabletop__control-panel,
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace__panel { display:none; }
+@media (max-width:760px), (orientation:portrait) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] { display:block; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary strong { max-width:62px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { padding:3px; font-size:10px; }
+}
