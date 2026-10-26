@@ -4,6 +4,7 @@ import { renderActionReceipt } from './action-receipt.js';
 import { finishCombatUnit } from '../application/combat-activation-workflow.js';
 import { isCombatActivationFinished } from '../rules/combat-activation-state.js';
 import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
+import { getBattleRosterUnit, getBattleUnitDatasheet } from '../rules/battle-unit-reference.js';
 import { getFightViewModel, getFightAttackOptions, getFightWeaponOptions, activateFightUnit, resolveFightAttack, finishFightPhase } from '../application/fight-workflow.js';
 import { getFightAdvisorContext } from '../application/fight-advisor-context.js';
 import { fightAdvisory } from './fight-advisor.js';
@@ -33,6 +34,15 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       : [];
     if (!precisionOptions.some(option => option.unitId === precisionAllocationId)) precisionAllocationId = null;
     const unit = state.units.find(unit => unit.id === attackerId);
+    const rosterUnit = unit ? getBattleRosterUnit(state, unit) : null;
+    const loadout = rosterUnit?.loadoutValidation;
+    const weaponNotice = unit && !weapons.length
+      ? ['source-invalid', 'rules-invalid', 'manual-selection-required', 'unverified'].includes(loadout?.status)
+        ? `No melee weapon is available because ${unit.name}'s saved wargear needs review. ${loadout.errors?.join(' ') || 'Review this unit’s equipment in the army roster.'}`
+        : getBattleUnitDatasheet(state, unit)?.weapons?.length
+          ? `No melee weapon profile is available for ${unit.name}'s saved equipment. Review this unit’s wargear in the army roster.`
+          : `No combat datasheet was found for ${unit.name}. Review this unit in the army roster.`
+      : '';
     const active = model.activations.some(item => item.unitId === attackerId && item.actionType !== 'not_fight');
     const available = [...model.candidates.fightsFirst, ...model.candidates.normal];
     const chooseButtons = (units, blocked = false) => units.map(item => `<button type="button" class="fight-order__unit ${item.ownerId === perspectivePlayerId ? 'is-friendly' : 'is-opponent'}" data-fight-select="${esc(item.unitId)}" aria-pressed="${item.unitId === attackerId}" ${blocked ? 'disabled' : ''}>${esc(item.name)}</button>`).join('');
@@ -54,6 +64,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       </details>
       ${unit ? `<p>${active ? 'Fight activation recorded · add weapon/target results below.' : 'Compare targets, then record the first attack to begin this activation.'}</p>
         <label>Melee weapon<select data-fight-weapon><option value="">Choose weapon…</option>${weapons.map(weapon => `<option value="${esc(weapon.id)}" ${weapon.id === weaponId ? 'selected' : ''}>${esc(weapon.name)}${weapon.characteristics?.extraAttacks ? ' · Extra Attacks' : ''}</option>`).join('')}</select></label>
+        ${weaponNotice ? `<p class="combat-workspace__error" role="status">${esc(weaponNotice)}</p>` : ''}
         ${selectedWeapon?.characteristics?.extraAttacks ? '<p><strong>Extra Attacks:</strong> record this weapon in addition to the model’s main melee weapon during the same activation.</p>' : ''}
         <label>Target · tap an enemy marker<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
         ${precisionOptions.length ? `<label>Precision allocation · optional<select data-fight-precision><option value="">Normal allocation</option>${precisionOptions.map(option => `<option value="${esc(option.unitId)}" ${option.unitId === precisionAllocationId ? 'selected' : ''}>${esc(option.name)}</option>`).join('')}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ''}
