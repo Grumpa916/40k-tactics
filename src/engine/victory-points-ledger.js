@@ -28,6 +28,18 @@ function getEffectiveAwardEvents(state, playerId = null) {
     .map(({ event }) => ({ eventId: event.id ?? null, ...event.payload }));
 }
 
+export function getRemainingPrimaryVictoryPoints(state, playerId, scoringTiming = null) {
+  const awards = getEffectiveAwardEvents(state, playerId).filter(entry => entry.category === 'primary');
+  const round = state?.battle?.round ?? 0, turn = state?.turn ?? 0;
+  const usedThisTurn = awards.filter(entry => entry.round === round && entry.turn === turn)
+    .reduce((total, entry) => total + entry.amount, 0);
+  const usedThisGame = awards.reduce((total, entry) => total + entry.amount, 0);
+  const turnRemaining = scoringTiming === SCORING_TIMINGS.END_OF_BATTLE
+    ? Number.POSITIVE_INFINITY : VICTORY_POINT_CAPS.primaryPerTurn - usedThisTurn;
+  return Math.max(0, Math.min(turnRemaining,
+    VICTORY_POINT_CAPS.primaryPerGame - usedThisGame));
+}
+
 function calculateCappedAward(state, {
   playerId, amount, category, missionDefinitionId, missionMode, scoringTiming, turn, round
 }) {

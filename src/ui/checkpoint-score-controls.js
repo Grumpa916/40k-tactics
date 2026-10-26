@@ -1,6 +1,7 @@
 import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
 import { getSecondaryMissionHistory } from '../rules/secondary-mission-lifecycle.js';
 import { missionConditionEvidence } from '../rules/checkpoint-mission-evidence.js';
+import { estimateCheckpointVp } from '../rules/checkpoint-vp-estimate.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export const checkpointScoreKey = (state, playerId, checkpoint) => [state.battle?.round ?? 0, state.turn ?? 0, playerId, checkpoint].join(':');
 
@@ -65,8 +66,11 @@ export function renderCheckpointScore(state, group, mission) {
   }
   if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
   const vpOptions = getMissionVpOptions(mission);
+  const estimate = estimateCheckpointVp(state, group.playerId, mission, group.checkpoint);
+  const estimateMarkup = estimate ? `<p class="checkpoint-vp-estimate" role="status"><strong>Estimated from recorded state: ${estimate.points} VP</strong>${estimate.partial ? ' · Partial evidence; other conditions or unrecorded control may change this.' : ''}${estimate.capped ? ' · Limited by remaining Primary VP cap.' : ''} Verify on the tabletop before choosing VP.</p>` : '';
   const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
   return `<form data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}">
+    ${estimateMarkup}
     <label>Confirm VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}" ${vpOptions.length ? '' : 'disabled'}><option value="">${vpOptions.length ? 'Choose VP…' : 'No configured VP value'}</option>${optionMarkup}</select></label>
     <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Confirm score${category === 'secondary' ? ' & remove card' : ''}</button>
     <p>Confirm against the tabletop before awarding. Existing VP caps apply.</p>
