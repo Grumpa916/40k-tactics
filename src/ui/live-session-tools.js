@@ -19,8 +19,8 @@ export function mountLiveSessionTools({ root, session, store, onRetryCloud = () 
     const correction = session.getLastCorrection?.();
     const summary = root.querySelector('.prototype-phase-menu > summary');
     if (summary) {
-      summary.textContent = 'Phases & tools ' + (status.mode === 'saved' ? '●' : status.mode === 'error' ? '!' : '○');
-      summary.setAttribute('aria-label', 'Phases and game tools. ' + status.message);
+      summary.textContent = status.mode === 'saved' ? '●' : status.mode === 'error' ? '!' : '⋯';
+      summary.setAttribute('aria-label', 'Game tools. ' + status.message);
       summary.setAttribute('title', status.message);
     }
     if (tools) tools.innerHTML = '<button type="button" data-live-tools-open>' + esc(status.message) + '</button>' +

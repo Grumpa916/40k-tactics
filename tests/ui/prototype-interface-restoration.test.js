@@ -77,9 +77,9 @@ test('Battle view starts with the panel closed and keeps the phase progression a
   x.controller.refresh();
   assert.equal(x.shell.attrs['data-controls-collapsed'],'false');
   x.click('data-workspace-focus');
-  assert.equal(x.shell.attrs['data-battle-focus'],'false');
+  assert.equal(x.shell.attrs['data-battle-focus'],'true');
   assert.equal(x.progression.parentElement,x.shell);
-  x.click('data-workspace-focus');x.click('data-workspace-panel');
+  x.click('data-workspace-panel');
   assert.equal(x.shell.attrs['data-controls-collapsed'],'true');
   x.controller.destroy();assert.equal(x.handlers.click,undefined);
 });

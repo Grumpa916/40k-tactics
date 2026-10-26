@@ -9,7 +9,7 @@ test('Tabletop HUD exposes visible phase chips and reuses the score controls', (
   assert.ok(src.includes('prototype-phase-chips'));
   assert.ok(src.includes('data-workspace-score-host'));
   assert.ok(src.includes('scoreHost.append?.(summary)'));
-  assert.ok(src.includes("focus ? 'Overview' : 'Tabletop'"));
+  assert.equal(src.includes('data-workspace-focus'), false);
   assert.equal(src.includes('data-open-score-adjust-kind="vp"'), false);
   assert.equal(src.includes('data-open-score-adjust-kind="cp"'), false);
   assert.equal(src.includes('data-toggle-turn-clock'), false);
