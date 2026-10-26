@@ -7,6 +7,9 @@ import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_KATAH } from '../../src/
 import { getAdeptusCustodesWargearRuleSet } from '../../src/data/adeptus-custodes-wargear-rules.js';
 import { validateWargearLoadout } from '../../src/rules/wargear-loadout-validation.js';
 import { detachmentOptions } from '../../src/ui/army-builder-options.js';
+import { createGameState } from '../../src/state/game-state.js';
+import { applyArmyRosterToBattle } from '../../src/engine/army-roster-transitions.js';
+import { getFightWeaponOptions } from '../../src/application/fight-workflow.js';
 
 const exportText = `Adeptus Custodes\nGuardians of the Throne (3 Detachment Points)\nOnslaught (3,000 Points)\n\nCHARACTERS\n\nBlade Champion (175 Points)\n  • 1x Vaultswords\n\nBATTLELINE\n\nCustodian Guard Sodality (240 Points)\n  • 3x Custodian Guard\n     ◦ 3x Guardian Spear\n\nOTHER DATASHEETS\n\nTelemon Heavy Dreadnought (280 Points)\n  • 1x Dual Caestus Fists\n  • 1x Spiculus Bolt Launcher\n  • 2x Twin Neutronium Cascade Projectors`;
 
@@ -125,4 +128,33 @@ test('multi-piece Custodes loadouts accept exact legal bundles and reject invent
     {name:'Guardian Spear',quantity:1},{name:'Praesidium Shield',quantity:1}
   ]));
   assert.equal(captainInvalid.status,'rules-invalid');
+});
+
+test('imported Shield-Captain exposes only its equipped melee weapon in Fight', () => {
+  for (const [selection, shield, expected] of [
+    ['Guardian Spear', false, 'Guardian Spear'],
+    ['Castellan Axe', false, 'Castellan Axe'],
+    ['Pyrithite Spear', true, 'Pyrithite Spear'],
+    ['Eternity-pattern Paragon Blade', true, 'Eternity-pattern Paragon Blade']
+  ]) {
+    const text = `Adeptus Custodes\nCHARACTERS\nShield-Captain (205 Points)\n  • 1x ${selection}${shield ? '\n  • 1x Praesidium Shield' : ''}`;
+    const roster = importWarhammerAppRoster({ text, faction:'Adeptus Custodes', id:'custodes-fight', name:'Custodes fight' }).roster;
+    assert.equal(roster.units[0].loadoutValidation.status, 'rules-reviewed-valid');
+    const initial = createGameState({ phase:'setup', battle:{id:'fight-test',status:'setup',round:0}, players:[{id:'p1'},{id:'p2'}] });
+    const state = applyArmyRosterToBattle(initial, { playerId:'p2', roster });
+    const captain = state.units.find(unit => unit.ownerId === 'p2');
+    assert.deepEqual(getFightWeaponOptions(state, { attackerId:captain.id }).map(weapon => weapon.name), [expected]);
+  }
+});
+
+test('combined Shield-Captain spear and shield line resolves to its melee profile', () => {
+  const text = 'Adeptus Custodes\nCHARACTERS\nShield-Captain (205 Points)\n  • 1x Pyrithite Spear and 1 Praesidium Shield';
+  const { roster } = importWarhammerAppRoster({ text, faction:'Adeptus Custodes', id:'combined-captain', name:'Combined captain' });
+  const selected = roster.units[0];
+  assert.equal(selected.loadoutValidation.status, 'rules-reviewed-valid');
+  assert.deepEqual(selected.equippedWargear.map(item => item.name), ['Pyrithite Spear', 'Praesidium Shield']);
+  const initial = createGameState({ phase:'setup', battle:{id:'fight-test',status:'setup',round:0}, players:[{id:'p1'},{id:'p2'}] });
+  const state = applyArmyRosterToBattle(initial, { playerId:'p2', roster });
+  const captain = state.units.find(unit => unit.ownerId === 'p2');
+  assert.deepEqual(getFightWeaponOptions(state, { attackerId:captain.id }).map(weapon => weapon.name), ['Pyrithite Spear']);
 });
