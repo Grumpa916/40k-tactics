@@ -1,24 +1,31 @@
 // Display labels only: unit IDs, names and gameplay state remain unchanged.
 const SHORT_NAMES = {
-  'norn emissary': 'Norn Emiss.',
-  'norn assimilator': 'Norn Assim.',
-  'winged hive tyrant': 'Winged Tyrant',
+  'norn emissary': 'Norn Emiss',
+  'norn assimilator': 'Norn Assim',
+  'winged hive tyrant': 'Winged Tyr',
   'winged tyranid prime': 'Winged Prime',
-  'tyranid warriors with ranged bio-weapons': 'Warriors Rng',
-  'tyranid warriors with melee bio-weapons': 'Warriors Mel',
-  'screamer-killer': 'Scream-Killer',
+  'tyranid warriors with ranged bio-weapons': 'Warriors R',
+  'tyranid warriors with melee bio-weapons': 'Warriors M',
+  'screamer-killer': 'Scream K',
+  'trajann valoris': 'Trajann',
+  'blade champion': 'Blade Champ',
+  'shield-captain': 'Shield Capt',
+  'sentinel guard sodality': 'Sentinel',
+  'aquilon terminators with solarite power talons': 'Aquilon T',
+  'aquilon terminators with solarite power gauntlets': 'Aquilon G',
+  'prosecutor squad': 'Prosecutor',
 };
 
 export function shortMapUnitName(unit) {
   const name = String(unit?.name || unit?.id || 'Unit').trim().replace(/\s+/g, ' ');
   const known = SHORT_NAMES[name.toLowerCase()];
   if (known) return known;
-  if (name.length <= 12) return name;
+  if (name.length <= 11) return name;
   const words = name.split(' ');
   const shorten = (word, length) => word.length <= length ? word : word.slice(0, length - 1) + '…';
-  if (words.length === 1) return shorten(name, 12);
+  if (words.length === 1) return shorten(name, 11);
   // Keep both the beginning and distinguishing final word of unfamiliar names.
-  return shorten(words[0], 5) + ' ' + shorten(words.at(-1), 6);
+  return shorten(words[0], 4) + ' ' + shorten(words.at(-1), 5);
 }
 
 export function mapUnitLabels(units = []) {
