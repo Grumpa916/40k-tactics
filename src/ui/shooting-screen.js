@@ -92,6 +92,7 @@ export function createShootingScreen(container, {
   let actualDamage = "0";
   let attackError = "";
   let actionPickerOpen = false;
+  let lastRenderedSelection = null;
 
   function clearPending() {
     pendingUnitId = null;
@@ -292,6 +293,12 @@ export function createShootingScreen(container, {
     }
 
     restoreView();
+    const selection = [selectedAttackerId, selectedWeaponId, selectedTargetId].join(':');
+    if (selection !== lastRenderedSelection) {
+      const controls = container.querySelector?.('.shoot-tabletop__control-scroll');
+      if (controls) controls.scrollTop = 0;
+      lastRenderedSelection = selection;
+    }
     if (layoutMode === "tabletop" && selectedTargetId) {
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         if (marker.getAttribute?.("data-map-unit-id") === selectedTargetId) {
@@ -382,11 +389,6 @@ export function createShootingScreen(container, {
         attackError = "";
         render();
       }));
-      if (selectedTargetId) {
-        const scroll = container.querySelector?.('.shoot-tabletop__control-scroll');
-        const advisor = container.querySelector?.('.shoot-tabletop__advisor');
-        if (scroll && advisor) scroll.scrollTop = Math.max(0, advisor.offsetTop - 8);
-      }
       container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
         actionPickerOpen = !actionPickerOpen;
         attackError = "";
