@@ -6,6 +6,7 @@ import { getFightState } from "../rules/fight-state.js";
 import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
 import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
+import { unitDisplayLabels } from "../ui/map-unit-labels.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -13,6 +14,7 @@ function playerName(player) {
 
 function describeUnit(state, unitId, perspectivePlayerId) {
   const unit = state.units.find((item) => item?.id === unitId);
+  const displayName = unitDisplayLabels(state.units).get(unitId);
   if (!unit) {
     return {
       unitId,
@@ -28,7 +30,7 @@ function describeUnit(state, unitId, perspectivePlayerId) {
 
   return {
     unitId: unit.id,
-    name: unit.name ?? unit.id,
+    name: displayName ?? unit.name ?? unit.id,
     ownerId: unit.ownerId ?? null,
     ownerName: playerName(owner),
     side: perspectivePlayerId

@@ -1,0 +1,18 @@
+.battle-shell.is-review-view .battle-shell__workspace{display:block;min-width:0}
+.battle-shell.is-review-view .battle-shell__side-panel{display:none}
+.battle-shell.is-review-view .battle-shell__content{min-width:0;overflow:visible}
+.endgame-review{max-width:1100px;margin:0 auto;padding:16px;color:#e8eef5;line-height:1.5}
+.endgame-review h2{font-size:28px;margin:4px 0 12px}.endgame-review h3{font-size:19px;margin:0 0 12px}
+.endgame-review__eyebrow{color:#b8c9dc;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.endgame-review section,.endgame-review>details,.endgame-review header{margin-bottom:16px;border:1px solid #465766;border-radius:12px;padding:16px;background:#15222d}
+.endgame-review p{margin:8px 0 12px}.endgame-review__actions{display:flex;gap:12px;flex-wrap:wrap}
+.endgame-review button{min-height:44px;padding:10px 16px;background:#27475c;color:#fff;border:1px solid #84b3d0;border-radius:8px;font:inherit;cursor:pointer}
+.endgame-review button:disabled{opacity:.5;cursor:default}.endgame-review button:focus-visible,.endgame-review summary:focus-visible{outline:3px solid #c4e99b;outline-offset:3px}
+.endgame-review summary{padding:12px 0;min-height:24px;font-weight:700;cursor:pointer}.endgame-review details{margin:8px 0}
+.endgame-review__table{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.endgame-review table{border-collapse:collapse;width:100%;font-size:13px}.endgame-review caption{text-align:left;color:#b8c9dc;padding-bottom:10px}
+.endgame-review th,.endgame-review td{text-align:left;padding:10px;border-bottom:1px solid #42515c;vertical-align:top;min-width:65px}
+.endgame-review th:first-child{min-width:130px}.endgame-review__lesson{padding:12px;border-left:3px solid #a2c990;margin:12px 0;background:#20313b}
+.endgame-review__confirm{flex-basis:100%}.endgame-review__confirm label{display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px}.endgame-review input{width:22px;height:22px}
+.endgame-review li{margin-bottom:10px}.endgame-review__confirm button{margin:8px 8px 0 0}
+@media(max-width:650px){.endgame-review{padding:8px}.endgame-review section,.endgame-review header{padding:12px}}

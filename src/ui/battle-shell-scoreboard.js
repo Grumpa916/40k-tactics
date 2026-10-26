@@ -15,7 +15,8 @@ export function phaseLabel(phase) {
     movement: "Movement",
     shooting: "Shooting",
     charge: "Charge",
-    fight: "Fight"
+    fight: "Fight",
+    review: "Endgame review"
   })[phase] ?? phase;
 }
 
