@@ -8,7 +8,8 @@ const LIVE_PHASES = Object.freeze([
   ['movement', 'Movement'],
   ['shooting', 'Shooting'],
   ['charge', 'Charge'],
-  ['fight', 'Fight']
+  ['fight', 'Fight'],
+  ['review', 'Game review']
 ]);
 
 const esc = value => String(value ?? '')
