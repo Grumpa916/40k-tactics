@@ -8,39 +8,31 @@ const LIVE_PHASES = Object.freeze([
   ['movement', 'Movement'],
   ['shooting', 'Shooting'],
   ['charge', 'Charge'],
-  ['fight', 'Fight'],
-  ['review', 'Game review']
+  ['fight', 'Fight']
 ]);
-
-const esc = value => String(value ?? '')
-  .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
 export function renderPrototypeWorkspaceTools() {
   const href = new URL('./styles/prototype-workspace.css', import.meta.url).href;
   const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const planningMapHref = new URL('./styles/planning-map-fit.css', import.meta.url).href;
   const phases = LIVE_PHASES.map(([id, label]) =>
-    `<button type="button" data-battle-phase-button="${id}">${label}</button>`
+    `<button type="button" data-battle-phase-button="${id}" aria-pressed="false">${label}</button>`
   ).join('');
   return `<link rel="stylesheet" href="${href}"><link rel="stylesheet" href="${navigationHref}"><link rel="stylesheet" href="${planningMapHref}"><style>
     .battle-shell.is-tabletop-experiment .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
-    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header .battle-shell__status-summary{display:none!important}
-    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-header{display:block!important;min-height:0!important}
-    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-topline{display:block!important;min-height:0!important}
-    .battle-shell.is-tabletop-experiment[data-battle-focus="true"] .battle-shell__tabletop-missions{width:100%;min-width:0}
   </style><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
-    <div class="tabletop-live-strip" data-workspace-live-strip></div>
-    <details class="prototype-phase-menu"><summary>Phases</summary><div>${phases}</div></details>
-    <button type="button" data-workspace-next-phase data-advance-game-phase hidden>Next phase → Movement</button>
-    <button type="button" data-workspace-focus>Overview</button>
-    <button type="button" data-workspace-panel aria-expanded="true">Hide panel ⇥</button>
+    <div class="prototype-score-host" data-workspace-score-host></div>
+    <div class="prototype-phase-row">
+      <div class="prototype-phase-chips" aria-label="Battle phases">${phases}</div>
+      <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-workspace-focus>Overview</button><button type="button" data-battle-phase-button="review">Game review</button></div></details>
+    </div>
+    <button type="button" data-workspace-panel aria-expanded="false" aria-label="Show phase panel">Panel</button>
   </nav>`;
 }
 
 // UI-only preferences persist across shell/phase renders without touching game state.
 export function createPrototypeWorkspace(container, {session, gameData = {}}) {
-  let focus = true, collapsed = false, unitId = null, logOpen = false, returnFocus = null;
+  let focus = true, collapsed = true, unitId = null, logOpen = false, returnFocus = null;
 
   function refresh() {
     const shell = container.querySelector?.('.battle-shell');
@@ -51,22 +43,14 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     shell.setAttribute('data-controls-collapsed', String(combat && collapsed));
     const tools = container.querySelector('[data-prototype-tools]');
     if (tools) tools.hidden = !combat;
-    const progression = container.querySelector('[data-phase-progression-host]');
-    if (combat && focus && tools && progression && progression.parentElement !== tools) tools.append?.(progression);
-    else if ((!combat || !focus) && progression?.parentElement === tools) shell.insertBefore?.(progression, container.querySelector('[data-battle-workspace]'));
-
-    const strip = container.querySelector('[data-workspace-live-strip]');
-    if (strip) {
-      const phase = String(state.phase ?? '').replaceAll('_', ' ');
-      strip.innerHTML = `<span class="tabletop-live-round">R${esc(state.battle?.round ?? '—')}</span>` +
-        `<span class="tabletop-live-phase">${esc(phase)}</span>`;
-    }
-
-    const nextPhaseButton = container.querySelector('[data-workspace-next-phase]');
-    if (nextPhaseButton) {
-      nextPhaseButton.hidden = !(combat && state.phase === 'command');
-      nextPhaseButton.textContent = 'Next phase → Movement';
-    }
+    const summary = container.querySelector('[data-battle-status-summary]');
+    const scoreHost = container.querySelector('[data-workspace-score-host]');
+    const headerTopline = container.querySelector('.battle-shell__tabletop-topline');
+    if (summary && combat && focus && scoreHost && summary.parentElement !== scoreHost) scoreHost.append?.(summary);
+    else if (summary && (!combat || !focus) && headerTopline && summary.parentElement !== headerTopline) headerTopline.prepend?.(summary);
+    container.querySelectorAll?.('.prototype-phase-chips [data-battle-phase-button]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.getAttribute('data-battle-phase-button') === state.phase));
+    });
     const focusButton = container.querySelector('[data-workspace-focus]');
     if (focusButton) {
       focusButton.textContent = focus ? 'Overview' : 'Tabletop';
@@ -74,7 +58,8 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     }
     const panelButton = container.querySelector('[data-workspace-panel]');
     if (panelButton) {
-      panelButton.textContent = collapsed ? 'Show panel ⇤' : 'Hide panel ⇥';
+      panelButton.textContent = collapsed ? 'Panel' : 'Close panel';
+      panelButton.setAttribute('aria-label', collapsed ? 'Show phase panel' : 'Hide phase panel');
       panelButton.setAttribute('aria-expanded', String(!collapsed));
     }
     const overlay = container.querySelector('[data-army-roster-overlay]');

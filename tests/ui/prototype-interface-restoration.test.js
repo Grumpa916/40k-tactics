@@ -67,19 +67,20 @@ function workspaceFixture(session) {
   const click=(attr,value='')=>{const target={getAttribute:()=>value,closest:selector=>selector===`[${attr}]`?target:null};handlers.click({target});};
   return {shell,tools,progression,overlay,controller,click,handlers};
 }
-test('Battle view and side-panel preferences survive refresh; phase progression remains available',()=>{
+test('Battle view starts with the panel closed and keeps the phase progression available',()=>{
   const initial=state(), x=workspaceFixture({getState:()=>initial});
   x.controller.refresh();
   assert.equal(x.shell.attrs['data-battle-focus'],'true');
-  assert.equal(x.progression.parentElement,x.tools);
+  assert.equal(x.shell.attrs['data-controls-collapsed'],'true');
+  assert.equal(x.progression.parentElement,x.shell);
   x.click('data-workspace-panel');
   x.controller.refresh();
-  assert.equal(x.shell.attrs['data-controls-collapsed'],'true');
+  assert.equal(x.shell.attrs['data-controls-collapsed'],'false');
   x.click('data-workspace-focus');
   assert.equal(x.shell.attrs['data-battle-focus'],'false');
   assert.equal(x.progression.parentElement,x.shell);
   x.click('data-workspace-focus');x.click('data-workspace-panel');
-  assert.equal(x.shell.attrs['data-controls-collapsed'],'false');
+  assert.equal(x.shell.attrs['data-controls-collapsed'],'true');
   x.controller.destroy();assert.equal(x.handlers.click,undefined);
 });
 test('unit detail manually changes either army Battle-shock in Shooting through the persistent command engine',()=>{
