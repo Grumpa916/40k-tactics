@@ -1,3 +1,4 @@
+import { createEndgameReviewScreen } from './endgame-review-screen.js';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
 import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
@@ -47,7 +48,8 @@ const SCREEN_FACTORIES = Object.freeze({
   movement: createMovementScreen,
   shooting: createShootingScreen,
   charge: createChargeScreen,
-  fight: createFightScreen
+  fight: createFightScreen,
+  review: createEndgameReviewScreen
 });
 
 function escapeHtml(value) {
@@ -82,7 +84,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
     ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
-    : PHASES)];
+    : PHASES), { id: "review", label: "Game review", status: "live" }];
   const phaseItems = visiblePhases.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
@@ -121,11 +123,12 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     'aria-controls="battle-right-panel-body" aria-expanded="' + String(!rightPanelCollapsed) + '">' +
     '<span data-panel-toggle-label>' + (rightPanelCollapsed ? 'Show references ‹' : 'Hide references ›') + '</span></button>';
   const isSetupView = viewedPhase === "setup";
+  const isReviewView = viewedPhase === "review";
   const isScrollablePreparationView = viewedPhase === "deployment";
   // Only Shooting currently owns an internal scroll region. Other phase screens
   // must retain document scrolling so their controls remain reachable on iPad.
   const isScrollableLiveView = ["command", "movement", "charge", "fight"].includes(viewedPhase);
-  const tabletopExperiment = layoutMode === "tabletop" && !isSetupView;
+  const tabletopExperiment = layoutMode === "tabletop" && !isSetupView && !isReviewView;
   const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
   const layoutSwitch = "";
   const workspace = '<section class="battle-shell__workspace' + (isSetupView ? ' is-setup-view' : '') + '" data-battle-workspace' +
@@ -154,7 +157,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
-  container.innerHTML = '<main class="battle-shell' + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
+  container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
     shellLiveHeader + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
@@ -216,7 +219,7 @@ export function createBattleShell(container, {
   let setupWorkspaceTab = "saves";
   let setupNavigationMessage = "";
   let phaseProgressionMessage = "";
-  let viewedPhase = session.getState()?.phase ?? "command";
+  let viewedPhase = session.getState()?.phase === "complete" ? "review" : session.getState()?.phase ?? "command";
   let observedGamePhase = session.getState()?.phase ?? null;
   let scoringReminder = null;
   let scoringReviewCheckpoint = null;
@@ -388,7 +391,7 @@ export function createBattleShell(container, {
     if (actualPhase !== observedGamePhase) {
       const previousPhase = observedGamePhase;
       observedGamePhase = actualPhase;
-      viewedPhase = actualPhase;
+      viewedPhase = actualPhase === "complete" ? "review" : actualPhase;
       // A checkpoint review belongs to one specific transition. Do not carry it
       // into a later game phase or present it as current after the state advances.
       scoringReviewCheckpoint = null;
@@ -829,7 +832,7 @@ export function createBattleShell(container, {
     const button = event.target?.closest?.("[data-battle-phase-button]");
     if (!button || !container.contains(button)) return;
     const nextPhase = button.getAttribute("data-battle-phase-button");
-    if (nextPhase !== "setup" && !PHASES.some((phase) => phase.id === nextPhase) &&
+    if (nextPhase !== "setup" && nextPhase !== "review" && !PHASES.some((phase) => phase.id === nextPhase) &&
         !(nextPhase === "deployment" && session.getState()?.battle?.status === "deployment")) return;
     if (nextPhase !== "command") {
       scoringReviewCheckpoint = null;

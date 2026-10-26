@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mapUnitLabels, shortMapUnitName } from '../../src/ui/map-unit-labels.js';
+import { mapUnitLabels, shortMapUnitName, unitDisplayLabels } from '../../src/ui/map-unit-labels.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 
 test('compact labels retain recognizable names and distinguish Norn variants', () => {
@@ -26,6 +26,20 @@ test('duplicate numbers remain stable through casualties, reserves and perspecti
     assert.match(html, />Exocrine 2<\/div>/);
     assert.doesNotMatch(html, />Exocrine 1<\/div>/);
   }
+});
+
+test('full unit names use the same stable duplicate numbers as map markers', () => {
+  const units = [
+    {...unit('a','p1'),name:'Sentinel Guard Sodality'},
+    {...unit('b','p1'),name:'Sentinel Guard Sodality'},
+    {...unit('c','p2'),name:'Sentinel Guard Sodality'}
+  ];
+  const labels = unitDisplayLabels(units);
+  assert.equal(labels.get('a'), 'Sentinel Guard Sodality 1');
+  assert.equal(labels.get('b'), 'Sentinel Guard Sodality 2');
+  assert.equal(labels.get('c'), 'Sentinel Guard Sodality');
+  assert.equal(mapUnitLabels(units).get('a'), 'Sent… Sodal… 1');
+  assert.equal(mapUnitLabels(units).get('b'), 'Sent… Sodal… 2');
 });
 
 test('selected full name is visible and escaped; activation badge and unit identity survive', () => {

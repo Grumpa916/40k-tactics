@@ -2,6 +2,7 @@ import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getTacticalCombatRecommendations } from "../rules/tactical-combat-recommendations.js";
+import { unitDisplayLabels } from "../ui/map-unit-labels.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -9,11 +10,12 @@ function playerName(player) {
 
 function describeUnit(state, unitId, perspectivePlayerId) {
   const unit = state.units.find((item) => item?.id === unitId);
+  const displayName = unitDisplayLabels(state.units).get(unitId);
   if (!unit) return { unitId, name: unitId, ownerId: null, ownerName: "Unknown", side: null, status: null };
   const owner = state.players.find((player) => player?.id === unit.ownerId);
   return {
     unitId: unit.id,
-    name: unit.name ?? unit.id,
+    name: displayName ?? unit.name ?? unit.id,
     ownerId: unit.ownerId ?? null,
     ownerName: playerName(owner),
     side: perspectivePlayerId ? unit.ownerId === perspectivePlayerId ? "self" : "opponent" : null,

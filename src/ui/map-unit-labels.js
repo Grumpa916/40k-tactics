@@ -38,3 +38,24 @@ export function mapUnitLabels(units = []) {
   }
   return labels;
 }
+
+// Full names for selectors and advisor text, using the same stable suffixes as
+// the map so a player can identify a duplicate consistently across the UI.
+export function unitDisplayLabels(units = []) {
+  const groups = new Map();
+  for (const unit of units) {
+    if (!unit?.id) continue;
+    const label = shortMapUnitName(unit);
+    const key = JSON.stringify([unit.ownerId, label.toLowerCase()]);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(unit);
+  }
+  const labels = new Map();
+  for (const group of groups.values()) {
+    group.forEach((unit, index) => {
+      const name = String(unit.name || unit.id || 'Unit').trim().replace(/\\s+/g, ' ');
+      labels.set(unit.id, name + (group.length > 1 ? ' ' + (index + 1) : ''));
+    });
+  }
+  return labels;
+}
