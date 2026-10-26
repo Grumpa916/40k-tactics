@@ -5,6 +5,7 @@ import { getPostFightTargetStates } from "./post-fight-target-states.js";
 import { evaluateShootingOpportunity } from "./tactical-shooting-opportunity.js";
 import { getCombatFormationRoot } from "./battle-unit-reference.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
+import { getCustodesShootingRangeContext } from "./custodes-tactical-advisor.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
@@ -69,7 +70,9 @@ export function getShootingTargetPriorities(state, {
   const proximities = spatial.unitProximity.filter(
     (item) => item.unitId === attackerId
   );
-  const range = rangeFromWeapon(weapon);
+  const baseRange = rangeFromWeapon(weapon);
+  const custodesRange = getCustodesShootingRangeContext(state, { playerId, unitId: attackerId, baseRange });
+  const range = custodesRange.extendedRange ?? baseRange;
   const priorities = [];
 
   for (const proximity of proximities) {
@@ -142,11 +145,15 @@ export function getShootingTargetPriorities(state, {
       reasons.push("Estimated destruction chance is approximately " + (destructionProbability * 100).toFixed(0) + "%.");
     }
     if (range != null) {
-      reasons.push(
-        proximity.distance <= range
-          ? "Target is within the weapon's approximate range."
-          : "Target is just beyond the weapon's approximate range; exact tabletop measurement is required."
-      );
+      if (custodesRange.available && Number.isFinite(baseRange) && proximity.distance > baseRange && proximity.distance <= range) {
+        reasons.push(`Target is outside the base ${baseRange}\" range but inside the ${range}\" Aquilan Shield Salvus range; confirm Salvus if you choose this shot.`);
+      } else {
+        reasons.push(
+          proximity.distance <= range
+            ? "Target is within the weapon's approximate range."
+            : "Target is just beyond the weapon's approximate range; exact tabletop measurement is required."
+        );
+      }
     }
 
     priorities.push({
@@ -158,6 +165,9 @@ export function getShootingTargetPriorities(state, {
       targetDistance: proximity.distance,
       targetBand: proximity.band,
       weaponId: weapon?.id ?? null,
+      baseRange,
+      effectiveRange: range,
+      custodesRange,
       rangeStatus,
       expectedDamage,
       destructionProbability,
