@@ -91,14 +91,15 @@ const state = createGameState({
 
 const session = createGameSession(state);
 
-function bindNativeMissionSummaryToggle(root) {
+function bindMissionSummaryToggle(root) {
   root?.addEventListener?.("click", (event) => {
     const summary = event.target?.closest?.(".battle-mission-summary__section > summary");
     if (!summary || !root.contains?.(summary)) return;
-    // Let <details>/<summary> perform its native open/close behavior. This listener
-    // is registered before the battle shell so Safari does not also hit the older
-    // manual details.open click workaround and immediately undo the native toggle.
+    // Handle exactly one toggle on Safari, even when another shell click handler
+    // would also update the same <details> element.
+    event.preventDefault?.();
     event.stopImmediatePropagation?.();
+    summary.parentElement.open = !summary.parentElement.open;
   });
 }
 
@@ -107,7 +108,7 @@ function initializeBattleDemo() {
     ? "classic"
     : "tabletop";
   const root = document.getElementById("battle-app");
-  bindNativeMissionSummaryToggle(root);
+  bindMissionSummaryToggle(root);
   installTerritoryMapOverlay(root, { session, perspectivePlayerId: "p1" });
   let tools;
   const app = startLiveApp({
