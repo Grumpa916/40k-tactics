@@ -11,6 +11,7 @@ import { captureTurnStartSnapshot } from "./scoring-transitions.js";
 import { updateTurnClockForPlayer } from "../state/turn-clock.js";
 import { pauseTurnClock, startTurnClock } from "./turn-clock-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -178,6 +179,13 @@ export function changePhase(state, { phase } = {}) {
     if (pendingRedraw && pendingRedraw.round === (state.battle?.round ?? 0) &&
         pendingRedraw.turn === (state.turn ?? 0)) {
       throw new Error("Record the New Orders replacement card before leaving the Command phase.");
+    }
+    if (getSecondaryMissionMode(state, activePlayerId) === SECONDARY_MISSION_MODES.TACTICAL) {
+      const activeCards = getSecondaryMissionHistory(state, activePlayerId).filter((card) =>
+        card.status === SECONDARY_MISSION_STATUS.ACTIVE);
+      if (activeCards.length < 2) {
+        throw new Error("Record two active Tactical secondary cards for the active player before leaving the Command phase.");
+      }
     }
   }
 
