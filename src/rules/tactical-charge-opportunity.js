@@ -3,6 +3,7 @@ import {
   getCombatFormationWeaponOptions,
   getProbabilisticUnitProfile
 } from "./saved-roster-combat-profile.js";
+import { getCustodesChargeAdvisorContext } from "./custodes-tactical-advisor.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
 
 function unitById(state, unitId) {
@@ -81,8 +82,14 @@ function meleeProjection(state, attacker, target) {
   });
 }
 
-function recommendationFor({ successProbability, measuredDistance, strategicContext, projectedFight, projectedCounterFight }) {
+function recommendationFor({ successProbability, measuredDistance, strategicContext, projectedFight, projectedCounterFight, custodesCharge }) {
   const exact = Number.isFinite(measuredDistance) && Number.isFinite(successProbability);
+  if (custodesCharge?.rerollCharge && exact) {
+    const pct = Math.round(successProbability * 100);
+    if (successProbability >= 0.45) {
+      return `Dread Host charge opportunity: the detachment re-roll raises the measured success chance to about ${pct}%. Weigh that improved chance against mission value and the projected Fight trade.`;
+    }
+  }
   if (exact && successProbability < 0.3 && strategicContext.score < 0.65) {
     return "Low-probability charge with limited strategic leverage. Prefer a stronger mission or combat opportunity unless the table position changes the calculation.";
   }
@@ -126,8 +133,20 @@ export function getChargeOpportunity(state, {
   const strategicContext = getTargetStrategicContext(state, { playerId, targetUnitId });
   const projectedFight = meleeProjection(state, attacker, target);
   const projectedCounterFight = meleeProjection(state, target, attacker);
-  const exactSuccessProbability = getChargeSuccessProbability(measuredDistance);
-  const mapSuccessProbability = getChargeSuccessProbability(mapDistance);
+  const unmodifiedSuccessProbability = getChargeSuccessProbability(measuredDistance);
+  const unmodifiedMapSuccessProbability = getChargeSuccessProbability(mapDistance);
+  const measuredCustodesCharge = getCustodesChargeAdvisorContext(state, {
+    playerId,
+    unitId: attackerId,
+    baseProbability: unmodifiedSuccessProbability
+  });
+  const mapCustodesCharge = getCustodesChargeAdvisorContext(state, {
+    playerId,
+    unitId: attackerId,
+    baseProbability: unmodifiedMapSuccessProbability
+  });
+  const exactSuccessProbability = measuredCustodesCharge.adjustedProbability;
+  const mapSuccessProbability = mapCustodesCharge.adjustedProbability;
   const probabilityForRanking = exactSuccessProbability ?? mapSuccessProbability ?? 0.5;
   const counterProfile = getProbabilisticUnitProfile(state, attacker);
   const counterWounds = Number(counterProfile?.wounds);
@@ -142,6 +161,8 @@ export function getChargeOpportunity(state, {
     counterImpact * 1.25 -
     battleShockPenalty;
 
+  const custodesCharge = exactSuccessProbability != null ? measuredCustodesCharge : mapCustodesCharge;
+
   return Object.freeze({
     playerId,
     attackerId,
@@ -149,8 +170,11 @@ export function getChargeOpportunity(state, {
     measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
     mapDistance: Number.isFinite(Number(mapDistance)) ? Number(mapDistance) : null,
     successProbability: exactSuccessProbability,
+    unmodifiedSuccessProbability,
     mapSuccessProbability,
+    unmodifiedMapSuccessProbability,
     probabilityBasis: exactSuccessProbability != null ? "measured" : mapSuccessProbability != null ? "map-approximation" : "unknown",
+    custodesCharge,
     projectedFight,
     projectedCounterFight,
     strategicContext,
@@ -160,8 +184,11 @@ export function getChargeOpportunity(state, {
       measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
       strategicContext,
       projectedFight,
-      projectedCounterFight
+      projectedCounterFight,
+      custodesCharge
     }),
-    assumption: "Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
+    assumption: custodesCharge?.rerollCharge
+      ? "Charge probability uses 2D6 against the measured distance and applies the modeled Dread Host full Charge re-roll. Other charge modifiers, terrain and model placement remain tabletop-authoritative."
+      : "Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
   });
 }
