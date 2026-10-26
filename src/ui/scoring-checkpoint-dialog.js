@@ -19,10 +19,11 @@ export function renderScoringCheckpointDialog(state,scoringReminder) {
       ).join("") +
       '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
     : "";
-  const reminderMarkup = scoringReminder ? '<link rel="stylesheet" href="' + new URL('./styles/scoring-checkpoints.css',import.meta.url).href + '"><div class="battle-scoring-reminder__backdrop">' +
+  const stylesheet = new URL('./styles/scoring-checkpoints.css',import.meta.url);
+  stylesheet.searchParams.set('v','vp-estimate-1');
+  const reminderMarkup = scoringReminder ? '<link rel="stylesheet" href="' + stylesheet.href + '"><div class="battle-scoring-reminder__backdrop">' +
     '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
     '<h2 id="battle-scoring-reminder-title">Scoring checkpoint</h2>' +
-    '<p>' + escapeHtml(scoringReminder.label) + '. Record any Primary or Secondary score shown below before continuing.</p>' +
     renderScoringCheckpointGroups(state, scoringReminder) +
     (scoringReminder.groups ? '' : '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
       '<li>Review your mission cards and confirm any points earned.</li>') + '</ul>') +
