@@ -5,10 +5,10 @@ import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 
 test('compact labels retain recognizable names and distinguish Norn variants', () => {
   assert.equal(shortMapUnitName({name:'Exocrine'}), 'Exocrine');
-  assert.equal(shortMapUnitName({name:'Norn Emissary'}), 'Norn Emiss.');
-  assert.equal(shortMapUnitName({name:'Norn Assimilator'}), 'Norn Assim.');
+  assert.equal(shortMapUnitName({name:'Norn Emissary'}), 'Norn Emiss');
+  assert.equal(shortMapUnitName({name:'Norn Assimilator'}), 'Norn Assim');
   assert.notEqual(shortMapUnitName({name:'Custodian Guard'}), shortMapUnitName({name:'Custodian Wardens'}));
-  assert.ok(shortMapUnitName({name:'An unfamiliar very long unit name'}).length <= 12);
+  assert.ok(shortMapUnitName({name:'An unfamiliar very long unit name'}).length <= 11);
 });
 
 const unit = (id, ownerId, status = 'deployed') => ({id, ownerId, name:'Exocrine', status, position:{x:10,y:10}});
@@ -38,8 +38,11 @@ test('full unit names use the same stable duplicate numbers as map markers', () 
   assert.equal(labels.get('a'), 'Sentinel Guard Sodality 1');
   assert.equal(labels.get('b'), 'Sentinel Guard Sodality 2');
   assert.equal(labels.get('c'), 'Sentinel Guard Sodality');
-  assert.equal(mapUnitLabels(units).get('a'), 'Sent… Sodal… 1');
-  assert.equal(mapUnitLabels(units).get('b'), 'Sent… Sodal… 2');
+  assert.equal(mapUnitLabels(units).get('a'), 'Sentinel 1');
+  assert.equal(mapUnitLabels(units).get('b'), 'Sentinel 2');
+  const html = renderBattlefieldMap({units}, {compactMarkers:true,selectedUnitId:'a',perspectivePlayerId:'p1'});
+  assert.match(html, /Selected: <strong>Sentinel Guard Sodality 1<\/strong>/);
+  assert.match(html, /aria-label="Select Sentinel Guard Sodality 1"/);
 });
 
 test('selected full name is visible and escaped; activation badge and unit identity survive', () => {
