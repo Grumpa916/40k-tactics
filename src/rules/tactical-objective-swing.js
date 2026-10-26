@@ -8,6 +8,7 @@ import { getLiveUnitVitals } from "./live-unit-vitals.js";
 import { isUnitBattleShocked } from "./unit-status-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { parseCombatCharacteristic } from "./saved-roster-combat-profile.js";
+import { getCustodesObjectiveControlBonus } from "./custodes-tactical-advisor.js";
 import { clamp01, impactLabel, opponentPlayerIds, unitById } from "./tactical-context-utils.js";
 
 function characteristicValue(unit, datasheet, keys) {
@@ -28,18 +29,22 @@ function characteristicValue(unit, datasheet, keys) {
 
 function memberOc(state, unit) {
   const datasheet = getBattleUnitDatasheet(state, unit);
-  const perModel = parseCombatCharacteristic(characteristicValue(unit, datasheet, [
+  const basePerModel = parseCombatCharacteristic(characteristicValue(unit, datasheet, [
     "objectiveControl", "Objective Control", "Objective control", "OC", "oc"
   ]));
+  const ruleBonus = getCustodesObjectiveControlBonus(state, unit);
+  const perModel = Number.isFinite(basePerModel) ? basePerModel + ruleBonus : basePerModel;
   const vitals = getLiveUnitVitals(state, unit);
   const exactModels = Number.isInteger(vitals.models) && vitals.models >= 0 ? vitals.models : null;
   const fallbackModels = exactModels == null && Number.isInteger(vitals.startingModels) && vitals.startingModels > 0
     ? vitals.startingModels
     : exactModels;
   if (!Number.isFinite(perModel) || fallbackModels == null) {
-    return Object.freeze({ perModel: perModel ?? null, models: exactModels, total: null, confidence: "low" });
+    return Object.freeze({ basePerModel: basePerModel ?? null, ruleBonus, perModel: perModel ?? null, models: exactModels, total: null, confidence: "low" });
   }
   return Object.freeze({
+    basePerModel,
+    ruleBonus,
     perModel,
     models: fallbackModels,
     total: perModel * fallbackModels,

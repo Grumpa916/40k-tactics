@@ -26,9 +26,6 @@ function strategicFightRecommendation(evaluation, strategicContext, retaliationE
   const role = strategicContext?.scoringRole;
   const battleShock = strategicContext?.battleShock;
 
-  // Unknown return damage must stay visibly unknown. Strategic value can rank the
-  // target, but it must never turn missing retaliation data into an "acceptable"
-  // preservation-risk claim.
   if (!retaliationEstimateAvailable) {
     return "Fight opportunity can be evaluated offensively; retaliation data is not available. Mission value can still affect target priority, but confirm the enemy response at the table.";
   }
@@ -54,6 +51,44 @@ function strategicFightRecommendation(evaluation, strategicContext, retaliationE
     return "Fight opportunity has measurable retaliation risk; weigh that trade against the target's mission and threat value.";
   }
   return "Fight opportunity is primarily damage-driven; no stronger mission or retaliation signal is currently established.";
+}
+
+function getKaptarisRetaliation(state, { playerId, attacker, sourceAttacker, target, weapon, retaliationOptions, enabled }) {
+  if (!enabled) return null;
+  try {
+    if (weapon) {
+      const probabilistic = getProbabilisticFightRetaliation(state, {
+        playerId,
+        attackerId: attacker.id,
+        sourceAttackerId: sourceAttacker.id,
+        targetId: target.id,
+        weapon,
+        targetHitModifier: 1
+      });
+      if (probabilistic?.confidence === "moderate") {
+        return Object.freeze({
+          expectedDamage: probabilistic.expectedRetaliationDamage,
+          source: "probabilistic",
+          confidence: probabilistic.confidence,
+          details: probabilistic
+        });
+      }
+    }
+    const best = getBestFightRetaliation(state, {
+      playerId,
+      attackerId: attacker.id,
+      retaliationOptions,
+      targetHitModifier: 1
+    });
+    return best ? Object.freeze({
+      expectedDamage: best.expectedDamage,
+      source: best.source,
+      confidence: best.confidence,
+      details: best
+    }) : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -105,15 +140,15 @@ export function getFightOpportunityRecommendations(
         }
       }
       const automaticCustodesOption = custodesFight?.options
-        ?.filter((item) => item?.requiresKatahUse !== true)
+        ?.filter((item) => item?.requiresKatahUse !== true && item?.requiresTableConfirmation !== true)
         ?.sort((a, b) => b.expectedDamage - a.expectedDamage)?.[0] ?? null;
-      const expectedDamage = Number.isFinite(automaticCustodesOption?.expectedDamage)
-        ? Math.max(baselineExpectedDamage ?? 0, automaticCustodesOption.expectedDamage)
+      const automaticBaseline = Number.isFinite(custodesFight?.baselineExpectedDamage)
+        ? custodesFight.baselineExpectedDamage
         : baselineExpectedDamage;
+      const expectedDamage = Number.isFinite(automaticCustodesOption?.expectedDamage)
+        ? Math.max(automaticBaseline ?? 0, automaticCustodesOption.expectedDamage)
+        : automaticBaseline;
 
-      // Expected damage is an average, not a guaranteed result. Do not
-      // convert it into a deterministic kill. Retaliation therefore remains
-      // available whenever the enemy is an authoritative engaged candidate.
       const probabilisticRetaliation =
         Number.isFinite(option?.retaliationExpectedDamage) || !option?.weapon
           ? null
@@ -153,6 +188,19 @@ export function getFightOpportunityRecommendations(
       const retaliationEstimateAvailable = Number.isFinite(option?.retaliationExpectedDamage) ||
         probabilisticRetaliation?.confidence === "moderate" || Number.isFinite(automaticRetaliation?.expectedDamage);
 
+      const kaptaris = getKaptarisRetaliation(state, {
+        playerId,
+        attacker,
+        sourceAttacker,
+        target,
+        weapon: option?.weapon,
+        retaliationOptions: option?.retaliationOptions,
+        enabled: Boolean(custodesFight?.katah?.readied && state?.phase === "fight")
+      });
+      const kaptarisDamagePrevented = kaptaris && Number.isFinite(retaliationExpectedDamage)
+        ? Math.max(0, retaliationExpectedDamage - kaptaris.expectedDamage)
+        : 0;
+
       const evaluation = evaluateFightOpportunity({
         expectedDamage,
         retaliationExpectedDamage,
@@ -179,8 +227,11 @@ export function getFightOpportunityRecommendations(
       const katahPotentialBonus = custodesFight?.bestOption?.requiresKatahUse && custodesFight.expectedDamageGain > 0
         ? Math.min(0.6, custodesFight.expectedDamageGain / Math.max(1, targetProfile?.wounds ?? 1))
         : 0;
+      const kaptarisPotentialBonus = kaptarisDamagePrevented > 0
+        ? Math.min(0.5, kaptarisDamagePrevented / Math.max(1, attacker.maxWounds ?? attacker.wounds ?? 1))
+        : 0;
       const combatScore = evaluation.targetImpact * 3 - evaluation.preservationRisk * 2;
-      const strategicPoints = strategicScore * 3 + objectiveSwingBonus + verifiedVpBonus - battleShockPenalty + katahPotentialBonus;
+      const strategicPoints = strategicScore * 3 + objectiveSwingBonus + verifiedVpBonus - battleShockPenalty + katahPotentialBonus + kaptarisPotentialBonus;
       const decisionScore = combatScore + strategicPoints;
       const baseRecommendation = strategicContext
         ? strategicFightRecommendation(evaluation, strategicContext, retaliationEstimateAvailable)
@@ -191,9 +242,12 @@ export function getFightOpportunityRecommendations(
             : retaliationEstimateAvailable
               ? "No expected damage from the modeled response; tabletop rules and unmodeled effects still apply."
               : "Fight opportunity can be evaluated offensively; retaliation data is not available.";
-      const recommendation = custodesFight?.recommendation
+      const offensiveRecommendation = custodesFight?.recommendation
         ? `${baseRecommendation} ${custodesFight.recommendation}`
         : baseRecommendation;
+      const recommendation = kaptarisDamagePrevented > 0.01
+        ? `${offensiveRecommendation} Kaptaris would reduce modeled return damage from ${retaliationExpectedDamage.toFixed(2)} to ${kaptaris.expectedDamage.toFixed(2)} (about ${kaptarisDamagePrevented.toFixed(2)} prevented); confirm Kaptaris only if you choose to spend this unit's readiness.`
+        : offensiveRecommendation;
 
       return {
         type: "fight-opportunity",
@@ -204,6 +258,13 @@ export function getFightOpportunityRecommendations(
         baselineExpectedDamage,
         expectedDamage: evaluation.expectedDamage,
         custodesFight,
+        custodesDefence: Object.freeze({
+          kaptarisAvailable: Boolean(custodesFight?.katah?.readied && state?.phase === "fight"),
+          baselineRetaliationExpectedDamage: retaliationExpectedDamage,
+          kaptarisExpectedDamage: kaptaris?.expectedDamage ?? null,
+          damagePrevented: kaptarisDamagePrevented,
+          confidence: kaptaris?.confidence ?? "low"
+        }),
         retaliationExpectedDamage: evaluation.retaliationExpectedDamage,
         retaliationEstimateAvailable,
         targetImpact: evaluation.targetImpact,
@@ -224,7 +285,8 @@ export function getFightOpportunityRecommendations(
           objectiveSwingBonus,
           verifiedVpBonus,
           battleShockPenalty,
-          katahPotentialBonus
+          katahPotentialBonus,
+          kaptarisPotentialBonus
         }),
         recommendation,
         reason: recommendation

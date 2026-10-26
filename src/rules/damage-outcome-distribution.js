@@ -1,6 +1,7 @@
 import { buildAttackProfile } from "./combat-profile.js";
 import { getContextualWeaponProfile } from "./contextual-weapon-abilities.js";
 import { getWoundBracketModifiers } from "./wound-bracket.js";
+import { getRollSuccessProbabilities, strongestReroll } from "./attack-roll-probabilities.js";
 
 function targetAfterModifier(target, modifier = 0) {
   const cappedModifier = Math.min(1, Math.max(-1, modifier));
@@ -13,10 +14,6 @@ function woundTarget(strength, toughness) {
   if (strength === toughness) return 4;
   if (strength * 2 <= toughness) return 6;
   return 5;
-}
-
-function successProbability(target) {
-  return (7 - target) / 6;
 }
 
 function damageValues(damage) {
@@ -89,17 +86,11 @@ function oneSavedWoundDamageDistribution(profile, saveFailure) {
 }
 
 function woundProbabilities(profile, woundTargetValue) {
-  const normalBase = successProbability(woundTargetValue);
-  const criticalBase = successProbability(profile.criticalWoundTarget);
-  const successBase = Math.max(normalBase, criticalBase);
-  if (!profile.twinLinked) {
-    return { success: successBase, critical: criticalBase };
-  }
-  const failedFirstRoll = 1 - successBase;
-  return {
-    success: successBase + (failedFirstRoll * successBase),
-    critical: criticalBase + (failedFirstRoll * criticalBase)
-  };
+  return getRollSuccessProbabilities({
+    successTarget: woundTargetValue,
+    criticalTarget: profile.criticalWoundTarget,
+    reroll: strongestReroll(profile.woundReroll, profile.twinLinked ? "failed" : "none")
+  });
 }
 
 function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) {
@@ -119,10 +110,14 @@ function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
   if (profile.torrent) return oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure);
   const result = new Map();
   const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier);
-  const critical = 1 / 6;
-  const regular = successProbability(hitTarget);
-  const nonCriticalHit = Math.max(0, regular - critical);
-  const miss = Math.max(0, 1 - regular);
+  const hitRoll = getRollSuccessProbabilities({
+    successTarget: hitTarget,
+    criticalTarget: 6,
+    reroll: profile.hitReroll
+  });
+  const critical = hitRoll.critical;
+  const nonCriticalHit = hitRoll.nonCritical;
+  const miss = hitRoll.failure;
   const normalHit = oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure);
   const lethalHit = oneSavedWoundDamageDistribution(profile, saveFailure);
 
@@ -138,11 +133,9 @@ function oneAttackDistribution(profile, woundTargetValue, saveFailure) {
 
   if (profile.sustainedHits > 0) {
     const sustainedCount = profile.sustainedHits;
-    const sustainedDistribution = new Map([[0, 1]]);
+    let sustainedDistribution = new Map([[0, 1]]);
     for (let index = 0; index < sustainedCount; index += 1) {
-      const next = convolve(sustainedDistribution, normalHit);
-      sustainedDistribution.clear();
-      for (const [damage, probability] of next) sustainedDistribution.set(damage, probability);
+      sustainedDistribution = convolve(sustainedDistribution, normalHit);
     }
 
     result.clear();
@@ -206,7 +199,9 @@ export function getDamageOutcomeDistribution({ attacker, target, weapon, attacke
       halfRangeStatus: profile.halfRangeStatus,
       approximateDistance: profile.approximateDistance,
       precision: profile.precision,
-      extraAttacks: profile.extraAttacks
+      extraAttacks: profile.extraAttacks,
+      hitReroll: profile.hitReroll,
+      woundReroll: strongestReroll(profile.woundReroll, profile.twinLinked ? "failed" : "none")
     })
   });
 }
