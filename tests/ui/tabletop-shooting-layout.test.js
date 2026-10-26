@@ -45,6 +45,8 @@ function fakeDom() {
         attrs,
         events: {},
         style: {},
+        scrollTop: 0,
+        offsetTop: attrs.get('class')?.includes('shoot-tabletop__advisor') ? 240 : 0,
         disabled: attrs.has('disabled'),
         value: attrs.get('value') ?? '',
         getAttribute(name) { return this.attrs.get(name) ?? null; },
@@ -56,6 +58,7 @@ function fakeDom() {
   };
   const attrName = (selector) => selector.match(/^\[([^\]]+)\]$/)?.[1] ?? null;
   const findNode = (selector, value = null) => {
+    if (selector.startsWith('.')) return nodes.find((candidate) => candidate.attrs.get('class')?.split(/\s+/).includes(selector.slice(1)));
     const attr = attrName(selector);
     return nodes.find((candidate) => candidate.attrs.has(attr) && (value == null || candidate.attrs.get(attr) === value));
   };
@@ -64,6 +67,7 @@ function fakeDom() {
     set innerHTML(value) { rebuild(value); },
     replaceChildren() { rebuild(''); },
     querySelector(selector) {
+      if (selector.startsWith('.')) return findNode(selector) ?? null;
       const attr = attrName(selector);
       return attr ? nodes.find((node) => node.attrs.has(attr)) ?? null : null;
     },
@@ -123,6 +127,8 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
     assert.equal(targetMarker.getAttribute('data-shoot-target-marker'), 'true');
     assert.equal(targetMarker.style.touchAction, 'manipulation');
     root.click('[data-map-unit-id]', 'marine');
+    assert.equal(root.querySelector('.shoot-tabletop__control-scroll').scrollTop, 0,
+      'target selection keeps the shooter and weapon controls visible');
     assert.match(root.innerHTML, /Intercessor Squad/);
     const selectedMarker = root.node('[data-map-unit-id]', 'marine');
     assert.equal(selectedMarker.getAttribute('aria-pressed'), 'true');
