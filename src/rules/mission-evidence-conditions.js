@@ -3,6 +3,7 @@ const LEGACY_CONDITIONS = Object.freeze({
   'Control at least one non-home objective.': { type: 'control-non-home', minimum: 1 },
   'Control a non-home objective.': { type: 'control-non-home', minimum: 1 },
   'Per controlled non-home objective.': { type: 'count-non-home' },
+  'Per controlled objective other than your home objective.': { type: 'count-non-home' },
   'Per objective controlled.': { type: 'count-objectives' },
   'Control more objectives than your opponent.': { type: 'control-more' },
   'Control two or more objectives.': { type: 'control-objectives', minimum: 2 },
