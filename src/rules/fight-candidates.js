@@ -1,5 +1,6 @@
 import { UNIT_STATUS } from "../state/unit.js";
 import { getCombatFormationRoot, getCombatFormationRootId } from "./battle-unit-reference.js";
+import { hasCustodesFightsFirst } from "./custodes-tactical-advisor.js";
 import {
   getFightEngagementState,
   getFightStepStartEngagementState
@@ -81,6 +82,13 @@ export function getFightCandidates(state) {
       )
       .map((event) => event.payload.unitId)
   );
+
+  for (const unit of units) {
+    if (unit?.id && hasCustodesFightsFirst(state, unit.id)) {
+      const rootId = getCombatFormationRootId(state, unit);
+      if (rootId) fightsFirst.add(rootId);
+    }
+  }
 
   const deployed = units.filter((unit) =>
     unit?.status === UNIT_STATUS.DEPLOYED &&
