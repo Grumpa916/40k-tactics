@@ -4,7 +4,7 @@ import { getRemainingPrimaryVictoryPoints } from '../engine/victory-points-ledge
 
 // Advisory only. A scoring award always comes from the player's separate
 // confirmation, because map positions and carried-forward control can be stale.
-export function estimateCheckpointVp(state, playerId, mission) {
+export function estimateCheckpointVp(state, playerId, mission, scoringTiming = null) {
   if (mission?.category !== 'primary') return null;
   const windows = mission.scoringWindows ?? [];
   const items = windows.flatMap(window => window.items ?? []);
@@ -30,6 +30,6 @@ export function estimateCheckpointVp(state, playerId, mission) {
     points += vp * (/\bper\b/i.test(item.summary ?? '') ? count : Number(count > 0));
   }
   if (!evaluated || (incomplete && !points)) return null;
-  const remaining = getRemainingPrimaryVictoryPoints(state, playerId);
+  const remaining = getRemainingPrimaryVictoryPoints(state, playerId, scoringTiming);
   return { points: Math.min(points, remaining), partial: incomplete, capped: points > remaining };
 }
