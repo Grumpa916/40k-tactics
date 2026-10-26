@@ -5,6 +5,7 @@ import { getSpatialContext } from "./spatial-context.js";
 import { getChargeOpportunity } from "./tactical-charge-opportunity.js";
 import { getMovementStrategicRecommendations } from "./tactical-movement-opportunities.js";
 import { getCustodesPhaseRecommendations } from "./custodes-tactical-advisor.js";
+import { getCustodesMovementRecommendations } from "./custodes-movement-advisor.js";
 
 const CHARGE_MAX_DISTANCE = 12;
 const CHARGE_RANGE_UNCERTAINTY_MARGIN = 3;
@@ -141,7 +142,10 @@ export function getTacticalCombatRecommendations(
     : [];
   const charge = chargeCandidates(state, { playerId });
   const fight = fightRecommendations(state);
-  const custodes = getCustodesPhaseRecommendations(state, { playerId });
+  const phaseCustodes = getCustodesPhaseRecommendations(state, { playerId })
+    .filter((item) => item.katahName !== "Calistus");
+  const custodesMovement = getCustodesMovementRecommendations(state, { playerId });
+  const custodes = [...phaseCustodes, ...custodesMovement];
 
   return {
     shooting,
