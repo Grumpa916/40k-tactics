@@ -1,3 +1,4 @@
+import { renderAdvisorAppliedRules } from './advisor-applied-rules.js';
 import { getShootingTargetComparison } from '../rules/tactical-shooting-comparison.js';
 import { getAttackDamageForecast } from '../rules/attack-damage-forecast.js';
 import { escapeHtml } from './combat-workspace.js';
@@ -56,6 +57,7 @@ export function shootingAdvisory(attackerId, weaponId, targetId, state, weapons,
         <div><strong>${destruction}</strong><span>destruction chance</span></div>
       </div>
       ${renderAdvisorDecisionSummary(recommendation)}
+      ${renderAdvisorAppliedRules(recommendation.damageDistribution?.contextualAbilities?.appliedRules)}
       <details class="shoot-advisory__details" data-view-key="shoot-assumptions" ${openDetails ? "open" : ""}><summary>Advisor assumptions &amp; detail</summary>
       <div class="shoot-advisory__grid">        <div><strong>${escapeHtml(primaryImpact)}</strong><span>Primary impact</span></div>
         <div><strong>${escapeHtml(secondaryImpact)}</strong><span>Secondary impact</span></div>
@@ -98,6 +100,7 @@ export function shootingDamageForecast(attackerId, weaponId, targetId, state, we
         <div><strong>${escapeHtml(thresholdChance)}</strong><span>chance of ${escapeHtml(forecast.thresholdDamage)}+ damage</span></div>
         <div><strong>${escapeHtml(anyDamageChance)}</strong><span>chance to cause any damage</span></div>
       </div>
+      ${renderAdvisorAppliedRules(forecast.appliedRules)}
       <small>Uses saved profiles and known weapon characteristics. Exact tabletop modifiers and dice remain authoritative.</small>
     </aside>
   `;

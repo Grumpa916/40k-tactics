@@ -107,7 +107,7 @@ Examples that may still require table context or future engine work include:
 
 - Martial Ka'tah readiness / expenditure timing;
 - favored Ka'tah side effects;
-- Anti-X, Blast, Melta, Rapid Fire, Lance, Precision and Extra Attacks where the combat engine does not yet model that keyword;
+- weapon/defensive effects beyond the modeled coverage documented in `advisor-recorded-rules-2026-10-26.md` (including Cleave declarations and restricted Psychic protection);
 - objective-dependent detachment bonuses;
 - reactive moves and once-per-battle abilities;
 - actively spending detachment stratagems / enhancements in the battle-state engine.
