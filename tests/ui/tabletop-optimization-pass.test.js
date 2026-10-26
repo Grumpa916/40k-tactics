@@ -57,9 +57,10 @@ test('Movement, Command and Fight use compact action-first controls', () => {
 });
 
 test('scoreboard routes VP, CP and timer taps to their specific controls', () => {
-  const src = read('src/ui/battle-shell.js');
-  assert.ok(src.includes('data-score-adjust-kind="vp"'));
-  assert.ok(src.includes('data-score-adjust-kind="cp"'));
-  assert.ok(src.includes('scoreAdjustKind'));
-  assert.ok(src.includes('data-toggle-turn-clock'));
+  const shell = read('src/ui/battle-shell.js');
+  const scoreboard = read('src/ui/battle-shell-scoreboard.js');
+  assert.ok(scoreboard.includes('data-score-adjust-kind="vp"'));
+  assert.ok(scoreboard.includes('data-score-adjust-kind="cp"'));
+  assert.ok(shell.includes('scoreAdjustKind'));
+  assert.ok(shell.includes('data-toggle-turn-clock'));
 });

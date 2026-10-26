@@ -9,10 +9,11 @@ test('command screen no longer renders full VP and CP adjustment sections',()=>{
 });
 
 test('scoreboard opens compact VP and CP adjustment controls',()=>{
- const src=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
- assert.match(src,/data-open-score-adjust/);
- assert.match(src,/data-score-adjust-kind=\"vp\"/);
- assert.match(src,/data-score-adjust-kind=\"cp\"/);
+ const shell=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
+ const scoreboard=fs.readFileSync(new URL('../../src/ui/battle-shell-scoreboard.js',import.meta.url),'utf8');
+ assert.match(shell,/data-open-score-adjust/);
+ assert.match(scoreboard,/data-score-adjust-kind=\"vp\"/);
+ assert.match(scoreboard,/data-score-adjust-kind=\"cp\"/);
 });
 
 test('live objective markers are clickable and have perspective colors',()=>{
@@ -32,10 +33,11 @@ test('canonical objectives default to uncontrolled',()=>{
 
 
 test('score adjustment can collapse, refresh in place, and report adjustment results',()=>{
- const src=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
- assert.match(src,/data-toggle-score-adjust-collapse/);
- assert.match(src,/data-score-adjust-host/);
- assert.match(src,/scoreAdjustHost\.innerHTML = renderScoreAdjustOverlay/);
- assert.match(src,/scoreAdjustMessage/);
- assert.match(src,/stopPropagation/);
+ const shell=fs.readFileSync(new URL('../../src/ui/battle-shell.js',import.meta.url),'utf8');
+ const scoreboard=fs.readFileSync(new URL('../../src/ui/battle-shell-scoreboard.js',import.meta.url),'utf8');
+ assert.match(scoreboard,/data-toggle-score-adjust-collapse/);
+ assert.match(shell,/data-score-adjust-host/);
+ assert.match(shell,/scoreAdjustHost\.innerHTML = renderScoreAdjustOverlay/);
+ assert.match(shell,/scoreAdjustMessage/);
+ assert.match(shell,/stopPropagation/);
 });
