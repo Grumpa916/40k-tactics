@@ -77,6 +77,20 @@ function captureEquipmentLine(unit, line) {
  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) return;
  const resolved = matchWargearSelection({ datasheetId: unit.datasheetId, datasheet: unit.datasheet, sourceName });
  if (resolved) { addSelection(unit, resolved, quantity, sourceName); return; }
+ // Some roster exports put a weapon and its shield on one line, e.g.
+ // "1x Pyrithite Spear and 1 Praesidium Shield". Split only when both
+ // parts independently match reviewed selections; leave other text unmatched.
+ const pair = sourceName.match(/^(.+?)\s+and\s+(\d+)\s*(?:[x×]\s*)?(.+)$/i);
+ if (pair) {
+  const secondQuantity = Number(pair[2]);
+  const first = matchWargearSelection({ datasheetId: unit.datasheetId, datasheet: unit.datasheet, sourceName: pair[1] });
+  const second = matchWargearSelection({ datasheetId: unit.datasheetId, datasheet: unit.datasheet, sourceName: pair[3] });
+  if (first && second && Number.isInteger(secondQuantity) && secondQuantity > 0 && secondQuantity <= 500) {
+   addSelection(unit, first, quantity, pair[1]);
+   addSelection(unit, second, secondQuantity, pair[3]);
+   return;
+  }
+ }
  // Multi-model App exports use a top-level bullet for model groups and nested
  // circles for their equipment. Single-model top-level bullets are equipment.
  if (marker === '◦' || marker === '·' || unit.modelCount === 1) addUnmatched(unit, sourceName, quantity);
