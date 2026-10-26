@@ -146,3 +146,15 @@ test('imported Shield-Captain exposes only its equipped melee weapon in Fight', 
     assert.deepEqual(getFightWeaponOptions(state, { attackerId:captain.id }).map(weapon => weapon.name), [expected]);
   }
 });
+
+test('combined Shield-Captain spear and shield line resolves to its melee profile', () => {
+  const text = 'Adeptus Custodes\nCHARACTERS\nShield-Captain (205 Points)\n  • 1x Pyrithite Spear and 1 Praesidium Shield';
+  const { roster } = importWarhammerAppRoster({ text, faction:'Adeptus Custodes', id:'combined-captain', name:'Combined captain' });
+  const selected = roster.units[0];
+  assert.equal(selected.loadoutValidation.status, 'rules-reviewed-valid');
+  assert.deepEqual(selected.equippedWargear.map(item => item.name), ['Pyrithite Spear', 'Praesidium Shield']);
+  const initial = createGameState({ phase:'setup', battle:{id:'fight-test',status:'setup',round:0}, players:[{id:'p1'},{id:'p2'}] });
+  const state = applyArmyRosterToBattle(initial, { playerId:'p2', roster });
+  const captain = state.units.find(unit => unit.ownerId === 'p2');
+  assert.deepEqual(getFightWeaponOptions(state, { attackerId:captain.id }).map(weapon => weapon.name), ['Pyrithite Spear']);
+});
