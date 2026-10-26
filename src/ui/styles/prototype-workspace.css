@@ -318,7 +318,12 @@
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { flex:1; min-width:0; min-height:40px; padding:4px 8px; font-size:12px; font-weight:750; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button[aria-pressed=true] { background:#c4e99b; border-color:#c4e99b; color:#17212b; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > summary { min-height:40px; width:44px; justify-content:center; padding:0; }
-.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div { grid-template-columns:1fr; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div {
+  display:flex; flex-wrap:nowrap; align-items:center; width:max-content; max-width:calc(100vw - 24px);
+  right:0; left:auto; gap:5px;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div button { white-space:nowrap; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu [data-live-session-tools] { display:flex; flex-wrap:nowrap; margin:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] {
   position:fixed; right:calc(10px + env(safe-area-inset-right,0px)); bottom:calc(66px + env(safe-area-inset-bottom,0px)); z-index:1100;
   min-width:68px; min-height:48px; padding:5px 8px; font-size:12px;
