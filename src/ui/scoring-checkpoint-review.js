@@ -26,18 +26,26 @@ function primaryOpportunityMarkup(state, group) {
 }
 
 function reviewMissionMarkup(state, group, mission, actions) {
-  const opportunity=getMissionReviewOpportunity(state,mission);
+  const opportunity=getMissionReviewOpportunity(state,mission,group.playerId);
   if (!opportunity?.actionable) return '';
   const name=mission.definitionName??mission.definitionId;
   if (opportunity.needsObjectiveConfirmation) {
     return `<details open class="checkpoint-mission"><summary>${esc(name)} · objective confirmation needed</summary><p>Confirm the current objective state above before resolving this scoring opportunity.</p></details>`;
   }
-  const status=opportunity.eligible?'Potential completion':'Possible scoring opportunity — confirm on tabletop';
-  return `<details open class="checkpoint-mission"><summary>${esc(name)} · ${esc(status)}</summary>${mission.result.rulesVerified===false?'<p>Card reference awaiting official verification. Check the physical card.</p>':''}
-      ${(mission.result.scoringWindows??[]).flatMap(window=>(window.tiers??[]).map(tier=>renderConditionEvidence(state,group.playerId,tier))).join('')}
+  const status=opportunity.calculatedPoints>0
+    ? `Potential ${opportunity.calculatedPoints} VP`
+    : opportunity.eligible?'Potential completion':'Possible scoring opportunity — confirm on tabletop';
+  const evidence=(opportunity.estimate?.evidence??[]).filter(entry=>entry.evidence.count>0);
+  const missionForScore={
+    ...mission,
+    calculatedPoints:opportunity.calculatedPoints,
+    calculatedPartial:opportunity.estimate?.partial===true
+  };
+  return `<details open class="checkpoint-mission"><summary>${esc(name)} · ${esc(status)}</summary>${mission.result.rulesVerified===false?'<p>Card reference awaiting official verification. Check the physical card before confirming the award.</p>':''}
+      ${evidence.map(entry=>renderConditionEvidence(state,group.playerId,entry.tier)).join('')}
       ${(mission.result.conditions??[]).filter(condition=>condition.eligible||condition.reason!=null||condition.actual==null).map(condition=>`<p>${condition.eligible?'Completed in recorded state':'Tabletop confirmation may be required'} · ${esc(condition.evidence)}${condition.reason?` · ${esc(condition.reason)}`:''}</p>`).join('')}
       ${actions.filter(action=>action.missionInstanceId===mission.instanceId).map(action=>`<p><strong>${action.review?.outcome==='completed'?'Action completion confirmed':'Action attempted — confirm completion below'}</strong> · ${esc(action.unitName)}</p>`).join('')}
-      ${renderCheckpointScore(state,group,mission)}
+      ${renderCheckpointScore(state,group,missionForScore)}
       ${(mission.result.referenceNotes??[]).map(note=>`<p>${esc(note)}</p>`).join('')}
     </details>`;
 }
