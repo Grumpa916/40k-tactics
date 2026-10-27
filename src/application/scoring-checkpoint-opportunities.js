@@ -33,14 +33,14 @@ function itemDependsOnObjectives(item) {
   return OBJECTIVE_CONDITION_TYPES.has(condition?.type);
 }
 
-function secondaryDependsOnObjectives(mission) {
+function reviewMissionDependsOnObjectives(mission) {
   const result = mission?.result ?? {};
   if ((result.conditions ?? []).some((condition) => condition?.evidence === 'objective-control')) return true;
   const windows = result.scoringWindows ?? (result.scoringWindow ? [result.scoringWindow] : []);
   return windows.some((window) => (window?.tiers ?? []).some((tier) => /objective|control/i.test(String(tier?.summary ?? ''))));
 }
 
-function secondaryEvidenceUnavailable(mission) {
+function reviewMissionEvidenceUnavailable(mission) {
   const result = mission?.result ?? {};
   if (result.manualReviewRequired === true) return true;
   return (result.conditions ?? []).some((condition) =>
@@ -82,15 +82,15 @@ export function getPrimaryCheckpointOpportunity(state, group) {
   });
 }
 
-export function getSecondaryCheckpointOpportunity(state, mission) {
+export function getMissionReviewOpportunity(state, mission) {
   if (!mission) return null;
   const result = mission.result ?? {};
-  const objectiveDependent = secondaryDependsOnObjectives(mission);
+  const objectiveDependent = reviewMissionDependsOnObjectives(mission);
   const needsObjectiveConfirmation = objectiveDependent && !areObjectiveControlsFresh(state);
-  const needsManualConfirmation = secondaryEvidenceUnavailable(mission);
+  const needsManualConfirmation = reviewMissionEvidenceUnavailable(mission);
   const eligible = result.eligible === true;
   return Object.freeze({
-    kind: 'secondary',
+    kind: mission.category ?? (mission.instanceId ? 'secondary' : 'mission'),
     definitionId: mission.definitionId,
     instanceId: mission.instanceId ?? null,
     definitionName: mission.definitionName ?? mission.definitionId,
@@ -102,25 +102,34 @@ export function getSecondaryCheckpointOpportunity(state, mission) {
   });
 }
 
+export const getSecondaryCheckpointOpportunity = getMissionReviewOpportunity;
+
 function actionableActions(actions = []) {
   return actions.filter((action) => !action?.review || action.review.outcome === 'completed');
 }
 
+function decorateReviewMissions(state, missions = []) {
+  return missions
+    .map((mission) => ({ mission, opportunity: getMissionReviewOpportunity(state, mission) }))
+    .filter((entry) => entry.opportunity?.actionable);
+}
+
 export function decorateScoringCheckpointGroup(state, group) {
   const primaryOpportunity = getPrimaryCheckpointOpportunity(state, group);
-  const secondaryOpportunities = (group?.review?.secondary ?? [])
-    .map((mission) => ({ mission, opportunity: getSecondaryCheckpointOpportunity(state, mission) }))
-    .filter((entry) => entry.opportunity?.actionable);
+  const reviewPrimaryOpportunities = decorateReviewMissions(state, group?.review?.primary ?? []);
+  const secondaryOpportunities = decorateReviewMissions(state, group?.review?.secondary ?? []);
   const actions = actionableActions(group?.actions ?? []);
-  const actionable = Boolean(primaryOpportunity?.actionable || secondaryOpportunities.length || actions.length);
+  const reviewOpportunities = [...reviewPrimaryOpportunities, ...secondaryOpportunities];
+  const actionable = Boolean(primaryOpportunity?.actionable || reviewOpportunities.length || actions.length);
   const requiresObjectiveConfirmation = Boolean(
     primaryOpportunity?.needsObjectiveConfirmation ||
-    secondaryOpportunities.some((entry) => entry.opportunity.needsObjectiveConfirmation)
+    reviewOpportunities.some((entry) => entry.opportunity.needsObjectiveConfirmation)
   );
 
   return {
     ...group,
     opportunity: primaryOpportunity,
+    reviewPrimaryOpportunities,
     secondaryOpportunities,
     actionableActions: actions,
     actionable,
