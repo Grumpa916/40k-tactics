@@ -3,12 +3,17 @@ import assert from 'node:assert/strict';
 import { mapUnitLabels, shortMapUnitName, unitDisplayLabels } from '../../src/ui/map-unit-labels.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 
-test('compact labels retain recognizable names and distinguish Norn variants', () => {
+test('compact labels retain recognizable names and distinguish variants', () => {
   assert.equal(shortMapUnitName({name:'Exocrine'}), 'Exocrine');
-  assert.equal(shortMapUnitName({name:'Norn Emissary'}), 'Norn Emiss');
-  assert.equal(shortMapUnitName({name:'Norn Assimilator'}), 'Norn Assim');
+  assert.equal(shortMapUnitName({name:'Norn Emissary'}), 'Norn Em');
+  assert.equal(shortMapUnitName({name:'Norn Assimilator'}), 'Norn As');
+  assert.equal(shortMapUnitName({name:'Blade Champion'}), 'B. Champ');
+  assert.equal(shortMapUnitName({name:'Shield-Captain'}), 'S. Capt');
+  assert.equal(shortMapUnitName({name:'Hormagaunts'}), 'Horm');
+  assert.equal(shortMapUnitName({name:'Termagants'}), 'Term');
+  assert.equal(shortMapUnitName({name:'Tyrannofex'}), 'Tfex');
   assert.notEqual(shortMapUnitName({name:'Custodian Guard'}), shortMapUnitName({name:'Custodian Wardens'}));
-  assert.ok(shortMapUnitName({name:'An unfamiliar very long unit name'}).length <= 11);
+  assert.ok(shortMapUnitName({name:'An unfamiliar very long unit name'}).length <= 9);
 });
 
 const unit = (id, ownerId, status = 'deployed') => ({id, ownerId, name:'Exocrine', status, position:{x:10,y:10}});
@@ -38,8 +43,8 @@ test('full unit names use the same stable duplicate numbers as map markers', () 
   assert.equal(labels.get('a'), 'Sentinel Guard Sodality 1');
   assert.equal(labels.get('b'), 'Sentinel Guard Sodality 2');
   assert.equal(labels.get('c'), 'Sentinel Guard Sodality');
-  assert.equal(mapUnitLabels(units).get('a'), 'Sentinel 1');
-  assert.equal(mapUnitLabels(units).get('b'), 'Sentinel 2');
+  assert.equal(mapUnitLabels(units).get('a'), 'Sent 1');
+  assert.equal(mapUnitLabels(units).get('b'), 'Sent 2');
   const html = renderBattlefieldMap({units}, {compactMarkers:true,selectedUnitId:'a',perspectivePlayerId:'p1'});
   assert.match(html, /Selected: <strong>Sentinel Guard Sodality 1<\/strong>/);
   assert.match(html, /aria-label="Select Sentinel Guard Sodality 1"/);
