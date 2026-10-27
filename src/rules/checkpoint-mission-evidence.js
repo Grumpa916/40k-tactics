@@ -5,11 +5,15 @@ import {
 } from './scoring-evidence-state.js';
 import { getMissionEvidenceCondition } from './mission-evidence-conditions.js';
 import { getPunishmentCondemnedUnitsLeftThisTurn } from './punishment-condemnation.js';
-import { getConsecrateReviewState, isOpponentHomeObjectiveForPlayer } from './consecrate-state.js';
+import {
+  getConsecrateReviewState,
+  isOpponentHomeObjectiveForPlayer,
+  isPlayerHomeObjective
+} from './consecrate-state.js';
 
 const OBJECTIVE_CONTROL_TYPES = new Set([
   'control-non-home', 'count-non-home', 'count-objectives', 'control-more',
-  'control-objectives', 'control-central', 'new-non-home-control', 'control-opponent-home'
+  'control-objectives', 'control-central', 'control-home', 'new-non-home-control', 'control-opponent-home'
 ]);
 
 function objectiveText(objective) {
@@ -54,6 +58,11 @@ export function missionConditionEvidence(state, playerId, item) {
     if (type === 'control-more') count = Number(controlled.length > enemy.length);
     if (type === 'control-objectives') count = Number(controlled.length >= condition.minimum);
     if (type === 'control-central') count = Number(central.length >= condition.minimum);
+    if (type === 'control-home') {
+      const home = controlled.filter((objective) => isPlayerHomeObjective(state, objective, playerId));
+      count = Number(home.length >= (condition.minimum ?? 1));
+      detail = home.length + ' home objectives controlled.';
+    }
     if (type === 'control-opponent-home') {
       const opponentHome = controlled.filter((objective) => isOpponentHomeObjectiveForPlayer(state, objective, playerId));
       count = Number(opponentHome.length >= (condition.minimum ?? 1));
