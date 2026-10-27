@@ -4,6 +4,7 @@ import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
 import { reviewMissionAction } from "./mission-action-transitions.js";
 import { finishCombatActivation } from "./combat-activation-transitions.js";
 import { updatePreparation } from "./event-preparation-transitions.js";
+import { recordPunishmentCondemnation } from "./punishment-transitions.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
 import { setPreGameRoles, setBattleSize } from "./battle-setup-transitions.js";
@@ -63,6 +64,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.SET_PRE_GAME_ROLES, (state, command) => setPreGameRoles(state, command.payload)],
     [COMMAND_TYPES.SET_BATTLE_SIZE, (state, command) => setBattleSize(state, command.payload)],
     [COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, (state, command) => recordObjectiveControl(state, command.payload)],
+    [COMMAND_TYPES.RECORD_PUNISHMENT_CONDEMNATION, (state, command) => recordPunishmentCondemnation(state, command.payload)],
     [COMMAND_TYPES.START_FIRST_TURN, (state, command) => startFirstTurn(state, command.payload)],
     [COMMAND_TYPES.CHANGE_PHASE, (state, command) => changePhase(state, command.payload)],
     [COMMAND_TYPES.END_TURN, (state, command) => endTurn(state, command.payload)],
