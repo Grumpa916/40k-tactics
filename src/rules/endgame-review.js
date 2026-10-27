@@ -1,10 +1,11 @@
+import { getEndgameEvidence, getEvidenceLessons } from './endgame-evidence.js';
 // Read-only review of recorded evidence. Never reconstruct past choices from the final map.
 const number = value => typeof value === 'number' && Number.isFinite(value);
 const frame = p => ({ round: Number.isInteger(p.round) ? p.round : null, turn: Number.isInteger(p.turn) ? p.turn : null });
 
-export function getEndgameReview(state, { playerId = state.players?.[0]?.id } = {}) {
+export function getEndgameReview(state, { playerId = state.players?.[0]?.id, unitLabels = new Map() } = {}) {
   const history = Array.isArray(state.history) ? state.history : [];
-  const roster = new Map((state.units ?? []).filter(Boolean).map(u => [u.id, u]));
+  const roster = new Map((state.units ?? []).filter(Boolean).map(u => [u.id, {...u,name:unitLabels.get(u.id) ?? u.name}]));
   const reversedIds = new Set(), reversedIndices = new Set();
   for (const event of history) {
     if (['victory_points.award_undone', 'victory_points.adjustment_undone'].includes(event?.type)) {
@@ -91,13 +92,14 @@ export function getEndgameReview(state, { playerId = state.players?.[0]?.id } = 
   const largestSwing = scoreSwings.find(s=>s.margin !== 0) ?? null;
   const own=players.find(p=>p.id===playerId), enemy=players.find(p=>p.id!==playerId);
   const ownUnits=[...units.values()].filter(u=>u.ownerId===playerId);
-  const lessons=[];
+  const evidence=getEndgameEvidence(state,scores,unitLabels);
+  const lessons=getEvidenceLessons(evidence,playerId);
   if (own && enemy && own.unallocated === 0 && enemy.unallocated === 0 && own.entries && enemy.entries && enemy.categories.primary > own.categories.primary) {
     lessons.push({kind:'Possible improvement',evidence:`Recorded Primary scoring: ${own.categories.primary} VP for ${own.name}, ${enemy.categories.primary} VP for ${enemy.name}.`,
       advice:'Review how you protected objective holders before scoring checkpoints. This gap alone does not prove that a different move would have scored.'});
   }
   const failed=ownUnits.reduce((n,u)=>n+u.failedCharges,0), charges=ownUnits.reduce((n,u)=>n+u.charges,0);
-  if(failed) lessons.push({kind:'Possible improvement',evidence:`${failed} of ${charges} recorded charge attempts failed.`,advice:'Plan a fallback for important charges. A failed charge is not itself a mistake; modifiers, rerolls and alternatives are not fully recorded.'});
+  if(failed && !lessons.some(l=>l.kind==='Charge planning')) lessons.push({kind:'Possible improvement',evidence:`${failed} of ${charges} recorded charge attempts failed.`,advice:'Plan a fallback for important charges. A failed charge is not itself a mistake; modifiers, rerolls and alternatives are not fully recorded.'});
   const expected=ownUnits.reduce((n,u)=>n+u.expectedDamage,0), actual=ownUnits.reduce((n,u)=>n+u.comparableDamage,0), pairs=ownUnits.reduce((n,u)=>n+u.comparisons,0);
   if(pairs && expected > actual + 2) lessons.push({kind:'Outcome context',evidence:`Across ${pairs} attacks with saved estimates, recorded damage was ${actual.toFixed(1)} against ${expected.toFixed(1)} expected.`,advice:'Allow a margin when planning to remove a crucial target. Below-average damage does not establish bad target selection or prove bad dice.'});
   const actionUnit=ownUnits.filter(u=>u.completedActions).sort((a,b)=>b.completedActions-a.completedActions)[0];
@@ -111,5 +113,5 @@ export function getEndgameReview(state, { playerId = state.players?.[0]?.id } = 
   if(unknownOwners) evidenceGaps.push(`${unknownOwners} attack entries have incomplete unit ownership; no side-specific conclusion is drawn from those entries.`);
   if(players.some(p=>p.total == null || p.unallocated !== 0)) evidenceGaps.push('Some score totals are missing or do not reconcile with the scoring history. Unallocated VP are shown separately, without assigning them to a round or mission.');
   return {largestSwing,complete:state.battle?.status === 'complete',playerId,players,rounds,scores,units:[...units.values()],moments,
-    lessons:lessons.slice(0,3),evidenceGaps,coverage:{attacks,comparisons,scoreEntries:scores.length}};
+    lessons:lessons.slice(0,6),evidence,evidenceGaps,coverage:{attacks,comparisons,scoreEntries:scores.length}};
 }

@@ -1,3 +1,4 @@
+import { getChargeReviewSnapshot } from '../rules/charge-review-snapshot.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -87,6 +88,7 @@ export function recordChargeOutcome(state, {
     outcome: succeeded ? "successful" : "failed",
     targetIds: [...targetIds],
     measuredDistances: normalizedMeasuredDistances,
+    reviewSnapshot: getChargeReviewSnapshot(state, charger, targetIds, normalizedMeasuredDistances),
     round: state.battle.round,
     turn: state.turn
   });

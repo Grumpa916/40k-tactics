@@ -16,3 +16,6 @@
 .endgame-review__confirm{flex-basis:100%}.endgame-review__confirm label{display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px}.endgame-review input{width:22px;height:22px}
 .endgame-review li{margin-bottom:10px}.endgame-review__confirm button{margin:8px 8px 0 0}
 @media(max-width:650px){.endgame-review{padding:8px}.endgame-review section,.endgame-review header{padding:12px}}
+.endgame-review a{color:#c4e99b;text-underline-offset:3px}
+.endgame-review tr:target{background:#314c40;outline:2px solid #c4e99b;outline-offset:-2px}
+.endgame-review__lesson a{display:inline-block;min-height:32px;padding:6px 2px}
