@@ -1,6 +1,6 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
-import { getMovementStrategicRecommendations } from "../rules/tactical-movement-opportunities.js";
-import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy.js";
+import { getMovementStrategicRecommendations } from "../rules/tactical-movement-router.js";
+import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
 
 let highlightEventsBound = false;
 let activeHighlight = null;
