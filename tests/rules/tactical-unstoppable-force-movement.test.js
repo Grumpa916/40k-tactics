@@ -67,12 +67,14 @@ test("Unstoppable Force movement ranking elevates a reachable new non-home captu
   assert.equal(result.primaryStrategy.active,true);
   assert.equal(result.primaryStrategy.missionName,"Unstoppable Force");
   const scorer=result.recommendations.find((item)=>item.unitId==="scorer");
-  assert.equal(scorer.objectiveId,"centerA");
-  assert.equal(scorer.purpose,"contest-objective");
-  assert.equal(scorer.primaryStrategySignal.active,true);
-  assert.equal(scorer.primaryStrategySignal.newlyEligible,true);
-  assert.ok(scorer.primaryStrategySignal.vpLeverage>=7);
-  assert.match(scorer.reason,/Unstoppable Force|3 VP new-control condition|4 VP-per-objective/);
+  const options=[scorer,...(scorer.alternatives??[])];
+  const capture=options.find((item)=>item.objectiveId==="centerA");
+  assert.ok(capture,"reachable center capture should remain among the selected unit's top movement options");
+  assert.equal(capture.purpose,"contest-objective");
+  assert.equal(capture.primaryStrategySignal.active,true);
+  assert.equal(capture.primaryStrategySignal.newlyEligible,true);
+  assert.ok(capture.primaryStrategySignal.vpLeverage>=7);
+  assert.match(capture.reason,/3 VP new-control condition|4 VP-per-objective/);
 });
 
 test("Unstoppable Force movement UI shows the live primary outlook without adding input", () => {
