@@ -1,3 +1,4 @@
+import { getAttackReviewSnapshot } from '../rules/review-context-snapshot.js';
 import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
 import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
@@ -109,6 +110,7 @@ export function resolveUnitAttack(state, {
   let profile = null;
   let result = null;
   let expectedDamage = null;
+  let reviewSnapshot = null;
   const attackerProfile = getProbabilisticUnitProfile(state, sourceAttacker);
   const targetProfile = getProbabilisticUnitProfile(state, target);
   try {
@@ -118,7 +120,9 @@ export function resolveUnitAttack(state, {
       weapon
     });
     if (actualDamage === null) result = resolveAttack({ ...profile, random });
-    expectedDamage = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon }).expectedDamage;
+    const forecast = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon });
+    expectedDamage = forecast.expectedDamage;
+    reviewSnapshot = getAttackReviewSnapshot(forecast,targetProfile,allocationTarget?.id);
   } catch (error) {
     // Live battles deliberately allow incomplete saved-roster profiles. When the
     // player supplies actual damage, preserve that authoritative table result
@@ -150,6 +154,7 @@ export function resolveUnitAttack(state, {
     profile,
     result,
     expectedDamage,
+    reviewSnapshot,
     actualDamage: recordedDamage,
     stateDelta: {
       target: {

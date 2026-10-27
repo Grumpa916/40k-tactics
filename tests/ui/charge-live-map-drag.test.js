@@ -61,11 +61,13 @@ test('Charge live map lets the active player drag deployed units without adding 
     assert.match(x.root.innerHTML, /Drag an active player's deployed unit/);
     x.drag('charger', {x:30,y:24});
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'charger').position, {x:30,y:24});
-    assert.equal(x.session.getState().history.length, historyBefore);
+    assert.equal(x.session.getState().history.length, historyBefore + 1);
+    assert.equal(x.session.getState().history.at(-1).type, 'battlefield_map.position_adjusted');
 
     x.drag('support', {x:18,y:12});
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'support').position, {x:18,y:12});
-    assert.equal(x.session.getState().history.length, historyBefore);
+    assert.equal(x.session.getState().history.length, historyBefore + 2);
+    assert.ok(x.session.getState().history.slice(historyBefore).every(e=>e.type==='battlefield_map.position_adjusted'));
   } finally {
     x.screen.destroy();
   }

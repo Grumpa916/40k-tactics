@@ -157,3 +157,11 @@ test('the last casualty destroys an originally multi-model unit and undo can res
   assert.equal(restored.units[0].currentStrength, 1);
   assert.equal(restored.units[0].status, 'deployed');
 });
+
+test('casualty undo retains a stable reference when other history entries are removed',()=>{
+ const s=termagantState();s.history=[{type:'unrelated'}];
+ const next=recordUnitCasualty(s,{unitId:'p1:gants'}),id=next.history.at(-1).id;
+ assert.ok(id);next.history.shift();
+ const undone=undoUnitCasualty(next,{unitId:'p1:gants'});
+ assert.equal(undone.history.at(-1).payload.originalCasualtyEventId,id);
+});

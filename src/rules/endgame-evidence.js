@@ -46,7 +46,7 @@ export function getEndgameEvidence(state, scores = [], unitLabels = new Map()) {
     return [{...frame(p),index,unitId:p.unitId,unitName:name(p.unitId),ownerId:units.get(p.unitId)?.ownerId ?? p.playerId ?? null,
       mission:p.missionName ?? p.missionInstanceId,outcome:['completed','failed'].includes(result?.outcome) ? result.outcome : 'unreviewed'}];
   });
-  const roundKeys=[...new Set([...scores,...attacks,...charges,...actions].map(e=>e.round))].sort((a,b)=>(a ?? Infinity)-(b ?? Infinity));
+  const roundKeys=[...new Set([...scores,...attacks,...charges,...actions,...history.filter(e=>e?.type==='unit.casualty_recorded').map(e=>frame(e.payload ?? {}))].map(e=>e.round))].sort((a,b)=>(a ?? Infinity)-(b ?? Infinity));
   const rounds=roundKeys.map(round=>({round,players:(state.players ?? []).map(player=>{
     const own=attacks.filter(a=>a.round === round && a.ownerId === player.id);
     const pairs=own.filter(a=>a.actual!=null && a.expected!=null);

@@ -101,10 +101,13 @@ export function recordUnitCasualty(state, {
   const modelsAfter = modelsBefore - 1;
   const statusBefore = unit.status;
   const statusAfter = modelsAfter <= 0 ? UNIT_STATUS.DESTROYED : statusBefore;
+  const casualtyEventId=crypto.randomUUID();
   const undoSnapshot = {
+    casualtyEventId,
     hadCurrentStrength: Object.hasOwn(unit, 'currentStrength'),
     currentStrengthBefore: unit.currentStrength,
     statusBefore,
+    casualtyEventIndex:state.history.length,
     liveWargearBefore: cloneLiveWargear(unit.liveWargear)
   };
   const unitAfter = {
@@ -135,7 +138,7 @@ export function recordUnitCasualty(state, {
   return appendHistoryEntry({
     ...state,
     units: state.units.map((item) => item.id === unitId ? unitAfter : item)
-  }, event);
+  }, {...event,id:casualtyEventId});
 }
 
 export function undoUnitCasualty(state, { unitId } = {}) {
@@ -158,6 +161,8 @@ export function undoUnitCasualty(state, { unitId } = {}) {
 
   const restored = getCasualtyLoadoutState({ ...state, units: state.units.map((item) => item.id === unitId ? unitAfter : item) }, unitAfter);
   const event = createEvent('unit.casualty_undone', {
+    originalCasualtyEventId:snapshot.casualtyEventId ?? null,
+    originalCasualtyEventIndex:snapshot.casualtyEventIndex ?? null,
     unitId,
     playerId: unit.ownerId,
     modelsBefore: modelsBeforeUndo,

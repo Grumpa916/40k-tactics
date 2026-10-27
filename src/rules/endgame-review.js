@@ -1,3 +1,4 @@
+import { getEndgameContext } from './endgame-context.js';
 import { getEndgameEvidence, getEvidenceLessons } from './endgame-evidence.js';
 // Read-only review of recorded evidence. Never reconstruct past choices from the final map.
 const number = value => typeof value === 'number' && Number.isFinite(value);
@@ -93,6 +94,10 @@ export function getEndgameReview(state, { playerId = state.players?.[0]?.id, uni
   const own=players.find(p=>p.id===playerId), enemy=players.find(p=>p.id!==playerId);
   const ownUnits=[...units.values()].filter(u=>u.ownerId===playerId);
   const evidence=getEndgameEvidence(state,scores,unitLabels);
+  const context=getEndgameContext(state,unitLabels);
+  for(const round of evidence.rounds) for(const player of round.players) {
+    player.lost=[...new Map(context.losses.filter(l=>l.destroyed && l.round===round.round && l.ownerId===player.playerId).map(l=>[l.unitId,l.unitName])).values()];
+  }
   const lessons=getEvidenceLessons(evidence,playerId);
   if (own && enemy && own.unallocated === 0 && enemy.unallocated === 0 && own.entries && enemy.entries && enemy.categories.primary > own.categories.primary) {
     lessons.push({kind:'Possible improvement',evidence:`Recorded Primary scoring: ${own.categories.primary} VP for ${own.name}, ${enemy.categories.primary} VP for ${enemy.name}.`,
@@ -113,5 +118,5 @@ export function getEndgameReview(state, { playerId = state.players?.[0]?.id, uni
   if(unknownOwners) evidenceGaps.push(`${unknownOwners} attack entries have incomplete unit ownership; no side-specific conclusion is drawn from those entries.`);
   if(players.some(p=>p.total == null || p.unallocated !== 0)) evidenceGaps.push('Some score totals are missing or do not reconcile with the scoring history. Unallocated VP are shown separately, without assigning them to a round or mission.');
   return {largestSwing,complete:state.battle?.status === 'complete',playerId,players,rounds,scores,units:[...units.values()],moments,
-    lessons:lessons.slice(0,6),evidence,evidenceGaps,coverage:{attacks,comparisons,scoreEntries:scores.length}};
+    lessons:lessons.slice(0,6),evidence,context,evidenceGaps,coverage:{attacks,comparisons,scoreEntries:scores.length}};
 }

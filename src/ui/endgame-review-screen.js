@@ -1,3 +1,4 @@
+import { renderEndgameContext } from './endgame-context-view.js';
 import { renderEndgameEvidence } from './endgame-evidence-view.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
 import { getEndgameReview } from '../rules/endgame-review.js';
@@ -35,6 +36,7 @@ export function renderEndgameReview(state, { playerId, confirmEnd = false, messa
     <section><h3>Score by round</h3>${roundRows.length?table('Effective recorded VP, with undone entries excluded',['Round',...review.players.map(p=>p.name)],roundRows):'<p>No scoring history recorded yet.</p>'}<p>— means no entry for that player and round, not a confirmed zero.</p></section>
     <section><h3>Lessons to consider · ${esc(playerName(review.playerId) ?? 'your army')}</h3>${review.lessons.length?review.lessons.map(l=>`<article class="endgame-review__lesson"><strong>${esc(l.kind)}</strong><p>${esc(l.evidence)}</p><p>${esc(l.advice)}</p>${l.eventIndices?.length?`<p>Evidence: ${l.eventIndices.map((index,i)=>`<a href="#endgame-event-${index}">entry ${i+1}</a>`).join(' · ')}</p>`:''}</article>`).join(''):'<p>Not enough recorded evidence for specific coaching yet. No mistakes inferred.</p>'}</section>
     ${renderEndgameEvidence(review)}
+    ${renderEndgameContext(review)}
     <section><h3>Recorded turning points</h3>${swing?`<p><strong>Largest recorded round scoring gap:</strong> Round ${esc(swing.round)}, ${esc(swing.margin>0?first.name:second.name)} gained ${esc(Math.abs(swing.margin))} VP more than the other player. Only rounds with entries for both players are compared.</p>`:''}<p>These are confirmed destruction events, not proof of what decided the game.</p>${review.moments.length?`<ol>${review.moments.map(m=>`<li><strong>${esc(when(m))}</strong> · ${esc(m.text)}</li>`).join('')}</ol>`:'<p>No combat destruction events recorded.</p>'}</section>
     <section><h3>Unit contributions</h3>${unitTables}<p>Damage is the entered attack result; it can exceed wounds remaining. *Actual / expected compares only attacks with both values saved; the number in brackets is the compared attack count. Declined charges are excluded from attempts. Confirmed mission actions do not automatically imply VP.</p></section>
     <details><summary>Scoring entries</summary>${review.scores.length?table('Effective awards and manual adjustments',['When','Player','Category','VP','Reason'],review.scores.map(s=>row([when(s),playerName(s.playerId),s.category,num(s.amount),s.reason]))):'<p>No scoring entries recorded.</p>'}</details>
