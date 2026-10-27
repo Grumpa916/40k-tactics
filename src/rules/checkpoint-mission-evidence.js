@@ -1,17 +1,56 @@
-import { getEnemyUnitDestructionsForTurn } from './scoring-evidence-state.js';
+import {
+  getEnemyUnitDestructionsForTurn,
+  getFriendlyUnitDestructionsForTurn,
+  getTurnSnapshot
+} from './scoring-evidence-state.js';
 import { getMissionEvidenceCondition } from './mission-evidence-conditions.js';
+import { getPunishmentCondemnedUnitsLeftThisTurn } from './punishment-condemnation.js';
+import {
+  getConsecrateReviewState,
+  isOpponentHomeObjectiveForPlayer,
+  isPlayerHomeObjective
+} from './consecrate-state.js';
+
+const OBJECTIVE_CONTROL_TYPES = new Set([
+  'control-non-home', 'count-non-home', 'count-objectives', 'control-more',
+  'control-objectives', 'control-central', 'control-home', 'new-non-home-control', 'control-opponent-home'
+]);
+
+function objectiveText(objective) {
+  return `${objective?.name ?? ''} ${objective?.id ?? ''} ${objective?.layoutObjective ?? ''}`;
+}
+
+function isHomeObjective(objective) {
+  return /home/i.test(objectiveText(objective));
+}
+
+function controlledBy(objective, playerId) {
+  return objective?.control?.controlState === 'controlled' && objective?.control?.controllerId === playerId;
+}
+
+function newNonHomeControlCount(state, playerId, objectives) {
+  const snapshot = getTurnSnapshot(state, state.turn ?? 0);
+  if (!snapshot) return null;
+  const startById = new Map((snapshot.objectives ?? []).map((objective) => [objective.id, objective]));
+  const relevant = objectives.filter((objective) => !isHomeObjective(objective));
+  if (!relevant.every((objective) => startById.has(objective.id))) return null;
+  return relevant.filter((objective) =>
+    controlledBy(objective, playerId) && !controlledBy(startById.get(objective.id), playerId)
+  ).length;
+}
 
 // Only explicit recorded facts qualify. Approximate positions cannot prove mission ranges.
 export function missionConditionEvidence(state, playerId, item) {
   const condition = typeof item === 'object' ? item?.condition ?? getMissionEvidenceCondition(item?.summary) : getMissionEvidenceCondition(item);
   const objectives = state.objectives ?? [];
   const known = objectives.length > 0 && objectives.every(o => o.control != null);
-  const controlled = objectives.filter(o => o.control?.controlState === 'controlled' && o.control.controllerId === playerId);
+  const controlled = objectives.filter(o => controlledBy(o, playerId));
   const enemy = objectives.filter(o => o.control?.controlState === 'controlled' && o.control.controllerId !== playerId);
-  const nonHome = controlled.filter(o => !/home/i.test(o.name ?? o.id));
-  const central = controlled.filter(o => /cent(er|ral)/i.test(o.name ?? o.id));
+  const nonHome = controlled.filter(o => !isHomeObjective(o));
+  const central = controlled.filter(o => /cent(er|ral)/i.test(objectiveText(o)));
   let count = null, detail = '';
   const type = condition?.type;
+
   if (known) {
     if (type === 'control-non-home') count = Number(nonHome.length >= condition.minimum);
     if (type === 'count-non-home') count = nonHome.length;
@@ -19,17 +58,69 @@ export function missionConditionEvidence(state, playerId, item) {
     if (type === 'control-more') count = Number(controlled.length > enemy.length);
     if (type === 'control-objectives') count = Number(controlled.length >= condition.minimum);
     if (type === 'control-central') count = Number(central.length >= condition.minimum);
+    if (type === 'control-home') {
+      const home = controlled.filter((objective) => isPlayerHomeObjective(state, objective, playerId));
+      count = Number(home.length >= (condition.minimum ?? 1));
+      detail = home.length + ' home objectives controlled.';
+    }
+    if (type === 'control-opponent-home') {
+      const opponentHome = controlled.filter((objective) => isOpponentHomeObjectiveForPlayer(state, objective, playerId));
+      count = Number(opponentHome.length >= (condition.minimum ?? 1));
+      detail = opponentHome.length + ' opponent-home objectives controlled.';
+    }
+    if (type === 'new-non-home-control') {
+      const newlyControlled = newNonHomeControlCount(state, playerId, objectives);
+      count = newlyControlled == null ? null : Number(newlyControlled >= (condition.minimum ?? 1));
+      detail = newlyControlled == null
+        ? 'Turn-start objective snapshot is unavailable.'
+        : newlyControlled + ' newly controlled non-home objectives recorded this turn.';
+    }
   }
-  if (type && !['destroy-enemy', 'count-destroyed'].includes(type)) {
+
+  if (OBJECTIVE_CONTROL_TYPES.has(type) && !detail) {
     const current = objectives.filter(o => o.controlRecordedAt?.turn === state.turn && o.controlRecordedAt?.round === state.battle?.round).length;
     detail = controlled.length + ' objectives controlled; ' + nonHome.length + ' non-home; opponent ' + enemy.length +
-      '. Control confirmations: ' + current + ' this turn, ' + (objectives.length - current) + ' carried forward or undated. Confirm at this checkpoint.';
+      '. Control confirmations: ' + current + ' this turn, ' + (objectives.length - current) + ' carried forward or undated.';
   }
+
   if (type === 'destroy-enemy' || type === 'count-destroyed') {
     const destroyed = getEnemyUnitDestructionsForTurn(state, playerId, state.turn ?? 0);
     count = type === 'count-destroyed' ? destroyed.length : Number(destroyed.length >= condition.minimum);
     detail = destroyed.length + ' enemy destructions recorded this turn.';
   }
+
+  if (type === 'kill-more-than-last-losses') {
+    const turn = state.turn ?? 0;
+    const destroyed = getEnemyUnitDestructionsForTurn(state, playerId, turn).length;
+    const losses = turn > 0 ? getFriendlyUnitDestructionsForTurn(state, playerId, turn - 1).length : 0;
+    count = Number(destroyed > losses);
+    detail = destroyed + ' enemy destructions this turn versus ' + losses + ' friendly units lost last turn.';
+  }
+
+  if (type === 'condemned-left') {
+    const left = getPunishmentCondemnedUnitsLeftThisTurn(state, playerId);
+    count = Number(left.length >= (condition.minimum ?? 1));
+    detail = left.length + ' condemned enemy unit' + (left.length === 1 ? '' : 's') + ' recorded as leaving the battlefield this turn.';
+  }
+
+  if (type === 'consecrated-count' || type === 'consecrated-opponent-home') {
+    const consecrate = getConsecrateReviewState(state, { playerId });
+    if (!consecrate.active) {
+      count = null;
+      detail = 'Consecrate mission state is unavailable for this player.';
+    } else if (type === 'consecrated-count') {
+      const minimum = condition.minimum ?? 0;
+      const maximum = condition.maximum ?? Infinity;
+      count = Number(consecrate.consecratedCount >= minimum && consecrate.consecratedCount <= maximum);
+      detail = consecrate.consecratedCount + ' objectives are recorded as consecrated.';
+    } else {
+      count = Number(consecrate.opponentHomeConsecrated === true);
+      detail = consecrate.opponentHomeConsecrated
+        ? 'The opponent home objective is recorded as consecrated.'
+        : 'The opponent home objective is not recorded as consecrated.';
+    }
+  }
+
   return { status: count == null ? 'Needs tabletop confirmation' : count > 0 ? 'Completed in recorded state' : 'Not completed in recorded state', count, detail };
 }
 

@@ -2,6 +2,7 @@ import { primaryWindowDue } from '../rules/checkpoint-mission-evidence.js';
 import { evaluateScoringCheckpoint } from '../engine/scoring-check-coordinator.js';
 import { getMissionActionReviews } from '../rules/mission-action-state.js';
 import { getBattlePrimaryMissionDefinitions } from '../data/primary-mission-catalog.js';
+import { decorateScoringCheckpointGroup } from './scoring-checkpoint-opportunities.js';
 
 export function getScoringCheckpointReminder(state, { previousPhase, missionDefinitions=[], perspectivePlayerId=null } = {}) {
   const timing=previousPhase==='command'&&state.phase==='movement'?'command-phase':state.phase==='end_turn'&&previousPhase!=='end_turn'?'end-of-turn':null;
@@ -24,12 +25,15 @@ export function getScoringCheckpointReminder(state, { previousPhase, missionDefi
     group.primaryScoringWindows=(group.primaryReference?.scoring??[]).filter(window =>
       primaryWindowDue(window.when, group.checkpoint, state.battle?.round));
   }
+  const actionableGroups=groups.map(group=>decorateScoringCheckpointGroup(state,group)).filter(group=>group.actionable);
+  if (!actionableGroups.length) return null;
   const activeName=players.find(p=>p.id===activePlayerId)?.name??'active player';
   return {timing,label:`End of ${activeName}'s ${timing==='command-phase'?'Command phase':'turn'}`,
-    activePlayerId,scoringPlayerId:activePlayerId,groups,
-    missions:groups.flatMap(group=>[
-      ...(group.primaryReference?[`${group.playerName}: ${group.primaryReference.name}`]:[]),
-      ...[...group.review.primary,...group.review.secondary].map(item=>`${group.playerName}: ${item.definitionName??item.definitionId}`)
+    activePlayerId,scoringPlayerId:activePlayerId,perspectivePlayerId:myPlayer,groups:actionableGroups,
+    requiresObjectiveConfirmation:actionableGroups.some(group=>group.requiresObjectiveConfirmation),
+    missions:actionableGroups.flatMap(group=>[
+      ...(group.opportunity?.actionable&&group.primaryReference?[`${group.playerName}: ${group.primaryReference.name}`]:[]),
+      ...[...(group.reviewPrimaryOpportunities??[]),...(group.secondaryOpportunities??[])].map(entry=>`${group.playerName}: ${entry.mission.definitionName??entry.mission.definitionId}`)
     ])};
 }
 

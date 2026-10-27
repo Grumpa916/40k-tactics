@@ -12,3 +12,10 @@
 .checkpoint-player select { min-height:44px; padding:8px; margin:4px 8px; font:inherit; background:#1b2a30; color:#f2f4f8; border:1px solid #7c9668; border-radius:8px; }
 .checkpoint-player [role=status] { border-left:3px solid #c6e99e; padding:8px; }
 .checkpoint-player .checkpoint-vp-estimate { margin:0 0 12px; border-radius:6px; background:#20342a; line-height:1.45; }
+.checkpoint-objective-confirmation { padding:12px; margin:8px 0 14px; border:1px solid #80659c; border-radius:10px; background:#211b2a; }
+.checkpoint-objective-confirmation h3 { margin:0 0 6px; }
+.checkpoint-objective-confirmation p { margin:6px 0 10px; }
+.checkpoint-objective-confirmation__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px; margin:10px 0; }
+.checkpoint-objective-confirmation__objective { min-height:50px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px; padding:8px 10px; border:1px solid #8a7a9f; border-radius:8px; background:#30263b; color:#f2f4f8; font:inherit; touch-action:manipulation; }
+.checkpoint-objective-confirmation__objective span { font-size:12px; font-weight:800; letter-spacing:.04em; }
+.checkpoint-objective-confirmation [data-confirm-checkpoint-objectives] { min-height:46px; padding:8px 12px; border:1px solid #b99bdd; border-radius:8px; background:#41314f; color:#fff; font:inherit; font-weight:750; }
