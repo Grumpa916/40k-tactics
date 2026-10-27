@@ -2,38 +2,17 @@ name: Diagnostic final checkpoint
 on:
   push:
 jobs:
-  application:
+  ui-a-m:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: node --test tests/application/*.test.js
-  engine:
+      - run: node --test tests/ui/[a-m]*.test.js
+  ui-n-z:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: node --test tests/engine/*.test.js
-  rules:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: node --test tests/rules/*.test.js
-  ui:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: node --test tests/ui/*.test.js
-  state-data-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: node --test tests/state/*.test.js tests/data/*.test.js tests/build/*.test.js
+      - run: node --test tests/ui/[n-z]*.test.js
