@@ -1,8 +1,10 @@
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import {
   getEnemyUnitDestructionsForTurn,
-  getFriendlyUnitDestructionsForTurn
+  getFriendlyUnitDestructionsForTurn,
+  getTurnSnapshot
 } from "./scoring-evidence-state.js";
+import { clamp01 } from "./tactical-context-utils.js";
 
 function playerIds(state) {
   return (Array.isArray(state?.players) ? state.players : []).map((player) => player?.id).filter(Boolean);
@@ -18,29 +20,94 @@ function resolvePrimaryMission(state, playerId, perspectivePlayerId = null) {
   return playerId === perspective ? definitions.myMission : definitions.opponentMission;
 }
 
+function objectiveText(objective) {
+  return String(objective?.name ?? objective?.id ?? "");
+}
+
+function isHomeObjective(objective) {
+  return /home/i.test(objectiveText(objective));
+}
+
+function isCentralObjective(objective) {
+  return /cent(er|ral)/i.test(objectiveText(objective));
+}
+
+function controlledBy(control, playerId) {
+  return control?.controlState === "controlled" && control?.controllerId === playerId;
+}
+
 function objectiveSnapshot(state, playerId) {
-  const objectives = Array.isArray(state?.objectives) ? state.objectives : [];
-  const known = objectives.length > 0 && objectives.every((objective) => objective?.control != null);
+  const all = Array.isArray(state?.objectives) ? state.objectives : [];
+  const known = all.length > 0 && all.every((objective) => objective?.control != null);
   if (!known) {
-    return Object.freeze({ known: false, controlled: 0, opponentControlled: 0, nonHomeControlled: 0, margin: 0 });
+    return Object.freeze({
+      known: false,
+      controlled: 0,
+      opponentControlled: 0,
+      nonHomeControlled: 0,
+      centralControlled: 0,
+      margin: 0,
+      controlledIds: Object.freeze([]),
+      nonHomeControlledIds: Object.freeze([]),
+      centralControlledIds: Object.freeze([])
+    });
   }
 
-  const controlled = objectives.filter((objective) =>
-    objective?.control?.controlState === "controlled" && objective?.control?.controllerId === playerId
-  );
-  const opponentControlled = objectives.filter((objective) =>
+  const controlled = all.filter((objective) => controlledBy(objective?.control, playerId));
+  const opponentControlled = all.filter((objective) =>
     objective?.control?.controlState === "controlled" &&
     objective?.control?.controllerId != null &&
     objective.control.controllerId !== playerId
   );
-  const nonHomeControlled = controlled.filter((objective) => !/home/i.test(objective?.name ?? objective?.id ?? ""));
+  const nonHomeControlled = controlled.filter((objective) => !isHomeObjective(objective));
+  const centralControlled = controlled.filter((objective) => isCentralObjective(objective));
 
   return Object.freeze({
     known: true,
     controlled: controlled.length,
     opponentControlled: opponentControlled.length,
     nonHomeControlled: nonHomeControlled.length,
-    margin: controlled.length - opponentControlled.length
+    centralControlled: centralControlled.length,
+    margin: controlled.length - opponentControlled.length,
+    controlledIds: Object.freeze(controlled.map((objective) => objective.id)),
+    nonHomeControlledIds: Object.freeze(nonHomeControlled.map((objective) => objective.id)),
+    centralControlledIds: Object.freeze(centralControlled.map((objective) => objective.id))
+  });
+}
+
+function turnStartAcquisitionContext(state, playerId) {
+  const turn = Number.isInteger(state?.turn) ? state.turn : 0;
+  const objectives = Array.isArray(state?.objectives) ? state.objectives : [];
+  const snapshot = getTurnSnapshot(state, turn);
+  if (!snapshot) {
+    return Object.freeze({
+      known: false,
+      eligibleObjectiveIds: Object.freeze([]),
+      newlyControlledObjectiveIds: Object.freeze([])
+    });
+  }
+
+  const startById = new Map((snapshot.objectives ?? []).map((objective) => [objective.id, objective]));
+  const relevant = objectives.filter((objective) => !isHomeObjective(objective));
+  const known = relevant.every((objective) => startById.has(objective.id));
+  if (!known) {
+    return Object.freeze({
+      known: false,
+      eligibleObjectiveIds: Object.freeze([]),
+      newlyControlledObjectiveIds: Object.freeze([])
+    });
+  }
+
+  const eligible = relevant.filter((objective) => {
+    const start = startById.get(objective.id);
+    return !controlledBy(start?.control, playerId);
+  });
+  const newlyControlled = eligible.filter((objective) => controlledBy(objective?.control, playerId));
+
+  return Object.freeze({
+    known: true,
+    eligibleObjectiveIds: Object.freeze(eligible.map((objective) => objective.id)),
+    newlyControlledObjectiveIds: Object.freeze(newlyControlled.map((objective) => objective.id))
   });
 }
 
@@ -130,6 +197,7 @@ function destroyersWrathContext(state, playerId, mission) {
     opponentControlledObjectives: objectives.opponentControlled,
     objectiveMargin: objectives.margin,
     nonHomeControlled: objectives.nonHomeControlled,
+    nonHomeControlledObjectiveIds: objectives.nonHomeControlledIds,
     majoritySatisfied,
     nonHomeSatisfied,
     enemyKillsThisTurn: enemyKills,
@@ -159,12 +227,188 @@ function destroyersWrathContext(state, playerId, mission) {
   });
 }
 
+function unstoppableForceContext(state, playerId, mission) {
+  const round = Math.max(1, Number(state?.battle?.round) || 1);
+  const turn = Number.isInteger(state?.turn) ? state.turn : 0;
+  const objectives = objectiveSnapshot(state, playerId);
+  const acquisition = turnStartAcquisitionContext(state, playerId);
+  const enemyKills = getEnemyUnitDestructionsForTurn(state, playerId, turn).length;
+  const basicKillNeeded = Math.max(0, 1 - enemyKills);
+  const newControlSatisfied = round >= 2 && acquisition.known
+    ? acquisition.newlyControlledObjectiveIds.length > 0
+    : round >= 2 ? null : false;
+  const centralEndBattleSatisfied = objectives.known ? objectives.centralControlled > 0 : null;
+
+  let rawRecordedVp = enemyKills >= 1 ? 3 : 0;
+  if (round >= 2 && objectives.known) rawRecordedVp += objectives.nonHomeControlled * 4;
+  if (round >= 2 && newControlSatisfied) rawRecordedVp += 3;
+
+  const nextKillVpLeverage = enemyKills < 1 ? 3 : 0;
+  const targetingScore = basicKillNeeded > 0 ? 0.82 : 0.1;
+  const objectivePreservationScore = !objectives.known
+    ? 0.35
+    : round < 2
+      ? 0.5
+      : objectives.nonHomeControlled === 0
+        ? 0.82
+        : objectives.nonHomeControlled === 1
+          ? 0.9
+          : 0.78;
+
+  const objectiveProgress = objectives.known
+    ? round >= 2
+      ? `${objectives.nonHomeControlled} non-home objective${objectives.nonHomeControlled === 1 ? "" : "s"} controlled; that represents ${objectives.nonHomeControlled * 4} VP at the next applicable control checkpoint before the round cap.`
+      : `${objectives.nonHomeControlled} non-home objective${objectives.nonHomeControlled === 1 ? "" : "s"} controlled; Round 1 positioning can set up later control scoring.`
+    : "Objective control is incomplete; confirm all objective controllers before relying on non-home scoring advice.";
+  const acquisitionProgress = round < 2
+    ? "The 3 VP new-control condition is not active until Round 2."
+    : !acquisition.known
+      ? "Turn-start objective control is unavailable; confirm whether a non-home objective was newly taken this turn."
+      : acquisition.newlyControlledObjectiveIds.length > 0
+        ? `${acquisition.newlyControlledObjectiveIds.length} non-home objective${acquisition.newlyControlledObjectiveIds.length === 1 ? "" : "s"} now controlled that you did not control at turn start; the 3 VP new-control condition is currently satisfied.`
+        : `No newly controlled non-home objective is recorded yet; ${acquisition.eligibleObjectiveIds.length} non-home objective${acquisition.eligibleObjectiveIds.length === 1 ? " was" : "s were"} not controlled by you at turn start.`;
+  const killProgress = basicKillNeeded > 0
+    ? "Need 1 enemy unit kill for the 3 VP destroy condition."
+    : "The 3 VP destroy condition is currently satisfied by recorded kills.";
+  const endgameProgress = centralEndBattleSatisfied === true
+    ? "A central objective is currently controlled; preserving central access matters for the 5 VP end-of-battle condition."
+    : "No central objective is currently controlled; central access matters for the 5 VP end-of-battle condition.";
+
+  const reason = round >= 2 && objectives.known && objectives.nonHomeControlled === 0
+    ? "No non-home objective is currently controlled. Unstoppable Force rewards each controlled non-home objective, so establishing one is the highest-confidence Primary need."
+    : round >= 2 && acquisition.known && acquisition.newlyControlledObjectiveIds.length === 0 && acquisition.eligibleObjectiveIds.length > 0
+      ? "No new non-home capture is recorded this turn. Taking an eligible objective can add the 3 VP new-control condition while improving future non-home control scoring."
+      : basicKillNeeded > 0
+        ? "The first enemy unit destroyed this turn is worth 3 VP; prefer a high-probability finish when it does not compromise objective control."
+        : round >= 4 && centralEndBattleSatisfied === false
+          ? "Current turn scoring is in good shape; begin protecting a route to a central objective for the 5 VP end-of-battle condition."
+          : "Recorded Unstoppable Force conditions are favorable; preserve non-home control and avoid abandoning scoring positions for low-value damage.";
+
+  return Object.freeze({
+    active: true,
+    supported: true,
+    disposition: "Purge the Foe",
+    missionId: mission.id,
+    missionName: mission.name,
+    round,
+    turn,
+    objectiveStateKnown: objectives.known,
+    controlledObjectives: objectives.controlled,
+    opponentControlledObjectives: objectives.opponentControlled,
+    nonHomeControlled: objectives.nonHomeControlled,
+    nonHomeControlledObjectiveIds: objectives.nonHomeControlledIds,
+    centralControlled: objectives.centralControlled,
+    centralControlledObjectiveIds: objectives.centralControlledIds,
+    enemyKillsThisTurn: enemyKills,
+    basicKillNeeded,
+    nextKillVpLeverage,
+    turnStartControlKnown: acquisition.known,
+    eligibleNewControlObjectiveIds: acquisition.eligibleObjectiveIds,
+    newlyControlledNonHomeObjectiveIds: acquisition.newlyControlledObjectiveIds,
+    newControlSatisfied,
+    nonHomeControlVpPerObjective: 4,
+    newControlVpLeverage: round >= 2 ? 3 : 0,
+    centralEndBattleVpLeverage: 5,
+    centralEndBattleSatisfied,
+    rawRecordedVp,
+    cappedRecordedVp: Math.min(15, rawRecordedVp),
+    targetingScore,
+    objectivePreservationScore,
+    protectCheapUnits: false,
+    summary: Object.freeze([
+      objectiveProgress,
+      acquisitionProgress,
+      killProgress,
+      endgameProgress,
+      `Recorded current-turn conditions represent up to ${Math.min(15, rawRecordedVp)}/15 Primary VP before timing and player confirmation; the 5 VP central end-of-battle condition is tracked separately.`
+    ]),
+    reason,
+    assumptions: Object.freeze([
+      "Only recorded objective control, turn-start snapshots and destruction events are used.",
+      "Non-home control is scored only at the mission's applicable checkpoint; Movement advice treats those objectives as setup/preservation value rather than silently awarding VP.",
+      "The 3 VP new-control condition requires a non-home objective you did not control at the start of the turn; missing turn-start evidence remains player-confirmed.",
+      "The central end-of-battle condition is tracked separately from the 15 VP current-round outlook."
+    ])
+  });
+}
+
 export function getPrimaryStrategyContext(state, { playerId, perspectivePlayerId = null } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
   const mission = resolvePrimaryMission(state, playerId, perspectivePlayerId);
   if (!mission) return inactive("Primary Mission strategy is unavailable until both Force Dispositions are recorded.");
-  if (mission.id !== "primary-destroyers-wrath") {
-    return inactive(`Primary strategy modeling is not yet enabled for ${mission.name}.`, mission);
+  if (mission.id === "primary-destroyers-wrath") return destroyersWrathContext(state, playerId, mission);
+  if (mission.id === "primary-unstoppable-force") return unstoppableForceContext(state, playerId, mission);
+  return inactive(`Primary strategy modeling is not yet enabled for ${mission.name}.`, mission);
+}
+
+export function getPrimaryObjectiveStrategySignal(state, {
+  playerId,
+  perspectivePlayerId = null,
+  objectiveId,
+  control = null,
+  purpose = null,
+  primaryStrategy = null
+} = {}) {
+  if (!playerId || !objectiveId) {
+    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
   }
-  return destroyersWrathContext(state, playerId, mission);
+  const context = primaryStrategy ?? getPrimaryStrategyContext(state, { playerId, perspectivePlayerId });
+  if (!context?.active || context.missionId !== "primary-unstoppable-force") {
+    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
+  }
+
+  const objective = (Array.isArray(state?.objectives) ? state.objectives : []).find((item) => item?.id === objectiveId);
+  if (!objective || isHomeObjective(objective)) {
+    return Object.freeze({ active: true, score: 0, vpLeverage: 0, reason: "Home objectives do not receive Unstoppable Force non-home scoring value." });
+  }
+
+  const round = context.round;
+  const controlledNow = control === "controlled" || controlledBy(objective?.control, playerId);
+  const newlyEligible = context.turnStartControlKnown && context.eligibleNewControlObjectiveIds.includes(objectiveId);
+  const newlyControlled = context.newlyControlledNonHomeObjectiveIds.includes(objectiveId);
+  const central = isCentralObjective(objective);
+  let score = round >= 2 ? 0.2 : 0.1;
+  let vpLeverage = 0;
+  const notes = [];
+
+  if (round >= 2) {
+    vpLeverage += 4;
+    if (controlledNow) {
+      score += purpose === "hold-objective" ? 0.16 : 0.1;
+      notes.push("This non-home objective supports the 4 VP control scoring at the next applicable checkpoint.");
+    } else {
+      score += 0.16;
+      notes.push("Taking this non-home objective can improve the 4 VP-per-objective control position at the next applicable checkpoint.");
+    }
+
+    if (newlyEligible) {
+      vpLeverage += 3;
+      if (newlyControlled) {
+        score += 0.16;
+        notes.push("You did not control it at turn start and control it now, so preserving it protects the 3 VP new-control condition through the scoring check.");
+      } else {
+        score += 0.18;
+        notes.push("You did not control it at turn start, so taking it this turn can satisfy the 3 VP new-control condition.");
+      }
+    }
+  } else {
+    notes.push("Round 1 positioning here can set up later non-home control scoring.");
+  }
+
+  if (central) {
+    const centralBoost = round >= 5 ? 0.2 : round >= 4 ? 0.12 : 0.05;
+    score += centralBoost;
+    vpLeverage += 5;
+    notes.push("It is central, so preserving access also matters for the 5 VP end-of-battle condition.");
+  }
+
+  return Object.freeze({
+    active: true,
+    score: clamp01(score),
+    vpLeverage,
+    newlyEligible,
+    newlyControlled,
+    central,
+    reason: notes.join(" ")
+  });
 }
