@@ -24,12 +24,32 @@ function objectiveText(objective) {
   return String(objective?.name ?? objective?.id ?? "");
 }
 
+function objectiveLayoutName(objective) {
+  if (objective?.layoutObjective) return String(objective.layoutObjective);
+  const id = String(objective?.id ?? "");
+  if (id.startsWith("event-companion:")) return id.slice("event-companion:".length);
+  return objectiveText(objective);
+}
+
 function isHomeObjective(objective) {
-  return /home/i.test(objectiveText(objective));
+  return /home/i.test(objectiveText(objective)) || /home/i.test(objectiveLayoutName(objective));
 }
 
 function isCentralObjective(objective) {
-  return /cent(er|ral)/i.test(objectiveText(objective));
+  return /cent(er|ral)/i.test(objectiveText(objective)) || /cent(er|ral)/i.test(objectiveLayoutName(objective));
+}
+
+function isOpponentHomeObjective(state, objective, playerId) {
+  const text = `${objectiveText(objective)} ${objectiveLayoutName(objective)}`;
+  if (/opponent.*home|enemy.*home/i.test(text)) return true;
+  if (/my.*home/i.test(text)) return false;
+
+  const layout = objectiveLayoutName(objective);
+  const attacker = state?.preGameSetup?.attackerPlayerId ?? null;
+  const defender = state?.preGameSetup?.defenderPlayerId ?? null;
+  if (layout === "Attacker Home" && attacker) return attacker !== playerId;
+  if (layout === "Defender Home" && defender) return defender !== playerId;
+  return false;
 }
 
 function controlledBy(control, playerId) {
@@ -46,10 +66,12 @@ function objectiveSnapshot(state, playerId) {
       opponentControlled: 0,
       nonHomeControlled: 0,
       centralControlled: 0,
+      opponentHomeControlled: 0,
       margin: 0,
       controlledIds: Object.freeze([]),
       nonHomeControlledIds: Object.freeze([]),
-      centralControlledIds: Object.freeze([])
+      centralControlledIds: Object.freeze([]),
+      opponentHomeControlledIds: Object.freeze([])
     });
   }
 
@@ -61,6 +83,7 @@ function objectiveSnapshot(state, playerId) {
   );
   const nonHomeControlled = controlled.filter((objective) => !isHomeObjective(objective));
   const centralControlled = controlled.filter((objective) => isCentralObjective(objective));
+  const opponentHomeControlled = controlled.filter((objective) => isOpponentHomeObjective(state, objective, playerId));
 
   return Object.freeze({
     known: true,
@@ -68,10 +91,12 @@ function objectiveSnapshot(state, playerId) {
     opponentControlled: opponentControlled.length,
     nonHomeControlled: nonHomeControlled.length,
     centralControlled: centralControlled.length,
+    opponentHomeControlled: opponentHomeControlled.length,
     margin: controlled.length - opponentControlled.length,
     controlledIds: Object.freeze(controlled.map((objective) => objective.id)),
     nonHomeControlledIds: Object.freeze(nonHomeControlled.map((objective) => objective.id)),
-    centralControlledIds: Object.freeze(centralControlled.map((objective) => objective.id))
+    centralControlledIds: Object.freeze(centralControlled.map((objective) => objective.id)),
+    opponentHomeControlledIds: Object.freeze(opponentHomeControlled.map((objective) => objective.id))
   });
 }
 
@@ -332,40 +357,146 @@ function unstoppableForceContext(state, playerId, mission) {
   });
 }
 
+function meatgrinderContext(state, playerId, mission) {
+  const round = Math.max(1, Number(state?.battle?.round) || 1);
+  const turn = Number.isInteger(state?.turn) ? state.turn : 0;
+  const previousTurn = Math.max(0, turn - 1);
+  const objectives = objectiveSnapshot(state, playerId);
+  const enemyKills = getEnemyUnitDestructionsForTurn(state, playerId, turn).length;
+  const friendlyLossesLastTurn = turn > 0
+    ? getFriendlyUnitDestructionsForTurn(state, playerId, previousTurn).length
+    : 0;
+
+  const basicKillNeeded = Math.max(0, 1 - enemyKills);
+  const comparisonTarget = friendlyLossesLastTurn + 1;
+  const comparisonKillsNeeded = round >= 2 ? Math.max(0, comparisonTarget - enemyKills) : null;
+  const comparisonSatisfied = round >= 2 ? enemyKills > friendlyLossesLastTurn : null;
+  const nonHomeSatisfied = round >= 2 && objectives.known ? objectives.nonHomeControlled >= 1 : round >= 2 ? null : false;
+  const opponentHomeSatisfied = round >= 2 && objectives.known ? objectives.opponentHomeControlled >= 1 : round >= 2 ? null : false;
+
+  let rawRecordedVp = enemyKills >= 1 ? 3 : 0;
+  if (round >= 2 && nonHomeSatisfied) rawRecordedVp += 4;
+  if (round >= 2 && comparisonSatisfied) rawRecordedVp += 5;
+  if (round >= 2 && opponentHomeSatisfied) rawRecordedVp += 5;
+
+  let nextKillVpLeverage = enemyKills < 1 ? 3 : 0;
+  if (round >= 2 && !comparisonSatisfied && enemyKills + 1 > friendlyLossesLastTurn) nextKillVpLeverage += 5;
+
+  const targetingScore = basicKillNeeded > 0
+    ? nextKillVpLeverage >= 8 ? 0.95 : 0.88
+    : comparisonKillsNeeded > 0
+      ? 0.82
+      : 0.12;
+  const objectivePreservationScore = !objectives.known
+    ? 0.35
+    : round < 2
+      ? 0.45
+      : opponentHomeSatisfied
+        ? 0.96
+        : objectives.nonHomeControlled === 0
+          ? 0.86
+          : 0.72;
+
+  const killProgress = basicKillNeeded > 0
+    ? `Need ${basicKillNeeded} enemy unit kill${basicKillNeeded === 1 ? "" : "s"} for the 3 VP destroy condition.`
+    : "The 3 VP destroy condition is currently satisfied by recorded kills.";
+  const comparisonProgress = round < 2
+    ? "The 5 VP kill-comparison condition is not active until Round 2."
+    : comparisonKillsNeeded > 0
+      ? `You lost ${friendlyLossesLastTurn} recorded unit${friendlyLossesLastTurn === 1 ? "" : "s"} last turn; need ${comparisonKillsNeeded} more enemy kill${comparisonKillsNeeded === 1 ? "" : "s"} this turn to exceed that total for 5 VP.`
+      : `Recorded kills already exceed the ${friendlyLossesLastTurn} friendly unit${friendlyLossesLastTurn === 1 ? "" : "s"} lost last turn for the 5 VP comparison condition.`;
+  const nonHomeProgress = round < 2
+    ? "The 4 VP non-home control condition begins in Round 2."
+    : !objectives.known
+      ? "Objective control is incomplete; confirm whether you control at least one non-home objective."
+      : nonHomeSatisfied
+        ? `${objectives.nonHomeControlled} non-home objective${objectives.nonHomeControlled === 1 ? " is" : "s are"} controlled; the mission needs only one for its 4 VP control condition.`
+        : "No non-home objective is currently controlled; securing any one can satisfy the 4 VP control condition.";
+  const opponentHomeProgress = round < 2
+    ? "The 5 VP opponent-home condition begins in Round 2."
+    : !objectives.known
+      ? "Opponent-home control is not fully known; confirm it before relying on this condition."
+      : opponentHomeSatisfied
+        ? "The opponent's home objective is currently controlled for the 5 VP end-of-turn condition."
+        : "The opponent's home objective is not currently controlled; taking it is worth 5 VP at the applicable end-of-turn check.";
+
+  const reason = basicKillNeeded > 0
+    ? nextKillVpLeverage >= 8
+      ? "The first enemy unit destroyed this turn can satisfy both the 3 VP destroy condition and the 5 VP kill-comparison condition. Prefer a high-probability finish when the mission trade is otherwise acceptable."
+      : "The first enemy unit destroyed this turn is worth 3 VP; prefer a high-probability finish when it does not compromise the objective plan."
+    : comparisonKillsNeeded > 0
+      ? `${comparisonProgress} Finishing another enemy unit has elevated Primary value.`
+      : round >= 2 && nonHomeSatisfied === false
+        ? "Kill conditions are currently covered, but Meatgrinder still needs one non-home objective for 4 VP. Establish a durable scoring position rather than collecting extra low-value damage."
+        : round >= 3 && opponentHomeSatisfied === false
+          ? "Current basic scoring is covered. The opponent's home objective is the remaining 5 VP positional swing and should receive more pressure when the route is credible."
+          : "Recorded Meatgrinder conditions are favorable; preserve one non-home scoring position and avoid unnecessary friendly losses that raise next turn's kill-comparison threshold.";
+
+  return Object.freeze({
+    active: true,
+    supported: true,
+    disposition: "Purge the Foe",
+    missionId: mission.id,
+    missionName: mission.name,
+    round,
+    turn,
+    objectiveStateKnown: objectives.known,
+    controlledObjectives: objectives.controlled,
+    opponentControlledObjectives: objectives.opponentControlled,
+    nonHomeControlled: objectives.nonHomeControlled,
+    nonHomeControlledObjectiveIds: objectives.nonHomeControlledIds,
+    nonHomeSatisfied,
+    opponentHomeControlled: objectives.opponentHomeControlled,
+    opponentHomeControlledObjectiveIds: objectives.opponentHomeControlledIds,
+    opponentHomeSatisfied,
+    enemyKillsThisTurn: enemyKills,
+    friendlyLossesLastTurn,
+    basicKillNeeded,
+    comparisonKillTarget: round >= 2 ? comparisonTarget : null,
+    comparisonKillsNeeded,
+    comparisonSatisfied,
+    nextKillVpLeverage,
+    rawRecordedVp,
+    cappedRecordedVp: Math.min(15, rawRecordedVp),
+    targetingScore,
+    objectivePreservationScore,
+    protectCheapUnits: round >= 1,
+    summary: Object.freeze([
+      killProgress,
+      comparisonProgress,
+      nonHomeProgress,
+      opponentHomeProgress,
+      `Recorded current-turn conditions represent up to ${Math.min(15, rawRecordedVp)}/15 Primary VP before timing and player confirmation.`
+    ]),
+    reason,
+    assumptions: Object.freeze([
+      "Only recorded objective control and destruction events are used.",
+      "Meatgrinder needs at least one non-home objective; additional non-home objectives do not add more VP to that condition.",
+      "The opponent-home condition is identified from saved objective roles and setup perspective; incomplete role evidence remains player-confirmed.",
+      "A unit lost during the opponent's turn raises the next-turn 5 VP kill-comparison threshold, so avoid giving away expendable units without a scoring return."
+    ])
+  });
+}
+
 export function getPrimaryStrategyContext(state, { playerId, perspectivePlayerId = null } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
   const mission = resolvePrimaryMission(state, playerId, perspectivePlayerId);
   if (!mission) return inactive("Primary Mission strategy is unavailable until both Force Dispositions are recorded.");
   if (mission.id === "primary-destroyers-wrath") return destroyersWrathContext(state, playerId, mission);
   if (mission.id === "primary-unstoppable-force") return unstoppableForceContext(state, playerId, mission);
+  if (mission.id === "primary-meatgrinder") return meatgrinderContext(state, playerId, mission);
   return inactive(`Primary strategy modeling is not yet enabled for ${mission.name}.`, mission);
 }
 
-export function getPrimaryObjectiveStrategySignal(state, {
-  playerId,
-  perspectivePlayerId = null,
-  objectiveId,
-  control = null,
-  purpose = null,
-  primaryStrategy = null
-} = {}) {
-  if (!playerId || !objectiveId) {
-    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
-  }
-  const context = primaryStrategy ?? getPrimaryStrategyContext(state, { playerId, perspectivePlayerId });
-  if (!context?.active || context.missionId !== "primary-unstoppable-force") {
-    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
-  }
-
-  const objective = (Array.isArray(state?.objectives) ? state.objectives : []).find((item) => item?.id === objectiveId);
-  if (!objective || isHomeObjective(objective)) {
+function unstoppableObjectiveSignal(state, playerId, objective, control, purpose, context) {
+  if (isHomeObjective(objective)) {
     return Object.freeze({ active: true, score: 0, vpLeverage: 0, reason: "Home objectives do not receive Unstoppable Force non-home scoring value." });
   }
 
   const round = context.round;
   const controlledNow = control === "controlled" || controlledBy(objective?.control, playerId);
-  const newlyEligible = context.turnStartControlKnown && context.eligibleNewControlObjectiveIds.includes(objectiveId);
-  const newlyControlled = context.newlyControlledNonHomeObjectiveIds.includes(objectiveId);
+  const newlyEligible = context.turnStartControlKnown && context.eligibleNewControlObjectiveIds.includes(objective.id);
+  const newlyControlled = context.newlyControlledNonHomeObjectiveIds.includes(objective.id);
   const central = isCentralObjective(objective);
   let score = round >= 2 ? 0.2 : 0.1;
   let vpLeverage = 0;
@@ -411,4 +542,87 @@ export function getPrimaryObjectiveStrategySignal(state, {
     central,
     reason: notes.join(" ")
   });
+}
+
+function meatgrinderObjectiveSignal(state, playerId, objective, control, purpose, context) {
+  const round = context.round;
+  const controlledNow = control === "controlled" || controlledBy(objective?.control, playerId);
+  const opponentHome = isOpponentHomeObjective(state, objective, playerId);
+  const nonHome = !isHomeObjective(objective) || opponentHome;
+  if (!nonHome && !opponentHome) {
+    return Object.freeze({ active: true, score: 0, vpLeverage: 0, opponentHome: false, reason: "Your home objective does not directly satisfy a Meatgrinder objective-control condition." });
+  }
+
+  let score = round >= 2 ? 0.08 : 0.04;
+  let vpLeverage = 0;
+  const notes = [];
+
+  if (round >= 2 && nonHome) {
+    const thisObjectiveAlreadySupportsCondition = controlledNow && context.nonHomeSatisfied;
+    if (!context.nonHomeSatisfied) {
+      vpLeverage += 4;
+      score += 0.24;
+      notes.push("Meatgrinder needs at least one non-home objective for 4 VP, so taking this objective can establish that condition.");
+    } else if (thisObjectiveAlreadySupportsCondition) {
+      vpLeverage += 4;
+      score += purpose === "hold-objective" ? 0.22 : 0.14;
+      notes.push("This controlled non-home objective currently supports the 4 VP condition; preserving at least one such objective matters.");
+    } else {
+      score += 0.02;
+      notes.push("You already control a different non-home objective, so taking another does not add VP to Meatgrinder's 4 VP non-home condition by itself.");
+    }
+  } else if (nonHome) {
+    notes.push("Round 1 positioning here can establish the non-home control needed from Round 2 onward.");
+  }
+
+  if (opponentHome) {
+    if (round >= 2) {
+      vpLeverage += 5;
+      score += controlledNow ? 0.28 : 0.34;
+      notes.push(controlledNow
+        ? "This is the opponent's home objective; holding it protects the separate 5 VP end-of-turn condition."
+        : "This is the opponent's home objective; taking it can satisfy the separate 5 VP end-of-turn condition.");
+    } else {
+      score += 0.1;
+      notes.push("This is the opponent's home objective; Round 1 pressure can stage the separate 5 VP condition that begins in Round 2.");
+    }
+  }
+
+  return Object.freeze({
+    active: true,
+    score: clamp01(score),
+    vpLeverage,
+    opponentHome,
+    reason: notes.join(" ")
+  });
+}
+
+export function getPrimaryObjectiveStrategySignal(state, {
+  playerId,
+  perspectivePlayerId = null,
+  objectiveId,
+  control = null,
+  purpose = null,
+  primaryStrategy = null
+} = {}) {
+  if (!playerId || !objectiveId) {
+    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
+  }
+  const context = primaryStrategy ?? getPrimaryStrategyContext(state, { playerId, perspectivePlayerId });
+  if (!context?.active) {
+    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
+  }
+
+  const objective = (Array.isArray(state?.objectives) ? state.objectives : []).find((item) => item?.id === objectiveId);
+  if (!objective) {
+    return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
+  }
+
+  if (context.missionId === "primary-unstoppable-force") {
+    return unstoppableObjectiveSignal(state, playerId, objective, control, purpose, context);
+  }
+  if (context.missionId === "primary-meatgrinder") {
+    return meatgrinderObjectiveSignal(state, playerId, objective, control, purpose, context);
+  }
+  return Object.freeze({ active: false, score: 0, vpLeverage: 0, reason: "" });
 }
