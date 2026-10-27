@@ -10,6 +10,8 @@ const LEGACY_CONDITIONS = Object.freeze({
   'Control three or more objectives.': { type: 'control-objectives', minimum: 3 },
   'Control four or more objectives.': { type: 'control-objectives', minimum: 4 },
   'Control at least one central objective.': { type: 'control-central', minimum: 1 },
+  'You control your home objective.': { type: 'control-home', minimum: 1 },
+  'Control your home objective.': { type: 'control-home', minimum: 1 },
   'Destroy at least one enemy unit this turn.': { type: 'destroy-enemy', minimum: 1 },
   'Per enemy unit destroyed this turn.': { type: 'count-destroyed' },
   'Control a non-home objective you did not control at the start of the turn.': { type: 'new-non-home-control', minimum: 1 },
