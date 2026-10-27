@@ -8,7 +8,9 @@ const OBJECTIVE_CONDITION_TYPES = new Set([
   'count-objectives',
   'control-more',
   'control-objectives',
-  'control-central'
+  'control-central',
+  'new-non-home-control',
+  'control-opponent-home'
 ]);
 
 function currentTurnStamp(state) {
