@@ -57,6 +57,14 @@ export function getMissionVpOptions(mission = {}) {
   return [...totals].filter(value => value > 0).sort((a,b) => a-b);
 }
 
+function directCalculatedPoints(mission, estimate, vpOptions) {
+  if (estimate && estimate.partial !== true && Number(estimate.points) > 0 && vpOptions.includes(Number(estimate.points))) {
+    return Number(estimate.points);
+  }
+  if (!estimate && mission?.result?.eligible === true && vpOptions.length === 1) return vpOptions[0];
+  return null;
+}
+
 export function renderCheckpointScore(state, group, mission) {
   const { definitionId, definitionName, instanceId, category } = mission;
   const card = instanceId ? getSecondaryMissionHistory(state, group.playerId).find(c => c.instanceId === instanceId) : null;
@@ -67,13 +75,22 @@ export function renderCheckpointScore(state, group, mission) {
   if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
   const vpOptions = getMissionVpOptions(mission);
   const estimate = estimateCheckpointVp(state, group.playerId, mission, group.checkpoint);
-  const estimateMarkup = estimate ? `<p class="checkpoint-vp-estimate" role="status"><strong>Estimated from recorded state: ${estimate.points} VP</strong>${estimate.partial ? ' · Partial evidence; other conditions or unrecorded control may change this.' : ''}${estimate.capped ? ' · Limited by remaining Primary VP cap.' : ''} Verify on the tabletop before choosing VP.</p>` : '';
+  const directPoints = directCalculatedPoints(mission, estimate, vpOptions);
+  const estimateMarkup = estimate
+    ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential score from recorded state: ${estimate.points} VP</strong>${estimate.partial ? ' · Partial evidence; tabletop confirmation may change this total.' : ''}${estimate.capped ? ' · Limited by remaining Primary VP cap.' : ''}</p>`
+    : directPoints
+      ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential completion: ${directPoints} VP</strong> · Recorded conditions support completion.</p>`
+      : '';
+  const formAttrs = `data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}"`;
+  if (directPoints) {
+    return `<form ${formAttrs}>${estimateMarkup}<input type="hidden" name="vp" value="${directPoints}"><button type="submit">Confirm +${directPoints} VP${category === 'secondary' ? ' & remove card' : ''}</button><p>Player confirmation remains authoritative.</p></form>`;
+  }
   const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
-  return `<form data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}">
+  return `<form ${formAttrs}>
     ${estimateMarkup}
     <label>Confirm VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}" ${vpOptions.length ? '' : 'disabled'}><option value="">${vpOptions.length ? 'Choose VP…' : 'No configured VP value'}</option>${optionMarkup}</select></label>
     <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Confirm score${category === 'secondary' ? ' & remove card' : ''}</button>
-    <p>Confirm against the tabletop before awarding. Existing VP caps apply.</p>
+    <p>Use this manual choice only when recorded evidence cannot determine the exact award. Existing VP caps apply.</p>
   </form>`;
 }
 
