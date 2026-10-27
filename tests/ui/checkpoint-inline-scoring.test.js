@@ -32,9 +32,10 @@ test('confirmed secondary scoring is atomic, retires card, rejects repeat, persi
     const scored=JSON.parse(JSON.stringify(recordSecondaryMissionScore(state,payload)));
     assert.equal(scored.victoryPoints.p1,3);assert.equal(scored.scoring.secondaryMissions[0].status,'scored');
     assert.throws(()=>recordSecondaryMissionScore(scored,payload),/active secondary/);
-    const reminder=getScoringCheckpointReminder(scored,{previousPhase:'fight'});
+    const isolated={...scored,battlefieldMap:null};
+    const reminder=getScoringCheckpointReminder(isolated,{previousPhase:'fight'});
     assert.equal(reminder,null);
-    assert.equal(renderScoringCheckpointDialog(scored,reminder),'');
+    assert.equal(renderScoringCheckpointDialog(isolated,reminder),'');
     const undone=undoLatestVictoryPointsAward(scored,{playerId:'p1'});
     assert.equal(undone.victoryPoints.p1,0);assert.equal(undone.scoring.secondaryMissions[0].status,'active');
     assert.equal(recordSecondaryMissionScore(undone,payload).victoryPoints.p1,3);
