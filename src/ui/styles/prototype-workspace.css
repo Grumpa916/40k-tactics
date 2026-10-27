@@ -252,7 +252,7 @@
 .battle-shell.is-tabletop-experiment .combat-workspace__panel footer{padding:6px 8px}
 .battle-shell.is-tabletop-experiment .battle-shell__army-dock{gap:6px;padding:5px 8px;min-height:44px}
 .battle-shell.is-tabletop-experiment .battle-shell__army-dock button{min-height:44px!important;padding:5px 10px!important;border-radius:8px;justify-content:center;font-size:12px}
-.battle-shell.is-tabletop-experiment[data-battle-focus=true]{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true]{padding-bottom:calc(var(--live-phase-footer-clearance,78px) + env(safe-area-inset-bottom,0px))}
 .battle-shell.is-tabletop-experiment .battle-shell__player-summary{display:flex;align-items:center;gap:6px;padding:7px 10px}
 .battle-shell.is-tabletop-experiment .battle-shell__player-summary>strong{margin-right:auto}
 .battle-shell.is-tabletop-experiment .battle-shell__summary-value,
@@ -326,16 +326,16 @@
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div button { white-space:nowrap; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu [data-live-session-tools] { display:flex; flex-wrap:nowrap; margin:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] {
-  position:fixed; right:calc(10px + env(safe-area-inset-right,0px)); bottom:calc(66px + env(safe-area-inset-bottom,0px)); z-index:1100;
-  min-width:68px; min-height:48px; padding:5px 8px; font-size:12px;
+  position:fixed; right:calc(10px + env(safe-area-inset-right,0px)); bottom:calc(10px + env(safe-area-inset-bottom,0px)); z-index:1100;
+  box-sizing:border-box; height:56px; min-width:68px; min-height:48px; padding:5px 8px; font-size:12px;
 }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] > [data-phase-progression-host] {
-  position:fixed; left:10px; right:calc(88px + env(safe-area-inset-right,0px)); bottom:calc(66px + env(safe-area-inset-bottom,0px)); z-index:1090;
+  position:fixed; left:10px; right:calc(88px + env(safe-area-inset-right,0px)); bottom:calc(10px + env(safe-area-inset-bottom,0px)); z-index:1090;
   max-width:none; margin:0;
 }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress { padding:0; margin:0; border:0; background:transparent; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress > div { display:none; }
-.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress button { width:100%; min-height:48px; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress button { box-sizing:border-box; width:100%; height:56px; min-height:48px; }
 .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-screen--tabletop,
 .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace { grid-template-columns:minmax(0,1fr); }
 .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-tabletop__control-panel,
@@ -345,3 +345,6 @@
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary strong { max-width:62px; }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { padding:3px; font-size:10px; }
 }
+
+/* Reserve 56px controls + 10px bottom offset + 12px breathing room. */
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] { --live-phase-footer-clearance:78px; }
