@@ -1,3 +1,4 @@
+import { getReviewContextSnapshot } from '../rules/review-context-snapshot.js';
 import { requirePreparationComplete } from "./event-preparation-transitions.js";
 import { BATTLE_STATUS } from "../state/battle.js";
 import { UNIT_STATUS } from "../state/unit.js";
@@ -15,7 +16,7 @@ import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
-  return appendHistoryEntry(nextState, createEvent(eventType, payload));
+  return appendHistoryEntry(nextState, createEvent(eventType, eventType === 'turn.phase_changed' ? {...payload,previousPhase:state.phase,reviewSnapshot:getReviewContextSnapshot(state)} : payload));
 }
 
 export function startBattle(state, { battleId, missionId = null } = {}) {
@@ -102,7 +103,7 @@ export function recordObjectiveControl(state, {
     controlState
   });
 
-  return transition(state, "objective.control_recorded", control, (current) => ({
+  return transition(state, "objective.control_recorded", {...control,previousControl:objective.control ?? null,round:state.battle?.round ?? null,turn:state.turn ?? null,phase:state.phase ?? null}, (current) => ({
     ...current,
     objectives: current.objectives.map((item) =>
       item.id === objectiveId ? { ...item, control, controlRecordedAt: { round: state.battle?.round ?? 0, turn: state.turn ?? 0, phase: state.phase } } : item

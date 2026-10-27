@@ -63,6 +63,7 @@ export function recordCommandPointChange(state, {
     note: note.trim(),
     turn,
     round,
+    phase:state.phase ?? null,
     balanceBefore,
     balanceAfter
   }));

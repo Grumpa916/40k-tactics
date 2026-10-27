@@ -1,3 +1,4 @@
+import { getReviewContextSnapshot } from '../rules/review-context-snapshot.js';
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
@@ -138,6 +139,7 @@ export function recordVictoryPointsAward(state, {
     victoryPoints: { ...scores, [playerId]: scoreAfter }
   };
   return appendHistoryEntry(updated, createEvent("victory_points.awarded", {
+    reviewSnapshot: getReviewContextSnapshot(state),
     playerId, amount: appliedAmount, reason: reason.trim(), turn, round, scoreBefore, scoreAfter,
     ...(appliedAmount !== amount ? { requestedAmount: amount } : {}),
     ...(capped.appliedCaps.length ? { appliedCaps: capped.appliedCaps } : {}),

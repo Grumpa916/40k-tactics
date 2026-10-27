@@ -71,6 +71,11 @@ test('manual shooting records expected and actual damage and updates legacy targ
  assert.equal(getLiveUnitVitals(next,next.units[1]).wounds,before-2);
  assert.ok(next.history.at(-1).payload.expectedDamage>0);
  assert.equal(next.history.at(-1).payload.actualDamage,2);
+ const snapshot=next.history.at(-1).payload.reviewSnapshot;
+ assert.equal(snapshot.version,1);assert.equal(snapshot.targetWounds,before);
+ assert.equal(snapshot.expectedDamage,next.history.at(-1).payload.expectedDamage);
+ assert.ok(snapshot.destructionProbability>=0 && snapshot.destructionProbability<=1);
+ assert.ok(Array.isArray(snapshot.context.appliedRules));
 });
 
 test('explicit imported loadout hides unselected optional weapons and can confirm no ranged weapon',()=>{

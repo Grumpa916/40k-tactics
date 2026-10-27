@@ -149,10 +149,14 @@ export function adjustLiveMapPosition(state, { unitId, playerId, moves } = {}) {
   const nextUnit = Array.isArray(unit.models) && unit.models.length > 0
     ? { ...unit, models: movedModels }
     : { ...unit, position: movedModels[0].position };
-  return {
+  return appendHistoryEntry({
     ...state,
     units: state.units.map((item) => item.id === unitId ? nextUnit : item)
-  };
+  }, createEvent('battlefield_map.position_adjusted', {
+    unitId,playerId,round:state.battle.round,turn:state.turn,phase:state.phase,
+    moves:models.map(model=>({modelId:model.id,from:structuredClone(model.position ?? null),to:{...destinations.get(model.id)}})),
+    source:'approximate-map-correction'
+  }));
 }
 
 export function declareUnitReserve(state, { unitId, playerId } = {}) {
