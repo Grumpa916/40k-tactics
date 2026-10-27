@@ -57,6 +57,18 @@
   .battle-shell.is-tabletop-experiment.is-deploy-begin .battle-shell__workspace { flex:1; height:auto; min-height:0; overflow:hidden; }
   .battle-shell.is-tabletop-experiment.is-deploy-begin .battle-shell__content,.battle-shell.is-tabletop-experiment.is-deploy-begin [data-battle-screen],.battle-shell.is-deploy-begin [data-live-deploy-begin],.battle-shell.is-deploy-begin .deploy-begin { height:100%; min-height:0; }
 }
+/* Standalone tablet safe areas: keep deployment content below system chrome and use the available height. */
+@media (display-mode:standalone) and (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment.is-deploy-begin {
+    inset:var(--pwa-safe-top,env(safe-area-inset-top,0px)) var(--pwa-safe-right,env(safe-area-inset-right,0px)) var(--pwa-safe-bottom,env(safe-area-inset-bottom,0px)) var(--pwa-safe-left,env(safe-area-inset-left,0px));
+    width:auto;
+    height:auto;
+    max-height:none;
+    box-sizing:border-box;
+    padding:8px;
+  }
+}
+
 @media (max-width:1000px) { .deploy-begin__workspace { grid-template-columns:minmax(0,1fr) 175px; } }
 @media (orientation:portrait), (max-width:760px) {
   .deploy-begin__workspace { grid-template-columns:minmax(0,1fr); }
