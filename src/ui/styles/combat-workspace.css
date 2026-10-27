@@ -22,6 +22,11 @@
 .combat-workspace button[aria-pressed=true], .combat-workspace .is-selected { border-color:#c6e99e; background:#354a35; }
 .combat-workspace button:focus-visible, .combat-workspace select:focus-visible, .combat-workspace [role=button]:focus-visible { outline:3px solid #c6e99e; outline-offset:2px; }
 .combat-workspace select { width:100%; margin:4px 0 10px; }
+.combat-workspace__active-status { margin:0 0 10px; padding:9px 10px; border:1px solid #40545c; border-radius:9px; background:#1d2927; }
+.combat-workspace__active-status > strong { display:block; margin-bottom:6px; font-size:12px; letter-spacing:.02em; color:#dce7e3; }
+.combat-workspace__active-status ul { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.combat-workspace__active-status li { display:inline-flex; align-items:center; gap:6px; margin:0; min-height:30px; padding:4px 8px; border:1px solid #52656c; border-radius:999px; background:#223139; font-size:12px; line-height:1.2; }
+.combat-workspace__status-icon { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 4px; border-radius:999px; background:#101a1f; color:#f5f8f7; font-size:11px; font-weight:800; }
 .combat-workspace__choices { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
 .combat-workspace__choices button { flex:1 1 90px; text-align:left; }
 .combat-workspace__card { padding:10px; border:1px solid #40545c; border-radius:9px; margin:10px 0; }
