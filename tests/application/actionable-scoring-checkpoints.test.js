@@ -138,15 +138,15 @@ test('Punishment only opens for that player when a condemned unit is recorded le
 
 test('Consecrate end-turn tier is 3 VP for one marker and 6 VP for three markers', () => {
   const one = endTurnState({ opponentDisposition: 'Reconnaissance' });
-  one.history = [{ type: 'primary.objective_consecrated', payload: { playerId: 'p1', unitId: 'u1', objectiveId: 'myExp', turn: 2, round: 1 } }];
+  one.history = [{ type: 'primary.consecrate.recorded', payload: { playerId: 'p1', unitId: 'u1', objectiveId: 'myExp', turn: 2, round: 1 } }];
   let reminder = getScoringCheckpointReminder(one, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
   assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 3);
 
   const three = structuredClone(one);
   three.history.push(
-    { type: 'primary.objective_consecrated', payload: { playerId: 'p1', unitId: 'u2', objectiveId: 'center1', turn: 2, round: 1 } },
-    { type: 'primary.objective_consecrated', payload: { playerId: 'p1', unitId: 'u3', objectiveId: 'center2', turn: 3, round: 2 } }
+    { type: 'primary.consecrate.recorded', payload: { playerId: 'p1', unitId: 'u2', objectiveId: 'center1', turn: 2, round: 1 } },
+    { type: 'primary.consecrate.recorded', payload: { playerId: 'p1', unitId: 'u3', objectiveId: 'center2', turn: 3, round: 2 } }
   );
   reminder = getScoringCheckpointReminder(three, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
