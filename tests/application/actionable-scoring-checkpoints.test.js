@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getScoringCheckpointReminder } from '../../src/application/scoring-checkpoint-reminders.js';
-import { getPrimaryCheckpointOpportunity, estimateReviewMissionVp } from '../../src/application/scoring-checkpoint-opportunities.js';
+import { estimateReviewMissionVp } from '../../src/application/scoring-checkpoint-opportunities.js';
 import { renderScoringCheckpointDialog } from '../../src/ui/scoring-checkpoint-dialog.js';
 
 function control(controllerId = null, controlState = controllerId ? 'controlled' : 'uncontrolled') {
@@ -47,6 +47,10 @@ function destroyed(turn, unitId, ownerId) {
   return { type: 'unit.destroyed', payload: { turn, round: 2, unitId, ownerId } };
 }
 
+function playerGroup(reminder, playerId = 'p1') {
+  return reminder?.groups?.find((group) => group.playerId === playerId) ?? null;
+}
+
 test('fresh recorded state with no scoring opportunity produces no popup', () => {
   const state = baseState();
   state.objectives = [
@@ -77,7 +81,7 @@ test("Destroyer's Wrath command opportunity calculates 10 VP and offers one-tap 
   const reminder = getScoringCheckpointReminder(state, { previousPhase: 'command', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
   assert.equal(reminder.requiresObjectiveConfirmation, false);
-  assert.equal(reminder.groups[0].opportunity.calculatedPoints, 10);
+  assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 10);
   const html = renderScoringCheckpointDialog(state, reminder);
   assert.match(html, /Potential 10 VP/);
   assert.match(html, /Potential score from recorded state: 10 VP/);
@@ -85,17 +89,18 @@ test("Destroyer's Wrath command opportunity calculates 10 VP and offers one-tap 
   assert.doesNotMatch(html, /Confirm objective control before scoring/);
 });
 
-test("Destroyer's Wrath end turn stays silent with no kills and calculates 7 VP when both kill conditions are met", () => {
+test("Destroyer's Wrath end turn stays silent for that player with no kills and calculates 7 VP when both kill conditions are met", () => {
   const none = endTurnState();
   none.objectives = none.objectives.map((item) => ({ ...item, controlRecordedAt: { turn: 3, round: 2, phase: 'fight' } }));
   none.history = [destroyed(2, 'lost', 'p1')];
-  assert.equal(getScoringCheckpointReminder(none, { previousPhase: 'fight', perspectivePlayerId: 'p1' }), null);
+  const noneReminder = getScoringCheckpointReminder(none, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
+  assert.equal(playerGroup(noneReminder), null);
 
   const scored = endTurnState();
   scored.history = [destroyed(3, 'enemy', 'p2')];
   const reminder = getScoringCheckpointReminder(scored, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  assert.equal(reminder.groups[0].opportunity.calculatedPoints, 7);
+  assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 7);
   assert.match(renderScoringCheckpointDialog(scored, reminder), /Confirm \+7 VP/);
 });
 
@@ -112,21 +117,23 @@ test('Unstoppable Force new-control opportunity uses the turn-start snapshot', (
   }];
   const reminder = getScoringCheckpointReminder(state, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  assert.equal(reminder.groups[0].opportunity.calculatedPoints, 3);
+  assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 3);
 
   const noCapture = structuredClone(state);
   noCapture.scoring.turnSnapshots[0].objectives = noCapture.objectives.map((item) => ({ id: item.id, control: item.control }));
-  assert.equal(getScoringCheckpointReminder(noCapture, { previousPhase: 'fight', perspectivePlayerId: 'p1' }), null);
+  const noCaptureReminder = getScoringCheckpointReminder(noCapture, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
+  assert.equal(playerGroup(noCaptureReminder), null);
 });
 
-test('Punishment only opens when a condemned unit is recorded leaving the battlefield', () => {
+test('Punishment only opens for that player when a condemned unit is recorded leaving the battlefield', () => {
   const state = endTurnState({ opponentDisposition: 'Disruption' });
   state.scoring.punishmentCondemnations = [{ playerId: 'p1', round: 2, turn: 3, unitIds: ['enemy'], unitNames: ['Enemy'] }];
-  assert.equal(getScoringCheckpointReminder(state, { previousPhase: 'fight', perspectivePlayerId: 'p1' }), null);
+  const before = getScoringCheckpointReminder(state, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
+  assert.equal(playerGroup(before), null);
   state.history.push({ type: 'unit.entered_reserves', payload: { turn: 3, round: 2, unitId: 'enemy' } });
   const reminder = getScoringCheckpointReminder(state, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  assert.equal(reminder.groups[0].opportunity.calculatedPoints, 5);
+  assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 5);
 });
 
 test('Consecrate end-turn tier is 3 VP for one marker and 6 VP for three markers', () => {
@@ -134,7 +141,7 @@ test('Consecrate end-turn tier is 3 VP for one marker and 6 VP for three markers
   one.history = [{ type: 'primary.objective_consecrated', payload: { playerId: 'p1', unitId: 'u1', objectiveId: 'myExp', turn: 2, round: 1 } }];
   let reminder = getScoringCheckpointReminder(one, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  assert.equal(reminder.groups[0].opportunity.calculatedPoints, 3);
+  assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 3);
 
   const three = structuredClone(one);
   three.history.push(
@@ -143,7 +150,7 @@ test('Consecrate end-turn tier is 3 VP for one marker and 6 VP for three markers
   );
   reminder = getScoringCheckpointReminder(three, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  assert.equal(reminder.groups[0].opportunity.calculatedPoints, 6);
+  assert.equal(playerGroup(reminder).opportunity.calculatedPoints, 6);
 });
 
 test('due-only unverified Secondary does not force a popup when no evidence or action was recorded', () => {
@@ -171,11 +178,11 @@ test('recorded Secondary home-control evidence produces a calculated scoring opp
   }];
   const reminder = getScoringCheckpointReminder(state, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  const entry = reminder.groups[0].secondaryOpportunities[0];
+  const entry = playerGroup(reminder).secondaryOpportunities[0];
   assert.equal(entry.opportunity.calculatedPoints, 3);
   const html = renderScoringCheckpointDialog(state, reminder);
   assert.match(html, /Hold Home · Potential 3 VP/);
-  assert.match(html, /Confirm \+3 VP &amp; remove card/);
+  assert.match(html, /Confirm \+3 VP & remove card/);
 });
 
 test('cumulative Secondary tiers can produce a calculated combined VP value', () => {
@@ -209,7 +216,7 @@ test('recorded mission action keeps checkpoint actionable even when its card tex
   }});
   const reminder = getScoringCheckpointReminder(state, { previousPhase: 'fight', perspectivePlayerId: 'p1' });
   assert.ok(reminder);
-  assert.equal(reminder.groups[0].actionableActions.length, 1);
+  assert.equal(playerGroup(reminder).actionableActions.length, 1);
 });
 
 test('optional Tactical discard alone does not force an end-turn popup', () => {
