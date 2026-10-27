@@ -304,9 +304,14 @@ export function endTurn(state, { nextActivePlayerId, nowMs = Date.now() } = {}) 
   const withTurnClock = battleRoundComplete
     ? pauseTurnClock(ended, { nowMs })
     : updateTurnClockForPlayer(ended, nextActivePlayerId, nowMs);
-  return battleRoundComplete
-    ? transition(withTurnClock, "battle.round_ended", { round: state.battle.round }, (current) => current)
-    : withTurnClock;
+  if (battleRoundComplete) {
+    return transition(withTurnClock, "battle.round_ended", { round: state.battle.round }, (current) => current);
+  }
+  return captureTurnStartSnapshot(withTurnClock, {
+    turn: withTurnClock.turn,
+    round: withTurnClock.battle.round,
+    playerId: nextActivePlayerId
+  });
 }
 
 export function advanceBattleRound(state, { nowMs = Date.now() } = {}) {
