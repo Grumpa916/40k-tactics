@@ -1,5 +1,6 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-opportunities.js";
+import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy.js";
 
 let highlightEventsBound = false;
 let activeHighlight = null;
@@ -138,6 +139,13 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     return `<aside class="movement-advisor"><h2>Movement Advisor</h2><p>Strategic movement context is unavailable for the current battle state.</p></aside>`;
   }
 
+  let primaryStrategy = null;
+  try {
+    primaryStrategy = getPrimaryStrategyContext(state, { playerId, perspectivePlayerId });
+  } catch {
+    primaryStrategy = null;
+  }
+
   const selectedUnit = (state.units ?? []).find((unit) => unit.id === selectedUnitId) ?? null;
   const selectedRootId = getCombatFormationRoot(state, selectedUnit)?.id ?? selectedUnitId;
   const selected = context.recommendations.find((item) => item.unitId === selectedRootId) ?? context.recommendations[0] ?? null;
@@ -172,6 +180,11 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       <h2>Movement Advisor</h2>
       <span>${escapeHtml(context.strategy.posture)} · ${escapeHtml(priorityLabel(selected.priority))} priority</span>
     </div>
+    ${primaryStrategy?.active ? `<details open data-primary-strategy><summary><strong>Primary strategy · ${escapeHtml(primaryStrategy.missionName)}</strong></summary>
+      <p>${escapeHtml(primaryStrategy.reason)}</p>
+      <ul>${(primaryStrategy.summary ?? []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      <small>Recorded-state outlook only; mission timing, actual OC and the physical mission card remain authoritative.</small>
+    </details>` : ""}
     <p><strong>${escapeHtml(selected.recommendation)}</strong></p>
     <div class="fight-advisory__grid movement-advisor__grid">
       <div><strong>${selected.movement == null ? "—" : `${escapeHtml(selected.movement)}\"`}</strong><span>saved Move</span></div>
@@ -201,6 +214,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     </details>
     <details>
       <summary>Mission context</summary>
+      ${primaryStrategy?.active ? `<p><strong>${escapeHtml(primaryStrategy.missionName)}</strong> · ${escapeHtml(primaryStrategy.summary?.[0] ?? primaryStrategy.reason)}</p>` : ""}
       <p>${escapeHtml(activeMissionText)}</p>
       <small>${escapeHtml(territoryVerifiedText)}</small>
       ${territoryReviewText ? `<br><small>${escapeHtml(territoryReviewText)}</small>` : ""}

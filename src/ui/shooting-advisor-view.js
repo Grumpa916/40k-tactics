@@ -13,9 +13,12 @@ export function shootingTargetComparisonCards(attackerId, weaponId, selectedTarg
   const cards = result.comparisons.map((item) => {
     const destroy = Number.isFinite(item.destructionProbability) ? Math.round(item.destructionProbability * 100) + '%' : '—';
     const expected = Number.isFinite(item.expectedDamage) ? item.expectedDamage.toFixed(1) : '—';
-    const mission = item.secondaryMissionImpact?.score >= item.primaryMissionImpact?.score
-      ? item.secondaryMissionImpact?.label ?? 'none'
-      : item.primaryMissionImpact?.label ?? 'none';
+    const primaryStrategy = item.strategicContext?.primaryStrategy;
+    const mission = primaryStrategy?.active && primaryStrategy.nextKillVpLeverage > 0
+      ? `kill +${primaryStrategy.nextKillVpLeverage} VP`
+      : item.secondaryMissionImpact?.score >= item.primaryMissionImpact?.score
+        ? item.secondaryMissionImpact?.label ?? 'none'
+        : item.primaryMissionImpact?.label ?? 'none';
     return `<button type="button" class="shoot-tabletop__comparison${item.targetUnitId === selectedTargetId ? ' is-selected' : ''}" data-advisor-target="${escapeHtml(item.targetUnitId)}">
       <span><strong>#${item.rank} ${escapeHtml(item.targetName)}</strong><small>${escapeHtml(item.recommendation)}</small></span>
       <span class="shoot-tabletop__comparison-stats"><b>${expected}</b><small>mean</small><b>${destroy}</b><small>destroy</small><b>${escapeHtml(mission)}</b><small>mission</small></span>
@@ -42,6 +45,7 @@ export function shootingAdvisory(attackerId, weaponId, targetId, state, weapons,
   const primaryImpact = recommendation.primaryMissionImpact?.label ?? "none";
   const secondaryImpact = recommendation.secondaryMissionImpact?.label ?? "none";
   const threat = recommendation.recentThreat?.label ?? "none";
+  const primaryStrategy = recommendation.strategicContext?.primaryStrategy ?? null;
   const impact = recommendation.impactClassification === "unknown"
     ? "Unknown"
     : recommendation.impactClassification.replaceAll("-", " ");
@@ -51,6 +55,7 @@ export function shootingAdvisory(attackerId, weaponId, targetId, state, weapons,
   return `
     <aside class="shoot-advisory" data-shoot-advisory>
       <div class="shoot-advisory__heading"><h3>Shooting Advisor</h3><span>${escapeHtml(recommendation.rangeStatus)} range</span></div>
+      ${primaryStrategy?.active ? `<p><strong>${escapeHtml(primaryStrategy.missionName)}:</strong> ${escapeHtml(primaryStrategy.reason)}</p>` : ''}
       <div class="shoot-advisory__grid">
         <div><strong>${expected}</strong><span>expected damage</span></div>
         <div><strong>${expectedOrMore}</strong><span>chance of ${escapeHtml(recommendation.expectedDamageThreshold ?? "expected")}+ damage</span></div>
@@ -64,6 +69,7 @@ export function shootingAdvisory(attackerId, weaponId, targetId, state, weapons,
         <div><strong>${escapeHtml(threat)}</strong><span>recent threat</span></div>
         <div><strong>${escapeHtml(impact)}</strong><span>outcome profile</span></div>
       </div>
+        ${primaryStrategy?.active ? `<p>${(primaryStrategy.summary ?? []).map(escapeHtml).join(' · ')}</p>` : ''}
         ${recommendation.gameStrategy?.reason ? `<p>${escapeHtml(recommendation.gameStrategy.reason)}</p>` : ''}
         <p>${escapeHtml(recommendation.primaryMissionImpact?.reason ?? "")}</p>
         <p>${escapeHtml(recommendation.secondaryMissionImpact?.reason ?? "")}</p>

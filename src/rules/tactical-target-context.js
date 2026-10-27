@@ -8,6 +8,7 @@ import { getTargetObjectiveSwing } from "./tactical-objective-swing.js";
 import { getTargetRetaliationRisk } from "./tactical-retaliation-risk.js";
 import { getGameStrategyContext } from "./tactical-game-strategy.js";
 import { getStratagemResourceContext } from "./tactical-stratagem-context.js";
+import { getPrimaryStrategyContext } from "./tactical-primary-strategy.js";
 import { clamp01, impactLabel } from "./tactical-context-utils.js";
 
 export {
@@ -18,7 +19,8 @@ export {
   getTargetObjectiveSwing,
   getTargetRetaliationRisk,
   getGameStrategyContext,
-  getStratagemResourceContext
+  getStratagemResourceContext,
+  getPrimaryStrategyContext
 };
 
 function scoringRole({ objective, primary, secondary, objectiveSwing }) {
@@ -76,6 +78,7 @@ export function getTargetStrategicContext(state, options = {}) {
   const retaliation = getTargetRetaliationRisk(state, options);
   const gameStrategy = getGameStrategyContext(state, options);
   const stratagems = getStratagemResourceContext(state, options);
+  const primaryStrategy = getPrimaryStrategyContext(state, options);
   const battleShock = battleShockContext({ objective, primary, secondary, objectiveSwing, stratagems });
   const role = scoringRole({ objective, primary, secondary, objectiveSwing });
   const weights = gameStrategy.weights;
@@ -86,13 +89,15 @@ export function getTargetStrategicContext(state, options = {}) {
   const weightedObjective = objective.score;
   const weightedSwing = objectiveSwing.score * weights.objectiveSwing;
   const weightedRetaliation = retaliation.score * weights.retaliation;
+  const weightedPrimaryStrategy = primaryStrategy.targetingScore * weights.primary;
   const score = clamp01(
     0.23 * weightedPrimary +
     0.21 * weightedSecondary +
     0.14 * weightedThreat +
     0.12 * weightedObjective +
     0.20 * weightedSwing +
-    0.10 * weightedRetaliation
+    0.10 * weightedRetaliation +
+    0.12 * weightedPrimaryStrategy
   );
 
   return Object.freeze({
@@ -100,6 +105,7 @@ export function getTargetStrategicContext(state, options = {}) {
     label: impactLabel(score),
     objective,
     primary,
+    primaryStrategy,
     secondary,
     threat,
     objectiveSwing,
@@ -110,6 +116,7 @@ export function getTargetStrategicContext(state, options = {}) {
     gameStrategy,
     reason: [
       primary.reason,
+      primaryStrategy.active ? primaryStrategy.reason : "",
       secondary.reason,
       objectiveSwing.reason,
       threat.reason,
