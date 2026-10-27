@@ -123,3 +123,27 @@ test("Movement Advisor UI shows selected advice, destination comparisons, priori
   assert.match(html, /Destination options describe strategic purposes, not exact legal endpoints/);
   assert.match(html, /Only verified mission text changes movement ranking/);
 });
+
+test('Movement Advisor objective names match map markers without exposing internal IDs', async()=>{
+ const {renderBattlefieldMap}=await import('../../src/ui/battlefield-map.js');
+ const {getBattlePrimaryMissions,getEventCompanionMapLayout}=await import('../../src/rules/event-companion-map-catalog.js');
+ const s=state();s.battlefieldMap={missionSetup:{myDisposition:'Take and Hold',opponentDisposition:'Take and Hold',layout:'A'}};
+ s.preGameSetup={attackerPlayerId:'p1',defenderPlayerId:'p2'};
+ const missions=getBattlePrimaryMissions('Take and Hold','Take and Hold');
+ const geometry=getEventCompanionMapLayout(missions.myMission,missions.opponentMission,'A');
+ s.objectives=[{id:'event-companion:Expansion 2',layoutObjective:'Expansion 2',position:geometry.objectivePositions['Expansion 2'],control:{controlState:'controlled',controllerId:'p2'}}];
+ s.units[0].position={...geometry.objectivePositions['Expansion 2']};
+ for(const perspective of ['p1','p2']){
+  const result=getMovementStrategicRecommendations(s,{playerId:'p1',perspectivePlayerId:perspective});
+  const option=result.recommendations.find(r=>r.unitId==='scorer');
+  const objective=[option,...option.alternatives].find(o=>o.objectiveId===s.objectives[0].id);
+  assert.ok(objective);assert.match(objective.objectiveName,/^(My|Opponent) Expansion \((MY|OPP) EXP\)$/);
+  assert.doesNotMatch(objective.reason,/event-companion:/);
+  const html=renderMovementAdvisor(s,{playerId:'p1',selectedUnitId:'scorer',perspectivePlayerId:perspective});
+  assert.ok(html.includes(objective.objectiveName));
+  assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
+  const map=renderBattlefieldMap(s,{perspectivePlayerId:perspective});
+  const abbreviation=objective.objectiveName.match(/\((.*?)\)/)[1];
+  assert.ok(map.includes('>'+abbreviation+'</button>'));
+ }
+});

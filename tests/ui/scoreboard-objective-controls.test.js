@@ -22,8 +22,9 @@ test('live objective markers are clickable and have perspective colors',()=>{
  assert.match(src,/is-mine/);
  assert.match(src,/is-opponent/);
  assert.match(src,/is-contested/);
- assert.match(src,/My Home/);
- assert.match(src,/Opponent Home/);
+ const labels=fs.readFileSync(new URL('../../src/rules/objective-display-labels.js',import.meta.url),'utf8');
+ assert.match(labels,/My Home/);
+ assert.match(labels,/Opponent Home/);
 });
 
 test('canonical objectives default to uncontrolled',()=>{

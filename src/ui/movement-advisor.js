@@ -22,7 +22,7 @@ function purposeLabel(purpose) {
 }
 
 function destinationLabel(option) {
-  if (option?.objectiveId) return `Objective · ${option.objectiveId}`;
+  if (option?.objectiveId) return `Objective · ${option.objectiveName ?? option.objectiveId}`;
   if (option?.targetName) return `Enemy · ${option.targetName}`;
   if (option?.territoryTarget === "boundary") return "Territory · Boundary";
   if (option?.territoryTarget === "opponent") return "Territory · Opponent";
@@ -128,12 +128,12 @@ function scheduleHighlightRestore(unitId) {
   });
 }
 
-export function renderMovementAdvisor(state, { playerId, selectedUnitId = null } = {}) {
+export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, perspectivePlayerId = playerId } = {}) {
   if (!playerId || state?.phase !== "movement") return "";
 
   let context;
   try {
-    context = getMovementStrategicRecommendations(state, { playerId });
+    context = getMovementStrategicRecommendations(state, { playerId, perspectivePlayerId });
   } catch {
     return `<aside class="movement-advisor"><h2>Movement Advisor</h2><p>Strategic movement context is unavailable for the current battle state.</p></aside>`;
   }
