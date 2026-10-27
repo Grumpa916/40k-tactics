@@ -35,7 +35,7 @@ test('Do not fight resolves the unit without making it an attack option', () => 
   assert.equal(getFightAttackOptions(next, { perspectivePlayerId: 'p1' }).attackers.some((unit) => unit.unitId === 'tyrannofex'), false);
 });
 
-test('Movement UI hides model IDs and X/Y coordinate entry', () => {
+test('Movement UI uses drag-first Normal Move and only exposes refinements after movement', () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
   const game = createGameSession(baseState('movement'));
@@ -44,6 +44,7 @@ test('Movement UI hides model IDs and X/Y coordinate entry', () => {
     innerHTML: '',
     replaceChildren() {},
     querySelector() { return null; },
+    querySelectorAll() { return []; },
     addEventListener(type, fn) { handlers[type] = fn; },
     removeEventListener(type) { delete handlers[type]; }
   };
@@ -52,11 +53,21 @@ test('Movement UI hides model IDs and X/Y coordinate entry', () => {
     assert.doesNotMatch(root.innerHTML, /data-move-x|data-move-y|move-coordinate-row/);
     assert.doesNotMatch(root.innerHTML, /p1:|p2:/);
     assert.match(root.innerHTML, /data-move-stationary>Did Not Move<\/button>/);
-    assert.match(root.innerHTML, /data-move-save>Normal Move<\/button>/);
+    assert.doesNotMatch(root.innerHTML, /data-move-save>Normal Move<\/button>/);
+    assert.doesNotMatch(root.innerHTML, /data-refine-advance/);
+
+    game.dispatch({
+      type: 'unit.normal_move',
+      payload: { unitId:'tyrannofex', moves:[{ modelId:'tyrannofex', position:{ x:7, y:5 } }] }
+    });
+
+    assert.match(root.innerHTML, /Normal Move recorded/);
+    assert.match(root.innerHTML, /<summary>Refine move type<\/summary>/);
     assert.match(root.innerHTML, /data-advance-roll="1"/);
     assert.match(root.innerHTML, /data-advance-roll="6"/);
-    assert.match(root.innerHTML, /data-move-advance disabled>Select roll first<\/button>/);
-    assert.match(root.innerHTML, /data-move-fallback>Fall Back<\/button>/);
+    assert.match(root.innerHTML, /data-refine-advance disabled>Select Advance roll<\/button>/);
+    assert.match(root.innerHTML, /data-refine-fallback>Mark Fall Back<\/button>/);
+    assert.match(root.innerHTML, /data-refine-special>Special movement<\/button>/);
   } finally {
     screen.destroy();
   }
