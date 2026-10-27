@@ -27,7 +27,8 @@ export function createBattleSetupScreen(container, {
   missionDefinitions = [],
   secondaryMissionCatalog = [],
   eventStage = null,
-  setupTab = "pre-game"
+  setupTab = "pre-game",
+  layoutNavigationMarkup = ""
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -380,7 +381,7 @@ export function createBattleSetupScreen(container, {
           (item.layout === missionSetup.layout ? 'true' : 'false') + '"' +
           (state.battle && state.battle.status !== "setup" ? " disabled" : "") + '>Layout ' + item.layout + ' · p. ' + item.page +
           (item.layout === missionSetup.layout ? ' — Selected' : '') + '</button>'
-        ).join("") + '</div>' +
+        ).join("") + '</div>' + layoutNavigationMarkup +
         '<div class="event-companion-layout-diagrams" aria-label="Battlefield layout diagrams">' +
         layoutOptions.layouts.map((item) => {
           const previewState = { ...state, battlefieldMap: { ...(state.battlefieldMap ?? {}), missionSetup: { ...missionSetup, layout: item.layout } } };
@@ -391,7 +392,7 @@ export function createBattleSetupScreen(container, {
         }).join("") +
         '</div><p>Source pages refer to the official Event Companion. These diagrams are intentionally reduced for quick comparison.</p>' +
         '</div>' :
-        '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>') +
+        '<p>Choose both dispositions to reveal the two Primary Missions and three available layouts.</p>' + layoutNavigationMarkup) +
       '</section>';
     const preGameMarkup = missionSetupMarkup;
     const history = getSecondaryMissionHistory(state);
