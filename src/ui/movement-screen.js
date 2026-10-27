@@ -3,6 +3,7 @@ import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
 import { renderMovementAdvisor } from './movement-advisor.js';
+import { getCustodesKatahDefinition, getCustodesKatahState } from '../rules/custodes-tactical-advisor.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
@@ -36,14 +37,51 @@ const MOVEMENT_LABELS = {
   "unit.stationary_recorded": "Did Not Move"
 };
 
-function movementActionLabel(action) {
+function movementActionLabel(action, refinement = null) {
   if (!action) return "Select movement";
+  if (refinement?.movementType === 'advance') {
+    const roll = Number(refinement.advanceRoll);
+    return Number.isInteger(roll) ? `Advance recorded · +${roll}\"` : "Advance recorded";
+  }
+  if (refinement?.movementType === 'fall_back') return "Fall Back recorded";
+  if (refinement?.movementType === 'special') return "Special movement recorded";
   const base = MOVEMENT_LABELS[action.type] ?? "Movement recorded";
   const roll = Number(action.payload?.advanceRoll);
   if (action.type === "unit.advanced" && Number.isInteger(roll) && roll >= 1 && roll <= 6) {
     return `${base} · +${roll}\"`;
   }
   return base;
+}
+
+function movementRefinement(state, unitId) {
+  const history = Array.isArray(state?.history) ? state.history : [];
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const event = history[index];
+    if (event?.payload?.movementRefinement !== true || event.payload?.unitId !== unitId) continue;
+    if (event.payload?.turn !== state.turn || event.payload?.round !== state.battle?.round) continue;
+    return {
+      movementType: event.payload?.movementType ?? null,
+      advanceRoll: Number.isInteger(event.payload?.advanceRoll) ? event.payload.advanceRoll : null
+    };
+  }
+  return null;
+}
+
+function renderCalistus(state, unit, action) {
+  if (!unit) return "";
+  const katah = getCustodesKatahState(state, { playerId: unit.ownerId, unitId: unit.id });
+  if (!katah.eligible) return "";
+  const definition = getCustodesKatahDefinition("Calistus");
+  const active = !katah.readied && katah.lastKatah === "Calistus";
+  if (!active && (!katah.readied || action)) return "";
+  const border = active ? '#d9b65b' : '#76b979';
+  const status = active ? 'ACTIVE' : 'READIED';
+  const statusColor = active ? '#f2ce69' : '#9edb9f';
+  return `<section class="move-katah" data-move-katah="Calistus" style="border:1px solid ${border};border-radius:9px;padding:10px;margin:0 0 10px;background:#202d26">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>CALISTUS</strong><span style="color:${statusColor};font-weight:800;font-size:12px">${status}</span></div>
+    <small style="display:block;margin:5px 0;color:#bdc9c8">Movement Phase · ${escapeHtml(definition?.effect ?? 'Move through models during a Normal Move, Advance or Fall Back move.')}</small>
+    ${active ? '' : '<button type="button" data-move-katah-calistus>Use Calistus for this unit</button>'}
+  </section>`;
 }
 
 export function createMovementScreen(container, { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}) {
@@ -59,10 +97,14 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   let livePointerDrag = null;
 
   function movementAction(state, unitId) {
-    return state.history.find((event) =>
-      ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
-      event.payload?.unitId === unitId && event.payload?.turn === state.turn
-    ) ?? null;
+    const history = Array.isArray(state?.history) ? state.history : [];
+    for (let index = history.length - 1; index >= 0; index -= 1) {
+      const event = history[index];
+      if (event?.payload?.movementRefinement === true) continue;
+      if (["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
+        event.payload?.unitId === unitId && event.payload?.turn === state.turn) return event;
+    }
+    return null;
   }
 
   function selectUnit(unitId) {
@@ -84,32 +126,41 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
     const unitCards = eligible.length ? eligible.map((unit) => {
       const action = movementAction(state, unit.id);
+      const refinement = movementRefinement(state, unit.id);
       return `<button type="button" class="move-unit${unit.id === selectedUnitId ? " is-selected" : ""}" data-move-unit="${escapeHtml(unit.id)}">
         <strong>${escapeHtml(unit.name)}</strong>
         <span>${escapeHtml(ownerLabel(unit, state, perspectivePlayerId))}</span>
-        <small>${escapeHtml(movementActionLabel(action))}</small>
+        <small>${escapeHtml(movementActionLabel(action, refinement))}</small>
       </button>`;
     }).join("") : "<p>No deployed units are available to move.</p>";
 
     let editor = "<p>Select a deployed unit to record its movement choice.</p>";
     if (selected) {
       const action = movementAction(state, selected.id);
+      const refinement = movementRefinement(state, selected.id);
       const advanceReady = Number.isInteger(advanceRoll) && advanceRoll >= 1 && advanceRoll <= 6;
+      const canRefine = action && action.type !== 'unit.stationary_recorded';
+      const refinementControls = canRefine ? `<details class="move-refine"><summary>Refine move type</summary>
+        <div class="move-actions">
+          <div class="advance-choice">
+            <span>Advance roll: <strong data-advance-roll-value>${advanceReady ? advanceRoll : "—"}</strong></span>
+            <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" aria-pressed="${value === advanceRoll}" class="${value === advanceRoll ? "is-selected" : ""}"${value === advanceRoll ? ' style="background:#c4e99b;color:#17212b;border-color:#c4e99b;font-weight:800"' : ""}>${value}</button>`).join("")}</div>
+            <button type="button" data-refine-advance${advanceReady ? "" : " disabled"}>${advanceReady ? `Mark Advance +${advanceRoll}\"` : "Select Advance roll"}</button>
+          </div>
+          <button type="button" data-refine-fallback>Mark Fall Back</button>
+          <button type="button" data-refine-special>Special movement</button>
+        </div>
+      </details>` : '';
       editor = `<div class="move-editor">
         <h2>${escapeHtml(selected.name)}</h2>
+        ${renderCalistus(state, selected, action)}
         ${action
-          ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(movementActionLabel(action))}</strong></p>
-             <div class="move-actions"><button type="button" data-reset-position>Undo</button></div>`
-          : `<div class="move-actions">
-               <button type="button" data-move-stationary>Did Not Move</button>
-               <button type="button" data-move-save>Normal Move</button>
-               <div class="advance-choice">
-                 <span>Advance roll: <strong data-advance-roll-value>${advanceReady ? advanceRoll : "—"}</strong></span>
-                 <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" aria-pressed="${value === advanceRoll}" class="${value === advanceRoll ? "is-selected" : ""}"${value === advanceRoll ? ' style="background:#c4e99b;color:#17212b;border-color:#c4e99b;font-weight:800"' : ""}>${value}</button>`).join("")}</div>
-                 <button type="button" data-move-advance${advanceReady ? "" : " disabled"}>${advanceReady ? `Advance +${advanceRoll}\"` : "Select roll first"}</button>
-               </div>
-               <button type="button" data-move-fallback>Fall Back</button>
-             </div>`}
+          ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(movementActionLabel(action, refinement))}</strong></p>
+             ${refinementControls}
+             <div class="move-actions">${refinement
+               ? '<button type="button" data-undo-move-refinement>Undo refinement</button>'
+               : '<button type="button" data-reset-position>Undo movement</button>'}</div>`
+          : `<div class="move-actions"><button type="button" data-move-stationary>Did Not Move</button></div>`}
       </div>`;
     }
 
@@ -267,24 +318,43 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const state = session.getState();
       const unit = state.units.find((item) => item.id === selectedUnitId);
       if (!unit) throw new Error("Select a unit before recording movement.");
-      const moves = movesAtCurrentPositions(unit);
-      if (!moves.length) throw new Error("This unit has no map position yet. Place it on the battlefield map first.");
 
-      if (button.hasAttribute("data-reset-position")) {
-        session.dispatch({ type: COMMAND_TYPES.UNDO_MOVEMENT_ACTION, payload: { unitId: unit.id } });
-        advanceRoll = null;
-      } else if (button.hasAttribute("data-move-save")) {
-        session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
-        advanceRoll = null;
-      } else if (button.hasAttribute("data-move-advance")) {
+      if (button.hasAttribute("data-move-katah-calistus")) {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_CUSTODES_KATAH_USE, payload: { playerId: unit.ownerId, unitId: unit.id, katahName: "Calistus" } });
+        errorMessage = "";
+        render();
+        return;
+      }
+      if (button.hasAttribute("data-refine-advance")) {
         if (!Number.isInteger(advanceRoll) || advanceRoll < 1 || advanceRoll > 6) throw new Error("Select the Advance roll (1–6) first.");
-        session.dispatch({ type: COMMAND_TYPES.RESOLVE_ADVANCE, payload: { unitId: unit.id, moves, advanceRoll } });
+        session.dispatch({ type: COMMAND_TYPES.REFINE_MOVEMENT_ACTION, payload: { unitId: unit.id, movementType: 'advance', advanceRoll } });
+        advanceRoll = null;
+      } else if (button.hasAttribute("data-refine-fallback")) {
+        session.dispatch({ type: COMMAND_TYPES.REFINE_MOVEMENT_ACTION, payload: { unitId: unit.id, movementType: 'fall_back' } });
+        advanceRoll = null;
+      } else if (button.hasAttribute("data-refine-special")) {
+        session.dispatch({ type: COMMAND_TYPES.REFINE_MOVEMENT_ACTION, payload: { unitId: unit.id, movementType: 'special' } });
+        advanceRoll = null;
+      } else if (button.hasAttribute("data-undo-move-refinement")) {
+        session.dispatch({ type: COMMAND_TYPES.UNDO_MOVEMENT_REFINEMENT, payload: { unitId: unit.id } });
+        advanceRoll = null;
+      } else if (button.hasAttribute("data-reset-position")) {
+        session.dispatch({ type: COMMAND_TYPES.UNDO_MOVEMENT_ACTION, payload: { unitId: unit.id } });
         advanceRoll = null;
       } else if (button.hasAttribute("data-move-stationary")) {
         session.dispatch({ type: COMMAND_TYPES.RECORD_STATIONARY, payload: { unitId: unit.id } });
         advanceRoll = null;
-      } else if (button.hasAttribute("data-move-fallback")) {
-        session.dispatch({ type: COMMAND_TYPES.RECORD_FALL_BACK, payload: { unitId: unit.id } });
+      } else if (button.hasAttribute("data-move-save") || button.hasAttribute("data-move-advance") || button.hasAttribute("data-move-fallback")) {
+        const moves = movesAtCurrentPositions(unit);
+        if (!moves.length) throw new Error("This unit has no map position yet. Place it on the battlefield map first.");
+        if (button.hasAttribute("data-move-save")) {
+          session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
+        } else if (button.hasAttribute("data-move-advance")) {
+          if (!Number.isInteger(advanceRoll) || advanceRoll < 1 || advanceRoll > 6) throw new Error("Select the Advance roll (1–6) first.");
+          session.dispatch({ type: COMMAND_TYPES.RESOLVE_ADVANCE, payload: { unitId: unit.id, moves, advanceRoll } });
+        } else {
+          session.dispatch({ type: COMMAND_TYPES.RECORD_FALL_BACK, payload: { unitId: unit.id } });
+        }
         advanceRoll = null;
       } else {
         return;
