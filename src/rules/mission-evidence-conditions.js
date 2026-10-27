@@ -11,7 +11,16 @@ const LEGACY_CONDITIONS = Object.freeze({
   'Control four or more objectives.': { type: 'control-objectives', minimum: 4 },
   'Control at least one central objective.': { type: 'control-central', minimum: 1 },
   'Destroy at least one enemy unit this turn.': { type: 'destroy-enemy', minimum: 1 },
-  'Per enemy unit destroyed this turn.': { type: 'count-destroyed' }
+  'Per enemy unit destroyed this turn.': { type: 'count-destroyed' },
+  'Control a non-home objective you did not control at the start of the turn.': { type: 'new-non-home-control', minimum: 1 },
+  'Control at least one non-home objective you did not control at the start of the turn.': { type: 'new-non-home-control', minimum: 1 },
+  'Destroy more enemy units this turn than friendly units lost last turn.': { type: 'kill-more-than-last-losses' },
+  "Control the opponent's home objective.": { type: 'control-opponent-home', minimum: 1 },
+  'Control the enemy home objective.': { type: 'control-opponent-home', minimum: 1 },
+  'At least one condemned enemy unit left the battlefield this turn.': { type: 'condemned-left', minimum: 1 },
+  'One or two objectives have been consecrated.': { type: 'consecrated-count', minimum: 1, maximum: 2 },
+  'Three or more objectives have been consecrated.': { type: 'consecrated-count', minimum: 3 },
+  'The enemy home objective has been consecrated.': { type: 'consecrated-opponent-home', minimum: 1 }
 });
 export function getMissionEvidenceCondition(summary) {
   return LEGACY_CONDITIONS[summary] ?? null;
