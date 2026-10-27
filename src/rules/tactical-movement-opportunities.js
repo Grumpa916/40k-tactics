@@ -5,6 +5,7 @@ import { getFormationObjectiveContribution } from "./tactical-objective-swing.js
 import { getObjectiveControlForPlayer } from "./objective-control-state.js";
 import { getGameStrategyContext } from "./tactical-game-strategy.js";
 import { getTargetStrategicContext } from "./tactical-target-context.js";
+import { getPrimaryStrategyContext, getPrimaryObjectiveStrategySignal } from "./tactical-primary-strategy.js";
 import { getLiveUnitPosition, getSpatialContext } from "./spatial-context.js";
 import { getTerritoryStatusForPosition } from "./battlefield-territory.js";
 import { clamp01, unitById } from "./tactical-context-utils.js";
@@ -140,12 +141,20 @@ function movementActionLabel(action) {
   return "Reposition toward this purpose";
 }
 
-function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal }) {
+function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal, primaryStrategy }) {
   const entries = (spatial.objectiveProximity ?? []).filter((entry) => entry.unitId === unit.id);
   return entries.map((entry) => {
     const control = getObjectiveControlForPlayer(state, { playerId, objectiveId: entry.objectiveId });
     const action = objectiveAction({ control, distance: entry.distance, movement });
     const purpose = objectivePurpose(control, action);
+    const primarySignal = getPrimaryObjectiveStrategySignal(state, {
+      playerId,
+      perspectivePlayerId,
+      objectiveId: entry.objectiveId,
+      control,
+      purpose,
+      primaryStrategy
+    });
     const ocValue = Number.isFinite(oc.effectiveOc) ? clamp01(oc.effectiveOc / 8) : 0.35;
     const usableOcFactor = oc.battleShocked ? 0.35 : 0.58 + 0.42 * ocValue;
     const urgency = Math.min(1.35, (strategy.weights.primary + strategy.weights.objectiveSwing) / 2);
@@ -158,12 +167,14 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
       usableOcFactor *
       urgency +
       missionSignal.score +
-      holdBonus
+      holdBonus +
+      primarySignal.score
     );
     const objectiveName=objectiveAdvisorLabel(state,entry.objectiveId,perspectivePlayerId);
     let reason = `${objectiveName} is ${control ?? "uncontrolled"} and about ${entry.distance}\" away on the approximate map.`;
     if (Number.isFinite(oc.effectiveOc)) reason += ` This formation currently contributes about ${oc.effectiveOc} usable OC.`;
     if (holdBonus > 0) reason += " Holding receives extra value because this formation is already contributing usable OC near a friendly-controlled objective.";
+    if (primarySignal.active && primarySignal.reason) reason += ` ${primarySignal.reason}`;
     if (oc.battleShocked) reason += " It is Battle-shocked, so its saved OC is treated as suppressed for this recommendation.";
     if (missionSignal.missions.length) reason += ` Verified active movement-relevant secondary context: ${missionSignal.missions.join(", ")}.`;
     return Object.freeze({
@@ -174,6 +185,7 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
       objectiveName,
       distance: entry.distance,
       control,
+      primaryStrategySignal: primarySignal,
       actionHint: movementActionLabel(action),
       confidence: Number.isFinite(movement) && oc.confidence !== "low" ? "moderate" : "low",
       reason
@@ -349,6 +361,7 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
   }
 
   const strategy = getGameStrategyContext(state, { playerId });
+  const primaryStrategy = getPrimaryStrategyContext(state, { playerId, perspectivePlayerId });
   const spatial = getSpatialContext(state, { playerId });
   const secondaries = activeSecondaries(state, playerId);
   const missionSignal = verifiedMovementMissionSignal(secondaries);
@@ -363,7 +376,7 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
     const weapons = formationWeapons(state, unit);
     const territory = territoryOptions(state, { playerId, unit, movement, strategy, territorySignal });
     const candidates = [
-      ...objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal }),
+      ...objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal, primaryStrategy }),
       ...territory,
       ...targetOptions(state, { playerId, unit, movement, spatial, weapons }),
       fallbackOption(unit, movement, strategy)
@@ -390,6 +403,7 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
       territoryTarget: best.territoryTarget ?? null,
       distance: best.distance ?? null,
       strategicContext: best.strategicContext ?? null,
+      primaryStrategySignal: best.primaryStrategySignal ?? null,
       recommendation: recommendationText(unit, best),
       reason: best.reason,
       alternatives: Object.freeze(candidates.slice(1, 3))
@@ -399,6 +413,7 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
   return Object.freeze({
     playerId,
     strategy,
+    primaryStrategy,
     activeSecondaries: Object.freeze(secondaries.map(({ id, name, verified }) => Object.freeze({ id, name, verified }))),
     missionSignal,
     territorySignal,
