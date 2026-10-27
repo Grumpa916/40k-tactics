@@ -4,20 +4,47 @@ on:
   push:
 
 jobs:
-  new-opportunity-tests:
+  new-core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test tests/application/actionable-scoring-checkpoints.test.js
+      - run: node --test --test-name-pattern='fresh|stale|Destroyer' tests/application/actionable-scoring-checkpoints.test.js
 
-  legacy-checkpoint-tests:
+  new-purge:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test tests/ui/checkpoint-inline-scoring.test.js
+      - run: node --test --test-name-pattern='Unstoppable|Punishment|Consecrate' tests/application/actionable-scoring-checkpoints.test.js
+
+  new-secondary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test --test-name-pattern='Secondary|cumulative|mission action|Tactical' tests/application/actionable-scoring-checkpoints.test.js
+
+  legacy-a:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test --test-name-pattern='primary timing|objective evidence|confirmed secondary' tests/ui/checkpoint-inline-scoring.test.js
+
+  legacy-b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test --test-name-pattern='primary scores|inline form|destruction evidence' tests/ui/checkpoint-inline-scoring.test.js
