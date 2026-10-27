@@ -17,6 +17,7 @@ export const COMMAND_TYPES = Object.freeze({
   SET_BATTLE_SIZE: "battle.set_size",
   RECORD_OBJECTIVE_CONTROL: "objective.record_control",
   RECORD_PUNISHMENT_CONDEMNATION: "primary.punishment.record_condemnation",
+  RECORD_CONSECRATE_REVIEW: "primary.consecrate.record_review",
   START_FIRST_TURN: "turn.start_first",
   CHANGE_PHASE: "turn.change_phase",
   END_TURN: "turn.end",

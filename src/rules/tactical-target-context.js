@@ -8,7 +8,7 @@ import { getTargetObjectiveSwing } from "./tactical-objective-swing.js";
 import { getTargetRetaliationRisk } from "./tactical-retaliation-risk.js";
 import { getGameStrategyContext } from "./tactical-game-strategy.js";
 import { getStratagemResourceContext } from "./tactical-stratagem-context.js";
-import { getPrimaryStrategyContext } from "./tactical-primary-strategy.js";
+import { getPrimaryStrategyContext } from "./tactical-primary-strategy-router.js";
 import { clamp01, impactLabel } from "./tactical-context-utils.js";
 
 export {
