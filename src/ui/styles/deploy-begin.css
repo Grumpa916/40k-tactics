@@ -47,6 +47,8 @@
 .deploy-begin label { display:block; font-size:11px; margin:7px 0; }
 .deploy-begin label select { display:block; width:100%; }
 .deploy-reference-overlay { position:fixed; inset:0; z-index:1300; display:grid; place-items:center; background:#000b; padding:10px; }
+.live-preparation__actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 12px; }
+.live-preparation__actions button { min-height:44px; padding:8px 12px; }
 .deploy-reference-overlay > section { width:min(1200px,100%); max-height:95dvh; overflow:auto; background:#10191f; border:1px solid #53676a; border-radius:12px; padding:12px; }
 .deploy-reference-overlay > section > header { display:flex; justify-content:space-between; align-items:center; gap:12px; position:sticky; top:-12px; padding:10px 0; background:#10191f; z-index:2; }
 @media (orientation:landscape) and (min-width:761px) {

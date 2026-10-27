@@ -22,9 +22,11 @@ export function createLivePreparationScreen(container,options={}) {
     child?.destroy();referenceScreen?.destroy();referenceScreen=null;combinedMounted=false;
     const issues=preparationIssues(state,'mission');
     const deployStyle=new URL('./styles/deploy-begin.css',import.meta.url).href;
-    container.innerHTML=`<link rel="stylesheet" href="${deployStyle}"><main class="live-preparation"><h1>Prepare game</h1><p>Confirm the missions and layout, then deploy both armies and select reserves together.</p><div data-prep-child></div><p role="status">${esc(message)}</p>${issues.length?`<ul>${issues.map(issue=>`<li>${esc(issue)}</li>`).join('')}</ul>`:''}<div class="live-preparation__actions"><button type="button" data-prep-terrain-reference>View terrain setup</button><button type="button" data-prep-next${issues.length?' disabled':''}>Continue to Deploy &amp; Begin</button></div>${terrainReference?`<div class="deploy-reference-overlay"><section role="dialog" aria-modal="true" aria-label="Terrain setup"><header><h2>Terrain setup</h2><button type="button" data-prep-close-terrain>Back to Prepare game</button></header><div data-prep-terrain-content></div></section></div>`:''}</main>`;
+    const layoutNavigationMarkup=`<div class="live-preparation__actions"><button type="button" data-prep-terrain-reference>View terrain setup</button><button type="button" data-prep-next${issues.length?' disabled':''}>Continue to Deploy &amp; Begin</button></div>`;
+    container.innerHTML=`<link rel="stylesheet" href="${deployStyle}"><main class="live-preparation"><h1>Prepare game</h1><p>Confirm the missions and layout, then deploy both armies and select reserves together.</p><div data-prep-child></div><p role="status">${esc(message)}</p>${issues.length?`<ul>${issues.map(issue=>`<li>${esc(issue)}</li>`).join('')}</ul>`:''}${terrainReference?`<div class="deploy-reference-overlay"><section role="dialog" aria-modal="true" aria-label="Terrain setup"><header><h2>Terrain setup</h2><button type="button" data-prep-close-terrain>Back to Prepare game</button></header><div data-prep-terrain-content></div></section></div>`:''}</main>`;
     const mount=container.querySelector('[data-prep-child]');
-    if(mount)child=createBattleSetupScreen(mount,{...options,eventStage:'mission'});
+    if(mount)child=createBattleSetupScreen(mount,{...options,eventStage:'mission',layoutNavigationMarkup});
+    else container.innerHTML=container.innerHTML.replace('</main>',`${layoutNavigationMarkup}</main>`);
     const terrainMount=container.querySelector('[data-prep-terrain-content]');
     if(terrainReference&&terrainMount)referenceScreen=createBattleSetupScreen(terrainMount,{...options,eventStage:'terrain'});
   }
