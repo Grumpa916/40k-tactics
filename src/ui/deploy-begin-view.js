@@ -1,32 +1,26 @@
 import { renderMapReserveTray } from './map-reserve-tray.js';
-import { deploymentUnits, formationFor, attachmentParent } from '../rules/event-preparation.js';
+import { deploymentUnits, formationFor } from '../rules/event-preparation.js';
 import { deploymentWorkspaceSummary, deploymentWorkspaceIssues } from '../rules/deployment-workspace.js';
 import { getSecondaryMissionMode } from '../rules/secondary-mission-lifecycle.js';
 export const escapeDeploymentText = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const esc=escapeDeploymentText;
 
-function armyMarkup(state,summary,selectedUnitId) {
-  const {player,units,reserve,unplaced,needsReserveReview}=summary;
-  return `<section class="deploy-army"><h2>${esc(player.name)}</h2><p>${units.length-unplaced.length} assigned · ${unplaced.length} awaiting placement</p>
-    <div class="deploy-unit-list">${units.map(unit=>{
-      const f=formationFor(state,unit), attached=(state.units??[]).filter(item=>attachmentParent(state,item)===unit.id);
-      return `<div class="deploy-unit-row"><button type="button" data-deploy-select="${esc(unit.id)}" aria-pressed="${unit.id===selectedUnitId}"><strong>${esc(unit.name)}</strong><small>${attached.length?'+ '+attached.map(item=>esc(item.name)).join(', '):f.kind==='field'?(state.battlefieldMap?.actualDeployment?.[unit.id]?'Placed':'Awaiting placement'):f.kind==='embarked'?'Embarked in '+esc(state.units.find(item=>item.id===f.transportId)?.name):'In reserves'}</small></button><div role="group" aria-label="Location for ${esc(unit.name)}">${['field','reserve'].map(kind=>`<button type="button" data-deploy-location="${kind}" data-deploy-unit="${esc(unit.id)}" aria-pressed="${f.kind===kind}">${kind==='field'?'Battlefield':'Reserves'}</button>`).join('')}</div></div>`;
-    }).join('')}</div>
-    <p class="deploy-reserve-total">Reserves: ${reserve.count} units · ${reserve.points} known pts${reserve.unknown?' + '+reserve.unknown+' unknown costs':''}${reserve.limit==null?' · allowance not set':' / '+reserve.limit+' pt allowance'}</p>
+function armySummaryMarkup(state,summary) {
+  const {player,units,unplaced,needsReserveReview}=summary;
+  return `<section class="deploy-army deploy-army--summary"><h2>${esc(player.name)}</h2><p>${units.length-unplaced.length} assigned · ${unplaced.length} awaiting placement</p>
     ${needsReserveReview?`<aside class="deploy-warning">Check reserve limits and applicable exceptions on the tabletop.<button type="button" data-deploy-review="${esc(player.id)}">Reserve review confirmed</button></aside>`:state.preparation?.reserveReview?.[player.id]?'<small>Reserve review recorded ✓</small>':''}</section>`;
 }
 export function renderDeployBeginView(state,{selectedUnitId=null,message='',rolesOpen=false,transportsOpen=false,checklistOpen=false,reference=null}={}) {
   const summaries=deploymentWorkspaceSummary(state), issues=deploymentWorkspaceIssues(state), players=state.players??[];
   const rolesMissing=!state.preGameSetup?.attackerPlayerId||!state.preparation?.firstPlayerId;
-  const reserved=deploymentUnits(state).filter(unit=>formationFor(state,unit).kind==='reserve');
   const playerName=id=>players.find(player=>player.id===id)?.name??'Not recorded';
   const style=new URL('./styles/deploy-begin.css',import.meta.url).href;
-  return `<link rel="stylesheet" href="${style}"><main class="deploy-begin"><header class="deploy-begin__heading"><div><h1>Deploy &amp; Begin</h1><p>Both armies · deployment and reserves in one place</p></div><button type="button" data-deploy-reference="terrain">View terrain setup</button></header>
+  return `<link rel="stylesheet" href="${style}"><main class="deploy-begin">
     <div class="deploy-begin__workspace"><section class="deploy-begin__map"><div data-deploy-map></div>${renderMapReserveTray(state,{selectedUnitId})}</section>
     <aside class="deploy-begin__panel"><div class="deploy-begin__scroll">
     <details data-deploy-roles${rolesOpen||rolesMissing?' open':''}><summary>Attacker &amp; first player</summary><p>Attacker: ${esc(playerName(state.preGameSetup?.attackerPlayerId))}<br>First player: ${esc(playerName(state.preparation?.firstPlayerId))}</p><p>Record the tabletop roll results when resolved.</p>${[['attacker','Attacker',state.preGameSetup?.attackerPlayerId],['first-player','First player',state.preparation?.firstPlayerId]].map(([action,label,selected])=>`<fieldset><legend>${label}</legend>${players.map(player=>`<button type="button" data-deploy-role="${action}" data-deploy-player="${esc(player.id)}" aria-pressed="${selected===player.id}">${esc(player.name)}</button>`).join('')}</fieldset>`).join('')}<small>Defender is the other army. First turn is recorded separately.</small></details>
     <button type="button" data-deploy-reference="secondaries">Secondary choices · ${players.map(player=>esc(getSecondaryMissionMode(state,player.id)??'Choose mode')).join(' / ')}</button>
-    ${summaries.map(summary=>armyMarkup(state,summary,selectedUnitId)).join('')}
+    ${summaries.map(summary=>armySummaryMarkup(state,summary)).join('')}
     <details data-deploy-transports${transportsOpen?' open':''}><summary>Transport assignments</summary><p>Confirm passenger eligibility and capacity on the tabletop. Attached units follow their bodyguard.</p>${deploymentUnits(state).map(unit=>`<label>${esc(unit.name)}<select data-deploy-transport="${esc(unit.id)}"><option value="">Not embarked</option>${deploymentUnits(state).filter(carrier=>carrier.id!==unit.id&&carrier.ownerId===unit.ownerId&&formationFor(state,carrier).kind!=='embarked').map(carrier=>`<option value="${esc(carrier.id)}"${formationFor(state,unit).transportId===carrier.id?' selected':''}>${esc(carrier.name)}</option>`).join('')}</select></label>`).join('')}</details>
     <details data-deploy-checklist${checklistOpen?' open':''}><summary>Tabletop setup order · reference</summary><ol><li>Confirm missions and battlefield layout.</li><li>Set up terrain; determine attacker and defender.</li><li>Reveal secondary choices and battle formations, including transports and reserves.</li><li>Deploy armies, then resolve redeployment rules.</li><li>Determine first turn; resolve Scouts and other pre-battle rules.</li></ol><p>Follow the mission pack at the table. These are reminders, not separate app checkpoints.</p></details>
     </div><footer><p role="status">${esc(message)}</p>${issues.length?`<details class="deploy-missing"><summary>${issues.length} setup item${issues.length===1?'':'s'} remaining</summary><ul>${issues.map(issue=>`<li>${esc(issue)}</li>`).join('')}</ul></details>`:''}<small>Starting confirms tabletop deployment, redeployments and pre-battle rules are resolved or not applicable.</small><button type="button" data-deploy-begin${issues.length?' disabled':''}>Deployment complete · Begin battle</button></footer></aside></div>
