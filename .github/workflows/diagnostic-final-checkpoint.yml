@@ -2,17 +2,17 @@ name: Diagnostic final checkpoint
 on:
   push:
 jobs:
-  ui-a-m:
+  ui-a-f:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: node --test tests/ui/[a-m]*.test.js
-  ui-n-z:
+      - run: node --test tests/ui/[a-f]*.test.js
+  ui-g-m:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: node --test tests/ui/[n-z]*.test.js
+      - run: node --test tests/ui/[g-m]*.test.js
