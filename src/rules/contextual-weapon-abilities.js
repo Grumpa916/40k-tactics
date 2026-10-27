@@ -1,3 +1,4 @@
+import { applyRecordedCombatEffects } from './contextual-datasheet-effects.js';
 const RANGE_UNCERTAINTY_MARGIN = 3;
 
 function validPosition(position) {
@@ -60,6 +61,7 @@ function halfRangeStatus(profile, distance) {
 
 export function getContextualWeaponProfile({ attacker, target, profile } = {}) {
   if (!profile) throw new TypeError('An attack profile is required.');
+  profile = applyRecordedCombatEffects({ attacker, target, profile });
   const distance = distanceBetween(attacker, target);
   const rangeStatus = halfRangeStatus(profile, distance);
   const targetModels = Number.isInteger(target?.modelCount) && target.modelCount >= 0

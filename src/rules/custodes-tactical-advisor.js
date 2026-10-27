@@ -1,3 +1,4 @@
+import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_KATAH } from "../data/adeptus-custodes-faction-rules.js";
 import { getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from "./battle-unit-reference.js";
 import { getExpectedDamage } from "./expected-damage.js";
@@ -370,17 +371,22 @@ export function getCustodesFightAdvisorContext(state, {
 export function getCustodesChargeAdvisorContext(state, { playerId, unitId, baseProbability } = {}) {
   const base = Number(baseProbability);
   const eligible = isMartialKatahEligible(state, unitId);
-  const rerollCharge = eligible && hasCustodesDetachment(state, playerId, "Dread Host");
+  const unit = unitById(state, unitId);
+  const swiftOnslaught = unit?.ownerId === playerId && getRecordedCombatRules(state, unit).effects.includes("swift-onslaught");
+  const dreadHost = eligible && hasCustodesDetachment(state, playerId, "Dread Host");
+  const rerollCharge = swiftOnslaught || dreadHost;
+  const ruleName = swiftOnslaught ? "Swift Onslaught" : dreadHost ? "Dread Host" : null;
   const adjustedProbability = Number.isFinite(base)
     ? rerollCharge ? 1 - ((1 - base) ** 2) : base
     : null;
   return Object.freeze({
-    available: eligible && rerollCharge,
+    available: rerollCharge,
+    ruleName,
     rerollCharge,
     baseProbability: Number.isFinite(base) ? base : null,
     adjustedProbability,
     reason: rerollCharge
-      ? "Dread Host allows this Adeptus Custodes unit to re-roll its Charge roll."
+      ? `${ruleName} allows this unit to re-roll its Charge roll.`
       : "No modeled Custodes detachment charge reroll applies."
   });
 }

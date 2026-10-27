@@ -1,3 +1,4 @@
+import { getReducedDamageValues } from './damage-mitigation.js';
 import { buildAttackProfile } from "./combat-profile.js";
 import { getContextualWeaponProfile } from "./contextual-weapon-abilities.js";
 import { getWoundBracketModifiers } from "./wound-bracket.js";
@@ -33,17 +34,6 @@ function woundTarget(strength, toughness) {
 
 function successProbability(target) {
   return (7 - target) / 6;
-}
-
-function expectedDamageValue(damage) {
-  if (Number.isInteger(damage) && damage >= 1) return damage;
-  const text = String(damage ?? '').trim().toUpperCase();
-  if (/^\d+$/.test(text)) return Number(text);
-  const match = text.match(/^D([36])(?:\+(\d+))?$/);
-  if (!match) throw new RangeError("Damage must be a positive integer or supported D3/D6 expression.");
-  const sides = Number(match[1]);
-  const modifier = Number(match[2] || 0);
-  return ((sides + 1) / 2) + modifier;
 }
 
 function saveFailureProbability(profile, saveModifier = 0) {
@@ -122,13 +112,15 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   const saveFailure = saveFailureProbability(profile, saveModifier);
   const unsavedNormalWounds = normalWounds * saveFailure;
   const unsavedLethalWounds = lethalHitWounds * saveFailure;
-  const damagePerUnsavedWound = expectedDamageValue(profile.damage);
+  const damageValues = getReducedDamageValues(profile);
+  const damagePerUnsavedWound = damageValues.reduce((sum, [value]) => sum + value, 0) / damageValues.length;
   const preventionMultiplier = damagePreventionMultiplier(profile.damagePrevention);
 
-  const expectedDamage =
-    (unsavedNormalWounds + unsavedLethalWounds + devastatingWounds) *
-    damagePerUnsavedWound *
-    preventionMultiplier;
+  const mortalPreventionMultiplier = damagePreventionMultiplier(profile.mortalDamagePrevention);
+  const expectedDamage = damagePerUnsavedWound * (
+    (unsavedNormalWounds + unsavedLethalWounds) * preventionMultiplier +
+    devastatingWounds * mortalPreventionMultiplier
+  );
 
   return Object.freeze({
     expectedDamage,
@@ -146,6 +138,10 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     damagePerUnsavedWound,
     damagePreventionMultiplier: preventionMultiplier,
     contextualAbilities: Object.freeze({
+      appliedRules: profile.appliedRules,
+      damageReduction: profile.damageReduction,
+      damagePrevention: profile.damagePrevention,
+      mortalDamagePrevention: profile.mortalDamagePrevention,
       blastBonus: profile.blastBonus,
       rapidFireBonus: profile.rapidFireBonus,
       meltaBonus: profile.meltaBonus,

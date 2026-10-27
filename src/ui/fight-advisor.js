@@ -1,3 +1,4 @@
+import { renderAdvisorAppliedRules } from './advisor-applied-rules.js';
 import { getFightOpportunityRecommendations } from "../rules/tactical-fight-opportunities.js";
 import { escapeHtml } from "./combat-workspace.js";
 
@@ -48,6 +49,7 @@ export function fightAdvisory(attackerId, weaponId, targetId, state, weapons, pe
         <div><strong>${survival}</strong><span>target survival</span></div>
         <div><strong>${destruction}</strong><span>target destruction</span></div>
       </div>
+      ${renderAdvisorAppliedRules(recommendation.appliedRules)}
       <p><strong>Strategic value: ${escapeHtml(strategicLabel)}</strong>${scoringRole ? ` · ${escapeHtml(scoringRole.replaceAll("-", " "))}` : ""}${escapeHtml(objectiveSwing)}</p>
       <p>${escapeHtml(recommendation.recommendation ?? recommendation.reason)}</p>
     </aside>

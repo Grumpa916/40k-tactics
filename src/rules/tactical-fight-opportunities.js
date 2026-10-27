@@ -14,7 +14,7 @@ function unitById(state, unitId) {
 function expectedDamageForOption(attacker, target, weapon) {
   if (!attacker || !target || !weapon) return null;
   try {
-    return getExpectedDamage({ attacker, target, weapon }).expectedDamage;
+    return getExpectedDamage({ attacker, target, weapon });
   } catch {
     return null;
   }
@@ -120,10 +120,11 @@ export function getFightOpportunityRecommendations(
 
       const sourceProfile = getProbabilisticUnitProfile(state, sourceAttacker);
       const targetProfile = getProbabilisticUnitProfile(state, target);
+      const calculation = expectedDamageForOption(sourceProfile, targetProfile, option?.weapon);
       const baselineExpectedDamage =
         Number.isFinite(option?.expectedDamage)
           ? option.expectedDamage
-          : expectedDamageForOption(sourceProfile, targetProfile, option?.weapon);
+          : calculation?.expectedDamage ?? null;
 
       let custodesFight = null;
       if (option?.weapon) {
@@ -255,6 +256,7 @@ export function getFightOpportunityRecommendations(
         sourceUnitId: sourceAttacker.id,
         targetUnitId: target.id,
         weaponId: option?.weapon?.id ?? option?.weaponId ?? null,
+        appliedRules: calculation?.contextualAbilities?.appliedRules ?? [],
         baselineExpectedDamage,
         expectedDamage: evaluation.expectedDamage,
         custodesFight,

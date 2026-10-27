@@ -28,6 +28,7 @@ export function getAttackDamageForecast(state, { attackerId, targetId, weapon } 
     );
 
     return Object.freeze({
+      appliedRules: distribution.contextualAbilities?.appliedRules ?? [],
       expectedDamage,
       thresholdDamage,
       probabilityAtLeastThreshold,

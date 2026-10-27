@@ -1,3 +1,4 @@
+import { getWoundLossValues } from './damage-mitigation.js';
 import { buildAttackProfile } from "./combat-profile.js";
 import { getContextualWeaponProfile } from "./contextual-weapon-abilities.js";
 import { getWoundBracketModifiers } from "./wound-bracket.js";
@@ -14,17 +15,6 @@ function woundTarget(strength, toughness) {
   if (strength === toughness) return 4;
   if (strength * 2 <= toughness) return 6;
   return 5;
-}
-
-function damageValues(damage) {
-  if (Number.isInteger(damage) && damage >= 1) return [[damage, 1]];
-  const text = String(damage ?? '').trim().toUpperCase();
-  if (/^\d+$/.test(text)) return [[Number(text), 1]];
-  const match = text.match(/^D([36])(?:\+(\d+))?$/);
-  if (!match) throw new RangeError("Damage must be a positive integer or supported D3/D6 expression.");
-  const sides = Number(match[1]);
-  const modifier = Number(match[2] || 0);
-  return Array.from({ length: sides }, (_, index) => [index + 1 + modifier, 1 / sides]);
 }
 
 function attackCountValues(attacks) {
@@ -79,7 +69,7 @@ function singleSaveFailureProbability(profile, saveModifier = 0) {
 function oneSavedWoundDamageDistribution(profile, saveFailure) {
   const result = new Map();
   addProbability(result, 0, 1 - saveFailure);
-  for (const [damage, probability] of damageValues(profile.damage)) {
+  for (const [damage, probability] of getWoundLossValues(profile)) {
     addProbability(result, damage, saveFailure * probability);
   }
   return result;
@@ -99,8 +89,10 @@ function oneNormalHitDamageDistribution(profile, woundTargetValue, saveFailure) 
   const critical = profile.devastatingWounds ? woundRoll.critical : 0;
   const normalWoundProbability = Math.max(0, woundRoll.success - critical);
   addProbability(result, 0, 1 - (normalWoundProbability * saveFailure + critical));
-  for (const [damage, probability] of damageValues(profile.damage)) {
+  for (const [damage, probability] of getWoundLossValues(profile)) {
     addProbability(result, damage, normalWoundProbability * saveFailure * probability);
+  }
+  for (const [damage, probability] of getWoundLossValues({ ...profile, damagePrevention: profile.mortalDamagePrevention })) {
     addProbability(result, damage, critical * probability);
   }
   return result;
@@ -191,6 +183,10 @@ export function getDamageOutcomeDistribution({ attacker, target, weapon, attacke
     expectedDamage: entries.reduce((sum, outcome) => sum + outcome.damage * outcome.probability, 0),
     totalProbability: entries.reduce((sum, outcome) => sum + outcome.probability, 0),
     contextualAbilities: Object.freeze({
+      appliedRules: profile.appliedRules,
+      damageReduction: profile.damageReduction,
+      damagePrevention: profile.damagePrevention,
+      mortalDamagePrevention: profile.mortalDamagePrevention,
       blastBonus: profile.blastBonus,
       rapidFireBonus: profile.rapidFireBonus,
       meltaBonus: profile.meltaBonus,

@@ -31,9 +31,10 @@ export function getChargeSuccessProbability(distance) {
   return successful / 36;
 }
 
-function expectedDamageForWeapon(state, sourceUnit, target, weapon) {
+function expectedDamageForWeapon(state, sourceUnit, target, weapon, assumeCharged) {
   try {
     const attackerProfile = getProbabilisticUnitProfile(state, sourceUnit);
+    if (assumeCharged) attackerProfile.combatRules = { ...attackerProfile.combatRules, chargedThisTurn: true };
     const targetProfile = getProbabilisticUnitProfile(state, target);
     const result = getExpectedDamage({ attacker: attackerProfile, target: targetProfile, weapon });
     return Number.isFinite(result?.expectedDamage) ? result.expectedDamage : null;
@@ -42,7 +43,7 @@ function expectedDamageForWeapon(state, sourceUnit, target, weapon) {
   }
 }
 
-function meleeProjection(state, attacker, target) {
+function meleeProjection(state, attacker, target, assumeCharged = false) {
   if (!attacker || !target) {
     return Object.freeze({ available: false, expectedDamage: null, targetImpact: 0, primaryWeapon: null, extraAttackWeapons: [] });
   }
@@ -50,7 +51,7 @@ function meleeProjection(state, attacker, target) {
   const options = getCombatFormationWeaponOptions(state, attacker, { type: "melee" })
     .map((weapon) => {
       const source = unitById(state, weapon.sourceUnitId) ?? attacker;
-      const expectedDamage = expectedDamageForWeapon(state, source, target, weapon);
+      const expectedDamage = expectedDamageForWeapon(state, source, target, weapon, assumeCharged);
       return expectedDamage == null ? null : { weapon, expectedDamage };
     })
     .filter(Boolean);
@@ -87,7 +88,7 @@ function recommendationFor({ successProbability, measuredDistance, strategicCont
   if (custodesCharge?.rerollCharge && exact) {
     const pct = Math.round(successProbability * 100);
     if (successProbability >= 0.45) {
-      return `Dread Host charge opportunity: the detachment re-roll raises the measured success chance to about ${pct}%. Weigh that improved chance against mission value and the projected Fight trade.`;
+      return `${custodesCharge.ruleName} charge opportunity: the re-roll raises the measured success chance to about ${pct}%. Weigh that improved chance against mission value and the projected Fight trade.`;
     }
   }
   if (exact && successProbability < 0.3 && strategicContext.score < 0.65) {
@@ -131,7 +132,7 @@ export function getChargeOpportunity(state, {
   if (!target || target.ownerId === playerId) throw new Error("Charge target must be an enemy unit.");
 
   const strategicContext = getTargetStrategicContext(state, { playerId, targetUnitId });
-  const projectedFight = meleeProjection(state, attacker, target);
+  const projectedFight = meleeProjection(state, attacker, target, true);
   const projectedCounterFight = meleeProjection(state, target, attacker);
   const unmodifiedSuccessProbability = getChargeSuccessProbability(measuredDistance);
   const unmodifiedMapSuccessProbability = getChargeSuccessProbability(mapDistance);
@@ -188,7 +189,7 @@ export function getChargeOpportunity(state, {
       custodesCharge
     }),
     assumption: custodesCharge?.rerollCharge
-      ? "Charge probability uses 2D6 against the measured distance and applies the modeled Dread Host full Charge re-roll. Other charge modifiers, terrain and model placement remain tabletop-authoritative."
-      : "Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
+      ? `Charge probability uses 2D6 and the ${custodesCharge.ruleName} full Charge re-roll. Projected melee assumes a successful charge. Other modifiers, terrain and model placement remain tabletop-authoritative.`
+      : "Projected melee assumes a successful charge. Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
   });
 }

@@ -27,6 +27,9 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
   }
 
   return Object.freeze({
+    weaponType: weapon.type,
+    lance: weaponCharacteristics.lance === true,
+    conditionalAbilities: weaponCharacteristics.conditionalAbilities ?? [],
     torrent: weaponCharacteristics.torrent === true,
     attacks: characteristics.attacks,
     hitTarget,
@@ -45,7 +48,8 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     saveRerollCount: characteristics.saveRerollCount ?? null,
     ap: characteristics.ap ?? 0,
     damage: characteristics.damage,
-    damagePrevention: characteristics.damagePrevention ?? 0,
+    damageReduction: targetCharacteristics.damageReduction ?? 0,
+    damagePrevention: targetCharacteristics.damagePrevention ?? 0,
     sustainedHits: characteristics.sustainedHits ?? 0,
     lethalHits: characteristics.lethalHits ?? false,
     devastatingWounds: characteristics.devastatingWounds ?? false,
