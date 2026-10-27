@@ -1,0 +1,23 @@
+name: Diagnostic actionable checkpoints
+
+on:
+  push:
+
+jobs:
+  new-opportunity-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test tests/application/actionable-scoring-checkpoints.test.js
+
+  legacy-checkpoint-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test tests/ui/checkpoint-inline-scoring.test.js
