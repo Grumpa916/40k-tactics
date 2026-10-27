@@ -11,7 +11,7 @@ const seed=()=>createGameState({phase:'movement',turn:3,activePlayer:'p1',player
 function fixture() {
  const handlers={},checkbox={checked:false,focus(){}},confirmButton={disabled:true};
  return {innerHTML:'',replaceChildren(){},contains:()=>true,addEventListener(t,f){handlers[t]=f;},removeEventListener(t){delete handlers[t];},querySelector(s){return s==='[data-final-score-confirmed]'?checkbox:s==='[data-confirm-end-game]'?confirmButton:null;},querySelectorAll(){return [];},
- click(attr){const b={hasAttribute:n=>n===attr};handlers.click?.({target:{closest:()=>b}});},
+ click(attr){const b={hasAttribute:n=>n===attr};handlers.click?.({target:{closest:s=>s==='button'?b:null}});},
  check(value){checkbox.checked=value;handlers.change?.({target:{hasAttribute:n=>n==='data-final-score-confirmed',checked:value}});},handlers,checkbox,confirmButton};
 }
 test('review renders escaped names, unknown score gaps, both armies, and no invented mistakes',()=>{
@@ -55,4 +55,23 @@ test('review refreshes with saved scoring corrections and keeps the requested pe
  assert.match(root.innerHTML,/Lessons to consider · Opponent/);
  session.replaceState({...session.getState(),victoryPoints:{p1:10,p2:10}});
  assert.match(root.innerHTML,/Recorded score is tied/);screen.destroy();
+});
+
+test('deeper review renders escaped evidence, stable duplicate labels and missing forecasts',()=>{
+ const s=seed();s.units=[{id:'a',name:'Guard',ownerId:'p1'},{id:'a2',name:'Guard',ownerId:'p1'},{id:'b',name:'Enemy',ownerId:'p2'}];
+ s.history=[{type:'charge.outcome_recorded',payload:{unitId:'a2',round:2,turn:3,outcome:'failed',targetIds:['b'],measuredDistances:{b:9}}},
+ {type:'combat.attack_resolved',payload:{attackerId:'a2',targetId:'b',round:2,turn:3,actualDamage:7,expectedDamage:5,weaponName:'<script>bad()</script>',stateDelta:{target:{unitId:'b',woundsBefore:2,woundsAfter:0,statusBefore:'deployed',statusAfter:'destroyed'}}}}];
+ const before=JSON.stringify(s),html=renderEndgameReview(s);
+ assert.match(html,/Round-by-round review/);assert.match(html,/Charge decisions and follow-through/);
+ assert.match(html,/Guard 2/);assert.match(html,/Not saved/);assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);
+ assert.match(html,/href="#endgame-event-1"/);assert.match(html,/id="endgame-event-1"/);assert.equal(JSON.stringify(s),before);
+});
+
+test('lesson evidence link opens the containing disclosure without issuing game commands',()=>{
+ const root=fixture(),details={open:false},target={closest:()=>details},session=createGameSession(seed());
+ const query=root.querySelector.bind(root);root.querySelector=s=>s==='#endgame-event-7'?target:query(s);
+ const screen=createEndgameReviewScreen(root,{session}),before=session.getState();
+ const link={getAttribute:()=> '#endgame-event-7'};
+ root.handlers.click({target:{closest:s=>s.startsWith('a[')?link:null}});
+ assert.equal(details.open,true);assert.equal(session.getState(),before);screen.destroy();
 });
