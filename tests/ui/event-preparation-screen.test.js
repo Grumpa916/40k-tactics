@@ -47,25 +47,31 @@ test('Fixed card UI accepts input while battle is in setup, rather than rejectin
  screen.destroy();
 });
 
-test('default preparation opens one deployment workspace and its controls begin the battle',()=>{
- const session=fixture(),root=element(),workspace=element();
+test('default preparation keeps terrain reference before deployment and uses the map reserve tray',()=>{
+ const session=fixture(),root=element(),workspace=element(),terrain=element();
  root.fields.set('[data-live-deploy-begin]',workspace);
+ root.fields.set('[data-prep-terrain-content]',terrain);
  const screen=createEventPreparationScreen(root,{session});
+ assert.match(root.innerHTML,/data-prep-terrain-reference/);
+ root.click({'data-prep-terrain-reference':''});
+ assert.match(root.innerHTML,/role="dialog"/);
+ root.click({'data-prep-close-terrain':''});
+ assert.doesNotMatch(root.innerHTML,/role="dialog"/);
  assert.match(root.innerHTML,/Continue to Deploy &amp; Begin/);
  root.click({'data-prep-next':''});
  assert.equal(session.getState().preparation.mode,'combined');
  assert.match(workspace.innerHTML,/Reserves tray/);
+ assert.doesNotMatch(workspace.innerHTML,/View terrain setup/);
+ assert.doesNotMatch(workspace.innerHTML,/data-deploy-location=/);
+ assert.doesNotMatch(workspace.innerHTML,/>Placed</);
+ assert.doesNotMatch(workspace.innerHTML,/>Battlefield</);
+ assert.doesNotMatch(workspace.innerHTML,/Deploy &amp; Begin/);
  assert.doesNotMatch(workspace.innerHTML,/Confirm current checkpoint/);
  workspace.click({'data-deploy-role':'attacker','data-deploy-player':'p1'});
  workspace.click({'data-deploy-role':'first-player','data-deploy-player':'p2'});
  for(const playerId of ['p1','p2'])session.dispatch({type:C.SET_SECONDARY_MISSION_MODE,payload:{playerId,mode:'tactical'}});
- workspace.click({'data-deploy-location':'reserve','data-deploy-unit':'a'});
- assert.equal(session.getState().preparation.formations.a.kind,'reserve');
+ session.dispatch({type:C.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId:'a',playerId:'p1',position:{x:10,y:10}}});
  session.dispatch({type:C.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId:'b',playerId:'p2',position:{x:12,y:10}}});
- workspace.click({'data-deploy-reference':'terrain'});
- assert.match(workspace.innerHTML,/role="dialog"/);
- workspace.click({'data-deploy-close-reference':''});
- assert.doesNotMatch(workspace.innerHTML,/role="dialog"/);
  assert.match(workspace.innerHTML, /data-deploy-begin>Deployment complete/);
  workspace.click({'data-deploy-begin':''});
  assert.equal(session.getState().phase,'command');
