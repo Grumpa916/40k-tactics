@@ -168,3 +168,17 @@ test('Shooting and Fight forecasts use reviewed defence and expose included rule
   const html = renderAdvisorAppliedRules(['Living Fortress','<script>']);
   assert.match(html,/Rules included · 2/); assert.ok(!html.includes('<script>'));
 });
+
+ test('Caladius Annihilator Lethal Hits requires a known Monster or Vehicle target', () => {
+  const state = battle('caladius-annihilator-grav-tank');
+  const w = getDatasheetWeaponOptions(state,state.units[0],{type:'ranged'}).find(item => item.characteristics.conditionalAbilities?.some(rule => rule.lethalHits));
+  assert.ok(w);
+  assert.equal(w.characteristics.lethalHits,undefined);
+  const baseline = calculation(state,w).expectedDamage;
+  for (const keyword of ['Monster','Vehicle']) {
+    state.units[1].keywords=[keyword];
+    assert.ok(calculation(state,w).expectedDamage > baseline);
+  }
+  state.units[1].keywords=[];
+  close(calculation(state,w).expectedDamage,baseline);
+});

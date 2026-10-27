@@ -30,9 +30,11 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   });
   for (const conditional of profile.conditionalAbilities ?? []) {
     const matches = conditional.condition === 'psyker' ? keywords.includes('psyker') :
+      conditional.condition === 'monster-vehicle' ? keywords.includes('monster') || keywords.includes('vehicle') :
       conditional.condition === 'non-monster-vehicle' && nonMonsterVehicle;
     apply(matches, conditional.label, () => {
       if (conditional.sustainedHits) sustained(conditional.sustainedHits);
+      if (conditional.lethalHits) result.lethalHits = true;
       if (conditional.devastatingWounds) result.devastatingWounds = true;
     });
   }

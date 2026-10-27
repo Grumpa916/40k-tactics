@@ -2,12 +2,12 @@
 export function weaponAbilityCharacteristics(abilities) {
   const result = {}, conditionalAbilities = [];
   for (const token of String(abilities ?? '').split(/[,;\n]+/).map(value => value.trim()).filter(Boolean)) {
-    const conditional = token.match(/^(Sustained Hits\s+(\d+)|Devastating Wounds)\s+vs\s+(non-Monster\/Vehicle|Psyker)$/i);
+    const conditional = token.match(/^(Sustained Hits\s+(\d+)|Devastating Wounds|Lethal Hits)\s+vs\s+(non-Monster\/Vehicle|Monster\/Vehicle|Psyker)$/i);
     if (conditional) {
       conditionalAbilities.push({
         label: token,
-        condition: conditional[3].toLowerCase() === 'psyker' ? 'psyker' : 'non-monster-vehicle',
-        ...(conditional[2] ? { sustainedHits: Number(conditional[2]) } : { devastatingWounds: true })
+        condition: conditional[3].toLowerCase().replace('/', '-'),
+        ...(conditional[2] ? { sustainedHits: Number(conditional[2]) } : conditional[1].toLowerCase() === 'lethal hits' ? { lethalHits: true } : { devastatingWounds: true })
       });
       continue;
     }
