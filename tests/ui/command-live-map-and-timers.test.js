@@ -17,5 +17,5 @@ test('persistent player summaries display separate accumulated timers',()=>{
 test('battlefield objective labels are compact and expansion naming is perspective-stable',()=>{
   const src=fs.readFileSync(new URL('../../src/ui/battlefield-map.js',import.meta.url),'utf8');
   assert.match(src,/min-width:34px;max-width:88px/);
-  assert.match(src,/myExpansionName/);
+  assert.match(fs.readFileSync(new URL('../../src/rules/objective-display-labels.js',import.meta.url),'utf8'),/myExpansionName/);
 });

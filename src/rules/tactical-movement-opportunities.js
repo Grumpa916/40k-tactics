@@ -1,3 +1,4 @@
+import { objectiveAdvisorLabel } from './objective-display-labels.js';
 import { getBattleUnitMovement, getCombatFormationMembers, getCombatFormationRoot } from "./battle-unit-reference.js";
 import { getDatasheetWeaponOptions } from "./saved-roster-combat-profile.js";
 import { getFormationObjectiveContribution } from "./tactical-objective-swing.js";
@@ -139,7 +140,7 @@ function movementActionLabel(action) {
   return "Reposition toward this purpose";
 }
 
-function objectiveOptions(state, { playerId, unit, movement, oc, spatial, strategy, missionSignal }) {
+function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal }) {
   const entries = (spatial.objectiveProximity ?? []).filter((entry) => entry.unitId === unit.id);
   return entries.map((entry) => {
     const control = getObjectiveControlForPlayer(state, { playerId, objectiveId: entry.objectiveId });
@@ -159,7 +160,8 @@ function objectiveOptions(state, { playerId, unit, movement, oc, spatial, strate
       missionSignal.score +
       holdBonus
     );
-    let reason = `${entry.objectiveId} is ${control ?? "uncontrolled"} and about ${entry.distance}\" away on the approximate map.`;
+    const objectiveName=objectiveAdvisorLabel(state,entry.objectiveId,perspectivePlayerId);
+    let reason = `${objectiveName} is ${control ?? "uncontrolled"} and about ${entry.distance}\" away on the approximate map.`;
     if (Number.isFinite(oc.effectiveOc)) reason += ` This formation currently contributes about ${oc.effectiveOc} usable OC.`;
     if (holdBonus > 0) reason += " Holding receives extra value because this formation is already contributing usable OC near a friendly-controlled objective.";
     if (oc.battleShocked) reason += " It is Battle-shocked, so its saved OC is treated as suppressed for this recommendation.";
@@ -169,6 +171,7 @@ function objectiveOptions(state, { playerId, unit, movement, oc, spatial, strate
       purpose,
       score,
       objectiveId: entry.objectiveId,
+      objectiveName,
       distance: entry.distance,
       control,
       actionHint: movementActionLabel(action),
@@ -324,11 +327,11 @@ function fallbackOption(unit, movement, strategy) {
 
 function recommendationText(unit, best) {
   const name = unit.name ?? unit.id;
-  if (best.purpose === "hold-objective") return `${name}: hold ${best.objectiveId}; current scoring position is more valuable than unnecessary movement.`;
-  if (best.purpose === "reinforce-objective") return `${name}: reinforce ${best.objectiveId}.`;
-  if (best.purpose === "contest-objective") return `${name}: move toward ${best.objectiveId} to pressure enemy control.`;
-  if (best.purpose === "swing-objective") return `${name}: prioritize ${best.objectiveId}; it is already contested and this move can improve the local scoring fight.`;
-  if (best.purpose === "claim-objective") return `${name}: move toward ${best.objectiveId} to establish control.`;
+  if (best.purpose === "hold-objective") return `${name}: hold ${best.objectiveName ?? best.objectiveId}; current scoring position is more valuable than unnecessary movement.`;
+  if (best.purpose === "reinforce-objective") return `${name}: reinforce ${best.objectiveName ?? best.objectiveId}.`;
+  if (best.purpose === "contest-objective") return `${name}: move toward ${best.objectiveName ?? best.objectiveId} to pressure enemy control.`;
+  if (best.purpose === "swing-objective") return `${name}: prioritize ${best.objectiveName ?? best.objectiveId}; it is already contested and this move can improve the local scoring fight.`;
+  if (best.purpose === "claim-objective") return `${name}: move toward ${best.objectiveName ?? best.objectiveId} to establish control.`;
   if (best.purpose === "enter-opponent-territory") return `${name}: consider crossing into opponent territory for forward positioning and any verified territory-dependent secondary value.`;
   if (best.purpose === "hold-opponent-territory") return `${name}: preserve the opponent-territory position unless another move has greater mission or combat value.`;
   if (best.purpose === "confirm-territory-boundary") return `${name}: measure the territory line before relying on this position for a territory-dependent secondary.`;
@@ -339,7 +342,7 @@ function recommendationText(unit, best) {
   return `${name}: improve board position; no higher-confidence mission or combat route is established yet.`;
 }
 
-export function getMovementStrategicRecommendations(state, { playerId } = {}) {
+export function getMovementStrategicRecommendations(state, { playerId, perspectivePlayerId = playerId } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
   if (state?.phase !== "movement") {
     return Object.freeze({ playerId, strategy: getGameStrategyContext(state, { playerId }), activeSecondaries: Object.freeze([]), recommendations: Object.freeze([]) });
@@ -360,7 +363,7 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
     const weapons = formationWeapons(state, unit);
     const territory = territoryOptions(state, { playerId, unit, movement, strategy, territorySignal });
     const candidates = [
-      ...objectiveOptions(state, { playerId, unit, movement, oc, spatial, strategy, missionSignal }),
+      ...objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal }),
       ...territory,
       ...targetOptions(state, { playerId, unit, movement, spatial, weapons }),
       fallbackOption(unit, movement, strategy)
@@ -381,6 +384,7 @@ export function getMovementStrategicRecommendations(state, { playerId } = {}) {
       confidence: best.confidence,
       actionHint: best.actionHint,
       objectiveId: best.objectiveId ?? null,
+      objectiveName:best.objectiveName ?? null,
       targetUnitId: best.targetUnitId ?? null,
       targetName: best.targetName ?? null,
       territoryTarget: best.territoryTarget ?? null,

@@ -1,3 +1,4 @@
+import { perspectiveObjectiveName, compactObjectiveLabel } from '../rules/objective-display-labels.js';
 import { attachmentParent } from '../rules/event-preparation.js';
 import { mapUnitLabels, unitDisplayLabels } from './map-unit-labels.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
@@ -95,39 +96,6 @@ function modeDescription(mode, mapLabel = null) {
   return "Live battlefield positions";
 }
 function playerLabel(state, playerId) { return (state.players ?? []).find((player) => player.id === playerId)?.name ?? playerId ?? "Unknown player"; }
-function perspectiveObjectiveName(name, state, perspectivePlayerId) {
-  const attacker = state.preGameSetup?.attackerPlayerId ?? null;
-  const defender = state.preGameSetup?.defenderPlayerId ?? null;
-  const homeOwner = name === "Attacker Home" ? attacker : name === "Defender Home" ? defender : null;
-  if (homeOwner) return homeOwner === perspectivePlayerId ? "My Home" : "Opponent Home";
-  if (name === "Expansion 1" || name === "Expansion 2") {
-    const positions = selectedLayoutGeometry(state)?.objectivePositions ?? {};
-    const myHomeName = perspectivePlayerId === attacker ? "Attacker Home" :
-      perspectivePlayerId === defender ? "Defender Home" : null;
-    const myHome = myHomeName ? positions[myHomeName] : null;
-    const expansion1 = positions["Expansion 1"];
-    const expansion2 = positions["Expansion 2"];
-    if (myHome && expansion1 && expansion2) {
-      const distance = (a,b) => (a.x-b.x)**2 + (a.y-b.y)**2;
-      const myExpansionName = distance(expansion1, myHome) <= distance(expansion2, myHome)
-        ? "Expansion 1" : "Expansion 2";
-      return name === myExpansionName ? "My Expansion" : "Opponent Expansion";
-    }
-  }
-  if (name === "Central 1") return "Center 1";
-  if (name === "Central 2") return "Center 2";
-  return name;
-}
-function compactObjectiveLabel(label) {
-  return ({
-    "My Home": "MY HOME",
-    "Opponent Home": "OPP HOME",
-    "My Expansion": "MY EXP",
-    "Opponent Expansion": "OPP EXP",
-    "Center 1": "C1",
-    "Center 2": "C2"
-  })[label] ?? label;
-}
 
 function objectiveControlClass(objective, perspectivePlayerId) {
   const control = objective?.control;
