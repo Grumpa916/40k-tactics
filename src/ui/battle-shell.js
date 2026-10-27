@@ -125,8 +125,6 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const isSetupView = viewedPhase === "setup";
   const isReviewView = viewedPhase === "review";
   const isScrollablePreparationView = viewedPhase === "deployment";
-  // Only Shooting currently owns an internal scroll region. Other phase screens
-  // must retain document scrolling so their controls remain reachable on iPad.
   const isScrollableLiveView = ["command", "movement", "charge", "fight"].includes(viewedPhase);
   const tabletopExperiment = layoutMode === "tabletop" && !isSetupView && !isReviewView;
   const persistentMissionSummary = renderPersistentMissionSummary(state, { perspectivePlayerId, missionDefinitions, openStates: missionOpenStates });
@@ -392,8 +390,6 @@ export function createBattleShell(container, {
       const previousPhase = observedGamePhase;
       observedGamePhase = actualPhase;
       viewedPhase = actualPhase === "complete" ? "review" : actualPhase;
-      // A checkpoint review belongs to one specific transition. Do not carry it
-      // into a later game phase or present it as current after the state advances.
       scoringReviewCheckpoint = null;
       scoringReviewActivePlayerId = null;
       scoringReviewPlayerId = null;
@@ -728,6 +724,25 @@ export function createBattleShell(container, {
   }
 
   function handleSubmit(event) {
+    const punishmentForm = event.target?.closest?.("[data-punishment-condemnation-form]");
+    if (punishmentForm && container.contains(punishmentForm)) {
+      event.preventDefault();
+      const state = session.getState();
+      const playerId = punishmentForm.getAttribute("data-player-id") ?? state.activePlayer ?? state.battle?.activePlayerId;
+      const formData = new FormData(punishmentForm);
+      const unitIds = formData.getAll("condemned-unit").map(String);
+      const tabletopEligibilityConfirmed = formData.get("tabletop-confirmed") === "yes";
+      try {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_PUNISHMENT_CONDEMNATION, payload: {
+          playerId, unitIds, tabletopEligibilityConfirmed
+        }});
+        phaseProgressionMessage = "Punishment condemned units recorded. You can begin the Command phase.";
+        render();
+      } catch (error) {
+        punishmentForm.insertAdjacentHTML("beforebegin", '<p role="alert">' + escapeHtml(error?.message ?? error) + '</p>');
+      }
+      return;
+    }
     const form = event.target?.closest?.("[data-tactical-discard-form]");
     if (!form || !container.contains(form)) return;
     event.preventDefault();
@@ -819,7 +834,7 @@ export function createBattleShell(container, {
     if (viewedPhase !== state.phase) return;
     if (mountedScreen?.requestPhaseEnd) { mountedScreen.requestPhaseEnd(); return; }
     const action = getPhaseProgressionAction(state);
-    if (!action) return;
+    if (!action || action.disabled || !action.type) return;
     try {
       session.dispatch({ type: action.type, payload: action.payload });
     } catch (error) {
@@ -873,7 +888,6 @@ export function createBattleShell(container, {
       cloudStore = battleStore ?? createSupabaseBattleStore(client);
       showCloud = true;
       cloudPanelsPending = true;
-      // Do not remount a live phase or interrupt setup input outside the account tab.
       if (viewedPhase === 'setup' && setupWorkspaceTab === 'saves') {
         destroyMountedScreen();
         render();
