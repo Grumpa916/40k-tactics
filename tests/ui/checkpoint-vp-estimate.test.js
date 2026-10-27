@@ -11,15 +11,17 @@ const mission = {
 const controlled = (id, name, controllerId) => ({id,name,control:{controlState:'controlled',controllerId}});
 const state = objectives => ({turn:3,battle:{round:2},objectives,history:[]});
 
-test('Immovable Object suggests recorded non-home VP without awarding or preselecting it', () => {
+test('Immovable Object offers one-tap confirmation for deterministic recorded VP without awarding it', () => {
   const game = state([
     controlled('home','My Home','p1'), controlled('centre','Central 1','p1'),
     controlled('opp','Opponent Home','p2')
   ]);
   assert.deepEqual(estimateCheckpointVp(game,'p1',mission),{points:5,partial:false,capped:false});
   const html = renderCheckpointScore(game,{playerId:'p1',checkpoint:'command-phase'},mission);
-  assert.match(html,/Estimated from recorded state: 5 VP/);
-  assert.match(html,/<option value="">Choose VP…<\/option>/);
+  assert.match(html,/Potential score from recorded state: 5 VP/);
+  assert.match(html,/name="vp" value="5"/);
+  assert.match(html,/Confirm \+5 VP/);
+  assert.doesNotMatch(html,/Choose VP…/);
   assert.equal(game.victoryPoints,undefined);
 });
 
