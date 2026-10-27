@@ -21,13 +21,30 @@ function scoreWindowsFor(mission) {
   return mission?.result?.scoringWindow ? [mission.result.scoringWindow] : [];
 }
 
+function cumulativeTierTotals(tiers) {
+  let totals = new Set([0]);
+  for (const tier of tiers) {
+    const value = positiveVp(tier?.vp);
+    if (!value) continue;
+    const next = new Set(totals);
+    for (const total of totals) if (total + value <= 15) next.add(total + value);
+    totals = next;
+  }
+  return [...totals].filter(Boolean);
+}
+
 export function getMissionVpOptions(mission = {}) {
   const windows = scoreWindowsFor(mission);
   if (mission.category === 'secondary' || mission.instanceId) {
-    const tierValues = windows.flatMap(window => (window.tiers ?? []).map(tier => positiveVp(tier.vp))).filter(Boolean);
+    const values = [];
+    for (const window of windows) {
+      const tiers = window.tiers ?? [];
+      values.push(...tiers.map(tier => positiveVp(tier.vp)).filter(Boolean));
+      if (tiers.some(tier => tier?.relationship === 'cumulative')) values.push(...cumulativeTierTotals(tiers));
+    }
     const configured = positiveVp(mission.victoryPoints ?? mission.result?.victoryPoints);
-    if (!tierValues.length && configured) tierValues.push(configured);
-    return [...new Set(tierValues)].sort((a,b) => a-b);
+    if (!values.length && configured) values.push(configured);
+    return [...new Set(values)].filter(value => value <= 15).sort((a,b) => a-b);
   }
 
   const items = windows.flatMap(window => window.items ?? []);
@@ -58,6 +75,8 @@ export function getMissionVpOptions(mission = {}) {
 }
 
 function directCalculatedPoints(mission, estimate, vpOptions) {
+  const supplied = Number(mission?.calculatedPoints);
+  if (Number.isInteger(supplied) && supplied > 0 && mission?.calculatedPartial !== true && vpOptions.includes(supplied)) return supplied;
   if (estimate && estimate.partial !== true && Number(estimate.points) > 0 && vpOptions.includes(Number(estimate.points))) {
     return Number(estimate.points);
   }
@@ -75,12 +94,15 @@ export function renderCheckpointScore(state, group, mission) {
   if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
   const vpOptions = getMissionVpOptions(mission);
   const estimate = estimateCheckpointVp(state, group.playerId, mission, group.checkpoint);
+  const suppliedPoints = Number(mission?.calculatedPoints) > 0 ? Number(mission.calculatedPoints) : null;
   const directPoints = directCalculatedPoints(mission, estimate, vpOptions);
   const estimateMarkup = estimate
     ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential score from recorded state: ${estimate.points} VP</strong>${estimate.partial ? ' · Partial evidence; tabletop confirmation may change this total.' : ''}${estimate.capped ? ' · Limited by remaining Primary VP cap.' : ''}</p>`
-    : directPoints
-      ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential completion: ${directPoints} VP</strong> · Recorded conditions support completion.</p>`
-      : '';
+    : suppliedPoints
+      ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential score from recorded state: ${suppliedPoints} VP</strong>${mission?.calculatedPartial ? ' · Partial evidence; verify the final award on the tabletop.' : ''}</p>`
+      : directPoints
+        ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential completion: ${directPoints} VP</strong> · Recorded conditions support completion.</p>`
+        : '';
   const formAttrs = `data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}"`;
   if (directPoints) {
     return `<form ${formAttrs}>${estimateMarkup}<input type="hidden" name="vp" value="${directPoints}"><button type="submit">Confirm +${directPoints} VP${category === 'secondary' ? ' & remove card' : ''}</button><p>Player confirmation remains authoritative.</p></form>`;
