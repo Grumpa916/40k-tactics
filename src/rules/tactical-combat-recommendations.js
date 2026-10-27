@@ -3,7 +3,7 @@ import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getChargeOpportunity } from "./tactical-charge-opportunity.js";
-import { getMovementStrategicRecommendations } from "./tactical-movement-opportunities.js";
+import { getMovementStrategicRecommendations } from "./tactical-movement-router.js";
 import { getCustodesPhaseRecommendations } from "./custodes-tactical-advisor.js";
 import { getCustodesMovementRecommendations } from "./custodes-movement-advisor.js";
 import { getCustodesFightKatahRecommendations } from "./custodes-fight-katah-recommendations.js";
@@ -32,10 +32,6 @@ function chargeCandidates(state, { playerId }) {
     if (attacker.status === "destroyed" || target.status === "destroyed") continue;
     if (engagedUnitIds.has(attacker.id)) continue;
 
-    // A charge roll can reach at most 12 inches. Because map distance is
-    // deliberately coarse, this is an eligibility screen, not exact legality.
-    // Keep one coarse bucket beyond the maximum charge distance as borderline.
-    // Map distance is advisory; exact tabletop measurement remains authoritative.
     if (proximity.distance > CHARGE_MAX_DISTANCE + CHARGE_RANGE_UNCERTAINTY_MARGIN) continue;
 
     const rangeStatus = proximity.distance <= CHARGE_MAX_DISTANCE ? "within" : "borderline";
