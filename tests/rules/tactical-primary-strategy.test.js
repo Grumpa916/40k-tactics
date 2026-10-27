@@ -185,9 +185,9 @@ test("Unstoppable Force objective signal values an eligible new non-home capture
 
 test("other Primary missions remain unchanged until their strategy model is added", () => {
   const s=state();
-  s.battlefieldMap.missionSetup.opponentDisposition="Purge the Foe";
+  s.battlefieldMap.missionSetup.opponentDisposition="Disruption";
   const context=getPrimaryStrategyContext(s,{playerId:"p1"});
   assert.equal(context.active,false);
-  assert.equal(context.missionName,"Meatgrinder");
+  assert.equal(context.missionName,"Punishment");
   assert.match(context.reason,/not yet enabled/);
 });
