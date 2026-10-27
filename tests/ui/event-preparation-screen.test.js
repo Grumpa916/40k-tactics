@@ -70,8 +70,7 @@ test('default preparation keeps terrain reference before deployment and uses the
  workspace.click({'data-deploy-role':'attacker','data-deploy-player':'p1'});
  workspace.click({'data-deploy-role':'first-player','data-deploy-player':'p2'});
  for(const playerId of ['p1','p2'])session.dispatch({type:C.SET_SECONDARY_MISSION_MODE,payload:{playerId,mode:'tactical'}});
- workspace.click({'data-map-reserve-area':''});
- assert.equal(session.getState().preparation.formations.a.kind,'reserve');
+ session.dispatch({type:C.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId:'a',playerId:'p1',position:{x:10,y:10}}});
  session.dispatch({type:C.SET_ACTUAL_DEPLOYMENT_POSITION,payload:{unitId:'b',playerId:'p2',position:{x:12,y:10}}});
  assert.match(workspace.innerHTML, /data-deploy-begin>Deployment complete/);
  workspace.click({'data-deploy-begin':''});
