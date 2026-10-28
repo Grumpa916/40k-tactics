@@ -22,6 +22,11 @@ import {
   getDeterminedAcquisitionObjectiveStrategySignal,
   isDeterminedAcquisitionMissionForPlayer
 } from "./tactical-determined-acquisition-strategy.js";
+import {
+  getPurgeAndSecurePrimaryStrategyContext,
+  getPurgeAndSecureObjectiveStrategySignal,
+  isPurgeAndSecureMissionForPlayer
+} from "./tactical-purge-and-secure-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -33,6 +38,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getDeterminedAcquisitionPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getPurgeAndSecurePrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -50,6 +58,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getDeterminedAcquisitionObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getPurgeAndSecureObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);

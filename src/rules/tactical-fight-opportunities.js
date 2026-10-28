@@ -213,7 +213,11 @@ export function getFightOpportunityRecommendations(
 
       let strategicContext = null;
       try {
-        strategicContext = getTargetStrategicContext(state, { playerId, targetUnitId: target.id });
+        strategicContext = getTargetStrategicContext(state, {
+          playerId,
+          attackerId: sourceAttacker.id,
+          targetUnitId: target.id
+        });
       } catch {
         strategicContext = null;
       }
