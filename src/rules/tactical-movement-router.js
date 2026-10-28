@@ -7,10 +7,22 @@ import {
   getConsecrateObjectiveStrategySignal,
   getConsecratePrimaryStrategyContext
 } from "./tactical-consecrate-strategy.js";
+import {
+  getBattlefieldDominanceObjectiveStrategySignal,
+  getBattlefieldDominancePrimaryStrategyContext,
+  isBattlefieldDominanceMissionForPlayer
+} from "./tactical-battlefield-dominance-strategy.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
   if (signal.unitIsConsecration && signal.availableToConsecrate) return "consecrate-objective";
+  if (control === "controlled") return "hold-objective";
+  if (control === "enemy-controlled") return "contest-objective";
+  if (control === "contested" || control === "contested-by-others") return "swing-objective";
+  return "claim-objective";
+}
+
+function standardObjectivePurpose(control) {
   if (control === "controlled") return "hold-objective";
   if (control === "enemy-controlled") return "contest-objective";
   if (control === "contested" || control === "contested-by-others") return "swing-objective";
@@ -43,6 +55,17 @@ function recommendationText(unitName, option) {
   return `${unitName}: move toward ${option.objectiveName} for Consecrate mission value.`;
 }
 
+function battlefieldDominanceRecommendationText(unitName, option) {
+  if (option.primaryStrategySignal?.ownHome) {
+    return option.purpose === "hold-objective"
+      ? `${unitName}: preserve ${option.objectiveName}; your home objective multiplies Battlefield Dominance scoring on other controlled objectives.`
+      : `${unitName}: secure ${option.objectiveName}; restoring your home objective activates the Battlefield Dominance multiplier.`;
+  }
+  if (option.purpose === "hold-objective") return `${unitName}: preserve ${option.objectiveName}; it carries direct Battlefield Dominance VP and can protect the objective majority.`;
+  if (option.purpose === "contest-objective" || option.purpose === "swing-objective") return `${unitName}: pressure ${option.objectiveName}; changing this objective can improve both Battlefield Dominance VP and the objective count.`;
+  return `${unitName}: move toward ${option.objectiveName} for Battlefield Dominance scoring value.`;
+}
+
 function consecrateOption(state, {
   playerId,
   perspectivePlayerId,
@@ -66,6 +89,41 @@ function consecrateOption(state, {
   if (!missionRelevant) return null;
   const purpose = purposeFor(control, signal);
   const score = clamp01(0.16 + reachBoost(entry.distance, unitRecommendation.movement) + signal.score);
+  const objectiveName = objectiveAdvisorLabel(state, entry.objectiveId, perspectivePlayerId);
+  return Object.freeze({
+    kind: "objective",
+    purpose,
+    score,
+    objectiveId: entry.objectiveId,
+    objectiveName,
+    distance: entry.distance,
+    control,
+    primaryStrategySignal: signal,
+    actionHint: actionHint(purpose, entry.distance, unitRecommendation.movement),
+    confidence: Number.isFinite(unitRecommendation.movement) ? "moderate" : "low",
+    reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map. ${signal.reason}`
+  });
+}
+
+function battlefieldDominanceOption(state, {
+  playerId,
+  perspectivePlayerId,
+  unitRecommendation,
+  entry,
+  primaryStrategy
+}) {
+  const control = getObjectiveControlForPlayer(state, { playerId, objectiveId: entry.objectiveId });
+  const purpose = standardObjectivePurpose(control);
+  const signal = getBattlefieldDominanceObjectiveStrategySignal(state, {
+    playerId,
+    perspectivePlayerId,
+    objectiveId: entry.objectiveId,
+    control,
+    purpose,
+    primaryStrategy
+  });
+  if (!signal.active || signal.vpLeverage <= 0 && signal.score < 0.18) return null;
+  const score = clamp01(0.14 + reachBoost(entry.distance, unitRecommendation.movement) + signal.score);
   const objectiveName = objectiveAdvisorLabel(state, entry.objectiveId, perspectivePlayerId);
   return Object.freeze({
     kind: "objective",
@@ -130,19 +188,82 @@ function enhanceRecommendation(state, options, recommendation, spatial, primaryS
   });
 }
 
-export function getMovementStrategicRecommendations(state, { playerId, perspectivePlayerId = playerId } = {}) {
-  const base = getBaseMovementStrategicRecommendations(state, { playerId, perspectivePlayerId });
-  if (!playerId || state?.phase !== "movement" || !isConsecrateMissionForPlayer(state, playerId, perspectivePlayerId)) return base;
+function enhanceBattlefieldDominanceRecommendation(state, options, recommendation, spatial, primaryStrategy) {
+  const entries = (spatial.objectiveProximity ?? []).filter((entry) => entry.unitId === recommendation.unitId);
+  const missionOptions = entries.map((entry) => battlefieldDominanceOption(state, {
+    ...options,
+    unitRecommendation: recommendation,
+    entry,
+    primaryStrategy
+  })).filter(Boolean).sort((a, b) => b.score - a.score);
+  const best = missionOptions[0];
+  if (!best) return recommendation;
 
-  const primaryStrategy = getConsecratePrimaryStrategyContext(state, { playerId, perspectivePlayerId });
-  const spatial = getSpatialContext(state, { playerId });
-  const recommendations = (base.recommendations ?? []).map((recommendation) =>
-    enhanceRecommendation(state, { playerId, perspectivePlayerId }, recommendation, spatial, primaryStrategy)
-  ).sort((a, b) => b.score - a.score || b.priority - a.priority || a.unitName.localeCompare(b.unitName));
+  if (best.score <= recommendation.score) {
+    const sameObjective = recommendation.objectiveId === best.objectiveId;
+    return Object.freeze({
+      ...recommendation,
+      primaryStrategySignal: sameObjective ? best.primaryStrategySignal : recommendation.primaryStrategySignal,
+      reason: sameObjective ? `${recommendation.reason} ${best.primaryStrategySignal.reason}` : recommendation.reason,
+      alternatives: Object.freeze([
+        ...(recommendation.alternatives ?? []),
+        ...missionOptions.filter((option) => option.objectiveId !== recommendation.objectiveId)
+      ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 2))
+    });
+  }
 
   return Object.freeze({
-    ...base,
-    primaryStrategy,
-    recommendations: Object.freeze(recommendations)
+    ...recommendation,
+    score: best.score,
+    priority: best.score >= 0.8 ? 5 : best.score >= 0.65 ? 4 : best.score >= 0.48 ? 3 : best.score >= 0.3 ? 2 : 1,
+    purpose: best.purpose,
+    confidence: best.confidence,
+    actionHint: best.actionHint,
+    objectiveId: best.objectiveId,
+    objectiveName: best.objectiveName,
+    targetUnitId: null,
+    targetName: null,
+    territoryTarget: null,
+    distance: best.distance,
+    strategicContext: null,
+    primaryStrategySignal: best.primaryStrategySignal,
+    recommendation: battlefieldDominanceRecommendationText(recommendation.unitName, best),
+    reason: best.reason,
+    alternatives: Object.freeze([
+      ...(recommendation.alternatives ?? []),
+      ...missionOptions.slice(1)
+    ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 2))
   });
+}
+
+export function getMovementStrategicRecommendations(state, { playerId, perspectivePlayerId = playerId } = {}) {
+  const base = getBaseMovementStrategicRecommendations(state, { playerId, perspectivePlayerId });
+  if (!playerId || state?.phase !== "movement") return base;
+
+  const spatial = getSpatialContext(state, { playerId });
+  if (isConsecrateMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    const primaryStrategy = getConsecratePrimaryStrategyContext(state, { playerId, perspectivePlayerId });
+    const recommendations = (base.recommendations ?? []).map((recommendation) =>
+      enhanceRecommendation(state, { playerId, perspectivePlayerId }, recommendation, spatial, primaryStrategy)
+    ).sort((a, b) => b.score - a.score || b.priority - a.priority || a.unitName.localeCompare(b.unitName));
+    return Object.freeze({
+      ...base,
+      primaryStrategy,
+      recommendations: Object.freeze(recommendations)
+    });
+  }
+
+  if (isBattlefieldDominanceMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    const primaryStrategy = getBattlefieldDominancePrimaryStrategyContext(state, { playerId, perspectivePlayerId });
+    const recommendations = (base.recommendations ?? []).map((recommendation) =>
+      enhanceBattlefieldDominanceRecommendation(state, { playerId, perspectivePlayerId }, recommendation, spatial, primaryStrategy)
+    ).sort((a, b) => b.score - a.score || b.priority - a.priority || a.unitName.localeCompare(b.unitName));
+    return Object.freeze({
+      ...base,
+      primaryStrategy,
+      recommendations: Object.freeze(recommendations)
+    });
+  }
+
+  return base;
 }
