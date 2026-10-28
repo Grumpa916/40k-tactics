@@ -5,6 +5,7 @@ import {
   getTurnSnapshot,
   getUnitStateAtTurnStart
 } from "./scoring-evidence-state.js";
+import { getLiveUnitPosition } from "./spatial-context.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 const OBJECTIVE_RANGE = 3;
@@ -131,14 +132,14 @@ function killSnapshot(state, playerId, turn) {
   });
 }
 
-function targetKillOpportunity(state, { playerId, targetUnitId, attackerId, turn, killSatisfied }) {
+function targetKillOpportunity(state, { targetUnitId, attackerId, turn, killSatisfied }) {
   if (!targetUnitId) {
     return Object.freeze({ active: false, targetStartedNearObjective: null, attackerNearObjective: null, qualifiesOnApproximateMap: false, vpLeverage: 0 });
   }
   const targetStart = getUnitStateAtTurnStart(state, targetUnitId, turn);
   const targetRange = objectiveRangeEvidence(state, targetStart?.position);
   const attacker = (Array.isArray(state?.units) ? state.units : []).find((unit) => unit?.id === attackerId) ?? null;
-  const attackerRange = objectiveRangeEvidence(state, attacker?.position);
+  const attackerRange = objectiveRangeEvidence(state, attacker ? getLiveUnitPosition(state, attacker) : null);
   const qualifies = targetRange.withinApproximateRange === true || attackerRange.withinApproximateRange === true;
   return Object.freeze({
     active: true,
@@ -184,7 +185,7 @@ export function getPurgeAndSecurePrimaryStrategyContext(state, {
   const objectives = objectiveSnapshot(state, playerId, perspectivePlayerId);
   const acquisition = acquisitionSnapshot(state, playerId, perspectivePlayerId);
   const kills = killSnapshot(state, playerId, turn);
-  const killOpportunity = targetKillOpportunity(state, { playerId, targetUnitId, attackerId, turn, killSatisfied: kills.mapSupportedSatisfied });
+  const killOpportunity = targetKillOpportunity(state, { targetUnitId, attackerId, turn, killSatisfied: kills.mapSupportedSatisfied });
   const controlScoringActive = round >= 2;
   const controlVp = controlScoringActive && objectives.known ? objectives.nonHomeControlled * 4 : 0;
   const acquisitionSatisfied = controlScoringActive && acquisition.known && acquisition.newlyControlledObjectiveIds.length > 0;
@@ -280,7 +281,7 @@ export function getPurgeAndSecurePrimaryStrategyContext(state, {
       "Turn-start objective control must be explicitly recorded for every relevant non-home objective before the 3 VP new-capture condition is treated as known.",
       "The objective-linked destruction condition scores 3 VP once per turn even if both positioning alternatives or multiple kills qualify.",
       "Approximate map distance can identify a likely objective-linked kill opportunity, but the tabletop measurement is authoritative and VP is never awarded automatically.",
-      "For a destroyed target, its saved turn-start position can support the target-position branch. Current attacker position is used only for target prioritization because the combat event does not preserve exact attacker position at the moment of destruction.",
+      "For a destroyed target, its saved turn-start position can support the target-position branch. Current live attacker position is used only for target prioritization because the combat event does not preserve exact attacker position at the moment of destruction.",
       "In Rounds 2–4, movement after the Command phase does not retroactively change a completed control checkpoint; new non-home control can still satisfy the end-of-turn capture condition and prepare the next checkpoint.",
       "The 15 VP per-round Primary cap is applied to the outlook."
     ])
