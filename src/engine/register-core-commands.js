@@ -24,6 +24,8 @@ import {
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
 import { resolveNormalMove, resolveAdvance, recordFallBack, recordStationary, undoMovementAction } from "./movement-transitions.js";
+import { refineMovementAction, undoMovementRefinement } from './movement-refinement-transitions.js';
+import { recordCustodesKatahUse } from './custodes-katah-transitions.js';
 import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
@@ -76,7 +78,10 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_FALL_BACK, (state, command) => recordFallBack(state, command.payload)],
     [COMMAND_TYPES.RESOLVE_ADVANCE, (state, command) => resolveAdvance(state, command.payload)],
     [COMMAND_TYPES.RECORD_STATIONARY, (state, command) => recordStationary(state, command.payload)],
+    [COMMAND_TYPES.REFINE_MOVEMENT_ACTION, (state, command) => refineMovementAction(state, command.payload)],
+    [COMMAND_TYPES.UNDO_MOVEMENT_REFINEMENT, (state, command) => undoMovementRefinement(state, command.payload)],
     [COMMAND_TYPES.UNDO_MOVEMENT_ACTION, (state, command) => undoMovementAction(state, command.payload)],
+    [COMMAND_TYPES.RECORD_CUSTODES_KATAH_USE, (state, command) => recordCustodesKatahUse(state, command.payload)],
     [COMMAND_TYPES.RECORD_UNIT_CASUALTY, (state, command) => recordUnitCasualty(state, command.payload)],
     [COMMAND_TYPES.UNDO_UNIT_CASUALTY, (state, command) => undoUnitCasualty(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],
