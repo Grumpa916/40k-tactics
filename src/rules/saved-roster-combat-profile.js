@@ -22,7 +22,11 @@ function normalizeWeaponName(value) {
 }
 
 function isInvalidLoadout(rosterUnit) {
-  return ["source-invalid", "rules-invalid", "manual-selection-required", "unverified"].includes(rosterUnit?.loadoutValidation?.status);
+  return ["source-invalid", "rules-invalid", "unverified"].includes(rosterUnit?.loadoutValidation?.status);
+}
+
+function isPendingManualLoadout(rosterUnit) {
+  return rosterUnit?.loadoutValidation?.status === "manual-selection-required";
 }
 
 function explicitWeaponLoadout(state, unit) {
@@ -39,6 +43,30 @@ function explicitWeaponLoadout(state, unit) {
     loadout.set(key, { ...item, quantity: (current?.quantity ?? 0) + quantity });
   }
   return loadout.size ? loadout : null;
+}
+
+function reviewedFixedWeaponLoadout(rosterUnit, unit) {
+  const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
+  const loadout = new Map();
+  if (!ruleSet) return loadout;
+  const modelCount = Number.isInteger(rosterUnit?.modelCount) && rosterUnit.modelCount > 0
+    ? rosterUnit.modelCount
+    : Number.isInteger(unit?.modelCount) && unit.modelCount > 0 ? unit.modelCount : 1;
+  for (const item of ruleSet.fixed ?? []) {
+    const quantity = (item.count ?? 0) + (item.perModel ?? 0) * modelCount;
+    if (!Number.isInteger(quantity) || quantity <= 0) continue;
+    for (const profileName of item.profiles ?? [item.name]) {
+      const key = normalizeWeaponName(profileName);
+      if (!key) continue;
+      loadout.set(key, {
+        name: profileName,
+        quantity,
+        selectionName: item.name,
+        sourceName: 'Reviewed fixed wargear'
+      });
+    }
+  }
+  return loadout;
 }
 
 function scaleAttackCount(attacks, quantity) {
@@ -151,14 +179,15 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
   };
 }
 
-
 export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit)) return [];
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
-  const loadout = explicitWeaponLoadout(state, unit);
+  const loadout = isPendingManualLoadout(rosterUnit)
+    ? reviewedFixedWeaponLoadout(rosterUnit, unit)
+    : explicitWeaponLoadout(state, unit);
 
   return weapons.flatMap((weapon, index) => {
     const loadoutEntry = loadout?.get(normalizeWeaponName(weapon?.name)) ?? null;
