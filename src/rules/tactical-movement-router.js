@@ -16,6 +16,8 @@ import { isImmovableObjectMissionForPlayer } from "./tactical-immovable-object-s
 import { enhanceImmovableObjectMovementRecommendations } from "./tactical-immovable-object-movement.js";
 import { isDeterminedAcquisitionMissionForPlayer } from "./tactical-determined-acquisition-strategy.js";
 import { enhanceDeterminedAcquisitionMovementRecommendations } from "./tactical-determined-acquisition-movement.js";
+import { isPurgeAndSecureMissionForPlayer } from "./tactical-purge-and-secure-strategy.js";
+import { enhancePurgeAndSecureMovementRecommendations } from "./tactical-purge-and-secure-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -275,6 +277,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isDeterminedAcquisitionMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceDeterminedAcquisitionMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isPurgeAndSecureMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhancePurgeAndSecureMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
