@@ -40,6 +40,16 @@ function recommendationText(unitName, option) {
   return `${unitName}: move toward ${option.objectiveName} for Immovable Object non-home scoring value.`;
 }
 
+function usableOcFactor(recommendation) {
+  if (recommendation?.battleShocked === true) return 0;
+  const effectiveOc = Number(recommendation?.effectiveOc);
+  if (Number.isFinite(effectiveOc)) {
+    if (effectiveOc <= 0) return 0;
+    return 0.58 + 0.42 * clamp01(effectiveOc / 8);
+  }
+  return 0.72;
+}
+
 function missionOption(state, { playerId, perspectivePlayerId, recommendation, entry, primaryStrategy }) {
   const control = getObjectiveControlForPlayer(state, { playerId, objectiveId: entry.objectiveId });
   const purpose = purposeFor(control);
@@ -54,8 +64,14 @@ function missionOption(state, { playerId, perspectivePlayerId, recommendation, e
   if (!signal.active) return null;
   if (signal.ownHome && signal.vpLeverage === 0) return null;
   if (signal.vpLeverage <= 0 && signal.score < 0.18) return null;
-  const score = clamp01(0.14 + reachBoost(entry.distance, recommendation.movement) + signal.score);
+  const ocFactor = usableOcFactor(recommendation);
+  if (ocFactor <= 0) return null;
+  const score = clamp01((0.14 + reachBoost(entry.distance, recommendation.movement) + signal.score) * ocFactor);
   const objectiveName = objectiveAdvisorLabel(state, entry.objectiveId, perspectivePlayerId);
+  const effectiveOc = Number(recommendation?.effectiveOc);
+  const ocText = Number.isFinite(effectiveOc)
+    ? ` This formation currently contributes about ${effectiveOc} usable OC.`
+    : " Usable OC is not fully known, so this mission ranking is conservative.";
   return Object.freeze({
     kind: "objective",
     purpose,
@@ -66,8 +82,8 @@ function missionOption(state, { playerId, perspectivePlayerId, recommendation, e
     control,
     primaryStrategySignal: signal,
     actionHint: actionHint(purpose, entry.distance, recommendation.movement),
-    confidence: Number.isFinite(recommendation.movement) ? "moderate" : "low",
-    reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map. ${signal.reason}`
+    confidence: Number.isFinite(recommendation.movement) && Number.isFinite(effectiveOc) ? "moderate" : "low",
+    reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map.${ocText} ${signal.reason}`
   });
 }
 
