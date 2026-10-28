@@ -1,5 +1,6 @@
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from './secondary-mission-lifecycle.js';
 import { getPrimaryMissionDefinition } from '../data/primary-mission-catalog.js';
+import { getCompleteSecondaryMissionById } from '../data/secondary-mission-complete-catalog.js';
 
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
 
@@ -24,6 +25,9 @@ function getPrimaryMissionActionOption(state, playerId) {
     missionName: definition.name,
     actionName: action.name,
     missionKind: 'primary',
+    missionAction: action,
+    knownShootingAction: true,
+    actionSummary: action.summary ?? null,
     timings: [action.reviewTiming ?? 'end-of-turn'],
     notes: [action.summary],
     rulesVerified: definition.rulesVerified === true,
@@ -35,8 +39,11 @@ export function getMissionActionOptions(state, playerId = state.activePlayer) {
   const mode = getSecondaryMissionMode(state, playerId);
   const secondary = getSecondaryMissionHistory(state, playerId).filter(item => item.status === SECONDARY_MISSION_STATUS.ACTIVE).map(item => {
     const windows = (item.definition.scoringWindows ?? []).filter(window => !window.modes?.length || window.modes.includes(mode));
+    const complete = getCompleteSecondaryMissionById(item.definitionId);
+    const missionAction = complete?.missionAction ?? null;
     return { id:item.instanceId, instanceId:item.instanceId, definitionId:item.definitionId, name:item.definition.name,
-      missionKind:'secondary', timings:[...new Set(windows.map(window=>window.timing).filter(t=>ACTION_REVIEW_TIMINGS.includes(t)))],
+      missionKind:'secondary', missionAction, knownShootingAction:missionAction?.phase === 'shooting', actionSummary:missionAction?.summary ?? null,
+      timings:[...new Set(windows.map(window=>window.timing).filter(t=>ACTION_REVIEW_TIMINGS.includes(t)))],
       notes:item.definition.referenceNotes ?? [], rulesVerified:item.definition.rulesVerified === true,
       fallbackTiming:ACTION_REVIEW_TIMINGS.includes(item.definition.timing) ? item.definition.timing : 'end-of-turn' };
   });

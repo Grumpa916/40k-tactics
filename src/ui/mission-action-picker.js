@@ -1,6 +1,12 @@
 import { getMissionActionOptions } from '../rules/mission-action-state.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const labels={'command-phase':'End of own Command phase','end-of-turn':'End of own turn','end-of-opponent-turn':"End of opponent's turn"};
+const validTiming=id=>Object.prototype.hasOwnProperty.call(labels,id);
+function timingsFor(option) {
+  const timings=[...new Set((option?.timings??[]).filter(validTiming))];
+  if (timings.length) return timings;
+  return [validTiming(option?.fallbackTiming)?option.fallbackTiming:'end-of-turn'];
+}
 export function createMissionActionPicker() {
   let unit=null, selected='', timing='', confirmed=false, objective='';
   let options=[];
@@ -13,24 +19,43 @@ export function createMissionActionPicker() {
         unit=unitKey; selected=options.length===1?options[0].id:''; confirmed=false; objective=''; timing='';
       }
       const option=options.find(item=>item.id===selected);
-      if (!timing && option) timing=option.timings?.length===1?option.timings[0]:option.fallbackTiming??'end-of-turn';
-      return `<link rel="stylesheet" href="${new URL('./styles/scoring-checkpoints.css',import.meta.url).href}"><div class="shoot-tabletop__action-picker"><label>Active mission<select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
-        ${!options.length?'<p>No active secondary missions. Select cards in Command before linking an action.</p>':''}
-        ${option?.instanceId?`<label>Verify at<select data-action-timing>${Object.entries(labels).map(([id,label])=>`<option value="${id}" ${id===timing?'selected':''}>${label}</option>`).join('')}</select></label>
-          <label>Objective (if applicable)<select data-action-objective><option value="">Not linked to an objective</option>${state.objectives.map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>
-          <label><input type="checkbox" data-action-rules-confirmed ${confirmed?'checked':''}> I checked that this unit can perform an Action for this card, and confirmed its scoring timing.</label>
-          <small>This records an attempt. Confirm completion and score separately at the checkpoint.</small>`:option?'<p>Custom action · no secondary card linked.</p>':''}
+      const allowedTimings=timingsFor(option);
+      if (option && (!timing || !allowedTimings.includes(timing))) timing=allowedTimings.length===1?allowedTimings[0]:(allowedTimings.includes(option.fallbackTiming)?option.fallbackTiming:allowedTimings[0]);
+      const actionReminder=option?.actionSummary
+        ? `<div class="mission-action-picker__reminder"><strong>Action reminder</strong><span>${esc(option.actionSummary)}</span></div>`
+        : option?.instanceId && option?.knownShootingAction===false
+          ? '<div class="mission-action-picker__warning"><strong>Check the physical card</strong><span>This active mission is not recorded as a known Shooting-phase Action. Continue only if the card says this unit can perform an Action now.</span></div>'
+          : '';
+      const timingControl=option?.instanceId
+        ? allowedTimings.length===1
+          ? `<div class="mission-action-picker__timing"><span>Scoring check</span><strong>${esc(labels[allowedTimings[0]])}</strong><small>Set automatically from the active mission.</small></div>`
+          : `<label class="mission-action-picker__field"><span>Scoring check</span><select data-action-timing>${allowedTimings.map(id=>`<option value="${id}" ${id===timing?'selected':''}>${esc(labels[id])}</option>`).join('')}</select><small>This mission has more than one valid scoring window.</small></label>`
+        : '';
+      const confirmationText=option?.knownShootingAction===false
+        ? 'Physical card confirms this is a Shooting-phase Action'
+        : 'Action requirements met';
+      const linkedFields=option?.instanceId?`${actionReminder}${timingControl}
+          <label class="mission-action-picker__field"><span>Objective used for this Action <small>(optional)</small></span><select data-action-objective><option value="">No objective selected</option>${(state.objectives??[]).map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>
+          <label class="mission-action-picker__confirm"><input type="checkbox" data-action-rules-confirmed ${confirmed?'checked':''}><span><strong>${confirmationText}</strong><small>${option?.knownShootingAction===false?'Confirm this against the physical mission card.':'Confirm the unit satisfies the card’s Action requirements.'}</small></span></label>
+          <p class="mission-action-picker__note">This records the Action attempt only. Completion and VP are confirmed later at the scoring checkpoint.</p>`:option?'<p class="mission-action-picker__note">Custom action · no mission card linked.</p>':'';
+      const scoringHref=new URL('./styles/scoring-checkpoints.css',import.meta.url).href;
+      const pickerHref=new URL('./styles/mission-action-picker.css',import.meta.url).href;
+      return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
+        ${!options.length?'<p class="mission-action-picker__note">No active mission Actions are available. Select cards in Command before linking an Action.</p>':''}
+        ${linkedFields}
         <button type="button" data-choice-action-confirm ${selected && (!option?.instanceId||confirmed)?'':'disabled'}>Record Action attempt</button></div>`;
     },
     bind(container,onSubmit,rerender) {
-      container.querySelector('[data-choice-action]')?.addEventListener('change',event=>{selected=event.target.value;timing='';confirmed=false;rerender();});
+      container.querySelector('[data-choice-action]')?.addEventListener('change',event=>{selected=event.target.value;timing='';confirmed=false;objective='';rerender();});
       container.querySelector('[data-action-timing]')?.addEventListener('change',event=>{timing=event.target.value;confirmed=false;rerender();});
       container.querySelector('[data-action-objective]')?.addEventListener('change',event=>{objective=event.target.value;});
       container.querySelector('[data-action-rules-confirmed]')?.addEventListener('change',event=>{confirmed=event.target.checked;rerender();});
       container.querySelector('[data-choice-action-confirm]')?.addEventListener('click',()=>{
         const option=options.find(item=>item.id===selected);
         if (!option || (option.instanceId&&!confirmed)) return;
-        onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming:timing||'end-of-turn',objectiveId:objective||null,rulesConfirmed:confirmed});
+        const allowedTimings=timingsFor(option);
+        const reviewTiming=allowedTimings.includes(timing)?timing:allowedTimings[0];
+        onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming,objectiveId:objective||null,rulesConfirmed:confirmed});
       });
     }
   };
