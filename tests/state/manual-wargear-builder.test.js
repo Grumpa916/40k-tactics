@@ -90,15 +90,33 @@ test('Army Builder control reader includes fixed equipment plus the selected sin
   ]);
 });
 
-test('manual-selection-required and unverified loadouts cannot fall back to every datasheet weapon', () => {
-  for (const status of ['manual-selection-required', 'unverified']) {
-    const tyrant = unit('tyranids:hive-tyrant');
-    const rosterUnit = { ...tyrant, id: `roster-${status}`, loadoutValidation: { status } };
-    const state = {
-      armyRosters: { p1: { units: [rosterUnit] } },
-      units: [{ id: `battle-${status}`, ownerId: 'p1', metadata: { rosterUnitId: rosterUnit.id } }]
-    };
-    assert.deepEqual(getDatasheetWeaponOptions(state, state.units[0], { type: 'ranged' }), []);
-    assert.deepEqual(getDatasheetWeaponOptions(state, state.units[0], { type: 'melee' }), []);
-  }
+test('pending manual review exposes reviewed fixed weapons but not unresolved choice weapons', () => {
+  const aquilons = unit('adeptus-custodes:aquilon-terminators-with-solarite-power-talons', 3);
+  const rosterUnit = {
+    ...aquilons,
+    id: 'roster-aquilons',
+    loadoutValidation: { status: 'manual-selection-required' }
+  };
+  const battleUnit = { id: 'battle-aquilons', ownerId: 'p1', metadata: { rosterUnitId: rosterUnit.id }, modelCount: 3 };
+  const state = {
+    armyRosters: { p1: { units: [rosterUnit] } },
+    units: [battleUnit]
+  };
+
+  const melee = getDatasheetWeaponOptions(state, battleUnit, { type: 'melee' });
+  assert.deepEqual(melee.map((item) => item.name), ['Solarite Power Talon']);
+  assert.equal(melee[0].equippedQuantity, 3);
+  assert.equal(melee[0].activeQuantity, 3);
+  assert.deepEqual(getDatasheetWeaponOptions(state, battleUnit, { type: 'ranged' }), []);
+});
+
+test('unverified loadouts remain fully blocked instead of falling back to datasheet weapons', () => {
+  const aquilons = unit('adeptus-custodes:aquilon-terminators-with-solarite-power-talons', 3);
+  const rosterUnit = { ...aquilons, id: 'roster-unverified', loadoutValidation: { status: 'unverified' } };
+  const state = {
+    armyRosters: { p1: { units: [rosterUnit] } },
+    units: [{ id: 'battle-unverified', ownerId: 'p1', metadata: { rosterUnitId: rosterUnit.id } }]
+  };
+  assert.deepEqual(getDatasheetWeaponOptions(state, state.units[0], { type: 'ranged' }), []);
+  assert.deepEqual(getDatasheetWeaponOptions(state, state.units[0], { type: 'melee' }), []);
 });
