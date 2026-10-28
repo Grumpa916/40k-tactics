@@ -18,6 +18,8 @@ import { isDeterminedAcquisitionMissionForPlayer } from "./tactical-determined-a
 import { enhanceDeterminedAcquisitionMovementRecommendations } from "./tactical-determined-acquisition-movement.js";
 import { isPurgeAndSecureMissionForPlayer } from "./tactical-purge-and-secure-strategy.js";
 import { enhancePurgeAndSecureMovementRecommendations } from "./tactical-purge-and-secure-movement.js";
+import { isInescapableDominionMissionForPlayer } from "./tactical-inescapable-dominion-strategy.js";
+import { enhanceInescapableDominionMovementRecommendations } from "./tactical-inescapable-dominion-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -281,6 +283,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isPurgeAndSecureMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhancePurgeAndSecureMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isInescapableDominionMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceInescapableDominionMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
