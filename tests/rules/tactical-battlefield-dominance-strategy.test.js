@@ -125,9 +125,10 @@ test("losing the home objective exposes its multiplier value", () => {
   });
   assert.equal(signal.active, true);
   assert.equal(signal.ownHome, true);
-  assert.equal(signal.vpLeverage, 7);
+  assert.equal(signal.vpLeverage, 9);
   assert.ok(signal.score >= 0.5);
   assert.match(signal.reason, /unlock 4 VP|multiplier/i);
+  assert.match(signal.reason, /2 VP end-of-turn objective-majority/i);
 });
 
 test("Round 1 uses only the objective-majority scoring condition", () => {
