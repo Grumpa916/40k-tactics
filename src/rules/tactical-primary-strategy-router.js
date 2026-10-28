@@ -27,6 +27,11 @@ import {
   getPurgeAndSecureObjectiveStrategySignal,
   isPurgeAndSecureMissionForPlayer
 } from "./tactical-purge-and-secure-strategy.js";
+import {
+  getInescapableDominionPrimaryStrategyContext,
+  getInescapableDominionObjectiveStrategySignal,
+  isInescapableDominionMissionForPlayer
+} from "./tactical-inescapable-dominion-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -41,6 +46,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getPurgeAndSecurePrimaryStrategyContext(state, options);
+  }
+  if (playerId && isInescapableDominionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getInescapableDominionPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -61,6 +69,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getPurgeAndSecureObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isInescapableDominionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getInescapableDominionObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
