@@ -106,6 +106,7 @@ export function getShootingTargetComparison(state, {
     const target = unitById(state, item.targetUnitId);
     const strategicContext = getTargetStrategicContext(state, {
       playerId,
+      attackerId: sourceAttacker?.id ?? attackerId,
       targetUnitId: item.targetUnitId
     });
 
