@@ -1,0 +1,107 @@
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-compact {
+  box-sizing:border-box;
+  width:32px;
+  height:32px;
+  min-width:32px;
+  max-width:32px;
+  min-height:32px;
+  padding:0;
+  border-radius:50%;
+  border-width:2px;
+  display:grid;
+  place-items:center;
+  font-size:9px;
+  font-weight:850;
+  line-height:1;
+  letter-spacing:-.02em;
+  overflow:visible;
+  box-shadow:none;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-compact::before {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:48px;
+  height:48px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:transparent;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-selected {
+  outline:0;
+  box-shadow:0 0 0 3px #fff6b0, 0 0 0 5px rgba(255,246,176,.34);
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective {
+  --objective-fill:#4b535b;
+  --objective-stroke:#b9c1c7;
+  box-sizing:border-box;
+  width:44px;
+  height:44px;
+  min-width:44px;
+  max-width:44px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  line-height:1;
+  isolation:isolate;
+  box-shadow:none;
+  filter:none;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective::before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:5px;
+  right:5px;
+  top:7px;
+  bottom:7px;
+  background:var(--objective-fill);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  filter:drop-shadow(0 0 1px var(--objective-stroke));
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective.is-uncontrolled {
+  --objective-fill:#4b535b;
+  --objective-stroke:#c2c9ce;
+  background:transparent;
+  color:#fff;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective.is-mine {
+  --objective-fill:#205d87;
+  --objective-stroke:#8dd0ff;
+  background:transparent;
+  color:#fff;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective.is-opponent {
+  --objective-fill:#7a3035;
+  --objective-stroke:#ff9c93;
+  background:transparent;
+  color:#fff;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective.is-contested {
+  --objective-fill:linear-gradient(90deg,#205d87 0 50%,#7a3035 50% 100%);
+  --objective-stroke:#f4d77a;
+  background:transparent;
+  color:#fff;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__legend i.objective {
+  width:14px;
+  height:12px;
+  border:0 !important;
+  border-radius:0;
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+}
