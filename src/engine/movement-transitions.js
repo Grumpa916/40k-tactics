@@ -2,6 +2,7 @@ import { getBattleUnitMovement } from "../rules/battle-unit-reference.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { BASE_MOVEMENT_EVENT_TYPES, hasBaseMovementAction, isMovementRefinementEvent } from "./movement-refinement-transitions.js";
 
 function positionIsValid(position) {
   return position && Number.isFinite(position.x) && Number.isFinite(position.y);
@@ -42,11 +43,7 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   if (!unit) throw new Error("Unit not found: " + unitId);
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may move.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can move.");
-  if (state.history.some((event) =>
-    ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
-    event.payload?.unitId === unitId &&
-    event.payload?.turn === state.turn
-  )) {
+  if (hasBaseMovementAction(state, unitId)) {
     throw new Error("A unit can make only one Normal Move per turn.");
   }
 
@@ -101,7 +98,6 @@ export function resolveNormalMove(state, { unitId, moves } = {}) {
   }, event);
 }
 
-
 /**
  * Record a Fall Back without inventing movement geometry. The movement UI may
  * update model positions separately; this event is the authoritative gameplay
@@ -116,11 +112,7 @@ export function recordFallBack(state, { unitId } = {}) {
   if (!unit) throw new Error("Unit not found: " + unitId);
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may Fall Back.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can Fall Back.");
-  if (state.history.some((event) =>
-    ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) &&
-    event.payload?.unitId === unitId &&
-    event.payload?.turn === state.turn
-  )) {
+  if (hasBaseMovementAction(state, unitId)) {
     throw new Error("A unit can Fall Back only once per turn.");
   }
 
@@ -133,7 +125,6 @@ export function recordFallBack(state, { unitId } = {}) {
   }));
 }
 
-
 export function resolveAdvance(state, { unitId, moves, advanceRoll } = {}) {
   if (!Number.isInteger(advanceRoll) || advanceRoll < 1 || advanceRoll > 6) throw new TypeError("Enter the actual Advance roll (1–6).");
   if (!unitId) throw new TypeError("Unit id is required.");
@@ -143,8 +134,7 @@ export function resolveAdvance(state, { unitId, moves, advanceRoll } = {}) {
   if (!unit) throw new Error("Unit not found: " + unitId);
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may Advance.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed before it can Advance.");
-  const used = state.history.some((event) => ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) && event.payload?.unitId === unitId && event.payload?.turn === state.turn);
-  if (used) throw new Error("A unit can record only one movement action per turn.");
+  if (hasBaseMovementAction(state, unitId)) throw new Error("A unit can record only one movement action per turn.");
   const models = getModels(unit);
   if (!Array.isArray(moves) || moves.length !== models.length) throw new Error("An Advance must include a destination for every model.");
   const destinations = new Map();
@@ -175,21 +165,18 @@ export function recordStationary(state, { unitId } = {}) {
   if (!unit) throw new Error("Unit not found: " + unitId);
   if (unit.ownerId !== state.activePlayer) throw new Error("Only the active player's units may be recorded stationary.");
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Unit must be deployed.");
-  const used = state.history.some((event) => ["unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"].includes(event.type) && event.payload?.unitId === unitId && event.payload?.turn === state.turn);
-  if (used) throw new Error("A unit can record only one movement action per turn.");
+  if (hasBaseMovementAction(state, unitId)) throw new Error("A unit can record only one movement action per turn.");
   return appendHistoryEntry(state, createEvent("unit.stationary_recorded", {
     unitId, playerId: state.activePlayer, phase: state.phase, round: state.battle.round, turn: state.turn
   }));
 }
 
-
-const MOVEMENT_ACTION_EVENT_TYPES = new Set([
-  "unit.normal_move_resolved", "unit.fell_back", "unit.advanced", "unit.stationary_recorded"
-]);
+const MOVEMENT_ACTION_EVENT_TYPES = new Set(BASE_MOVEMENT_EVENT_TYPES);
 
 /** Undo the selected unit's current-turn Movement action.
  * Normal Move and Advance restore the positions recorded before the action.
- * Fall Back and Stationary only remove their gameplay fact.
+ * Fall Back and Stationary only remove their gameplay fact. Any optional
+ * refinement is removed with the base action so history cannot be left dangling.
  */
 export function undoMovementAction(state, { unitId } = {}) {
   if (!unitId) throw new TypeError("Unit id is required.");
@@ -203,6 +190,7 @@ export function undoMovementAction(state, { unitId } = {}) {
   let eventIndex = -1;
   for (let index = history.length - 1; index >= 0; index -= 1) {
     const event = history[index];
+    if (isMovementRefinementEvent(event)) continue;
     if (MOVEMENT_ACTION_EVENT_TYPES.has(event?.type) && event.payload?.unitId === unitId && event.payload?.turn === state.turn) {
       eventIndex = index;
       break;
@@ -237,6 +225,8 @@ export function undoMovementAction(state, { unitId } = {}) {
   return {
     ...state,
     units: state.units.map((item) => item.id === unitId ? nextUnit : item),
-    history: history.filter((_, index) => index !== eventIndex)
+    history: history.filter((candidate, index) =>
+      index !== eventIndex && !isMovementRefinementEvent(candidate, unitId, state)
+    )
   };
 }
