@@ -3,6 +3,7 @@ import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
 import { renderMovementAdvisor } from './movement-advisor.js';
+import { renderMovementRosterRail, renderMovementSelectedUnitCard } from './movement-dashboard-view.js';
 import { getCustodesKatahDefinition, getCustodesKatahState } from '../rules/custodes-tactical-advisor.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
@@ -95,6 +96,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   let errorMessage = "";
   let advanceRoll = null;
   let livePointerDrag = null;
+  let rosterView = 'mine';
 
   function movementAction(state, unitId) {
     const history = Array.isArray(state?.history) ? state.history : [];
@@ -110,6 +112,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   function selectUnit(unitId) {
     if (unitId !== selectedUnitId) advanceRoll = null;
     selectedUnitId = unitId;
+    rosterView = 'mine';
     errorMessage = "";
   }
 
@@ -119,10 +122,11 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
     const selectable=state.units.filter(unit=>unit.ownerId===playerId && ['deployed','reserves'].includes(unit.status) && !attachmentParent(state,unit));
     if (!selectable.some((unit) => unit.id === selectedUnitId)) {
-      selectedUnitId = eligible[0]?.id ?? null;
+      selectedUnitId = eligible[0]?.id ?? selectable[0]?.id ?? null;
       advanceRoll = null;
     }
     const selected = eligible.find((unit) => unit.id === selectedUnitId) ?? null;
+    const selectedAny = selectable.find((unit) => unit.id === selectedUnitId) ?? null;
 
     const unitCards = eligible.length ? eligible.map((unit) => {
       const action = movementAction(state, unit.id);
@@ -165,12 +169,25 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     }
 
     const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
-    if(reserved)editor=`<h2>${escapeHtml(reserved.name)}</h2><p>In reserves</p>`;
+    if(reserved)editor=`<div class="move-editor"><p class="move-editor__status"><strong>Reserves</strong></p><p>Tap an empty map position to place this unit on the battlefield.</p></div>`;
     const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId});
     const advisor=renderMovementAdvisor(state,{playerId,selectedUnitId,perspectivePlayerId:perspectivePlayerId ?? playerId});
     if (layoutMode === 'tabletop') {
+      const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;
+      const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
+      const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url).href;
+      const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
+        playerId,
+        perspectivePlayerId: perspectivePlayerId ?? playerId,
+        selectedUnitId,
+        rosterView,
+        actionForUnit: unitId => movementAction(state, unitId),
+        refinementForUnit: unitId => movementRefinement(state, unitId)
+      })}`;
+      const selectedCard = renderMovementSelectedUnitCard(state, selectedAny, {action:selectedAction, refinement:selectedRefinement});
+      const controls = `<div class="movement-screen movement-screen--dashboard">${selectedCard}${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details class="movement-advisor-drawer"><summary>Tactical Advisor</summary>${advisor}</details></div>`;
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        mapExtra:reserveTray,controls:`<div class="movement-screen">${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${advisor}${editor}<details><summary>Units · ${eligible.length}</summary><div class="move-units">${unitCards}</div></details></div>`,footer:''});
+        leftRail,mapExtra:reserveTray,controls,footer:''});
       mapView.bind(container);
       return;
     }
@@ -271,6 +288,10 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   function handleClick(event) {
+    const rosterTab = event.target?.closest?.('[data-movement-roster-view]');
+    if (rosterTab) { rosterView = rosterTab.getAttribute('data-movement-roster-view') === 'opponent' ? 'opponent' : 'mine'; render(); return; }
+    const rosterUnit = event.target?.closest?.('[data-move-roster-unit]');
+    if (rosterUnit) { selectUnit(rosterUnit.getAttribute('data-move-roster-unit')); render(); return; }
     const reserve=event.target?.closest?.('[data-map-reserve-select]');
     if(reserve){selectUnit(reserve.getAttribute('data-map-reserve-select'));render();return;}
     const area=event.target?.closest?.('[data-map-reserve-area]');
