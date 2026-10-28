@@ -21,27 +21,32 @@ function scoreWindowsFor(mission) {
   return mission?.result?.scoringWindow ? [mission.result.scoringWindow] : [];
 }
 
-function cumulativeTierTotals(tiers) {
-  let totals = new Set([0]);
-  for (const tier of tiers) {
-    const value = positiveVp(tier?.vp);
-    if (!value) continue;
-    const next = new Set(totals);
-    for (const total of totals) if (total + value <= 15) next.add(total + value);
-    totals = next;
-  }
-  return [...totals].filter(Boolean);
+function secondaryTierChoices(mission = {}) {
+  return scoreWindowsFor(mission).flatMap(window => {
+    const choices = [];
+    let runningTotal = 0;
+    let requiredTiers = [];
+    for (const tier of window?.tiers ?? []) {
+      const value = positiveVp(tier?.vp);
+      if (!value) continue;
+      if (tier?.relationship === 'cumulative' && requiredTiers.length) {
+        runningTotal += value;
+        requiredTiers = [...requiredTiers, tier];
+      } else {
+        runningTotal = value;
+        requiredTiers = [tier];
+      }
+      choices.push({ vp: runningTotal, tiers: requiredTiers, timingLabel: window?.timingLabel ?? '' });
+    }
+    return choices;
+  });
 }
 
 export function getMissionVpOptions(mission = {}) {
   const windows = scoreWindowsFor(mission);
   if (mission.category === 'secondary' || mission.instanceId) {
-    const values = [];
-    for (const window of windows) {
-      const tiers = window.tiers ?? [];
-      values.push(...tiers.map(tier => positiveVp(tier.vp)).filter(Boolean));
-      if (tiers.some(tier => tier?.relationship === 'cumulative')) values.push(...cumulativeTierTotals(tiers));
-    }
+    const choices = secondaryTierChoices(mission);
+    const values = choices.map(choice => choice.vp);
     const configured = positiveVp(mission.victoryPoints ?? mission.result?.victoryPoints);
     if (!values.length && configured) values.push(configured);
     return [...new Set(values)].filter(value => value <= 15).sort((a,b) => a-b);
@@ -84,6 +89,45 @@ function directCalculatedPoints(mission, estimate, vpOptions) {
   return null;
 }
 
+function evidenceLabel(evidence) {
+  if (evidence.count == null) return 'Confirm on tabletop';
+  return evidence.count > 0 ? 'Completed in recorded state' : 'Still needed';
+}
+
+function renderSecondaryTierChoices(state, playerId, mission, suppliedPoints, formAttrs) {
+  const choices = secondaryTierChoices(mission);
+  if (choices.length <= 1) return null;
+  const unique = [];
+  const seen = new Set();
+  for (const choice of choices) {
+    if (seen.has(choice.vp)) continue;
+    seen.add(choice.vp);
+    unique.push(choice);
+  }
+  const rows = unique.map(choice => {
+    const current = suppliedPoints === choice.vp;
+    const requirements = choice.tiers.map(tier => {
+      const evidence = missionConditionEvidence(state, playerId, tier);
+      return `<p class="checkpoint-vp-requirement"><strong>${esc(evidenceLabel(evidence))}</strong> · ${esc(tier.summary ?? '')}${evidence.detail ? `<br>${esc(evidence.detail)}` : ''}</p>`;
+    }).join('');
+    const buttonLabel = current
+      ? `Score ${choice.vp} VP now${mission.category === 'secondary' ? ' & remove card' : ''}`
+      : `Confirm ${choice.vp} VP${mission.category === 'secondary' ? ' & remove card' : ''}`;
+    return `<section class="checkpoint-vp-option${current ? ' checkpoint-vp-option--current' : ''}" data-vp-option="${choice.vp}">
+      <h4>${choice.vp} VP${current ? ' · Current recorded-state result' : ''}</h4>
+      ${requirements}
+      <button type="submit" name="vp" value="${choice.vp}">${buttonLabel}</button>
+    </section>`;
+  }).join('');
+  return `<form ${formAttrs}>
+    <div class="checkpoint-vp-options" role="group" aria-label="Scoring options for ${esc(mission.definitionName)}">
+      <h4>Scoring options</h4>
+      ${rows}
+    </div>
+    <p>Choose the score you are confirming now. Higher-value options stay visible so you can see what still needs to be completed or confirmed. Existing VP caps apply.</p>
+  </form>`;
+}
+
 export function renderCheckpointScore(state, group, mission) {
   const { definitionId, definitionName, instanceId, category } = mission;
   const card = instanceId ? getSecondaryMissionHistory(state, group.playerId).find(c => c.instanceId === instanceId) : null;
@@ -104,6 +148,10 @@ export function renderCheckpointScore(state, group, mission) {
         ? `<p class="checkpoint-vp-estimate" role="status"><strong>Potential completion: ${directPoints} VP</strong> · Recorded conditions support completion.</p>`
         : '';
   const formAttrs = `data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}"`;
+  const tierMarkup = category === 'secondary'
+    ? renderSecondaryTierChoices(state, group.playerId, mission, suppliedPoints, formAttrs)
+    : null;
+  if (tierMarkup) return `${estimateMarkup}${tierMarkup}`;
   if (directPoints) {
     return `<form ${formAttrs}>${estimateMarkup}<input type="hidden" name="vp" value="${directPoints}"><button type="submit">Confirm +${directPoints} VP${category === 'secondary' ? ' & remove card' : ''}</button><p>Player confirmation remains authoritative.</p></form>`;
   }
@@ -124,7 +172,8 @@ export function bindCheckpointScores(container, session, onError) {
       const playerId = form.getAttribute('data-player');
       const scoringTiming = form.getAttribute('data-checkpoint');
       const instanceId = form.getAttribute('data-instance');
-      const payload = { playerId, amount: Number(form.querySelector('[name="vp"]').value), scoringTiming,
+      const submittedValue = event.submitter?.name === 'vp' ? event.submitter.value : form.querySelector('[name="vp"]')?.value;
+      const payload = { playerId, amount: Number(submittedValue), scoringTiming,
         round: state.battle?.round ?? 0, turn: state.turn ?? 0 };
       if (instanceId) session.dispatch({type:'secondary_mission.record_score',payload:{...payload,instanceId,retireAfterScoring:true}});
       else session.dispatch({type:'victory_points.record_award',payload:{...payload,
