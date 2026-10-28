@@ -78,9 +78,12 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
     </section>`;
 }
 
-// Each phase owns its selection and command handling.
-export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, footer = '', mapExtra = '', mapView = createLiveMapView() }) {
-  return `<main class="combat-workspace" data-combat-phase="${phase}">
+// Each phase owns its selection and command handling. A phase may provide a
+// compact left rail without forcing other phases into a three-column layout.
+export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, footer = '', mapExtra = '', leftRail = '', mapView = createLiveMapView() }) {
+  const hasLeftRail = Boolean(String(leftRail ?? '').trim());
+  return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
+    ${hasLeftRail ? `<aside class="combat-workspace__rail" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       <div class="combat-workspace__scroll">${renderSelectedUnitActiveStatus(state, selectedUnitId)}${controls}</div>${footer ? `<footer>${footer}</footer>` : ''}
