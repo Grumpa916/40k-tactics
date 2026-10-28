@@ -14,7 +14,7 @@ function control(controllerId) {
     : { controlState: "controlled", controllerId, contestingPlayerIds: [] };
 }
 
-function objective(id, layoutObjective, controllerId, x, y = 22) {
+function objective(id, layoutObjective, controllerId, x, y) {
   return { id, name: id, layoutObjective, position: { x, y }, control: control(controllerId) };
 }
 
@@ -52,19 +52,19 @@ function snapshotObjective(id, controllerId) {
 
 function state({ round = 2, phase = "movement", expansionTwo = "p1", includeSnapshot = true, runnerBattleShocked = false } = {}) {
   const turn = round;
+  // Event Companion page 15 / layout A: attacker territory is y=0–22,
+  // defender territory is y=22–44. Use the verified objective positions.
   const objectives = [
-    objective("event-companion:Attacker Home", "Attacker Home", "p1", 52),
-    objective("event-companion:Expansion 1", "Expansion 1", "p1", 42),
-    objective("event-companion:Central 1", "Central 1", "p2", 34),
-    objective("event-companion:Central 2", "Central 2", "p2", 26),
-    objective("event-companion:Expansion 2", "Expansion 2", expansionTwo, 18),
-    objective("event-companion:Defender Home", "Defender Home", "p2", 8)
+    objective("event-companion:Attacker Home", "Attacker Home", "p1", 50.3, 7),
+    objective("event-companion:Expansion 1", "Expansion 1", "p1", 11, 13.6),
+    objective("event-companion:Central 1", "Central 1", "p2", 31.8, 21.4),
+    objective("event-companion:Expansion 2", "Expansion 2", expansionTwo, 48.8, 30.4),
+    objective("event-companion:Defender Home", "Defender Home", "p2", 9.6, 37)
   ];
   const startObjectives = [
     snapshotObjective("event-companion:Attacker Home", "p1"),
     snapshotObjective("event-companion:Expansion 1", "p1"),
     snapshotObjective("event-companion:Central 1", "p2"),
-    snapshotObjective("event-companion:Central 2", "p2"),
     snapshotObjective("event-companion:Expansion 2", "p2"),
     snapshotObjective("event-companion:Defender Home", "p2")
   ];
@@ -87,9 +87,9 @@ function state({ round = 2, phase = "movement", expansionTwo = "p1", includeSnap
     commandPoints: { p1: 2, p2: 2 },
     objectives,
     units: [
-      unit("runner", "p1", 22, 22, { move: 8, oc: 3, rosterUnitId: "r-runner", battleShocked: runnerBattleShocked }),
-      unit("holder", "p1", 42, 22, { move: 6, oc: 3, rosterUnitId: "r-holder" }),
-      unit("target", "p2", 17, 22, { move: 6, oc: 2, rosterUnitId: "r-target" })
+      unit("runner", "p1", 45, 27, { move: 8, oc: 3, rosterUnitId: "r-runner", battleShocked: runnerBattleShocked }),
+      unit("holder", "p1", 11, 13, { move: 6, oc: 3, rosterUnitId: "r-holder" }),
+      unit("target", "p2", 48, 31, { move: 6, oc: 2, rosterUnitId: "r-target" })
     ],
     history: [],
     scoring: {
@@ -209,8 +209,8 @@ test("Round 5 makes a newly acquired enemy-territory objective an eight VP same-
 
 test("territory-boundary objectives do not receive an automatic enemy-territory bonus", () => {
   const s = state();
-  const boundary = s.objectives.find((item) => item.layoutObjective === "Central 2");
-  boundary.position.x = 30;
+  const boundary = s.objectives.find((item) => item.layoutObjective === "Central 1");
+  boundary.position.y = 22;
   boundary.control = control("p1");
   const start = s.scoring.turnSnapshots[0].objectives.find((item) => item.id === boundary.id);
   start.control = control("p1");
@@ -228,6 +228,28 @@ test("missing turn-start evidence keeps acquisition VP player-confirmed", () => 
   assert.equal(context.acquisitionVp, 0);
   assert.match(context.reason, /turn-start snapshot is unavailable/i);
   assert.match(context.summary.join(" "), /confirm which non-home objectives/i);
+});
+
+test("null turn-start control keeps acquisition eligibility player-confirmed", () => {
+  const s = state();
+  const start = s.scoring.turnSnapshots[0].objectives.find((item) => item.id === "event-companion:Expansion 2");
+  start.control = null;
+  const context = getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  assert.equal(context.turnStartKnown, false);
+  assert.equal(context.acquisitionVp, 0);
+  const signal = getPrimaryObjectiveStrategySignal(s, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "event-companion:Expansion 2",
+    control: "controlled",
+    purpose: "hold-objective",
+    primaryStrategy: context
+  });
+  assert.equal(signal.startKnown, false);
+  assert.equal(signal.acquisitionEligible, false);
+  assert.equal(signal.acquisitionVpLeverage, 0);
+  assert.equal(signal.checkpointVpLeverage, 6);
+  assert.match(signal.reason, /must be confirmed/i);
 });
 
 test("Determined Acquisition gives enemy kills no direct Primary premium", () => {
