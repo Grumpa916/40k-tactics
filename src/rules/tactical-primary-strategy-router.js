@@ -12,11 +12,19 @@ import {
   getBattlefieldDominanceObjectiveStrategySignal,
   isBattlefieldDominanceMissionForPlayer
 } from "./tactical-battlefield-dominance-strategy.js";
+import {
+  getImmovableObjectPrimaryStrategyContext,
+  getImmovableObjectObjectiveStrategySignal,
+  isImmovableObjectMissionForPlayer
+} from "./tactical-immovable-object-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
   if (playerId && isBattlefieldDominanceMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getBattlefieldDominancePrimaryStrategyContext(state, options);
+  }
+  if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getImmovableObjectPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -28,6 +36,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   const playerId = options.playerId;
   if (playerId && isBattlefieldDominanceMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getBattlefieldDominanceObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getImmovableObjectObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
