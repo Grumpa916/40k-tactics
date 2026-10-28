@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ARMY_UNIT_CATALOG } from '../../src/data/army-unit-catalog.js';
+import { getFightWeaponOptions } from '../../src/application/fight-workflow.js';
 import { getDatasheetWeaponOptions } from '../../src/rules/saved-roster-combat-profile.js';
 
 function stateFor(datasheetId, modelCount = 1, status = 'manual-selection-required') {
@@ -31,6 +32,7 @@ test('Aquilon Talons remain available in Fight while the ranged slot still needs
   assert.deepEqual(melee.map(item=>item.name),['Solarite Power Talon']);
   assert.equal(melee[0].equippedQuantity,3);
   assert.deepEqual(ranged,[]);
+  assert.deepEqual(getFightWeaponOptions(state,{attackerId:unit.id}).map(item=>item.name),['Solarite Power Talon']);
 });
 
 test('reviewed fixed Allarus grenade launchers remain known while spear or axe choice is unresolved', () => {
