@@ -6,20 +6,8 @@ on:
       - feature/movement-calistus-refinement
 
 jobs:
-  test-group:
-    name: test-${{ matrix.group }}
+  ui-tests:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        group:
-          - application
-          - build
-          - data
-          - engine
-          - rules
-          - state
-          - ui
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,12 +15,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run test group
+      - name: Run UI tests
+        id: ui
+        continue-on-error: true
         shell: bash
         run: |
-          mapfile -t test_files < <(find "tests/${{ matrix.group }}" -type f -name '*.test.js' | sort)
-          if [ "${#test_files[@]}" -eq 0 ]; then
-            echo "No test files found for ${{ matrix.group }}"
-            exit 0
-          fi
-          node --test "${test_files[@]}"
+          mapfile -t test_files < <(find tests/ui -type f -name '*.test.js' | sort)
+          set +e
+          node --test "${test_files[@]}" > pr400-ui-output.txt 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload UI output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr400-ui-test-output
+          path: pr400-ui-output.txt
+      - name: Mark diagnostic result
+        if: always()
+        shell: bash
+        run: |
+          cat pr400-ui-output.txt
+          exit "${{ steps.ui.outputs.exit_code }}"
