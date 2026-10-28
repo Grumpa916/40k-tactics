@@ -107,7 +107,7 @@ export function getInescapableDominionPrimaryStrategyContext(state, {
   let objectivePreservationScore = objectives.known ? 0.58 : 0.34;
   if (objectives.known && objectives.controlled === 2) objectivePreservationScore = Math.max(objectivePreservationScore, 0.95);
   if (objectives.known && objectives.controlled === 3) objectivePreservationScore = Math.max(objectivePreservationScore, 0.97);
-  if (majorityActive && objectives.known && objectives.margin === 1) objectivePreservationScore = Math.max(objectivePreservationScore, 0.96);
+  if (majorityActive && objectives.known && objectives.margin >= 1 && objectives.margin <= 2) objectivePreservationScore = Math.max(objectivePreservationScore, 0.96);
   if (round >= 4 && objectives.opponentHomeRoleKnown) objectivePreservationScore = Math.max(objectivePreservationScore, objectives.opponentHomeControlled ? 0.98 : 0.82);
   if (round === 5) objectivePreservationScore = Math.max(objectivePreservationScore, 0.98);
 
@@ -215,14 +215,17 @@ export function getInescapableDominionObjectiveStrategySignal(state, {
   const opponentHome = context.opponentHomeObjectiveIds.includes(objectiveId) || isOpponentHomeObjectiveForPlayer(state, objective, playerId, perspectivePlayerId);
   const opponentOwnsNow = objective?.control?.controlState === "controlled" && objective.control.controllerId != null && objective.control.controllerId !== playerId;
   const deltaIfTaken = controlledNow ? 0 : opponentOwnsNow ? 2 : 1;
-  const controlledAfterTake = context.controlledObjectives + (controlledNow ? 0 : 1);
-  const marginAfterTake = context.objectiveMargin + deltaIfTaken;
+  const controlledAfterTake = context.objectiveStateKnown ? context.controlledObjectives + (controlledNow ? 0 : 1) : null;
+  const marginAfterTake = context.objectiveStateKnown ? context.objectiveMargin + deltaIfTaken : null;
 
   let vpLeverage = 0;
   let score = 0.12;
   const notes = [];
 
-  if (controlledNow) {
+  if (!context.objectiveStateKnown) {
+    score = 0.06;
+    notes.push("Objective control is incomplete, so Dominion count and majority leverage remain player-confirmed until every objective controller is recorded.");
+  } else if (controlledNow) {
     if (context.controlledObjectives === 3) {
       vpLeverage += 4;
       score += 0.28;
@@ -236,10 +239,12 @@ export function getInescapableDominionObjectiveStrategySignal(state, {
       score += 0.3;
       notes.push("Losing this objective would drop you below the two-objective threshold for the 5 VP condition at the next applicable checkpoint.");
     }
-    if (context.round >= 2 && context.objectiveMargin === 1) {
+    if (context.round >= 2 && context.objectiveMargin >= 1 && context.objectiveMargin <= 2) {
       vpLeverage += 4;
       score += 0.28;
-      notes.push("Your objective lead is only one; losing this objective can cost the 4 VP majority condition.");
+      notes.push(context.objectiveMargin === 1
+        ? "Your objective lead is only one; losing this objective can cost the 4 VP majority condition."
+        : "Your objective lead is two; an enemy takeover of this objective would erase that lead and cost the 4 VP majority condition.");
     }
   } else {
     if (context.controlledObjectives < 3 && controlledAfterTake >= 3) {
@@ -271,7 +276,7 @@ export function getInescapableDominionObjectiveStrategySignal(state, {
       : "This is the opponent's home objective and carries a separate 5 VP end-of-battle opportunity.");
   }
 
-  if (context.round === 5) score += 0.12;
+  if (context.round === 5 && context.objectiveStateKnown) score += 0.12;
   if (notes.length === 0) notes.push("This objective contributes to Dominion count and majority buffer, but it does not currently cross a scoring breakpoint by itself.");
 
   return Object.freeze({
