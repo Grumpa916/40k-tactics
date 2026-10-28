@@ -17,6 +17,11 @@ import {
   getImmovableObjectObjectiveStrategySignal,
   isImmovableObjectMissionForPlayer
 } from "./tactical-immovable-object-strategy.js";
+import {
+  getDeterminedAcquisitionPrimaryStrategyContext,
+  getDeterminedAcquisitionObjectiveStrategySignal,
+  isDeterminedAcquisitionMissionForPlayer
+} from "./tactical-determined-acquisition-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -25,6 +30,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getImmovableObjectPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getDeterminedAcquisitionPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -39,6 +47,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getImmovableObjectObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getDeterminedAcquisitionObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);

@@ -14,6 +14,8 @@ import {
 } from "./tactical-battlefield-dominance-strategy.js";
 import { isImmovableObjectMissionForPlayer } from "./tactical-immovable-object-strategy.js";
 import { enhanceImmovableObjectMovementRecommendations } from "./tactical-immovable-object-movement.js";
+import { isDeterminedAcquisitionMissionForPlayer } from "./tactical-determined-acquisition-strategy.js";
+import { enhanceDeterminedAcquisitionMovementRecommendations } from "./tactical-determined-acquisition-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -269,6 +271,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isImmovableObjectMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceImmovableObjectMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isDeterminedAcquisitionMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceDeterminedAcquisitionMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
