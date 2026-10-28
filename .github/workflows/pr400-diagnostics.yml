@@ -29,4 +29,10 @@ jobs:
           node-version: 22
       - name: Run test group
         shell: bash
-        run: node --test tests/${{ matrix.group }}
+        run: |
+          mapfile -t test_files < <(find "tests/${{ matrix.group }}" -type f -name '*.test.js' | sort)
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No test files found for ${{ matrix.group }}"
+            exit 0
+          fi
+          node --test "${test_files[@]}"
