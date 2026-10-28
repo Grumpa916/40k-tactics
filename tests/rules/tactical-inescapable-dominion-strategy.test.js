@@ -166,6 +166,42 @@ test("a two-objective position identifies the third objective as the next direct
   assert.match(signal.reason, /three-objective threshold/i);
 });
 
+test("incomplete objective control does not fabricate count or majority leverage", () => {
+  const s = state();
+  s.objectives.find((item) => item.id === "expansion-2").control = null;
+  const context = getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  assert.equal(context.objectiveStateKnown, false);
+  const signal = getPrimaryObjectiveStrategySignal(s, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "central-1",
+    control: "enemy-controlled",
+    purpose: "contest-objective",
+    primaryStrategy: context
+  });
+  assert.equal(signal.controlledAfterTake, null);
+  assert.equal(signal.marginAfterTake, null);
+  assert.equal(signal.vpLeverage, 0);
+  assert.match(signal.reason, /control is incomplete/i);
+});
+
+test("a two-objective lead recognizes majority loss from an enemy takeover of a held objective", () => {
+  const s = state({ round: 5, controllers: ["p1", "p1", "p1", "p2", null] });
+  const context = getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  assert.equal(context.objectiveMargin, 2);
+  const signal = getPrimaryObjectiveStrategySignal(s, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "expansion-1",
+    control: "controlled",
+    purpose: "hold-objective",
+    primaryStrategy: context
+  });
+  assert.equal(signal.vpLeverage, 8);
+  assert.match(signal.reason, /three-objective threshold/i);
+  assert.match(signal.reason, /enemy takeover/i);
+});
+
 test("Inescapable Dominion gives no automatic Primary kill premium", () => {
   const s = state({ phase: "shooting" });
   const context = getTargetStrategicContext(s, { playerId: "p1", targetUnitId: "enemy" });
