@@ -6,8 +6,20 @@ on:
       - feature/movement-calistus-refinement
 
 jobs:
-  focused-tests:
+  test-group:
+    name: test-${{ matrix.group }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          - application
+          - build
+          - data
+          - engine
+          - rules
+          - state
+          - ui
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,29 +27,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run focused PR 400 tests
-        id: focused
-        continue-on-error: true
+      - name: Run test group
         shell: bash
-        run: |
-          set +e
-          node --test \
-            tests/engine/movement-refinement-transitions.test.js \
-            tests/engine/custodes-katah-command.test.js \
-            tests/ui/live-phase-regressions.test.js \
-            > pr400-test-output.txt 2>&1
-          code=$?
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Upload focused output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr400-focused-test-output
-          path: pr400-test-output.txt
-      - name: Mark diagnostic result
-        if: always()
-        shell: bash
-        run: |
-          cat pr400-test-output.txt
-          exit "${{ steps.focused.outputs.exit_code }}"
+        run: node --test tests/${{ matrix.group }}
