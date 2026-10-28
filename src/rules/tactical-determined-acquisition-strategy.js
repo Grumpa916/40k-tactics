@@ -92,7 +92,7 @@ function acquisitionSnapshot(state, playerId, perspectivePlayerId) {
   }
 
   const startById = new Map((snapshot.objectives ?? []).map((objective) => [objective.id, objective]));
-  if (!relevant.every((objective) => startById.has(objective.id))) {
+  if (!relevant.every((objective) => startById.has(objective.id) && startById.get(objective.id)?.control != null)) {
     return Object.freeze({
       known: false,
       turn,
@@ -237,7 +237,7 @@ export function getDeterminedAcquisitionPrimaryStrategyContext(state, {
     reason,
     assumptions: Object.freeze([
       "Objective control comes from recorded tabletop confirmation; approximate unit position does not determine control.",
-      "Turn-start objective control comes from the recorded turn snapshot. Without that snapshot, the 2 VP newly acquired condition remains player-confirmed.",
+      "Turn-start objective control comes from the recorded turn snapshot. Without complete control evidence in that snapshot, the 2 VP newly acquired condition remains player-confirmed.",
       "Enemy-territory bonuses use the verified battlefield territory geometry. Objectives inside the ±3-inch advisory boundary band are not automatically credited with the +3 VP bonus.",
       "In Rounds 2–4, movement after the Command phase can score acquisition VP this turn and prepare future control scoring, but does not retroactively change a completed Command-phase checkpoint.",
       "Determined Acquisition has no direct kill-scoring condition, so destroying a unit receives no automatic Primary VP premium.",
