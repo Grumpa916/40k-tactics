@@ -43,7 +43,10 @@ test('VP choices come from mission scoring values instead of 1 through 15', () =
   const state = { battle:{round:1}, turn:1, history:[], scoring:{secondaryMissions:[{instanceId:'card',playerId:'p1',status:'active'}]} };
   const html = renderCheckpointScore(state,{playerId:'p1',checkpoint:'end-of-turn'},
     { ...secondary, definitionId:'centre-ground', definitionName:'Centre Ground' });
-  assert.match(html, /<option value="3">3 VP<\/option>/);
-  assert.match(html, /<option value="5">5 VP<\/option>/);
-  assert.doesNotMatch(html, /<option value="1">1 VP<\/option>/);
+  assert.match(html, /data-vp-option="3"/);
+  assert.match(html, /name="vp" value="3"/);
+  assert.match(html, /data-vp-option="5"/);
+  assert.match(html, /name="vp" value="5"/);
+  assert.doesNotMatch(html, /data-vp-option="1"/);
+  assert.doesNotMatch(html, /Choose VP/);
 });
