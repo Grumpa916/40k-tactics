@@ -120,7 +120,7 @@ test("45 Primary VP suppresses Round 5 objective capture leverage", () => {
   assert.equal(signal.controlVpLeverage, 0);
   assert.equal(signal.vpLeverage, 0);
   assert.ok(signal.score < 0.18);
-  assert.match(signal.reason, /Primary round\/game cap/i);
+  assert.match(signal.reason, /45 VP Primary game cap/i);
 });
 
 test("a projected kill consumes the last two VP of partial game allowance", () => {
