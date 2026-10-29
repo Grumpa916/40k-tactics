@@ -33,9 +33,14 @@ function targetKillOpportunity(state, deathTrap, targetUnitId) {
   const terrainAreaIds = Object.freeze(areas.map((area) => area.terrainAreaId));
   if (!terrainAreaIds.length) return Object.freeze({ active: true, terrainAreaId: null, terrainAreaIds, trapped: false, canTrapLater: false, vpLeverage: 0 });
   const trappedIds = new Set(deathTrap.trappedTerrainIds);
+  const terrainById = new Map((deathTrap.terrain ?? []).map((entry) => [entry.terrainAreaId, entry]));
   const trappedTerrainAreaIds = Object.freeze(terrainAreaIds.filter((terrainAreaId) => trappedIds.has(terrainAreaId)));
-  const availableTerrainAreaIds = Object.freeze(terrainAreaIds.filter((terrainAreaId) => !trappedIds.has(terrainAreaId)));
+  const availableTerrainAreaIds = Object.freeze(terrainAreaIds.filter((terrainAreaId) => {
+    const entry = terrainById.get(terrainAreaId);
+    return entry && !entry.trapped && entry.boobyTrapEligibleByGeometry !== false;
+  }));
   const trapped = trappedTerrainAreaIds.length > 0;
+  const canTrapLater = !trapped && availableTerrainAreaIds.length > 0;
   return Object.freeze({
     active: true,
     terrainAreaId: trappedTerrainAreaIds[0] ?? availableTerrainAreaIds[0] ?? terrainAreaIds[0],
@@ -43,10 +48,10 @@ function targetKillOpportunity(state, deathTrap, targetUnitId) {
     trappedTerrainAreaIds,
     availableTerrainAreaIds,
     trapped,
-    canTrapLater: !trapped && availableTerrainAreaIds.length > 0,
-    vpLeverage: 3,
+    canTrapLater,
+    vpLeverage: trapped || canTrapLater ? 3 : 0,
     confirmedByMap: trapped,
-    conditionalOnLaterTrap: !trapped && availableTerrainAreaIds.length > 0
+    conditionalOnLaterTrap: canTrapLater
   });
 }
 
@@ -198,7 +203,7 @@ export function getDeathTrapObjectiveStrategySignal(state, {
   const ownHome = isPlayerHomeObjective(state, objective, playerId, perspectivePlayerId);
   const controlledNow = control === "controlled" || (objective?.control?.controlState === "controlled" && objective.control.controllerId === playerId);
   const terrain = context.terrain.find((entry) => entry.objectiveIds?.includes(objectiveId)) ?? null;
-  const trapAvailable = !!terrain && !terrain.trapped && !ownHome;
+  const trapAvailable = !!terrain && !terrain.trapped && !ownHome && terrain.boobyTrapEligibleByGeometry !== false;
   const trapVpLeverage = trapAvailable ? 5 : 0;
   let controlVpLeverage = 0;
   if (context.round >= 2 && !ownHome && context.controlStateKnown) {
