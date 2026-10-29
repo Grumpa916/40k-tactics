@@ -24,7 +24,7 @@ function getPrimaryMissionActionOption(state, playerId) {
   let action = definition?.action;
   if (definition?.id === 'primary-locate-and-deny') {
     const locate = getLocateAndDenyState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
-    if (!locate.setupComplete || !locate.sensorSweepAvailable) return null;
+    if (locate.setupComplete && !locate.sensorSweepAvailable) return null;
     action = LOCATE_AND_DENY_ACTION;
   }
   if (!definition || !action || action.phase !== 'shooting') return null;
