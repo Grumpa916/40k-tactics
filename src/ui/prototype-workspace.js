@@ -28,6 +28,7 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
     <div class="prototype-phase-row">
       <div class="prototype-phase-chips" aria-label="Battle phases">${phases}</div>
       <button type="button" class="prototype-missions-button" data-toggle-mission-review aria-expanded="${String(missionReviewOpen)}">Missions</button>
+      <button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button>
       <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-battle-phase-button="review">Game review</button></div></details>
     </div>
     <button type="button" data-workspace-panel aria-expanded="false" aria-label="Show phase panel">Panel</button>

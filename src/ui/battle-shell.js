@@ -1,23 +1,17 @@
-import { createEndgameReviewScreen } from './endgame-review-screen.js';
+import { PHASES, SCREEN_FACTORIES } from './battle-screen-registry.js';
+import { createRulesReminderController } from './rules-reminder-panel.js';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
 import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
 import { getPhaseProgressionAction, renderPhaseProgressionPanel } from "./phase-progression-panel.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
-import { createChargeScreen } from "./charge-screen.js";
-import { createCommandScreen } from "./command-screen.js";
-import { createEventPreparationScreen as createBattleSetupScreen } from "./event-preparation-screen.js";
-import { createEventPreparationScreen as createDeploymentScreen } from "./event-preparation-screen.js";
-import { createFightScreen } from "./fight-screen.js";
-import { createMovementScreen } from "./movement-screen.js";
 import { createBattlePersistencePanel } from "./battle-persistence-panel.js";
 import { createSupabaseAuthPanel } from "./supabase-auth-panel.js";
 import { createSupabaseBattleStore } from "../persistence/supabase-battle-store.js";
 import { createSupabaseArmyRosterStore } from "../persistence/supabase-army-roster-store.js";
 import { createArmyRosterPanel } from "./army-roster-panel.js";
 import { createArmySelectionPanel } from "./army-selection-panel.js";
-import { createShootingScreen } from "./shooting-screen.js";
 import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, renderArmyRosterOverlay } from "./battle-context-panels.js";
 import { renderTurnClockPanel } from "./turn-clock-panel.js";
 import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../state/turn-clock.js";
@@ -34,24 +28,6 @@ import {
 } from "./battle-shell-scoreboard.js";
 import { setupContinueLabel, setupTabLabel } from "./setup-navigation-labels.js";
 
-const PHASES = Object.freeze([
-  { id: "command", label: "Command", status: "live" },
-  { id: "movement", label: "Movement", status: "live" },
-  { id: "shooting", label: "Shooting", status: "live" },
-  { id: "charge", label: "Charge", status: "live" },
-  { id: "fight", label: "Fight", status: "live" }
-]);
-
-const SCREEN_FACTORIES = Object.freeze({
-  setup: createBattleSetupScreen,
-  deployment: createDeploymentScreen,
-  command: createCommandScreen,
-  movement: createMovementScreen,
-  shooting: createShootingScreen,
-  charge: createChargeScreen,
-  fight: createFightScreen,
-  review: createEndgameReviewScreen
-});
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -87,7 +63,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
     ? [{ id: "deployment", label: "Deployment", status: "live" }, ...PHASES]
     : PHASES), { id: "review", label: "Game review", status: "live" }];
-  const phaseItems = visiblePhases.map((phase) => {
+  let phaseItems = visiblePhases.map((phase) => {
     const active = phase.id === viewedPhase ? " is-active" : "";
     const status = phase.status === "live" ? "Ready" : "Planned";
     return '<li class="battle-phase' + active + '">' +
@@ -100,6 +76,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     visible: layoutMode !== "tabletop" && PHASES.some(phase => phase.id === viewedPhase),
     open: missionReviewOpen
   });
+
+  if (layoutMode !== 'tabletop') phaseItems += '<li class="battle-phase"><button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button></li>';
 
   const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
     renderStatusSummaryContent(state, viewedPhase, clockPanelOpen) + '</section>';
@@ -160,7 +138,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
 
   const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen });
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
-    '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
+    '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div><div data-rules-reminder-host></div>' +
     shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen }) : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
     (viewedPhase === "setup"
@@ -231,6 +209,7 @@ export function createBattleShell(container, {
   let leftPanelCollapsed = true;
   let rightPanelCollapsed = false;
   const prototypeWorkspace = createPrototypeWorkspace(container, { session, gameData });
+  const rulesReminders = createRulesReminderController(container, {session, perspectivePlayerId});
   let armyRosterPlayerId = null;
   let battleShockMessage = "";
   let battleShockReminder = null;
@@ -511,6 +490,7 @@ export function createBattleShell(container, {
     }
 
     refreshPersistentPanels();
+    rulesReminders.refresh();
     onRender();
     return state;
   }
@@ -919,6 +899,7 @@ export function createBattleShell(container, {
     destroy: () => {
       unsubscribe();
       prototypeWorkspace.destroy();
+      rulesReminders.destroy();
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
       container.removeEventListener?.("click", handleMissionSummaryToggle);

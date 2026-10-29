@@ -9,11 +9,11 @@ export const SPACE_MARINES_RULES_SOURCE = Object.freeze({
 });
 
 export const SPACE_MARINES_ARMY_RULES = Object.freeze({
-  name: "Oath of Moment",
-  timing: "Start of your Command phase",
-  effect: "Select one enemy unit as your Oath of Moment target until the start of your next Command phase. Adeptus Astartes attacks targeting it can re-roll Hit rolls; the Codex: Space Marines bonus also improves Wound rolls when the army has no Blood Angels, Dark Angels, Deathwatch or Space Wolves units.",
+  name: "Combat Doctrines",
+  timing: "Confirm the selected army-wide and unit-specific doctrines with the Space Marines player",
+  effect: "Assault Doctrine permits charges after Advance moves. Devastator Doctrine grants Assault to ranged attacks. Tactical Doctrine permits shooting and charging after Fall Back moves. Each doctrine is normally selected once per battle; datasheet and detachment exceptions can apply, and normally only one doctrine is active per unit.",
   implementationStatus: "reference-only",
-  source: SPACE_MARINES_RULES_SOURCE
+  source: Object.freeze({sourceName:'Games Workshop · Space Marines rules — First look',sourceUrl:'https://www.warhammer-community.com/en-gb/articles/ifgezlgu/space-marines-rules-first-look/',reviewedAt:'2026-10-29',version:'September 2026 Codex army rule'})
 });
 
 export const ARMOURED_SPEARTIP_STRATAGEMS = Object.freeze([

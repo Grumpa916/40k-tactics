@@ -1,3 +1,4 @@
+import { renderTargetDefenseReminders } from './rules-reminder-panel.js';
 import { createLiveMapView } from './live-map-view.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { renderActionReceipt } from './action-receipt.js';
@@ -58,6 +59,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
 
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
+      ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,weapon:selectedWeapon,phase:'fight'})}
       ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId })}
       <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} available</summary>
         <h3>Fights First</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>

@@ -13,7 +13,7 @@ test('reference panel derives Space Marines army rule and detachment from the sa
       p2: { faction: 'Tyranids', detachment: 'Invasion Fleet' }
     }
   }, {}, 'p1');
-  assert.match(html, /Oath of Moment/);
+  assert.match(html, /Combat Doctrines/);
   assert.match(html, /Take and Hold/);
   assert.match(html, /2 DP/);
 });
