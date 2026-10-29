@@ -377,7 +377,7 @@ test("one remaining marker exposes both end-turn and endgame leverage when frien
   const context = strategy(state);
   assert.ok(context.rawRecordedVp >= 4);
   assert.equal(context.endgameLastMarkerVp, 5);
-  assert.match(context.reason, /protect and occupy|recorded Locate and Deny conditions/i);
+  assert.match(context.reason, /unsecured|establish one durable non-home objective/i);
 });
 
 test("round and game caps limit Locate and Deny tactical leverage without counting endgame VP twice", () => {
