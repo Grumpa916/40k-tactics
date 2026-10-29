@@ -399,6 +399,7 @@ export function createBattleShell(container, {
       const previousPhase = observedGamePhase;
       observedGamePhase = actualPhase;
       viewedPhase = actualPhase === "complete" ? "review" : actualPhase;
+      if (actualPhase === "command") rightPanelCollapsed = false;
       scoringReviewCheckpoint = null;
       scoringReviewActivePlayerId = null;
       scoringReviewPlayerId = null;
@@ -619,6 +620,16 @@ export function createBattleShell(container, {
     ensureClockTicker();
   }
 
+  function openRightPanel() {
+    rightPanelCollapsed = false;
+    const workspace = container.querySelector?.("[data-battle-workspace]");
+    workspace?.setAttribute?.("data-right-collapsed", "false");
+    const button = container.querySelector?.('[data-toggle-battle-panel="right"]');
+    button?.setAttribute?.("aria-expanded", "true");
+    const label = button?.querySelector?.("[data-panel-toggle-label]");
+    if (label) label.textContent = "Hide references ›";
+  }
+
   function handleToggleBattlePanel(event) {
     const button = event.target?.closest?.("[data-toggle-battle-panel]");
     if (!button || !container.contains(button)) return;
@@ -790,6 +801,7 @@ export function createBattleShell(container, {
     scoringReviewActivePlayerId = scoringReminder?.activePlayerId ?? null;
     scoringReviewPlayerId = button.getAttribute("data-scoring-player") ?? scoringReminder?.scoringPlayerId ?? scoringReminder?.activePlayerId ?? null;
     scoringReminder = null;
+    openRightPanel();
     viewedPhase = "command";
     render();
   }
@@ -863,6 +875,7 @@ export function createBattleShell(container, {
       scoringReviewActivePlayerId = null;
       scoringReviewPlayerId = null;
     }
+    if (nextPhase === "command") openRightPanel();
     viewedPhase = nextPhase;
     render();
   }
