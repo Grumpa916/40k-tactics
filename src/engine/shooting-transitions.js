@@ -61,6 +61,9 @@ export function recordShootingActivation(state, {
       deathTrapTerrain = getDeathTrapTerrainOptions(state, { playerId: activePlayerId }).find(item => item.terrainAreaId === terrainAreaId);
       if (!deathTrapTerrain) throw new Error("Select a terrain area from the current Event Companion battlefield.");
       if (deathTrapTerrain.trapped) throw new Error("That terrain area is already trapped.");
+      if (deathTrapTerrain.boobyTrapEligibleByGeometry === false) {
+        throw new Error("That terrain area is wholly within your deployment zone and is not a non-home objective area.");
+      }
     }
   }
   return appendHistoryEntry(state, createEvent("shooting.unit_activated", {
