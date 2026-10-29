@@ -97,7 +97,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
       (phase.id === "setup" ? "Pre-game & cloud saves" : status) +
       '</span></button></li>';
   }).join("") + renderMissionReviewToggle({
-    visible: PHASES.some(phase => phase.id === viewedPhase),
+    visible: layoutMode !== "tabletop" && PHASES.some(phase => phase.id === viewedPhase),
     open: missionReviewOpen
   });
 
@@ -161,7 +161,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen });
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
-    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
+    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen }) : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
