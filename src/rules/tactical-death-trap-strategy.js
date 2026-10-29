@@ -3,7 +3,7 @@ import { isPlayerHomeObjective } from "./consecrate-state.js";
 import { getUnitStateAtTurnStart } from "./scoring-evidence-state.js";
 import {
   getDeathTrapState,
-  getDeathTrapTerrainAreaForPosition,
+  getDeathTrapTerrainAreasForPosition,
   isDeathTrapMissionForPlayer
 } from "./death-trap-state.js";
 import { clamp01 } from "./tactical-context-utils.js";
@@ -26,21 +26,27 @@ function missionForPlayer(state, playerId, perspectivePlayerId = defaultPerspect
 
 function targetKillOpportunity(state, deathTrap, targetUnitId) {
   if (!targetUnitId || deathTrap.trappedKillSatisfied) {
-    return Object.freeze({ active: false, terrainAreaId: null, trapped: false, canTrapLater: false, vpLeverage: 0 });
+    return Object.freeze({ active: false, terrainAreaId: null, terrainAreaIds: Object.freeze([]), trapped: false, canTrapLater: false, vpLeverage: 0 });
   }
   const start = getUnitStateAtTurnStart(state, targetUnitId, deathTrap.turn);
-  const area = getDeathTrapTerrainAreaForPosition(state, start?.position);
-  if (!area) return Object.freeze({ active: true, terrainAreaId: null, trapped: false, canTrapLater: false, vpLeverage: 0 });
-  const terrain = deathTrap.terrain.find((item) => item.terrainAreaId === area.terrainAreaId) ?? null;
-  const trapped = terrain?.trapped === true;
+  const areas = getDeathTrapTerrainAreasForPosition(state, start?.position);
+  const terrainAreaIds = Object.freeze(areas.map((area) => area.terrainAreaId));
+  if (!terrainAreaIds.length) return Object.freeze({ active: true, terrainAreaId: null, terrainAreaIds, trapped: false, canTrapLater: false, vpLeverage: 0 });
+  const trappedIds = new Set(deathTrap.trappedTerrainIds);
+  const trappedTerrainAreaIds = Object.freeze(terrainAreaIds.filter((terrainAreaId) => trappedIds.has(terrainAreaId)));
+  const availableTerrainAreaIds = Object.freeze(terrainAreaIds.filter((terrainAreaId) => !trappedIds.has(terrainAreaId)));
+  const trapped = trappedTerrainAreaIds.length > 0;
   return Object.freeze({
     active: true,
-    terrainAreaId: area.terrainAreaId,
+    terrainAreaId: trappedTerrainAreaIds[0] ?? availableTerrainAreaIds[0] ?? terrainAreaIds[0],
+    terrainAreaIds,
+    trappedTerrainAreaIds,
+    availableTerrainAreaIds,
     trapped,
-    canTrapLater: !trapped,
+    canTrapLater: !trapped && availableTerrainAreaIds.length > 0,
     vpLeverage: 3,
     confirmedByMap: trapped,
-    conditionalOnLaterTrap: !trapped
+    conditionalOnLaterTrap: !trapped && availableTerrainAreaIds.length > 0
   });
 }
 
@@ -98,7 +104,7 @@ export function getDeathTrapPrimaryStrategyContext(state, {
   const killProgress = deathTrap.trappedKillSatisfied
     ? `${deathTrap.qualifyingKills.length} recorded enemy destruction${deathTrap.qualifyingKills.length === 1 ? "" : "s"} began the turn in terrain that is now trapped; this supports the single 3 VP destruction condition.`
     : deathTrap.enemyKillsThisTurn > 0
-      ? `${deathTrap.enemyKillsThisTurn} enemy destruction${deathTrap.enemyKillsThisTurn === 1 ? " is" : "s are"} recorded this turn, but no saved turn-start position currently proves the enemy began in terrain that is trapped by end of turn.`
+      ? `${deathTrap.enemyKillsThisTurn} enemy destruction${deathTrap.enemyKillsThisTurn === 1 ? " is" : "s are"} recorded this turn, but no saved turn-start terrain overlap is trapped yet.`
       : "No enemy destruction is recorded this turn; the first enemy destroyed after starting the turn in a terrain area that is trapped by end of turn can score 3 VP.";
   const controlProgress = round < 2
     ? "The 4 VP non-home control condition begins in Round 2."
@@ -110,9 +116,10 @@ export function getDeathTrapPrimaryStrategyContext(state, {
 
   let reason;
   if (killOpportunity.confirmedByMap) {
-    reason = `This target began the turn in ${killOpportunity.terrainAreaId}, which is already trapped. Destroying it can satisfy the 3 VP Death Trap destruction condition.`;
+    reason = `This target began the turn in terrain that includes ${killOpportunity.trappedTerrainAreaIds.join(", ")}, and at least one of those areas is already trapped. Destroying it can satisfy the 3 VP Death Trap destruction condition.`;
   } else if (killOpportunity.conditionalOnLaterTrap) {
-    reason = `This target began the turn in ${killOpportunity.terrainAreaId}. Destroying it can still support the 3 VP condition if that terrain is trapped by end of turn; the Event Companion FAQ confirms the trap does not need to exist when the unit is destroyed.`;
+    const areas = killOpportunity.availableTerrainAreaIds.join(", ");
+    reason = `This target began the turn in ${areas}. Destroying it can still support the 3 VP condition if one of those terrain areas is trapped by end of turn; the Event Companion FAQ confirms the trap does not need to exist when the unit is destroyed.`;
   } else if (deathTrap.trapVp < 10 && deathTrap.terrainKnown) {
     reason = "Booby Trap Actions are the mission's most repeatable scoring lever. Objective terrain is especially valuable because a newly trapped objective terrain area is worth 5 VP before the round cap.";
   } else if (round >= 2 && deathTrap.nonHomeControlledCount === 0) {
@@ -166,6 +173,7 @@ export function getDeathTrapPrimaryStrategyContext(state, {
       "A terrain area trapped this turn is worth 2 VP, plus 3 additional VP if that terrain area contains an objective.",
       "The trapped-terrain destruction condition scores 3 VP once per turn, not per destroyed unit.",
       "Per the Event Companion FAQ, the terrain area only needs to be trapped by the scoring check; it did not need to be trapped when the enemy unit was destroyed.",
+      "If verified terrain polygons overlap at a saved turn-start position, any matching terrain area can support the condition; the advisor does not arbitrarily choose one overlap as authoritative.",
       "Turn-start enemy position and Event Companion terrain geometry are advisory evidence; tabletop confirmation remains authoritative.",
       "The 4 VP control condition is binary: controlling additional non-home objectives does not add more Death Trap VP.",
       "The 15 VP Primary cap is applied to the current-round outlook."
