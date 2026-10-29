@@ -2,7 +2,7 @@ import { getEventCompanionMapForForceDispositions } from "./event-companion-map-
 import { getObjectiveControlForPlayer } from "./objective-control-state.js";
 import { objectiveAdvisorLabel } from "./objective-display-labels.js";
 import { getLiveUnitPosition } from "./spatial-context.js";
-import { getDeathTrapState } from "./death-trap-state.js";
+import { getDeathTrapState, pointInTerrainPolygon } from "./death-trap-state.js";
 import {
   getDeathTrapObjectiveStrategySignal,
   getDeathTrapPrimaryStrategyContext
@@ -23,20 +23,9 @@ function segmentDistance(point, a, b) {
   return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
 }
 
-function pointInPolygon(point, points) {
-  let inside = false;
-  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-    const a = points[j], b = points[i];
-    const cross = ((b.y > point.y) !== (a.y > point.y)) &&
-      point.x < ((a.x - b.x) * (point.y - b.y)) / ((a.y - b.y) || Number.EPSILON) + b.x;
-    if (cross) inside = !inside;
-  }
-  return inside;
-}
-
 function distanceToPolygon(point, points) {
   if (!point || !Array.isArray(points) || points.length < 3) return null;
-  if (pointInPolygon(point, points)) return 0;
+  if (pointInTerrainPolygon(point, points)) return 0;
   let best = Infinity;
   for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
     best = Math.min(best, segmentDistance(point, points[j], points[i]));
@@ -66,7 +55,9 @@ function terrainOptions(state, recommendation, deathTrap, primaryStrategy) {
   const position = unit ? getLiveUnitPosition(state, unit) : null;
   const map = geometry(state);
   if (!position || !map?.terrainGeometry) return [];
-  const unresolvedKillTerrain = new Set(deathTrap.unresolvedKills.map((item) => item.terrainAreaId).filter(Boolean));
+  const unresolvedKillTerrain = new Set(
+    deathTrap.unresolvedKills.flatMap((item) => item.terrainAreaIds ?? (item.terrainAreaId ? [item.terrainAreaId] : []))
+  );
   return deathTrap.terrain.filter((entry) => !entry.trapped).map((entry) => {
     const shape = map.terrainGeometry?.[entry.terrainAreaId];
     const distance = distanceToPolygon(position, shape?.points ?? []);
