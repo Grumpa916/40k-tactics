@@ -337,11 +337,22 @@ test("Movement routing can elevate the opponent home objective for a usable-OC f
   assert.ok(runner);
   assert.equal(runner.primaryStrategySignal?.opponentHome, true);
   assert.equal(runner.objectiveId, "event-companion:Defender Home");
-  assert.match(runner.recommendation, /opponent's home objective/i);
+  assert.match(runner.recommendation, /opponent home/i);
 });
 
 test("Battle-shocked formations do not receive Outmanoeuvre-specific Movement elevation", () => {
   const s = state({ round: 4, centralController: "p2", opponentHomeController: "p2", runnerBattleShocked: true });
+  const base = getBaseMovementStrategicRecommendations(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  const routed = getMovementStrategicRecommendations(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  const baseRunner = base.recommendations.find((item) => item.unitId === "runner");
+  const routedRunner = routed.recommendations.find((item) => item.unitId === "runner");
+  assert.ok(baseRunner && routedRunner);
+  assert.equal(routedRunner.score, baseRunner.score);
+  assert.equal(routedRunner.objectiveId, baseRunner.objectiveId);
+});
+
+test("zero-OC formations do not receive Outmanoeuvre-specific Movement elevation", () => {
+  const s = state({ round: 4, centralController: "p2", opponentHomeController: "p2", runnerOc: 0 });
   const base = getBaseMovementStrategicRecommendations(s, { playerId: "p1", perspectivePlayerId: "p1" });
   const routed = getMovementStrategicRecommendations(s, { playerId: "p1", perspectivePlayerId: "p1" });
   const baseRunner = base.recommendations.find((item) => item.unitId === "runner");
