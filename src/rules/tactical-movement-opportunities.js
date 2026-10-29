@@ -157,6 +157,9 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
     });
     const ocValue = Number.isFinite(oc.effectiveOc) ? clamp01(oc.effectiveOc / 8) : 0.35;
     const usableOcFactor = oc.battleShocked ? 0.35 : 0.58 + 0.42 * ocValue;
+    const suppressSmokePrimary = primaryStrategy?.missionId === "primary-smoke-and-mirrors" &&
+      (oc.battleShocked === true || (Number.isFinite(oc.effectiveOc) && oc.effectiveOc <= 0));
+    const primaryStrategyScoreApplied = suppressSmokePrimary ? 0 : primarySignal.score;
     const urgency = Math.min(1.35, (strategy.weights.primary + strategy.weights.objectiveSwing) / 2);
     const holdBonus = purpose === "hold-objective" && Number(oc.effectiveOc) > 0
       ? 0.18 + Math.min(0.12, Number(oc.effectiveOc) * 0.02)
@@ -168,13 +171,14 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
       urgency +
       missionSignal.score +
       holdBonus +
-      primarySignal.score
+      primaryStrategyScoreApplied
     );
     const objectiveName=objectiveAdvisorLabel(state,entry.objectiveId,perspectivePlayerId);
     let reason = `${objectiveName} is ${control ?? "uncontrolled"} and about ${entry.distance}\" away on the approximate map.`;
     if (Number.isFinite(oc.effectiveOc)) reason += ` This formation currently contributes about ${oc.effectiveOc} usable OC.`;
     if (holdBonus > 0) reason += " Holding receives extra value because this formation is already contributing usable OC near a friendly-controlled objective.";
-    if (primarySignal.active && primarySignal.reason) reason += ` ${primarySignal.reason}`;
+    if (primarySignal.active && primarySignal.reason && !suppressSmokePrimary) reason += ` ${primarySignal.reason}`;
+    if (suppressSmokePrimary) reason += " Smoke and Mirrors objective bonuses are suppressed because this formation has no usable OC to complete or establish the required objective-control play.";
     if (oc.battleShocked) reason += " It is Battle-shocked, so its saved OC is treated as suppressed for this recommendation.";
     if (missionSignal.missions.length) reason += ` Verified active movement-relevant secondary context: ${missionSignal.missions.join(", ")}.`;
     return Object.freeze({
@@ -186,6 +190,7 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
       distance: entry.distance,
       control,
       primaryStrategySignal: primarySignal,
+      primaryStrategyScoreApplied,
       actionHint: movementActionLabel(action),
       confidence: Number.isFinite(movement) && oc.confidence !== "low" ? "moderate" : "low",
       reason
@@ -404,6 +409,7 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
       distance: best.distance ?? null,
       strategicContext: best.strategicContext ?? null,
       primaryStrategySignal: best.primaryStrategySignal ?? null,
+      primaryStrategyScoreApplied: best.primaryStrategyScoreApplied ?? 0,
       recommendation: recommendationText(unit, best),
       reason: best.reason,
       alternatives: Object.freeze(candidates.slice(1, 3))
