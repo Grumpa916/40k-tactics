@@ -8,6 +8,20 @@ Limited ability uses are recorded in battle history and survive the existing JSO
 
 Moment Shackle offers its two choices at the start of either player's phase. After recording one, the selected effect stays visible as **Active this phase** in the unit reminders and Rules drawer, including when Trajann is attached to Wardens. The save reminder explicitly applies to Trajann only. At the next phase it leaves the active reminders, remains in used abilities, and cannot be chosen again in that battle. No additional map badge is added.
 
+## Venatari controls
+
+The Rules drawer and inline unit reminders use dedicated Venatari forms rather than a generic mark-used button:
+
+- **Neutronium Cascade Mine:** at the start of either player's phase, select a deployed enemy formation and confirm its measured 3″ range. Enter actual wounds lost after defensive rolls using 0–6 touch choices. A known non-Monster/Vehicle target is capped at 3. Recording updates tracked wounds, marks zero-wound failures as spent, and preserves the once-per-unit-per-battle limit through saves and reserve moves. No dice are rolled by the app. Positive damage requires a tracked target wound count.
+- **Take Wing:** in opponent Fight, confirm the phase has ended and the unit is unengaged. Known recorded engagements prevent use. Recording moves the unit to Strategic Reserves and removes its map position. Wounds, notes and ability-use history persist.
+- **Swift Ruin:** in opponent Movement from round 2, a non-Battle-shocked lance unit in reserves can confirm legal Rapid Ingress and the actual cost after the 1 CP discount (normally 0). Positive costs are deducted once. The confirmed unit appears in a Swift Ruin tray; select it and tap its arrival position on the existing map. Movement cannot advance until placement is recorded. The army-wide use limit and placement authorization apply only to that phase; another unit's normal Rapid Ingress is not marked spent by this ability.
+
+All three actions can be immediately undone as a single transaction, including wounds/reserve/CP changes. Arrival placement also has immediate reserve-transfer undo. Generic reminder commands cannot bypass the required confirmations. Range, end-of-phase timing, reserve eligibility and final placement remain table-confirmed; approximate map distance is never a hard eligibility test.
+
+Venatari Deep Strike is referenced when reviewing their reserves during own Movement. Kinetic Destroyers receive their Strike from the Skies re-roll reminder only after a recorded ingress in the current turn; that rule is never granted to the user's lance unit. Lance and Precision remain part of the equipped-weapon reminders. This adds no map status badges.
+
+Rules checked against the current [Verutum Lances reference](https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Venatari-with-Verutum-Lances) and [Custodes datasheets](https://orpheax.github.io/custobuilder/datasheets.html), including Rapid Ingress's round-one restriction and opponent Movement timing. Imported obsolete ability wording remains ineligible for automatic controls.
+
 Start-of-phase prompts close after a recorded tabletop activation, move, attack or charge. Dacatarai and Kaptaris now enforce that same boundary in the existing Ka’tah UI/command. Expired defensive effects are not carried to later phases. A unit known to be engaged is excluded from Take Wing and Swift as the Eagle reminders; unrecorded proximity and engagement still require table confirmation.
 
 Personal notes are stored on each battle unit, including opponent units, so they remain specific to that battle and persist through normal battle saves. Drafts stay separate when switching units. Notes are escaped when rendered, including in target defense cards.

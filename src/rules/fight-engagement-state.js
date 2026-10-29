@@ -62,6 +62,12 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
       }
       continue;
     }
+    if (event.type === 'unit.mortal_wounds_recorded' && event.payload?.stateDelta?.target?.statusAfter === 'destroyed') {
+      for (const [key, relationship] of relationships) {
+        if (relationship.unitIds.includes(event.payload.targetId)) relationships.delete(key);
+      }
+      continue;
+    }
     if (event.type === FALL_BACK_EVENT && event.payload?.unitId) {
       fallBacks.add(event.payload.unitId);
       fallBackIndexes.set(event.payload.unitId, index);

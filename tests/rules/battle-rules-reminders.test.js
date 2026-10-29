@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { custodesReminderState } from '../helpers/custodes-reminder-state.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, isRulesPhaseOpening } from '../../src/rules/battle-rules-reminders.js';
 import { recordRulesReminderUse, setUnitBattleNote } from '../../src/engine/rules-reminder-transitions.js';
+import { recordVenatariAbilityUse } from '../../src/engine/venatari-ability-transitions.js';
 import { getCustodesKatahState } from '../../src/rules/custodes-tactical-advisor.js';
 import { recordCustodesKatahUse } from '../../src/engine/custodes-katah-transitions.js';
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS as sheets } from '../../src/data/adeptus-custodes-datasheet-details.js';
@@ -73,12 +74,15 @@ test('once-per-battle tracking survives save/resume, rejects reuse, and expires 
 
 test('Venatari mine is once per unit while Swift Ruin is once per phase for the army',()=>{
   let state=custodesReminderState({phase:'movement'});
-  state=recordRulesReminderUse(state,{playerId:'p1',unitId:'venatari',ruleId:'cascade-mine'});
-  state=recordRulesReminderUse(state,{playerId:'p1',unitId:'venatari2',ruleId:'cascade-mine'});
-  assert.throws(()=>recordRulesReminderUse(state,{playerId:'p1',unitId:'venatari',ruleId:'cascade-mine'}));
+  const mine={playerId:'p1',ruleId:'cascade-mine',targetId:'marine',rangeConfirmed:true,actualWounds:0};
+  state=recordVenatariAbilityUse(state,{...mine,unitId:'venatari'});
+  state=recordVenatariAbilityUse(state,{...mine,unitId:'venatari2'});
+  assert.throws(()=>recordVenatariAbilityUse(state,{...mine,unitId:'venatari'}));
   state.units.filter(unit=>unit.id.startsWith('venatari')).forEach(unit=>unit.status='reserves');
-  state=recordRulesReminderUse(state,{playerId:'p1',unitId:'venatari',ruleId:'swift-ruin'});
-  assert.throws(()=>recordRulesReminderUse(state,{playerId:'p1',unitId:'venatari2',ruleId:'swift-ruin'}));
+  state.battle.round=2;
+  const ingress={playerId:'p1',ruleId:'swift-ruin',phaseEndConfirmed:true,ingressConfirmed:true};
+  state=recordVenatariAbilityUse(state,{...ingress,unitId:'venatari'});
+  assert.throws(()=>recordVenatariAbilityUse(state,{...ingress,unitId:'venatari2'}));
 });
 
 test('known engagement suppresses Take Wing; fallback releases that reminder',()=>{
