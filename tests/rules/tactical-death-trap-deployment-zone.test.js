@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { getEventCompanionMapForForceDispositions } from "../../src/rules/event-companion-map-catalog.js";
 import { getDeathTrapTerrainOptions } from "../../src/rules/death-trap-state.js";
 import { getMovementStrategicRecommendations } from "../../src/rules/tactical-movement-router.js";
+import { getPrimaryStrategyContext } from "../../src/rules/tactical-primary-strategy-router.js";
 import { createMissionActionPicker } from "../../src/ui/mission-action-picker.js";
 import { recordShootingActivation } from "../../src/engine/shooting-transitions.js";
 
@@ -126,6 +127,19 @@ test("Death Trap picker hides and engine rejects terrain known to be inside your
     reviewTiming: "end-of-turn",
     rulesConfirmed: true
   }), /wholly within your deployment zone/);
+});
+
+test("Death Trap targeting does not promise kill-now trap-later VP when the only terrain is deployment-zone ineligible", () => {
+  const { state, map, ineligible } = seed({ phase: "shooting" });
+  const position = centroid(map.terrainGeometry[ineligible.terrainAreaId].points);
+  state.units.find((unit) => unit.id === "enemy").position = position;
+  state.scoring.turnSnapshots[0].units.find((unit) => unit.id === "enemy").position = { ...position };
+  const context = getPrimaryStrategyContext(state, { playerId: "p1", perspectivePlayerId: "p1", targetUnitId: "enemy" });
+  assert.ok(context.killOpportunity.terrainAreaIds.includes(ineligible.terrainAreaId));
+  assert.equal(context.killOpportunity.conditionalOnLaterTrap, false);
+  assert.equal(context.killOpportunity.canTrapLater, false);
+  assert.equal(context.nextKillVpLeverage, 0);
+  assert.ok(context.targetingScore < 0.5);
 });
 
 test("Death Trap Movement never recommends the only remaining terrain when it is deployment-zone ineligible", () => {
