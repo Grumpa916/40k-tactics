@@ -10,5 +10,5 @@ test("shooting select changes blur and defer rerender until native menus dismiss
   assert.match(source, /requestAnimationFrame \?\? \(callback => globalThis\.setTimeout\(callback, 0\)\)/);
   assert.match(source, /nextFrame\(\(\) => nextFrame\(render\)\)/);
   assert.match(source, /querySelectorAll\("\[data-weapon\]"\)/);
-  assert.match(source, /deferRenderAfterSelectDismissal\(event\.currentTarget\)/);
+  assert.match(source, /deferRenderAfterSelectDismissal\(select\)/);
 });
