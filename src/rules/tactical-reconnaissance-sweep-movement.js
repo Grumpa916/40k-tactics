@@ -33,7 +33,24 @@ function quarterById(id) {
   return RECONNAISSANCE_SWEEP_QUARTERS.find((quarter) => quarter.id === id) ?? null;
 }
 
+function projectedPrimaryVp(primaryStrategy, rawMissionVp) {
+  const raw = Math.max(0, Number(rawMissionVp) || 0);
+  const actual = Math.max(0, Number(primaryStrategy?.actualMissionVpThisTurn) || 0);
+  const allowance = Math.max(0, Number(primaryStrategy?.additionalPrimaryAllowance) || 0);
+  const desired = Math.max(actual, Math.min(15, raw));
+  return actual + Math.min(Math.max(0, desired - actual), allowance);
+}
+
+function projectedQuarterTier(primaryStrategy, quarterVp) {
+  const rawWithoutCurrentQuarterTier = Math.max(0,
+    (Number(primaryStrategy?.rawAdvisoryVp) || 0) - (Number(primaryStrategy?.mapQuarterVpEstimate) || 0));
+  return projectedPrimaryVp(primaryStrategy, rawWithoutCurrentQuarterTier + Math.max(0, Number(quarterVp) || 0));
+}
+
 function quarterOption(state, recommendation, primaryStrategy, quarterState) {
+  if ((Number(primaryStrategy?.remainingPrimaryGameVp) || 0) <= 0 ||
+      (Number(primaryStrategy?.additionalPrimaryAllowance) || 0) <= 0) return null;
+
   const unit = (state?.units ?? []).find((entry) => entry?.id === recommendation.unitId);
   const position = unit ? getLiveUnitPosition(state, unit) : null;
   const currentQuarterId = quarterState.unitQuarterById[recommendation.unitId] ?? null;
@@ -42,7 +59,10 @@ function quarterOption(state, recommendation, primaryStrategy, quarterState) {
 
   if (isSoleRepresentative && quarterState.representedQuarterCount >= 3) {
     const current = quarterById(currentQuarterId);
-    const atRiskVp = 3;
+    const lowerQuarterVp = quarterState.representedQuarterCount >= 4 ? 3 : 0;
+    const atRiskVp = Math.max(0,
+      (Number(primaryStrategy?.cappedAdvisoryVp) || 0) - projectedQuarterTier(primaryStrategy, lowerQuarterVp));
+    if (atRiskVp <= 0) return null;
     const score = clamp01(quarterState.representedQuarterCount >= 4 ? 0.9 : 0.84);
     return Object.freeze({
       kind: "quarter",
@@ -54,7 +74,7 @@ function quarterOption(state, recommendation, primaryStrategy, quarterState) {
       vpLeverage: atRiskVp,
       actionHint: "Remain wholly within this table quarter and more than 6 inches from the battlefield centre",
       confidence: "low",
-      reason: `This unit is the approximate map's sole representative of the ${current?.label ?? currentQuarterId}. Moving it out can drop Reconnaissance Sweep's positional tier by ${atRiskVp} VP. Confirm the whole unit's tabletop position before relying on this.`
+      reason: `This unit is the approximate map's sole representative of the ${current?.label ?? currentQuarterId}. Moving it out can reduce the capped Reconnaissance Sweep projection by ${atRiskVp} VP. Confirm the whole unit's tabletop position before relying on this.`
     });
   }
 
@@ -72,8 +92,10 @@ function quarterOption(state, recommendation, primaryStrategy, quarterState) {
   const currentTier = quarterState.mapQuarterVpEstimate;
   const nextCount = Math.min(4, quarterState.representedQuarterCount + 1);
   const nextTier = nextCount >= 4 ? 6 : nextCount >= 3 ? 3 : 0;
-  const vpLeverage = Math.max(0, nextTier - currentTier);
-  const staging = vpLeverage === 0;
+  const nextProjectedVp = projectedQuarterTier(primaryStrategy, nextTier);
+  const vpLeverage = Math.max(0, nextProjectedVp - (Number(primaryStrategy?.cappedAdvisoryVp) || 0));
+  const staging = nextTier === currentTier;
+  if (!staging && vpLeverage <= 0) return null;
   const score = clamp01(
     (vpLeverage > 0 ? 0.48 + vpLeverage / 8 : 0.24) +
     reachBoost(best.distance, recommendation.movement)
@@ -90,7 +112,7 @@ function quarterOption(state, recommendation, primaryStrategy, quarterState) {
     actionHint: `Reposition toward the ${best.quarter.label}; confirm the entire unit is wholly inside it and more than 6 inches from centre`,
     confidence: "low",
     reason: vpLeverage > 0
-      ? `The ${best.quarter.label} is not represented on the approximate map. Filling it can raise the Reconnaissance Sweep positional tier by ${vpLeverage} VP if the tabletop wholly-within condition is met.`
+      ? `The ${best.quarter.label} is not represented on the approximate map. Filling it can raise the capped Reconnaissance Sweep projection by ${vpLeverage} VP if the tabletop wholly-within condition is met.`
       : `The ${best.quarter.label} is not represented on the approximate map. Moving toward it builds the spread needed to reach the three-quarter scoring threshold.`
   });
 }
