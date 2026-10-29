@@ -2,6 +2,7 @@ import { ADEPTUS_CUSTODES_DETACHMENTS } from '../data/adeptus-custodes-faction-r
 import { getBattleUnitDatasheet } from './battle-unit-reference.js';
 import { getCustodesKatahState } from './custodes-tactical-advisor.js';
 import { isRulesPhaseOpening } from './rules-phase-window.js';
+import { getCommandPointBalance } from '../engine/command-points-ledger.js';
 
 const DETACHMENT_REMINDERS = Object.freeze({
   'Shadowkeepers': { phases: ['fight'], turn: 'opponent', timing: 'When targeted by melee attacks', effect: 'If this non-Monster/Vehicle unit is within objective range and the attack Strength is greater than its Toughness, the attack is −1 to Wound. Confirm objective range and Strength at the table.' },
@@ -27,6 +28,29 @@ function selectedDetachments(state, playerId) {
     roster?.detachmentName
   ].map(item => typeof item === 'string' ? item : item?.name).filter(Boolean))];
   return names.map(name => ADEPTUS_CUSTODES_DETACHMENTS.find(item => item.name === name)).filter(Boolean);
+}
+
+export function getCustodesDetachmentStratagemReminders(state, { playerId } = {}) {
+  if (state?.battle?.status !== 'active' || !playerId || String(state?.armyRosters?.[playerId]?.faction ?? '').toLowerCase() !== 'adeptus custodes') return [];
+  const activePlayer = state.activePlayer ?? state.battle?.activePlayerId;
+  const ownTurn = activePlayer === playerId;
+  const phase = String(state.phase ?? '').toLowerCase();
+  const cp = getCommandPointBalance(state, playerId);
+  return selectedDetachments(state, playerId).filter(detachment => detachment.name !== 'Guardians of the Throne')
+    .flatMap(detachment => (detachment.stratagems ?? []).filter(stratagem => {
+      const timing = String(stratagem.timing ?? '').toLowerCase();
+      const phaseMatches = timing.includes('any phase') || timing.includes(`${phase} phase`);
+      const turnMatches = timing.includes('either') ? true : timing.includes('opponent') ? !ownTurn : !timing.includes('your ') || ownTurn;
+      return phaseMatches && turnMatches;
+    }).map(stratagem => ({
+      detachmentName: detachment.name,
+      title: stratagem.name,
+      cpCost: stratagem.cpCost,
+      timing: stratagem.timing,
+      effect: stratagem.description,
+      affordable: cp >= Number(stratagem.cpCost ?? 1),
+      sourceUrl: ADEPTUS_CUSTODES_RULE_SOURCES.currentReference
+    })));
 }
 
 export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = null } = {}) {

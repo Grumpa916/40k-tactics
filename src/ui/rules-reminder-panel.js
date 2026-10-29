@@ -3,7 +3,7 @@ import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote }
 import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
 import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
-import { getCustodesDetachmentRuleReminders } from '../rules/custodes-detachment-rule-reminders.js';
+import { getCustodesDetachmentRuleReminders, getCustodesDetachmentStratagemReminders } from '../rules/custodes-detachment-rule-reminders.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const stylesheet=new URL('./styles/rules-reminders.css',import.meta.url).href;
@@ -39,17 +39,29 @@ function renderEntry(entry, state) {
 
 const isActiveEffect = entry => Boolean(entry.used && entry.duration === 'phase' && entry.activeThisPhase);
 
+function renderDetachmentStratagemReminders(state,playerId) {
+  const entries=getCustodesDetachmentStratagemReminders(state,{playerId});
+  if(!entries.length)return '';
+  return '<details class="unit-rules-reminders" data-view-key="detachment-stratagem-windows"><summary>Detachment Stratagems · current phase · '+entries.length+'</summary>'+entries.map(entry=>
+    '<article class="rules-reminder-card"><header><strong>'+esc(entry.detachmentName)+' · '+esc(entry.title)+' · '+esc(entry.cpCost)+' CP</strong><span>'+(entry.affordable?'Check trigger':'Needs more CP')+'</span></header>'+
+    '<small>'+esc(entry.timing)+'</small><p>'+esc(entry.effect)+'</p><small>Confirm the exact trigger, target eligibility, and phase limits in the rule reference; enough CP does not by itself make this Stratagem usable.</small>'+
+    '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>'
+  ).join('')+'</details>';
+}
+
 export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
   const playerId=perspective(state,perspectivePlayerId);
   const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
   const detachmentEntries=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});
+  const stratagemEntries=getCustodesDetachmentStratagemReminders(state,{playerId});
+  const stratagemHtml=renderDetachmentStratagemReminders(state,playerId);
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
   const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId});
-  if(!entries.length&&!detachmentEntries.length&&!note)return guardians?style()+guardians:'';
+  if(!entries.length&&!detachmentEntries.length&&!note)return guardians||stratagemHtml?style()+guardians+stratagemHtml:'';
   const opening=entries.some(entry=>entry.kind==='decision');
-  return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+(entries.length+detachmentEntries.length)+'</summary>'+
+  return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+(entries.length+detachmentEntries.length+stratagemEntries.length)+'</summary>'+
     (note?'<div class="rules-personal-note"><strong>My notes</strong><p>'+esc(note)+'</p></div>':'')+
-    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+guardians;
+    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+guardians+stratagemHtml;
 }
 
 export function renderTargetDefenseReminders(state,options={}) {
@@ -78,7 +90,7 @@ export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null
     (canUndo?'<button type="button" data-undo-rule-use>Undo last reminder use</button>':'')+
     '<div class="rules-reminder-list">'+(active.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
     (used.length?'<details><summary>Used abilities · '+used.length+'</summary>'+used.map(entry=>renderEntry(entry,state)).join('')+'</details>':'')+
-    renderGuardiansStratagemOpportunities(state,{playerId})+
+    renderGuardiansStratagemOpportunities(state,{playerId})+renderDetachmentStratagemReminders(state,playerId)+
     '<form class="rules-unit-note-editor" data-save-unit-rules-note><h3>My unit notes</h3><label>Unit<select data-rules-note-unit>'+units.map(unit=>'<option value="'+esc(unit.id)+'"'+(unit.id===unitId?' selected':'')+'>'+esc((state.players?.find(p=>p.id===unit.ownerId)?.name??unit.ownerId)+' · '+unit.name)+'</option>').join('')+'</select></label>'+
     '<label>Notes<textarea data-unit-rules-note maxlength="2000" rows="4" placeholder="A reminder for this unit…">'+esc(draft??getUnitBattleNote(state,unitId))+'</textarea></label><button type="submit"'+(!unitId?' disabled':'')+'>Save unit notes</button></form></section></div>';
 }
@@ -95,8 +107,9 @@ export function createRulesReminderController(container,{session,perspectivePlay
     const entries=groupEntries(getBattleRulesReminders(state,{playerId}).filter(entry=>!entry.used||isActiveEffect(entry)));
     const guardiansCount=new Set(getGuardiansStratagemOpportunities(state,{playerId}).filter(entry=>entry.available||entry.active).map(entry=>entry.stratagemId)).size;
     const detachmentCount=getCustodesDetachmentRuleReminders(state,{playerId}).length;
+    const stratagemCount=getCustodesDetachmentStratagemReminders(state,{playerId}).length;
     for(const button of container.querySelectorAll?.('[data-toggle-rules-reminders]')??[]) {
-      button.textContent='Rules · '+(entries.length+detachmentCount+guardiansCount);button.setAttribute('aria-expanded',String(open));
+      button.textContent='Rules · '+(entries.length+detachmentCount+stratagemCount+guardiansCount);button.setAttribute('aria-expanded',String(open));
       button.hidden=state.battle?.status!=='active';
     }
     if(!state.units?.some(unit=>unit.id===unitId))unitId=state.units?.find(unit=>unit.ownerId===playerId)?.id??state.units?.[0]?.id??null;
