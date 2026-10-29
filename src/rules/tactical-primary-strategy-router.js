@@ -47,6 +47,11 @@ import {
   getOutmanoeuvreObjectiveStrategySignal,
   isOutmanoeuvreMissionForPlayer
 } from "./tactical-outmanoeuvre-strategy.js";
+import {
+  getSmokeAndMirrorsPrimaryStrategyContext,
+  getSmokeAndMirrorsObjectiveStrategySignal
+} from "./tactical-smoke-and-mirrors-strategy.js";
+import { isSmokeAndMirrorsMissionForPlayer } from "./smoke-and-mirrors-state.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -73,6 +78,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isOutmanoeuvreMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getOutmanoeuvrePrimaryStrategyContext(state, options);
+  }
+  if (playerId && isSmokeAndMirrorsMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSmokeAndMirrorsPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -105,6 +113,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isOutmanoeuvreMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getOutmanoeuvreObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isSmokeAndMirrorsMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSmokeAndMirrorsObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
