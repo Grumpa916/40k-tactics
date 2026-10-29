@@ -22,6 +22,23 @@ Venatari Deep Strike is referenced when reviewing their reserves during own Move
 
 Rules checked against the current [Verutum Lances reference](https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Venatari-with-Verutum-Lances) and [Custodes datasheets](https://orpheax.github.io/custobuilder/datasheets.html), including Rapid Ingress's round-one restriction and opponent Movement timing. Imported obsolete ability wording remains ineligible for automatic controls.
 
+## Defensive modifiers and Guardians opportunities
+
+The selected target's defense card shows current weapon-specific AP and Damage examples, strength-dependent wound protection, and allocated-model saves. A recorded In Auramite Clad use worsens AP only against the named enemy formation, through that attacker's remaining weapons. It expires on recorded activation finish or phase change. Kaptaris's melee Hit penalty and the selected Moment Shackle save feed the existing expected-damage forecast in their valid windows; the latter applies only to Trajann's profile, never the Warden bodyguard. Actual damage entered by the player is not reduced a second time.
+
+Guardians controls are grouped by stratagem in **Rules** and filtered for the selected friendly formation in unit reminders. In Auramite Clad is also available beside the selected incoming target, with the attacker preselected. Unavailable entries explain CP, Battle-shock, timing and recorded-use restrictions. Attached Leaders cannot receive a second stratagem independently. The use ledger enforces each stratagem once per army per phase and one stratagem per friendly formation per phase, including recorded Superhuman Focus and Rapid Ingress history. The table confirmation covers other stratagem uses that were not recorded in the app.
+
+- **Superhuman Focus:** confirm the end of a phase, spend 1 CP and re-ready the formation; additionally once per unit per battle round. Explicit readiness before the first Command phase is supported. Confirming phase end does not reopen a start-of-Fight Ka’tah window.
+- **In Auramite Clad:** opponent Shooting or either player's Fight, when an enemy selects targets and before its first recorded attack. Excludes Wardens and their attached formation. A zero-AP weapon receives a no-benefit reminder; other weapons may still matter.
+- **Shield of Honour:** start of Fight, Infantry/Mounted only. The reminder remains conditional on each engaged enemy model's allocations. No blanket Hit/Wound penalty is applied by the forecast.
+- **Prime Target:** own Shooting, when selected to shoot and before recording attacks. Skipped/action-only and completed activations are excluded. Resolve the single Hit, Wound and Damage re-rolls at the table.
+- **Unlimited Endurance:** immediately after the recorded Advance. Its Assault and Advance-and-charge reminders remain visible in the relevant later phases of the same turn. They do not alter the recorded Advance.
+- **Swift as the Eagle:** after a recorded enemy move in opponent Movement, an unengaged Trusted Sentinel can confirm the measured 8″ trigger. The app records CP and use; resolve the D3+3″ Normal move and its destination at the table.
+
+Each confirmed use spends the printed 1 CP, persists in saves and history, and supports immediate atomic undo. No stratagem use adds a map status badge. Conditions involving distances, final phase timing or individual enemy models stay table-confirmed.
+
+Current references: [Guardians](https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/#Guardians-of-the-Throne), [core stratagem restrictions](https://wahapedia.ru/wh40k11ed/the-rules/core-rules/#Using-Stratagems) and the linked Custodes reference. Superhuman Focus's end-of-phase timing and Auramite's either-player Fight window correct earlier shortened catalog summaries.
+
 Start-of-phase prompts close after a recorded tabletop activation, move, attack or charge. Dacatarai and Kaptaris now enforce that same boundary in the existing Ka’tah UI/command. Expired defensive effects are not carried to later phases. A unit known to be engaged is excluded from Take Wing and Swift as the Eagle reminders; unrecorded proximity and engagement still require table confirmation.
 
 Personal notes are stored on each battle unit, including opponent units, so they remain specific to that battle and persist through normal battle saves. Drafts stay separate when switching units. Notes are escaped when rendered, including in target defense cards.

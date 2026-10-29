@@ -1,7 +1,7 @@
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
-import { isRulesPhaseOpening } from '../rules/rules-phase-window.js';
+import { isRulesPhaseOpening, isRulesPhaseEndConfirmed } from '../rules/rules-phase-window.js';
 import {
   getCustodesKatahDefinition,
   getCustodesKatahState,
@@ -13,6 +13,7 @@ function unitById(state, unitId) {
 }
 
 export function recordCustodesKatahUse(state, { playerId, unitId, katahName } = {}) {
+  if (isRulesPhaseEndConfirmed(state)) throw new Error('This phase’s end has been confirmed; use the next appropriate Ka’tah window.');
   if (!state?.battle || state.battle.status !== "active") {
     throw new Error("Martial Ka'tah use can only be recorded during an active battle.");
   }

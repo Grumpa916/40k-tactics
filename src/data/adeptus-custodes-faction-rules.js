@@ -39,11 +39,11 @@ export const ADEPTUS_CUSTODES_DETACHMENTS = Object.freeze([
       E("Eagle's Eye",30,'The bearer gains +1 Wound. Once per battle for the army, it can gain a 3+ invulnerable save when attacks are allocated.','Adeptus Custodes Character')
     ],
     stratagems:[
-      S('Superhuman Focus',1,'Any phase','One friendly Adeptus Custodes unit that is not readied becomes readied; the same unit can only be affected once per battle round.'),
+      S('Superhuman Focus',1,'End of any phase','One friendly Adeptus Custodes unit that is not readied becomes readied; the same unit can only be affected once per battle round.'),
       S('Unlimited Endurance',1,'Your Movement phase','After an Advance move, the unit gains Assault on ranged attacks and that Advance does not prevent it from charging.'),
       S('Shield of Honour',1,'Start of Fight phase','For an engaged Infantry/Mounted Custodes unit, an enemy model that does not allocate all attacks to it is -1 to Hit and -1 to Wound.'),
       S('Prime Target',1,'Your Shooting phase','The selected unit can re-roll one Hit roll, one Wound roll and one Damage roll for its ranged attacks.'),
-      S('In Auramite Clad',1,'Opponent Shooting or Fight phase','Attacks targeting the selected unit, excluding Custodian Wardens, worsen AP by 1 until the attacking unit has finished.'),
+      S('In Auramite Clad',1,'Opponent Shooting phase or either Fight phase','Attacks targeting the selected unit, excluding Custodian Wardens, worsen AP by 1 until the attacking unit has finished.'),
       S('Swift as the Eagle',1,'Opponent Movement phase','When an enemy ends a move within 8 inches of an unengaged Trusted Sentinel, that unit can make a normal move up to D3+3 inches.')
     ]
   }),

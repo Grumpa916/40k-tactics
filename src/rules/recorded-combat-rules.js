@@ -1,5 +1,7 @@
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
+import { getActiveGuardiansEffects } from './stratagem-use-state.js';
+import { rulesContextKey } from './rules-phase-window.js';
 
 // Only these reviewed descriptions are modeled. An older saved datasheet with a
 // different rule bearing the same name must not silently receive today's effect.
@@ -50,6 +52,10 @@ export function getRecordedCombatRules(state, unit) {
     event.payload?.outcome === 'successful' && memberIds.has(event.payload.unitId) &&
     event.payload.turn === state.turn && (event.payload.round == null || event.payload.round === state.battle?.round));
   const rootToughness = root?.characteristics?.toughness ?? root?.profile?.characteristics?.toughness ?? getBattleUnitDatasheet(state, root)?.characteristics?.Toughness;
-  return { effects, chargedThisTurn, unitToughness: Number.isFinite(Number(rootToughness)) && Number(rootToughness) > 0 ? Number(rootToughness) : null,
+  const auramiteAttackers=getActiveGuardiansEffects(state,unit.id).filter(use=>use.stratagemId==='in-auramite-clad').map(use=>use.enemyUnitId);
+  const kaptaris=state.phase==='fight' && (state.history??[]).some(event=>event.type==='custodes.katah_expended' && event.payload?.unitId===root?.id && event.payload.katahName==='Kaptaris' && event.payload.round===state.battle?.round && event.payload.turn===state.turn);
+  const shackleSave=(state.history??[]).some(event=>event.type==='rules.reminder_used' && event.payload?.unitId===unit.id && event.payload.ruleId==='moment-shackle' && event.payload.choice==='save' && event.payload.contextKey===rulesContextKey(state));
+  return { effects, chargedThisTurn, formationRootId:root?.id??unit.id, auramiteAttackers,kaptaris,temporaryInvulnerableSave:shackleSave?3:null,
+    unitToughness: Number.isFinite(Number(rootToughness)) && Number(rootToughness) > 0 ? Number(rootToughness) : null,
     feelNoPain: fnp.length ? Math.min(...fnp) : 0 };
 }
