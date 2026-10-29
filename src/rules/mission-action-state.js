@@ -53,7 +53,7 @@ export function getMissionActionOptions(state, playerId = state.activePlayer) {
 
 export function getMissionActionReviews(state, { playerId, checkpoint, round = state.battle?.round, turn = state.turn } = {}) {
   const reviewed = new Map((state.history ?? []).filter(e=>e.type==='mission_action.reviewed').map(e=>[e.payload.actionKey,e.payload]));
-  return (state.history ?? []).filter(e=>e.type==='shooting.unit_activated' && e.payload?.missionInstanceId).map(e=>{
+  return (state.history ?? []).filter(e=>e.type==='shooting.unit_activated' && e.payload?.missionInstanceId && e.payload?.actionCompletedImmediately!==true).map(e=>{
     const action=e.payload, key=[action.round,action.turn,action.unitId].join(':');
     const unit=state.units.find(u=>u.id===action.unitId);
     return { ...action, actionKey:key, unitName:unit?.name ?? action.unitId, unitStatus:unit?.status,

@@ -1,4 +1,5 @@
 import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
+import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -11,7 +12,7 @@ export function recordShootingActivation(state, {
   unitId,
   actionType = "shoot",
   actionId = null,
-  missionInstanceId = null, objectiveId = null, reviewTiming = null, rulesConfirmed = false
+  missionInstanceId = null, objectiveId = null, terrainAreaId = null, reviewTiming = null, rulesConfirmed = false
 } = {}) {
   if (!unitId) throw new TypeError("Shooting activation unit id is required.");
   if (!SHOOTING_ACTION_TYPES.has(actionType)) {
@@ -47,13 +48,23 @@ export function recordShootingActivation(state, {
   }
 
   let linkedMission = null;
+  let deathTrapTerrain = null;
   if (missionInstanceId) {
-    if (actionType !== "mission_action") throw new Error("Only a mission Action can link a secondary card.");
+    if (actionType !== "mission_action") throw new Error("Only a mission Action can link a mission card.");
     linkedMission = getMissionActionOptions(state, activePlayerId).find(item => item.instanceId === missionInstanceId);
-    if (!linkedMission) throw new Error("Select one of the active player's active secondary cards.");
+    if (!linkedMission) throw new Error("Select one of the active player's active secondary mission Actions or available primary mission Actions.");
     if (!rulesConfirmed) throw new Error("Confirm action eligibility against the physical mission card.");
     if (!ACTION_REVIEW_TIMINGS.includes(reviewTiming)) throw new Error("Choose the card's scoring checkpoint.");
     if (objectiveId && !state.objectives.some(item=>item.id===objectiveId)) throw new Error("Select an objective on this battlefield.");
+    if (linkedMission.definitionId === "primary-death-trap") {
+      if (!terrainAreaId) throw new Error("Select the terrain area being trapped.");
+      deathTrapTerrain = getDeathTrapTerrainOptions(state, { playerId: activePlayerId }).find(item => item.terrainAreaId === terrainAreaId);
+      if (!deathTrapTerrain) throw new Error("Select a terrain area from the current Event Companion battlefield.");
+      if (deathTrapTerrain.trapped) throw new Error("That terrain area is already trapped.");
+      if (deathTrapTerrain.boobyTrapEligibleByGeometry === false) {
+        throw new Error("That terrain area is wholly within your deployment zone and is not a non-home objective area.");
+      }
+    }
   }
   return appendHistoryEntry(state, createEvent("shooting.unit_activated", {
     unitId,
@@ -63,7 +74,7 @@ export function recordShootingActivation(state, {
     actionType,
     actionId:linkedMission?.definitionId ?? actionId,
     ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
-      reviewTiming, objectiveId, rulesConfirmed:true } : {})
+      reviewTiming, objectiveId, ...(deathTrapTerrain ? { terrainAreaId: deathTrapTerrain.terrainAreaId, actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
   }));
 }
 
@@ -74,4 +85,3 @@ export function completeShootingPhase(state) {
   }
   return changePhase(state, { phase: "charge" });
 }
-

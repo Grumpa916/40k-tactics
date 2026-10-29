@@ -30,7 +30,6 @@ function describeUnit(state, unitId, perspectivePlayerId) {
   };
 }
 
-
 function wasActivatedToShootThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
   return history.some((event) =>
@@ -40,6 +39,28 @@ function wasActivatedToShootThisTurn(state, unitId) {
     event?.payload?.turn === state?.turn &&
     (event?.payload?.actionType ?? "shoot") === "shoot"
   );
+}
+
+function shootingActivationPayload({
+  unitId,
+  actionType,
+  actionId,
+  missionInstanceId,
+  objectiveId,
+  terrainAreaId,
+  reviewTiming,
+  rulesConfirmed
+}) {
+  return {
+    unitId,
+    actionType,
+    actionId,
+    missionInstanceId,
+    objectiveId,
+    ...(terrainAreaId != null ? { terrainAreaId } : {}),
+    reviewTiming,
+    rulesConfirmed
+  };
 }
 
 export function getShootingViewModel(state, { perspectivePlayerId = null } = {}) {
@@ -66,11 +87,24 @@ export function recordShootingActivation(state, {
   unitId,
   actionType = "shoot",
   actionId = null,
-  missionInstanceId = null, objectiveId = null, reviewTiming = null, rulesConfirmed = false
+  missionInstanceId = null,
+  objectiveId = null,
+  terrainAreaId = null,
+  reviewTiming = null,
+  rulesConfirmed = false
 } = {}, context = {}) {
   return executeCommand(
     state,
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId, missionInstanceId, objectiveId, reviewTiming, rulesConfirmed }),
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, shootingActivationPayload({
+      unitId,
+      actionType,
+      actionId,
+      missionInstanceId,
+      objectiveId,
+      terrainAreaId,
+      reviewTiming,
+      rulesConfirmed
+    })),
     context
   );
 }
@@ -87,13 +121,26 @@ export function activateShootingUnit(session, {
   unitId,
   actionType = "shoot",
   actionId = null,
-  missionInstanceId = null, objectiveId = null, reviewTiming = null, rulesConfirmed = false
+  missionInstanceId = null,
+  objectiveId = null,
+  terrainAreaId = null,
+  reviewTiming = null,
+  rulesConfirmed = false
 } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
   }
   return session.dispatch(
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, { unitId, actionType, actionId, missionInstanceId, objectiveId, reviewTiming, rulesConfirmed }),
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, shootingActivationPayload({
+      unitId,
+      actionType,
+      actionId,
+      missionInstanceId,
+      objectiveId,
+      terrainAreaId,
+      reviewTiming,
+      rulesConfirmed
+    })),
     context
   );
 }
