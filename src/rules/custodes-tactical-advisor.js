@@ -84,11 +84,11 @@ export function getCustodesKatahState(state, { playerId, unitId } = {}) {
   }
   const root = getCombatFormationRoot(state, unit) ?? unit;
   const cycleRound = getCustodesReadinessCycleRound(state, playerId);
-  if (cycleRound < 1) {
+  if (cycleRound < 1 && !katahEvents(state, playerId, root.id, cycleRound).some(event=>event.type==='custodes.katah_readied')) {
     return Object.freeze({ eligible: true, readied: false, cycleRound, lastKatah: null, reason: "This unit has not reached its first Command-phase readiness cycle yet." });
   }
   const events = katahEvents(state, playerId, root.id, cycleRound);
-  let readied = true;
+  let readied = cycleRound >= 1;
   let lastKatah = null;
   for (const event of events) {
     if (event.type === "custodes.katah_readied") readied = true;

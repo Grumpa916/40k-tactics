@@ -1,6 +1,8 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote } from '../rules/battle-rules-reminders.js';
 import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
+import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
+import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const stylesheet=new URL('./styles/rules-reminders.css',import.meta.url).href;
@@ -40,21 +42,23 @@ export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selecte
   const playerId=perspective(state,perspectivePlayerId);
   const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
-  if(!entries.length&&!note)return '';
+  const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId});
+  if(!entries.length&&!note)return guardians?style()+guardians:'';
   const opening=entries.some(entry=>entry.kind==='decision');
   return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+entries.length+'</summary>'+
     (note?'<div class="rules-personal-note"><strong>My notes</strong><p>'+esc(note)+'</p></div>':'')+
-    entries.map(entry=>renderEntry(entry,state)).join('')+'</details>';
+    entries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+guardians;
 }
 
 export function renderTargetDefenseReminders(state,options={}) {
   const entries=getTargetDefenseReminders(state,options);
   const target=state.units?.find(unit=>unit.id===(options.allocationTargetId??options.targetUnitId));
   const note=target?getUnitBattleNote(state,target.id):'';
-  if(!entries.length&&!note)return '';
+  const guardians=target?renderGuardiansStratagemOpportunities(state,{playerId:target.ownerId,unitId:target.id,stratagemId:'in-auramite-clad',enemyUnitId:options.attackerId}):'';
+  if(!entries.length&&!note)return guardians?style()+guardians:'';
   return style()+'<section class="rules-target-defense" aria-label="Target defensive rules" data-target-defense-reminders><h2>Target defenses · '+esc(target?.name??'Selected unit')+'</h2><ul>'+
     entries.map(entry=>'<li'+(entry.conditional?' class="is-conditional"':'')+'><strong>'+esc(entry.title)+'</strong><span>'+esc(entry.effect)+'</span></li>').join('')+'</ul>'+
-    (note?'<div class="rules-personal-note"><strong>Unit notes</strong><p>'+esc(note)+'</p></div>':'')+'</section>';
+    (note?'<div class="rules-personal-note"><strong>Unit notes</strong><p>'+esc(note)+'</p></div>':'')+'</section>'+guardians;
 }
 
 export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null,message='',canUndo=false}={}) {
@@ -69,6 +73,7 @@ export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null
     (canUndo?'<button type="button" data-undo-rule-use>Undo last reminder use</button>':'')+
     '<div class="rules-reminder-list">'+(active.map(entry=>renderEntry(entry,state)).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
     (used.length?'<details><summary>Used abilities · '+used.length+'</summary>'+used.map(entry=>renderEntry(entry,state)).join('')+'</details>':'')+
+    renderGuardiansStratagemOpportunities(state,{playerId})+
     '<form class="rules-unit-note-editor" data-save-unit-rules-note><h3>My unit notes</h3><label>Unit<select data-rules-note-unit>'+units.map(unit=>'<option value="'+esc(unit.id)+'"'+(unit.id===unitId?' selected':'')+'>'+esc((state.players?.find(p=>p.id===unit.ownerId)?.name??unit.ownerId)+' · '+unit.name)+'</option>').join('')+'</select></label>'+
     '<label>Notes<textarea data-unit-rules-note maxlength="2000" rows="4" placeholder="A reminder for this unit…">'+esc(draft??getUnitBattleNote(state,unitId))+'</textarea></label><button type="submit"'+(!unitId?' disabled':'')+'>Save unit notes</button></form></section></div>';
 }
@@ -82,9 +87,10 @@ export function createRulesReminderController(container,{session,perspectivePlay
     if(!host)return;
     if(capture)captureDraft();
     const state=session.getState(),playerId=perspective(state,perspectivePlayerId);
-    const entries=groupEntries(getBattleRulesReminders(state,{playerId,includeUsed:false}));
+    const entries=groupEntries(getBattleRulesReminders(state,{playerId}).filter(entry=>!entry.used||isActiveEffect(entry)));
+    const guardiansCount=new Set(getGuardiansStratagemOpportunities(state,{playerId}).filter(entry=>entry.available||entry.active).map(entry=>entry.stratagemId)).size;
     for(const button of container.querySelectorAll?.('[data-toggle-rules-reminders]')??[]) {
-      button.textContent='Rules · '+entries.length;button.setAttribute('aria-expanded',String(open));
+      button.textContent='Rules · '+(entries.length+guardiansCount);button.setAttribute('aria-expanded',String(open));
       button.hidden=state.battle?.status!=='active';
     }
     if(!state.units?.some(unit=>unit.id===unitId))unitId=state.units?.find(unit=>unit.ownerId===playerId)?.id??state.units?.[0]?.id??null;
@@ -111,6 +117,12 @@ export function createRulesReminderController(container,{session,perspectivePlay
   function input(event){if(event.target?.hasAttribute?.('data-unit-rules-note')&&unitId)drafts.set(unitId,event.target.value);}
   function change(event){if(!event.target?.hasAttribute?.('data-rules-note-unit'))return;captureDraft();unitId=event.target.value;message='';const field=container.querySelector?.('[data-unit-rules-note]');if(field)field.value=drafts.get(unitId)??getUnitBattleNote(session.getState(),unitId);event.target.blur?.();}
   function submit(event){
+    if(event.target?.hasAttribute?.('data-guardians-stratagem-form')) {
+      event.preventDefault?.();
+      try {session.dispatch({type:COMMAND_TYPES.RECORD_GUARDIANS_STRATAGEM_USE,payload:readGuardiansStratagemForm(event.target)});message='Guardians stratagem recorded; CP updated.';}
+      catch(error){message=error.message;open=true;}
+      refresh();return;
+    }
     if(event.target?.hasAttribute?.('data-venatari-ability-form')) {
       event.preventDefault?.();
       try {session.dispatch({type:COMMAND_TYPES.RECORD_VENATARI_ABILITY_USE,payload:readVenatariAbilityForm(event.target)});message='Venatari ability recorded.';}

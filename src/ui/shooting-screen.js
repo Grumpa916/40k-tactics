@@ -197,7 +197,7 @@ export function createShootingScreen(container, {
             ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
             ${renderCustodesKatahPhasePanel(state, { phase: "shooting", unitId: activeUnitId })}
 
-            ${renderTargetDefenseReminders(state, {targetUnitId:selectedTargetId,allocationTargetId:precisionAllocationId,weapon:selectedWeapon,phase:'shooting'})}
+            ${renderTargetDefenseReminders(state, {targetUnitId:selectedTargetId,allocationTargetId:precisionAllocationId,attackerId:selectedAttackerId,weapon:selectedWeapon,phase:'shooting'})}
             ${state.phase === 'shooting' ? renderUnitRulesReminders(state, {perspectivePlayerId,selectedUnitId:activeUnitId}) : ''}
             <label class="shoot-tabletop__unit-picker">Acting unit · ${escapeHtml(model.activePlayerId === perspectivePlayerId ? 'your army' : 'opponent army')}
               <select data-shooting-unit-picker><option value="">Choose unit by name…</option>

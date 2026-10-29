@@ -4,6 +4,7 @@ import { custodesReminderState } from '../helpers/custodes-reminder-state.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, isRulesPhaseOpening } from '../../src/rules/battle-rules-reminders.js';
 import { recordRulesReminderUse, setUnitBattleNote } from '../../src/engine/rules-reminder-transitions.js';
 import { recordVenatariAbilityUse } from '../../src/engine/venatari-ability-transitions.js';
+import { recordGuardiansStratagemUse } from '../../src/engine/guardians-stratagem-transitions.js';
 import { getCustodesKatahState } from '../../src/rules/custodes-tactical-advisor.js';
 import { recordCustodesKatahUse } from '../../src/engine/custodes-katah-transitions.js';
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS as sheets } from '../../src/data/adeptus-custodes-datasheet-details.js';
@@ -106,10 +107,11 @@ test('Superhuman Focus spends CP, re-readies a formation once per round, and rej
   let state=custodesReminderState({phase:'fight',activePlayer:'p1'});state.battle.firstPlayerId='p1';
   const spend=()=>state.history.push({type:'custodes.katah_expended',payload:{playerId:'p1',unitId:'wardens',cycleRound:1,katahName:'Salvus',round:1,turn:1,phase:'shooting'}});
   spend();assert.equal(getCustodesKatahState(state,{playerId:'p1',unitId:'wardens'}).readied,false);
-  state=recordRulesReminderUse(state,{playerId:'p1',unitId:'wardens',ruleId:'superhuman-focus'});
+  const focus={playerId:'p1',unitId:'wardens',stratagemId:'superhuman-focus',timingConfirmed:true,unitLimitConfirmed:true};
+  state=recordGuardiansStratagemUse(state,focus);
   assert.equal(state.commandPoints.p1,2);assert.equal(getCustodesKatahState(state,{playerId:'p1',unitId:'wardens'}).readied,true);
-  spend();assert.throws(()=>recordRulesReminderUse(state,{playerId:'p1',unitId:'wardens',ruleId:'superhuman-focus'}));
-  assert.throws(()=>recordRulesReminderUse(state,{playerId:'p2',unitId:'wardens',ruleId:'superhuman-focus'}));
+  spend();assert.throws(()=>recordGuardiansStratagemUse(state,focus));
+  assert.throws(()=>recordGuardiansStratagemUse(state,{...focus,playerId:'p2'}));
 });
 
 test('unit notes persist independently for each army and validate owner and text length',()=>{

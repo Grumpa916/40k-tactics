@@ -2,7 +2,6 @@ import { createEvent } from '../events/event.js';
 import { appendHistoryEntry } from '../state/history.js';
 import { getBattleRulesReminders, rulesContextKey } from '../rules/battle-rules-reminders.js';
 import { recordCommandPointChange } from './command-points-ledger.js';
-import { recordCustodesKatahReadied } from './custodes-katah-transitions.js';
 
 export function requireRulesReminderUse(state, {playerId,unitId=null,ruleId,choice=null}={}) {
   const entry=getBattleRulesReminders(state,{playerId}).find(item=>item.ruleId===ruleId && (item.unitId??null)===unitId);
@@ -13,14 +12,11 @@ export function requireRulesReminderUse(state, {playerId,unitId=null,ruleId,choi
 }
 
 export function recordRulesReminderUse(state, {playerId,unitId=null,ruleId,choice=null}={}) {
+  if (ruleId==='superhuman-focus') throw new Error('Use the Guardians stratagem controls to confirm the end-of-phase window.');
   const entry = requireRulesReminderUse(state, {playerId,unitId,ruleId,choice});
   if (entry.venatariControl) throw new Error('Use the Venatari ability controls to confirm timing and its tabletop result.');
   let next=state;
   if(ruleId==='aquila-commander') next=recordCommandPointChange(next,{playerId,amount:1,reason:'gain',note:'Aquila Commander',round:state.battle.round,turn:state.turn});
-  if(ruleId==='superhuman-focus') {
-    next=recordCommandPointChange(next,{playerId,amount:-1,reason:'spend',note:'Superhuman Focus',round:state.battle.round,turn:state.turn});
-    next=recordCustodesKatahReadied(next,{playerId,unitId,source:'Superhuman Focus'});
-  }
   return appendHistoryEntry(next,createEvent('rules.reminder_used',{playerId,unitId,ruleId,choice,ruleName:entry.title,contextKey:rulesContextKey(state),round:state.battle.round,turn:state.turn,phase:state.phase}));
 }
 

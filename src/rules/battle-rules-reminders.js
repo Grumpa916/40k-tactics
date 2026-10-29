@@ -1,5 +1,5 @@
-import { CUSTODES_REMINDER_DEFINITIONS, GUARDIANS_REMINDER_PHASES } from '../data/custodes-reminder-definitions.js';
-import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_RULE_SOURCES, ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
+import { CUSTODES_REMINDER_DEFINITIONS } from '../data/custodes-reminder-definitions.js';
+import { ADEPTUS_CUSTODES_RULE_SOURCES, ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
 import { getBattleUnitDatasheet, getBattleRosterUnit, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getCustodesKatahState, hasCustodesDetachment } from './custodes-tactical-advisor.js';
 import { getRecordedCombatRules } from './recorded-combat-rules.js';
@@ -7,8 +7,9 @@ import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getDatasheetWeaponOptions } from './saved-roster-combat-profile.js';
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
-import { rulesContextKey, isRulesPhaseOpening } from './rules-phase-window.js';
+import { rulesContextKey, isRulesPhaseOpening, isRulesPhaseEndConfirmed } from './rules-phase-window.js';
 import { getVenatariAbilityBlockReason, arrivedFromReservesThisTurn } from './venatari-abilities.js';
+import { getActiveGuardiansEffects, getRecordedStratagemUses } from './stratagem-use-state.js';
 export { rulesContextKey, isRulesPhaseOpening } from './rules-phase-window.js';
 
 const norm = value => String(value ?? '').trim().toLowerCase();
@@ -78,7 +79,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
         const wounds=getLiveUnitVitals(state,unit).wounds;
         if(damaged && Number.isFinite(wounds) && wounds<=Number(damaged.name.match(/\d+/)[0]))entries.push(decorate(state,{ruleId:'damaged-profile',playerId,unitId:unit.id,unitName:unit.name,title:damaged.name,kind:'unit',timing:'While damaged',effect:wounds+' wounds remaining. Apply the datasheet’s Damaged rule when resolving attacks.'}));
       }
-      if (unit.status === 'deployed' && state.phase === 'fight' && ability(state, unit, 'Martial Ka\'tah') && getCombatFormationRoot(state, unit)?.id === unit.id) {
+      if (!isRulesPhaseEndConfirmed(state) && unit.status === 'deployed' && state.phase === 'fight' && ability(state, unit, 'Martial Ka\'tah') && getCombatFormationRoot(state, unit)?.id === unit.id) {
         const readiness = getCustodesKatahState(state, {playerId, unitId: unit.id});
         const names = isRulesPhaseOpening(state) ? ['Dacatarai', 'Kaptaris', 'Rendax'] : ['Rendax'];
         if (readiness.readied) entries.push(decorate(state, { ruleId: 'katah-fight-window', playerId, unitId: unit.id, unitName: unit.name,
@@ -94,30 +95,6 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
     if (ownTurn && state.phase === 'command') entries.unshift(decorate(state, {ruleId:'katah-readiness', playerId, title:'Ka’tah readiness', kind:'army', timing:'Your Command phase', effect:'Eligible units become readied at the start of your Command phase. A use spends that unit’s readiness; check the Ka’tah panel for current status.'}));
     if (hasCustodesDetachment(state, playerId, 'Guardians of the Throne')) {
       if (state.phase === 'fight') entries.unshift(decorate(state, {ruleId:'martial-mastery', playerId, title:'Martial Mastery', kind:'army', timing:'Each eligible unit selected to fight', effect:'Choose Sustained Hits 1 or Lethal Hits for melee attacks. Check for existing Lethal/Sustained Hits on the unit or weapon before choosing.'}));
-      const guardians = ADEPTUS_CUSTODES_DETACHMENTS.find(item => item.name === 'Guardians of the Throne');
-      for (const strat of guardians.stratagems) {
-        if (!GUARDIANS_REMINDER_PHASES[strat.name]?.includes(state.phase)) continue;
-        if (['Unlimited Endurance','Prime Target'].includes(strat.name) && !ownTurn) continue;
-        if (['Swift as the Eagle','In Auramite Clad'].includes(strat.name) && ownTurn) continue;
-        if (strat.name === 'Shield of Honour' && !isRulesPhaseOpening(state)) continue;
-        const eligible = units.filter(unit => unit.status === 'deployed' && ability(state, unit, 'Martial Ka\'tah'));
-        if (strat.name === 'Superhuman Focus') {
-          for (const unit of eligible.filter(unit => getCombatFormationRoot(state, unit)?.id === unit.id)) {
-            if (getCustodesKatahState(state,{playerId,unitId:unit.id}).readied) continue;
-            entries.push(decorate(state, {ruleId:'superhuman-focus',playerId,unitId:unit.id,unitName:unit.name,title:strat.name,kind:'stratagem',timing:strat.timing,effect:strat.description,limit:'round-unit',cpCost:1,action:'Spend 1 CP · Re-ready'}));
-          }
-        } else {
-          const candidates=eligible.filter(unit=>{
-            const sheet=getBattleUnitDatasheet(state,unit);
-            if(strat.name==='In Auramite Clad' && ability(state,getCombatFormationRoot(state,unit),'Living Fortress'))return false;
-            if(strat.name==='Swift as the Eagle' && !(sheet?.keywords??[]).includes('Trusted Sentinel'))return false;
-            if(strat.name==='Swift as the Eagle' && engaged.has(getCombatFormationRoot(state,unit)?.id))return false;
-            if(strat.name==='Shield of Honour' && !(sheet?.keywords??[]).some(k=>['Infantry','Mounted'].includes(k)))return false;
-            return true;
-          });
-          if(candidates.length)entries.push(decorate(state,{ruleId:'guardians-'+norm(strat.name).replaceAll(' ','-'),playerId,title:strat.name,kind:'stratagem',timing:strat.timing,effect:strat.description,cpCost:strat.cpCost}));
-        }
-      }
     }
   }
   const opponent = state.players?.find(player => player.id !== playerId);
@@ -126,17 +103,20 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
     .sort((a,b) => Number(Boolean(a.used))-Number(Boolean(b.used)) || Number(b.kind==='decision')-Number(a.kind==='decision'));
 }
 
-export function getTargetDefenseReminders(state, { targetUnitId, allocationTargetId = null, weapon = null, phase = state?.phase } = {}) {
+export function getTargetDefenseReminders(state, { targetUnitId, allocationTargetId = null, attackerId = null, weapon = null, phase = state?.phase } = {}) {
   const unit = state?.units?.find(item => item.id === (allocationTargetId ?? targetUnitId));
   if (!unit || unit.status !== 'deployed' || !isCustodes(state,unit.ownerId) || !['shooting','fight'].includes(phase) || state.phase!==phase) return [];
   const root = getCombatFormationRoot(state,unit), rules = getRecordedCombatRules(state,unit);
   const strength = Number(weapon?.characteristics?.strength ?? weapon?.strength);
   const highStrength = !Number.isFinite(strength) || !rules.unitToughness ? null : strength > rules.unitToughness;
   const result = [], add = (id,title,effect,conditional=false) => result.push({id,title,effect,conditional});
-  if (rules.effects.includes('living-fortress')) add('living-fortress','Living Fortress','Worsen incoming AP by 1: AP −2 becomes AP −1.');
+  const ap=Number(weapon?.characteristics?.ap??weapon?.ap);
+  const apExample=Number.isFinite(ap)?' AP '+ap+' → '+Math.min(0,ap+1)+'.':' AP −2 becomes AP −1.';
+  if (rules.effects.includes('living-fortress')) add('living-fortress','Living Fortress','Worsen incoming AP by 1:'+apExample);
   if (highStrength !== false && rules.effects.some(id=>['sentinel-shield','unyielding-ancient'].includes(id))) add('strong-attack-defense','Strength above Toughness','−1 to incoming Wound rolls when attack Strength exceeds this unit’s Toughness.' + (highStrength===null?' Check the weapon’s Strength.':''),highStrength===null);
   if (rules.effects.includes('captain-shield')) add('captain-shield','Praesidium Shield · allocated model','Reduce Damage by 1 for attacks allocated to '+unit.name+' only.');
-  if (rules.effects.includes('guardian-eternal') && phase==='shooting') add('guardian-eternal','Guardian Eternal','Reduce incoming ranged Damage by 1.');
+  const damage=Number(weapon?.characteristics?.damage??weapon?.damage);
+  if (rules.effects.includes('guardian-eternal') && phase==='shooting') add('guardian-eternal','Guardian Eternal','Reduce incoming ranged Damage by 1.'+(Number.isFinite(damage)?' Damage '+damage+' → '+(damage>0?Math.max(1,damage-1):0)+'.':''));
   if (rules.effects.includes('aegis-of-the-emperor')) add('aegis','Aegis of the Emperor','If mortal wounds are inflicted: Feel No Pain 5+. No additional general Feel No Pain is implied.',true);
   if (rules.feelNoPain) add('personal-fnp','Allocated model only','Feel No Pain '+rules.feelNoPain+'+ for wounds allocated to '+unit.name+'.');
   if (ability(state,unit,'Daughters of the Abyss')) add('psychic-null','Daughters of the Abyss','Against Psychic attacks: Feel No Pain 3+. Check the 6″ Psychic Null aura for nearby eligible Custodes.',true);
@@ -148,7 +128,16 @@ export function getTargetDefenseReminders(state, { targetUnitId, allocationTarge
   }
   const shackle = reminderUseHistory(state).findLast(use=>use.unitId===unit.id && use.ruleId==='moment-shackle' && use.choice==='save' && use.contextKey===rulesContextKey(state));
   if (shackle) add('shackle-save','Moment Shackle active','3+ invulnerable save for '+unit.name+' only, for this phase.');
-  if (hasCustodesDetachment(state,unit.ownerId,'Guardians of the Throne') && activePlayer(state)!==unit.ownerId && !rules.effects.includes('living-fortress')) add('auramite-option','In Auramite Clad · 1 CP','Consider before resolving attacks: worsen incoming AP by 1 until this attacking unit finishes. Confirm the stratagem window.',true);
+  if (getActiveGuardiansEffects(state,unit.id).some(use=>use.stratagemId==='in-auramite-clad' && use.enemyUnitId===attackerId)) {
+    add('auramite-active','In Auramite Clad active','Worsen incoming AP by 1 against the recorded attacking unit only:'+apExample);
+  }
+  if (Number.isFinite(ap) && ap===0 && hasCustodesDetachment(state,unit.ownerId,'Guardians of the Throne')) add('ap-zero','AP 0 weapon','Worsening AP does not change this weapon’s AP. Review the attacker’s other weapons before spending CP.',true);
+  if (phase==='fight') {
+    for (const use of getRecordedStratagemUses(state).filter(use=>use.stratagemId==='shield-of-honour' && use.playerId===unit.ownerId && use.contextKey===rulesContextKey(state))) {
+      const protector=state.units.find(item=>item.id===use.unitId && item.status==='deployed');
+      if (protector) add('shield-of-honour-'+protector.id,'Shield of Honour · '+protector.name,'If an enemy model engaged with this protected unit does not allocate all its attacks to it, that model’s attacks have −1 to Hit and −1 to Wound. Confirm engagement and allocations per model; no blanket modifier is assumed.',true);
+    }
+  }
   return result;
 }
 

@@ -49,6 +49,7 @@ function humanizeEventType(type) {
     "combat.attack_resolved": "Attack resolved",
     "unit.mortal_wounds_recorded": "Mortal wounds recorded",
     "rules.reminder_used": "Rule used",
+    "custodes.guardians_stratagem_used": "Guardians stratagem used",
     "battle_shock.test_recorded": "Battle-shock test",
     "objective.control_recorded": "Objective control changed",
     "command_points.changed": "Command Points changed",
@@ -85,9 +86,10 @@ export function summarizeGameEvent(event, state = {}) {
     details.push(payload.actualWounds + ' wounds lost');
     if (Number.isFinite(payload.stateDelta?.target?.woundsAfter)) details.push(payload.stateDelta.target.woundsAfter + ' Wounds remaining');
     if (payload.stateDelta?.target?.statusAfter === UNIT_STATUS.DESTROYED) details.push('Destroyed');
-  } else if (event?.type === 'rules.reminder_used') {
+  } else if (event?.type === 'rules.reminder_used' || event?.type === 'custodes.guardians_stratagem_used') {
     if (payload.unitId) details.push(unitName(payload.unitId));
     if (payload.ruleName) details.push(payload.ruleName);
+    if (payload.enemyUnitId) details.push('Enemy: '+unitName(payload.enemyUnitId));
     if (Number.isFinite(payload.cpSpent)) details.push(payload.cpSpent + ' CP spent');
   } else if (event?.type === "unit.casualty_recorded") {
     if (payload.unitId) details.push(unitName(payload.unitId));

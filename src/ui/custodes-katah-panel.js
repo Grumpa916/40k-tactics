@@ -1,6 +1,6 @@
 import { ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
-import { isRulesPhaseOpening } from '../rules/rules-phase-window.js';
+import { isRulesPhaseOpening, isRulesPhaseEndConfirmed } from '../rules/rules-phase-window.js';
 import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import {
   isMartialKatahEligible,
@@ -65,6 +65,7 @@ export function renderCustodesKatahCommandPanel(state, { playerId = state?.activ
 }
 
 export function renderCustodesKatahPhasePanel(state, { phase, unitId = null } = {}) {
+  if (isRulesPhaseEndConfirmed(state)) return '';
   const playerId = state?.activePlayer ?? state?.battle?.activePlayerId;
   const names = PHASE_KATAH[phase];
   if (!names || state?.phase !== phase || !playerId) return '';

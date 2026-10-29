@@ -18,12 +18,3 @@ export const CUSTODES_REMINDER_DEFINITIONS = Object.freeze([
   { id: 'daughters-of-the-abyss', ability: 'Daughters of the Abyss', phases: ['shooting', 'fight'], timing: 'When resolving Psychic attacks', effect: 'This Anathema Psykana unit has Feel No Pain 3+ against Psychic attacks. Eligible Custodes within 6″ receive Feel No Pain 5+ against Psychic attacks; confirm aura range.' },
   { id: 'aegis-of-the-emperor', ability: 'Aegis of the Emperor', phases: ['command', 'movement', 'shooting', 'charge', 'fight'], timing: 'When suffering mortal wounds', effect: 'Eligible models have Feel No Pain 5+ against mortal wounds. Use only the applicable Feel No Pain roll for each wound.' }
 ]);
-
-export const GUARDIANS_REMINDER_PHASES = Object.freeze({
-  'Superhuman Focus': ['command', 'movement', 'shooting', 'charge', 'fight'],
-  'Unlimited Endurance': ['movement'],
-  'Shield of Honour': ['fight'],
-  'Prime Target': ['shooting'],
-  'In Auramite Clad': ['shooting', 'fight'],
-  'Swift as the Eagle': ['movement']
-});
