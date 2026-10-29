@@ -1,3 +1,5 @@
+import { getLiveUnitPosition } from "./spatial-context.js";
+
 export function createTurnSnapshot(state, {
   turn = state?.turn ?? 0,
   round = state?.battle?.round ?? 0,
@@ -19,7 +21,7 @@ export function createTurnSnapshot(state, {
           ownerId: unit.ownerId,
           status: unit.status,
           wounds: unit.wounds ?? null,
-          position: unit.position ?? null
+          position: getLiveUnitPosition(state, unit) ?? null
         })
       )
     )
