@@ -24,6 +24,8 @@ import { isDeathTrapMissionForPlayer } from "./tactical-death-trap-strategy.js";
 import { enhanceDeathTrapMovementRecommendations } from "./tactical-death-trap-movement.js";
 import { isDelayingActionMissionForPlayer } from "./tactical-delaying-action-strategy.js";
 import { enhanceDelayingActionMovementRecommendations } from "./tactical-delaying-action-movement.js";
+import { isOutmanoeuvreMissionForPlayer } from "./tactical-outmanoeuvre-strategy.js";
+import { enhanceOutmanoeuvreMovementRecommendations } from "./tactical-outmanoeuvre-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -300,6 +302,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isDelayingActionMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceDelayingActionMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isOutmanoeuvreMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceOutmanoeuvreMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
