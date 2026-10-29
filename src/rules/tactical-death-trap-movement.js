@@ -110,9 +110,9 @@ function terrainOptions(state, recommendation, deathTrap, primaryStrategy) {
   const position = unit ? getLiveUnitPosition(state, unit) : null;
   const map = geometry(state);
   if (!position || !map?.terrainGeometry) return [];
-  const unresolvedKillTerrain = new Set(
-    deathTrap.unresolvedKills.flatMap((item) => item.terrainAreaIds ?? (item.terrainAreaId ? [item.terrainAreaId] : []))
-  );
+  const unresolvedKillTerrain = deathTrap.trappedKillSatisfied
+    ? new Set()
+    : new Set(deathTrap.unresolvedKills.flatMap((item) => item.terrainAreaIds ?? (item.terrainAreaId ? [item.terrainAreaId] : [])));
   return deathTrap.terrain.filter((entry) => !entry.trapped && entry.boobyTrapEligibleByGeometry !== false).map((entry) => {
     const shape = map.terrainGeometry?.[entry.terrainAreaId];
     const distance = distanceToPolygon(position, shape?.points ?? []);
