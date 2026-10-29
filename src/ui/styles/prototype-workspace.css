@@ -318,6 +318,8 @@
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips { display:flex; flex:1; gap:5px; min-width:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { flex:1; min-width:0; min-height:40px; padding:4px 8px; font-size:12px; font-weight:750; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button[aria-pressed=true] { background:#c4e99b; border-color:#c4e99b; color:#17212b; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-missions-button { flex:0 0 auto; min-width:82px; min-height:40px; padding:4px 11px; border:1px solid #a7cd72; border-radius:8px; background:#26392c; color:#c7e89a; font-size:12px; font-weight:750; white-space:nowrap; cursor:pointer; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-missions-button[aria-expanded=true] { background:#c4e99b; color:#17212b; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > summary { min-height:40px; width:44px; justify-content:center; padding:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div {
   display:flex; flex-wrap:nowrap; align-items:center; width:max-content; max-width:calc(100vw - 24px);
