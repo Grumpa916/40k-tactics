@@ -33,8 +33,11 @@ test('Movement roster rail provides My Army and Opponent views with compact unit
   assert.match(html, /movement-roster__token/);
 });
 
-test('selected-unit Movement card shows the approved M T SV W OC strip', () => {
-  const html = renderMovementSelectedUnitCard(state,state.units[0]);
+test('selected-unit Movement card colors its token by army perspective and shows the approved M T SV W OC strip', () => {
+  const html = renderMovementSelectedUnitCard(state,state.units[0],{perspectivePlayerId:'p1'});
+  const enemyHtml = renderMovementSelectedUnitCard(state,state.units[2],{perspectivePlayerId:'p1'});
+  assert.match(html,/movement-selected-unit__token is-friendly/);
+  assert.match(enemyHtml,/movement-selected-unit__token is-opponent/);
   for (const key of ['M','T','SV','W','OC']) assert.match(html,new RegExp(`<small>${key}<\\/small>`));
   assert.match(html,/Shield Captain/);
   assert.match(html,/Movement/);
@@ -57,4 +60,5 @@ test('Movement dashboard CSS keeps reserves compact and uses three columns on la
   assert.match(css,/grid-template-columns:180px minmax\(0,1fr\) 310px/);
   assert.match(css,/map-reserve-tray small\{display:none\}/);
   assert.match(css,/movement-selected-unit__stats/);
+  assert.match(css,/movement-selected-unit__token\.is-opponent\{background:#602e34;border-color:#ff8585\}/);
 });

@@ -1,3 +1,4 @@
+import { renderPhaseArmyRoster } from './phase-army-roster.js';
 import { createLiveMapView } from './live-map-view.js';
 import { UNIT_STATUS } from '../state/unit.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
@@ -78,9 +79,10 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
     </section>`;
 }
 
-// Each phase owns its selection and command handling. A phase may provide a
-// compact left rail without forcing other phases into a three-column layout.
+// Each phase owns its selection and command handling. Use the shared reference
+// roster unless the phase supplies its own selection rail.
 export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, footer = '', mapExtra = '', leftRail = '', mapView = createLiveMapView() }) {
+  leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId);
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
   return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
     ${hasLeftRail ? `<aside class="combat-workspace__rail" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
