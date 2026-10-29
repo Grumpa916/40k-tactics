@@ -6,6 +6,7 @@ import { finishCombatActivation } from "./combat-activation-transitions.js";
 import { updatePreparation } from "./event-preparation-transitions.js";
 import { recordPunishmentCondemnation } from "./punishment-transitions.js";
 import { recordConsecrateReview } from "./consecrate-transitions.js";
+import { recordSmokeAndMirrorsMarkerRemoval } from "./smoke-and-mirrors-removal-transitions.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
 import { setPreGameRoles, setBattleSize } from "./battle-setup-transitions.js";
@@ -69,6 +70,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, (state, command) => recordObjectiveControl(state, command.payload)],
     [COMMAND_TYPES.RECORD_PUNISHMENT_CONDEMNATION, (state, command) => recordPunishmentCondemnation(state, command.payload)],
     [COMMAND_TYPES.RECORD_CONSECRATE_REVIEW, (state, command) => recordConsecrateReview(state, command.payload)],
+    [COMMAND_TYPES.RECORD_SMOKE_AND_MIRRORS_MARKER_REMOVAL, (state, command) => recordSmokeAndMirrorsMarkerRemoval(state, command.payload)],
     [COMMAND_TYPES.START_FIRST_TURN, (state, command) => startFirstTurn(state, command.payload)],
     [COMMAND_TYPES.CHANGE_PHASE, (state, command) => changePhase(state, command.payload)],
     [COMMAND_TYPES.END_TURN, (state, command) => endTurn(state, command.payload)],
