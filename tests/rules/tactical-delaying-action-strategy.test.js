@@ -52,6 +52,25 @@ function killEvent(index, turn) {
   };
 }
 
+function commandAwardEvent(round, turn) {
+  return {
+    id: `delaying-action-command-${round}-${turn}`,
+    type: "victory_points.awarded",
+    payload: {
+      playerId: "p1",
+      amount: 4,
+      category: "primary",
+      missionDefinitionId: "primary-delaying-action",
+      scoringTiming: "command-phase",
+      opportunityKey: `${round}:${turn}:p1:command-phase`,
+      round,
+      turn,
+      scoreBefore: 10,
+      scoreAfter: 14
+    }
+  };
+}
+
 function state({
   round = 2,
   phase = "movement",
@@ -60,6 +79,7 @@ function state({
   expansionTwoController = "p2",
   nullObjectiveId = null,
   kills = 0,
+  commandAward = null,
   runnerBattleShocked = false,
   runnerOc = 3
 } = {}) {
@@ -72,6 +92,20 @@ function state({
     objective("event-companion:Defender Home", "Defender Home", "p2", 10, 39)
   ];
   if (nullObjectiveId) objectives.find((item) => item.id === nullObjectiveId).control = null;
+
+  const objectiveStateKnown = objectives.every((item) => item.control != null);
+  const hasNonHomeControl = objectives.some((item) =>
+    !/Home$/i.test(item.layoutObjective) &&
+    item.control?.controlState === "controlled" &&
+    item.control?.controllerId === "p1"
+  );
+  const recordCommandAward = commandAward ?? (
+    round >= 2 && round < 5 && phase !== "command" && objectiveStateKnown && hasNonHomeControl
+  );
+  const history = [
+    ...(recordCommandAward ? [commandAwardEvent(round, turn)] : []),
+    ...Array.from({ length: kills }, (_, index) => killEvent(index + 1, turn))
+  ];
 
   const units = [
     unit("runner", "p1", 28, 22, { move: 8, oc: runnerOc, rosterUnitId: "r-runner", battleShocked: runnerBattleShocked }),
@@ -94,11 +128,11 @@ function state({
         layout: "A"
       }
     },
-    victoryPoints: { p1: 10, p2: 10 },
+    victoryPoints: { p1: recordCommandAward ? 14 : 10, p2: 10 },
     commandPoints: { p1: 2, p2: 2 },
     objectives,
     units,
-    history: Array.from({ length: kills }, (_, index) => killEvent(index + 1, turn)),
+    history,
     scoring: {
       turnSnapshots: [],
       secondaryMissions: [],
@@ -134,8 +168,10 @@ test("the non-home control award is binary rather than per objective", () => {
   const three = getPrimaryStrategyContext(state({ centralController: "p1", expansionOneController: "p1", expansionTwoController: "p1" }), { playerId: "p1", perspectivePlayerId: "p1" });
   assert.equal(one.nonHomeControlled, 1);
   assert.equal(one.controlVp, 4);
+  assert.equal(one.controlVpForRoundCap, 4);
   assert.equal(three.nonHomeControlled, 3);
   assert.equal(three.controlVp, 4);
+  assert.equal(three.controlVpForRoundCap, 4);
 });
 
 test("central plus expansion scores three VP once even with multiple qualifying objectives", () => {
@@ -175,8 +211,9 @@ test("Delaying Action obeys the fifteen VP round cap and suppresses further kill
     perspectivePlayerId: "p1",
     targetUnitId: "enemy-live"
   });
+  assert.equal(context.controlCheckpointAwardRecorded, true);
   assert.equal(context.killVp, 8);
-  assert.equal(context.controlVp, 4);
+  assert.equal(context.controlVpForRoundCap, 4);
   assert.equal(context.centralExpansionVp, 3);
   assert.equal(context.rawRecordedVp, 15);
   assert.equal(context.cappedRecordedVp, 15);
@@ -187,14 +224,39 @@ test("Delaying Action obeys the fifteen VP round cap and suppresses further kill
 test("extra kills beyond the round cap remain recorded but capped", () => {
   const context = getPrimaryStrategyContext(state({ kills: 5, expansionOneController: "p1" }), { playerId: "p1", perspectivePlayerId: "p1" });
   assert.equal(context.killVp, 10);
+  assert.equal(context.controlVpForRoundCap, 4);
   assert.equal(context.rawRecordedVp, 17);
   assert.equal(context.cappedRecordedVp, 15);
+});
+
+test("post-Command captures do not consume cap headroom for an unearned four VP checkpoint", () => {
+  const context = getPrimaryStrategyContext(state({
+    round: 3,
+    phase: "shooting",
+    centralController: "p1",
+    expansionOneController: "p1",
+    kills: 4,
+    commandAward: false
+  }), {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    targetUnitId: "enemy-live"
+  });
+  assert.equal(context.controlVp, 4, "live control still describes the current board condition");
+  assert.equal(context.controlCheckpointAwardRecorded, false);
+  assert.equal(context.controlVpForRoundCap, 0, "completed Command checkpoint must use recorded evidence");
+  assert.equal(context.killVp, 8);
+  assert.equal(context.centralExpansionVp, 3);
+  assert.equal(context.rawRecordedVp, 11);
+  assert.equal(context.remainingRoundCap, 4);
+  assert.equal(context.nextKillVpLeverage, 2);
 });
 
 test("incomplete objective control does not fabricate Delaying Action objective VP", () => {
   const context = getPrimaryStrategyContext(state({ nullObjectiveId: "event-companion:Expansion 2" }), { playerId: "p1", perspectivePlayerId: "p1" });
   assert.equal(context.objectiveStateKnown, false);
   assert.equal(context.controlVp, 0);
+  assert.equal(context.controlVpForRoundCap, 0);
   assert.equal(context.centralExpansionVp, 0);
   assert.match(context.summary.join(" "), /Objective control is incomplete/i);
 });
@@ -227,8 +289,10 @@ test("Rounds 2-4 Movement does not claim retroactive four VP control leverage", 
     primaryStrategy: context
   });
   assert.equal(context.controlCheckpointTiming, "end-of-command");
+  assert.equal(context.controlCheckpointAwardRecorded, false);
   assert.equal(signal.controlVpLeverage, 0);
   assert.equal(signal.nextCheckpointSetup, true);
+  assert.equal(signal.pairSetup, true);
   assert.match(signal.reason, /Command-phase control checkpoint has already passed/i);
 });
 
@@ -245,9 +309,60 @@ test("Round 5 can give a missing non-home objective four VP of same-turn control
   });
   assert.equal(context.controlCheckpointTiming, "end-of-turn");
   assert.equal(context.controlSatisfied, false);
+  assert.equal(signal.rawControlVpLeverage, 4);
   assert.equal(signal.controlVpLeverage, 4);
   assert.equal(signal.pairVpLeverage, 0);
   assert.equal(signal.vpLeverage, 4);
+});
+
+test("Round 5 objective capture leverage is zero once kills have filled the round cap", () => {
+  const s = state({
+    round: 5,
+    kills: 8,
+    centralController: "p2",
+    expansionOneController: "p2",
+    expansionTwoController: "p2"
+  });
+  const context = getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  const signal = getPrimaryObjectiveStrategySignal(s, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "event-companion:Central 1",
+    control: "enemy-controlled",
+    purpose: "contest-objective",
+    primaryStrategy: context
+  });
+  assert.equal(context.cappedRecordedVp, 15);
+  assert.equal(context.remainingRoundCap, 0);
+  assert.equal(signal.rawControlVpLeverage, 4);
+  assert.equal(signal.controlVpLeverage, 0);
+  assert.equal(signal.vpLeverage, 0);
+  assert.ok(signal.score < 0.18, "cap-filled capture should not receive mission-specific movement elevation");
+  assert.match(signal.reason, /15 VP round cap/i);
+});
+
+test("preservation leverage reflects only VP that would actually fall below the cap", () => {
+  const s = state({
+    round: 5,
+    kills: 5,
+    centralController: "p1",
+    expansionOneController: "p1",
+    expansionTwoController: "p2"
+  });
+  const context = getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  const signal = getPrimaryObjectiveStrategySignal(s, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "event-companion:Expansion 1",
+    control: "controlled",
+    purpose: "hold-objective",
+    primaryStrategy: context
+  });
+  assert.equal(context.rawRecordedVp, 17);
+  assert.equal(context.cappedRecordedVp, 15);
+  assert.equal(signal.rawPairVpLeverage, 3);
+  assert.equal(signal.pairVpLeverage, 1, "losing the pair would reduce the capped total from 15 to 14");
+  assert.equal(signal.vpLeverage, 1);
 });
 
 test("taking the missing expansion completes the three VP end-of-turn pair", () => {
