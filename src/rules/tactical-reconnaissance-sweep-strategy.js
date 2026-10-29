@@ -145,7 +145,7 @@ export function getReconnaissanceSweepQuarterForPosition(position) {
 export function getReconnaissanceSweepQuarterState(state, { playerId } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
   const units = (Array.isArray(state?.units) ? state.units : [])
-    .filter((unit) => unit?.ownerId === playerId && unit?.status !== "destroyed");
+    .filter((unit) => unit?.ownerId === playerId && unit?.status === "deployed");
   const unitEntries = units.map((unit) => {
     const position = getLiveUnitPosition(state, unit);
     const quarter = getReconnaissanceSweepQuarterForPosition(position);
@@ -302,7 +302,7 @@ export function getReconnaissanceSweepPrimaryStrategyContext(state, {
     ]),
     reason,
     assumptions: Object.freeze([
-      "Quarter coverage is advisory only. The map uses approximate unit positions and cannot prove that an entire unit is wholly within one quarter or more than 6 inches from the battlefield centre.",
+      "Quarter coverage is advisory only. The map uses approximate positions for deployed units and cannot prove that an entire unit is wholly within one quarter or more than 6 inches from the battlefield centre.",
       "Reconnaissance Sweep itself does not exclude Battle-shocked units or AIRCRAFT from its quarter condition; no Engage on All Fronts restrictions are imported.",
       "Enemy destruction VP uses recorded destruction events at 1 VP per enemy unit destroyed this turn.",
       "The 3 VP non-home objective condition is binary: controlling additional non-home objectives does not multiply it.",
