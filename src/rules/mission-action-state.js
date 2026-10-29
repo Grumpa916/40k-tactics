@@ -1,8 +1,17 @@
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from './secondary-mission-lifecycle.js';
 import { getPrimaryMissionDefinition } from '../data/primary-mission-catalog.js';
 import { getCompleteSecondaryMissionById } from '../data/secondary-mission-complete-catalog.js';
+import { getLocateAndDenyState } from './locate-and-deny-state.js';
 
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
+
+const LOCATE_AND_DENY_ACTION = Object.freeze({
+  id: 'sensor-sweep',
+  name: 'Sensor Sweep',
+  phase: 'shooting',
+  reviewTiming: 'end-of-turn',
+  summary: 'Once per turn, a qualifying unit within range of a central objective can remove one of your operation markers at end of turn if it controls that objective. This Action cannot start when only one marker remains.'
+});
 
 function getPrimaryMissionActionOption(state, playerId) {
   const players = state.players ?? [];
@@ -12,7 +21,12 @@ function getPrimaryMissionActionOption(state, playerId) {
   const ownDisposition = playerId === myPlayerId ? setup.myDisposition : setup.opponentDisposition;
   const opponentDisposition = playerId === myPlayerId ? setup.opponentDisposition : setup.myDisposition;
   const definition = getPrimaryMissionDefinition(ownDisposition, opponentDisposition);
-  const action = definition?.action;
+  let action = definition?.action;
+  if (definition?.id === 'primary-locate-and-deny') {
+    const locate = getLocateAndDenyState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
+    if (locate.setupComplete && !locate.sensorSweepAvailable) return null;
+    action = LOCATE_AND_DENY_ACTION;
+  }
   if (!definition || !action || action.phase !== 'shooting') return null;
   const round = state.battle?.round ?? 0;
   if (Number.isInteger(action.minRound) && round < action.minRound) return null;

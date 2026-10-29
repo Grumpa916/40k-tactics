@@ -19,6 +19,7 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_PUNISHMENT_CONDEMNATION: "primary.punishment.record_condemnation",
   RECORD_CONSECRATE_REVIEW: "primary.consecrate.record_review",
   RECORD_SMOKE_AND_MIRRORS_MARKER_REMOVAL: "primary.smoke_and_mirrors.remove_marker",
+  RECORD_LOCATE_AND_DENY_MARKER_SETUP: "primary.locate_and_deny.record_marker_setup",
   START_FIRST_TURN: "turn.start_first",
   CHANGE_PHASE: "turn.change_phase",
   END_TURN: "turn.end",
