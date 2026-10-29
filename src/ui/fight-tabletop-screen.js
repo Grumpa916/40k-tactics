@@ -11,6 +11,7 @@ import { getFightAdvisorContext } from '../application/fight-advisor-context.js'
 import { fightAdvisory } from './fight-advisor.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from './custodes-katah-panel.js';
+import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
 
 export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null }) {
   const mapView = createLiveMapView();
@@ -24,6 +25,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const model = getFightViewModel(state, { perspectivePlayerId });
+    const viewingPlayerId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
     let options = getFightAttackOptions(state, { attackerId, perspectivePlayerId, includeCandidates:true });
     if (!options.attackers.some(unit => unit.unitId === attackerId)) reset();
     options = getFightAttackOptions(state, { attackerId, perspectivePlayerId, includeCandidates:true });
@@ -36,6 +38,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       : [];
     if (!precisionOptions.some(option => option.unitId === precisionAllocationId)) precisionAllocationId = null;
     const unit = state.units.find(unit => unit.id === attackerId);
+    const incomingAttackMode = Boolean(unit && unit.ownerId !== viewingPlayerId);
     const rosterUnit = unit ? getBattleRosterUnit(state, unit) : null;
     const loadout = rosterUnit?.loadoutValidation;
     const weaponNotice = unit && !weapons.length
@@ -48,10 +51,12 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const active = model.activations.some(item => item.unitId === attackerId && item.actionType !== 'not_fight');
     const available = [...model.candidates.fightsFirst, ...model.candidates.normal];
     const chooseButtons = (units, blocked = false) => units.map(item => `<button type="button" class="fight-order__unit ${item.ownerId === perspectivePlayerId ? 'is-friendly' : 'is-opponent'}" data-fight-select="${esc(item.unitId)}" aria-pressed="${item.unitId === attackerId}" ${blocked ? 'disabled' : ''}>${esc(item.name)}</button>`).join('');
-    const adviceState = unit && targetId && weaponId ? getFightAdvisorContext(state, gameData) : state;
+    const adviceState = !incomingAttackMode && unit && targetId && weaponId ? getFightAdvisorContext(state, gameData) : state;
     let advice = '';
-    try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId); }
-    catch { advice = '<p>Combat profile incomplete. Check unit details; record the physical result below.</p>'; }
+    if (!incomingAttackMode) {
+      try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId); }
+      catch { advice = '<p>Combat profile incomplete. Check unit details; record the physical result below.</p>'; }
+    }
     const unitNameColor = unit ? (unit.ownerId === perspectivePlayerId ? '#79bbff' : '#ff8585') : '';
     const attackControls = `${unit ? `<div class="combat-workspace__damage"><span>Actual damage</span><div><button type="button" data-fight-damage-minus aria-label="Decrease actual damage">−</button><strong data-fight-damage-value>${damage}</strong><button type="button" data-fight-damage-plus aria-label="Increase actual damage">+</button></div></div>
         <button type="button" data-fight-attack ${attackerId && weaponId && targetId ? '' : 'disabled'}>Record weapon attack →</button>` : ''}`;
@@ -74,9 +79,11 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         ${precisionOptions.length ? `<label>Precision allocation · optional<select data-fight-precision><option value="">Normal allocation</option>${precisionOptions.map(option => `<option value="${esc(option.unitId)}" ${option.unitId === precisionAllocationId ? 'selected' : ''}>${esc(option.name)}</option>`).join('')}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ''}
         ${!options.targets.length ? '<p>No eligible targets remain in the recorded engagement context.</p>' : ''}
         <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-begin>Begin Fight</button><button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish activation</button>'}</div>` : ''}
-      <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Fight Tactical Advisor"><h2>Tactical Advisor</h2>
-        ${advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
-        <details data-view-key="fight-assumptions"><summary>Advisor assumptions</summary><p>Uses known weapon profiles, wounds and recorded engagements. Return damage is the strongest known eligible retaliation estimate across possible target survival outcomes, not the sum of every enemy attack. A dash means no response estimate is established, not guaranteed safety. Unknown profiles or abilities can change the result.</p></details>
+      <aside class="combat-workspace__card combat-workspace__advisor" aria-label="${incomingAttackMode ? 'Incoming damage estimate' : 'Fight Tactical Advisor'}"><h2>${incomingAttackMode ? 'Incoming attack' : 'Tactical Advisor'}</h2>
+        ${incomingAttackMode
+          ? renderIncomingDamageForecast(state, { attackerId, targetId, weapon: selectedWeapon })
+          : advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
+        ${incomingAttackMode ? '' : '<details data-view-key="fight-assumptions"><summary>Advisor assumptions</summary><p>Uses known weapon profiles, wounds and recorded engagements. Return damage is the strongest known eligible retaliation estimate across possible target survival outcomes, not the sum of every enemy attack. A dash means no response estimate is established, not guaranteed safety. Unknown profiles or abilities can change the result.</p></details>'}
       </aside>
       <details data-view-key="fight-history"><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(attack.allocationTargetName ? `${state.units.find(unit => unit.id === attack.targetId)?.name} (${attack.allocationTargetName})` : state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining units as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';

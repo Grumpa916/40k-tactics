@@ -21,6 +21,7 @@ import { createLiveMapView } from "./live-map-view.js";
 import { finishCombatUnit } from "../application/combat-activation-workflow.js";
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
+import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -145,6 +146,8 @@ export function createShootingScreen(container, {
     const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const model = getShootingViewModel(state, { perspectivePlayerId });
+    const viewingPlayerId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
+    const incomingAttackMode = state.phase === 'shooting' && model.activePlayerId !== viewingPlayerId;
     const phaseNotice = state.phase !== "shooting"
       ? `<p class="shoot-error" role="status">Viewing Shooting. The game is still in ${escapeHtml(state.phase)}. Use Return to current phase, then the phase advance button to reach Shooting.</p>`
       : "";
@@ -181,10 +184,11 @@ export function createShootingScreen(container, {
       const activeActivation = selectedAttackerId
         ? model.activations.find((activation) => activation.unitId === selectedAttackerId && activation.actionType === "shoot")
         : null;
-      const comparison = selectedAttackerId && selectedWeaponId ? compareTargets(state, { playerId: activeUnit.ownerId, attackerId: selectedAttackerId, weapon: weapons.find(w => w.id === selectedWeaponId) }) : null;
-      const targetComparison = shootingTargetComparisonCards(
-        selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison
-      );
+      const selectedWeapon = weapons.find(w => w.id === selectedWeaponId) ?? null;
+      const comparison = !incomingAttackMode && selectedAttackerId && selectedWeaponId ? compareTargets(state, { playerId: activeUnit.ownerId, attackerId: selectedAttackerId, weapon: selectedWeapon }) : null;
+      const targetComparison = incomingAttackMode
+        ? renderIncomingDamageForecast(state, { attackerId: selectedAttackerId, targetId: selectedTargetId, weapon: selectedWeapon })
+        : shootingTargetComparisonCards(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison);
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
         ${renderPhaseArmyRoster(state, perspectivePlayerId)}
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
@@ -220,10 +224,10 @@ export function createShootingScreen(container, {
 
             </div>` : ""}
 
-            <section class="shoot-tabletop__advisor" aria-label="Tactical Advisor">
-              <div class="shoot-tabletop__advisor-heading"><div><span class="kicker">TACTICAL ADVISOR</span><h2>Compare your targets</h2></div><span>${selectedTargetId ? "Selected target" : "Choose target"}</span></div>
+            <section class="shoot-tabletop__advisor" aria-label="${incomingAttackMode ? 'Incoming damage estimate' : 'Tactical Advisor'}">
+              <div class="shoot-tabletop__advisor-heading"><div><span class="kicker">${incomingAttackMode ? 'DEFENSIVE REVIEW' : 'TACTICAL ADVISOR'}</span><h2>${incomingAttackMode ? 'Incoming attack' : 'Compare your targets'}</h2></div><span>${selectedTargetId ? "Selected target" : "Choose target"}</span></div>
               <div class="shoot-tabletop__target-comparisons">${targetComparison}</div>
-              ${selectedAttackerId && selectedWeaponId && selectedTargetId ? `<details class="shoot-tabletop__selected-target" data-view-key="shoot-selected-target" open><summary>Selected target details</summary><div class="shoot-tabletop__advisor-scroll">
+              ${!incomingAttackMode && selectedAttackerId && selectedWeaponId && selectedTargetId ? `<details class="shoot-tabletop__selected-target" data-view-key="shoot-selected-target" open><summary>Selected target details</summary><div class="shoot-tabletop__advisor-scroll">
                 ${shootingAdvisory(selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, { openDetails: false, comparison })}
               </div></details>` : ''}
             </section>
