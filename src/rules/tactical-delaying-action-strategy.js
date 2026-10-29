@@ -351,6 +351,8 @@ export function getDelayingActionObjectiveStrategySignal(state, {
     reason = "Preserving this non-home objective protects the binary 4 VP Round 5 control condition.";
   } else if (controlVpLeverage > 0) {
     reason = "Taking this non-home objective can establish the binary 4 VP Round 5 control condition.";
+  } else if (pairSetup && nextCheckpointSetup) {
+    reason = `This ${role} objective does not complete the pair by itself, but controlling it establishes one half of the 3 VP central-plus-expansion end-of-turn condition. The current round's Command-phase control checkpoint has already passed before Movement, so this position only stages or preserves the next 4 VP control checkpoint.`;
   } else if (pairSetup) {
     reason = `This ${role} objective does not complete the pair by itself, but controlling it establishes one half of the 3 VP central-plus-expansion end-of-turn condition.`;
   } else if (nextCheckpointSetup) {
