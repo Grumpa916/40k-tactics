@@ -12,6 +12,8 @@ const PHASE_KATAH = Object.freeze({
   shooting: ['Salvus'],
   fight: ['Dacatarai', 'Kaptaris', 'Rendax']
 });
+const stylesheetHref = new URL('./styles/custodes-katah-panel.css', import.meta.url).href;
+const styleLink = '<link rel="stylesheet" href="' + stylesheetHref + '">';
 const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
@@ -56,7 +58,7 @@ export function renderCustodesKatahCommandPanel(state, { playerId = state?.activ
     const tone = readiness.readied ? 'is-readied' : readiness.lastKatah ? 'is-spent' : 'is-unavailable';
     return '<li><span>' + esc(unit.name ?? unit.id) + '</span><strong class="' + tone + '">' + esc(label) + '</strong></li>';
   }).join('');
-  return '<details class="custodes-katah-panel" open><summary>Martial Ka’tah · Command Phase</summary>' +
+  return styleLink + '<details class="custodes-katah-panel" open><summary>Martial Ka’tah · Command Phase</summary>' +
     readinessLabel(state) + '<ul class="custodes-katah-panel__units">' + unitRows + '</ul>' +
     '<div class="custodes-katah-panel__options">' + cards + '</div></details>';
 }
@@ -71,13 +73,13 @@ export function renderCustodesKatahPhasePanel(state, { phase, unitId = null } = 
   if (!selected || selected.ownerId !== playerId || !isMartialKatahEligible(state, selected.id)) {
     const ready = roots.filter(unit => unitState(state, playerId, unit).readied);
     if (!ready.length) return '';
-    return '<section class="custodes-katah-phase" aria-label="Martial Ka’tah availability"><h2>Martial Ka’tah · ' +
+    return styleLink + '<section class="custodes-katah-phase" aria-label="Martial Ka’tah availability"><h2>Martial Ka’tah · ' +
       esc(phase) + '</h2><p>Select a readied Custodes unit to review its available Ka’tah.</p></section>';
   }
   const root = getCombatFormationRoot(state, selected) ?? selected;
   const readiness = getCustodesKatahState(state, { playerId, unitId: root.id });
   if (!readiness.readied) {
-    return '<section class="custodes-katah-phase" aria-label="Martial Ka’tah availability"><h2>Martial Ka’tah</h2>' +
+    return styleLink + '<section class="custodes-katah-phase" aria-label="Martial Ka’tah availability"><h2>Martial Ka’tah</h2>' +
       '<p><strong class="is-spent">SPENT</strong>' +
       (readiness.lastKatah ? ' · ' + esc(readiness.lastKatah) + ' used this readiness cycle.' : ' · This unit is not readied.') +
       '</p></section>';
@@ -92,7 +94,7 @@ export function renderCustodesKatahPhasePanel(state, { phase, unitId = null } = 
     '<button type="button" data-custodes-katah-use="' + esc(definition.name) + '" data-custodes-katah-unit="' +
     esc(root.id) + '" data-custodes-katah-player="' + esc(playerId) + '">Use ' + esc(definition.name) + '</button></article>'
   ).join('');
-  return '<section class="custodes-katah-phase" aria-label="Available Martial Ka’tah"><h2>Available Ka’tah · ' +
+  return styleLink + '<section class="custodes-katah-phase" aria-label="Available Martial Ka’tah"><h2>Available Ka’tah · ' +
     esc(selected.name ?? selected.id) + '</h2><p><strong class="is-readied">READIED</strong> · This unit can use one Martial Ka’tah.</p>' +
     '<div class="custodes-katah-phase__options">' + buttons + '</div></section>';
 }
