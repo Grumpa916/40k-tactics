@@ -55,8 +55,10 @@ function objectiveSnapshot(state, playerId, perspectivePlayerId) {
   const opponentHome = all.filter((objective) => isOpponentHomeObjectiveForPlayer(state, objective, playerId, perspectivePlayerId));
   const playerHomeObjectiveIds = Object.freeze(playerHome.map((objective) => objective.id));
   const opponentHomeObjectiveIds = Object.freeze(opponentHome.map((objective) => objective.id));
-  const known = all.length > 0 && all.every((objective) => objective?.control != null);
-  const opponentHomeControlKnown = opponentHome.length > 0 && opponentHome.every((objective) => objective?.control != null);
+  const playerHomeRoleKnown = playerHome.length > 0;
+  const opponentHomeRoleKnown = opponentHome.length > 0;
+  const known = all.length > 0 && playerHomeRoleKnown && all.every((objective) => objective?.control != null);
+  const opponentHomeControlKnown = opponentHomeRoleKnown && opponentHome.every((objective) => objective?.control != null);
   const opponentHomeControlled = opponentHomeControlKnown
     ? opponentHome.some((objective) => controlledBy(objective.control, playerId))
     : null;
@@ -64,8 +66,8 @@ function objectiveSnapshot(state, playerId, perspectivePlayerId) {
   if (!known) {
     return Object.freeze({
       known: false,
-      playerHomeRoleKnown: playerHome.length > 0,
-      opponentHomeRoleKnown: opponentHome.length > 0,
+      playerHomeRoleKnown,
+      opponentHomeRoleKnown,
       playerHomeObjectiveIds,
       opponentHomeObjectiveIds,
       controlled: 0,
@@ -80,8 +82,8 @@ function objectiveSnapshot(state, playerId, perspectivePlayerId) {
   const nonHomeControlled = controlled.filter((objective) => !playerHomeObjectiveIds.includes(objective.id));
   return Object.freeze({
     known: true,
-    playerHomeRoleKnown: playerHome.length > 0,
-    opponentHomeRoleKnown: opponentHome.length > 0,
+    playerHomeRoleKnown,
+    opponentHomeRoleKnown,
     playerHomeObjectiveIds,
     opponentHomeObjectiveIds,
     controlled: controlled.length,
@@ -222,7 +224,7 @@ export function getOutmanoeuvrePrimaryStrategyContext(state, {
   if (remainingPrimaryGameVp === 0) objectivePreservationScore = Math.min(objectivePreservationScore, 0.2);
 
   const controlProgress = !objectives.known
-    ? "Objective control is incomplete; confirm every controller before relying on Outmanoeuvre's per-objective totals or cap headroom."
+    ? "Objective scoring evidence is incomplete; confirm the player's home-objective role and every controller before relying on Outmanoeuvre's per-objective totals or cap headroom."
     : checkpointCompleted
       ? `${objectives.nonHomeControlled} non-home objective${objectives.nonHomeControlled === 1 ? " is" : "s are"} controlled now, but the Round ${round} 5 VP-per-objective Command checkpoint has already passed. ${commandAwardAmount} VP from that completed checkpoint is currently recorded for cap projection.`
       : `${objectives.nonHomeControlled} non-home objective${objectives.nonHomeControlled === 1 ? " is" : "s are"} controlled, representing ${liveNonHomeVp} raw VP at the ${checkpointTiming === "end-of-command" ? "Command" : "end-of-turn"} checkpoint before Primary caps.`;
@@ -234,7 +236,7 @@ export function getOutmanoeuvrePrimaryStrategyContext(state, {
 
   let reason;
   if (!objectives.known) {
-    reason = "Confirm objective control first. Outmanoeuvre is driven by exact non-home objective counts and the opponent-home condition, both of which interact strongly with the 15 VP round cap.";
+    reason = "Confirm home-objective roles and objective control first. Outmanoeuvre depends on knowing which objective is excluded from non-home scoring before exact VP or cap leverage can be projected.";
   } else if (remainingPrimaryGameVp === 0) {
     reason = "The 45 VP Primary game cap is already filled, so Outmanoeuvre should no longer distort movement or target priorities for additional Primary scoring.";
   } else if (objectives.opponentHomeRoleKnown && objectives.opponentHomeControlled !== true) {
@@ -331,7 +333,7 @@ export function getOutmanoeuvreObjectiveStrategySignal(state, {
 
   const ownHome = context.playerHomeObjectiveIds.includes(objectiveId) || isPlayerHomeObjective(state, objective, playerId, perspectivePlayerId);
   const opponentHome = context.opponentHomeObjectiveIds.includes(objectiveId) || isOpponentHomeObjectiveForPlayer(state, objective, playerId, perspectivePlayerId);
-  const nonHome = !ownHome;
+  const nonHome = context.playerHomeRoleKnown ? !ownHome : false;
   const controlledNow = control === "controlled" || controlledBy(objective.control, playerId);
   const sameTurnNonHomeActive = !context.commandCheckpointCompleted;
   const futureCheckpointVp = context.commandCheckpointCompleted
@@ -378,7 +380,7 @@ export function getOutmanoeuvreObjectiveStrategySignal(state, {
       nextCheckpointSetup: potentialStage > 0,
       nextCheckpointTiming,
       score: context.remainingPrimaryGameVp === 0 ? 0.03 : opponentHome ? 0.48 : potentialStage > 0 ? 0.2 : 0.12,
-      reason: `Objective control evidence is incomplete, so exact Outmanoeuvre cap leverage for this objective remains player-confirmed${opponentHome ? "; it is still the opponent's home objective and carries the 10 VP end-of-turn condition" : ""}.`
+      reason: `Objective scoring evidence is incomplete, so exact Outmanoeuvre cap leverage for this objective remains player-confirmed${opponentHome ? "; it is still the opponent's home objective and carries the 10 VP end-of-turn condition" : ""}.`
     });
   }
 
