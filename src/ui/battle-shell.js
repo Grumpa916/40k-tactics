@@ -140,7 +140,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
     '<section class="battle-shell__content">' +
     '<section data-battle-screen></section>' +
-    (tabletopExperiment ? '' : '<div data-battle-mission-summary-host>' + persistentMissionSummary + '</div>') +
+    '' +
     '</section>' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
