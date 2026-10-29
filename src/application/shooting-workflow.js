@@ -41,6 +41,28 @@ function wasActivatedToShootThisTurn(state, unitId) {
   );
 }
 
+function shootingActivationPayload({
+  unitId,
+  actionType,
+  actionId,
+  missionInstanceId,
+  objectiveId,
+  terrainAreaId,
+  reviewTiming,
+  rulesConfirmed
+}) {
+  return {
+    unitId,
+    actionType,
+    actionId,
+    missionInstanceId,
+    objectiveId,
+    ...(terrainAreaId != null ? { terrainAreaId } : {}),
+    reviewTiming,
+    rulesConfirmed
+  };
+}
+
 export function getShootingViewModel(state, { perspectivePlayerId = null } = {}) {
   const shooting = getShootingState(state);
   return {
@@ -73,7 +95,7 @@ export function recordShootingActivation(state, {
 } = {}, context = {}) {
   return executeCommand(
     state,
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, {
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, shootingActivationPayload({
       unitId,
       actionType,
       actionId,
@@ -82,7 +104,7 @@ export function recordShootingActivation(state, {
       terrainAreaId,
       reviewTiming,
       rulesConfirmed
-    }),
+    })),
     context
   );
 }
@@ -109,7 +131,7 @@ export function activateShootingUnit(session, {
     throw new TypeError("A game session is required.");
   }
   return session.dispatch(
-    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, {
+    createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, shootingActivationPayload({
       unitId,
       actionType,
       actionId,
@@ -118,7 +140,7 @@ export function activateShootingUnit(session, {
       terrainAreaId,
       reviewTiming,
       rulesConfirmed
-    }),
+    })),
     context
   );
 }
