@@ -52,7 +52,7 @@ export function recordShootingActivation(state, {
   if (missionInstanceId) {
     if (actionType !== "mission_action") throw new Error("Only a mission Action can link a mission card.");
     linkedMission = getMissionActionOptions(state, activePlayerId).find(item => item.instanceId === missionInstanceId);
-    if (!linkedMission) throw new Error("Select one of the active player's available mission Actions.");
+    if (!linkedMission) throw new Error("Select one of the active player's active secondary mission Actions or available primary mission Actions.");
     if (!rulesConfirmed) throw new Error("Confirm action eligibility against the physical mission card.");
     if (!ACTION_REVIEW_TIMINGS.includes(reviewTiming)) throw new Error("Choose the card's scoring checkpoint.");
     if (objectiveId && !state.objectives.some(item=>item.id===objectiveId)) throw new Error("Select an objective on this battlefield.");
@@ -82,4 +82,3 @@ export function completeShootingPhase(state) {
   }
   return changePhase(state, { phase: "charge" });
 }
-
