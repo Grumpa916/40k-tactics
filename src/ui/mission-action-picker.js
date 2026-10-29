@@ -22,7 +22,7 @@ export function createMissionActionPicker() {
       const option=options.find(item=>item.id===selected);
       const isDeathTrap=option?.definitionId==='primary-death-trap';
       const playerId=state.activePlayer ?? state.battle?.activePlayerId ?? null;
-      const deathTrapTerrain=isDeathTrap ? getDeathTrapTerrainOptions(state,{playerId}).filter(item=>!item.trapped) : [];
+      const deathTrapTerrain=isDeathTrap ? getDeathTrapTerrainOptions(state,{playerId}).filter(item=>!item.trapped && item.boobyTrapEligibleByGeometry!==false) : [];
       if (isDeathTrap && terrainArea && !deathTrapTerrain.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
       const allowedTimings=timingsFor(option);
       if (option && (!timing || !allowedTimings.includes(timing))) timing=allowedTimings.length===1?allowedTimings[0]:(allowedTimings.includes(option.fallbackTiming)?option.fallbackTiming:allowedTimings[0]);
@@ -40,7 +40,7 @@ export function createMissionActionPicker() {
         ? 'Physical card confirms this is a Shooting-phase Action'
         : 'Action requirements met';
       const targetControl=isDeathTrap
-        ? `<label class="mission-action-picker__field"><span>Terrain area to trap</span><select data-action-terrain><option value="">Choose terrain area…</option>${deathTrapTerrain.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Choose the Event Companion terrain area receiving the operation marker. Already trapped areas are hidden.</small></label>`
+        ? `<label class="mission-action-picker__field"><span>Terrain area to trap</span><select data-action-terrain><option value="">Choose terrain area…</option>${deathTrapTerrain.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Choose the Event Companion terrain area receiving the operation marker. Already trapped areas and terrain known to be wholly inside your deployment zone are hidden.</small></label>`
         : `<label class="mission-action-picker__field"><span>Objective used for this Action <small>(optional)</small></span><select data-action-objective><option value="">No objective selected</option>${(state.objectives??[]).map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>`;
       const completionNote=isDeathTrap
         ? '<p class="mission-action-picker__note">Booby Trap completes immediately. Recording it marks this terrain area as trapped for the rest of the battle; VP is still confirmed at the scoring checkpoint.</p>'
