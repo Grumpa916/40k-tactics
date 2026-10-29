@@ -17,8 +17,8 @@ import { renderTurnClockPanel } from "./turn-clock-panel.js";
 import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../state/turn-clock.js";
 import { renderPersistentMissionSummary } from "./mission-summary-panel.js";
 import { bindMissionReviewPanel, renderMissionReviewPanel, renderMissionReviewToggle } from "./mission-review-panel.js";
-import { renderDecisionReminderHost, tyranidDecisionContextKey } from './battle-decision-reminders-view.js';
-import { getTyranidDecisionReminders, TYRANID_DECISION_IDS } from "../rules/tyranid-decision-reminders.js";
+import { renderDecisionReminderHost } from './battle-decision-reminders-view.js';
+import { createBattleDecisionReminderController } from './battle-decision-reminder-controller.js';
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
 import {
   phaseLabel,
@@ -210,12 +210,12 @@ export function createBattleShell(container, {
   let rightPanelCollapsed = false;
   const prototypeWorkspace = createPrototypeWorkspace(container, { session, gameData });
   const rulesReminders = createRulesReminderController(container, {session, perspectivePlayerId});
+  const decisionReminders = createBattleDecisionReminderController(container, {
+    session,
+    onRender: () => render(),
+    onRefresh: () => refreshPersistentPanels()
+  });
   let armyRosterPlayerId = null;
-  let battleShockMessage = "";
-  let battleShockReminder = null;
-  let observedBattleShockContextKey = null;
-  let dismissedTyranidDecisionContextKey = null;
-  let factionDecisionMessage = "";
   let clockPanelOpen = false;
   let clockMessage = "";
   let clockTickInterval = null;
@@ -276,6 +276,7 @@ export function createBattleShell(container, {
   }
 
   function refreshPersistentPanels() {
+    const decisionState = decisionReminders.getState();
     const phaseHost = container.querySelector?.("[data-phase-progression-host]");
     if (phaseHost) phaseHost.innerHTML = renderPhaseProgressionPanel(session.getState(), viewedPhase, phaseProgressionMessage);
     const state = session.getState();
@@ -284,8 +285,8 @@ export function createBattleShell(container, {
     if (decisionHost) {
       decisionHost.innerHTML = renderDecisionReminderHost(state, {
         perspectivePlayerId,
-        battleShockReminder,
-        dismissedTyranidDecisionContextKey
+        battleShockReminder: decisionState.battleShockReminder,
+        dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey
       });
     }
     const summaryContainer = container.querySelector?.("[data-battle-status-summary]");
@@ -303,8 +304,8 @@ export function createBattleShell(container, {
     if (statusContainer) {
       const openSections = readOpenStates(statusContainer, "details[data-context-key]", "data-context-key");
       contextOpenStates = { ...contextOpenStates, ...openSections };
-      statusContainer.innerHTML = (battleShockMessage
-        ? '<p role="status" class="battle-context__message">' + escapeHtml(battleShockMessage) + '</p>'
+      statusContainer.innerHTML = (decisionState.battleShockMessage
+        ? '<p role="status" class="battle-context__message">' + escapeHtml(decisionState.battleShockMessage) + '</p>'
         : "") +
         renderUnitStatusPanel(state, { openSections }) +
         renderEventLogPanel(state, { openSections });
@@ -359,21 +360,7 @@ export function createBattleShell(container, {
   function render() {
     const state = session.getState();
     const actualPhase = state?.phase ?? null;
-    const commandPlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
-    const commandContextKey = state?.battle?.status === "active" && actualPhase === "command" && commandPlayerId
-      ? [state.battle?.round ?? 0, state.turn ?? 0, commandPlayerId].join(":")
-      : null;
-    if (commandContextKey && commandContextKey !== observedBattleShockContextKey) {
-      observedBattleShockContextKey = commandContextKey;
-      battleShockReminder = {
-        round: state.battle?.round ?? 0,
-        turn: state.turn ?? 0,
-        playerId: commandPlayerId
-      };
-    } else if (!commandContextKey) {
-      observedBattleShockContextKey = null;
-      battleShockReminder = null;
-    }
+    const decisionState = decisionReminders.synchronize(state);
     if (actualPhase !== observedGamePhase) {
       const previousPhase = observedGamePhase;
       observedGamePhase = actualPhase;
@@ -414,7 +401,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
@@ -652,77 +639,6 @@ export function createBattleShell(container, {
     overlay.hidden = true;
   }
 
-  function handleTyranidHyperAdaptationChoice(event) {
-    const button = event.target?.closest?.("[data-faction-decision-choice]");
-    if (!button || !container.contains(button)) return;
-    const playerId = button.getAttribute("data-faction-player-id");
-    const decisionId = button.getAttribute("data-faction-decision-id");
-    const choice = button.getAttribute("data-faction-decision-choice");
-    try {
-      session.dispatch({
-        type: COMMAND_TYPES.RECORD_FACTION_ABILITY_DECISION,
-        payload: { playerId, decisionId, choice }
-      });
-      factionDecisionMessage = "Hyper-adaptation choice recorded.";
-    } catch (error) {
-      factionDecisionMessage = error?.message ?? String(error);
-    }
-    const messageHost = container.querySelector?.("[data-faction-decision-message]");
-    if (messageHost) messageHost.textContent = factionDecisionMessage;
-    refreshPersistentPanels();
-  }
-
-  function handleUseTyranidFactionAbility(event) {
-    const button = event.target?.closest?.("[data-use-faction-decision]");
-    if (!button || !container.contains(button)) return;
-    const playerId = button.getAttribute("data-faction-player-id");
-    const decisionId = button.getAttribute("data-use-faction-decision");
-    try {
-      session.dispatch({
-        type: COMMAND_TYPES.RECORD_FACTION_ABILITY_DECISION,
-        payload: { playerId, decisionId, choice: "use" }
-      });
-      factionDecisionMessage = "Shadow in the Warp recorded as used. Resolve the required Battle-shock tests at the table.";
-    } catch (error) {
-      factionDecisionMessage = error?.message ?? String(error);
-    }
-    const messageHost = container.querySelector?.("[data-faction-decision-message]");
-    if (messageHost) messageHost.textContent = factionDecisionMessage;
-    refreshPersistentPanels();
-  }
-
-  function handleDismissTyranidFactionAbility(event) {
-    const button = event.target?.closest?.("[data-dismiss-faction-decision]");
-    if (!button || !container.contains(button)) return;
-    const decisionId = button.getAttribute("data-dismiss-faction-decision");
-    const playerId = button.getAttribute("data-faction-player-id");
-    const state = session.getState();
-    const decision = getTyranidDecisionReminders(state, playerId)
-      .find((item) => item.id === decisionId);
-    if (decision?.id === TYRANID_DECISION_IDS.SHADOW_IN_THE_WARP) {
-      dismissedTyranidDecisionContextKey = tyranidDecisionContextKey(decision, state);
-    }
-    refreshPersistentPanels();
-  }
-
-  function handleBattleShockResult(event) {
-    const button = event.target?.closest?.("[data-battle-shock-result]");
-    if (!button || !container.contains(button)) return;
-    const unitId = button.getAttribute("data-unit-id");
-    const result = button.getAttribute("data-battle-shock-result");
-    const eligibilityConfirmed = button.getAttribute("data-eligibility-confirmed") === "true";
-    try {
-      session.dispatch({ type: COMMAND_TYPES.RECORD_BATTLE_SHOCK_TEST, payload: {
-        unitId, result, eligibilityConfirmed
-      }});
-      battleShockMessage = "Battle-shock result recorded for " +
-        (session.getState().units?.find((unit) => unit.id === unitId)?.name ?? unitId) + ".";
-    } catch (error) {
-      battleShockMessage = error?.message ?? String(error);
-    }
-    render();
-  }
-
   function handleSubmit(event) {
     const punishmentForm = event.target?.closest?.("[data-punishment-condemnation-form]");
     if (punishmentForm && container.contains(punishmentForm)) {
@@ -765,13 +681,6 @@ export function createBattleShell(container, {
     if (!button || !container.contains(button)) return;
     scoringReminder = null;
     render();
-  }
-
-  function handleDismissBattleShockReminder(event) {
-    const button = event.target?.closest?.("[data-dismiss-battle-shock-reminder]");
-    if (!button || !container.contains(button)) return;
-    battleShockReminder = null;
-    button.closest(".battle-shock-reminder__backdrop")?.remove();
   }
 
   function handleReviewScoring(event) {
@@ -872,12 +781,7 @@ export function createBattleShell(container, {
   container.addEventListener?.("click", handleToggleBattlePanel);
   container.addEventListener?.("click", handleOpenArmyRoster);
   container.addEventListener?.("click", handleCloseArmyRoster);
-  container.addEventListener?.("click", handleTyranidHyperAdaptationChoice);
-  container.addEventListener?.("click", handleUseTyranidFactionAbility);
-  container.addEventListener?.("click", handleDismissTyranidFactionAbility);
-  container.addEventListener?.("click", handleBattleShockResult);
   container.addEventListener?.("click", handleDismissScoringReminder);
-  container.addEventListener?.("click", handleDismissBattleShockReminder);
   container.addEventListener?.("click", handleReviewScoring);
   container.addEventListener?.("submit", handleSubmit);
   const unsubscribe = session.subscribe(render);
@@ -915,12 +819,8 @@ export function createBattleShell(container, {
       container.removeEventListener?.("click", handleToggleBattlePanel);
       container.removeEventListener?.("click", handleOpenArmyRoster);
       container.removeEventListener?.("click", handleCloseArmyRoster);
-      container.removeEventListener?.("click", handleTyranidHyperAdaptationChoice);
-      container.removeEventListener?.("click", handleUseTyranidFactionAbility);
-      container.removeEventListener?.("click", handleDismissTyranidFactionAbility);
-      container.removeEventListener?.("click", handleBattleShockResult);
       container.removeEventListener?.("click", handleDismissScoringReminder);
-      container.removeEventListener?.("click", handleDismissBattleShockReminder);
+      decisionReminders.destroy();
       container.removeEventListener?.("click", handleReviewScoring);
       container.removeEventListener?.("submit", handleSubmit);
       destroyMountedScreen();
