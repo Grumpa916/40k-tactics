@@ -1,7 +1,7 @@
 import { ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
+import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import {
-  getCombatFormationRoot,
   isMartialKatahEligible,
   getCustodesKatahState,
   isCustodesKatahTimingAvailable
