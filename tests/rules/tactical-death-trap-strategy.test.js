@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { getEventCompanionMapForForceDispositions } from "../../src/rules/event-companion-map-catalog.js";
-import { getDeathTrapState, getDeathTrapTerrainOptions } from "../../src/rules/death-trap-state.js";
+import {
+  getDeathTrapState,
+  getDeathTrapTerrainAreasForPosition,
+  getDeathTrapTerrainOptions
+} from "../../src/rules/death-trap-state.js";
 import {
   getPrimaryStrategyContext,
   getPrimaryObjectiveStrategySignal
@@ -80,12 +84,12 @@ function buildState({ round = 2, phase = "movement", history = [], targetTerrain
   const targetEntry = targetTerrainId
     ? terrainEntries.find(([id]) => id === targetTerrainId)
     : terrainEntries.find(([, shape]) => !objectives.some((objective) => {
-        const box = shape.points;
-        const xs = box.map((point) => point.x), ys = box.map((point) => point.y);
+        const xs = shape.points.map((point) => point.x), ys = shape.points.map((point) => point.y);
         return objective.position.x >= Math.min(...xs) && objective.position.x <= Math.max(...xs) && objective.position.y >= Math.min(...ys) && objective.position.y <= Math.max(...ys);
       })) ?? terrainEntries[0];
+  assert.ok(targetEntry);
   const targetPosition = centroid(targetEntry[1].points);
-  const objectiveTerrain = getDeathTrapTerrainOptions({
+  const seedState = {
     phase,
     turn: round,
     activePlayer: "p1",
@@ -97,7 +101,9 @@ function buildState({ round = 2, phase = "movement", history = [], targetTerrain
     units: [],
     history: [],
     scoring: { turnSnapshots: [] }
-  }, { playerId: "p1" }).find((entry) => entry.containsObjective && !entry.objectiveIds.includes("event-companion:Attacker Home"));
+  };
+  const objectiveTerrain = getDeathTrapTerrainOptions(seedState, { playerId: "p1" })
+    .find((entry) => entry.containsObjective && !entry.objectiveIds.includes("event-companion:Attacker Home"));
   const runnerPosition = objectiveTerrain ? centroid(map.terrainGeometry[objectiveTerrain.terrainAreaId].points) : { x: 30, y: 22 };
   const units = [
     {
@@ -115,14 +121,7 @@ function buildState({ round = 2, phase = "movement", history = [], targetTerrain
     }
   ];
   return {
-    phase,
-    turn: round,
-    activePlayer: "p1",
-    battle: { status: "active", round, activePlayerId: "p1" },
-    preGameSetup: { attackerPlayerId: "p1", defenderPlayerId: "p2" },
-    players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
-    battlefieldMap: { missionSetup: { myDisposition: "Disruption", opponentDisposition: "Take and Hold", layout: "A" } },
-    objectives,
+    ...seedState,
     units,
     history,
     scoring: {
@@ -186,10 +185,22 @@ test("Event Companion FAQ line works: kill first and trap the terrain later in t
   assert.equal(context.qualifyingKillCount, 1);
 });
 
+test("overlapping terrain evidence does not arbitrarily discard a valid trapped area", () => {
+  const s = buildState();
+  const start = s.scoring.turnSnapshots[0].units.find((unit) => unit.id === "target").position;
+  const matches = getDeathTrapTerrainAreasForPosition(s, start);
+  assert.ok(matches.some((entry) => entry.terrainAreaId === s.__targetTerrainId));
+  s.history.push(killEvent(), trapEvent({ terrainAreaId: s.__targetTerrainId }));
+  s.units.find((unit) => unit.id === "target").status = "destroyed";
+  const deathTrap = getDeathTrapState(s, { playerId: "p1" });
+  assert.equal(deathTrap.trappedKillSatisfied, true);
+  assert.ok(deathTrap.qualifyingKills[0].terrainAreaIds.includes(s.__targetTerrainId));
+});
+
 test("targeting an enemy that began in untrapped terrain preserves the conditional kill-now trap-later line", () => {
   const s = buildState({ phase: "shooting" });
   const context = getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1", targetUnitId: "target" });
-  assert.equal(context.killOpportunity.terrainAreaId, s.__targetTerrainId);
+  assert.ok(context.killOpportunity.terrainAreaIds.includes(s.__targetTerrainId));
   assert.equal(context.killOpportunity.conditionalOnLaterTrap, true);
   assert.equal(context.nextKillVpLeverage, 3);
   assert.ok(context.targetingScore >= 0.5);
