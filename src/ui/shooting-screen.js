@@ -457,22 +457,25 @@ export function createShootingScreen(container, {
     }
 
     container.querySelectorAll("[data-weapon]").forEach(select => select.addEventListener("change", event => {
-      selectedWeaponId = event.currentTarget.value || null;
+      const select = event.currentTarget ?? event.target;
+      selectedWeaponId = select.value || null;
       precisionAllocationId = null;
       attackError = "";
-      deferRenderAfterSelectDismissal(event.currentTarget);
+      deferRenderAfterSelectDismissal(select);
     }));
     container.querySelectorAll("[data-target]").forEach(select => select.addEventListener("change", event => {
-      selectedTargetId = event.currentTarget.value || null;
+      const select = event.currentTarget ?? event.target;
+      selectedTargetId = select.value || null;
       precisionAllocationId = null;
       attackError = "";
-      deferRenderAfterSelectDismissal(event.currentTarget);
+      deferRenderAfterSelectDismissal(select);
     }));
     container.querySelectorAll("[data-shoot-precision]").forEach(select => select.addEventListener("change", event => {
-      precisionAllocationId = event.currentTarget.value || null;
+      const select = event.currentTarget ?? event.target;
+      precisionAllocationId = select.value || null;
       actualDamage = "0";
       attackError = "";
-      deferRenderAfterSelectDismissal(event.currentTarget);
+      deferRenderAfterSelectDismissal(select);
     }));
     container.querySelector("[data-shoot-damage-minus]")?.addEventListener("click", () => {
       actualDamage = String(Math.max(0, Number(actualDamage) - 1));
