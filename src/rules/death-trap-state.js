@@ -60,8 +60,13 @@ function terrainEntries(state) {
   }));
 }
 
+export function getDeathTrapTerrainAreasForPosition(state, position) {
+  return Object.freeze(terrainEntries(state).filter((entry) => pointInTerrainPolygon(position, entry.points)));
+}
+
 export function getDeathTrapTerrainAreaForPosition(state, position) {
-  return terrainEntries(state).find((entry) => pointInTerrainPolygon(position, entry.points)) ?? null;
+  const matches = getDeathTrapTerrainAreasForPosition(state, position);
+  return matches.length === 1 ? matches[0] : null;
 }
 
 function objectiveIdsForTerrain(state, entry) {
@@ -121,13 +126,16 @@ export function getDeathTrapState(state, { playerId, perspectivePlayerId = defau
   const trappedIds = new Set(trapped.map((entry) => entry.terrainAreaId));
   for (const kill of kills) {
     const start = getUnitStateAtTurnStart(state, kill.unitId, turn);
-    const area = getDeathTrapTerrainAreaForPosition(state, start?.position);
-    if (!area) {
-      unresolvedKills.push(Object.freeze({ ...kill, terrainAreaId: null }));
-      continue;
-    }
-    const item = Object.freeze({ ...kill, terrainAreaId: area.terrainAreaId });
-    if (trappedIds.has(area.terrainAreaId)) qualifyingKills.push(item);
+    const areas = getDeathTrapTerrainAreasForPosition(state, start?.position);
+    const terrainAreaIds = Object.freeze(areas.map((area) => area.terrainAreaId));
+    const trappedTerrainAreaIds = Object.freeze(terrainAreaIds.filter((terrainAreaId) => trappedIds.has(terrainAreaId)));
+    const item = Object.freeze({
+      ...kill,
+      terrainAreaId: terrainAreaIds.length === 1 ? terrainAreaIds[0] : null,
+      terrainAreaIds,
+      trappedTerrainAreaIds
+    });
+    if (trappedTerrainAreaIds.length > 0) qualifyingKills.push(item);
     else unresolvedKills.push(item);
   }
   return Object.freeze({
