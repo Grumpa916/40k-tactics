@@ -58,7 +58,7 @@ function terrainOptions(state, recommendation, deathTrap, primaryStrategy) {
   const unresolvedKillTerrain = new Set(
     deathTrap.unresolvedKills.flatMap((item) => item.terrainAreaIds ?? (item.terrainAreaId ? [item.terrainAreaId] : []))
   );
-  return deathTrap.terrain.filter((entry) => !entry.trapped).map((entry) => {
+  return deathTrap.terrain.filter((entry) => !entry.trapped && entry.boobyTrapEligibleByGeometry !== false).map((entry) => {
     const shape = map.terrainGeometry?.[entry.terrainAreaId];
     const distance = distanceToPolygon(position, shape?.points ?? []);
     const objectiveId = entry.objectiveIds?.[0] ?? null;
