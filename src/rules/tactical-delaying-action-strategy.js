@@ -1,4 +1,5 @@
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
+import { hasEffectiveVictoryPointOpportunity } from "../engine/victory-points-ledger.js";
 import { isPlayerHomeObjective } from "./consecrate-state.js";
 import { getEnemyUnitDestructionsForTurn } from "./scoring-evidence-state.js";
 import { clamp01 } from "./tactical-context-utils.js";
@@ -113,6 +114,10 @@ function timingSummary(round) {
   return "Round 5: the 4 VP non-home control check moves to end of turn, alongside the 3 VP central-plus-expansion condition and 2 VP per enemy unit destroyed, so Movement and combat can directly change every Delaying Action scoring component before the 15 VP round cap.";
 }
 
+function commandCheckpointOpportunityKey(round, turn, playerId) {
+  return [round, turn, playerId, "command-phase"].join(":");
+}
+
 export function getDelayingActionPrimaryStrategyContext(state, {
   playerId,
   perspectivePlayerId = defaultPerspectivePlayerId(state),
@@ -136,16 +141,32 @@ export function getDelayingActionPrimaryStrategyContext(state, {
   const mission = missionForPlayer(state, playerId, perspectivePlayerId);
   const round = Math.max(1, Number(state?.battle?.round) || 1);
   const turn = Number.isInteger(state?.turn) ? state.turn : 0;
+  const phase = state?.phase ?? null;
   const objectives = objectiveSnapshot(state, playerId, perspectivePlayerId);
   const kills = getEnemyUnitDestructionsForTurn(state, playerId, turn);
   const controlScoringActive = round >= 2;
   const controlSatisfied = controlScoringActive && objectives.known && objectives.nonHomeControlled > 0;
   const controlVp = controlSatisfied ? 4 : 0;
+  const controlCheckpointTiming = round >= 5 ? "end-of-turn" : round >= 2 ? "end-of-command" : null;
+  const commandCheckpointCompleted = round >= 2 && round < 5 && phase !== "command";
+  const controlCheckpointAwardRecorded = round >= 2 && round < 5 && hasEffectiveVictoryPointOpportunity(
+    state,
+    playerId,
+    mission.id,
+    commandCheckpointOpportunityKey(round, turn, playerId)
+  );
+  const controlVpForRoundCap = !controlScoringActive
+    ? 0
+    : round >= 5
+      ? controlVp
+      : commandCheckpointCompleted
+        ? controlCheckpointAwardRecorded ? 4 : 0
+        : controlVp;
   const centralExpansionScoringActive = round >= 2;
   const centralExpansionSatisfied = centralExpansionScoringActive && objectives.known && objectives.centralControlled > 0 && objectives.expansionControlled > 0;
   const centralExpansionVp = centralExpansionSatisfied ? 3 : 0;
   const killVp = kills.length * 2;
-  const rawRecordedVp = killVp + controlVp + centralExpansionVp;
+  const rawRecordedVp = killVp + controlVpForRoundCap + centralExpansionVp;
   const cappedRecordedVp = Math.min(15, rawRecordedVp);
   const remainingRoundCap = Math.max(0, 15 - cappedRecordedVp);
   const effectiveNextKillVp = Math.min(2, remainingRoundCap);
@@ -163,9 +184,15 @@ export function getDelayingActionPrimaryStrategyContext(state, {
     ? "The 4 VP non-home control condition begins in Round 2."
     : !objectives.known
       ? "Objective control is incomplete; confirm controllers before relying on the 4 VP non-home control condition."
-      : controlSatisfied
-        ? `At least one non-home objective is controlled, satisfying the binary 4 VP control condition at the applicable checkpoint.`
-        : "No non-home objective is currently controlled; establish one for the binary 4 VP control condition.";
+      : commandCheckpointCompleted
+        ? controlCheckpointAwardRecorded
+          ? "The completed Command-phase checkpoint has a recorded 4 VP Delaying Action award."
+          : controlSatisfied
+            ? "No 4 VP award is recorded for the completed Command-phase checkpoint; current non-home control can only stage the next checkpoint."
+            : "No 4 VP award is recorded for the completed Command-phase checkpoint."
+        : controlSatisfied
+          ? "At least one non-home objective is controlled, satisfying the binary 4 VP control condition at the applicable checkpoint."
+          : "No non-home objective is currently controlled; establish one for the binary 4 VP control condition.";
   const pairProgress = !centralExpansionScoringActive
     ? "The 3 VP central-plus-expansion condition begins in Round 2."
     : !objectives.known
@@ -222,8 +249,11 @@ export function getDelayingActionPrimaryStrategyContext(state, {
     expansionControlledObjectiveIds: objectives.expansionControlledIds,
     controlScoringActive,
     controlSatisfied,
-    controlCheckpointTiming: round >= 5 ? "end-of-turn" : round >= 2 ? "end-of-command" : null,
+    controlCheckpointTiming,
+    commandCheckpointCompleted,
+    controlCheckpointAwardRecorded,
     controlVp,
+    controlVpForRoundCap,
     centralExpansionScoringActive,
     centralExpansionSatisfied,
     centralExpansionVp,
@@ -249,7 +279,7 @@ export function getDelayingActionPrimaryStrategyContext(state, {
       "Each enemy unit destroyed this turn is worth 2 VP, subject to the 15 VP Primary cap for the round.",
       "The 4 VP non-home condition is binary: controlling additional non-home objectives does not multiply that award.",
       "The 3 VP end-of-turn condition is binary and requires at least one controlled central objective and at least one controlled expansion objective.",
-      "In rounds 2–4, Movement occurs after the Command-phase 4 VP checkpoint and cannot retroactively change that completed checkpoint; positioning can still affect the 3 VP end-of-turn pair and prepare the next round.",
+      "In rounds 2–4, Movement occurs after the Command-phase 4 VP checkpoint and cannot retroactively change that completed checkpoint; cap headroom uses the recorded Command-phase award rather than later live control.",
       "In round 5, the 4 VP non-home control condition and 3 VP central-plus-expansion condition both resolve at end of turn."
     ])
   });
@@ -311,46 +341,73 @@ export function getDelayingActionObjectiveStrategySignal(state, {
     });
   }
 
-  let controlVpLeverage = 0;
+  let rawControlVpLeverage = 0;
   let nextCheckpointSetup = false;
   if (context.round >= 5) {
-    if (!context.controlSatisfied && !controlledNow) controlVpLeverage = 4;
-    else if (context.controlSatisfied && controlledNow && context.nonHomeControlled === 1) controlVpLeverage = 4;
+    if (!context.controlSatisfied && !controlledNow) rawControlVpLeverage = 4;
+    else if (context.controlSatisfied && controlledNow && context.nonHomeControlled === 1) rawControlVpLeverage = 4;
   } else {
     nextCheckpointSetup = true;
   }
 
-  let pairVpLeverage = 0;
+  let rawPairVpLeverage = 0;
   let pairSetup = false;
   if (role === "central") {
-    if (controlledNow && context.centralExpansionSatisfied && context.centralControlled === 1) pairVpLeverage = 3;
-    else if (!controlledNow && context.centralControlled === 0 && context.expansionControlled > 0) pairVpLeverage = 3;
+    if (controlledNow && context.centralExpansionSatisfied && context.centralControlled === 1) rawPairVpLeverage = 3;
+    else if (!controlledNow && context.centralControlled === 0 && context.expansionControlled > 0) rawPairVpLeverage = 3;
     else if (context.centralControlled === 0) pairSetup = true;
   } else if (role === "expansion") {
-    if (controlledNow && context.centralExpansionSatisfied && context.expansionControlled === 1) pairVpLeverage = 3;
-    else if (!controlledNow && context.expansionControlled === 0 && context.centralControlled > 0) pairVpLeverage = 3;
+    if (controlledNow && context.centralExpansionSatisfied && context.expansionControlled === 1) rawPairVpLeverage = 3;
+    else if (!controlledNow && context.expansionControlled === 0 && context.centralControlled > 0) rawPairVpLeverage = 3;
     else if (context.expansionControlled === 0) pairSetup = true;
   }
 
-  const vpLeverage = Math.min(7, controlVpLeverage + pairVpLeverage);
+  if (context.round >= 5 && context.remainingRoundCap === 0) pairSetup = false;
+
+  let cappedLeverage;
+  if (controlledNow) {
+    const rawLoss = rawControlVpLeverage + rawPairVpLeverage;
+    const withoutObjective = Math.min(15, Math.max(0, context.rawRecordedVp - rawLoss));
+    cappedLeverage = Math.max(0, context.cappedRecordedVp - withoutObjective);
+  } else {
+    cappedLeverage = Math.min(context.remainingRoundCap, rawControlVpLeverage + rawPairVpLeverage);
+  }
+  let leverageRemaining = cappedLeverage;
+  const controlVpLeverage = Math.min(rawControlVpLeverage, leverageRemaining);
+  leverageRemaining -= controlVpLeverage;
+  const pairVpLeverage = Math.min(rawPairVpLeverage, leverageRemaining);
+  const vpLeverage = controlVpLeverage + pairVpLeverage;
+
   let score = 0.08;
   if (vpLeverage > 0) score += clamp01(vpLeverage / 7) * 0.72;
   if (pairSetup) score += 0.2;
   if (nextCheckpointSetup) score += controlledNow ? 0.16 : 0.12;
-  if (purpose === "hold-objective" && controlledNow && (pairVpLeverage > 0 || controlVpLeverage > 0)) score += 0.08;
+  if (purpose === "hold-objective" && controlledNow && vpLeverage > 0) score += 0.08;
   score = clamp01(score);
 
   let reason;
-  if (context.round >= 5 && controlVpLeverage > 0 && pairVpLeverage > 0) {
-    reason = `Round 5 resolves both Delaying Action objective checks at end of turn; this ${role} objective carries up to 7 VP of same-turn leverage (4 VP non-home control plus 3 VP central-plus-expansion pairing).`;
-  } else if (pairVpLeverage > 0 && controlledNow) {
-    reason = `Preserving this ${role} objective protects the 3 VP central-plus-expansion end-of-turn condition.`;
-  } else if (pairVpLeverage > 0) {
-    reason = `Taking this ${role} objective can complete the 3 VP central-plus-expansion end-of-turn condition.`;
-  } else if (controlVpLeverage > 0 && controlledNow) {
-    reason = "Preserving this non-home objective protects the binary 4 VP Round 5 control condition.";
-  } else if (controlVpLeverage > 0) {
-    reason = "Taking this non-home objective can establish the binary 4 VP Round 5 control condition.";
+  if (rawControlVpLeverage + rawPairVpLeverage > 0 && vpLeverage === 0) {
+    reason = "The 15 VP round cap is already filled by other Delaying Action scoring, so this objective has no additional same-turn Primary VP leverage.";
+  } else if (context.round >= 5 && rawControlVpLeverage > 0 && rawPairVpLeverage > 0) {
+    reason = vpLeverage < 7
+      ? `Round 5 resolves both Delaying Action objective checks at end of turn; this ${role} objective has ${vpLeverage} VP of remaining same-turn leverage before the round cap, from conditions normally worth 7 VP combined.`
+      : `Round 5 resolves both Delaying Action objective checks at end of turn; this ${role} objective carries up to 7 VP of same-turn leverage (4 VP non-home control plus 3 VP central-plus-expansion pairing).`;
+  } else if (rawPairVpLeverage > 0 && controlledNow) {
+    reason = pairVpLeverage < 3
+      ? `Preserving this ${role} objective protects ${pairVpLeverage} VP that still matters before the round cap from the 3 VP central-plus-expansion condition.`
+      : `Preserving this ${role} objective protects the 3 VP central-plus-expansion end-of-turn condition.`;
+  } else if (rawPairVpLeverage > 0) {
+    reason = pairVpLeverage < 3
+      ? `Taking this ${role} objective can add ${pairVpLeverage} VP before the round cap toward the 3 VP central-plus-expansion condition.`
+      : `Taking this ${role} objective can complete the 3 VP central-plus-expansion end-of-turn condition.`;
+  } else if (rawControlVpLeverage > 0 && controlledNow) {
+    reason = controlVpLeverage < 4
+      ? `Preserving this non-home objective protects ${controlVpLeverage} VP that still matters before the round cap from the binary 4 VP Round 5 control condition.`
+      : "Preserving this non-home objective protects the binary 4 VP Round 5 control condition.";
+  } else if (rawControlVpLeverage > 0) {
+    reason = controlVpLeverage < 4
+      ? `Taking this non-home objective can add ${controlVpLeverage} VP before the round cap toward the binary 4 VP Round 5 control condition.`
+      : "Taking this non-home objective can establish the binary 4 VP Round 5 control condition.";
   } else if (pairSetup && nextCheckpointSetup) {
     reason = `This ${role} objective does not complete the pair by itself, but controlling it establishes one half of the 3 VP central-plus-expansion end-of-turn condition. The current round's Command-phase control checkpoint has already passed before Movement, so this position only stages or preserves the next 4 VP control checkpoint.`;
   } else if (pairSetup) {
@@ -369,6 +426,8 @@ export function getDelayingActionObjectiveStrategySignal(state, {
     ownHome: false,
     role,
     controlledNow,
+    rawControlVpLeverage,
+    rawPairVpLeverage,
     controlVpLeverage,
     pairVpLeverage,
     pairSetup,
