@@ -1,5 +1,6 @@
 import { getMissionActionOptions } from '../rules/mission-action-state.js';
 import { getDeathTrapTerrainOptions } from '../rules/death-trap-state.js';
+import { getSmokeAndMirrorsObjectiveOptions } from '../rules/smoke-and-mirrors-state.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const labels={'command-phase':'End of own Command phase','end-of-turn':'End of own turn','end-of-opponent-turn':"End of opponent's turn"};
 const validTiming=id=>Object.prototype.hasOwnProperty.call(labels,id);
@@ -21,9 +22,12 @@ export function createMissionActionPicker() {
       }
       const option=options.find(item=>item.id===selected);
       const isDeathTrap=option?.definitionId==='primary-death-trap';
+      const isSmokeAndMirrors=option?.definitionId==='primary-smoke-and-mirrors';
       const playerId=state.activePlayer ?? state.battle?.activePlayerId ?? null;
       const deathTrapTerrain=isDeathTrap ? getDeathTrapTerrainOptions(state,{playerId}).filter(item=>!item.trapped && item.boobyTrapEligibleByGeometry!==false) : [];
+      const smokeObjectives=isSmokeAndMirrors ? getSmokeAndMirrorsObjectiveOptions(state,{playerId}) : [];
       if (isDeathTrap && terrainArea && !deathTrapTerrain.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
+      if (isSmokeAndMirrors && objective && !smokeObjectives.some(item=>item.objectiveId===objective)) objective='';
       const allowedTimings=timingsFor(option);
       if (option && (!timing || !allowedTimings.includes(timing))) timing=allowedTimings.length===1?allowedTimings[0]:(allowedTimings.includes(option.fallbackTiming)?option.fallbackTiming:allowedTimings[0]);
       const actionReminder=option?.actionSummary
@@ -41,16 +45,20 @@ export function createMissionActionPicker() {
         : 'Action requirements met';
       const targetControl=isDeathTrap
         ? `<label class="mission-action-picker__field"><span>Terrain area to trap</span><select data-action-terrain><option value="">Choose terrain area…</option>${deathTrapTerrain.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Choose the Event Companion terrain area receiving the operation marker. Already trapped areas and terrain known to be wholly inside your deployment zone are hidden.</small></label>`
-        : `<label class="mission-action-picker__field"><span>Objective used for this Action <small>(optional)</small></span><select data-action-objective><option value="">No objective selected</option>${(state.objectives??[]).map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>`;
+        : isSmokeAndMirrors
+          ? `<label class="mission-action-picker__field"><span>Objective to Decoy</span><select data-action-objective><option value="">Choose eligible objective…</option>${smokeObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)} · ${item.enemyTerritory?'enemy territory · ':''}${item.recurringVpIfDecoyed} VP/turn</option>`).join('')}</select><small>Your home objective, active Decoys and objectives already selected for another Decoy attempt this turn are hidden.</small></label>`
+          : `<label class="mission-action-picker__field"><span>Objective used for this Action <small>(optional)</small></span><select data-action-objective><option value="">No objective selected</option>${(state.objectives??[]).map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>`;
       const completionNote=isDeathTrap
         ? '<p class="mission-action-picker__note">Booby Trap completes immediately. Recording it marks this terrain area as trapped for the rest of the battle; VP is still confirmed at the scoring checkpoint.</p>'
-        : '<p class="mission-action-picker__note">This records the Action attempt only. Completion and VP are confirmed later at the scoring checkpoint.</p>';
+        : isSmokeAndMirrors
+          ? '<p class="mission-action-picker__note">Decoy completes at the end of your turn only if this unit controls the selected objective. Once completion is confirmed, that objective remains Decoyed and scores on later turns until its operation marker is removed.</p>'
+          : '<p class="mission-action-picker__note">This records the Action attempt only. Completion and VP are confirmed later at the scoring checkpoint.</p>';
       const linkedFields=option?.instanceId?`${actionReminder}${timingControl}${targetControl}
           <label class="mission-action-picker__confirm"><input type="checkbox" data-action-rules-confirmed ${confirmed?'checked':''}><span><strong>${confirmationText}</strong><small>${option?.knownShootingAction===false?'Confirm this against the physical mission card.':'Confirm the unit satisfies the card’s Action requirements.'}</small></span></label>
           ${completionNote}`:option?'<p class="mission-action-picker__note">Custom action · no mission card linked.</p>':'';
       const scoringHref=new URL('./styles/scoring-checkpoints.css',import.meta.url).href;
       const pickerHref=new URL('./styles/mission-action-picker.css',import.meta.url).href;
-      const targetReady=!isDeathTrap || !!terrainArea;
+      const targetReady=isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : true;
       return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
         ${!options.length?'<p class="mission-action-picker__note">No active mission Actions are available. Select cards in Command before linking an Action.</p>':''}
         ${linkedFields}
@@ -59,13 +67,14 @@ export function createMissionActionPicker() {
     bind(container,onSubmit,rerender) {
       container.querySelector('[data-choice-action]')?.addEventListener('change',event=>{selected=event.target.value;timing='';confirmed=false;objective='';terrainArea='';rerender();});
       container.querySelector('[data-action-timing]')?.addEventListener('change',event=>{timing=event.target.value;confirmed=false;rerender();});
-      container.querySelector('[data-action-objective]')?.addEventListener('change',event=>{objective=event.target.value;});
+      container.querySelector('[data-action-objective]')?.addEventListener('change',event=>{objective=event.target.value;rerender();});
       container.querySelector('[data-action-terrain]')?.addEventListener('change',event=>{terrainArea=event.target.value;rerender();});
       container.querySelector('[data-action-rules-confirmed]')?.addEventListener('change',event=>{confirmed=event.target.checked;rerender();});
       container.querySelector('[data-choice-action-confirm]')?.addEventListener('click',()=>{
         const option=options.find(item=>item.id===selected);
         const isDeathTrap=option?.definitionId==='primary-death-trap';
-        if (!option || (option.instanceId&&!confirmed) || (isDeathTrap&&!terrainArea)) return;
+        const isSmokeAndMirrors=option?.definitionId==='primary-smoke-and-mirrors';
+        if (!option || (option.instanceId&&!confirmed) || (isDeathTrap&&!terrainArea) || (isSmokeAndMirrors&&!objective)) return;
         const allowedTimings=timingsFor(option);
         const reviewTiming=allowedTimings.includes(timing)?timing:allowedTimings[0];
         onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming,objectiveId:objective||null,terrainAreaId:terrainArea||null,rulesConfirmed:confirmed});
