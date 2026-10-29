@@ -22,6 +22,8 @@ import { isInescapableDominionMissionForPlayer } from "./tactical-inescapable-do
 import { enhanceInescapableDominionMovementRecommendations } from "./tactical-inescapable-dominion-movement.js";
 import { isDeathTrapMissionForPlayer } from "./tactical-death-trap-strategy.js";
 import { enhanceDeathTrapMovementRecommendations } from "./tactical-death-trap-movement.js";
+import { isDelayingActionMissionForPlayer } from "./tactical-delaying-action-strategy.js";
+import { enhanceDelayingActionMovementRecommendations } from "./tactical-delaying-action-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -294,6 +296,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isDeathTrapMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceDeathTrapMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isDelayingActionMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceDelayingActionMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
