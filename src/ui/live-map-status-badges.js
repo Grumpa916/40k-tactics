@@ -22,7 +22,7 @@ function katahBadge(state, unit) {
   if (!katah.eligible || katah.cycleRound < 1) return null;
   if (katah.readied) {
     const rereadied = Boolean(katah.lastKatah);
-    return { icon: rereadied ? '↻' : '✓', label: rereadied ? 'Martial Ka\'tah re-readied' : 'Martial Ka\'tah readied', className: rereadied ? 'is-katah-rereadied' : 'is-katah-readied' };
+    return { icon: rereadied ? '↻' : 'R', label: rereadied ? 'Martial Ka\'tah re-readied' : 'Martial Ka\'tah readied', className: rereadied ? 'is-katah-rereadied' : 'is-katah-readied' };
   }
   if (!katah.lastKatah) return { icon: 'K', label: 'Martial Ka\'tah spent', className: 'is-katah-spent' };
   const active = KATAH_PHASE[katah.lastKatah] === state.phase && (state.activePlayer ?? state.battle?.activePlayerId) === unit.ownerId;
