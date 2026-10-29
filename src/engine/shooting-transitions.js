@@ -6,6 +6,7 @@ import {
   getLocateAndDenyMarkerRemovalOptions,
   getLocateAndDenyState
 } from "../rules/locate-and-deny-state.js";
+import { recordLocateAndDenyMarkerSetup } from "./locate-and-deny-transitions.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -18,7 +19,13 @@ export function recordShootingActivation(state, {
   unitId,
   actionType = "shoot",
   actionId = null,
-  missionInstanceId = null, objectiveId = null, terrainAreaId = null, reviewTiming = null, rulesConfirmed = false
+  missionInstanceId = null,
+  objectiveId = null,
+  terrainAreaId = null,
+  reviewTiming = null,
+  rulesConfirmed = false,
+  locateSetupOnly = false,
+  locateMarkerSetupTerrainAreaIds = null
 } = {}) {
   if (!unitId) throw new TypeError("Shooting activation unit id is required.");
   if (!SHOOTING_ACTION_TYPES.has(actionType)) {
@@ -46,6 +53,19 @@ export function recordShootingActivation(state, {
   const activePlayerId = state.activePlayer ?? state.battle.activePlayerId ?? null;
   if (activePlayerId && unit.ownerId !== activePlayerId) {
     throw new Error("Only the active player's units can be selected for a Shooting activation.");
+  }
+
+  if (locateSetupOnly) {
+    if (actionType !== "mission_action" || actionId !== "primary-locate-and-deny") {
+      throw new Error("Locate and Deny marker setup must be recorded from its mission Action workflow.");
+    }
+    if (!Array.isArray(locateMarkerSetupTerrainAreaIds)) {
+      throw new TypeError("Locate and Deny marker setup requires selected terrain areas.");
+    }
+    return recordLocateAndDenyMarkerSetup(state, {
+      playerId: activePlayerId,
+      terrainAreaIds: locateMarkerSetupTerrainAreaIds
+    });
   }
 
   const candidates = getShootingCandidates(state);
