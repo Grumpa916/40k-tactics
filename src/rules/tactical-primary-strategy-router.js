@@ -37,6 +37,11 @@ import {
   getDeathTrapObjectiveStrategySignal,
   isDeathTrapMissionForPlayer
 } from "./tactical-death-trap-strategy.js";
+import {
+  getDelayingActionPrimaryStrategyContext,
+  getDelayingActionObjectiveStrategySignal,
+  isDelayingActionMissionForPlayer
+} from "./tactical-delaying-action-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -57,6 +62,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isDeathTrapMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getDeathTrapPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isDelayingActionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getDelayingActionPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -83,6 +91,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isDeathTrapMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getDeathTrapObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isDelayingActionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getDelayingActionObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
