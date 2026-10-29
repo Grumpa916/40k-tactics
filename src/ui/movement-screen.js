@@ -1,4 +1,5 @@
-import { renderMapReserveTray, tappedMapPosition } from './map-reserve-tray.js';
+import { renderMapReserveTray, renderVenatariIngressTray, tappedMapPosition } from './map-reserve-tray.js';
+import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
@@ -121,7 +122,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const state = session.getState();
     const playerId = state.activePlayer ?? state.battle?.activePlayerId;
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
-    const selectable=state.units.filter(unit=>unit.ownerId===playerId && ['deployed','reserves'].includes(unit.status) && !attachmentParent(state,unit));
+    const pendingIngressIds = new Set(getPendingVenatariIngress(state).map(unit => unit.id));
+    const selectable=state.units.filter(unit=>(unit.ownerId===playerId || pendingIngressIds.has(unit.id)) && ['deployed','reserves'].includes(unit.status) && !attachmentParent(state,unit));
     if (!selectable.some((unit) => unit.id === selectedUnitId)) {
       selectedUnitId = eligible[0]?.id ?? selectable[0]?.id ?? null;
       advanceRoll = null;
@@ -178,7 +180,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
     const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
     if(reserved)editor=`<div class="move-editor"><p class="move-editor__status"><strong>Reserves</strong></p><p>Tap an empty map position to place this unit on the battlefield.</p></div>`;
-    const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId});
+    const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId})+renderVenatariIngressTray(state,{selectedUnitId});
     const advisor=renderMovementAdvisor(state,{playerId,selectedUnitId,perspectivePlayerId:perspectivePlayerId ?? playerId});
     if (layoutMode === 'tabletop') {
       const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;

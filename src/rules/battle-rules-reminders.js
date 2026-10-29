@@ -8,6 +8,7 @@ import { getDatasheetWeaponOptions } from './saved-roster-combat-profile.js';
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
 import { rulesContextKey, isRulesPhaseOpening } from './rules-phase-window.js';
+import { getVenatariAbilityBlockReason, arrivedFromReservesThisTurn } from './venatari-abilities.js';
 export { rulesContextKey, isRulesPhaseOpening } from './rules-phase-window.js';
 
 const norm = value => String(value ?? '').trim().toLowerCase();
@@ -46,9 +47,13 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
     for (const unit of units) {
       for (const def of CUSTODES_REMINDER_DEFINITIONS) {
         if (!def.phases.includes(state.phase) || !reviewedAbility(state, unit, def.ability)) continue;
+        if (def.venatariOnly && !reviewedAbility(state, unit, 'Take Wing')) continue;
+        if (def.requiresIngress && !arrivedFromReservesThisTurn(state, unit.id)) continue;
         if (def.id==='praesidium-shield' && !getRecordedCombatRules(state,unit).effects.includes('sentinel-shield')) continue;
-        if (unit.status !== (def.reserves ? 'reserves' : 'deployed')) continue;
+        const used = def.limit && getReminderUse(state, {...def, ruleId:def.id, playerId, unitId:unit.id});
+        if (unit.status !== (def.reserves ? 'reserves' : 'deployed') && !(def.venatariControl && used)) continue;
         if (def.turn === 'own' && !ownTurn || def.turn === 'opponent' && ownTurn) continue;
+        if (def.venatariControl && !used && getVenatariAbilityBlockReason(state, unit, def.id)) continue;
         if (def.id === 'take-wing' && engaged.has(getCombatFormationRoot(state,unit)?.id)) continue;
         // The additional CP is a round-opening decision, even if the opponent goes first.
         if (def.id === 'aquila-commander' && state.battle.firstPlayerId && activePlayer(state) !== state.battle.firstPlayerId) continue;

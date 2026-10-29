@@ -1,4 +1,5 @@
 import { getReviewContextSnapshot } from '../rules/review-context-snapshot.js';
+import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 import { requirePreparationComplete } from "./event-preparation-transitions.js";
 import { BATTLE_STATUS } from "../state/battle.js";
 import { UNIT_STATUS } from "../state/unit.js";
@@ -173,6 +174,9 @@ export function changePhase(state, { phase } = {}) {
   const nextPhase = TURN_STEPS[phaseIndex + 1];
   if (phaseIndex < 0 || phase !== nextPhase) {
     throw new Error("Turn steps must resolve in order.");
+  }
+  if (getPendingVenatariIngress(state).length) {
+    throw new Error('Place the confirmed Swift Ruin arrival from its tray before leaving Movement.');
   }
   if (state.phase === "command") {
     const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;

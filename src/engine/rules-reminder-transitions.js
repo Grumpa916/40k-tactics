@@ -4,11 +4,17 @@ import { getBattleRulesReminders, rulesContextKey } from '../rules/battle-rules-
 import { recordCommandPointChange } from './command-points-ledger.js';
 import { recordCustodesKatahReadied } from './custodes-katah-transitions.js';
 
-export function recordRulesReminderUse(state, {playerId,unitId=null,ruleId,choice=null}={}) {
+export function requireRulesReminderUse(state, {playerId,unitId=null,ruleId,choice=null}={}) {
   const entry=getBattleRulesReminders(state,{playerId}).find(item=>item.ruleId===ruleId && (item.unitId??null)===unitId);
   if(!entry?.limit || !entry.available || entry.used) throw new Error('This rule is unavailable, already used, or outside its timing window.');
   if(entry.choices && !entry.choices.some(item=>item.id===choice)) throw new Error('Choose one of the listed rule effects.');
   if(!entry.choices && choice!==null) throw new Error('This rule does not require an effect choice.');
+  return entry;
+}
+
+export function recordRulesReminderUse(state, {playerId,unitId=null,ruleId,choice=null}={}) {
+  const entry = requireRulesReminderUse(state, {playerId,unitId,ruleId,choice});
+  if (entry.venatariControl) throw new Error('Use the Venatari ability controls to confirm timing and its tabletop result.');
   let next=state;
   if(ruleId==='aquila-commander') next=recordCommandPointChange(next,{playerId,amount:1,reason:'gain',note:'Aquila Commander',round:state.battle.round,turn:state.turn});
   if(ruleId==='superhuman-focus') {

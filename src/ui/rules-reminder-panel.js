@@ -1,5 +1,6 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote } from '../rules/battle-rules-reminders.js';
+import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const stylesheet=new URL('./styles/rules-reminders.css',import.meta.url).href;
@@ -17,7 +18,7 @@ function groupEntries(entries) {
   return [...grouped.values()];
 }
 
-function renderEntry(entry) {
+function renderEntry(entry, state) {
   const active = isActiveEffect(entry);
   const chosenEffect = entry.choices?.find(choice => choice.id === entry.used?.choice)?.effect;
   const context=' data-rule-id="'+esc(entry.ruleId)+'" data-rule-unit="'+esc(entry.unitId??'')+'" data-rule-player="'+esc(entry.playerId)+'"';
@@ -27,7 +28,9 @@ function renderEntry(entry) {
     (entry.limit?'<span>'+(active?'Active this phase':entry.used?'Used':'Available')+'</span>':'')+'</header>'+
     (entry.unitName?'<small>'+esc(entry.unitName)+'</small>':'')+'<small>'+esc(entry.timing??'')+(entry.cpCost?' · '+entry.cpCost+' CP':'')+'</small>'+
     '<p>'+esc(active?chosenEffect??entry.effect:entry.used?'This limited ability has already been used.':entry.effect)+'</p>'+(entry.used?'<p class="rules-reminder-used">Recorded in round '+esc(entry.used.round)+' · '+esc(entry.used.phase)+(entry.used.choice?' · '+esc(entry.choices?.find(choice=>choice.id===entry.used.choice)?.label??entry.used.choice):'')+'</p>':'')+
-    (actions?'<div class="rules-reminder-actions">'+actions+'</div>':'')+
+    (entry.used?.actualWounds !== undefined?'<p>'+esc(state.units?.find(unit=>unit.id===entry.used.targetId)?.name??entry.used.targetId)+' · '+esc(entry.used.actualWounds)+' wounds lost recorded</p>':'')+
+    (entry.used?.cpSpent !== undefined?'<p>'+esc(entry.used.cpSpent)+' CP spent</p>':'')+
+    (actions?'<div class="rules-reminder-actions">'+actions+'</div>':'')+renderVenatariAbilityControls(state, entry)+
     '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>';
 }
 
@@ -41,7 +44,7 @@ export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selecte
   const opening=entries.some(entry=>entry.kind==='decision');
   return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+entries.length+'</summary>'+
     (note?'<div class="rules-personal-note"><strong>My notes</strong><p>'+esc(note)+'</p></div>':'')+
-    entries.map(renderEntry).join('')+'</details>';
+    entries.map(entry=>renderEntry(entry,state)).join('')+'</details>';
 }
 
 export function renderTargetDefenseReminders(state,options={}) {
@@ -61,11 +64,11 @@ export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null
   return style()+'<div class="rules-reminder-backdrop" data-rules-backdrop><section class="rules-reminder-dialog" role="dialog" aria-modal="true" aria-labelledby="rules-reminder-title">'+
     '<header class="rules-reminder-heading"><h2 id="rules-reminder-title">Rules &amp; unit notes</h2><button type="button" data-close-rules-reminders>Close</button></header>'+
     '<p class="rules-reminder-phase">Current phase: '+esc(state.phase)+' · '+active.length+' current reminders</p>'+
-    '<p class="rules-reminder-help">Confirm distances and rule conditions at the table. “Mark used” tracks an ability; resolve its effect at the table. The CP confirmation and Re-ready buttons also update those recorded resources.</p>'+
+    '<p class="rules-reminder-help">Confirm distances and rule conditions at the table. “Mark used” tracks a tabletop declaration. Venatari controls update recorded wounds, reserves and the CP cost you confirm; CP confirmation and Re-ready buttons also update their recorded resources.</p>'+
     (message?'<p role="status">'+esc(message)+'</p>':'')+
     (canUndo?'<button type="button" data-undo-rule-use>Undo last reminder use</button>':'')+
-    '<div class="rules-reminder-list">'+(active.map(renderEntry).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
-    (used.length?'<details><summary>Used abilities · '+used.length+'</summary>'+used.map(renderEntry).join('')+'</details>':'')+
+    '<div class="rules-reminder-list">'+(active.map(entry=>renderEntry(entry,state)).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
+    (used.length?'<details><summary>Used abilities · '+used.length+'</summary>'+used.map(entry=>renderEntry(entry,state)).join('')+'</details>':'')+
     '<form class="rules-unit-note-editor" data-save-unit-rules-note><h3>My unit notes</h3><label>Unit<select data-rules-note-unit>'+units.map(unit=>'<option value="'+esc(unit.id)+'"'+(unit.id===unitId?' selected':'')+'>'+esc((state.players?.find(p=>p.id===unit.ownerId)?.name??unit.ownerId)+' · '+unit.name)+'</option>').join('')+'</select></label>'+
     '<label>Notes<textarea data-unit-rules-note maxlength="2000" rows="4" placeholder="A reminder for this unit…">'+esc(draft??getUnitBattleNote(state,unitId))+'</textarea></label><button type="submit"'+(!unitId?' disabled':'')+'>Save unit notes</button></form></section></div>';
 }
@@ -107,8 +110,15 @@ export function createRulesReminderController(container,{session,perspectivePlay
   }
   function input(event){if(event.target?.hasAttribute?.('data-unit-rules-note')&&unitId)drafts.set(unitId,event.target.value);}
   function change(event){if(!event.target?.hasAttribute?.('data-rules-note-unit'))return;captureDraft();unitId=event.target.value;message='';const field=container.querySelector?.('[data-unit-rules-note]');if(field)field.value=drafts.get(unitId)??getUnitBattleNote(session.getState(),unitId);event.target.blur?.();}
-  function submit(event){if(!event.target?.hasAttribute?.('data-save-unit-rules-note'))return;event.preventDefault?.();captureDraft();const unit=session.getState().units?.find(unit=>unit.id===unitId);try{message='Unit notes saved.';session.dispatch({type:COMMAND_TYPES.SET_UNIT_BATTLE_NOTE,payload:{playerId:unit?.ownerId,unitId,note:drafts.get(unitId)??''}});}catch(error){message=error.message;}refresh();}
-  function keydown(event){if(!open)return;if(event.key==='Escape'){event.preventDefault?.();close();return;}if(event.key==='Tab'){const dialog=container.querySelector?.('.rules-reminder-dialog');const items=[...(dialog?.querySelectorAll?.('button:not([disabled]),select,textarea,a[href]')??[])];const first=items[0],last=items.at(-1),active=container.ownerDocument?.activeElement;if(event.shiftKey&&active===first){event.preventDefault();last?.focus?.();}else if(!event.shiftKey&&active===last){event.preventDefault();first?.focus?.();}}}
+  function submit(event){
+    if(event.target?.hasAttribute?.('data-venatari-ability-form')) {
+      event.preventDefault?.();
+      try {session.dispatch({type:COMMAND_TYPES.RECORD_VENATARI_ABILITY_USE,payload:readVenatariAbilityForm(event.target)});message='Venatari ability recorded.';}
+      catch(error){message=error.message;open=true;}
+      refresh();return;
+    }
+    if(!event.target?.hasAttribute?.('data-save-unit-rules-note'))return;event.preventDefault?.();captureDraft();const unit=session.getState().units?.find(unit=>unit.id===unitId);try{message='Unit notes saved.';session.dispatch({type:COMMAND_TYPES.SET_UNIT_BATTLE_NOTE,payload:{playerId:unit?.ownerId,unitId,note:drafts.get(unitId)??''}});}catch(error){message=error.message;}refresh();}
+  function keydown(event){if(!open)return;if(event.key==='Escape'){event.preventDefault?.();close();return;}if(event.key==='Tab'){const dialog=container.querySelector?.('.rules-reminder-dialog');const items=[...(dialog?.querySelectorAll?.('button:not([disabled]),select,textarea,input,a[href],summary')??[])];const first=items[0],last=items.at(-1),active=container.ownerDocument?.activeElement;if(event.shiftKey&&active===first){event.preventDefault();last?.focus?.();}else if(!event.shiftKey&&active===last){event.preventDefault();first?.focus?.();}}}
   container.addEventListener?.('click',click);container.addEventListener?.('input',input);container.addEventListener?.('change',change);container.addEventListener?.('submit',submit);container.addEventListener?.('keydown',keydown);
   return {refresh,destroy(){for(const [name,fn] of [['click',click],['input',input],['change',change],['submit',submit],['keydown',keydown]])container.removeEventListener?.(name,fn);}};
 }

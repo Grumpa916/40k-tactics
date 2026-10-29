@@ -9,6 +9,19 @@
 .rules-reminder-card.is-used{opacity:.75;border-color:#5a6461}
 .rules-reminder-card.is-used header>span{color:#bbc2bf}
 .rules-reminder-card.is-active{border-color:#c4e99b;background:#243b29}
+.venatari-ability-controls>summary{min-height:44px;align-content:center;cursor:pointer;color:#c4e99b;font-weight:700}
+.venatari-ability-controls form{display:grid;gap:10px}
+.venatari-ability-controls label{display:grid;gap:5px}
+.venatari-ability-controls select{box-sizing:border-box;width:100%;min-height:44px;background:#0f1d22;color:#edf2eb;border:1px solid #61766e;border-radius:8px;font:inherit;padding:8px}
+.venatari-ability-controls .venatari-confirm{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.venatari-confirm input{width:22px;height:22px;flex-shrink:0;accent-color:#c4e99b}
+.venatari-number-choices{display:flex;flex-wrap:wrap;gap:6px;margin:0;border:1px solid #61766e;border-radius:8px;padding:8px}
+.venatari-number-choices label{position:relative;cursor:pointer}
+.venatari-number-choices input{position:absolute;opacity:0;width:1px;height:1px}
+.venatari-number-choices span{display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid #61766e;border-radius:6px}
+.venatari-number-choices input:checked+span{background:#c4e99b;color:#14201c;font-weight:800}
+.venatari-number-choices input:focus-visible+span{outline:3px solid #83c7ff}
+.venatari-ability-controls button{min-height:44px;padding:8px;border:1px solid #8dba70;border-radius:8px;background:#293c2d;color:#eaf1e8;font:inherit;cursor:pointer}
 .rules-reminder-actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .rules-reminder-actions button,.rules-reminder-dialog button{min-height:44px;padding:8px 12px;border:1px solid #8dba70;border-radius:8px;background:#293c2d;color:#eaf1e8;font:inherit;cursor:pointer}
 .rules-target-defense{border-color:#a6c985;background:#233326}
