@@ -439,7 +439,9 @@ export function getDelayingActionObjectiveStrategySignal(state, {
 
   let reason;
   if (rawControlVpLeverage + rawPairVpLeverage > 0 && vpLeverage === 0) {
-    reason = "The applicable Primary round/game cap is already filled by other scoring, so this objective has no additional same-turn Primary VP leverage.";
+    reason = context.remainingRoundCap === 0
+      ? "The 15 VP round cap is already filled by other Delaying Action scoring, so this objective has no additional same-turn Primary VP leverage."
+      : "The 45 VP Primary game cap leaves no remaining game allowance, so this objective has no additional same-turn Primary VP leverage.";
   } else if (context.round >= 5 && rawControlVpLeverage > 0 && rawPairVpLeverage > 0) {
     reason = vpLeverage < 7
       ? `Round 5 resolves both Delaying Action objective checks at end of turn; this ${role} objective has ${vpLeverage} VP of remaining same-turn leverage before Primary caps, from conditions normally worth 7 VP combined.`
