@@ -60,6 +60,24 @@ function terrainEntries(state) {
   }));
 }
 
+function ownDeploymentZonePoints(state, playerId) {
+  const geometry = mapGeometry(state);
+  const attackerPlayerId = state?.preGameSetup?.attackerPlayerId ?? null;
+  const defenderPlayerId = state?.preGameSetup?.defenderPlayerId ?? null;
+  const key = playerId === attackerPlayerId
+    ? "attackerDeployment"
+    : playerId === defenderPlayerId
+      ? "defenderDeployment"
+      : null;
+  const points = key ? geometry?.deploymentZones?.[key]?.points : null;
+  return Array.isArray(points) && points.length >= 3 ? points : null;
+}
+
+function terrainWhollyWithinDeploymentZone(entry, deploymentPoints) {
+  if (!deploymentPoints) return null;
+  return entry.points.length >= 3 && entry.points.every((point) => pointInTerrainPolygon(point, deploymentPoints));
+}
+
 export function getDeathTrapTerrainAreasForPosition(state, position) {
   return Object.freeze(terrainEntries(state).filter((entry) => pointInTerrainPolygon(position, entry.points)));
 }
@@ -91,13 +109,28 @@ export function getDeathTrapTerrainOptions(state, { playerId, perspectivePlayerI
   const turn = state?.turn ?? 0;
   const trappedIds = new Set(events.map((event) => event.payload.terrainAreaId));
   const trappedThisTurnIds = new Set(events.filter((event) => event.payload.round === round && event.payload.turn === turn).map((event) => event.payload.terrainAreaId));
+  const deploymentPoints = ownDeploymentZonePoints(state, playerId);
   return Object.freeze(terrainEntries(state).map((entry) => {
     const objectiveIds = objectiveIdsForTerrain(state, entry);
+    const nonHomeObjectiveIds = Object.freeze(objectiveIds.filter((objectiveId) => {
+      const objective = (state?.objectives ?? []).find((item) => item.id === objectiveId);
+      return objective && !isPlayerHomeObjective(state, objective, playerId, perspectivePlayerId);
+    }));
+    const withinOwnDeploymentZone = terrainWhollyWithinDeploymentZone(entry, deploymentPoints);
+    const boobyTrapEligibleByGeometry = nonHomeObjectiveIds.length > 0 || withinOwnDeploymentZone === false
+      ? true
+      : withinOwnDeploymentZone === true
+        ? false
+        : null;
     return Object.freeze({
       terrainAreaId: entry.terrainAreaId,
       label: `${entry.terrainAreaId}${objectiveIds.length ? " · objective terrain" : ""}`,
       objectiveIds,
+      nonHomeObjectiveIds,
       containsObjective: objectiveIds.length > 0,
+      containsEligibleObjective: nonHomeObjectiveIds.length > 0,
+      withinOwnDeploymentZone,
+      boobyTrapEligibleByGeometry,
       trapped: trappedIds.has(entry.terrainAreaId),
       trappedThisTurn: trappedThisTurnIds.has(entry.terrainAreaId)
     });
