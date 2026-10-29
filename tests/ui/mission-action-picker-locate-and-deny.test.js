@@ -41,12 +41,13 @@ test("Locate and Deny setup picker shows only eligible terrain and keeps setup c
   const eligible = terrain.filter((item) => item.eligible);
   const ineligible = terrain.filter((item) => item.withinOwnDeploymentZone === true);
   assert.ok(eligible.length >= setup.expectedMarkerCount);
-  assert.ok(ineligible.length > 0);
 
   const html = createMissionActionPicker().render(seed, "runner");
   assert.match(html, /Record Locate and Deny setup/);
   assert.match(html, new RegExp(`${setup.expectedMarkerCount}`));
   for (const item of eligible) assert.match(html, new RegExp(`data-locate-setup-terrain=["']${item.terrainAreaId}["']`));
+  // Some official layouts legitimately have no terrain wholly within this player's deployment zone.
+  // When they do, the picker must still exclude those ineligible terrain areas.
   for (const item of ineligible) assert.doesNotMatch(html, new RegExp(`data-locate-setup-terrain=["']${item.terrainAreaId}["']`));
   assert.doesNotMatch(html, /Central objective for Sensor Sweep/);
 });
