@@ -73,6 +73,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   contextOpenStates = { "unit-status": true, "event-log": true },
   referenceOpenStates = { stratagems: true },
   missionOpenStates = {},
+  missionReviewOpen = false,
   setupWorkspaceTab = "saves",
   setupNavigationMessage = "",
   layoutMode = "tabletop",
@@ -94,7 +95,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
       '<strong>' + phase.label + '</strong><span>' +
       (phase.id === "setup" ? "Pre-game & cloud saves" : status) +
       '</span></button></li>';
-  }).join("");
+  }).join("") + (PHASES.some(phase => phase.id === viewedPhase)
+    ? '<li class="battle-phase battle-phase--utility"><button type="button" class="battle-phase__button battle-phase__button--missions" data-toggle-mission-review aria-expanded="' + String(missionReviewOpen) + '"><strong>Missions</strong><span>Review both armies</span></button></li>'
+    : "");
 
   const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
     renderStatusSummaryContent(state, viewedPhase, clockPanelOpen) + '</section>';
@@ -148,16 +151,22 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
   const shellLiveHeader = tabletopExperiment
     ? '<header class="battle-shell__tabletop-header">' +
-      '<div class="battle-shell__tabletop-topline">' + statusSummary +
-      '<div class="battle-shell__tabletop-missions" data-battle-mission-summary-host>' + persistentMissionSummary + '</div></div>' +
+      '<div class="battle-shell__tabletop-topline">' + statusSummary + '</div>' +
       '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       layoutSwitch + '</header>'
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
+  const missionReviewMarkup = '<div class="battle-shell__mission-review"' +
+    (missionReviewOpen ? '' : ' hidden') + ' data-mission-review-overlay>' +
+    '<section class="battle-shell__mission-review-dialog" role="dialog" aria-modal="true" aria-labelledby="battle-mission-review-title">' +
+    '<header class="battle-shell__mission-review-heading"><h2 id="battle-mission-review-title">Mission review</h2>' +
+    '<button type="button" data-close-mission-review aria-label="Close mission review">Close</button></header>' +
+    '<div class="battle-shell__mission-review-body" data-battle-mission-summary-host>' + persistentMissionSummary + '</div>' +
+    '</section></div>';
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
-    shellLiveHeader + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
+    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
@@ -239,6 +248,7 @@ export function createBattleShell(container, {
   let contextOpenStates = { "unit-status": true, "event-log": true, "older-events": false };
   let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
   let missionOpenStates = {};
+  let missionReviewOpen = false;
   let scoreAdjustPlayerId = null;
   let scoreAdjustCollapsed = false;
   let scoreAdjustMessage = "";
@@ -425,7 +435,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
@@ -561,6 +571,31 @@ export function createBattleShell(container, {
     else if (next === "contested") { payload.controlState = "contested"; payload.contestingPlayerIds = players.map((player) => player.id); }
     try { session.dispatch({ type: COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, payload }); } catch (error) { console.error(error); }
     render();
+  }
+
+  function handleMissionReview(event) {
+    const toggle = event.target?.closest?.("[data-toggle-mission-review]");
+    const close = event.target?.closest?.("[data-close-mission-review]");
+    const overlay = container.querySelector?.("[data-mission-review-overlay]");
+    if (!overlay) return;
+    if (!toggle && !close && event.target !== overlay) return;
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    missionReviewOpen = Boolean(toggle) && !missionReviewOpen;
+    overlay.hidden = !missionReviewOpen;
+    const button = container.querySelector?.("[data-toggle-mission-review]");
+    button?.setAttribute?.("aria-expanded", String(missionReviewOpen));
+    if (missionReviewOpen) container.querySelector?.("[data-close-mission-review]")?.focus?.();
+    else button?.focus?.();
+  }
+
+  function handleMissionReviewKeydown(event) {
+    if (event.key !== "Escape" || !missionReviewOpen) return;
+    missionReviewOpen = false;
+    const overlay = container.querySelector?.("[data-mission-review-overlay]");
+    if (overlay) overlay.hidden = true;
+    container.querySelector?.("[data-toggle-mission-review]")?.setAttribute?.("aria-expanded", "false");
+    container.querySelector?.("[data-toggle-mission-review]")?.focus?.();
   }
 
   function handleMissionSummaryToggle(event) {
@@ -858,6 +893,8 @@ export function createBattleShell(container, {
     render();
   }
 
+  container.addEventListener?.("click", handleMissionReview);
+  container.addEventListener?.("keydown", handleMissionReviewKeydown);
   container.addEventListener?.("click", handleMissionSummaryToggle);
   container.addEventListener?.("click", handleScoreAdjust);
   container.addEventListener?.("click", handleMapObjectiveToggle);
@@ -900,6 +937,8 @@ export function createBattleShell(container, {
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
       container.removeEventListener?.("click", handleMissionSummaryToggle);
+      container.removeEventListener?.("click", handleMissionReview);
+      container.removeEventListener?.("keydown", handleMissionReviewKeydown);
       container.removeEventListener?.("click", handleScoreAdjust);
       container.removeEventListener?.("click", handleMapObjectiveToggle);
       container.removeEventListener?.("click", handleSetupWorkspaceNavigation);
