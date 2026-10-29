@@ -194,12 +194,13 @@ test("base Movement scorer applies zero Smoke premium to Battle-shocked or zero-
     { runnerBattleShocked: false, runnerOc: 0 }
   ]) {
     const state = seed({ round: 2, phase: "movement", ...settings });
+    state.units = state.units.filter((item) => item.id === "runner");
     const base = getBaseMovementStrategicRecommendations(state, { playerId: "p1", perspectivePlayerId: "p1" });
     const runner = base.recommendations.find((item) => item.unitId === "runner");
     assert.ok(runner);
     const candidates = [runner, ...(runner.alternatives ?? [])];
     const smokeObjective = candidates.find((item) => item.primaryStrategySignal?.active === true);
-    assert.ok(smokeObjective, "expected a Smoke and Mirrors objective candidate in base Movement output");
+    assert.ok(smokeObjective, "expected a Smoke and Mirrors objective candidate in isolated base Movement output");
     assert.ok(smokeObjective.primaryStrategySignal.score > 0, "strategy signal should exist so this proves score suppression rather than signal absence");
     assert.equal(smokeObjective.primaryStrategyScoreApplied, 0);
     assert.match(smokeObjective.reason, /bonuses are suppressed|no usable OC/i);
