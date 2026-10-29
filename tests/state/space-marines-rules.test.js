@@ -4,10 +4,10 @@ import { getRulesDataRevisionForFaction } from '../../src/data/rules-data-revisi
 import { SPACE_MARINES_DETACHMENTS, SPACE_MARINES_ARMY_RULES } from '../../src/data/space-marines-rules.js';
 import { detachmentOptions } from '../../src/ui/army-builder-options.js';
 
-test('Space Marines rules revision exposes Oath of Moment and official source metadata', () => {
+test('Space Marines rules revision exposes current Combat Doctrines and official source metadata', () => {
   const revision = getRulesDataRevisionForFaction('Space Marines');
   assert.equal(revision.edition, '11th');
-  assert.equal(revision.factionRules.armyRules[0].name, 'Oath of Moment');
+  assert.equal(revision.factionRules.armyRules[0].name, 'Combat Doctrines');
   assert.equal(SPACE_MARINES_ARMY_RULES.implementationStatus, 'reference-only');
   assert.match(revision.factionRules.source.sourceUrl, /warhammer-community\.com/);
 });

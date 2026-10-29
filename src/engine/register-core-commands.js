@@ -1,3 +1,4 @@
+import { recordRulesReminderUse, setUnitBattleNote } from './rules-reminder-transitions.js';
 import { transferMapReserve } from './map-reserve-transitions.js';
 import { updateDeploymentWorkspace } from './deployment-workspace-transitions.js';
 import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
@@ -51,6 +52,8 @@ import { drawSecondaryMission, setSecondaryMissionMode } from "../rules/secondar
 
 export function registerCoreCommandHandlers() {
   const handlers = [
+    [COMMAND_TYPES.RECORD_RULES_REMINDER_USE, (state, command) => recordRulesReminderUse(state, command.payload)],
+    [COMMAND_TYPES.SET_UNIT_BATTLE_NOTE, (state, command) => setUnitBattleNote(state, command.payload)],
     [COMMAND_TYPES.TRANSFER_MAP_RESERVE, (state, command) => transferMapReserve(state, command.payload)],
     [COMMAND_TYPES.UPDATE_DEPLOYMENT_WORKSPACE, (state, command) => updateDeploymentWorkspace(state, command.payload)],
     [COMMAND_TYPES.UPDATE_PREPARATION, (state, command) => updatePreparation(state, command.payload)],

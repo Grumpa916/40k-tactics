@@ -1,6 +1,7 @@
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
+import { isRulesPhaseOpening } from '../rules/rules-phase-window.js';
 import {
   getCustodesKatahDefinition,
   getCustodesKatahState,
@@ -27,6 +28,9 @@ export function recordCustodesKatahUse(state, { playerId, unitId, katahName } = 
   if (!readiness.readied) throw new Error("This unit has already expended its Martial Ka'tah readiness for the current cycle.");
   if (!isCustodesKatahTimingAvailable(state, definition.name, playerId)) {
     throw new Error(`${definition.name} cannot be recorded in the current phase/turn timing.`);
+  }
+  if (['Dacatarai','Kaptaris'].includes(definition.name) && !isRulesPhaseOpening(state)) {
+    throw new Error(`${definition.name} must be chosen at the start of the Fight phase.`);
   }
 
   return appendHistoryEntry(state, createEvent("custodes.katah_expended", {

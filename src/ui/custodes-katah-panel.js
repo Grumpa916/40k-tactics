@@ -1,5 +1,6 @@
 import { ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
+import { isRulesPhaseOpening } from '../rules/rules-phase-window.js';
 import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import {
   isMartialKatahEligible,
@@ -85,7 +86,8 @@ export function renderCustodesKatahPhasePanel(state, { phase, unitId = null } = 
       '</p></section>';
   }
   const choices = ADEPTUS_CUSTODES_KATAH.filter(definition =>
-    names.includes(definition.name) && isCustodesKatahTimingAvailable(state, definition.name, playerId)
+    names.includes(definition.name) && isCustodesKatahTimingAvailable(state, definition.name, playerId) &&
+    (!['Dacatarai','Kaptaris'].includes(definition.name) || isRulesPhaseOpening(state))
   );
   if (!choices.length) return '';
   const buttons = choices.map(definition =>

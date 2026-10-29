@@ -31,6 +31,8 @@ export const COMMAND_TYPES = Object.freeze({
   REFINE_MOVEMENT_ACTION: "unit.refine_movement_action",
   UNDO_MOVEMENT_REFINEMENT: "unit.undo_movement_refinement",
   UNDO_MOVEMENT_ACTION: "unit.undo_movement_action",
+  RECORD_RULES_REMINDER_USE: "rules.record_reminder_use",
+  SET_UNIT_BATTLE_NOTE: "unit.set_battle_note",
   RECORD_CUSTODES_KATAH_USE: "custodes.record_katah_use",
   RECORD_UNIT_CASUALTY: "unit.record_casualty",
   UNDO_UNIT_CASUALTY: "unit.undo_casualty",

@@ -1,4 +1,7 @@
 const LABELS = {
+  'rules.record_reminder_use': 'rule reminder use',
+  'custodes.record_katah_use': 'rule reminder use',
+  'unit.set_battle_note': 'unit note',
   'combat.resolve_attack': 'attack',
   'unit.normal_move': 'normal move', 'unit.advance': 'advance', 'unit.record_stationary': 'stationary choice',
   'unit.record_fall_back': 'fall back', 'battlefield_map.adjust_live_position': 'map move',
