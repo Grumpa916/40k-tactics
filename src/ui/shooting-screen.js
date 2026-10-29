@@ -1,3 +1,4 @@
+import { renderPhaseArmyRoster } from './phase-army-roster.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { renderActionReceipt } from './action-receipt.js';
@@ -182,7 +183,8 @@ export function createShootingScreen(container, {
       const targetComparison = shootingTargetComparisonCards(
         selectedAttackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison
       );
-      container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop${selectedTargetId ? ' is-target-selected' : ''}">
+      container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
+        ${renderPhaseArmyRoster(state, perspectivePlayerId)}
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
           perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
           selectedUnitId: activeUnitId })}

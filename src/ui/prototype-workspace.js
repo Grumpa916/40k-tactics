@@ -1,3 +1,4 @@
+import { refreshPhaseArmyRoster } from './phase-army-roster.js';
 import { renderArmyUnitDialog, renderEventLogPanel } from './battle-context-panels.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { createCommand } from '../commands/command.js';
@@ -34,12 +35,14 @@ export function renderPrototypeWorkspaceTools() {
 
 // UI-only preferences persist across shell/phase renders without touching game state.
 export function createPrototypeWorkspace(container, {session, gameData = {}}) {
+  let armyView = 'mine';
   let collapsed = true, unitId = null, logOpen = false, returnFocus = null;
 
   function refresh() {
     const shell = container.querySelector?.('.battle-shell');
     if (!shell) return;
     const state = session.getState();
+    refreshPhaseArmyRoster(container, armyView);
     const combat = !!container.querySelector?.('.shoot-screen--tabletop, .combat-workspace');
     shell.setAttribute('data-battle-focus', String(combat));
     shell.setAttribute('data-controls-collapsed', String(combat && collapsed));
@@ -67,6 +70,8 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
 
   function click(event) {
     const target = event.target;
+    const armyTab = target?.closest?.('[data-phase-army-view]');
+    if (armyTab) { armyView = armyTab.getAttribute('data-phase-army-view') === 'opponent' ? 'opponent' : 'mine'; refreshPhaseArmyRoster(container, armyView); return; }
     if (target?.closest?.('[data-workspace-panel]')) { collapsed = !collapsed; refresh(); }
     const detail = target?.closest?.('[data-open-unit-details]');
     if (detail) {

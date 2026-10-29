@@ -44,3 +44,8 @@
 @media (max-width:1100px) and (orientation:landscape){
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace.has-left-rail[data-combat-phase=movement]{grid-template-columns:152px minmax(0,1fr) 285px!important}
 }
+
+
+.movement-roster__entry{display:flex;gap:3px;align-items:stretch}
+.movement-roster__entry .movement-roster__row{flex:1;min-width:0}
+.movement-roster__reference{flex:0 0 44px;min-height:44px!important;margin:0 0 4px;padding:3px!important;font-size:15px!important}

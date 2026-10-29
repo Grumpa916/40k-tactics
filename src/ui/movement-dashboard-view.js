@@ -16,6 +16,7 @@ function characteristic(ref, ...keys) {
 function movementStatus(state, unit, action, refinement) {
   if (unit?.status === 'reserves') return 'RESERVES';
   if (unit?.status === 'destroyed') return 'DESTROYED';
+  if (unit?.status === 'embarked') return 'EMBARKED';
   if (refinement?.movementType === 'advance') return 'ADVANCED';
   if (refinement?.movementType === 'fall_back') return 'FELL BACK';
   if (refinement?.movementType === 'special') return 'SPECIAL';
@@ -41,17 +42,17 @@ export function renderMovementRosterRail(state, {
   const myId = perspectivePlayerId ?? playerId ?? players[0]?.id ?? null;
   const opponentId = players.find(player => player.id !== myId)?.id ?? null;
   const ownerId = rosterView === 'opponent' ? opponentId : myId;
-  const units = (state?.units ?? []).filter(unit => unit.ownerId === ownerId && unit.status !== 'destroyed' && unit.status !== 'embarked');
+  const units = (state?.units ?? []).filter(unit => unit.ownerId === ownerId);
   const symbols = liveUnitSymbolLabels(state?.units ?? []);
   const rows = units.map(unit => {
     const activeArmy = unit.ownerId === playerId;
     const selectable = activeArmy && ['deployed','reserves'].includes(unit.status);
     const status = movementStatus(state, unit, actionForUnit(unit.id), refinementForUnit(unit.id));
     const selected = unit.id === selectedUnitId;
-    return `<button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : 'disabled'} aria-pressed="${selected}">
+    return `<div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : `data-open-unit-details="${esc(unit.id)}"`} aria-pressed="${selected}">
       <span class="movement-roster__token ${unit.ownerId === myId ? 'is-friendly' : 'is-opponent'}">${esc(symbols.get(unit.id) ?? 'U')}</span>
       <span class="movement-roster__identity"><strong>${esc(unit.name ?? unit.id)}</strong><small>${esc(status)}</small></span>
-    </button>`;
+    </button>${selectable ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>`;
   }).join('');
   return `<section class="movement-roster" aria-label="Army units">
     <div class="movement-roster__tabs">
@@ -84,3 +85,4 @@ export function renderMovementSelectedUnitCard(state, unit, { action = null, ref
     <div class="movement-selected-unit__tabs" aria-label="Unit reference tabs"><span class="is-active">Movement</span><span>Weapons</span><span>Abilities</span><span>Profile</span></div>
   </section>`;
 }
+
