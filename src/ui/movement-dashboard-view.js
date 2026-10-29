@@ -63,10 +63,12 @@ export function renderMovementRosterRail(state, {
   </section>`;
 }
 
-export function renderMovementSelectedUnitCard(state, unit, { action = null, refinement = null } = {}) {
+export function renderMovementSelectedUnitCard(state, unit, { action = null, refinement = null, perspectivePlayerId = null } = {}) {
   if (!unit) return `<section class="movement-selected-unit"><h2>Selected Unit</h2><p>Select one of your units on the map or in the army list.</p></section>`;
   const ref = getArmyUnitReference(state, unit);
   const symbols = liveUnitSymbolLabels(state?.units ?? []);
+  const myId = perspectivePlayerId ?? state?.players?.[0]?.id ?? state?.activePlayer ?? unit.ownerId;
+  const tokenSide = unit.ownerId === myId ? 'is-friendly' : 'is-opponent';
   const stats = [
     ['M', characteristic(ref,'movement','Move')],
     ['T', characteristic(ref,'toughness','Toughness')],
@@ -77,7 +79,7 @@ export function renderMovementSelectedUnitCard(state, unit, { action = null, ref
   const status = movementStatus(state, unit, action, refinement);
   return `<section class="movement-selected-unit" data-movement-selected-unit>
     <div class="movement-selected-unit__heading">
-      <span class="movement-selected-unit__token">${esc(symbols.get(unit.id) ?? 'U')}</span>
+      <span class="movement-selected-unit__token ${tokenSide}">${esc(symbols.get(unit.id) ?? 'U')}</span>
       <span><small>SELECTED UNIT</small><strong>${esc(unit.name ?? unit.id)}</strong><em>${esc(ownerName(state, unit.ownerId))}</em></span>
       <b>${esc(status)}</b>
     </div>

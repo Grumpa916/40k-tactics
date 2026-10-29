@@ -49,3 +49,6 @@
 .movement-roster__entry{display:flex;gap:3px;align-items:stretch}
 .movement-roster__entry .movement-roster__row{flex:1;min-width:0}
 .movement-roster__reference{flex:0 0 44px;min-height:44px!important;margin:0 0 4px;padding:3px!important;font-size:15px!important}
+
+.movement-selected-unit__token.is-friendly{background:#213f60;border-color:#79bbff}
+.movement-selected-unit__token.is-opponent{background:#602e34;border-color:#ff8585}
