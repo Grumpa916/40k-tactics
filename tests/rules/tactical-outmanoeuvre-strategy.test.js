@@ -102,7 +102,8 @@ function state({
   commandAwardAmount = 0,
   priorPrimaryVp = 0,
   runnerBattleShocked = false,
-  runnerOc = 3
+  runnerOc = 3,
+  rolesKnown = true
 } = {}) {
   const turn = round;
   const objectives = [
@@ -124,7 +125,7 @@ function state({
     turn,
     activePlayer: "p1",
     battle: { status: "active", round, activePlayerId: "p1" },
-    preGameSetup: { attackerPlayerId: "p1", defenderPlayerId: "p2" },
+    preGameSetup: rolesKnown ? { attackerPlayerId: "p1", defenderPlayerId: "p2" } : {},
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
     battlefieldMap: {
       missionSetup: {
@@ -293,6 +294,20 @@ test("the player home objective carries no Outmanoeuvre mission leverage", () =>
   assert.equal(objectiveSignal.vpLeverage, 0);
   assert.equal(objectiveSignal.stagingVpLeverage, 0);
   assert.match(objectiveSignal.reason, /does not satisfy either Outmanoeuvre/i);
+});
+
+test("missing home roles do not fabricate non-home Outmanoeuvre VP", () => {
+  const s = state({ round: 4, rolesKnown: false, centralController: "p1" });
+  const context = strategy(s);
+  const objectiveSignal = signal(s, "event-companion:Central 1", { control: "controlled" });
+  assert.equal(context.playerHomeRoleKnown, false);
+  assert.equal(context.objectiveStateKnown, false);
+  assert.equal(context.nonHomeControlled, 0);
+  assert.equal(context.rawRecordedVp, 0);
+  assert.equal(objectiveSignal.nonHome, false);
+  assert.equal(objectiveSignal.vpLeverage, 0);
+  assert.equal(objectiveSignal.stagingVpLeverage, 0);
+  assert.match(objectiveSignal.reason, /player-confirmed/i);
 });
 
 test("incomplete objective control does not fabricate exact Outmanoeuvre VP", () => {
