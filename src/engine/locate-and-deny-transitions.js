@@ -11,8 +11,13 @@ export function recordLocateAndDenyMarkerSetup(state, {
   if (!playerId || !isLocateAndDenyMissionForPlayer(state, playerId, perspective)) {
     throw new Error("Locate and Deny is not active for that player.");
   }
-  if (state?.battle?.status === "active" || Number(state?.battle?.round) > 0) {
-    throw new Error("Locate and Deny operation markers must be recorded before the first turn begins.");
+  const locateActionStarted = (state?.history ?? []).some((event) =>
+    event?.type === "shooting.unit_activated" &&
+    event.payload?.playerId === playerId &&
+    event.payload?.missionDefinitionId === "primary-locate-and-deny"
+  );
+  if (locateActionStarted) {
+    throw new Error("Locate and Deny marker setup cannot be changed after Sensor Sweep has been started.");
   }
   if (!Array.isArray(terrainAreaIds)) throw new TypeError("terrainAreaIds must be an array.");
   const unique = [...new Set(terrainAreaIds.filter((id) => typeof id === "string" && id.length > 0))];
@@ -29,7 +34,8 @@ export function recordLocateAndDenyMarkerSetup(state, {
     playerId,
     terrainAreaIds: unique,
     markerType: "locate-and-deny-operation",
-    sourceMissionDefinitionId: "primary-locate-and-deny"
+    sourceMissionDefinitionId: "primary-locate-and-deny",
+    lateAppCapture: state?.battle?.status === "active"
   }));
   const setup = getLocateAndDenySetup(next, { playerId, perspectivePlayerId: perspective });
   if (!setup.setupComplete) throw new Error("Locate and Deny marker setup could not be validated.");
