@@ -49,7 +49,9 @@ function shootingActivationPayload({
   objectiveId,
   terrainAreaId,
   reviewTiming,
-  rulesConfirmed
+  rulesConfirmed,
+  locateSetupOnly,
+  locateMarkerSetupTerrainAreaIds
 }) {
   return {
     unitId,
@@ -59,7 +61,9 @@ function shootingActivationPayload({
     objectiveId,
     ...(terrainAreaId != null ? { terrainAreaId } : {}),
     reviewTiming,
-    rulesConfirmed
+    rulesConfirmed,
+    ...(locateSetupOnly === true ? { locateSetupOnly: true } : {}),
+    ...(Array.isArray(locateMarkerSetupTerrainAreaIds) ? { locateMarkerSetupTerrainAreaIds } : {})
   };
 }
 
@@ -91,7 +95,9 @@ export function recordShootingActivation(state, {
   objectiveId = null,
   terrainAreaId = null,
   reviewTiming = null,
-  rulesConfirmed = false
+  rulesConfirmed = false,
+  locateSetupOnly = false,
+  locateMarkerSetupTerrainAreaIds = null
 } = {}, context = {}) {
   return executeCommand(
     state,
@@ -103,7 +109,9 @@ export function recordShootingActivation(state, {
       objectiveId,
       terrainAreaId,
       reviewTiming,
-      rulesConfirmed
+      rulesConfirmed,
+      locateSetupOnly,
+      locateMarkerSetupTerrainAreaIds
     })),
     context
   );
@@ -125,7 +133,9 @@ export function activateShootingUnit(session, {
   objectiveId = null,
   terrainAreaId = null,
   reviewTiming = null,
-  rulesConfirmed = false
+  rulesConfirmed = false,
+  locateSetupOnly = false,
+  locateMarkerSetupTerrainAreaIds = null
 } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
@@ -139,7 +149,9 @@ export function activateShootingUnit(session, {
       objectiveId,
       terrainAreaId,
       reviewTiming,
-      rulesConfirmed
+      rulesConfirmed,
+      locateSetupOnly,
+      locateMarkerSetupTerrainAreaIds
     })),
     context
   );
