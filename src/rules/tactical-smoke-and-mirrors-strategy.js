@@ -115,14 +115,6 @@ function territoryForObjective(state, playerId, objective) {
   return getTerritoryStatusForPosition(state, { playerId, position: objective.position });
 }
 
-function projectedWithExtraRecurring(context, extraRecurringVp) {
-  return projectedMissionPrimaryVp(
-    context.rawRecordedVp + Math.max(0, Number(extraRecurringVp) || 0),
-    context.actualMissionVpThisTurn,
-    context.additionalPrimaryAllowance
-  );
-}
-
 export function getSmokeAndMirrorsPrimaryStrategyContext(state, {
   playerId,
   perspectivePlayerId = defaultPerspectivePlayerId(state),
@@ -258,6 +250,7 @@ export function getSmokeAndMirrorsPrimaryStrategyContext(state, {
       "A completed Decoy continues scoring on later turns while its operation marker remains on the battlefield; friendly control is not required for the recurring Decoy VP after placement.",
       "Enemy-territory bonuses use verified Event Companion territory geometry. Objectives inside the map uncertainty band receive only the certain 2 VP base value until confirmed.",
       "Rounds 2-4 resolve the binary 4 VP non-home control condition in the Command phase; Round 5 resolves it at end of turn.",
+      "The binary 4 VP control condition does not multiply for extra non-home objectives; additional objectives provide resilience only.",
       "The 10 VP four-decoy endgame award is separate from the 15 VP battle-round cap but still respects the 45 VP Primary game cap.",
       "Smoke and Mirrors has no direct kill-scoring condition, so target destruction receives no automatic Primary VP premium.",
       "Recorded mission_marker.removed events remove Decoys from persistent state; approximate map proximity never removes a marker automatically."
@@ -326,27 +319,18 @@ export function getSmokeAndMirrorsObjectiveStrategySignal(state, {
   }
 
   const recurringValue = 2 + (enemyTerritory ? 2 : 0);
-  const projectedWithDecoy = projectedWithExtraRecurring(context, recurringValue);
-  const decoyActionVpLeverage = !decoyed && !pendingDecoy
-    ? Math.max(0, projectedWithDecoy - context.cappedRecordedVp)
-    : 0;
-  const pendingCompletionVpLeverage = pendingDecoy
-    ? Math.max(0, projectedWithDecoy - context.cappedRecordedVp)
-    : 0;
-
-  let controlVpLeverage = 0;
+  const rawProspectiveDecoyVp = decoyed ? 0 : recurringValue;
+  let rawControlVpLeverage = 0;
   let stagingVpLeverage = 0;
   let controlPreservationVpLeverage = 0;
+
   if (context.round >= 2 && context.objectiveStateKnown) {
     if (context.commandCheckpointCompleted) {
-      stagingVpLeverage = context.remainingPrimaryGameVp > 0 ? 4 : 0;
+      const establishesNextCheckpoint = context.nonHomeControlled === 0 && !controlledNow;
+      const preservesOnlyNextCheckpoint = context.nonHomeControlled === 1 && controlledNow;
+      stagingVpLeverage = context.remainingPrimaryGameVp > 0 && (establishesNextCheckpoint || preservesOnlyNextCheckpoint) ? 4 : 0;
     } else if (context.nonHomeControlled === 0 && !controlledNow) {
-      const withControl = projectedMissionPrimaryVp(
-        context.rawRecordedVp + 4,
-        context.actualMissionVpThisTurn,
-        context.additionalPrimaryAllowance
-      );
-      controlVpLeverage = Math.max(0, withControl - context.cappedRecordedVp);
+      rawControlVpLeverage = 4;
     } else if (context.nonHomeControlled === 1 && controlledNow) {
       const withoutControl = projectedMissionPrimaryVp(
         Math.max(0, context.rawRecordedVp - 4),
@@ -357,12 +341,26 @@ export function getSmokeAndMirrorsObjectiveStrategySignal(state, {
     }
   }
 
+  const prospectiveProjectedVp = projectedMissionPrimaryVp(
+    context.rawRecordedVp + rawProspectiveDecoyVp + rawControlVpLeverage,
+    context.actualMissionVpThisTurn,
+    context.additionalPrimaryAllowance
+  );
+  const prospectiveSameTurnGain = Math.max(0, prospectiveProjectedVp - context.cappedRecordedVp);
+  let prospectiveRemaining = prospectiveSameTurnGain;
+  const decoyGain = Math.min(rawProspectiveDecoyVp, prospectiveRemaining);
+  prospectiveRemaining -= decoyGain;
+  const controlVpLeverage = Math.min(rawControlVpLeverage, prospectiveRemaining);
+  const decoyActionVpLeverage = !decoyed && !pendingDecoy ? decoyGain : 0;
+  const pendingCompletionVpLeverage = pendingDecoy ? decoyGain : 0;
+
   const wouldReachEndgameThreshold = !decoyed && context.decoyCount === 3;
   const pendingWouldReachEndgameThreshold = pendingDecoy && context.decoyCount === 3;
+  const remainingGameAfterProspective = Math.max(0, context.remainingGameAfterProjectedTurn - prospectiveSameTurnGain);
   const endgameVpLeverage = (wouldReachEndgameThreshold || pendingWouldReachEndgameThreshold)
-    ? Math.min(10, context.remainingGameAfterProjectedTurn)
+    ? Math.min(10, remainingGameAfterProspective)
     : 0;
-  const directVpLeverage = decoyActionVpLeverage + pendingCompletionVpLeverage + controlVpLeverage + controlPreservationVpLeverage;
+  const directVpLeverage = prospectiveSameTurnGain + controlPreservationVpLeverage;
 
   let score = 0.05;
   if (decoyActionVpLeverage > 0) score = Math.max(score, 0.28 + 0.46 * clamp01(decoyActionVpLeverage / 4));
@@ -395,9 +393,11 @@ export function getSmokeAndMirrorsObjectiveStrategySignal(state, {
   } else if (controlPreservationVpLeverage > 0) {
     reason = `Preserve this objective: losing your only non-home control can remove ${controlPreservationVpLeverage} same-turn Primary VP after caps.`;
   } else if (stagingVpLeverage > 0) {
-    reason = "The current Command checkpoint has passed. Control here cannot score retroactively, but it stages the next 4 VP non-home control checkpoint.";
+    reason = controlledNow
+      ? "The current Command checkpoint has passed. Preserving this only controlled non-home objective protects the next binary 4 VP control checkpoint."
+      : "The current Command checkpoint has passed. Control here cannot score retroactively, but it establishes the next binary 4 VP non-home control checkpoint.";
   } else {
-    reason = "This objective does not currently add Smoke and Mirrors VP after the applicable caps, but it may still matter for board position or marker defense.";
+    reason = "This objective does not currently add Smoke and Mirrors VP after the applicable caps; additional non-home control can add resilience but does not multiply the binary 4 VP condition."
   }
 
   return Object.freeze({
@@ -419,6 +419,8 @@ export function getSmokeAndMirrorsObjectiveStrategySignal(state, {
     controlPreservationVpLeverage,
     stagingVpLeverage,
     endgameVpLeverage,
+    prospectiveSameTurnGain,
+    remainingGameAfterProspective,
     score: clamp01(score),
     reason
   });
