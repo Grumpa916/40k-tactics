@@ -20,6 +20,8 @@ import { isPurgeAndSecureMissionForPlayer } from "./tactical-purge-and-secure-st
 import { enhancePurgeAndSecureMovementRecommendations } from "./tactical-purge-and-secure-movement.js";
 import { isInescapableDominionMissionForPlayer } from "./tactical-inescapable-dominion-strategy.js";
 import { enhanceInescapableDominionMovementRecommendations } from "./tactical-inescapable-dominion-movement.js";
+import { isDeathTrapMissionForPlayer } from "./tactical-death-trap-strategy.js";
+import { enhanceDeathTrapMovementRecommendations } from "./tactical-death-trap-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -229,12 +231,13 @@ function enhanceBattlefieldDominanceRecommendation(state, options, recommendatio
     actionHint: best.actionHint,
     objectiveId: best.objectiveId,
     objectiveName: best.objectiveName,
+    distance: best.distance,
+    control: best.control,
+    primaryStrategySignal: best.primaryStrategySignal,
     targetUnitId: null,
     targetName: null,
     territoryTarget: null,
-    distance: best.distance,
     strategicContext: null,
-    primaryStrategySignal: best.primaryStrategySignal,
     recommendation: battlefieldDominanceRecommendationText(recommendation.unitName, best),
     reason: best.reason,
     alternatives: Object.freeze([
@@ -287,6 +290,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isInescapableDominionMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceInescapableDominionMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isDeathTrapMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceDeathTrapMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
