@@ -194,16 +194,17 @@ test("base Movement scorer applies zero Smoke premium to Battle-shocked or zero-
     { runnerBattleShocked: false, runnerOc: 0 }
   ]) {
     const state = seed({ round: 2, phase: "movement", ...settings });
+    const friendlyHome = state.objectives.find((objective) => objective.layoutObjective === "Attacker Home");
     const enemyHome = state.objectives.find((objective) => objective.layoutObjective === "Defender Home");
-    assert.ok(enemyHome);
-    state.objectives = [enemyHome];
+    assert.ok(friendlyHome && enemyHome);
+    state.objectives = [friendlyHome, enemyHome];
     state.units = state.units.filter((item) => item.id === "runner");
     const base = getBaseMovementStrategicRecommendations(state, { playerId: "p1", perspectivePlayerId: "p1" });
     const runner = base.recommendations.find((item) => item.unitId === "runner");
     assert.ok(runner);
     const candidates = [runner, ...(runner.alternatives ?? [])];
-    const smokeObjective = candidates.find((item) => item.kind === "objective" && item.primaryStrategySignal?.active === true);
-    assert.ok(smokeObjective, "expected the isolated Smoke and Mirrors objective candidate in base Movement output");
+    const smokeObjective = candidates.find((item) => item.kind === "objective" && item.objectiveId === enemyHome.id && item.primaryStrategySignal?.active === true);
+    assert.ok(smokeObjective, "expected the enemy-home Smoke and Mirrors objective candidate in base Movement output");
     assert.ok(smokeObjective.primaryStrategySignal.score > 0, "strategy signal should exist so this proves score suppression rather than signal absence");
     assert.equal(smokeObjective.primaryStrategyScoreApplied, 0);
     assert.match(smokeObjective.reason, /bonuses are suppressed|no usable OC/i);
