@@ -22,6 +22,7 @@ import { renderEventLogPanel, renderUnitStatusPanel, renderReferencePanel, rende
 import { renderTurnClockPanel } from "./turn-clock-panel.js";
 import { formatElapsedTime, getTurnClockElapsedMs, getTurnClockState } from "../state/turn-clock.js";
 import { renderPersistentMissionSummary } from "./mission-summary-panel.js";
+import { bindMissionReviewPanel, renderMissionReviewPanel, renderMissionReviewToggle } from "./mission-review-panel.js";
 import { renderDecisionReminderHost, tyranidDecisionContextKey } from './battle-decision-reminders-view.js';
 import { getTyranidDecisionReminders, TYRANID_DECISION_IDS } from "../rules/tyranid-decision-reminders.js";
 import { evaluatePreGameReadiness } from "../rules/pre-game-readiness.js";
@@ -73,6 +74,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   contextOpenStates = { "unit-status": true, "event-log": true },
   referenceOpenStates = { stratagems: true },
   missionOpenStates = {},
+  missionReviewOpen = false,
   setupWorkspaceTab = "saves",
   setupNavigationMessage = "",
   layoutMode = "tabletop",
@@ -94,7 +96,10 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
       '<strong>' + phase.label + '</strong><span>' +
       (phase.id === "setup" ? "Pre-game & cloud saves" : status) +
       '</span></button></li>';
-  }).join("");
+  }).join("") + renderMissionReviewToggle({
+    visible: PHASES.some(phase => phase.id === viewedPhase),
+    open: missionReviewOpen
+  });
 
   const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
     renderStatusSummaryContent(state, viewedPhase, clockPanelOpen) + '</section>';
@@ -137,7 +142,6 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     renderUnitStatusPanel(state, { openSections: contextOpenStates }) + renderEventLogPanel(state, { openSections: contextOpenStates }) + '</div></aside>' +
     '<section class="battle-shell__content">' +
     '<section data-battle-screen></section>' +
-    (tabletopExperiment ? '' : '<div data-battle-mission-summary-host>' + persistentMissionSummary + '</div>') +
     '</section>' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
@@ -148,16 +152,16 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     (armyRosterPlayerId ? renderArmyRosterOverlay(state, armyRosterPlayerId, gameData ?? {}) : "") + '</div>';
   const shellLiveHeader = tabletopExperiment
     ? '<header class="battle-shell__tabletop-header">' +
-      '<div class="battle-shell__tabletop-topline">' + statusSummary +
-      '<div class="battle-shell__tabletop-missions" data-battle-mission-summary-host>' + persistentMissionSummary + '</div></div>' +
+      '<div class="battle-shell__tabletop-topline">' + statusSummary + '</div>' +
       '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       layoutSwitch + '</header>'
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
+  const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen });
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div>' +
-    shellLiveHeader + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
+    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools() : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
@@ -239,6 +243,11 @@ export function createBattleShell(container, {
   let contextOpenStates = { "unit-status": true, "event-log": true, "older-events": false };
   let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
   let missionOpenStates = {};
+  let missionReviewOpen = false;
+  const disposeMissionReviewPanel = bindMissionReviewPanel(container, {
+    open: missionReviewOpen,
+    onOpenChange: value => { missionReviewOpen = value; }
+  });
   let scoreAdjustPlayerId = null;
   let scoreAdjustCollapsed = false;
   let scoreAdjustMessage = "";
@@ -425,7 +434,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey, factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
@@ -900,6 +909,7 @@ export function createBattleShell(container, {
       if (clockTickInterval != null) clearInterval(clockTickInterval);
       clockTickInterval = null;
       container.removeEventListener?.("click", handleMissionSummaryToggle);
+      disposeMissionReviewPanel();
       container.removeEventListener?.("click", handleScoreAdjust);
       container.removeEventListener?.("click", handleMapObjectiveToggle);
       container.removeEventListener?.("click", handleSetupWorkspaceNavigation);

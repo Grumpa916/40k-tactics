@@ -450,24 +450,33 @@ export function createShootingScreen(container, {
       render();
     });
 
-    container.querySelector("[data-weapon]")?.addEventListener("change", (event) => {
-      selectedWeaponId = event.target.value || null;
+    function deferRenderAfterSelectDismissal(select) {
+      select?.blur?.();
+      const nextFrame = globalThis.requestAnimationFrame ?? (callback => globalThis.setTimeout(callback, 0));
+      nextFrame(() => nextFrame(render));
+    }
+
+    container.querySelectorAll("[data-weapon]").forEach(select => select.addEventListener("change", event => {
+      const select = event.currentTarget ?? event.target;
+      selectedWeaponId = select.value || null;
       precisionAllocationId = null;
       attackError = "";
-      render();
-    });
-    container.querySelector("[data-target]")?.addEventListener("change", (event) => {
-      selectedTargetId = event.target.value || null;
+      deferRenderAfterSelectDismissal(select);
+    }));
+    container.querySelectorAll("[data-target]").forEach(select => select.addEventListener("change", event => {
+      const select = event.currentTarget ?? event.target;
+      selectedTargetId = select.value || null;
       precisionAllocationId = null;
       attackError = "";
-      render();
-    });
-    container.querySelector("[data-shoot-precision]")?.addEventListener("change", (event) => {
-      precisionAllocationId = event.target.value || null;
+      deferRenderAfterSelectDismissal(select);
+    }));
+    container.querySelectorAll("[data-shoot-precision]").forEach(select => select.addEventListener("change", event => {
+      const select = event.currentTarget ?? event.target;
+      precisionAllocationId = select.value || null;
       actualDamage = "0";
       attackError = "";
-      render();
-    });
+      deferRenderAfterSelectDismissal(select);
+    }));
     container.querySelector("[data-shoot-damage-minus]")?.addEventListener("click", () => {
       actualDamage = String(Math.max(0, Number(actualDamage) - 1));
       const value = container.querySelector("[data-shoot-damage-value]");
