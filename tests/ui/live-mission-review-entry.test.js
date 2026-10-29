@@ -9,7 +9,7 @@ const page = fs.readFileSync(new URL("../../battle.html", import.meta.url), "utf
 test("live phase navigation opens an expandable mission review overlay", () => {
   assert.match(shell, /renderMissionReviewToggle/);
   assert.match(shell, /renderMissionReviewPanel/);
-  assert.match(shell, /data-battle-mission-summary-host/);
+  assert.match(panel, /data-battle-mission-summary-host/);
   assert.match(panel, /role="dialog" aria-modal="true"/);
   assert.match(panel, /data-close-mission-review/);
   assert.match(panel, /data-toggle-mission-review/);
