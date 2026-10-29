@@ -18,9 +18,12 @@ function timingsFor(option) {
 export function createMissionActionPicker() {
   let unit=null, selected='', timing='', confirmed=false, objective='', terrainArea='';
   let locateSetupTerrain=new Set();
+  let expectedLocateSetupCount=5;
+  let renderState=null;
   let options=[];
   return {
     render(state,unitId,customActions=[]) {
+      renderState=state;
       options=getMissionActionOptions(state);
       if (!options.length) options=customActions.map(item=>({...item,timings:['end-of-turn']}));
       const unitKey=[state.battle?.round,state.turn,unitId].join(':');
@@ -34,6 +37,7 @@ export function createMissionActionPicker() {
       const playerId=state.activePlayer ?? state.battle?.activePlayerId ?? null;
       const locateSetup=isLocateAndDeny ? getLocateAndDenySetup(state,{playerId}) : null;
       const locateSetupMode=isLocateAndDeny && locateSetup?.setupComplete!==true;
+      expectedLocateSetupCount=locateSetup?.expectedMarkerCount??5;
       const deathTrapTerrain=isDeathTrap ? getDeathTrapTerrainOptions(state,{playerId}).filter(item=>!item.trapped && item.boobyTrapEligibleByGeometry!==false) : [];
       const smokeObjectives=isSmokeAndMirrors ? getSmokeAndMirrorsObjectiveOptions(state,{playerId}) : [];
       const locateObjectives=isLocateAndDeny && !locateSetupMode ? getLocateAndDenyCentralObjectiveOptions(state,{playerId}) : [];
@@ -65,7 +69,7 @@ export function createMissionActionPicker() {
         ? 'Physical card confirms this is a Shooting-phase Action'
         : 'Action requirements met';
       const targetControl=locateSetupMode
-        ? `<div class="mission-action-picker__field mission-action-picker__setup"><span>Operation marker terrain areas · ${locateSetupTerrain.size}/${locateSetup?.expectedMarkerCount??5}</span><div class="mission-action-picker__setup-grid">${locateSetupOptions.map(item=>`<button type="button" data-locate-setup-terrain="${esc(item.terrainAreaId)}" aria-pressed="${String(locateSetupTerrain.has(item.terrainAreaId))}" class="${locateSetupTerrain.has(item.terrainAreaId)?'is-selected':''}">${esc(item.label)}</button>`).join('')}</div><small>Select exactly ${locateSetup?.expectedMarkerCount??5}. Terrain wholly within your deployment zone is excluded automatically.</small></div>`
+        ? `<div class="mission-action-picker__field mission-action-picker__setup"><span>Operation marker terrain areas · ${locateSetupTerrain.size}/${expectedLocateSetupCount}</span><div class="mission-action-picker__setup-grid">${locateSetupOptions.map(item=>`<button type="button" data-locate-setup-terrain="${esc(item.terrainAreaId)}" aria-pressed="${String(locateSetupTerrain.has(item.terrainAreaId))}" class="${locateSetupTerrain.has(item.terrainAreaId)?'is-selected':''}">${esc(item.label)}</button>`).join('')}</div><small>Select exactly ${expectedLocateSetupCount}. Terrain wholly within your deployment zone is excluded automatically.</small></div>`
         : isDeathTrap
           ? `<label class="mission-action-picker__field"><span>Terrain area to trap</span><select data-action-terrain><option value="">Choose terrain area…</option>${deathTrapTerrain.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Choose the Event Companion terrain area receiving the operation marker. Already trapped areas and terrain known to be wholly inside your deployment zone are hidden.</small></label>`
           : isSmokeAndMirrors
@@ -92,7 +96,7 @@ export function createMissionActionPicker() {
       const scoringHref=new URL('./styles/scoring-checkpoints.css',import.meta.url).href;
       const pickerHref=new URL('./styles/mission-action-picker.css',import.meta.url).href;
       const targetReady=locateSetupMode
-        ? locateSetupTerrain.size===(locateSetup?.expectedMarkerCount??5)
+        ? locateSetupTerrain.size===expectedLocateSetupCount
         : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isLocateAndDeny ? !!objective && !!terrainArea : true;
       const buttonLabel=locateSetupMode?'Record marker setup':'Record Action attempt';
       return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
@@ -108,9 +112,8 @@ export function createMissionActionPicker() {
       container.querySelectorAll?.('[data-locate-setup-terrain]')?.forEach(button=>button.addEventListener('click',()=>{
         const id=button.getAttribute('data-locate-setup-terrain');
         if(!id)return;
-        const stateCount=Number(button.closest('.mission-action-picker__setup')?.querySelector('span')?.textContent?.match(/(\d+)\/(\d+)/)?.[2]??5);
         if(locateSetupTerrain.has(id)) locateSetupTerrain.delete(id);
-        else if(locateSetupTerrain.size<stateCount) locateSetupTerrain.add(id);
+        else if(locateSetupTerrain.size<expectedLocateSetupCount) locateSetupTerrain.add(id);
         rerender();
       }));
       container.querySelector('[data-action-rules-confirmed]')?.addEventListener('change',event=>{confirmed=event.target.checked;rerender();});
@@ -120,9 +123,8 @@ export function createMissionActionPicker() {
         const isSmokeAndMirrors=option?.definitionId==='primary-smoke-and-mirrors';
         const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
         if(!option)return;
-        const state=container.__missionActionState;
-        const playerId=state?.activePlayer??state?.battle?.activePlayerId??null;
-        const locateSetup=isLocateAndDeny&&state?getLocateAndDenySetup(state,{playerId}):null;
+        const playerId=renderState?.activePlayer??renderState?.battle?.activePlayerId??null;
+        const locateSetup=isLocateAndDeny&&renderState?getLocateAndDenySetup(renderState,{playerId}):null;
         const locateSetupMode=isLocateAndDeny&&locateSetup?.setupComplete!==true;
         if(locateSetupMode){
           if(locateSetupTerrain.size!==(locateSetup?.expectedMarkerCount??5))return;
@@ -134,9 +136,6 @@ export function createMissionActionPicker() {
         const reviewTiming=allowedTimings.includes(timing)?timing:allowedTimings[0];
         onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming,objectiveId:objective||null,terrainAreaId:terrainArea||null,rulesConfirmed:confirmed});
       });
-    },
-    setStateForBindings(state){
-      if(container) container.__missionActionState=state;
     }
   };
 }
