@@ -19,6 +19,7 @@ import { shootingTargetComparisonCards, shootingAdvisory, shootingDamageForecast
 import { createLiveMapView } from "./live-map-view.js";
 import { finishCombatUnit } from "../application/combat-activation-workflow.js";
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
+import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -193,6 +194,7 @@ export function createShootingScreen(container, {
           <div class="shoot-tabletop__control-scroll">
             <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map")}</p></div><span>${model.canComplete ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
             ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
+            ${renderCustodesKatahPhasePanel(state, { phase: "shooting", unitId: activeUnitId })}
 
             <label class="shoot-tabletop__unit-picker">Acting unit · ${escapeHtml(model.activePlayerId === perspectivePlayerId ? 'your army' : 'opponent army')}
               <select data-shooting-unit-picker><option value="">Choose unit by name…</option>
@@ -368,6 +370,7 @@ export function createShootingScreen(container, {
         }
       };
       mapView.bind(container);
+      bindCustodesKatahActions(container, session, message => { attackError = message; }, render);
       container.querySelector("[data-shooting-unit-picker]")?.addEventListener("change", event => selectMapUnit(event.target.value));
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         const unitId = marker.getAttribute?.("data-map-unit-id");
