@@ -105,3 +105,49 @@
   border-radius:0;
   clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
 }
+
+/* Status badges stay outside the compact token while leaving its touch target intact. */
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit .unit-map-status-badges {
+  position:absolute;
+  z-index:10;
+  top:-9px;
+  right:-10px;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-start;
+  gap:1px;
+  width:max-content;
+  max-width:44px;
+  pointer-events:none;
+}
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge {
+  box-sizing:border-box;
+  display:grid;
+  place-items:center;
+  flex:0 0 14px;
+  width:14px;
+  height:14px;
+  border:1px solid #d8e0e2;
+  border-radius:50%;
+  background:#293943;
+  color:#fff;
+  font-size:8px;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 1px 2px #000;
+}
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit .unit-activation-badge {
+  top:auto;
+  right:-6px;
+  bottom:-7px;
+}
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-battle-shocked { background:#a34920; border-color:#ffd1a3; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-engaged { background:#8b3035; border-color:#ffb0a5; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-charged { background:#225b9b; border-color:#a5d2ff; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-fights-first { background:#75531b; border-color:#f6d783; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-mission-action { background:#5b3a81; border-color:#d2b2ff; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-off-battlefield { background:#48535b; border-color:#c2c9ce; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-readied,
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-rereadied { background:#17643f; border-color:#9de3ad; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-active { background:#8a6822; border-color:#ffe08b; color:#fff3c4; }
+.battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-spent { background:#48535b; border-color:#c2c9ce; color:#e0e5e8; }
