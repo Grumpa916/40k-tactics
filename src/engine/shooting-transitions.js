@@ -1,5 +1,6 @@
 import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
 import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
+import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -63,6 +64,14 @@ export function recordShootingActivation(state, {
       if (deathTrapTerrain.trapped) throw new Error("That terrain area is already trapped.");
       if (deathTrapTerrain.boobyTrapEligibleByGeometry === false) {
         throw new Error("That terrain area is wholly within your deployment zone and is not a non-home objective area.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-smoke-and-mirrors") {
+      if (!objectiveId) throw new Error("Select the objective being Decoyed.");
+      const eligibleObjective = getSmokeAndMirrorsObjectiveOptions(state, { playerId: activePlayerId })
+        .find(item => item.objectiveId === objectiveId);
+      if (!eligibleObjective) {
+        throw new Error("Select a non-home objective that is not already Decoyed and has not been selected for another Decoy attempt this turn.");
       }
     }
   }

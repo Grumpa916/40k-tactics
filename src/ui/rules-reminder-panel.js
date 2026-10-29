@@ -18,20 +18,24 @@ function groupEntries(entries) {
 }
 
 function renderEntry(entry) {
+  const active = isActiveEffect(entry);
+  const chosenEffect = entry.choices?.find(choice => choice.id === entry.used?.choice)?.effect;
   const context=' data-rule-id="'+esc(entry.ruleId)+'" data-rule-unit="'+esc(entry.unitId??'')+'" data-rule-player="'+esc(entry.playerId)+'"';
   const actions=entry.used?'':entry.katahChoices?entry.katahChoices.map(choice=>'<button type="button" data-record-katah-reminder'+context+' data-katah-name="'+esc(choice.id)+'">'+esc(choice.label)+'</button>').join(''):entry.choices?entry.choices.map(choice=>'<button type="button" data-record-rule-use'+context+' data-rule-choice="'+esc(choice.id)+'">Mark used · '+esc(choice.label)+'</button>').join(''):
     entry.action?'<button type="button" data-record-rule-use'+context+'>'+esc(entry.action)+'</button>':'';
-  return '<article class="rules-reminder-card'+(entry.used?' is-used':'')+'"><header><strong>'+esc(entry.title)+'</strong>'+
-    (entry.limit?'<span>'+(entry.used?'Used':'Available')+'</span>':'')+'</header>'+
+  return '<article class="rules-reminder-card'+(active?' is-active':entry.used?' is-used':'')+'"><header><strong>'+esc(entry.title)+'</strong>'+
+    (entry.limit?'<span>'+(active?'Active this phase':entry.used?'Used':'Available')+'</span>':'')+'</header>'+
     (entry.unitName?'<small>'+esc(entry.unitName)+'</small>':'')+'<small>'+esc(entry.timing??'')+(entry.cpCost?' · '+entry.cpCost+' CP':'')+'</small>'+
-    '<p>'+esc(entry.used&&!entry.activeThisPhase?'This limited ability has already been used.':entry.effect)+'</p>'+(entry.used?'<p class="rules-reminder-used">Recorded in round '+esc(entry.used.round)+' · '+esc(entry.used.phase)+(entry.used.choice?' · '+esc(entry.choices?.find(choice=>choice.id===entry.used.choice)?.label??entry.used.choice):'')+'</p>':'')+
+    '<p>'+esc(active?chosenEffect??entry.effect:entry.used?'This limited ability has already been used.':entry.effect)+'</p>'+(entry.used?'<p class="rules-reminder-used">Recorded in round '+esc(entry.used.round)+' · '+esc(entry.used.phase)+(entry.used.choice?' · '+esc(entry.choices?.find(choice=>choice.id===entry.used.choice)?.label??entry.used.choice):'')+'</p>':'')+
     (actions?'<div class="rules-reminder-actions">'+actions+'</div>':'')+
     '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>';
 }
 
+const isActiveEffect = entry => Boolean(entry.used && entry.duration === 'phase' && entry.activeThisPhase);
+
 export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
   const playerId=perspective(state,perspectivePlayerId);
-  const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId,includeUsed:false}));
+  const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
   if(!entries.length&&!note)return '';
   const opening=entries.some(entry=>entry.kind==='decision');
@@ -53,10 +57,10 @@ export function renderTargetDefenseReminders(state,options={}) {
 export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null,message='',canUndo=false}={}) {
   const entries=groupEntries(getBattleRulesReminders(state,{playerId}));
   const units=state.units??[];
-  const active=entries.filter(entry=>!entry.used),used=entries.filter(entry=>entry.used);
+  const active=entries.filter(entry=>!entry.used||isActiveEffect(entry)),used=entries.filter(entry=>entry.used&&!isActiveEffect(entry));
   return style()+'<div class="rules-reminder-backdrop" data-rules-backdrop><section class="rules-reminder-dialog" role="dialog" aria-modal="true" aria-labelledby="rules-reminder-title">'+
     '<header class="rules-reminder-heading"><h2 id="rules-reminder-title">Rules &amp; unit notes</h2><button type="button" data-close-rules-reminders>Close</button></header>'+
-    '<p class="rules-reminder-phase">Current phase: '+esc(state.phase)+' · '+active.length+' reminders available</p>'+
+    '<p class="rules-reminder-phase">Current phase: '+esc(state.phase)+' · '+active.length+' current reminders</p>'+
     '<p class="rules-reminder-help">Confirm distances and rule conditions at the table. “Mark used” tracks an ability; resolve its effect at the table. The CP confirmation and Re-ready buttons also update those recorded resources.</p>'+
     (message?'<p role="status">'+esc(message)+'</p>':'')+
     (canUndo?'<button type="button" data-undo-rule-use>Undo last reminder use</button>':'')+

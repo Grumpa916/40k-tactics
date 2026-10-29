@@ -8,6 +8,7 @@
 .rules-reminder-card a{color:#91c8ef;font-size:12px}
 .rules-reminder-card.is-used{opacity:.75;border-color:#5a6461}
 .rules-reminder-card.is-used header>span{color:#bbc2bf}
+.rules-reminder-card.is-active{border-color:#c4e99b;background:#243b29}
 .rules-reminder-actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .rules-reminder-actions button,.rules-reminder-dialog button{min-height:44px;padding:8px 12px;border:1px solid #8dba70;border-radius:8px;background:#293c2d;color:#eaf1e8;font:inherit;cursor:pointer}
 .rules-target-defense{border-color:#a6c985;background:#233326}

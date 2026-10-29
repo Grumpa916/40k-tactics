@@ -6,6 +6,8 @@ Selecting a Custodes target in Shooting or Fight displays its defensive rules be
 
 Limited ability uses are recorded in battle history and survive the existing JSON save/resume flow. Moment Shackle is once per army per battle, the Venatari mine once per unit per battle, and Swift Ruin once per army per phase. Marking these records tabletop use; their dice, movement and temporary offensive effects are resolved at the table. Aquila Commander confirmation adds 1 recorded CP once per army per round. Superhuman Focus spends 1 recorded CP and re-readies an eligible formation once per battle round. The immediate action can be undone from the Rules drawer.
 
+Moment Shackle offers its two choices at the start of either player's phase. After recording one, the selected effect stays visible as **Active this phase** in the unit reminders and Rules drawer, including when Trajann is attached to Wardens. The save reminder explicitly applies to Trajann only. At the next phase it leaves the active reminders, remains in used abilities, and cannot be chosen again in that battle. No additional map badge is added.
+
 Start-of-phase prompts close after a recorded tabletop activation, move, attack or charge. Dacatarai and Kaptaris now enforce that same boundary in the existing Ka’tah UI/command. Expired defensive effects are not carried to later phases. A unit known to be engaged is excluded from Take Wing and Swift as the Eagle reminders; unrecorded proximity and engagement still require table confirmation.
 
 Personal notes are stored on each battle unit, including opponent units, so they remain specific to that battle and persist through normal battle saves. Drafts stay separate when switching units. Notes are escaped when rendered, including in target defense cards.
