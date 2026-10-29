@@ -12,9 +12,9 @@ const LIVE_PHASES = Object.freeze([
   ['fight', 'Fight']
 ]);
 
-export function renderPrototypeWorkspaceTools() {
+export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}) {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
-  stylesheet.searchParams.set('v', 'compact-markers-3');
+  stylesheet.searchParams.set('v', 'compact-markers-4');
   const href = stylesheet.href;
   const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const planningMapHref = new URL('./styles/planning-map-fit.css', import.meta.url).href;
@@ -27,6 +27,7 @@ export function renderPrototypeWorkspaceTools() {
     <div class="prototype-score-host" data-workspace-score-host></div>
     <div class="prototype-phase-row">
       <div class="prototype-phase-chips" aria-label="Battle phases">${phases}</div>
+      <button type="button" class="prototype-missions-button" data-toggle-mission-review aria-expanded="${String(missionReviewOpen)}">Missions</button>
       <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-battle-phase-button="review">Game review</button></div></details>
     </div>
     <button type="button" data-workspace-panel aria-expanded="false" aria-label="Show phase panel">Panel</button>
