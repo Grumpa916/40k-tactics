@@ -8,6 +8,7 @@ import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
+import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -694,6 +695,7 @@ export function createCommandScreen(container, {
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>CP</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
+      renderCustodesKatahCommandPanel(state, { playerId }) +
       '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
       secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm + '</details>' +
       '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details></div>';

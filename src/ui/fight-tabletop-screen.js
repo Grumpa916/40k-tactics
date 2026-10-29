@@ -9,6 +9,7 @@ import { getFightViewModel, getFightAttackOptions, getFightWeaponOptions, activa
 import { getFightAdvisorContext } from '../application/fight-advisor-context.js';
 import { fightAdvisory } from './fight-advisor.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
+import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from './custodes-katah-panel.js';
 
 export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null }) {
   const mapView = createLiveMapView();
@@ -57,6 +58,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
 
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
+      ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId })}
       <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} available</summary>
         <h3>Fights First</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
         <h3>Remaining combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal, model.candidates.fightsFirst.length > 0) || '<small>None remaining</small>'}</div>
@@ -80,6 +82,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
 
     restoreView();
     mapView.bind(container);
+    bindCustodesKatahActions(container, session, message => { error = message; }, render);
     const choose = id => {
       if (!options.attackers.some(unit => unit.unitId === id)) {
         error = isCombatActivationFinished(state, id, 'fight') ? 'This unit has finished its Fight activation this turn.' : 'This unit cannot begin a Fight activation yet. Resolve remaining Fights First units and confirm eligibility.'; render(); return;
