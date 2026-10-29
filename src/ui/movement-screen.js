@@ -4,6 +4,7 @@ import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
 import { renderMovementAdvisor } from './movement-advisor.js';
 import { renderMovementRosterRail, renderMovementSelectedUnitCard } from './movement-dashboard-view.js';
+import { renderSmokeAndMirrorsRemovalControls } from './smoke-and-mirrors-removal-controls.js';
 import { getCustodesKatahDefinition, getCustodesKatahState } from '../rules/custodes-tactical-advisor.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
@@ -144,6 +145,12 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const refinement = movementRefinement(state, selected.id);
       const advanceReady = Number.isInteger(advanceRoll) && advanceRoll >= 1 && advanceRoll <= 6;
       const canRefine = action && action.type !== 'unit.stationary_recorded';
+      const markerRemovalControls = renderSmokeAndMirrorsRemovalControls(state, {
+        playerId,
+        unitId: selected.id,
+        perspectivePlayerId: perspectivePlayerId ?? playerId,
+        movementCompleted: Boolean(canRefine)
+      });
       const refinementControls = canRefine ? `<details class="move-refine"><summary>Refine move type</summary>
         <div class="move-actions">
           <div class="advance-choice">
@@ -160,6 +167,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         ${renderCalistus(state, selected, action)}
         ${action
           ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(movementActionLabel(action, refinement))}</strong></p>
+             ${markerRemovalControls}
              ${refinementControls}
              <div class="move-actions">${refinement
                ? '<button type="button" data-undo-move-refinement>Undo refinement</button>'
@@ -341,6 +349,21 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const unit = state.units.find((item) => item.id === selectedUnitId);
       if (!unit) throw new Error("Select a unit before recording movement.");
 
+      if (button.hasAttribute("data-remove-smoke-decoy")) {
+        session.dispatch({
+          type: COMMAND_TYPES.RECORD_SMOKE_AND_MIRRORS_MARKER_REMOVAL,
+          payload: {
+            playerId: unit.ownerId,
+            unitId: unit.id,
+            objectiveId: button.getAttribute("data-remove-smoke-decoy"),
+            markerOwnerPlayerId: button.getAttribute("data-marker-owner-player-id"),
+            tabletopConfirmed: true
+          }
+        });
+        errorMessage = "";
+        render();
+        return;
+      }
       if (button.hasAttribute("data-move-katah-calistus")) {
         session.dispatch({ type: COMMAND_TYPES.RECORD_CUSTODES_KATAH_USE, payload: { playerId: unit.ownerId, unitId: unit.id, katahName: "Calistus" } });
         errorMessage = "";

@@ -26,6 +26,8 @@ import { isDelayingActionMissionForPlayer } from "./tactical-delaying-action-str
 import { enhanceDelayingActionMovementRecommendations } from "./tactical-delaying-action-movement.js";
 import { isOutmanoeuvreMissionForPlayer } from "./tactical-outmanoeuvre-strategy.js";
 import { enhanceOutmanoeuvreMovementRecommendations } from "./tactical-outmanoeuvre-movement.js";
+import { isSmokeAndMirrorsMissionForPlayer } from "./smoke-and-mirrors-state.js";
+import { enhanceSmokeAndMirrorsMovementRecommendations } from "./tactical-smoke-and-mirrors-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -306,6 +308,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isOutmanoeuvreMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceOutmanoeuvreMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isSmokeAndMirrorsMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceSmokeAndMirrorsMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
