@@ -1,6 +1,11 @@
 import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
 import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
 import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-state.js";
+import {
+  getLocateAndDenyCentralObjectiveOptions,
+  getLocateAndDenyMarkerRemovalOptions,
+  getLocateAndDenyState
+} from "../rules/locate-and-deny-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -74,6 +79,18 @@ export function recordShootingActivation(state, {
         throw new Error("Select a non-home objective that is not already Decoyed and has not been selected for another Decoy attempt this turn.");
       }
     }
+    if (linkedMission.definitionId === "primary-locate-and-deny") {
+      const locate = getLocateAndDenyState(state, { playerId: activePlayerId });
+      if (!locate.setupComplete) throw new Error("Record the Locate and Deny operation-marker setup before starting Sensor Sweep.");
+      if (locate.activeMarkerCount <= 1) throw new Error("Sensor Sweep cannot be started when only one operation marker remains.");
+      if (locate.sensorSweepUsedThisTurn) throw new Error("Sensor Sweep can only be started once per turn.");
+      if (!objectiveId || !getLocateAndDenyCentralObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select the central objective this unit is within range of for Sensor Sweep.");
+      }
+      if (!terrainAreaId || !getLocateAndDenyMarkerRemovalOptions(state, { playerId: activePlayerId }).some(item => item.terrainAreaId === terrainAreaId)) {
+        throw new Error("Select one of your remaining Locate and Deny operation markers to remove.");
+      }
+    }
   }
   return appendHistoryEntry(state, createEvent("shooting.unit_activated", {
     unitId,
@@ -83,7 +100,7 @@ export function recordShootingActivation(state, {
     actionType,
     actionId:linkedMission?.definitionId ?? actionId,
     ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
-      reviewTiming, objectiveId, ...(deathTrapTerrain ? { terrainAreaId: deathTrapTerrain.terrainAreaId, actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
+      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), ...(deathTrapTerrain ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
   }));
 }
 
