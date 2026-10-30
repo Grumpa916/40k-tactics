@@ -2,6 +2,7 @@ import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-m
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { getCleanseActionState, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
+import { getBeaconMissionState } from "../rules/beacon-mission-state.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -110,8 +111,10 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
     };
     let cardChoiceSummary = '';
     if (item.definitionId === "secondary-beacon") {
+      const beacon = getBeaconMissionState(state, { playerId, instanceId: item.instanceId });
       cardChoiceSummary = item.cardState?.beaconUnitId
-        ? '<p><strong>Beacon unit:</strong> ' + escapeHtml(unitName(item.cardState.beaconUnitId)) + '</p>'
+        ? '<p><strong>Beacon unit:</strong> ' + escapeHtml(unitName(item.cardState.beaconUnitId)) + '</p><p><strong>Beacon checkpoint:</strong> ' +
+          escapeHtml(beacon.reviewSummary ?? 'Position status unavailable.') + '</p>'
         : '<p><strong>Beacon unit:</strong> selection is still required in the Command phase.</p>';
     } else if (item.definitionId === "secondary-a-tempting-target") {
       cardChoiceSummary = item.cardState?.temptingTargetObjectiveId
