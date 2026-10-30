@@ -8,6 +8,7 @@ import { getPunishmentCondemnedUnitsLeftThisTurn } from './punishment-condemnati
 import { getCleanseActionState, getPlunderActionState } from './secondary-mission-action-state.js';
 import { getBeaconScoringEvidence } from './beacon-mission-state.js';
 import { getTemptingTargetScoringEvidence } from './tempting-target-state.js';
+import { getBurdenOfTrustScoringEvidence } from './burden-of-trust-state.js';
 import {
   getConsecrateReviewState,
   isOpponentHomeObjectiveForPlayer,
@@ -16,7 +17,7 @@ import {
 
 const OBJECTIVE_CONTROL_TYPES = new Set([
   'control-non-home', 'count-non-home', 'count-objectives', 'control-more',
-  'control-objectives', 'control-central', 'control-home', 'new-non-home-control', 'control-opponent-home', 'control-selected-tempting-target'
+  'control-objectives', 'control-central', 'control-home', 'new-non-home-control', 'control-opponent-home', 'control-selected-tempting-target', 'burden-trust-guarded-objectives'
 ]);
 
 function objectiveText(objective) {
@@ -51,7 +52,7 @@ export function missionConditionEvidence(state, playerId, item) {
   const enemy = objectives.filter(o => o.control?.controlState === 'controlled' && o.control.controllerId !== playerId);
   const nonHome = controlled.filter(o => !isHomeObjective(o));
   const central = controlled.filter(o => /cent(er|ral)/i.test(objectiveText(o)));
-  let count = null, detail = '';
+  let count = null, detail = '', requiresTabletopConfirmation = false;
   const type = condition?.type;
 
   if (known) {
@@ -113,6 +114,13 @@ export function missionConditionEvidence(state, playerId, item) {
     detail = plunder.completedCount + ' Plunder terrain area' + (plunder.completedCount === 1 ? '' : 's') + ' recorded this turn.';
   }
 
+  if (type === 'burden-trust-guarded-objectives') {
+    const burden = getBurdenOfTrustScoringEvidence(state, playerId, { instanceId: item?.instanceId ?? null });
+    count = burden.count;
+    detail = burden.detail;
+    requiresTabletopConfirmation = burden.requiresTabletopConfirmation === true;
+  }
+
   if (type === 'control-selected-tempting-target') {
     const target = getTemptingTargetScoringEvidence(state, playerId, { instanceId: item?.instanceId ?? null });
     count = target.count;
@@ -149,7 +157,12 @@ export function missionConditionEvidence(state, playerId, item) {
     }
   }
 
-  return { status: count == null ? 'Needs tabletop confirmation' : count > 0 ? 'Completed in recorded state' : 'Not completed in recorded state', count, detail };
+  return {
+    status: count == null || requiresTabletopConfirmation ? 'Needs tabletop confirmation' : count > 0 ? 'Completed in recorded state' : 'Not completed in recorded state',
+    count,
+    detail,
+    ...(requiresTabletopConfirmation ? { requiresTabletopConfirmation: true } : {})
+  };
 }
 
 // Catalog timing labels contain separate round-qualified alternatives.
