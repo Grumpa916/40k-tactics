@@ -1,8 +1,9 @@
-import { ADEPTUS_CUSTODES_DETACHMENTS } from '../data/adeptus-custodes-faction-rules.js';
+import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_RULE_SOURCES } from '../data/adeptus-custodes-faction-rules.js';
 import { getBattleUnitDatasheet } from './battle-unit-reference.js';
 import { getCustodesKatahState } from './custodes-tactical-advisor.js';
 import { isRulesPhaseOpening } from './rules-phase-window.js';
 import { getCommandPointBalance } from '../engine/command-points-ledger.js';
+import { getActiveCustodesDetachmentStratagemUse } from './stratagem-use-state.js';
 
 const DETACHMENT_REMINDERS = Object.freeze({
   'Shadowkeepers': { phases: ['fight'], turn: 'opponent', timing: 'When targeted by melee attacks', effect: 'If this non-Monster/Vehicle unit is within objective range and the attack Strength is greater than its Toughness, the attack is −1 to Wound. Confirm objective range and Strength at the table.' },
@@ -61,6 +62,12 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
   const matching = selectedDetachments(state, playerId).flatMap(detachment => {
     const entries = [];
     if (detachment.name === 'Guardians of the Throne') return entries;
+    if (unit && detachment.name==='Dread Host' && getActiveCustodesDetachmentStratagemUse(state,{unitId:unit.id,stratagemId:'golden-light-of-the-moiraides'})) entries.push({
+      ruleId:'detachment-stratagem:golden-light-of-the-moiraides',playerId,unitId:unit.id,unitName:unit.name,
+      title:'Golden Light of the Moiraides',kind:'detachment',timing:'Active until the start of your next turn',
+      effect:'Attacks targeting this unit are -1 to Hit. Enemy units cannot target it with Snap Shooting.',
+      sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference,available:true
+    });
     const reminder = DETACHMENT_REMINDERS[detachment.name];
     if (reminder && reminder.phases.includes(state.phase) && !(reminder.turn === 'own' && !ownTurn || reminder.turn === 'opponent' && ownTurn)) {
       let include = true;

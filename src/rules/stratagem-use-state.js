@@ -14,6 +14,23 @@ export function getRecordedStratagemUses(state) {
   });
 }
 
+export function isGoldenLightActive(state,useOrEvent,unitId=null) {
+  const use=useOrEvent?.payload??useOrEvent;
+  if (use?.stratagemId!=='golden-light-of-the-moiraides' || state?.battle?.status!=='active' ||
+      !Number.isInteger(use.turn) || !Number.isInteger(state.turn) || state.turn<use.turn) return false;
+  const usedRoot=rootId(state,use.unitId), targetRoot=rootId(state,unitId??use.unitId);
+  if (!usedRoot || usedRoot!==targetRoot) return false;
+  const activePlayer=state.activePlayer??state.battle?.activePlayerId;
+  return !(state.turn>use.turn && activePlayer===use.playerId);
+}
+
+export function getActiveCustodesDetachmentStratagemUse(state,{unitId,stratagemId}={}) {
+  if (!unitId || !stratagemId) return null;
+  return getRecordedStratagemUses(state).find(use=>use.stratagemId===stratagemId&&
+    (stratagemId==='golden-light-of-the-moiraides' ? isGoldenLightActive(state,use,unitId) :
+      use.round===state.battle?.round&&use.turn===state.turn&&rootId(state,use.unitId)===rootId(state,unitId)))??null;
+}
+
 export function getStratagemUseBlock(state, {playerId, unitId, stratagemId}) {
   const uses = getRecordedStratagemUses(state).filter(use => use.playerId === playerId && use.contextKey === rulesContextKey(state));
   if (uses.some(use => use.stratagemId === stratagemId)) return 'Already used this stratagem in this phase.';

@@ -41,6 +41,7 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   apply(enemy.has('living-fortress'), 'Living Fortress: worsen incoming AP by 1', worsenAp);
   apply(target?.combatRules?.auramiteAttackers?.includes(attacker?.combatRules?.formationRootId??attacker?.id), 'In Auramite Clad: worsen AP by 1 against the recorded attacker', worsenAp);
   apply(melee && target?.combatRules?.kaptaris, 'Kaptaris: -1 to incoming melee Hit rolls', () => {result.hitModifier=(result.hitModifier??0)+1;});
+  apply(target?.combatRules?.goldenLightOfMoirades && !profile.torrent, 'Golden Light of the Moiraides: -1 to incoming Hit rolls', () => {result.hitModifier=(result.hitModifier??0)+1;});
   apply(target?.combatRules?.temporaryInvulnerableSave===3, 'Moment Shackle: allocated model has a 3+ invulnerable save', () => {result.invulnerableSave=Math.min(result.invulnerableSave??7,3);});
   apply(enemy.has('golden-laurels'), 'Golden Laurels: worsen incoming AP by 1', worsenAp);
   for (const [id, label] of [['sentinel-shield','Praesidium Shield'],['unyielding-ancient','Unyielding Ancient']]) {
