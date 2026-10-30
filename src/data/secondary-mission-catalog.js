@@ -417,7 +417,7 @@ const cardNames = [
 
 export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules]) => {
   const resolvedRules = rules ?? {
-    rulesVerified: true,
+    rulesVerified: false,
     referenceNotes: verifiedRules[slug]?.referenceNotes ?? [],
     scoringWindows: verifiedRules[slug]?.scoringWindows ?? unverified.scoringWindows
   };
