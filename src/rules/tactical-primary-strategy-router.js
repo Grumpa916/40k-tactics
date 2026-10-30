@@ -82,6 +82,11 @@ import {
   getVitalLinkObjectiveStrategySignal,
   isVitalLinkMissionForPlayer
 } from "./tactical-vital-link-strategy.js";
+import {
+  getSearchAndScourPrimaryStrategyContext,
+  getSearchAndScourObjectiveStrategySignal,
+  isSearchAndScourMissionForPlayer
+} from "./tactical-search-and-scour-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -129,6 +134,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getVitalLinkPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSearchAndScourPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -182,6 +190,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getVitalLinkObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSearchAndScourObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
