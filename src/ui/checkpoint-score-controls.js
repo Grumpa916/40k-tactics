@@ -29,6 +29,7 @@ function secondaryTierChoices(mission = {}) {
     for (const tier of window?.tiers ?? []) {
       const value = positiveVp(tier?.vp);
       if (!value) continue;
+      const repeatedByCondition = /\\b(?:per|for each)\\b/i.test(String(tier?.summary ?? ''));
       if (tier?.relationship === 'cumulative' && requiredTiers.length) {
         runningTotal += value;
         requiredTiers = [...requiredTiers, tier];
@@ -36,12 +37,21 @@ function secondaryTierChoices(mission = {}) {
         runningTotal = value;
         requiredTiers = [tier];
       }
-      choices.push({ vp: runningTotal, tiers: requiredTiers, timingLabel: window?.timingLabel ?? '' });
+      if (repeatedByCondition && tier?.relationship !== 'cumulative') {
+        const max = positiveVp(tier?.maxVP) ?? 15;
+        for (let score = value; score <= max; score += value) {
+          choices.push({ vp: Math.min(score, max), tiers: requiredTiers, timingLabel: window?.timingLabel ?? '' });
+        }
+        if (max % value !== 0) {
+          choices.push({ vp: max, tiers: requiredTiers, timingLabel: window?.timingLabel ?? '' });
+        }
+      } else {
+        choices.push({ vp: runningTotal, tiers: requiredTiers, timingLabel: window?.timingLabel ?? '' });
+      }
     }
     return choices;
   });
 }
-
 export function getMissionVpOptions(mission = {}) {
   const windows = scoreWindowsFor(mission);
   if (mission.category === 'secondary' || mission.instanceId) {
