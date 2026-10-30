@@ -7,6 +7,7 @@ import { getMissionEvidenceCondition } from './mission-evidence-conditions.js';
 import { getPunishmentCondemnedUnitsLeftThisTurn } from './punishment-condemnation.js';
 import { getCleanseActionState, getPlunderActionState } from './secondary-mission-action-state.js';
 import { getBeaconScoringEvidence } from './beacon-mission-state.js';
+import { getTemptingTargetScoringEvidence } from './tempting-target-state.js';
 import {
   getConsecrateReviewState,
   isOpponentHomeObjectiveForPlayer,
@@ -15,7 +16,7 @@ import {
 
 const OBJECTIVE_CONTROL_TYPES = new Set([
   'control-non-home', 'count-non-home', 'count-objectives', 'control-more',
-  'control-objectives', 'control-central', 'control-home', 'new-non-home-control', 'control-opponent-home'
+  'control-objectives', 'control-central', 'control-home', 'new-non-home-control', 'control-opponent-home', 'control-selected-tempting-target'
 ]);
 
 function objectiveText(objective) {
@@ -110,6 +111,12 @@ export function missionConditionEvidence(state, playerId, item) {
     const plunder = getPlunderActionState(state, { playerId, turn: state.turn ?? 0, round: state.battle?.round ?? 0 });
     count = Number(plunder.completedCount >= (condition.minimum ?? 1));
     detail = plunder.completedCount + ' Plunder terrain area' + (plunder.completedCount === 1 ? '' : 's') + ' recorded this turn.';
+  }
+
+  if (type === 'control-selected-tempting-target') {
+    const target = getTemptingTargetScoringEvidence(state, playerId, { instanceId: item?.instanceId ?? null });
+    count = target.count;
+    detail = target.detail;
   }
 
   if (type === 'beacon-outside-deployment-zone' || type === 'beacon-outside-territory') {
