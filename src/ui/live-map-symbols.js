@@ -1,4 +1,4 @@
-import { mapUnitLabels } from './map-unit-labels.js';
+import { mapUnitLabels, preferredMapUnitDesignator } from './map-unit-labels.js';
 
 const escapeHtml = (value) => String(value ?? '')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -22,7 +22,11 @@ export function liveUnitSymbolLabels(units = []) {
   const result = new Map();
   for (const unit of units) {
     if (!unit?.id) continue;
-    result.set(unit.id, compactSymbol(readable.get(unit.id)));
+    const label = readable.get(unit.id);
+    // Explicit designators retain their case and full prefix when numbered.
+    result.set(unit.id, preferredMapUnitDesignator(unit)
+      ? label.replace(/\s+(\d+)$/, '$1')
+      : compactSymbol(label));
   }
   return result;
 }

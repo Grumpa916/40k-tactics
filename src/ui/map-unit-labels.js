@@ -24,7 +24,26 @@ const SHORT_NAMES = {
   'prosecutor squad': 'Pros',
 };
 
+const PREFERRED_DESIGNATORS = new Map([
+  ['telemon heavy dreadnought', 'TEL'],
+  ['telemon', 'TEL'],
+  ['contemptor galatus dreadnought', 'CGD'],
+  ['contemptor galatus', 'CGD'],
+  ['venatari with verutum lances', 'VnL'],
+  ['venatari with lances', 'VnL'],
+  ['venatari with kinetic destroyers', 'VnD']
+]);
+
+export function preferredMapUnitDesignator(unit) {
+  const normalize = value => String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const datasheetId = unit?.metadata?.datasheetId ?? unit?.datasheetId;
+  return PREFERRED_DESIGNATORS.get(normalize(String(datasheetId ?? '').split(':').at(-1))) ??
+    PREFERRED_DESIGNATORS.get(normalize(unit?.name)) ?? null;
+}
+
 export function shortMapUnitName(unit) {
+  const preferred = preferredMapUnitDesignator(unit);
+  if (preferred) return preferred;
   const name = String(unit?.name || unit?.id || 'Unit').trim().replace(/\s+/g, ' ');
   const known = SHORT_NAMES[name.toLowerCase()];
   if (known) return known;
