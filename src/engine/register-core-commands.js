@@ -52,7 +52,7 @@ import {
   declareUnitReserve,
   setEventCompanionMissionSetup
 } from "./battlefield-map-transitions.js";
-import { drawSecondaryMission, setSecondaryMissionMode, returnSecondaryMissionForRule } from "../rules/secondary-mission-lifecycle.js";
+import { drawSecondaryMission, setSecondaryMissionMode, returnSecondaryMissionForRule, recordSecondaryMissionCardChoice } from "../rules/secondary-mission-lifecycle.js";
 
 export function registerCoreCommandHandlers() {
   const handlers = [
@@ -118,6 +118,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.ADJUST_VICTORY_POINTS, (state, command) => adjustVictoryPoints(state, command.payload)],
     [COMMAND_TYPES.UNDO_LATEST_VICTORY_POINTS_AWARD, (state, command) => undoLatestVictoryPointsAward(state, command.payload)],
     [COMMAND_TYPES.DRAW_SECONDARY_MISSION, (state, command) => drawSecondaryMission(state, command.payload)],
+    [COMMAND_TYPES.RECORD_SECONDARY_MISSION_CARD_CHOICE, (state, command) => recordSecondaryMissionCardChoice(state, command.payload)],
     [COMMAND_TYPES.RETURN_SECONDARY_MISSION_FOR_RULE, (state, command) => returnSecondaryMissionForRule(state, command.payload)],
     [COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, (state, command) => setSecondaryMissionMode(state, command.payload)],
     [COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, (state, command) => recordSecondaryMissionScore(state, command.payload)],
