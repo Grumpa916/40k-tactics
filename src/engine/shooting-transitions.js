@@ -6,6 +6,11 @@ import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js
 import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
 import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-link-state.js";
 import { getSecureAssetObjectiveOptions, getSecureAssetState } from "../rules/secure-asset-state.js";
+import {
+  getExtractRelicCentralObjectiveOptions,
+  getExtractRelicMarkerRemovalOptions,
+  getExtractRelicState
+} from "../rules/extract-relic-state.js";
 import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
@@ -136,6 +141,19 @@ export function recordShootingActivation(state, {
       if (reviewTiming !== "end-of-turn") throw new Error("Maintain Control completes at the end of your turn.");
       if (!objectiveId || !getVitalLinkObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
         throw new Error("Select the central objective this unit is within range of for Maintain Control.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-extract-relic") {
+      const extractRelic = getExtractRelicState(state, { playerId: activePlayerId });
+      if (!extractRelic.opponentMarkerSetupComplete) throw new Error("Record the opponent's Locate and Deny operation-marker setup before starting Sensor Sweep.");
+      if (extractRelic.activeOpponentMarkerCount <= 1) throw new Error("Sensor Sweep cannot be started when only one opponent operation marker remains.");
+      if (extractRelic.sensorSweepUsedThisTurn) throw new Error("Sensor Sweep can only be started once per turn.");
+      if (reviewTiming !== "end-of-turn") throw new Error("Sensor Sweep completes at the end of your turn.");
+      if (!objectiveId || !getExtractRelicCentralObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select the central objective this unit is within range of for Sensor Sweep.");
+      }
+      if (!terrainAreaId || !getExtractRelicMarkerRemovalOptions(state, { playerId: activePlayerId }).some(item => item.terrainAreaId === terrainAreaId)) {
+        throw new Error("Select one of the opponent's remaining Locate and Deny operation markers to remove.");
       }
     }
     if (linkedMission.definitionId === "primary-locate-and-deny") {
