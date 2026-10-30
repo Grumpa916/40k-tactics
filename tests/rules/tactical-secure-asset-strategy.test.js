@@ -278,7 +278,7 @@ test("Round 2 Command scoring projects both 4 VP control thresholds and locks th
 test("Secure Asset objective signals combine the once-per-turn Action and control-threshold leverage", () => {
   const { state } = seed({
     round: 2,
-    phase: "movement",
+    phase: "command",
     controls: { home: true, central1: false, central2: true, enemyHome: false }
   });
   const signal = getPrimaryObjectiveStrategySignal(state, {
