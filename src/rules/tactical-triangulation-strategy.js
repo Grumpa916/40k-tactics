@@ -344,22 +344,23 @@ export function getTriangulationObjectiveStrategySignal(state, {
   }
 
   const vpLeverage = Math.max(actionVpLeverage, controlVpLeverage, endgameVpLeverage);
+  const strongestLeverage = Math.max(actionVpLeverage, controlVpLeverage, stagingVpLeverage, endgameVpLeverage);
   let reason;
   if (pending) {
     reason = actionVpLeverage > 0
       ? `A Triangulate Action is pending here. Keeping the acting unit in control through end of turn can improve the capped recurring tier by ${actionVpLeverage} VP this turn.`
       : "A Triangulate Action is pending here. Preserve control through end of turn so the objective becomes permanently triangulated.";
-  } else if (!ownHome && !triangulated && actionVpLeverage > 0) {
+  } else if (!ownHome && !triangulated && actionVpLeverage > 0 && actionVpLeverage >= Math.max(controlVpLeverage, stagingVpLeverage, endgameVpLeverage)) {
     reason = `This objective is eligible for Triangulate. Completing it can improve the capped recurring tier by ${actionVpLeverage} VP this turn and leaves a permanent marker for later turns.`;
-  } else if (controlVpLeverage > 0) {
+  } else if (controlVpLeverage > 0 && controlVpLeverage >= Math.max(actionVpLeverage, stagingVpLeverage, endgameVpLeverage)) {
     reason = controlled
       ? "This objective is carrying the binary 4 VP non-home control condition at the active checkpoint."
       : "Taking this non-home objective can satisfy the binary 4 VP control condition at the active checkpoint.";
-  } else if (endgameVpLeverage > 0) {
+  } else if (endgameVpLeverage > 0 && endgameVpLeverage >= Math.max(actionVpLeverage, controlVpLeverage, stagingVpLeverage)) {
     reason = controlled
       ? "This objective is one of exactly four currently controlled objectives; losing it can drop the 10 VP end-of-battle threshold."
       : "Controlling this objective would raise the recorded total from three to four and meet the 10 VP end-of-battle threshold before the game cap.";
-  } else if (stagingVpLeverage > 0) {
+  } else if (stagingVpLeverage > 0 && stagingVpLeverage >= Math.max(actionVpLeverage, controlVpLeverage, endgameVpLeverage)) {
     reason = "The current Command checkpoint has passed; controlling this non-home objective now stages the binary 4 VP condition for the next scoring checkpoint.";
   } else if (triangulated) {
     reason = "This objective is already triangulated, so its marker no longer requires control. Preserve it only when control or the four-objective endgame threshold still matters.";

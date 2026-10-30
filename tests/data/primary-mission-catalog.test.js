@@ -46,6 +46,11 @@ test('shooting mission actions include the resolved primary action when applicab
     activePlayer: 'p1',
     battle: { status: 'active', round: 2, activePlayerId: 'p1' },
     players: [{ id: 'p1', name: 'You' }, { id: 'p2', name: 'Opponent' }],
+    preGameSetup: { attackerPlayerId: 'p1', defenderPlayerId: 'p2' },
+    objectives: [
+      { id: 'attacker-home', layoutObjective: 'Attacker Home' },
+      { id: 'defender-home', layoutObjective: 'Defender Home' }
+    ],
     battlefieldMap: { missionSetup: { myDisposition: 'Reconnaissance', opponentDisposition: 'Purge the Foe' } },
     scoring: { secondaryMissions: [] },
     history: []
