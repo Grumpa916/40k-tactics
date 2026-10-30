@@ -77,6 +77,11 @@ import {
   getGatherIntelObjectiveStrategySignal
 } from "./tactical-gather-intel-strategy.js";
 import { isGatherIntelMissionForPlayer } from "./gather-intel-state.js";
+import {
+  getSearchAndScourPrimaryStrategyContext,
+  getSearchAndScourObjectiveStrategySignal,
+  isSearchAndScourMissionForPlayer
+} from "./tactical-search-and-scour-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -121,6 +126,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getGatherIntelPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSearchAndScourPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -171,6 +179,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getGatherIntelObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSearchAndScourObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
