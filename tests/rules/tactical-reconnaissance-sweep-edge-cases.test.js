@@ -93,7 +93,7 @@ test("reserve and embarked units with stale model positions do not represent tab
   const quarters = getReconnaissanceSweepQuarterState(s, { playerId: "p1" });
   assert.equal(quarters.representedQuarterCount, 2);
   assert.equal(quarters.mapQuarterVpEstimate, 0);
-  assert.deepEqual(quarters.representedQuarterIds.sort(), ["upper-left", "upper-right"]);
+  assert.deepEqual([...quarters.representedQuarterIds].sort(), ["upper-left", "upper-right"]);
   assert.equal(quarters.units.some((entry) => entry.unitId === "reserve"), false);
   assert.equal(quarters.units.some((entry) => entry.unitId === "embarked"), false);
 });
