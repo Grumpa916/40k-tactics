@@ -41,6 +41,8 @@ import { isSecureAssetMissionForPlayer } from "./secure-asset-state.js";
 import { getSecureAssetObjectiveStrategySignal } from "./tactical-secure-asset-strategy.js";
 import { enhanceSecureAssetMovementRecommendations } from "./tactical-secure-asset-movement.js";
 import { enhanceSearchAndScourMovementRecommendations } from "./tactical-search-and-scour-movement.js";
+import { isExtractRelicMissionForPlayer } from "./extract-relic-state.js";
+import { enhanceExtractRelicMovementRecommendations } from "./tactical-extract-relic-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -349,6 +351,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isSecureAssetMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceSecureAssetMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isExtractRelicMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceExtractRelicMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
