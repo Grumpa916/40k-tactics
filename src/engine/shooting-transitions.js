@@ -141,14 +141,14 @@ export function recordShootingActivation(state, {
         throw new Error("Select one of your remaining Locate and Deny operation markers to remove.");
       }
     }
-    if (linkedMission.definitionId === "secondary-cleanse") {
+    if (linkedMission.definitionId === "secondary-cleanse" && linkedMission.rulesVerified === true) {
       if (reviewTiming !== "end-of-turn") throw new Error("Cleanse completes at the end of your turn.");
       if (!objectiveId || !getCleanseObjectiveOptions(state, { playerId: activePlayerId })
           .some(item => item.objectiveId === objectiveId)) {
         throw new Error("Select a different eligible non-home objective for this Cleanse attempt.");
       }
     }
-    if (linkedMission.definitionId === "secondary-plunder") {
+    if (linkedMission.definitionId === "secondary-plunder" && linkedMission.rulesVerified === true) {
       if (reviewTiming !== "end-of-turn") throw new Error("Plunder scores at the end of your turn.");
       if (getPlunderActionState(state, { playerId: activePlayerId }).usedThisTurn) {
         throw new Error("Plunder can only be started once per turn.");
@@ -178,7 +178,7 @@ export function recordShootingActivation(state, {
     actionType,
     actionId:linkedMission?.definitionId ?? actionId,
     ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
-      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), ...(targetUnitId ? { targetUnitId } : {}), ...((deathTrapTerrain || linkedMission?.definitionId === "secondary-plunder") ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
+      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), missionRulesVerified: linkedMission.rulesVerified === true, ...(targetUnitId ? { targetUnitId } : {}), ...((deathTrapTerrain || (linkedMission?.definitionId === "secondary-plunder" && linkedMission?.rulesVerified === true)) ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
   }));
 }
 
