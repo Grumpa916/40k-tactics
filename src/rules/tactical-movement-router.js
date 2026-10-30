@@ -34,6 +34,8 @@ import { isTriangulationMissionForPlayer } from "./tactical-triangulation-strate
 import { enhanceTriangulationMovementRecommendations } from "./tactical-triangulation-movement.js";
 import { isGatherIntelMissionForPlayer } from "./gather-intel-state.js";
 import { enhanceGatherIntelMovementRecommendations } from "./tactical-gather-intel-movement.js";
+import { isVitalLinkMissionForPlayer } from "./vital-link-state.js";
+import { enhanceVitalLinkMovementRecommendations } from "./tactical-vital-link-movement.js";
 import { isSearchAndScourMissionForPlayer } from "./search-and-scour-state.js";
 import { enhanceSearchAndScourMovementRecommendations } from "./tactical-search-and-scour-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
@@ -332,6 +334,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isGatherIntelMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceGatherIntelMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isVitalLinkMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceVitalLinkMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   if (isSearchAndScourMissionForPlayer(state, playerId, perspectivePlayerId)) {
