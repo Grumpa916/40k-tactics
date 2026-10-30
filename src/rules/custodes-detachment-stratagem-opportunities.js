@@ -71,20 +71,18 @@ export function getGoldenLightOpportunities(state,{playerId,unitId=null}={}) {
       (state.activePlayer??state.battle?.activePlayerId)!==playerId) return [];
   const roster=state.armyRosters?.[playerId];
   if (!roster || !isAdeptusCustodesFaction(roster.faction) || !getRosterDetachmentNames(roster).includes('Dread Host')) return [];
-  const arrival=(state.history??[]).findLast(event=>event.type==='unit.arrived_from_reserves' && event.payload?.phase==='movement' &&
-    event.payload?.round===state.battle?.round && event.payload?.turn===state.turn && event.payload?.reason!=='Swift Ruin');
-  if (!arrival) return [];
-  const arrivedUnit=state.units?.find(unit=>unit.id===arrival.payload?.unitId);
-  const rootId=arrivedUnit ? rootOf(state,arrivedUnit) : null;
-  if (!rootId || unitId && rootOf(state,state.units?.find(unit=>unit.id===unitId))!==rootId) return [];
-  const unit=state.units?.find(item=>item.id===rootId && item.ownerId===playerId && item.status==='deployed');
-  if (!unit || !hasCustodesKeyword(state,unit)) return [];
-  let blockedReason=null;
-  if (getCombatFormationMembers(state,unit).some(isUnitBattleShocked)) blockedReason='Battle-shocked units cannot receive Stratagems.';
-  blockedReason ??=getStratagemUseBlock(state,{playerId,unitId:unit.id,stratagemId:'golden-light-of-the-moiraides'});
-  if (!blockedReason && getCommandPointBalance(state,playerId)<2) blockedReason='Needs 2 CP.';
-  return [{stratagemId:'golden-light-of-the-moiraides',title:'Golden Light of the Moiraides',playerId,unitId:unit.id,unitName:unit.name,
-    cpCost:2,timing:'Your Movement phase · when a friendly unit is selected to make an ingress move',
-    effect:'Until the start of your next turn, attacks targeting this unit are -1 to Hit and enemy units cannot target it with Snap Shooting.',
-    available:!blockedReason,blockedReason,sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference}];
+  const focused=unitId ? state.units?.find(unit=>unit.id===unitId) : null;
+  const focusRoot=focused ? rootOf(state,focused) : null;
+  const units=(state.units??[]).filter(unit=>unit.ownerId===playerId && unit.status==='reserves' && rootOf(state,unit)===unit.id &&
+    (!focusRoot || unit.id===focusRoot) && hasCustodesKeyword(state,unit));
+  return units.map(unit=>{
+    let blockedReason=null;
+    if (getCombatFormationMembers(state,unit).some(isUnitBattleShocked)) blockedReason='Battle-shocked units cannot receive Stratagems.';
+    blockedReason ??=getStratagemUseBlock(state,{playerId,unitId:unit.id,stratagemId:'golden-light-of-the-moiraides'});
+    if (!blockedReason && getCommandPointBalance(state,playerId)<2) blockedReason='Needs 2 CP.';
+    return {stratagemId:'golden-light-of-the-moiraides',title:'Golden Light of the Moiraides',playerId,unitId:unit.id,unitName:unit.name,
+      cpCost:2,timing:'Your Movement phase · when a friendly unit in Reserves is selected to make an ingress move',
+      effect:'Until the start of your next turn, attacks targeting this unit are -1 to Hit and enemy units cannot target it with Snap Shooting.',
+      available:!blockedReason,blockedReason,sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference};
+  });
 }
