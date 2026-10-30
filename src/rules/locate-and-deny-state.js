@@ -6,6 +6,7 @@ import { getEnemyUnitDestructionsForTurn, getUnitStateAtTurnStart } from "./scor
 import { getLiveUnitPosition } from "./spatial-context.js";
 
 const MISSION_ID = "primary-locate-and-deny";
+const EXTRACT_RELIC_MISSION_ID = "primary-extract-relic";
 const SETUP_EVENT = "locate_and_deny.setup_recorded";
 const MARKER_TYPE = "locate-and-deny-operation";
 
@@ -133,15 +134,14 @@ export function getLocateAndDenySetup(state, {
   });
 }
 
-function completedSensorSweeps(state, playerId) {
+function completedSensorSweeps(state) {
   const history = Array.isArray(state?.history) ? state.history : [];
   const reviews = new Map(history
     .filter((event) => event?.type === "mission_action.reviewed")
     .map((event) => [event.payload?.actionKey, event.payload]));
   return history.filter((event) =>
     event?.type === "shooting.unit_activated" &&
-    event.payload?.playerId === playerId &&
-    event.payload?.missionDefinitionId === MISSION_ID &&
+    [MISSION_ID, EXTRACT_RELIC_MISSION_ID].includes(event.payload?.missionDefinitionId) &&
     typeof event.payload?.terrainAreaId === "string" &&
     reviews.get(actionKey(event.payload))?.outcome === "completed"
   );
@@ -173,7 +173,7 @@ export function getLocateAndDenyCentralObjectiveOptions(state, {
 function activeMarkerTerrainIds(state, playerId, perspectivePlayerId) {
   const setup = getLocateAndDenySetup(state, { playerId, perspectivePlayerId });
   if (!setup.setupComplete) return Object.freeze([]);
-  const removed = new Set(completedSensorSweeps(state, playerId).map((event) => event.payload.terrainAreaId));
+  const removed = new Set(completedSensorSweeps(state).map((event) => event.payload.terrainAreaId));
   return Object.freeze(setup.terrainAreaIds.filter((terrainAreaId) => !removed.has(terrainAreaId)));
 }
 
@@ -250,7 +250,7 @@ export function getLocateAndDenyState(state, {
   const round = Math.max(1, Number(state?.battle?.round) || 1);
   const turn = Number.isInteger(state?.turn) ? state.turn : 0;
   const setup = getLocateAndDenySetup(state, { playerId, perspectivePlayerId });
-  const removedTerrainAreaIds = Object.freeze(completedSensorSweeps(state, playerId).map((event) => event.payload.terrainAreaId));
+  const removedTerrainAreaIds = Object.freeze(completedSensorSweeps(state).map((event) => event.payload.terrainAreaId));
   const activeTerrainAreaIds = activeMarkerTerrainIds(state, playerId, perspectivePlayerId);
   const attemptsThisTurn = sensorSweepAttemptsThisTurn(state, playerId);
   const killEvidence = objectiveRangeKillEvidence(state, playerId, turn);
