@@ -2,6 +2,8 @@ import { getArmyUnitReference, renderArmyUnitSummary } from './army-unit-summary
 import { renderLiveCasualtyStatus } from './live-casualty-panel.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { getBattleShockEligibility, getUnitStrengthAssessment, isUnitBattleShocked } from "../rules/unit-status-summary.js";
+import { getBattleRosterUnit, hasInvalidWargear } from "../rules/battle-unit-reference.js";
+import { getDatasheetWeaponOptions } from "../rules/saved-roster-combat-profile.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -395,30 +397,85 @@ function renderCharacteristics(characteristics) {
   ).join("") + '</dl>';
 }
 
-function renderUnitWeapons(unit, gameData) {
+function normalizedWeaponName(value) {
+  return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function weaponProfilesForUnit(unit, gameData) {
   const catalog = [
     ...(Array.isArray(gameData?.weapons) ? gameData.weapons : []),
     ...(Array.isArray(gameData?.weaponProfiles) ? gameData.weaponProfiles : [])
   ];
   const embedded = Array.isArray(unit.profile?.weapons) ? unit.profile.weapons : [];
   const ids = Array.isArray(unit.profile?.weaponIds) ? unit.profile.weaponIds : [];
-  const linked = [
+  return [
     ...embedded,
     ...ids.map((id) => catalog.find((weapon) => weapon?.id === id)).filter(Boolean)
   ];
-  if (!linked.length) {
-    return '<p class="battle-context__empty">' +
-      (ids.length ? "Weapon reference data is not loaded for this unit." : "No weapon reference is attached to this unit.") +
-      '</p>';
+}
+
+function weaponCharacteristics(weapon) {
+  if (weapon?.characteristics && typeof weapon.characteristics === "object") return weapon.characteristics;
+  return Object.fromEntries(Object.entries(weapon ?? {}).filter(([key]) =>
+    ["range", "attacks", "skill", "strength", "ap", "damage", "abilities"].includes(key) &&
+    weapon[key] !== null && weapon[key] !== undefined && weapon[key] !== ""
+  ));
+}
+
+function renderWeaponEntries(entries) {
+  if (!entries.length) {
+    return '<p class="battle-context__empty">Weapon reference data is not loaded for this unit.</p>';
   }
-  return '<ul class="battle-shell__army-weapons">' + linked.map((weapon) => {
-    const chars = weapon?.characteristics ?? {};
+  return '<ul class="battle-shell__army-weapons">' + entries.map(({ weapon, activeQuantity, equippedQuantity, confirmed }) => {
+    const chars = weaponCharacteristics(weapon);
     const detail = renderCharacteristics(chars);
-    const type = weapon?.type ? '<span class="battle-context__badge">' + escapeHtml(weapon.type) + '</span>' : "";
+    const type = weapon?.type
+      ? '<span class="battle-context__badge">' + escapeHtml(weapon.type) + '</span>'
+      : "";
+    const quantity = confirmed
+      ? '<span class="prototype-unit-weapon-count">' + escapeHtml(activeQuantity) + ' active · ' +
+        escapeHtml(equippedQuantity) + ' equipped</span>'
+      : '<span class="prototype-unit-weapon-count">Reference profile</span>';
     return '<li><div class="battle-shell__army-weapon-heading"><strong>' +
-      escapeHtml(weapon?.name ?? weapon?.id ?? "Unnamed weapon") + '</strong>' + type + '</div>' +
+      escapeHtml(weapon?.name ?? weapon?.id ?? "Unnamed weapon") + '</strong>' + type + quantity + '</div>' +
       (weapon?.description ? '<p>' + escapeHtml(weapon.description) + '</p>' : '') + detail + '</li>';
   }).join("") + '</ul>';
+}
+
+function renderUnitWeapons(state, unit, rosterUnit, gameData) {
+  const profiles = weaponProfilesForUnit(unit, gameData);
+  const selections = (Array.isArray(rosterUnit?.equippedWeapons) ? rosterUnit.equippedWeapons : [])
+    .filter((item) => item && Number(item.quantity ?? 1) > 0);
+  const needsReview = hasInvalidWargear(state, unit);
+
+  if (selections.length && !needsReview) {
+    const options = getDatasheetWeaponOptions(state, unit);
+    const selectedEntries = options.map((option) => {
+      const weapon = profiles.find((profile) =>
+        normalizedWeaponName(profile?.name) === normalizedWeaponName(option.name)
+      ) ?? option;
+      return {
+        weapon,
+        activeQuantity: option.activeQuantity ?? option.equippedQuantity ?? 1,
+        equippedQuantity: option.equippedQuantity ?? option.activeQuantity ?? 1,
+        confirmed: true
+      };
+    });
+    if (selectedEntries.length) {
+      return '<p class="prototype-unit-loadout-note">Equipped weapon profiles from the saved army loadout. Active counts reflect recorded model losses.</p>' +
+        renderWeaponEntries(selectedEntries);
+    }
+  }
+
+  if (!profiles.length) return renderWeaponEntries([]);
+  const message = needsReview
+    ? "The saved loadout needs review. These are datasheet reference profiles, not confirmed equipped weapons."
+    : selections.length
+      ? "The saved weapon choices could not be matched to the current profiles. Review the roster loadout before relying on these."
+      : "No confirmed equipped weapon selection is saved for this unit. These are datasheet reference profiles.";
+  return '<p class="prototype-unit-loadout-note" data-tone="warning">' + escapeHtml(message) + '</p>' +
+    renderWeaponEntries(profiles.map((weapon) => ({ weapon, confirmed: false })));
 }
 
 function renderUnitAbilities(unit) {
@@ -432,6 +489,27 @@ function renderUnitAbilities(unit) {
     return '<li><strong>' + escapeHtml(name) + '</strong>' +
       (text ? '<p>' + escapeHtml(text) + '</p>' : '') + '</li>';
   }).join("") + '</ul>';
+}
+
+function renderUnitKeywords(unit) {
+  const keywords = Array.isArray(unit.profile?.keywords) ? unit.profile.keywords : [];
+  if (!keywords.length) return '<p class="battle-context__empty">Keywords are not loaded for this unit.</p>';
+  return '<p class="prototype-unit-keywords">' + keywords.map((keyword) =>
+    escapeHtml(typeof keyword === "string" ? keyword : keyword?.name ?? keyword?.keyword ?? "")
+  ).filter(Boolean).join(" · ") + '</p>';
+}
+
+function renderUnitNotes(unit, rosterUnit) {
+  const armyNotes = String(rosterUnit?.notes ?? "").trim();
+  const battleNote = String(unit.metadata?.battleRulesNote ?? "").trim();
+  if (!armyNotes && !battleNote) {
+    return '<p class="battle-context__empty">No notes are saved for this unit.</p>';
+  }
+  return (armyNotes
+    ? '<section class="prototype-unit-note"><h3>Army list notes</h3><p>' + escapeHtml(armyNotes) + '</p></section>'
+    : '') + (battleNote
+      ? '<section class="prototype-unit-note"><h3>Battle note</h3><p>' + escapeHtml(battleNote) + '</p></section>'
+      : '');
 }
 
 export function renderArmyRosterOverlay(state = {}, playerId = null, gameData = {}) {
@@ -448,14 +526,46 @@ export function renderArmyRosterOverlay(state = {}, playerId = null, gameData = 
     '</section>';
 }
 
-export function renderArmyUnitDialog(state, unitId, gameData = {}) {
+export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab = "profile") {
   const original = state.units?.find(unit => unit.id === unitId);
   if (!original) return '<p>Unit no longer available.</p><button data-army-back>Back to army</button>';
   const unit = getArmyUnitReference(state, original);
-  const weapons = (unit.profile?.weapons ?? []).map(weapon => ({ ...weapon, characteristics:weapon.characteristics ?? Object.fromEntries(Object.entries(weapon).filter(([key]) => ['range','attacks','skill','strength','ap','damage','abilities'].includes(key))) }));
-  return '<section class="battle-shell__army-dialog prototype-unit-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-unit-title"><header class="battle-shell__army-dialog-header"><button type="button" data-army-back>← Army list</button><h2 id="prototype-unit-title">' + escapeHtml(unit.name ?? unit.id) + '</h2><button type="button" data-close-army-roster>Close</button></header>' +
-    '<p>' + (Number.isFinite(unit.points ?? unit.metadata?.points) ? escapeHtml(unit.points ?? unit.metadata.points) + ' pts · ' : '') + escapeHtml(unit.status) + ' · ' + escapeHtml(unit.wounds ?? '—') + ' Wounds remaining</p>' +
-    '<h3>Characteristics</h3>' + renderCharacteristics(unit.profile?.characteristics) +
-    '<h3>Weapons</h3>' + renderUnitWeapons({...unit,profile:{...unit.profile,weapons}},gameData) +
-    '<h3>Abilities</h3>' + renderUnitAbilities(unit) + '</section>';
+  const rosterUnit = getBattleRosterUnit(state, original);
+  const tabs = ["profile", "weapons", "abilities", "notes"];
+  const activeTab = tabs.includes(selectedTab) ? selectedTab : "profile";
+  const tabTitle = { profile: "Profile", weapons: "Weapons", abilities: "Abilities", notes: "Notes" };
+  const tabButtons = tabs.map((tab) =>
+    '<button type="button" role="tab" id="army-unit-tab-' + tab + '" aria-controls="army-unit-panel-' + tab +
+    '" aria-selected="' + String(activeTab === tab) + '" tabindex="' + (activeTab === tab ? "0" : "-1") +
+    '" data-unit-detail-tab="' + tab + '">' + tabTitle[tab] + '</button>'
+  ).join("");
+  const keywords = Array.isArray(unit.profile?.keywords) ? unit.profile.keywords : [];
+  const sourceStatus = rosterUnit?.dataSource?.status ?? rosterUnit?.verificationStatus;
+  const sourceLine = typeof sourceStatus === "string" && sourceStatus
+    ? "Army data status · " + escapeHtml(sourceStatus)
+    : rosterUnit ? "Reference from the saved army list" : "Reference data attached to this battle";
+  const dataPanels = {
+    profile: '<div id="army-unit-panel-profile" role="tabpanel" aria-labelledby="army-unit-tab-profile" data-unit-detail-panel="profile"' +
+      (activeTab === "profile" ? "" : " hidden") + '><p class="prototype-unit-data-status">' + sourceLine + '</p>' +
+      renderCharacteristics(unit.profile?.characteristics) +
+      '<h3>Keywords</h3>' + renderUnitKeywords(unit) + '</div>',
+    weapons: '<div id="army-unit-panel-weapons" role="tabpanel" aria-labelledby="army-unit-tab-weapons" data-unit-detail-panel="weapons"' +
+      (activeTab === "weapons" ? "" : " hidden") + '>' +
+      renderUnitWeapons(state, unit, rosterUnit, gameData) + '</div>',
+    abilities: '<div id="army-unit-panel-abilities" role="tabpanel" aria-labelledby="army-unit-tab-abilities" data-unit-detail-panel="abilities"' +
+      (activeTab === "abilities" ? "" : " hidden") + '><h3>Abilities</h3>' + renderUnitAbilities(unit) + '</div>',
+    notes: '<div id="army-unit-panel-notes" role="tabpanel" aria-labelledby="army-unit-tab-notes" data-unit-detail-panel="notes"' +
+      (activeTab === "notes" ? "" : " hidden") + '>' + renderUnitNotes(unit, rosterUnit) + '</div>'
+  };
+  const points = unit.points ?? unit.metadata?.points;
+  const wounds = unit.wounds ?? "—";
+  const unitStatus = unit.status ?? "Status unavailable";
+  return '<section class="battle-shell__army-dialog prototype-unit-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-unit-title">' +
+    '<header class="battle-shell__army-dialog-header"><button type="button" data-army-back>← Army list</button><h2 id="prototype-unit-title">' +
+    escapeHtml(unit.name ?? unit.id) + '</h2><button type="button" data-close-army-roster>Close</button></header>' +
+    '<p>' + (Number.isFinite(points) ? escapeHtml(points) + ' pts · ' : '') + escapeHtml(unitStatus) +
+    ' · ' + escapeHtml(wounds) + ' Wounds remaining</p>' +
+    '<div class="prototype-unit-tabs" role="tablist" aria-label="' + escapeHtml(unit.name ?? unit.id) + ' army reference">' +
+    tabButtons + '</div>' +
+    dataPanels.profile + dataPanels.weapons + dataPanels.abilities + dataPanels.notes + '</section>';
 }
