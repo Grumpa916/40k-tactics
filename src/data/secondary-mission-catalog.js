@@ -158,7 +158,7 @@ const verifiedRules = Object.freeze({
         timing: "end-of-opponent-turn",
         timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
         modes: ["tactical"],
-        tiers: [{ vp: 2, maxVP: 5, summary: "For each objective guarded by your army." }]
+        tiers: [{ vp: 2, maxVP: 5, condition: { type: "burden-trust-guarded-objectives" }, summary: "For each objective guarded by your army." }]
       })
     ]
   },
