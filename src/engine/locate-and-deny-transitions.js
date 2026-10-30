@@ -11,13 +11,12 @@ export function recordLocateAndDenyMarkerSetup(state, {
   if (!playerId || !isLocateAndDenyMissionForPlayer(state, playerId, perspective)) {
     throw new Error("Locate and Deny is not active for that player.");
   }
-  const locateActionStarted = (state?.history ?? []).some((event) =>
+  const sensorSweepStarted = (state?.history ?? []).some((event) =>
     event?.type === "shooting.unit_activated" &&
-    event.payload?.playerId === playerId &&
-    event.payload?.missionDefinitionId === "primary-locate-and-deny"
+    ["primary-locate-and-deny", "primary-extract-relic"].includes(event.payload?.missionDefinitionId)
   );
-  if (locateActionStarted) {
-    throw new Error("Locate and Deny marker setup cannot be changed after Sensor Sweep has been started.");
+  if (sensorSweepStarted) {
+    throw new Error("Locate and Deny marker setup cannot be changed after either player has started Sensor Sweep.");
   }
   if (!Array.isArray(terrainAreaIds)) throw new TypeError("terrainAreaIds must be an array.");
   const unique = [...new Set(terrainAreaIds.filter((id) => typeof id === "string" && id.length > 0))];
