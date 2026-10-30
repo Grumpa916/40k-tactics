@@ -37,6 +37,9 @@ import { enhanceGatherIntelMovementRecommendations } from "./tactical-gather-int
 import { isVitalLinkMissionForPlayer } from "./vital-link-state.js";
 import { enhanceVitalLinkMovementRecommendations } from "./tactical-vital-link-movement.js";
 import { isSearchAndScourMissionForPlayer } from "./search-and-scour-state.js";
+import { isSecureAssetMissionForPlayer } from "./secure-asset-state.js";
+import { getSecureAssetObjectiveStrategySignal } from "./tactical-secure-asset-strategy.js";
+import { enhanceSecureAssetMovementRecommendations } from "./tactical-secure-asset-movement.js";
 import { enhanceSearchAndScourMovementRecommendations } from "./tactical-search-and-scour-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
@@ -342,6 +345,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isSearchAndScourMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceSearchAndScourMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isSecureAssetMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceSecureAssetMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
