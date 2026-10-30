@@ -4,7 +4,7 @@ import { getCommandPointBalance, getCommandPointHistory } from "../engine/comman
 import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictoryPointScore, hasEffectiveVictoryPointOpportunity } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
-import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getSecondaryMissionReplacementOpportunity, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getPendingSecondaryMissionCardChoice, getSecondaryMissionCardChoiceOptions, getActiveBurdenTrustAssignments, getSecondaryMissionReplacementOpportunity, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
@@ -365,6 +365,33 @@ export function createCommandScreen(container, {
   }
 
   function handleSubmit(event) {
+    const cardChoiceForm = event.target?.closest?.("[data-secondary-card-choice-form]");
+    if (cardChoiceForm && container.contains(cardChoiceForm)) {
+      event.preventDefault();
+      const state = session.getState();
+      const data = new FormData(cardChoiceForm);
+      const playerId = state.activePlayer ?? state.battle?.activePlayerId;
+      const instanceId = String(cardChoiceForm.getAttribute("data-secondary-choice-card") ?? "");
+      const choiceType = String(cardChoiceForm.getAttribute("data-secondary-choice-type") ?? "");
+      const payload = { playerId, instanceId, choiceType, round: state.battle?.round ?? 0, turn: state.turn ?? 0 };
+      if (choiceType === "beacon") payload.unitId = String(data.get("beacon-unit") ?? "");
+      if (choiceType === "tempting-target") payload.objectiveId = String(data.get("tempting-target") ?? "");
+      if (choiceType === "burden-trust") {
+        payload.guardAssignments = [...data.entries()]
+          .filter(([key, value]) => key.startsWith("guard-") && value)
+          .map(([key, unitId]) => ({ objectiveId: key.slice(6), unitId: String(unitId) }));
+      }
+      try {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_SECONDARY_MISSION_CARD_CHOICE, payload });
+        secondaryMissionMessage = choiceType === "burden-trust"
+          ? "Burden of Trust assignments saved. Check range and objective control at the table."
+          : "Required " + choiceType + " choice saved.";
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     const redrawForm = event.target?.closest?.("[data-secondary-redraw-form]");
     if (redrawForm && container.contains(redrawForm)) {
       event.preventDefault();
@@ -576,11 +603,14 @@ export function createCommandScreen(container, {
       item.isRedrawReplacement !== true).length;
     const tacticalRedrawPending = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[currentActivePlayerId];
     const secondaryRuleReplacementPending = getPendingSecondaryMissionRuleReplacement(state, currentActivePlayerId);
+    const secondaryCardChoicePending = getPendingSecondaryMissionCardChoice(state, currentActivePlayerId);
     const fixedCardsSelected = secondaryHistory.filter((item) =>
       item.playerId === selectedSecondaryPlayerId && ((getSecondaryMissionMode(state, item.playerId) ?? item.definition?.missionMode) === "fixed")).length;
     const secondaryModeStatusMarkup = secondaryMissionMode === "tactical" && state.phase === "command"
       ? '<p class="command-secondary-mode-status">' +
-        (secondaryRuleReplacementPending
+        (secondaryCardChoicePending
+          ? "Choose the " + secondaryCardChoicePending.choiceType + " for the card you just drew."
+          : secondaryRuleReplacementPending
           ? secondaryRuleReplacementPending.stage === "return"
             ? 'Defend Stronghold must be returned for a replacement before continuing.'
             : 'Draw the replacement card now before continuing.'
@@ -665,9 +695,51 @@ export function createCommandScreen(container, {
               '<button type="button" data-secondary-rule-return="' + escapeHtml(item.instanceId) + '">' +
               (opportunity.mandatory ? 'Return for required replacement' : 'Return and replace card') + '</button>'
             : '';
-          return '<article><strong>' + escapeHtml(item.definition?.name ?? item.definitionId) + '</strong>' +
+          const cardName = item.definition?.name ?? item.definitionId;
+          let cardChoiceControl = '';
+          if (item.definitionId === "secondary-beacon") {
+            const selectedUnit = item.cardState?.beaconUnitId;
+            const selectedName = state.units?.find((unit) => unit.id === selectedUnit)?.name;
+            if (selectedUnit) {
+              cardChoiceControl = '<p><strong>Beacon unit:</strong> ' + escapeHtml(selectedName ?? selectedUnit) + ' (locked for this card).</p>';
+            } else {
+              const options = getSecondaryMissionCardChoiceOptions(state, { playerId: item.playerId, choiceType: "beacon" });
+              cardChoiceControl = '<form data-secondary-card-choice-form data-secondary-choice-type="beacon" data-secondary-choice-card="' + escapeHtml(item.instanceId) + '">' +
+                '<label>Choose your Beacon unit<select name="beacon-unit" required><option value="">Select a battlefield or embarked unit…</option>' +
+                options.map((unit) => '<option value="' + escapeHtml(unit.id) + '">' + escapeHtml(unit.name ?? unit.id) + '</option>').join('') +
+                '</select></label><button type="submit">Set Beacon unit</button></form>';
+            }
+          } else if (item.definitionId === "secondary-a-tempting-target") {
+            const selectedObjectiveId = item.cardState?.temptingTargetObjectiveId;
+            const selectedObjective = state.objectives?.find((objective) => objective.id === selectedObjectiveId);
+            if (selectedObjectiveId) {
+              cardChoiceControl = '<p><strong>Opponent selected target:</strong> ' + escapeHtml(selectedObjective?.name ?? selectedObjective?.label ?? selectedObjectiveId) + ' (locked for this card).</p>';
+            } else {
+              const options = getSecondaryMissionCardChoiceOptions(state, { playerId: item.playerId, choiceType: "tempting-target" });
+              cardChoiceControl = '<form data-secondary-card-choice-form data-secondary-choice-type="tempting-target" data-secondary-choice-card="' + escapeHtml(item.instanceId) + '">' +
+                '<label>Opponent selects a No Man’s Land objective<select name="tempting-target" required><option value="">Select objective…</option>' +
+                options.map((objective) => '<option value="' + escapeHtml(objective.id) + '">' + escapeHtml(objective.name ?? objective.label ?? objective.id) + '</option>').join('') +
+                '</select></label><button type="submit">Record opponent’s target</button></form>';
+            }
+          } else if (item.definitionId === "secondary-burden-of-trust") {
+            const options = getSecondaryMissionCardChoiceOptions(state, { playerId: item.playerId, choiceType: "burden-trust" });
+            const activeAssignments = getActiveBurdenTrustAssignments(state, item, { turn: currentTurn });
+            const assignedByObjective = new Map(activeAssignments.map((assignment) => [assignment.objectiveId, assignment]));
+            const objectiveChoices = (state.objectives ?? []).map((objective) => {
+              const current = assignedByObjective.get(objective.id);
+              const unitOptions = '<option value="">Not guarded</option>' + options.map((unit) =>
+                '<option value="' + escapeHtml(unit.id) + '"' + (current?.unitId === unit.id ? ' selected' : '') + '>' +
+                escapeHtml(unit.name ?? unit.id) + '</option>').join('');
+              return '<label>' + escapeHtml(objective.name ?? objective.label ?? objective.id) +
+                '<select name="guard-' + escapeHtml(objective.id) + '">' + unitOptions + '</select></label>';
+            }).join('');
+            cardChoiceControl = '<form data-secondary-card-choice-form data-secondary-choice-type="burden-trust" data-secondary-choice-card="' + escapeHtml(item.instanceId) + '">' +
+              '<p>Assign one deployed unit to each objective you control. Recheck range and control at the end of the opponent’s turn.</p>' +
+              objectiveChoices + '<button type="submit">Save Burden of Trust guards</button></form>';
+          }
+          return '<article><strong>' + escapeHtml(cardName) + '</strong>' +
             (replacementControl ? '<p>' + escapeHtml(opportunity.reason) + '</p>' + replacementControl : '') +
-            '</article>';
+            cardChoiceControl + '</article>';
         }).join('') + '</section>'
       : '<p>No active secondary cards have been entered for this player.</p>';
     const manualTimingOptions = '<option value="">Choose checkpoint...</option>' + [

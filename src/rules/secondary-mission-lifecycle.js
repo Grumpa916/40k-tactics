@@ -1,5 +1,7 @@
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
+import { UNIT_STATUS } from "../state/unit.js";
+import { isPlayerHomeObjective } from "./consecrate-state.js";
 
 export const SECONDARY_MISSION_MODES = Object.freeze({
   FIXED: "fixed",
@@ -99,6 +101,138 @@ function requireOwnedActiveMission(state, instanceId, playerId, action) {
     throw new Error("Only an active secondary mission can be " + action + ".");
   }
   return { existing, index, entry };
+}
+
+const NO_MANS_LAND_OBJECTIVE_NAMES = new Set(["Central 1", "Central 2", "Expansion 1", "Expansion 2"]);
+
+function isNoMansLandObjective(objective) {
+  const layoutName = objective?.layoutObjective ?? objective?.name ?? "";
+  return NO_MANS_LAND_OBJECTIVE_NAMES.has(String(layoutName)) ||
+    objective?.zone === "no-mans-land";
+}
+
+export function getPendingSecondaryMissionCardChoice(state, playerId = state?.activePlayer) {
+  return playerId ? state?.scoring?.secondaryMissionCardChoicePendingByPlayer?.[playerId] ?? null : null;
+}
+
+export function getSecondaryMissionCardChoiceOptions(state, { playerId, choiceType } = {}) {
+  if (!playerId) throw new TypeError("A player id is required.");
+  const units = Array.isArray(state?.units) ? state.units : [];
+  if (choiceType === "beacon") {
+    return units.filter((unit) => unit.ownerId === playerId &&
+      [UNIT_STATUS.DEPLOYED, UNIT_STATUS.EMBARKED].includes(unit.status));
+  }
+  if (choiceType === "burden-trust") {
+    return units.filter((unit) => unit.ownerId === playerId && unit.status === UNIT_STATUS.DEPLOYED);
+  }
+  if (choiceType === "tempting-target") {
+    return (Array.isArray(state?.objectives) ? state.objectives : [])
+      .filter((objective) => objective?.id && isNoMansLandObjective(objective) &&
+        !isPlayerHomeObjective(state, objective, playerId) &&
+        !(state.players ?? []).some((player) => player.id !== playerId &&
+          isPlayerHomeObjective(state, objective, player.id)));
+  }
+  return [];
+}
+
+export function getActiveBurdenTrustAssignments(state, entry, {
+  turn = state?.turn ?? 0
+} = {}) {
+  if (entry?.definitionId !== "secondary-burden-of-trust" ||
+      entry?.status !== SECONDARY_MISSION_STATUS.ACTIVE) return [];
+  return (entry.cardState?.burdenTrustAssignments ?? [])
+    .filter((assignment) => Number.isInteger(assignment.expiresAtTurn) && turn < assignment.expiresAtTurn)
+    .map((assignment) => ({ ...assignment }));
+}
+
+/** Record a required When Drawn selection or a turn-based Burden of Trust assignment. */
+export function recordSecondaryMissionCardChoice(state, {
+  instanceId,
+  playerId,
+  choiceType,
+  unitId = null,
+  objectiveId = null,
+  guardAssignments = [],
+  round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  requireTurnPosition(round, turn);
+  if (state.phase !== "command" || (state.activePlayer && state.activePlayer !== playerId)) {
+    throw new Error("Secondary card choices are recorded during the owning player's Command phase.");
+  }
+  const { existing, index, entry } = requireOwnedActiveMission(state, instanceId, playerId, "update");
+  if (getSecondaryMissionMode(state, playerId) !== SECONDARY_MISSION_MODES.TACTICAL) {
+    throw new Error("These card-specific choices apply to Tactical secondary cards.");
+  }
+  const cardState = { ...(entry.cardState ?? {}) };
+  let eventType;
+  let eventPayload;
+
+  if (choiceType === "beacon" && entry.definitionId === "secondary-beacon") {
+    if (entry.drawnRound !== round || entry.drawnTurn !== turn) {
+      throw new Error("Select the Beacon unit immediately when the card is drawn.");
+    }
+    if (cardState.beaconUnitId) throw new Error("The Beacon unit cannot be replaced after it is selected.");
+    const unit = state.units?.find((item) => item.id === unitId && item.ownerId === playerId &&
+      [UNIT_STATUS.DEPLOYED, UNIT_STATUS.EMBARKED].includes(item.status));
+    if (!unit) throw new Error("Choose your unit on the battlefield or embarked within a Transport on the battlefield.");
+    cardState.beaconUnitId = unit.id;
+    cardState.beaconSelectedRound = round;
+    cardState.beaconSelectedTurn = turn;
+    eventType = "secondary_mission.beacon_selected";
+    eventPayload = { playerId, instanceId, unitId: unit.id, round, turn };
+  } else if (choiceType === "tempting-target" && entry.definitionId === "secondary-a-tempting-target") {
+    if (entry.drawnRound !== round || entry.drawnTurn !== turn) {
+      throw new Error("Choose the Tempting Target immediately when the card is drawn.");
+    }
+    if (cardState.temptingTargetObjectiveId) throw new Error("The Tempting Target objective cannot be changed after selection.");
+    const objective = getSecondaryMissionCardChoiceOptions(state, { playerId, choiceType })
+      .find((item) => item.id === objectiveId);
+    if (!objective) throw new Error("The opponent must select an eligible No Man's Land objective, excluding both home objectives.");
+    const opponent = (state.players ?? []).find((player) => player.id !== playerId);
+    cardState.temptingTargetObjectiveId = objective.id;
+    cardState.temptingTargetSelectedByPlayerId = opponent?.id ?? null;
+    cardState.temptingTargetSelectedRound = round;
+    cardState.temptingTargetSelectedTurn = turn;
+    eventType = "secondary_mission.tempting_target_selected";
+    eventPayload = { playerId, selectedByPlayerId: opponent?.id ?? null, instanceId, objectiveId: objective.id, round, turn };
+  } else if (choiceType === "burden-trust" && entry.definitionId === "secondary-burden-of-trust") {
+    if (!Array.isArray(guardAssignments)) throw new TypeError("Burden of Trust guard assignments must be a list.");
+    const objectives = Array.isArray(state.objectives) ? state.objectives : [];
+    const seenObjectives = new Set();
+    const normalizedAssignments = guardAssignments.filter((item) => item?.unitId).map((item) => {
+      if (!item.objectiveId || seenObjectives.has(item.objectiveId)) {
+        throw new Error("Each Burden of Trust objective can be assigned only once.");
+      }
+      seenObjectives.add(item.objectiveId);
+      if (!objectives.some((objective) => objective.id === item.objectiveId)) {
+        throw new Error("Choose an objective on this battlefield.");
+      }
+      const unit = state.units?.find((candidate) => candidate.id === item.unitId &&
+        candidate.ownerId === playerId && candidate.status === UNIT_STATUS.DEPLOYED);
+      if (!unit) throw new Error("Choose one of your deployed units to guard each objective.");
+      return { objectiveId: item.objectiveId, unitId: unit.id };
+    }).map((item) => ({ ...item, assignedRound: round, assignedTurn: turn, expiresAtTurn: turn + 2 }));
+    cardState.burdenTrustAssignments = normalizedAssignments;
+    cardState.burdenTrustHistory = [
+      ...(cardState.burdenTrustHistory ?? []),
+      { round, turn, assignments: normalizedAssignments.map((item) => ({ ...item })) }
+    ];
+    eventType = "secondary_mission.burden_trust_assignments_recorded";
+    eventPayload = { playerId, instanceId, round, turn, assignments: normalizedAssignments };
+  } else {
+    throw new Error("This choice does not apply to the selected active secondary card.");
+  }
+
+  const updatedEntry = Object.freeze({ ...entry, cardState: Object.freeze(cardState) });
+  const next = withMissionList(state, existing.map((item, itemIndex) => itemIndex === index ? updatedEntry : item));
+  const scoring = { ...next.scoring };
+  if (choiceType === "beacon" || choiceType === "tempting-target") {
+    const pending = { ...(scoring.secondaryMissionCardChoicePendingByPlayer ?? {}) };
+    if (pending[playerId]?.instanceId === instanceId) delete pending[playerId];
+    scoring.secondaryMissionCardChoicePendingByPlayer = pending;
+  }
+  return appendHistoryEntry({ ...next, scoring }, createEvent(eventType, eventPayload));
 }
 
 const RULE_REPLACEMENT_RULES = Object.freeze({
@@ -211,6 +345,8 @@ export function drawSecondaryMission(state, {
     if (state.activePlayer && state.activePlayer !== playerId) {
       throw new Error("Only the active player can draw Tactical secondary cards during their Command phase.");
     }
+    const pendingCardChoice = getPendingSecondaryMissionCardChoice(state, playerId);
+    if (pendingCardChoice) throw new Error("Resolve the " + pendingCardChoice.choiceType + " choice before drawing another Tactical card.");
     const pendingRuleReplacement = state.scoring?.secondaryMissionRuleReplacementPendingByPlayer?.[playerId] ?? null;
     if (pendingRuleReplacement && pendingRuleReplacement.round === round &&
         pendingRuleReplacement.turn === turn && pendingRuleReplacement.stage === "return") {
@@ -288,6 +424,14 @@ export function drawSecondaryMission(state, {
     scoring.secondaryMissionRuleReplacementPendingByPlayer = {
       ...(scoring.secondaryMissionRuleReplacementPendingByPlayer ?? {}),
       [playerId]: { instanceId: entry.instanceId, definitionId: entry.definitionId, round, turn, stage: "return" }
+    };
+  }
+  if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL &&
+      ["secondary-beacon", "secondary-a-tempting-target"].includes(entry.definitionId)) {
+    const choiceType = entry.definitionId === "secondary-beacon" ? "beacon" : "tempting-target";
+    scoring.secondaryMissionCardChoicePendingByPlayer = {
+      ...(scoring.secondaryMissionCardChoicePendingByPlayer ?? {}),
+      [playerId]: { instanceId: entry.instanceId, definitionId: entry.definitionId, choiceType, round, turn }
     };
   }
   return { ...next, scoring };
