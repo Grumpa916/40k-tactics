@@ -59,6 +59,7 @@ export const COMMAND_TYPES = Object.freeze({
   ADJUST_VICTORY_POINTS: "victory_points.adjust",
   UNDO_LATEST_VICTORY_POINTS_AWARD: "victory_points.undo_latest_award",
   DRAW_SECONDARY_MISSION: "secondary_mission.draw",
+  RETURN_SECONDARY_MISSION_FOR_RULE: "secondary_mission.return_for_rule_replacement",
   SET_SECONDARY_MISSION_MODE: "secondary_mission.set_mode",
   RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score",
   USE_SECONDARY_MISSION_REDRAW: "secondary_mission.use_redraw",

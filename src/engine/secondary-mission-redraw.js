@@ -3,6 +3,7 @@ import { appendHistoryEntry } from "../state/history.js";
 import { getCommandPointBalance, recordCommandPointChange } from "./command-points-ledger.js";
 import {
   discardSecondaryMission,
+  getPendingSecondaryMissionRuleReplacement,
   getSecondaryMissionHistory,
   getSecondaryMissionMode,
   SECONDARY_MISSION_MODES,
@@ -27,6 +28,9 @@ export function useSecondaryMissionRedraw(state, {
     throw new Error("Only the active player can use New Orders during their Command phase.");
   }
 
+  if (getPendingSecondaryMissionRuleReplacement(state, playerId)) {
+    throw new Error("Resolve the card's When Drawn replacement before using New Orders.");
+  }
   const used = state.scoring?.secondaryMissionRedrawUsedByPlayer ?? {};
   if (used[playerId]) throw new Error("New Orders has already been used by this player in this battle.");
   const pending = state.scoring?.secondaryMissionRedrawPendingByPlayer ?? {};

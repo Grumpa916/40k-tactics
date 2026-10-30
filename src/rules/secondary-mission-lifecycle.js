@@ -101,6 +101,89 @@ function requireOwnedActiveMission(state, instanceId, playerId, action) {
   return { existing, index, entry };
 }
 
+const RULE_REPLACEMENT_RULES = Object.freeze({
+  "secondary-a-grievous-blow": { condition: "Confirm no enemy unit with Starting Strength 13+ is on the battlefield." },
+  "secondary-behind-enemy-lines": { firstRoundOnly: true, prompt: "This card may be replaced when drawn in the first battle round." },
+  "secondary-bring-it-down": { condition: "Confirm no enemy model with 10+ Wounds is on the battlefield." },
+  "secondary-cleanse": { pairedMissionId: "secondary-plunder", prompt: "Plunder must already be active for you." },
+  "secondary-defend-stronghold": { firstRoundOnly: true, mandatory: true, prompt: "This card must be replaced if drawn in the first battle round." },
+  "secondary-forward-position": { firstRoundOnly: true, prompt: "This card may be replaced when drawn in the first battle round." },
+  "secondary-plunder": { pairedMissionId: "secondary-cleanse", prompt: "Cleanse must already be active for you." }
+});
+
+export function getPendingSecondaryMissionRuleReplacement(state, playerId = state?.activePlayer) {
+  return playerId ? state?.scoring?.secondaryMissionRuleReplacementPendingByPlayer?.[playerId] ?? null : null;
+}
+
+export function getSecondaryMissionReplacementOpportunity(state, entry, {
+  round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  if (!entry || entry.status !== SECONDARY_MISSION_STATUS.ACTIVE) {
+    return { eligible: false, reason: "Only an active card can be returned." };
+  }
+  const playerId = entry.playerId;
+  if (getSecondaryMissionMode(state, playerId) !== SECONDARY_MISSION_MODES.TACTICAL) {
+    return { eligible: false, reason: "When Drawn replacements apply only to Tactical cards." };
+  }
+  if (state.phase !== "command" || (state.activePlayer && state.activePlayer !== playerId)) {
+    return { eligible: false, reason: "Resolve this card during its owner's Command phase." };
+  }
+  if (entry.drawnRound !== round || entry.drawnTurn !== turn) {
+    return { eligible: false, reason: "When Drawn replacements must be resolved immediately after the card is drawn." };
+  }
+  const pending = getPendingSecondaryMissionRuleReplacement(state, playerId);
+  if (pending && (pending.stage === "draw" || pending.instanceId !== entry.instanceId)) {
+    return { eligible: false, reason: "Resolve the pending card replacement first." };
+  }
+  const rule = RULE_REPLACEMENT_RULES[entry.definitionId];
+  if (!rule) return { eligible: false, reason: "This card has no replacement rule." };
+  if (rule.firstRoundOnly && round !== 1) {
+    return { eligible: false, reason: "This replacement is available only when the card is drawn in battle round 1." };
+  }
+  if (rule.pairedMissionId && !missionList(state).some((item) =>
+    item.playerId === playerId && item.definitionId === rule.pairedMissionId &&
+    item.status === SECONDARY_MISSION_STATUS.ACTIVE)) {
+    return { eligible: false, reason: rule.prompt };
+  }
+  return {
+    eligible: true,
+    mandatory: rule.mandatory === true,
+    requiresConfirmation: Boolean(rule.condition),
+    confirmationPrompt: rule.condition ?? null,
+    reason: rule.prompt ?? rule.condition ?? "The card's When Drawn rule allows a replacement."
+  };
+}
+
+/** Return a Tactical card under its printed When Drawn replacement rule. */
+export function returnSecondaryMissionForRule(state, {
+  instanceId,
+  playerId,
+  conditionConfirmed = false,
+  round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  requireTurnPosition(round, turn);
+  const { entry } = requireOwnedActiveMission(state, instanceId, playerId, "return");
+  const opportunity = getSecondaryMissionReplacementOpportunity(state, entry, { round, turn });
+  if (!opportunity.eligible) throw new Error(opportunity.reason);
+  if (opportunity.requiresConfirmation && conditionConfirmed !== true) {
+    throw new Error("Confirm the printed card's replacement condition before returning it.");
+  }
+  const returned = returnSecondaryMissionToDeck(state, { instanceId, playerId, round, turn });
+  const pendingByPlayer = {
+    ...(returned.scoring?.secondaryMissionRuleReplacementPendingByPlayer ?? {}),
+    [playerId]: { instanceId, definitionId: entry.definitionId, round, turn, stage: "draw" }
+  };
+  const updated = {
+    ...returned,
+    scoring: { ...returned.scoring, secondaryMissionRuleReplacementPendingByPlayer: pendingByPlayer }
+  };
+  return appendHistoryEntry(updated, createEvent("secondary_mission.returned_for_rule_replacement", {
+    playerId, instanceId, definitionId: entry.definitionId, round, turn, conditionConfirmed
+  }));
+}
+
 /** Add a newly drawn secondary mission without changing the player's VP score. */
 export function drawSecondaryMission(state, {
   definition,
@@ -120,6 +203,7 @@ export function drawSecondaryMission(state, {
     ? Object.freeze({ ...normalized, missionMode: selectedMode })
     : normalized;
   const existing = missionList(state);
+  let isRuleReplacement = false;
   if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL) {
     if (state.phase !== "command") {
       throw new Error("Tactical secondary cards can only be drawn during the Command phase.");
@@ -127,8 +211,18 @@ export function drawSecondaryMission(state, {
     if (state.activePlayer && state.activePlayer !== playerId) {
       throw new Error("Only the active player can draw Tactical secondary cards during their Command phase.");
     }
+    const pendingRuleReplacement = state.scoring?.secondaryMissionRuleReplacementPendingByPlayer?.[playerId] ?? null;
+    if (pendingRuleReplacement && pendingRuleReplacement.round === round &&
+        pendingRuleReplacement.turn === turn && pendingRuleReplacement.stage === "return") {
+      throw new Error("Return Defend Stronghold before drawing its required replacement card.");
+    }
+    if (pendingRuleReplacement && (pendingRuleReplacement.round !== round || pendingRuleReplacement.turn !== turn)) {
+      throw new Error("Resolve the pending secondary card replacement before drawing another Tactical card.");
+    }
+    isRuleReplacement = Boolean(pendingRuleReplacement?.stage === "draw");
     const drawnThisCommandPhase = existing.filter((item) =>
       item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn &&
+      item.status !== SECONDARY_MISSION_STATUS.RETURNED_TO_DECK &&
       item.isRedrawReplacement !== true
     ).length;
     const pendingRedraw = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId];
@@ -147,7 +241,8 @@ export function drawSecondaryMission(state, {
     }
   }
   if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL && existing.some((item) =>
-      item.playerId === playerId && item.definitionId === missionDefinition.id)) {
+      item.playerId === playerId && item.definitionId === missionDefinition.id &&
+      item.status !== SECONDARY_MISSION_STATUS.RETURNED_TO_DECK)) {
     throw new Error("This Tactical card has already been drawn and cannot be drawn again.");
   }
   if (existing.some((item) => item.playerId === playerId &&
@@ -163,6 +258,8 @@ export function drawSecondaryMission(state, {
       state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId]?.round === round &&
       state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId]?.turn === turn
       ? { isRedrawReplacement: true } : {}),
+    ...(selectedMode === SECONDARY_MISSION_MODES.TACTICAL && isRuleReplacement
+      ? { isRuleReplacement: true } : {}),
     status: SECONDARY_MISSION_STATUS.ACTIVE,
     drawnRound: round,
     drawnTurn: turn,
@@ -175,15 +272,25 @@ export function drawSecondaryMission(state, {
     returnedToDeckTurn: null
   });
   const next = withMissionList(state, [...existing, entry]);
+  const scoring = { ...next.scoring };
   if (entry.isRedrawReplacement) {
-    const pending = { ...(next.scoring?.secondaryMissionRedrawPendingByPlayer ?? {}) };
+    const pending = { ...(scoring.secondaryMissionRedrawPendingByPlayer ?? {}) };
     delete pending[playerId];
-    return {
-      ...next,
-      scoring: { ...next.scoring, secondaryMissionRedrawPendingByPlayer: pending }
+    scoring.secondaryMissionRedrawPendingByPlayer = pending;
+  }
+  if (isRuleReplacement) {
+    const pending = { ...(scoring.secondaryMissionRuleReplacementPendingByPlayer ?? {}) };
+    delete pending[playerId];
+    scoring.secondaryMissionRuleReplacementPendingByPlayer = pending;
+  }
+  if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL &&
+      entry.definitionId === "secondary-defend-stronghold" && round === 1) {
+    scoring.secondaryMissionRuleReplacementPendingByPlayer = {
+      ...(scoring.secondaryMissionRuleReplacementPendingByPlayer ?? {}),
+      [playerId]: { instanceId: entry.instanceId, definitionId: entry.definitionId, round, turn, stage: "return" }
     };
   }
-  return next;
+  return { ...next, scoring };
 }
 
 /**
