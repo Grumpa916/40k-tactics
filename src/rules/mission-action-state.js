@@ -4,6 +4,7 @@ import { getCompleteSecondaryMissionById } from '../data/secondary-mission-compl
 import { getLocateAndDenyState } from './locate-and-deny-state.js';
 import { getTriangulationState } from './triangulation-state.js';
 import { getVitalLinkState } from './vital-link-state.js';
+import { getSecureAssetState } from './secure-asset-state.js';
 
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
 
