@@ -32,6 +32,8 @@ import { isReconnaissanceSweepMissionForPlayer } from "./tactical-reconnaissance
 import { enhanceReconnaissanceSweepMovementRecommendations } from "./tactical-reconnaissance-sweep-movement.js";
 import { isTriangulationMissionForPlayer } from "./tactical-triangulation-strategy.js";
 import { enhanceTriangulationMovementRecommendations } from "./tactical-triangulation-movement.js";
+import { isGatherIntelMissionForPlayer } from "./gather-intel-state.js";
+import { enhanceGatherIntelMovementRecommendations } from "./tactical-gather-intel-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -324,6 +326,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isTriangulationMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceTriangulationMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isGatherIntelMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceGatherIntelMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
