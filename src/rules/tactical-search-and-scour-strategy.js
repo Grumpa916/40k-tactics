@@ -289,7 +289,7 @@ export function getSearchAndScourObjectiveStrategySignal(state, {
 
   let centralVpLeverage = 0;
   if (central) {
-    if (controlled && strategy.centralControlledCount === 1) centralVpLeverage = 3;
+    if (controlled && strategy.centralControlledCount > 0) centralVpLeverage = 3;
     if (!controlled && strategy.centralControlledCount === 0) centralVpLeverage = 3;
   }
 
