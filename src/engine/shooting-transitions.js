@@ -2,6 +2,7 @@ import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission
 import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
 import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-state.js";
 import { getTriangulationObjectiveOptions, getTriangulationState } from "../rules/triangulation-state.js";
+import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -23,6 +24,7 @@ export function recordShootingActivation(state, {
   missionInstanceId = null,
   objectiveId = null,
   terrainAreaId = null,
+  targetUnitId = null,
   reviewTiming = null,
   rulesConfirmed = false,
   locateSetupOnly = false,
@@ -121,6 +123,14 @@ export function recordShootingActivation(state, {
         throw new Error("Select one of your remaining Locate and Deny operation markers to remove.");
       }
     }
+    if (linkedMission.definitionId === "primary-surveil-the-foe") {
+      if (!targetUnitId) throw new Error("Select the enemy unit being Surveilled.");
+      const eligibleTarget = getSurveilTheFoeTargetOptions(state, { playerId: activePlayerId, unitId })
+        .find(item => item.targetUnitId === targetUnitId);
+      if (!eligibleTarget) {
+        throw new Error("Select an enemy deployed unit that has not already been Surveilled this turn.");
+      }
+    }
   }
   return appendHistoryEntry(state, createEvent("shooting.unit_activated", {
     unitId,
@@ -130,7 +140,7 @@ export function recordShootingActivation(state, {
     actionType,
     actionId:linkedMission?.definitionId ?? actionId,
     ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
-      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), ...(deathTrapTerrain ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
+      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), ...(targetUnitId ? { targetUnitId } : {}), ...(deathTrapTerrain ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
   }));
 }
 
