@@ -47,6 +47,7 @@ function renderDetachmentStratagemReminders(state,playerId) {
     '<article class="rules-reminder-card"><header><strong>'+esc(entry.detachmentName)+' · '+esc(entry.title)+' · '+esc(entry.cpCost)+' CP</strong><span>'+(entry.affordable?'Check trigger':'Needs more CP')+'</span></header>'+
     '<small>'+esc(entry.timing)+'</small><p>'+esc(entry.effect)+'</p><small>Confirm the exact trigger, target eligibility, and phase limits in the rule reference; enough CP does not by itself make this Stratagem usable.</small>'+
     (entry.title==='Preternatural Rapidity'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'preternatural-rapidity'}):'')+
+    (entry.title==='Lightning Wrath'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'lightning-wrath'}):'')+
     '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>'
   ).join('')+'</details>';
 }
@@ -152,7 +153,11 @@ export function createRulesReminderController(container,{session,perspectivePlay
     }
     if(event.target?.hasAttribute?.('data-custodes-detachment-stratagem-form')) {
       event.preventDefault?.();
-      try {session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE,payload:readCustodesDetachmentStratagemForm(event.target)});message='Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';}
+      try {
+        const payload=readCustodesDetachmentStratagemForm(event.target);
+        session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE,payload});
+        message=payload.stratagemId==='lightning-wrath'?'Lightning Wrath recorded; 1 CP spent. Resolve this unit’s D3+3-inch pile-in at the table.':'Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';
+      }
       catch(error){message=error.message;open=true;}
       refresh();return;
     }
