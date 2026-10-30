@@ -1,6 +1,7 @@
 import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
 import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
 import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-state.js";
+import { getTriangulationObjectiveOptions, getTriangulationState } from "../rules/triangulation-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -97,6 +98,15 @@ export function recordShootingActivation(state, {
         .find(item => item.objectiveId === objectiveId);
       if (!eligibleObjective) {
         throw new Error("Select a non-home objective that is not already Decoyed and has not been selected for another Decoy attempt this turn.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-triangulation") {
+      const triangulation = getTriangulationState(state, { playerId: activePlayerId });
+      if (state.battle.round < 2) throw new Error("Triangulate cannot be started before the second battle round.");
+      if (triangulation.usedThisTurn) throw new Error("Triangulate can only be started once per turn.");
+      if (reviewTiming !== "end-of-turn") throw new Error("Triangulate completes at the end of your turn.");
+      if (!objectiveId || !getTriangulationObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select a non-home objective that is not already triangulated or reserved by another Triangulate attempt.");
       }
     }
     if (linkedMission.definitionId === "primary-locate-and-deny") {
