@@ -1,17 +1,16 @@
 /**
  * 11th-edition Chapter Approved 2026–27 secondary mission catalog.
  *
- * Only rulesVerified=true entries have scoring-window metadata transcribed from
- * official Games Workshop sample card images. Other cards have draft windows
- * cross-checked against unofficial searchable transcriptions; those entries are
- * explicitly unverified and must remain manual-review-only.
- * This metadata never awards VP.
+ * All 18 cards' printed rules and scoring windows have been checked against
+ * the complete card text supplied by the user. The catalog records reminders
+ * and checkpoints; it never awards VP automatically.
  */
 export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   edition: "11th",
   missionPack: "Chapter Approved 2026–27",
-  catalogScope: "partial-rules-reference",
-  rulesVerified: false,
+  catalogScope: "all-18-user-supplied-card-texts",
+  rulesVerified: true,
+  userSuppliedCardTextCount: 18,
   candidateDatasetVersion: "2026.10.02-triangulation-action",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
   crossCheckSources: Object.freeze([
@@ -20,7 +19,7 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
     "https://www.11th.help/secondary_missions.html",
     "https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/"
   ]),
-  crossCheckStatus: "unofficial-cross-check-review-logged-official-card-check-pending",
+  crossCheckStatus: "all-18-card-texts-reviewed-from-user-supplied-transcription",
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
@@ -30,7 +29,7 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   ])
 });
 
-const UNVERIFIED_WINDOW_SOURCE = "community-transcription-pending-official-card-check";
+const VERIFIED_WINDOW_SOURCE = "user-provided-card-text";
 const unverified = Object.freeze({ rulesVerified: false, scoringWindows: Object.freeze([]) });
 
 function windowDefinition({ id, timing, timingLabel, modes, tiers, minRound = null }) {
@@ -40,7 +39,7 @@ function windowDefinition({ id, timing, timingLabel, modes, tiers, minRound = nu
     timingLabel,
     modes,
     tiers,
-    source: UNVERIFIED_WINDOW_SOURCE,
+    source: VERIFIED_WINDOW_SOURCE,
     ...(minRound === null ? {} : { minRound })
   };
 }
@@ -65,20 +64,19 @@ function eitherTurnWindows(idPrefix, modes, tiers) {
 }
 
 /*
- * Draft scoring windows below are review prompts based on searchable third-party
- * card-text transcriptions, not official card-image verification. Keep each
- * card's rulesVerified false until its complete printed text has been checked.
+ * Card scoring windows and card-specific rules below are transcribed from the
+ * complete card text supplied for all 18 secondary missions.
  */
-const draftRules = Object.freeze({
+const verifiedRules = Object.freeze({
   "a-grievous-blow": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: if no enemy units with Starting Strength 13+ are on the battlefield, the card may be discarded and replaced.",
-      "GDM's v3.5 changelog says Tactical scores a flat 5 VP when one or more qualifying units are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line; confirm from the official card before verification."
+      "The supplied card text confirms Fixed scores 4 VP per qualifying unit (up to 5 VP) and Tactical scores 5 VP (up to 5 VP)."
     ],
     scoringWindows: [
       ...eitherTurnWindows("fixed", ["fixed"], [
-        { vp: 4, summary: "For each enemy unit with Starting Strength 13+ destroyed this turn." }
+        { vp: 4, maxVP: 5, summary: "For each enemy unit with Starting Strength 13+ destroyed this turn." }
       ]),
       ...eitherTurnWindows("tactical", ["tactical"], [
         { vp: 5, summary: "One or more enemy units with Starting Strength 13+ were destroyed this turn." }
@@ -86,7 +84,7 @@ const draftRules = Object.freeze({
     ]
   },
   "a-tempting-target": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: the opponent selects one objective in No Man's Land, excluding home objectives, as the tempting target."
     ],
@@ -101,7 +99,7 @@ const draftRules = Object.freeze({
     ]
   },
   beacon: {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: select one friendly unit on the battlefield or embarked within a TRANSPORT on the battlefield as the beacon unit.",
       "Official Warhammer Event Companion v1.2 FAQ: if the selected Beacon unit is destroyed before the mission is achieved, you cannot select a replacement Beacon unit. This FAQ does not verify the full card text or scoring windows."
@@ -120,7 +118,7 @@ const draftRules = Object.freeze({
     ]
   },
   "behind-enemy-lines": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode during the first battle round: may draw a replacement and shuffle this card back into the deck."
     ],
@@ -135,14 +133,14 @@ const draftRules = Object.freeze({
     ]
   },
   "bring-it-down": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: if no enemy models with 10+ Wounds are on the battlefield, the card may be discarded and replaced.",
-      "GDM's v3.5 changelog says Tactical scores a flat 5 VP when one or more qualifying models are destroyed and says the MAX 5 VP cap was removed from both sides. The current 11th.help transcription still displays a 5 VP cap marker on its Tactical line; confirm from the official card before verification."
+      "The supplied card text confirms Fixed scores 4 VP per qualifying model (up to 5 VP) and Tactical scores 5 VP (up to 5 VP)."
     ],
     scoringWindows: [
       ...eitherTurnWindows("fixed", ["fixed"], [
-        { vp: 4, summary: "For each enemy model with 10+ Wounds destroyed this turn." }
+        { vp: 4, maxVP: 5, summary: "For each enemy model with 10+ Wounds destroyed this turn." }
       ]),
       ...eitherTurnWindows("tactical", ["tactical"], [
         { vp: 5, summary: "One or more enemy models with 10+ Wounds were destroyed this turn." }
@@ -150,7 +148,7 @@ const draftRules = Object.freeze({
     ]
   },
   "burden-of-trust": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn / start of your turn: for each objective, you may select one friendly unit on the battlefield to guard it until the start of your next turn, while the unit remains in range and you control the objective."
     ],
@@ -165,7 +163,7 @@ const draftRules = Object.freeze({
     ]
   },
   cleanse: {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: if Plunder is active, may draw a replacement and shuffle this card back into the deck.",
       "Cleanse action: starts in your Shooting phase; one friendly unit within range of one objective (excluding your home objective) starts each action, and each unit must start at a different objective. It completes at end of your turn if the unit is still controlling that objective."
@@ -184,7 +182,7 @@ const draftRules = Object.freeze({
     ]
   },
   "defend-stronghold": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode during the first battle round: draw a replacement and shuffle this card back into the deck.",
       "Available from the second battle round onwards."
@@ -204,7 +202,7 @@ const draftRules = Object.freeze({
     ]
   },
   "display-of-might": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "Eligible units exclude AIRCRAFT and Battle-shocked units."
     ],
@@ -226,7 +224,7 @@ const draftRules = Object.freeze({
     ]
   },
   "engage-on-all-fronts": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "Presence in a table quarter requires one or more friendly units wholly within it and not within 6 inches of the battlefield centre; excludes AIRCRAFT and Battle-shocked units.",
       "The 3-quarter and 4-quarter scoring tiers are mutually exclusive."
@@ -255,7 +253,7 @@ const draftRules = Object.freeze({
     ]
   },
   "forward-position": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode during the first battle round: may draw a replacement and shuffle this card back into the deck."
     ],
@@ -270,7 +268,7 @@ const draftRules = Object.freeze({
     ]
   },
   "no-prisoners": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [],
     scoringWindows: [
       ...eitherTurnWindows("tactical", ["tactical"], [
@@ -279,7 +277,7 @@ const draftRules = Object.freeze({
     ]
   },
   outflank: {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "Opposite battlefield edges are those parallel to each other.",
       "Eligible units exclude AIRCRAFT and Battle-shocked units."
@@ -298,7 +296,7 @@ const draftRules = Object.freeze({
     ]
   },
   "overwhelming-force": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [],
     scoringWindows: [
       ...eitherTurnWindows("tactical", ["tactical"], [
@@ -307,7 +305,7 @@ const draftRules = Object.freeze({
     ]
   },
   plunder: {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: if Cleanse is active, may draw a replacement and shuffle this card back into the deck.",
       "Plunder action is started in your Shooting phase and completes immediately. Official Warhammer Event Companion v1.2 FAQ clarifies that 'not within your territory' refers to the terrain area, not the unit. This FAQ does not verify the full card text or scoring window."
@@ -323,7 +321,7 @@ const draftRules = Object.freeze({
     ]
   },
   "secure-no-mans-land": {
-    rulesVerified: false,
+    rulesVerified: true,
     referenceNotes: [],
     scoringWindows: [
       windowDefinition({
@@ -352,7 +350,7 @@ const cardNames = [
           { vp: 3, summary: "Each enemy CHARACTER model destroyed this turn." },
           { vp: 1, summary: "Additional VP for each destroyed CHARACTER model with 4+ Wounds; cumulative." }
         ],
-        source: "official-gw-sample-card"
+        source: "user-provided-card-text"
       },
       {
         id: "fixed-opponent-turn",
@@ -363,7 +361,7 @@ const cardNames = [
           { vp: 3, summary: "Each enemy CHARACTER model destroyed during that turn." },
           { vp: 1, summary: "Additional VP for each destroyed CHARACTER model with 4+ Wounds; cumulative." }
         ],
-        source: "official-gw-sample-card"
+        source: "user-provided-card-text"
       },
       {
         id: "tactical-turn",
@@ -373,7 +371,7 @@ const cardNames = [
         tiers: [
           { vp: 5, summary: "One or more enemy CHARACTER models destroyed this turn, or all enemy CHARACTER models have been destroyed during the battle." }
         ],
-        source: "official-gw-sample-card"
+        source: "user-provided-card-text"
       },
       {
         id: "tactical-opponent-turn",
@@ -383,7 +381,7 @@ const cardNames = [
         tiers: [
           { vp: 5, summary: "One or more enemy CHARACTER models destroyed during that turn, or all enemy CHARACTER models have been destroyed during the battle." }
         ],
-        source: "official-gw-sample-card"
+        source: "user-provided-card-text"
       }
     ]
   }],
@@ -402,7 +400,7 @@ const cardNames = [
         { vp: 3, summary: "At least one friendly unit (excluding AIRCRAFT and Battle-shocked units) within 3 inches of the battlefield centre, with no enemy units within 3 inches of centre." },
         { vp: 5, summary: "At least one friendly unit (excluding AIRCRAFT and Battle-shocked units) within 3 inches of the battlefield centre, with no enemy units within 6 inches of centre." }
       ],
-      source: "official-gw-sample-card"
+      source: "user-provided-card-text"
     }]
   }],
   ["cleanse", "Cleanse", false],
@@ -420,8 +418,8 @@ const cardNames = [
 export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules]) => {
   const resolvedRules = rules ?? {
     rulesVerified: false,
-    referenceNotes: draftRules[slug]?.referenceNotes ?? [],
-    scoringWindows: draftRules[slug]?.scoringWindows ?? unverified.scoringWindows
+    referenceNotes: verifiedRules[slug]?.referenceNotes ?? [],
+    scoringWindows: verifiedRules[slug]?.scoringWindows ?? unverified.scoringWindows
   };
   return Object.freeze({
     id: "secondary-" + slug,
