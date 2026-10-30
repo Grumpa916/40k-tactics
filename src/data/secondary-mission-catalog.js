@@ -111,8 +111,8 @@ const verifiedRules = Object.freeze({
         timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
         modes: ["tactical"],
         tiers: [
-          { vp: 3, relationship: "or", summary: "The beacon unit is on the battlefield and not within your deployment zone." },
-          { vp: 5, relationship: "or", summary: "The beacon unit is on the battlefield and not within your territory." }
+          { vp: 3, relationship: "or", condition: { type: "beacon-outside-deployment-zone" }, summary: "The beacon unit is on the battlefield and not within your deployment zone." },
+          { vp: 5, relationship: "or", condition: { type: "beacon-outside-territory" }, summary: "The beacon unit is on the battlefield and not within your territory." }
         ]
       })
     ]
