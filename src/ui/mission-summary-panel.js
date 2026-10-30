@@ -115,7 +115,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       ...(Array.isArray(definition.notes) ? definition.notes : [])
     ].filter((note) => note !== definition.whenDrawn);
     const missionText = referenceNotes.length
-      ? '<p><strong>Rules notes</strong></p><ul>' + referenceNotes.map((note) => '<li>' + escapeHtml(note) + '</li>').join('') + '</ul>'
+      ? '<p><strong>Mission text</strong></p><ul>' + referenceNotes.map((note) => '<li>' + escapeHtml(note) + '</li>').join('') + '</ul>'
       : '';
     const scoring = windows.map((window) => '<li><strong>' + escapeHtml(missionTimingLabel(window.timing)) +
       (window.modes?.length ? " · " + escapeHtml(window.modes.join("/")) : "") +
