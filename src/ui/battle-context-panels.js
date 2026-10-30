@@ -385,14 +385,17 @@ function displayLabel(key) {
     .replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function renderCharacteristics(characteristics) {
+function renderCharacteristics(characteristics, { singleLine = false } = {}) {
   if (!characteristics || typeof characteristics !== "object" || Array.isArray(characteristics)) {
     return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
   }
   const entries = Object.entries(characteristics).filter(([, value]) =>
     value !== null && value !== undefined && value !== "");
   if (!entries.length) return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
-  return '<dl class="battle-shell__army-characteristics">' + entries.map(([key, value]) =>
+  const layout = singleLine
+    ? ` class="battle-shell__army-characteristics prototype-unit-profile-characteristics" style="--unit-stat-count:${entries.length}"`
+    : ' class="battle-shell__army-characteristics"';
+  return '<dl' + layout + '>' + entries.map(([key, value]) =>
     '<div><dt>' + escapeHtml(displayLabel(key)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>'
   ).join("") + '</dl>';
 }
@@ -555,7 +558,7 @@ export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab =
   const dataPanels = {
     profile: '<div id="army-unit-panel-profile" role="tabpanel" aria-labelledby="army-unit-tab-profile" data-unit-detail-panel="profile"' +
       (activeTab === "profile" ? "" : " hidden") + '><p class="prototype-unit-data-status">' + sourceLine + '</p>' +
-      '<h3>Characteristics</h3>' + renderCharacteristics(profileCharacteristics) +
+      '<h3>Characteristics</h3>' + renderCharacteristics(profileCharacteristics, { singleLine: true }) +
       '<h3>Keywords</h3>' + renderUnitKeywords(unit) + '</div>',
     weapons: '<div id="army-unit-panel-weapons" role="tabpanel" aria-labelledby="army-unit-tab-weapons" data-unit-detail-panel="weapons"' +
       (activeTab === "weapons" ? "" : " hidden") + '>' +
