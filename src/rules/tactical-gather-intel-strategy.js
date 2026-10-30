@@ -344,7 +344,7 @@ export function getGatherIntelObjectiveStrategySignal(state, {
 
   const projectedMarkerIds = new Set([...strategy.markerObjectiveIds, ...strategy.pendingObjectiveIds]);
   let endgameVpLeverage = 0;
-  const contributesNewMarker = (eligible || pending) && !projectedMarkerIds.has(objectiveId) || pending;
+  const contributesNewMarker = eligible && !projectedMarkerIds.has(objectiveId);
   if (contributesNewMarker && strategy.projectedMarkerCount < 3 && strategy.projectedMarkerCount === 2) endgameVpLeverage += 5;
   if ((eligible || pending) && opponentHome && !strategy.projectedOpponentHomeMarker) endgameVpLeverage += 5;
   if (pending) {
