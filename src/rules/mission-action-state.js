@@ -3,6 +3,7 @@ import { getPrimaryMissionDefinition } from '../data/primary-mission-catalog.js'
 import { getCompleteSecondaryMissionById } from '../data/secondary-mission-complete-catalog.js';
 import { getLocateAndDenyState } from './locate-and-deny-state.js';
 import { getTriangulationState } from './triangulation-state.js';
+import { getSecureAssetState } from './secure-asset-state.js';
 
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
 
@@ -31,6 +32,10 @@ function getPrimaryMissionActionOption(state, playerId) {
   if (definition?.id === 'primary-triangulation') {
     const triangulation = getTriangulationState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
     if (!triangulation.actionAvailableThisTurn) return null;
+  }
+  if (definition?.id === 'primary-secure-asset') {
+    const secure = getSecureAssetState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
+    if (!secure.actionAvailableThisTurn) return null;
   }
   if (!definition || !action || action.phase !== 'shooting') return null;
   const round = state.battle?.round ?? 0;
