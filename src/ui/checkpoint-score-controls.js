@@ -107,7 +107,7 @@ function renderSecondaryTierChoices(state, playerId, mission, suppliedPoints, fo
   const rows = unique.map(choice => {
     const current = suppliedPoints === choice.vp;
     const requirements = choice.tiers.map(tier => {
-      const evidence = missionConditionEvidence(state, playerId, tier);
+      const evidence = missionConditionEvidence(state, playerId, { ...tier, instanceId: mission.instanceId ?? null });
       return `<p class="checkpoint-vp-requirement"><strong>${esc(evidenceLabel(evidence))}</strong> · ${esc(tier.summary ?? '')}${evidence.detail ? `<br>${esc(evidence.detail)}` : ''}</p>`;
     }).join('');
     const buttonLabel = current

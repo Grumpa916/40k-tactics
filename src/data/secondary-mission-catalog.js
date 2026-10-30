@@ -94,7 +94,7 @@ const verifiedRules = Object.freeze({
         timing: "end-of-turn",
         timingLabel: "End of your turn",
         modes: ["tactical"],
-        tiers: [{ vp: 5, summary: "You control your tempting target." }]
+        tiers: [{ vp: 5, condition: { type: "control-selected-tempting-target" }, summary: "You control your tempting target." }]
       })
     ]
   },
