@@ -6,6 +6,7 @@ export function getRecordedStratagemUses(state) {
   return (state.history ?? []).flatMap(event => {
     const p = event.payload ?? {};
     if (event.type === 'custodes.guardians_stratagem_used') return [p];
+    if (event.type === 'custodes.detachment_stratagem_used') return [p];
     if (event.type === 'rules.reminder_used' && ['superhuman-focus','swift-ruin'].includes(p.ruleId)) {
       return [{...p, stratagemId:p.ruleId === 'swift-ruin' ? 'rapid-ingress' : p.ruleId}];
     }
@@ -25,6 +26,9 @@ export function getActiveGuardiansEffects(state, unitId) {
   return getRecordedStratagemUses(state).filter(use => {
     if (rootId(state, use.unitId) !== root || use.round !== state.battle?.round || use.turn !== state.turn) return false;
     if (use.stratagemId === 'unlimited-endurance') return true;
+    if (use.stratagemId === 'preternatural-rapidity') {
+      return state.phase === 'charge' && (state.activePlayer ?? state.battle?.activePlayerId) === use.playerId;
+    }
     if (use.contextKey !== rulesContextKey(state)) return false;
     if (use.stratagemId === 'in-auramite-clad') {
       return !(state.history ?? []).some(event => event.type === 'combat.activation_finished' &&

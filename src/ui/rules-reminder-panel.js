@@ -3,6 +3,8 @@ import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote }
 import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
 import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
+import { getCustodesDetachmentRuleReminders, getCustodesDetachmentStratagemReminders } from '../rules/custodes-detachment-rule-reminders.js';
+import { renderCustodesDetachmentStratagemControls, readCustodesDetachmentStratagemForm } from './custodes-detachment-stratagem-controls.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const stylesheet=new URL('./styles/rules-reminders.css',import.meta.url).href;
@@ -38,31 +40,48 @@ function renderEntry(entry, state) {
 
 const isActiveEffect = entry => Boolean(entry.used && entry.duration === 'phase' && entry.activeThisPhase);
 
+function renderDetachmentStratagemReminders(state,playerId) {
+  const entries=getCustodesDetachmentStratagemReminders(state,{playerId});
+  if(!entries.length)return '';
+  return '<details class="unit-rules-reminders" data-view-key="detachment-stratagem-windows"><summary>Detachment Stratagems · current phase · '+entries.length+'</summary>'+entries.map(entry=>
+    '<article class="rules-reminder-card"><header><strong>'+esc(entry.detachmentName)+' · '+esc(entry.title)+' · '+esc(entry.cpCost)+' CP</strong><span>'+(entry.affordable?'Check trigger':'Needs more CP')+'</span></header>'+
+    '<small>'+esc(entry.timing)+'</small><p>'+esc(entry.effect)+'</p><small>Confirm the exact trigger, target eligibility, and phase limits in the rule reference; enough CP does not by itself make this Stratagem usable.</small>'+
+    (entry.title==='Preternatural Rapidity'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'preternatural-rapidity'}):'')+
+    '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>'
+  ).join('')+'</details>';
+}
+
 export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
   const playerId=perspective(state,perspectivePlayerId);
   const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
+  const detachmentEntries=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});
+  const stratagemEntries=getCustodesDetachmentStratagemReminders(state,{playerId});
+  const stratagemHtml=renderDetachmentStratagemReminders(state,playerId);
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
   const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId});
-  if(!entries.length&&!note)return guardians?style()+guardians:'';
+  if(!entries.length&&!detachmentEntries.length&&!note)return guardians||stratagemHtml?style()+guardians+stratagemHtml:'';
   const opening=entries.some(entry=>entry.kind==='decision');
-  return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+entries.length+'</summary>'+
+  return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+(entries.length+detachmentEntries.length+stratagemEntries.length)+'</summary>'+
     (note?'<div class="rules-personal-note"><strong>My notes</strong><p>'+esc(note)+'</p></div>':'')+
-    entries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+guardians;
+    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+guardians+stratagemHtml;
 }
 
 export function renderTargetDefenseReminders(state,options={}) {
   const entries=getTargetDefenseReminders(state,options);
   const target=state.units?.find(unit=>unit.id===(options.allocationTargetId??options.targetUnitId));
   const note=target?getUnitBattleNote(state,target.id):'';
+  const detachmentEntries=target?getCustodesDetachmentRuleReminders(state,{playerId:target.ownerId,unitId:target.id}):[];
   const guardians=target?renderGuardiansStratagemOpportunities(state,{playerId:target.ownerId,unitId:target.id,stratagemId:'in-auramite-clad',enemyUnitId:options.attackerId}):'';
-  if(!entries.length&&!note)return guardians?style()+guardians:'';
+  if(!entries.length&&!detachmentEntries.length&&!note)return guardians?style()+guardians:'';
   return style()+'<section class="rules-target-defense" aria-label="Target defensive rules" data-target-defense-reminders><h2>Target defenses · '+esc(target?.name??'Selected unit')+'</h2><ul>'+
-    entries.map(entry=>'<li'+(entry.conditional?' class="is-conditional"':'')+'><strong>'+esc(entry.title)+'</strong><span>'+esc(entry.effect)+'</span></li>').join('')+'</ul>'+
+    entries.map(entry=>'<li'+(entry.conditional?' class="is-conditional"':'')+'><strong>'+esc(entry.title)+'</strong><span>'+esc(entry.effect)+'</span></li>').join('')+
+    detachmentEntries.map(entry=>'<li class="is-conditional"><strong>'+esc(entry.title)+'</strong><span>'+esc(entry.effect)+'</span></li>').join('')+'</ul>'+
     (note?'<div class="rules-personal-note"><strong>Unit notes</strong><p>'+esc(note)+'</p></div>':'')+'</section>'+guardians;
 }
 
 export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null,message='',canUndo=false}={}) {
   const entries=groupEntries(getBattleRulesReminders(state,{playerId}));
+  const detachmentEntries=getCustodesDetachmentRuleReminders(state,{playerId});
   const units=state.units??[];
   const active=entries.filter(entry=>!entry.used||isActiveEffect(entry)),used=entries.filter(entry=>entry.used&&!isActiveEffect(entry));
   return style()+'<div class="rules-reminder-backdrop" data-rules-backdrop><section class="rules-reminder-dialog" role="dialog" aria-modal="true" aria-labelledby="rules-reminder-title">'+
@@ -71,9 +90,9 @@ export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null
     '<p class="rules-reminder-help">Confirm distances and rule conditions at the table. “Mark used” tracks a tabletop declaration. Venatari controls update recorded wounds, reserves and the CP cost you confirm; CP confirmation and Re-ready buttons also update their recorded resources.</p>'+
     (message?'<p role="status">'+esc(message)+'</p>':'')+
     (canUndo?'<button type="button" data-undo-rule-use>Undo last reminder use</button>':'')+
-    '<div class="rules-reminder-list">'+(active.map(entry=>renderEntry(entry,state)).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
+    '<div class="rules-reminder-list">'+(active.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
     (used.length?'<details><summary>Used abilities · '+used.length+'</summary>'+used.map(entry=>renderEntry(entry,state)).join('')+'</details>':'')+
-    renderGuardiansStratagemOpportunities(state,{playerId})+
+    renderGuardiansStratagemOpportunities(state,{playerId})+renderDetachmentStratagemReminders(state,playerId)+
     '<form class="rules-unit-note-editor" data-save-unit-rules-note><h3>My unit notes</h3><label>Unit<select data-rules-note-unit>'+units.map(unit=>'<option value="'+esc(unit.id)+'"'+(unit.id===unitId?' selected':'')+'>'+esc((state.players?.find(p=>p.id===unit.ownerId)?.name??unit.ownerId)+' · '+unit.name)+'</option>').join('')+'</select></label>'+
     '<label>Notes<textarea data-unit-rules-note maxlength="2000" rows="4" placeholder="A reminder for this unit…">'+esc(draft??getUnitBattleNote(state,unitId))+'</textarea></label><button type="submit"'+(!unitId?' disabled':'')+'>Save unit notes</button></form></section></div>';
 }
@@ -89,8 +108,10 @@ export function createRulesReminderController(container,{session,perspectivePlay
     const state=session.getState(),playerId=perspective(state,perspectivePlayerId);
     const entries=groupEntries(getBattleRulesReminders(state,{playerId}).filter(entry=>!entry.used||isActiveEffect(entry)));
     const guardiansCount=new Set(getGuardiansStratagemOpportunities(state,{playerId}).filter(entry=>entry.available||entry.active).map(entry=>entry.stratagemId)).size;
+    const detachmentCount=getCustodesDetachmentRuleReminders(state,{playerId}).length;
+    const stratagemCount=getCustodesDetachmentStratagemReminders(state,{playerId}).length;
     for(const button of container.querySelectorAll?.('[data-toggle-rules-reminders]')??[]) {
-      button.textContent='Rules · '+(entries.length+guardiansCount);button.setAttribute('aria-expanded',String(open));
+      button.textContent='Rules · '+(entries.length+detachmentCount+stratagemCount+guardiansCount);button.setAttribute('aria-expanded',String(open));
       button.hidden=state.battle?.status!=='active';
     }
     if(!state.units?.some(unit=>unit.id===unitId))unitId=state.units?.find(unit=>unit.ownerId===playerId)?.id??state.units?.[0]?.id??null;
@@ -126,6 +147,12 @@ export function createRulesReminderController(container,{session,perspectivePlay
     if(event.target?.hasAttribute?.('data-venatari-ability-form')) {
       event.preventDefault?.();
       try {session.dispatch({type:COMMAND_TYPES.RECORD_VENATARI_ABILITY_USE,payload:readVenatariAbilityForm(event.target)});message='Venatari ability recorded.';}
+      catch(error){message=error.message;open=true;}
+      refresh();return;
+    }
+    if(event.target?.hasAttribute?.('data-custodes-detachment-stratagem-form')) {
+      event.preventDefault?.();
+      try {session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE,payload:readCustodesDetachmentStratagemForm(event.target)});message='Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';}
       catch(error){message=error.message;open=true;}
       refresh();return;
     }

@@ -7,6 +7,7 @@ import { getRosterDetachmentNames, isAdeptusCustodesFaction } from "./roster-det
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getUnitStrengthAssessment, isUnitBattleShocked } from "./unit-status-summary.js";
+import { getActiveGuardiansEffects } from './stratagem-use-state.js';
 
 const KATAH_BY_NAME = new Map(ADEPTUS_CUSTODES_KATAH.map((item) => [item.name, item]));
 const DETACHMENT_BY_NAME = new Map(ADEPTUS_CUSTODES_DETACHMENTS.map((item) => [item.name, item]));
@@ -372,6 +373,9 @@ export function getCustodesChargeAdvisorContext(state, { playerId, unitId, baseP
   const base = Number(baseProbability);
   const eligible = isMartialKatahEligible(state, unitId);
   const unit = unitById(state, unitId);
+  const advanceChargePermission = unit?.ownerId === playerId && getActiveGuardiansEffects(state,unitId).some(use =>
+    use.stratagemId === 'preternatural-rapidity'
+  );
   const swiftOnslaught = unit?.ownerId === playerId && getRecordedCombatRules(state, unit).effects.includes("swift-onslaught");
   const dreadHost = eligible && hasCustodesDetachment(state, playerId, "Dread Host");
   const rerollCharge = swiftOnslaught || dreadHost;
@@ -380,12 +384,15 @@ export function getCustodesChargeAdvisorContext(state, { playerId, unitId, baseP
     ? rerollCharge ? 1 - ((1 - base) ** 2) : base
     : null;
   return Object.freeze({
-    available: rerollCharge,
+    available: rerollCharge || advanceChargePermission,
     ruleName,
     rerollCharge,
+    advanceChargePermission,
     baseProbability: Number.isFinite(base) ? base : null,
     adjustedProbability,
-    reason: rerollCharge
+    reason: advanceChargePermission
+      ? `${ruleName ? `${ruleName} permits a Charge re-roll. ` : ''}Preternatural Rapidity was recorded; this unit can declare a Charge after its Advance this turn.`
+      : rerollCharge
       ? `${ruleName} allows this unit to re-roll its Charge roll.`
       : "No modeled Custodes detachment charge reroll applies."
   });
