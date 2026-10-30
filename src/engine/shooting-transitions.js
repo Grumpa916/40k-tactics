@@ -37,7 +37,9 @@ export function recordShootingActivation(state, {
   reviewTiming = null,
   rulesConfirmed = false,
   locateSetupOnly = false,
-  locateMarkerSetupTerrainAreaIds = null
+  locateMarkerSetupTerrainAreaIds = null,
+  extractRelicSetupOnly = false,
+  extractRelicMarkerSetupTerrainAreaIds = null
 } = {}) {
   if (!unitId) throw new TypeError("Shooting activation unit id is required.");
   if (!SHOOTING_ACTION_TYPES.has(actionType)) {
@@ -77,6 +79,24 @@ export function recordShootingActivation(state, {
     return recordLocateAndDenyMarkerSetup(state, {
       playerId: activePlayerId,
       terrainAreaIds: locateMarkerSetupTerrainAreaIds
+    });
+  }
+
+  if (extractRelicSetupOnly) {
+    if (actionType !== "mission_action" || actionId !== "primary-extract-relic") {
+      throw new Error("Extract Relic opponent-marker setup must be recorded from its mission Action workflow.");
+    }
+    if (!Array.isArray(extractRelicMarkerSetupTerrainAreaIds)) {
+      throw new TypeError("Extract Relic opponent-marker setup requires selected terrain areas.");
+    }
+    const extractRelic = getExtractRelicState(state, { playerId: activePlayerId });
+    if (!extractRelic.opponentId || !extractRelic.opponentMarkerMissionAvailable) {
+      throw new Error("The opponent's Locate and Deny mission is not available for marker setup.");
+    }
+    return recordLocateAndDenyMarkerSetup(state, {
+      playerId: extractRelic.opponentId,
+      terrainAreaIds: extractRelicMarkerSetupTerrainAreaIds,
+      perspectivePlayerId: state?.players?.[0]?.id ?? activePlayerId
     });
   }
 
