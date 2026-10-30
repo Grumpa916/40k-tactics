@@ -155,9 +155,9 @@ export function getSearchAndScourPrimaryStrategyContext(state, {
   const targetEndgameVpLeverage = Math.min(opportunity.endgameVpLeverage, remainingPrimaryGameVp);
 
   let targetingScore = 0.05;
-  if (opportunity.terrainKillVpLeverage > 0) targetingScore += 0.34;
+  if (nextKillVpLeverage > 0) targetingScore += 0.34;
   if (opportunity.territoryBlocker) targetingScore += round >= 5 ? 0.46 : round >= 4 ? 0.3 : 0.16;
-  if (opportunity.terrainKillVpLeverage > 0 && opportunity.territoryBlocker) targetingScore += 0.08;
+  if (nextKillVpLeverage > 0 && opportunity.territoryBlocker) targetingScore += 0.08;
   if (remainingPrimaryGameVp === 0) targetingScore = Math.min(targetingScore, 0.08);
   targetingScore = clamp01(targetingScore);
 
@@ -289,7 +289,7 @@ export function getSearchAndScourObjectiveStrategySignal(state, {
 
   let centralVpLeverage = 0;
   if (central) {
-    if (controlled && strategy.centralControlledCount > 0) centralVpLeverage = 3;
+    if (controlled && strategy.centralControlledCount === 1) centralVpLeverage = 3;
     if (!controlled && strategy.centralControlledCount === 0) centralVpLeverage = 3;
   }
 
