@@ -38,7 +38,7 @@ export function isSearchAndScourCentralObjective(objective) {
 
 function liveEnemyUnits(state, playerId) {
   return (Array.isArray(state?.units) ? state.units : []).filter((unit) =>
-    unit?.ownerId != null && unit.ownerId !== playerId && unit.status !== "destroyed" && unit.status !== "removed"
+    unit?.ownerId != null && unit.ownerId !== playerId && unit.status === "deployed"
   );
 }
 
