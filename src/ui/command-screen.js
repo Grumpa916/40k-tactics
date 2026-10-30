@@ -4,7 +4,7 @@ import { getCommandPointBalance, getCommandPointHistory } from "../engine/comman
 import { getLatestUndoableVictoryPointsAward, getVictoryPointHistory, getVictoryPointScore, hasEffectiveVictoryPointOpportunity } from "../engine/victory-points-ledger.js";
 import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
-import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getSecondaryMissionReplacementOpportunity, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
@@ -77,7 +77,7 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-vp-undo], [data-objective-control-set]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute("data-vp-undo")) {
       const state = session.getState();
@@ -163,6 +163,30 @@ export function createCommandScreen(container, {
     }
     if (target.hasAttribute("data-cp-gain")) recordCp(1, "gain", "Manually recorded gain");
     if (target.hasAttribute("data-cp-spend")) recordCp(-1, "spend", "Manually recorded spend");
+    if (target.hasAttribute("data-secondary-rule-return")) {
+      const state = session.getState();
+      const instanceId = target.getAttribute("data-secondary-rule-return");
+      const entry = getSecondaryMissionHistory(state).find((item) =>
+        item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+      if (!entry) {
+        secondaryMissionMessage = "That Tactical card is no longer active.";
+        render();
+        return;
+      }
+      const conditionConfirmed = Array.from(container.querySelectorAll("[data-secondary-rule-condition]"))
+        .some((input) => input.getAttribute("data-secondary-rule-condition") === instanceId && input.checked);
+      try {
+        session.dispatch({ type: COMMAND_TYPES.RETURN_SECONDARY_MISSION_FOR_RULE, payload: {
+          playerId: entry.playerId, instanceId, conditionConfirmed,
+          round: state.battle?.round ?? 0, turn: state.turn ?? 0
+        }});
+        secondaryMissionMessage = (entry.definition?.name ?? entry.definitionId) + " returned to the Tactical deck. Record its replacement card before leaving Command.";
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
     if (target.hasAttribute("data-secondary-mission-add")) {
       const state = session.getState();
       if (state.phase !== "command") {
@@ -189,6 +213,7 @@ export function createCommandScreen(container, {
         }
         const drawnThisCommandPhase = priorSecondaryHistory.filter((item) =>
           item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn &&
+          item.status !== SECONDARY_MISSION_STATUS.RETURNED_TO_DECK &&
           item.isRedrawReplacement !== true
         ).length;
         const pendingRedraw = state.scoring?.secondaryMissionRedrawPendingByPlayer?.[playerId];
