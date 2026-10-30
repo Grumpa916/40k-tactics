@@ -5,6 +5,7 @@ import { getLocateAndDenyState } from './locate-and-deny-state.js';
 import { getTriangulationState } from './triangulation-state.js';
 import { getVitalLinkState } from './vital-link-state.js';
 import { getSecureAssetState } from './secure-asset-state.js';
+import { getExtractRelicState } from './extract-relic-state.js';
 
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
 
@@ -41,6 +42,10 @@ function getPrimaryMissionActionOption(state, playerId) {
   if (definition?.id === 'primary-secure-asset') {
     const secure = getSecureAssetState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
     if (!secure.actionAvailableThisTurn) return null;
+  }
+  if (definition?.id === 'primary-extract-relic') {
+    const extractRelic = getExtractRelicState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
+    if (!extractRelic.sensorSweepAvailable) return null;
   }
   if (!definition || !action || action.phase !== 'shooting') return null;
   const round = state.battle?.round ?? 0;
