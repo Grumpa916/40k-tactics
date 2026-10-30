@@ -388,3 +388,9 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.prototype-unit-weapon-keywords {
+  margin: 3px 0 8px;
+  color: #c4e99b;
+  font-size: .9em;
+}

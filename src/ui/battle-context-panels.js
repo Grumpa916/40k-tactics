@@ -418,11 +418,39 @@ function weaponProfilesForUnit(unit, gameData) {
   ];
 }
 
+function weaponKeywordsFromValue(value) {
+  if (Array.isArray(value)) return value.flatMap(weaponKeywordsFromValue);
+  if (typeof value === "string") return value.split(/[,;·]/).map((item) => item.trim()).filter(Boolean);
+  if (value && typeof value === "object") {
+    return weaponKeywordsFromValue(value.name ?? value.keyword ?? value.label ?? value.value ?? "");
+  }
+  return [];
+}
+
+function weaponKeywords(weapon) {
+  const values = [
+    weapon?.keywords, weapon?.keyword, weapon?.abilities,
+    weapon?.weaponKeywords,
+    weapon?.characteristics?.keywords, weapon?.characteristics?.keyword,
+    weapon?.characteristics?.abilities
+  ];
+  const seen = new Set();
+  return values.flatMap(weaponKeywordsFromValue).filter((keyword) => {
+    const key = keyword.toLocaleLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function weaponCharacteristics(weapon) {
-  if (weapon?.characteristics && typeof weapon.characteristics === "object") return weapon.characteristics;
-  return Object.fromEntries(Object.entries(weapon ?? {}).filter(([key]) =>
-    ["range", "attacks", "skill", "strength", "ap", "damage", "abilities"].includes(key) &&
-    weapon[key] !== null && weapon[key] !== undefined && weapon[key] !== ""
+  const raw = weapon?.characteristics && typeof weapon.characteristics === "object"
+    ? weapon.characteristics
+    : Object.fromEntries(Object.entries(weapon ?? {}).filter(([key]) =>
+      ["range", "attacks", "skill", "strength", "ap", "damage"].includes(String(key).toLowerCase())
+    ));
+  return Object.fromEntries(Object.entries(raw).filter(([key]) =>
+    !["abilities", "keywords", "keyword", "weaponkeywords"].includes(String(key).replace(/[^a-z]/gi, "").toLowerCase())
   ));
 }
 
@@ -433,6 +461,10 @@ function renderWeaponEntries(entries) {
   return '<ul class="battle-shell__army-weapons">' + entries.map(({ weapon, activeQuantity, equippedQuantity, confirmed }) => {
     const chars = weaponCharacteristics(weapon);
     const detail = renderCharacteristics(chars);
+    const keywords = weaponKeywords(weapon);
+    const keywordLine = keywords.length
+      ? '<p class="prototype-unit-weapon-keywords">[' + escapeHtml(keywords.join(", ")) + ']</p>'
+      : "";
     const type = weapon?.type
       ? '<span class="battle-context__badge">' + escapeHtml(weapon.type) + '</span>'
       : "";
@@ -442,9 +474,11 @@ function renderWeaponEntries(entries) {
       : '<span class="prototype-unit-weapon-count">Reference profile</span>';
     return '<li><div class="battle-shell__army-weapon-heading"><strong>' +
       escapeHtml(weapon?.name ?? weapon?.id ?? "Unnamed weapon") + '</strong>' + type + quantity + '</div>' +
+      keywordLine +
       (weapon?.description ? '<p>' + escapeHtml(weapon.description) + '</p>' : '') + detail + '</li>';
   }).join("") + '</ul>';
 }
+
 
 function renderUnitWeapons(state, unit, rosterUnit, gameData) {
   const profiles = weaponProfilesForUnit(unit, gameData);
