@@ -67,6 +67,11 @@ import {
   getTriangulationObjectiveStrategySignal,
   isTriangulationMissionForPlayer
 } from "./tactical-triangulation-strategy.js";
+import {
+  getSurveilTheFoePrimaryStrategyContext,
+  getSurveilTheFoeObjectiveStrategySignal,
+  isSurveilTheFoeMissionForPlayer
+} from "./tactical-surveil-the-foe-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -105,6 +110,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isTriangulationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getTriangulationPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSurveilTheFoePrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -149,6 +157,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isTriangulationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getTriangulationObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSurveilTheFoeObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
