@@ -474,8 +474,7 @@ function renderWeaponEntries(entries) {
       : '<span class="prototype-unit-weapon-count">Reference profile</span>';
     return '<li><div class="battle-shell__army-weapon-heading"><strong>' +
       escapeHtml(weapon?.name ?? weapon?.id ?? "Unnamed weapon") + '</strong>' + type + quantity + '</div>' +
-      keywordLine +
-      (weapon?.description ? '<p>' + escapeHtml(weapon.description) + '</p>' : '') + detail + '</li>';
+      (weapon?.description ? '<p>' + escapeHtml(weapon.description) + '</p>' : '') + detail + keywordLine + '</li>';
   }).join("") + '</ul>';
 }
 
