@@ -37,6 +37,10 @@ function getPrimaryMissionActionOption(state, playerId) {
     const vitalLink = getVitalLinkState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
     if (!vitalLink.actionAvailableThisTurn) return null;
   }
+  if (definition?.id === 'primary-secure-asset') {
+    const secure = getSecureAssetState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
+    if (!secure.actionAvailableThisTurn) return null;
+  }
   if (!definition || !action || action.phase !== 'shooting') return null;
   const round = state.battle?.round ?? 0;
   if (Number.isInteger(action.minRound) && round < action.minRound) return null;
