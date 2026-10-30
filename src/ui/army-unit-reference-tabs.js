@@ -1,6 +1,6 @@
 import { getArmyUnitReference } from './army-unit-summary.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, hasInvalidWargear } from '../rules/battle-unit-reference.js';
-import { getDatasheetWeaponOptions } from '../rules/saved-roster-combat-profile.js';
+import { getEquippedWeaponReferences } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { getArmyUnitDisplayGroup, armyUnitMemberRole } from './army-unit-display-groups.js';
 
@@ -33,11 +33,6 @@ function renderCharacteristics(characteristics, { singleLine = false, weapon = f
   return '<dl' + layout + '>' + entries.map(([key, value]) =>
     '<div><dt>' + escapeHtml(displayLabel(key)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>'
   ).join("") + '</dl>';
-}
-
-function normalizedWeaponName(value) {
-  return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function weaponProfilesForUnit(unit, gameData) {
@@ -93,7 +88,7 @@ function renderWeaponEntries(entries) {
   if (!entries.length) {
     return '<p class="battle-context__empty">Weapon reference data is not loaded for this unit.</p>';
   }
-  return '<ul class="battle-shell__army-weapons">' + entries.map(({ weapon, activeQuantity, equippedQuantity, confirmed }) => {
+  return '<ul class="battle-shell__army-weapons">' + entries.map(({ weapon, activeQuantity, equippedQuantity, quantityUncertain, confirmed }) => {
     const chars = weaponCharacteristics(weapon);
     const detail = renderCharacteristics(chars, { weapon: true });
     const keywords = weaponKeywords(weapon);
@@ -103,8 +98,10 @@ function renderWeaponEntries(entries) {
     const type = weapon?.type
       ? '<span class="battle-context__badge">' + escapeHtml(weapon.type) + '</span>'
       : "";
+    const activeLabel = quantityUncertain || !Number.isFinite(activeQuantity)
+      ? 'Active count unknown' : activeQuantity + ' active';
     const quantity = confirmed
-      ? '<span class="prototype-unit-weapon-count">' + escapeHtml(activeQuantity) + ' active · ' +
+      ? '<span class="prototype-unit-weapon-count">' + escapeHtml(activeLabel) + ' · ' +
         escapeHtml(equippedQuantity) + ' equipped</span>'
       : '<span class="prototype-unit-weapon-count">Reference profile</span>';
     return '<li><div class="battle-shell__army-weapon-heading"><strong>' +
@@ -121,20 +118,14 @@ function renderUnitWeapons(state, unit, rosterUnit, gameData) {
   const needsReview = hasInvalidWargear(state, unit);
 
   if (selections.length && !needsReview) {
-    const options = getDatasheetWeaponOptions(state, unit);
-    const selectedEntries = options.map((option) => {
-      const weapon = profiles.find((profile) =>
-        normalizedWeaponName(profile?.name) === normalizedWeaponName(option.name)
-      ) ?? option;
-      return {
-        weapon,
-        activeQuantity: option.activeQuantity ?? option.equippedQuantity ?? 1,
-        equippedQuantity: option.equippedQuantity ?? option.activeQuantity ?? 1,
-        confirmed: true
-      };
-    });
+    const selectedEntries = getEquippedWeaponReferences(state, unit, profiles)
+      .map(entry => ({ ...entry, confirmed: true }));
     if (selectedEntries.length) {
-      return '<p class="prototype-unit-loadout-note">Equipped weapon profiles from the saved army loadout. Active counts reflect recorded model losses.</p>' +
+      const uncertain = selectedEntries.some(entry => entry.quantityUncertain);
+      const review = uncertain
+        ? ' Active counts need casualty review where surviving weapon identities are unknown.' : '';
+      return '<p class="prototype-unit-loadout-note"' + (uncertain ? ' data-tone="warning"' : '') +
+        '>Equipped weapon profiles from the saved army loadout.' + review + '</p>' +
         renderWeaponEntries(selectedEntries);
     }
   }
