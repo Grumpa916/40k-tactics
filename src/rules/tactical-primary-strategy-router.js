@@ -87,6 +87,8 @@ import {
   getSearchAndScourObjectiveStrategySignal,
   isSearchAndScourMissionForPlayer
 } from "./tactical-search-and-scour-strategy.js";
+import { isSecureAssetMissionForPlayer } from "./secure-asset-state.js";
+import { getSecureAssetPrimaryStrategyContext, getSecureAssetObjectiveStrategySignal } from "./tactical-secure-asset-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -137,6 +139,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSearchAndScourPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSecureAssetPrimaryStrategyContext(state, options);
   }
   if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSecureAssetPrimaryStrategyContext(state, options);
