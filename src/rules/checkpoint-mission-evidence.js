@@ -5,6 +5,7 @@ import {
 } from './scoring-evidence-state.js';
 import { getMissionEvidenceCondition } from './mission-evidence-conditions.js';
 import { getPunishmentCondemnedUnitsLeftThisTurn } from './punishment-condemnation.js';
+import { getCleanseActionState, getPlunderActionState } from './secondary-mission-action-state.js';
 import {
   getConsecrateReviewState,
   isOpponentHomeObjectiveForPlayer,
@@ -95,6 +96,19 @@ export function missionConditionEvidence(state, playerId, item) {
     const losses = turn > 0 ? getFriendlyUnitDestructionsForTurn(state, playerId, turn - 1).length : 0;
     count = Number(destroyed > losses);
     detail = destroyed + ' enemy destructions this turn versus ' + losses + ' friendly units lost last turn.';
+  }
+
+  if (type === 'cleanse-objectives') {
+    const cleanse = getCleanseActionState(state, { playerId, turn: state.turn ?? 0, round: state.battle?.round ?? 0 });
+    count = Number(cleanse.cleansedCount >= (condition.minimum ?? 1));
+    detail = cleanse.cleansedCount + ' distinct non-home objective' + (cleanse.cleansedCount === 1 ? '' : 's') +
+      ' confirmed cleansed this turn; ' + cleanse.pendingCount + ' Cleanse Action' + (cleanse.pendingCount === 1 ? '' : 's') + ' awaiting completion review.';
+  }
+
+  if (type === 'plunder-this-turn') {
+    const plunder = getPlunderActionState(state, { playerId, turn: state.turn ?? 0, round: state.battle?.round ?? 0 });
+    count = Number(plunder.completedCount >= (condition.minimum ?? 1));
+    detail = plunder.completedCount + ' Plunder terrain area' + (plunder.completedCount === 1 ? '' : 's') + ' recorded this turn.';
   }
 
   if (type === 'condemned-left') {

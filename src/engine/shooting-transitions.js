@@ -5,6 +5,7 @@ import { getTriangulationObjectiveOptions, getTriangulationState } from "../rule
 import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js";
 import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
 import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-link-state.js";
+import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -140,6 +141,26 @@ export function recordShootingActivation(state, {
         throw new Error("Select one of your remaining Locate and Deny operation markers to remove.");
       }
     }
+    if (linkedMission.definitionId === "secondary-cleanse" && linkedMission.rulesVerified === true) {
+      if (reviewTiming !== "end-of-turn") throw new Error("Cleanse completes at the end of your turn.");
+      if (!objectiveId || !getCleanseObjectiveOptions(state, { playerId: activePlayerId })
+          .some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select a different eligible non-home objective for this Cleanse attempt.");
+      }
+    }
+    if (linkedMission.definitionId === "secondary-plunder" && linkedMission.rulesVerified === true) {
+      if (reviewTiming !== "end-of-turn") throw new Error("Plunder scores at the end of your turn.");
+      if (getPlunderActionState(state, { playerId: activePlayerId }).usedThisTurn) {
+        throw new Error("Plunder can only be started once per turn.");
+      }
+      if (!terrainAreaId) throw new Error("Select the terrain area where Plunder is performed.");
+      const terrain = getPlunderTerrainOptions(state, { playerId: activePlayerId })
+        .find(item => item.terrainAreaId === terrainAreaId);
+      if (!terrain) throw new Error("Select a terrain area from the current Event Companion battlefield.");
+      if (terrain.withinOwnDeploymentZone === true) {
+        throw new Error("The Plunder terrain area cannot be within your territory.");
+      }
+    }
     if (linkedMission.definitionId === "primary-surveil-the-foe") {
       if (!targetUnitId) throw new Error("Select the enemy unit being Surveilled.");
       const eligibleTarget = getSurveilTheFoeTargetOptions(state, { playerId: activePlayerId, unitId })
@@ -157,7 +178,7 @@ export function recordShootingActivation(state, {
     actionType,
     actionId:linkedMission?.definitionId ?? actionId,
     ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
-      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), ...(targetUnitId ? { targetUnitId } : {}), ...(deathTrapTerrain ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
+      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), missionRulesVerified: linkedMission.rulesVerified === true, ...(targetUnitId ? { targetUnitId } : {}), ...((deathTrapTerrain || (linkedMission?.definitionId === "secondary-plunder" && linkedMission?.rulesVerified === true)) ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
   }));
 }
 

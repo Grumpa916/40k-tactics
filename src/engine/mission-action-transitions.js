@@ -11,6 +11,17 @@ export function reviewMissionAction(state, { actionKey, playerId, checkpoint, ou
   const action=getMissionActionReviews(state,{playerId,checkpoint}).find(item=>item.actionKey===actionKey);
   if (!action) throw new Error('A linked mission action for this checkpoint is required.');
   if (action.review) throw new Error('This action has already been reviewed.');
+  if (action.missionDefinitionId === "secondary-cleanse" && action.missionRulesVerified === true && outcome === "completed") {
+    const objective = state.objectives?.find((item) => item.id === action.objectiveId);
+    const unit = state.units?.find((item) => item.id === action.unitId);
+    if (!objective || objective.control?.controlState !== "controlled" ||
+        objective.control?.controllerId !== playerId) {
+      throw new Error("Cleanse can only be confirmed complete if you still control its selected objective.");
+    }
+    if (!unit || unit.ownerId !== playerId || unit.status !== "deployed") {
+      throw new Error("Cleanse can only be confirmed complete while the acting unit remains on the battlefield.");
+    }
+  }
   return appendHistoryEntry(state,createEvent('mission_action.reviewed',{actionKey,playerId,checkpoint,outcome,
     missionInstanceId:action.missionInstanceId, round:state.battle.round,turn:state.turn}));
 }
