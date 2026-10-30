@@ -113,7 +113,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
     const referenceNotes = [
       ...(Array.isArray(definition.referenceNotes) ? definition.referenceNotes : []),
       ...(Array.isArray(definition.notes) ? definition.notes : [])
-    ];
+    ].filter((note) => note !== definition.whenDrawn);
     const missionText = referenceNotes.length
       ? '<p><strong>Rules notes</strong></p><ul>' + referenceNotes.map((note) => '<li>' + escapeHtml(note) + '</li>').join('') + '</ul>'
       : '';
