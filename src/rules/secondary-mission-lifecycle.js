@@ -132,6 +132,10 @@ export function getSecondaryMissionReplacementOpportunity(state, entry, {
   if (entry.drawnRound !== round || entry.drawnTurn !== turn) {
     return { eligible: false, reason: "When Drawn replacements must be resolved immediately after the card is drawn." };
   }
+  const pending = getPendingSecondaryMissionRuleReplacement(state, playerId);
+  if (pending && (pending.stage === "draw" || pending.instanceId !== entry.instanceId)) {
+    return { eligible: false, reason: "Resolve the pending card replacement first." };
+  }
   const rule = RULE_REPLACEMENT_RULES[entry.definitionId];
   if (!rule) return { eligible: false, reason: "This card has no replacement rule." };
   if (rule.firstRoundOnly && round !== 1) {
