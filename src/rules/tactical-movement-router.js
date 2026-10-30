@@ -30,6 +30,8 @@ import { isSmokeAndMirrorsMissionForPlayer } from "./smoke-and-mirrors-state.js"
 import { enhanceSmokeAndMirrorsMovementRecommendations } from "./tactical-smoke-and-mirrors-movement.js";
 import { isReconnaissanceSweepMissionForPlayer } from "./tactical-reconnaissance-sweep-strategy.js";
 import { enhanceReconnaissanceSweepMovementRecommendations } from "./tactical-reconnaissance-sweep-movement.js";
+import { isTriangulationMissionForPlayer } from "./tactical-triangulation-strategy.js";
+import { enhanceTriangulationMovementRecommendations } from "./tactical-triangulation-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -318,6 +320,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isReconnaissanceSweepMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceReconnaissanceSweepMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isTriangulationMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceTriangulationMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
