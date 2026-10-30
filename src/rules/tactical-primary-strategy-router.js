@@ -138,6 +138,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSearchAndScourPrimaryStrategyContext(state, options);
   }
+  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSecureAssetPrimaryStrategyContext(state, options);
+  }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
   }
