@@ -344,5 +344,9 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
     return enhanceSearchAndScourMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
+  if (isSecureAssetMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceSecureAssetMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
   return base;
 }
