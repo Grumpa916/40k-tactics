@@ -3,6 +3,7 @@ import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
 import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-state.js";
 import { getTriangulationObjectiveOptions, getTriangulationState } from "../rules/triangulation-state.js";
 import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js";
+import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -109,6 +110,13 @@ export function recordShootingActivation(state, {
       if (reviewTiming !== "end-of-turn") throw new Error("Triangulate completes at the end of your turn.");
       if (!objectiveId || !getTriangulationObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
         throw new Error("Select a non-home objective that is not already triangulated or reserved by another Triangulate attempt.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-gather-intel") {
+      if (state.battle.round < 2) throw new Error("Extract Intelligence cannot be started before the second battle round.");
+      if (reviewTiming !== "end-of-turn") throw new Error("Extract Intelligence completes at the end of your turn.");
+      if (!objectiveId || !getGatherIntelObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select a different eligible non-home objective that does not already have one of your Gather Intel operation markers or another Extract Intelligence attempt this turn.");
       }
     }
     if (linkedMission.definitionId === "primary-locate-and-deny") {

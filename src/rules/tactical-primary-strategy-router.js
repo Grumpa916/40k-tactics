@@ -72,6 +72,11 @@ import {
   getSurveilTheFoeObjectiveStrategySignal,
   isSurveilTheFoeMissionForPlayer
 } from "./tactical-surveil-the-foe-strategy.js";
+import {
+  getGatherIntelPrimaryStrategyContext,
+  getGatherIntelObjectiveStrategySignal
+} from "./tactical-gather-intel-strategy.js";
+import { isGatherIntelMissionForPlayer } from "./gather-intel-state.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -113,6 +118,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSurveilTheFoePrimaryStrategyContext(state, options);
+  }
+  if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getGatherIntelPrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -160,6 +168,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSurveilTheFoeObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getGatherIntelObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
