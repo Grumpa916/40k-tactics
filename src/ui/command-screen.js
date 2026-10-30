@@ -622,9 +622,11 @@ export function createCommandScreen(container, {
     const secondaryRedrawMarkup = state.phase === "command" &&
       getSecondaryMissionMode(state, activePlayerId) === "tactical" && activePlayerId
       ? '<section class="command-secondary-redraw"><h3>New Orders (once per battle)</h3>' +
-        (redrawUsed
-          ? '<p>New Orders has already been used by this player in this battle.</p>'
-          : activePlayerCp < 1
+        (secondaryRuleReplacementPending
+          ? '<p>Resolve the When Drawn replacement before using New Orders.</p>'
+          : redrawUsed
+            ? '<p>New Orders has already been used by this player in this battle.</p>'
+            : activePlayerCp < 1
             ? '<p>New Orders costs 1 CP; the active player does not have enough Command Points.</p>'
             : activeTacticalCards.length
               ? '<p>At the end of your Command phase, spend 1 CP to discard one active Tactical card and record one replacement drawn from the physical deck.</p>' +
