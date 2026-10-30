@@ -6,6 +6,7 @@ import {
 import { getMissionEvidenceCondition } from './mission-evidence-conditions.js';
 import { getPunishmentCondemnedUnitsLeftThisTurn } from './punishment-condemnation.js';
 import { getCleanseActionState, getPlunderActionState } from './secondary-mission-action-state.js';
+import { getBeaconScoringEvidence } from './beacon-mission-state.js';
 import {
   getConsecrateReviewState,
   isOpponentHomeObjectiveForPlayer,
@@ -109,6 +110,12 @@ export function missionConditionEvidence(state, playerId, item) {
     const plunder = getPlunderActionState(state, { playerId, turn: state.turn ?? 0, round: state.battle?.round ?? 0 });
     count = Number(plunder.completedCount >= (condition.minimum ?? 1));
     detail = plunder.completedCount + ' Plunder terrain area' + (plunder.completedCount === 1 ? '' : 's') + ' recorded this turn.';
+  }
+
+  if (type === 'beacon-outside-deployment-zone' || type === 'beacon-outside-territory') {
+    const beacon = getBeaconScoringEvidence(state, playerId, type);
+    count = beacon.count;
+    detail = beacon.detail;
   }
 
   if (type === 'condemned-left') {
