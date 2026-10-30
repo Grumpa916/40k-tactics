@@ -1,5 +1,6 @@
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
+import { isGoldenLightActive } from './stratagem-use-state.js';
 
 export function getAttackDamageForecast(state, { attackerId, targetId, weapon } = {}) {
   if (!attackerId || !targetId || !weapon) return null;
@@ -11,9 +12,15 @@ export function getAttackDamageForecast(state, { attackerId, targetId, weapon } 
   if (!attacker || !sourceAttacker || !target) return null;
 
   try {
+    const targetProfile=getProbabilisticUnitProfile(state,target);
+    const goldenLightActive=(state.history??[]).some(event=>event.type==='custodes.detachment_stratagem_used' &&
+      isGoldenLightActive(state,event,target.id));
+    const defensiveTarget=goldenLightActive
+      ? {...targetProfile,combatRules:{...(targetProfile.combatRules??{}),goldenLightOfMoirades:true}}
+      : targetProfile;
     const distribution = getDamageOutcomeDistribution({
       attacker: getProbabilisticUnitProfile(state, sourceAttacker),
-      target: getProbabilisticUnitProfile(state, target),
+      target: defensiveTarget,
       weapon
     });
     const expectedDamage = distribution.expectedDamage;

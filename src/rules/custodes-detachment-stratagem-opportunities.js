@@ -65,3 +65,24 @@ export function getLightningWrathOpportunities(state,{playerId,unitId=null}={}) 
       sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference}];
   });
 }
+
+export function getGoldenLightOpportunities(state,{playerId,unitId=null}={}) {
+  if (state?.battle?.status!=='active' || state.phase!=='movement' || !playerId ||
+      (state.activePlayer??state.battle?.activePlayerId)!==playerId) return [];
+  const roster=state.armyRosters?.[playerId];
+  if (!roster || !isAdeptusCustodesFaction(roster.faction) || !getRosterDetachmentNames(roster).includes('Dread Host')) return [];
+  const focused=unitId ? state.units?.find(unit=>unit.id===unitId) : null;
+  const focusRoot=focused ? rootOf(state,focused) : null;
+  const units=(state.units??[]).filter(unit=>unit.ownerId===playerId && unit.status==='reserves' && rootOf(state,unit)===unit.id &&
+    (!focusRoot || unit.id===focusRoot) && hasCustodesKeyword(state,unit));
+  return units.map(unit=>{
+    let blockedReason=null;
+    if (getCombatFormationMembers(state,unit).some(isUnitBattleShocked)) blockedReason='Battle-shocked units cannot receive Stratagems.';
+    blockedReason ??=getStratagemUseBlock(state,{playerId,unitId:unit.id,stratagemId:'golden-light-of-the-moiraides'});
+    if (!blockedReason && getCommandPointBalance(state,playerId)<2) blockedReason='Needs 2 CP.';
+    return {stratagemId:'golden-light-of-the-moiraides',title:'Golden Light of the Moiraides',playerId,unitId:unit.id,unitName:unit.name,
+      cpCost:2,timing:'Your Movement phase · when a friendly unit in Reserves is selected to make an ingress move',
+      effect:'Until the start of your next turn, attacks targeting this unit are -1 to Hit and enemy units cannot target it with Snap Shooting.',
+      available:!blockedReason,blockedReason,sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference};
+  });
+}

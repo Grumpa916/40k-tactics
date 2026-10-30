@@ -99,7 +99,7 @@ export const ADEPTUS_CUSTODES_DETACHMENTS = Object.freeze([
     ],
     stratagems:[
       S('Lightning Wrath',1,'Fight phase','The selected unit can pile in up to D3+3 inches.'),
-      S('Golden Light of the Moiraides',2,'Your Movement phase','After an ingress move, attacks targeting the unit are -1 to Hit and it cannot be targeted by snap shooting until your next turn.'),
+      S('Golden Light of the Moiraides',2,'Your Movement phase · when a friendly Adeptus Custodes unit is selected to ingress','Until the start of your next turn, attacks targeting the unit are -1 to Hit and enemy units cannot target it with Snap Shooting.'),
       S('Preternatural Rapidity',1,'Your Movement phase','After an Advance move, that Advance does not prevent the unit from declaring a charge.')
     ]
   }),

@@ -2,11 +2,16 @@ import { getAttackDamageForecast } from './attack-damage-forecast.js';
 import { getCombatFormationRoot } from './battle-unit-reference.js';
 import { getGuardiansStratagemOpportunities } from './guardians-stratagem-opportunities.js';
 import { rulesContextKey } from './rules-phase-window.js';
+import { isGoldenLightActive } from './stratagem-use-state.js';
 
 const isTemporaryDefence = (event, state, target, attacker) => {
   const payload = event?.payload ?? {};
   const targetRoot = getCombatFormationRoot(state, target) ?? target;
   const attackerRoot = getCombatFormationRoot(state, attacker) ?? attacker;
+  if (event.type==='custodes.detachment_stratagem_used' && payload.stratagemId==='golden-light-of-the-moiraides') {
+    return isGoldenLightActive(state,event,target.id) &&
+      (getCombatFormationRoot(state,state.units?.find(unit=>unit.id===payload.unitId))?.id??payload.unitId)===targetRoot.id;
+  }
   const currentTurn = payload.round === state.battle?.round && payload.turn === state.turn;
   if (!currentTurn) return false;
   if (event.type === 'custodes.guardians_stratagem_used') {
