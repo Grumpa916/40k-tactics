@@ -43,8 +43,8 @@ export function createMissionActionPicker() {
       const isGatherIntel=option?.definitionId==='primary-gather-intel';
       const isVitalLink=option?.definitionId==='primary-vital-link';
       const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
-      const isCleanse=option?.definitionId==='secondary-cleanse';
-      const isPlunder=option?.definitionId==='secondary-plunder';
+      const isCleanse=option?.definitionId==='secondary-cleanse'&&option?.rulesVerified===true;
+      const isPlunder=option?.definitionId==='secondary-plunder'&&option?.rulesVerified===true;
       const playerId=state.activePlayer ?? state.battle?.activePlayerId ?? null;
       const locateSetup=isLocateAndDeny ? getLocateAndDenySetup(state,{playerId}) : null;
       const cleanseObjectives=isCleanse ? getCleanseObjectiveOptions(state,{playerId}) : [];
@@ -177,6 +177,8 @@ export function createMissionActionPicker() {
         const isGatherIntel=option?.definitionId==='primary-gather-intel';
         const isVitalLink=option?.definitionId==='primary-vital-link';
         const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
+        const isCleanse=option?.definitionId==='secondary-cleanse'&&option?.rulesVerified===true;
+        const isPlunder=option?.definitionId==='secondary-plunder'&&option?.rulesVerified===true;
         if(!option)return;
         const playerId=renderState?.activePlayer??renderState?.battle?.activePlayerId??null;
         const locateSetup=isLocateAndDeny&&renderState?getLocateAndDenySetup(renderState,{playerId}):null;
