@@ -153,13 +153,13 @@ export function recordShootingActivation(state, {
       if (getPlunderActionState(state, { playerId: activePlayerId }).usedThisTurn) {
         throw new Error("Plunder can only be started once per turn.");
       }
+      if (!terrainAreaId) throw new Error("Select the terrain area where Plunder is performed.");
       const terrain = getPlunderTerrainOptions(state, { playerId: activePlayerId })
         .find(item => item.terrainAreaId === terrainAreaId);
       if (!terrain) throw new Error("Select a terrain area from the current Event Companion battlefield.");
       if (terrain.withinOwnDeploymentZone === true) {
         throw new Error("The Plunder terrain area cannot be within your territory.");
       }
-      if (!terrainAreaId) throw new Error("Select the terrain area where Plunder is performed.");
     }
     if (linkedMission.definitionId === "primary-surveil-the-foe") {
       if (!targetUnitId) throw new Error("Select the enemy unit being Surveilled.");
