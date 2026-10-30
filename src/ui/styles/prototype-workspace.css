@@ -369,20 +369,31 @@
 .prototype-unit-note h3 { margin:0 0 8px; color:#c4e99b; font-size:1rem; }
 .prototype-unit-note p { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; }
 
-.prototype-unit-dialog .prototype-unit-profile-characteristics {
+.prototype-unit-dialog .prototype-unit-stat-row {
   grid-template-columns: repeat(var(--unit-stat-count), minmax(0, 1fr));
   gap: 6px;
 }
-.prototype-unit-dialog .prototype-unit-profile-characteristics > div {
+.prototype-unit-dialog .prototype-unit-stat-row > div {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-start;
   gap: 3px;
   min-width: 0;
 }
-.prototype-unit-dialog .prototype-unit-profile-characteristics dt { overflow-wrap: anywhere; }
-.prototype-unit-dialog .prototype-unit-profile-characteristics dd { text-align: left; }
+.prototype-unit-dialog .prototype-unit-stat-row dt { overflow-wrap: anywhere; text-align: center; }
+.prototype-unit-dialog .prototype-unit-stat-row dd {
+  order: -1;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.prototype-unit-dialog .prototype-unit-weapon-characteristics {
+  grid-template-columns: repeat(var(--unit-stat-count), minmax(54px, 1fr));
+  min-width: 0;
+  overflow-x: auto;
+}
+.prototype-unit-dialog .battle-shell__army-weapons > li { min-width: 0; }
 @media (max-width: 640px) {
   .prototype-unit-dialog .prototype-unit-profile-characteristics {
     grid-template-columns: repeat(3, minmax(0, 1fr));

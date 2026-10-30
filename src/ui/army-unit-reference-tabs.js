@@ -14,15 +14,21 @@ function displayLabel(key) {
     .replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function renderCharacteristics(characteristics, { singleLine = false } = {}) {
+function renderCharacteristics(characteristics, { singleLine = false, weapon = false } = {}) {
   if (!characteristics || typeof characteristics !== "object" || Array.isArray(characteristics)) {
     return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
   }
   const entries = Object.entries(characteristics).filter(([, value]) =>
     value !== null && value !== undefined && value !== "");
   if (!entries.length) return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
-  const layout = singleLine
-    ? ` class="battle-shell__army-characteristics prototype-unit-profile-characteristics" style="--unit-stat-count:${entries.length}"`
+  if (weapon) {
+    const order = { range: 0, attacks: 1, a: 1, skill: 2, ballisticskill: 2, weaponskill: 2,
+      bs: 2, ws: 2, strength: 3, s: 3, ap: 4, armourpenetration: 4, armorpenetration: 4, damage: 5, d: 5 };
+    const rank = key => order[String(key).replace(/[^a-z]/gi, '').toLowerCase()] ?? 6;
+    entries.sort(([left], [right]) => rank(left) - rank(right));
+  }
+  const layout = singleLine || weapon
+    ? ` class="battle-shell__army-characteristics prototype-unit-stat-row ${weapon ? 'prototype-unit-weapon-characteristics' : 'prototype-unit-profile-characteristics'}" style="--unit-stat-count:${entries.length}"`
     : ' class="battle-shell__army-characteristics"';
   return '<dl' + layout + '>' + entries.map(([key, value]) =>
     '<div><dt>' + escapeHtml(displayLabel(key)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>'
@@ -89,7 +95,7 @@ function renderWeaponEntries(entries) {
   }
   return '<ul class="battle-shell__army-weapons">' + entries.map(({ weapon, activeQuantity, equippedQuantity, confirmed }) => {
     const chars = weaponCharacteristics(weapon);
-    const detail = renderCharacteristics(chars);
+    const detail = renderCharacteristics(chars, { weapon: true });
     const keywords = weaponKeywords(weapon);
     const keywordLine = keywords.length
       ? '<p class="prototype-unit-weapon-keywords">[' + escapeHtml(keywords.join(", ")) + ']</p>'
