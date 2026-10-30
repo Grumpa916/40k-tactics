@@ -78,6 +78,11 @@ import {
 } from "./tactical-gather-intel-strategy.js";
 import { isGatherIntelMissionForPlayer } from "./gather-intel-state.js";
 import {
+  getVitalLinkPrimaryStrategyContext,
+  getVitalLinkObjectiveStrategySignal,
+  isVitalLinkMissionForPlayer
+} from "./tactical-vital-link-strategy.js";
+import {
   getSearchAndScourPrimaryStrategyContext,
   getSearchAndScourObjectiveStrategySignal,
   isSearchAndScourMissionForPlayer
@@ -126,6 +131,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getGatherIntelPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getVitalLinkPrimaryStrategyContext(state, options);
   }
   if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSearchAndScourPrimaryStrategyContext(state, options);
@@ -179,6 +187,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getGatherIntelObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getVitalLinkObjectiveStrategySignal(state, options);
   }
   if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSearchAndScourObjectiveStrategySignal(state, options);
