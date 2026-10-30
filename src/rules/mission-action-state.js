@@ -45,7 +45,7 @@ function getPrimaryMissionActionOption(state, playerId) {
   }
   if (definition?.id === 'primary-extract-relic') {
     const extractRelic = getExtractRelicState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
-    if (!extractRelic.sensorSweepAvailable) return null;
+    if (extractRelic.opponentMarkerSetupComplete && !extractRelic.sensorSweepAvailable) return null;
   }
   if (!definition || !action || action.phase !== 'shooting') return null;
   const round = state.battle?.round ?? 0;
