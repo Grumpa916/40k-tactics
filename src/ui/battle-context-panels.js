@@ -2,7 +2,7 @@ import { getArmyUnitReference, renderArmyUnitSummary } from './army-unit-summary
 import { renderLiveCasualtyStatus } from './live-casualty-panel.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { getBattleShockEligibility, getUnitStrengthAssessment, isUnitBattleShocked } from "../rules/unit-status-summary.js";
-import { getBattleRosterUnit, hasInvalidWargear } from "../rules/battle-unit-reference.js";
+import { getBattleRosterUnit, getBattleUnitDatasheet, hasInvalidWargear } from "../rules/battle-unit-reference.js";
 import { getDatasheetWeaponOptions } from "../rules/saved-roster-combat-profile.js";
 
 function escapeHtml(value) {
@@ -531,6 +531,10 @@ export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab =
   if (!original) return '<p>Unit no longer available.</p><button data-army-back>Back to army</button>';
   const unit = getArmyUnitReference(state, original);
   const rosterUnit = getBattleRosterUnit(state, original);
+  const datasheetCharacteristics = getBattleUnitDatasheet(state, original)?.characteristics;
+  const profileCharacteristics = datasheetCharacteristics && Object.keys(datasheetCharacteristics).length
+    ? datasheetCharacteristics
+    : unit.profile?.characteristics;
   const tabs = ["profile", "weapons", "abilities", "notes"];
   const activeTab = tabs.includes(selectedTab) ? selectedTab : "profile";
   const tabTitle = { profile: "Profile", weapons: "Weapons", abilities: "Abilities", notes: "Notes" };
@@ -547,7 +551,7 @@ export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab =
   const dataPanels = {
     profile: '<div id="army-unit-panel-profile" role="tabpanel" aria-labelledby="army-unit-tab-profile" data-unit-detail-panel="profile"' +
       (activeTab === "profile" ? "" : " hidden") + '><p class="prototype-unit-data-status">' + sourceLine + '</p>' +
-      renderCharacteristics(unit.profile?.characteristics) +
+      '<h3>Characteristics</h3>' + renderCharacteristics(profileCharacteristics) +
       '<h3>Keywords</h3>' + renderUnitKeywords(unit) + '</div>',
     weapons: '<div id="army-unit-panel-weapons" role="tabpanel" aria-labelledby="army-unit-tab-weapons" data-unit-detail-panel="weapons"' +
       (activeTab === "weapons" ? "" : " hidden") + '>' +
