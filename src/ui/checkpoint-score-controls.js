@@ -29,7 +29,7 @@ function secondaryTierChoices(mission = {}) {
     for (const tier of window?.tiers ?? []) {
       const value = positiveVp(tier?.vp);
       if (!value) continue;
-      const repeatedByCondition = /\\b(?:per|for each)\\b/i.test(String(tier?.summary ?? ''));
+      const repeatedByCondition = /\b(?:per|for each)\b/i.test(String(tier?.summary ?? ''));
       if (tier?.relationship === 'cumulative' && requiredTiers.length) {
         runningTotal += value;
         requiredTiers = [...requiredTiers, tier];
