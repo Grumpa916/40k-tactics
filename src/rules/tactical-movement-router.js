@@ -34,6 +34,8 @@ import { isTriangulationMissionForPlayer } from "./tactical-triangulation-strate
 import { enhanceTriangulationMovementRecommendations } from "./tactical-triangulation-movement.js";
 import { isGatherIntelMissionForPlayer } from "./gather-intel-state.js";
 import { enhanceGatherIntelMovementRecommendations } from "./tactical-gather-intel-movement.js";
+import { isSecureAssetMissionForPlayer } from "./secure-asset-state.js";
+import { enhanceSecureAssetMovementRecommendations } from "./tactical-secure-asset-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -330,6 +332,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isGatherIntelMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceGatherIntelMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isSecureAssetMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceSecureAssetMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
