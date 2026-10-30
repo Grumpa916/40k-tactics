@@ -199,6 +199,7 @@ export function drawSecondaryMission(state, {
     ? Object.freeze({ ...normalized, missionMode: selectedMode })
     : normalized;
   const existing = missionList(state);
+  let isRuleReplacement = false;
   if (selectedMode === SECONDARY_MISSION_MODES.TACTICAL) {
     if (state.phase !== "command") {
       throw new Error("Tactical secondary cards can only be drawn during the Command phase.");
@@ -214,7 +215,7 @@ export function drawSecondaryMission(state, {
     if (pendingRuleReplacement && (pendingRuleReplacement.round !== round || pendingRuleReplacement.turn !== turn)) {
       throw new Error("Resolve the pending secondary card replacement before drawing another Tactical card.");
     }
-    const isRuleReplacement = Boolean(pendingRuleReplacement?.stage === "draw");
+    isRuleReplacement = Boolean(pendingRuleReplacement?.stage === "draw");
     const drawnThisCommandPhase = existing.filter((item) =>
       item.playerId === playerId && item.drawnRound === round && item.drawnTurn === turn &&
       item.status !== SECONDARY_MISSION_STATUS.RETURNED_TO_DECK &&
