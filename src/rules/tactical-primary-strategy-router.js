@@ -194,6 +194,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSearchAndScourObjectiveStrategySignal(state, options);
   }
+  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSecureAssetObjectiveStrategySignal(state, options);
+  }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
   }
