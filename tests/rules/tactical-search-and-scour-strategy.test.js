@@ -167,6 +167,17 @@ test("central control and each non-home objective contribute their Search and Sc
     perspectivePlayerId: "p1",
     objectiveId: "central-1"
   });
+  assert.equal(signal.centralVpLeverage, 0);
+  assert.equal(signal.nonHomeVpLeverage, 4);
+});
+
+test("a single controlled central objective carries the 3 VP preservation leverage", () => {
+  const state = seed({ round: 2, phase: "command", centralController: "p1", secondCentralController: "p2" });
+  const signal = getPrimaryObjectiveStrategySignal(state, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "central-1"
+  });
   assert.equal(signal.centralVpLeverage, 3);
   assert.equal(signal.nonHomeVpLeverage, 4);
 });
@@ -195,6 +206,17 @@ test("a live target that began the turn in terrain carries 2 VP kill leverage un
   const after = strategy(state, "enemy-a");
   assert.equal(after.terrainKillSatisfied, true);
   assert.equal(after.nextKillVpLeverage, 0);
+});
+
+test("terrain-start kill targeting bonus is suppressed once the 15 VP round cap is filled", () => {
+  const state = seed({ round: 2, phase: "shooting", history: [commandAward(2, 15)] });
+  putEnemyAtTerrainStart(state, ["enemy-a"]);
+  const result = strategy(state, "enemy-a");
+  assert.equal(result.targetOpportunity.startedInTerrain, true);
+  assert.equal(result.additionalPrimaryAllowance, 0);
+  assert.equal(result.nextKillVpLeverage, 0);
+  const expectedScore = result.targetOpportunity.territoryBlocker ? 0.05 + 0.16 : 0.05;
+  assert.equal(result.targetingScore, expectedScore);
 });
 
 test("movement after the Round 2 Command checkpoint does not retroactively add newly controlled non-home objectives", () => {
