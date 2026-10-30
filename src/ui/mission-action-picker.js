@@ -132,7 +132,9 @@ export function createMissionActionPicker() {
                       : isCleanse
                       ? '<p class="mission-action-picker__note">Cleanse is unlimited, but each unit that starts this Action this phase must use a different objective. At your turn’s end, confirm completion only if the unit still controls its selected objective. One cleansed objective is 2 VP; two or more are 5 VP.</p>'
                       : isPlunder
-                        ? '<p class="mission-action-picker__note">Plunder is limited to once per turn and completes immediately. A recorded Plunder is worth 5 VP at the end of your turn; confirm the terrain-area rule on the tabletop.</p>'
+                        ? (plunderState?.usedThisTurn
+                          ? '<p class="mission-action-picker__note">Plunder has already been used this turn. Check its 5 VP at the end-of-turn scoring review.</p>'
+                          : '<p class="mission-action-picker__note">Plunder is limited to once per turn and completes immediately. A recorded Plunder is worth 5 VP at the end of your turn; confirm the terrain-area rule on the tabletop.</p>')
                         : '<p class="mission-action-picker__note">This records the Action attempt only. Completion and VP are confirmed later at the scoring checkpoint.</p>';
       const linkedFields=option?.instanceId
         ? locateSetupMode
@@ -146,7 +148,7 @@ export function createMissionActionPicker() {
       const targetReady=locateSetupMode
         ? locateSetupTerrain.size===expectedLocateSetupCount
         : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isVitalLink ? !!objective : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
-      const buttonLabel=locateSetupMode?'Record marker setup':'Record Action attempt';
+      const buttonLabel=locateSetupMode?'Record marker setup':isPlunder&&plunderState?.usedThisTurn?'Plunder already used this turn':'Record Action attempt';
       return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
         ${!options.length?'<p class="mission-action-picker__note">No active mission Actions are available. Select cards in Command before linking an Action.</p>':''}
         ${linkedFields}
