@@ -6,6 +6,7 @@ import { getSurveilTheFoeTargetOptions } from '../rules/surveil-the-foe-state.js
 import { getGatherIntelObjectiveOptions } from '../rules/gather-intel-state.js';
 import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionState } from '../rules/secondary-mission-action-state.js';
 import { getVitalLinkObjectiveOptions } from '../rules/vital-link-state.js';
+import { getSecureAssetObjectiveOptions } from '../rules/secure-asset-state.js';
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -41,6 +42,7 @@ export function createMissionActionPicker() {
       const isTriangulation=option?.definitionId==='primary-triangulation';
       const isSurveilTheFoe=option?.definitionId==='primary-surveil-the-foe';
       const isGatherIntel=option?.definitionId==='primary-gather-intel';
+      const isSecureAsset=option?.definitionId==='primary-secure-asset';
       const isVitalLink=option?.definitionId==='primary-vital-link';
       const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
       const isCleanse=option?.definitionId==='secondary-cleanse'&&option?.rulesVerified===true;
@@ -57,6 +59,7 @@ export function createMissionActionPicker() {
       const triangulationObjectives=isTriangulation ? getTriangulationObjectiveOptions(state,{playerId}) : [];
       const surveilTargets=isSurveilTheFoe ? getSurveilTheFoeTargetOptions(state,{playerId,unitId}) : [];
       const gatherIntelObjectives=isGatherIntel ? getGatherIntelObjectiveOptions(state,{playerId}) : [];
+      const secureAssetObjectives=isSecureAsset ? getSecureAssetObjectiveOptions(state,{playerId}) : [];
       const vitalLinkObjectives=isVitalLink ? getVitalLinkObjectiveOptions(state,{playerId}) : [];
       const locateObjectives=isLocateAndDeny && !locateSetupMode ? getLocateAndDenyCentralObjectiveOptions(state,{playerId}) : [];
       const locateMarkers=isLocateAndDeny && !locateSetupMode ? getLocateAndDenyMarkerRemovalOptions(state,{playerId}) : [];
@@ -66,6 +69,7 @@ export function createMissionActionPicker() {
       if (isTriangulation && objective && !triangulationObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isSurveilTheFoe && targetUnit && !surveilTargets.some(item=>item.targetUnitId===targetUnit)) targetUnit='';
       if (isGatherIntel && objective && !gatherIntelObjectives.some(item=>item.objectiveId===objective)) objective='';
+      if (isSecureAsset && objective && !secureAssetObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isVitalLink && objective && !vitalLinkObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isLocateAndDeny && !locateSetupMode && objective && !locateObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isLocateAndDeny && !locateSetupMode && terrainArea && !locateMarkers.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
@@ -104,7 +108,9 @@ export function createMissionActionPicker() {
                 ? `<label class="mission-action-picker__field"><span>Enemy unit to Surveil</span><select data-action-target-unit><option value="">Choose enemy unit…</option>${surveilTargets.map(item=>`<option value="${esc(item.targetUnitId)}" ${item.targetUnitId===targetUnit?'selected':''}>${esc(item.targetName)}${item.approximateDistance==null?'':` · ~${item.approximateDistance.toFixed(1)} in`}</option>`).join('')}</select><small>Only deployed enemies not already surveilled this turn are shown. Confirm visibility and the 18-inch range on the physical tabletop; map distance is advisory.</small></label>`
                 : isGatherIntel
                   ? `<label class="mission-action-picker__field"><span>Objective for Extract Intelligence</span><select data-action-objective><option value="">Choose eligible objective…</option>${gatherIntelObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}${item.opponentHome?' · opponent home':''}${item.controlledByPlayer?' · currently controlled':''}</option>`).join('')}</select><small>Your home objective, objectives already carrying your Gather Intel marker, and objectives reserved by another Extract attempt this turn are hidden. Confirm this unit is within range on the physical tabletop.</small></label>`
-                  : isVitalLink
+                  : isSecureAsset
+                    ? `<label class="mission-action-picker__field"><span>Objective to Secure</span><select data-action-objective><option value="">Choose eligible objective…</option>${secureAssetObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}${item.central?' · central':''}${item.controlledByPlayer?' · currently controlled':''}</option>`).join('')}</select><small>Your home objective is hidden. Confirm this unit is within range on the physical tabletop and can control the selected objective at end of turn.</small></label>`
+                    : isVitalLink
                     ? `<label class="mission-action-picker__field"><span>Central objective for Maintain Control</span><select data-action-objective><option value="">Choose central objective…</option>${vitalLinkObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}${item.markerCount?` · ${item.markerCount} marker${item.markerCount===1?'':'s'}`:''}${item.controlledByPlayer?' · currently controlled':''}</option>`).join('')}</select><small>Only central objectives are shown. Existing operation markers can be stacked again on later turns. Confirm this unit is within range on the physical tabletop.</small></label>`
                     : isLocateAndDeny
                       ? `<label class="mission-action-picker__field"><span>Central objective for Sensor Sweep</span><select data-action-objective><option value="">Choose central objective…</option>${locateObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}</option>`).join('')}</select><small>Confirm this unit is within range on the physical tabletop.</small></label><label class="mission-action-picker__field"><span>Operation marker to remove</span><select data-action-terrain><option value="">Choose remaining marker…</option>${locateMarkers.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>The selected marker is removed only if Sensor Sweep completes at end of turn.</small></label>`
@@ -125,7 +131,9 @@ export function createMissionActionPicker() {
                 ? '<p class="mission-action-picker__note">Surveil completes immediately and lasts until the end of the turn. The 4 VP condition is checked later; an enemy protected by a marked objective can still qualify if that operation marker is removed before the end-turn check.</p>'
                 : isGatherIntel
                   ? '<p class="mission-action-picker__note">Extract Intelligence is unlimited, but each unit starting it this phase must use a different eligible objective. It completes at end of turn only if this unit controls that objective; a completed review places a persistent operation marker there and is worth 7 VP before Primary caps.</p>'
-                  : isVitalLink
+                  : isSecureAsset
+                    ? '<p class="mission-action-picker__note">Secure Asset completes at the end of your turn only if this unit controls the selected non-home objective. Starting the Action spends the once-per-turn use even if it fails; a completed review supports the mission’s 4 VP Action condition.</p>'
+                    : isVitalLink
                     ? '<p class="mission-action-picker__note">Maintain Control completes at the end of your turn only if this unit controls the selected central objective. A completed review adds a persistent operation marker there. Starting the Action spends its once-per-turn use even if it later fails.</p>'
                     : isLocateAndDeny
                       ? '<p class="mission-action-picker__note">Sensor Sweep completes at the end of your turn only if this unit controls the selected central objective. A completed review removes the selected operation marker. Starting the Action spends the once-per-turn use even if it fails.</p>'
@@ -147,7 +155,7 @@ export function createMissionActionPicker() {
       const pickerHref=new URL('./styles/mission-action-picker.css',import.meta.url).href;
       const targetReady=locateSetupMode
         ? locateSetupTerrain.size===expectedLocateSetupCount
-        : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isVitalLink ? !!objective : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
+        : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isSecureAsset ? !!objective : isVitalLink ? !!objective : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
       const buttonLabel=locateSetupMode?'Record marker setup':isPlunder&&plunderState?.usedThisTurn?'Plunder already used this turn':'Record Action attempt';
       return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
         ${!options.length?'<p class="mission-action-picker__note">No active mission Actions are available. Select cards in Command before linking an Action.</p>':''}
@@ -175,6 +183,7 @@ export function createMissionActionPicker() {
         const isTriangulation=option?.definitionId==='primary-triangulation';
         const isSurveilTheFoe=option?.definitionId==='primary-surveil-the-foe';
         const isGatherIntel=option?.definitionId==='primary-gather-intel';
+        const isSecureAsset=option?.definitionId==='primary-secure-asset';
         const isVitalLink=option?.definitionId==='primary-vital-link';
         const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
         const isCleanse=option?.definitionId==='secondary-cleanse'&&option?.rulesVerified===true;
@@ -188,7 +197,7 @@ export function createMissionActionPicker() {
           onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming:'end-of-turn',rulesConfirmed:true,locateSetupOnly:true,locateMarkerSetupTerrainAreaIds:[...locateSetupTerrain]});
           return;
         }
-        if((option.instanceId&&!confirmed)||(isDeathTrap&&!terrainArea)||(isSmokeAndMirrors&&!objective)||(isTriangulation&&!objective)||(isSurveilTheFoe&&!targetUnit)||(isGatherIntel&&!objective)||(isVitalLink&&!objective)||(isLocateAndDeny&&(!objective||!terrainArea))||(isCleanse&&!objective)||(isPlunder&&(!terrainArea||getPlunderActionState(renderState,{playerId,instanceId:option.instanceId}).usedThisTurn)))return;
+        if((option.instanceId&&!confirmed)||(isDeathTrap&&!terrainArea)||(isSmokeAndMirrors&&!objective)||(isTriangulation&&!objective)||(isSurveilTheFoe&&!targetUnit)||(isGatherIntel&&!objective)||(isSecureAsset&&!objective)||(isVitalLink&&!objective)||(isLocateAndDeny&&(!objective||!terrainArea))||(isCleanse&&!objective)||(isPlunder&&(!terrainArea||getPlunderActionState(renderState,{playerId,instanceId:option.instanceId}).usedThisTurn)))return;
         const allowedTimings=timingsFor(option);
         const reviewTiming=allowedTimings.includes(timing)?timing:allowedTimings[0];
         onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming,objectiveId:objective||null,terrainAreaId:terrainArea||null,targetUnitId:targetUnit||null,rulesConfirmed:confirmed});
