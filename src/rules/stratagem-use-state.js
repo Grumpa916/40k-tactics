@@ -29,6 +29,10 @@ export function getActiveGuardiansEffects(state, unitId) {
     if (use.stratagemId === 'preternatural-rapidity') {
       return state.phase === 'charge' && (state.activePlayer ?? state.battle?.activePlayerId) === use.playerId;
     }
+    if (use.stratagemId === 'lightning-wrath') {
+      return state.phase === 'fight' && !(state.history ?? []).some(event => event.type === 'fight.unit_activated' &&
+        event.payload?.unitId === use.unitId && event.payload?.round === use.round && event.payload?.turn === use.turn);
+    }
     if (use.contextKey !== rulesContextKey(state)) return false;
     if (use.stratagemId === 'in-auramite-clad') {
       return !(state.history ?? []).some(event => event.type === 'combat.activation_finished' &&
