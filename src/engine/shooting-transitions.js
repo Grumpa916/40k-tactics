@@ -4,6 +4,7 @@ import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-s
 import { getTriangulationObjectiveOptions, getTriangulationState } from "../rules/triangulation-state.js";
 import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js";
 import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
+import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-link-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -117,6 +118,14 @@ export function recordShootingActivation(state, {
       if (reviewTiming !== "end-of-turn") throw new Error("Extract Intelligence completes at the end of your turn.");
       if (!objectiveId || !getGatherIntelObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
         throw new Error("Select a different eligible non-home objective that does not already have one of your Gather Intel operation markers or another Extract Intelligence attempt this turn.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-vital-link") {
+      const vitalLink = getVitalLinkState(state, { playerId: activePlayerId });
+      if (vitalLink.usedThisTurn) throw new Error("Maintain Control can only be started once per turn.");
+      if (reviewTiming !== "end-of-turn") throw new Error("Maintain Control completes at the end of your turn.");
+      if (!objectiveId || !getVitalLinkObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select the central objective this unit is within range of for Maintain Control.");
       }
     }
     if (linkedMission.definitionId === "primary-locate-and-deny") {

@@ -179,6 +179,26 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
   };
 }
 
+// Army reference keeps confirmed equipment even when a weapon cannot activate.
+// Unknown casualty identities stay unknown rather than becoming a starting count.
+export function getEquippedWeaponReferences(state, unit, profiles = getBattleUnitDatasheet(state, unit)?.weapons) {
+  const rosterUnit = getBattleRosterUnit(state, unit);
+  if (isInvalidLoadout(rosterUnit) || isPendingManualLoadout(rosterUnit) || !Array.isArray(profiles)) return [];
+  const loadout = explicitWeaponLoadout(state, unit);
+  if (!loadout) return [];
+  return profiles.flatMap(weapon => {
+    const selection = loadout.get(normalizeWeaponName(weapon?.name));
+    if (!selection) return [];
+    const quantity = resolveEquippedQuantity(state, unit, weapon.name, selection);
+    return [{
+      weapon,
+      equippedQuantity: quantity.startingQuantity,
+      activeQuantity: quantity.quantityUncertain ? null : quantity.activeQuantity,
+      quantityUncertain: quantity.quantityUncertain
+    }];
+  });
+}
+
 export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit)) return [];

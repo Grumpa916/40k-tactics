@@ -3,16 +3,17 @@ import { SECONDARY_MISSION_CATALOG } from "./secondary-mission-catalog.js";
 /**
  * Supplemental 11th-edition Chapter Approved 2026–27 secondary mission metadata.
  *
- * Source: community-derived 2026.10.02 triangulation/action dataset, cross-checked
- * against the existing project catalog and Event Companion procedures. This is
- * intentionally structured as concise reference metadata rather than verbatim
- * card text. It must not auto-award VP; the player remains the scoring authority.
+ * Card-specific rules are structured from the complete secondary-card text
+ * supplied for this project. Event Companion procedures supplement that text.
+ * This is concise reference metadata, not a verbatim card reproduction. It must
+ * not auto-award VP; the player remains the scoring authority.
  */
 export const SECONDARY_MISSION_IMPORT_SOURCE = Object.freeze({
   edition: "11th",
   missionPack: "Chapter Approved 2026–27",
   datasetVersion: "2026.10.02-triangulation-action",
   datasetRepository: "IRONBUILT-LLC/ironbuilt-data",
+  rulesSource: "user-provided-card-text",
   scoringAuthority: "manual-player-confirmation"
 });
 

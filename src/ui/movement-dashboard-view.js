@@ -1,6 +1,8 @@
 import { getArmyUnitReference } from './army-unit-summary.js';
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
 import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
+import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
+import { getArmyUnitDisplayGroups, armyUnitMemberRole } from './army-unit-display-groups.js';
 
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 
@@ -44,16 +46,21 @@ export function renderMovementRosterRail(state, {
   const ownerId = rosterView === 'opponent' ? opponentId : myId;
   const units = (state?.units ?? []).filter(unit => unit.ownerId === ownerId);
   const symbols = liveUnitSymbolLabels(state?.units ?? []);
-  const rows = units.map(unit => {
+  const row = (unit, role = '') => {
     const activeArmy = unit.ownerId === playerId;
     const selectable = activeArmy && ['deployed','reserves'].includes(unit.status);
     const status = movementStatus(state, unit, actionForUnit(unit.id), refinementForUnit(unit.id));
     const selected = unit.id === selectedUnitId;
+    const vitals = getLiveUnitVitals(state, unit);
+    const wounds = (vitals.wounds ?? '—') + (Number.isFinite(vitals.startingWounds) ? '/' + vitals.startingWounds : '');
     return `<div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : `data-open-unit-details="${esc(unit.id)}"`} aria-pressed="${selected}">
       <span class="movement-roster__token ${unit.ownerId === myId ? 'is-friendly' : 'is-opponent'}">${esc(symbols.get(unit.id) ?? 'U')}</span>
-      <span class="movement-roster__identity"><strong>${esc(unit.name ?? unit.id)}</strong><small>${esc(status)}</small></span>
+      <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}</span><b>W ${esc(wounds)}</b></small></span>
     </button>${selectable ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>`;
-  }).join('');
+  };
+  const rows = getArmyUnitDisplayGroups(state, units).map(group => group.attached
+    ? `<section class="movement-roster__group" aria-label="${esc(group.name)}"><h3>Attached unit</h3>${group.members.map(unit => row(unit, armyUnitMemberRole(group, unit))).join('')}</section>`
+    : row(group.root)).join('');
   return `<section class="movement-roster" aria-label="Army units">
     <div class="movement-roster__tabs">
       <button type="button" data-movement-roster-view="mine" aria-pressed="${rosterView !== 'opponent'}">My Army</button>

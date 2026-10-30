@@ -13,7 +13,7 @@ import { captureTurnStartSnapshot } from "./scoring-transitions.js";
 import { updateTurnClockForPlayer } from "../state/turn-clock.js";
 import { pauseTurnClock, startTurnClock } from "./turn-clock-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
-import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getPendingSecondaryMissionCardChoice, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 
 function transition(state, eventType, payload, apply) {
   const nextState = apply(state);
@@ -184,6 +184,16 @@ export function changePhase(state, { phase } = {}) {
     if (pendingRedraw && pendingRedraw.round === (state.battle?.round ?? 0) &&
         pendingRedraw.turn === (state.turn ?? 0)) {
       throw new Error("Record the New Orders replacement card before leaving the Command phase.");
+    }
+    const pendingCardChoice = getPendingSecondaryMissionCardChoice(state, activePlayerId);
+    if (pendingCardChoice) {
+      throw new Error("Resolve the " + pendingCardChoice.choiceType + " choice before leaving the Command phase.");
+    }
+    const pendingRuleReplacement = getPendingSecondaryMissionRuleReplacement(state, activePlayerId);
+    if (pendingRuleReplacement) {
+      throw new Error(pendingRuleReplacement.stage === "return"
+        ? "Return Defend Stronghold and draw its required replacement before leaving the Command phase."
+        : "Record the replacement Tactical card before leaving the Command phase.");
     }
     if (getSecondaryMissionMode(state, activePlayerId) === SECONDARY_MISSION_MODES.TACTICAL) {
       const activeCards = getSecondaryMissionHistory(state, activePlayerId).filter((card) =>

@@ -38,7 +38,7 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
 // UI-only preferences persist across shell/phase renders without touching game state.
 export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   let armyView = 'mine';
-  let collapsed = true, unitId = null, logOpen = false, returnFocus = null;
+  let collapsed = true, unitId = null, logOpen = false, returnFocus = null, unitDetailTab = 'profile';
 
   function refresh() {
     const shell = container.querySelector?.('.battle-shell');
@@ -65,7 +65,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const overlay = container.querySelector('[data-army-roster-overlay]');
     if (overlay && (unitId || logOpen)) {
       overlay.hidden = false;
-      overlay.innerHTML = unitId ? renderArmyUnitDialog(state, unitId, gameData) :
+      overlay.innerHTML = unitId ? renderArmyUnitDialog(state, unitId, gameData, unitDetailTab) :
         '<section class="battle-shell__army-dialog" role="dialog" aria-modal="true" aria-label="Battle log"><header class="battle-shell__army-dialog-header"><h2>Battle log</h2><button type="button" data-close-army-roster>Close</button></header>' + renderEventLogPanel(state, {limit:30}) + '</section>';
     }
   }
@@ -74,10 +74,26 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const target = event.target;
     const armyTab = target?.closest?.('[data-phase-army-view]');
     if (armyTab) { armyView = armyTab.getAttribute('data-phase-army-view') === 'opponent' ? 'opponent' : 'mine'; refreshPhaseArmyRoster(container, armyView); return; }
+    const unitTab = target?.closest?.('[data-unit-detail-tab]');
+    if (unitTab) {
+      const dialog = unitTab.closest('.prototype-unit-dialog');
+      const selected = unitTab.getAttribute('data-unit-detail-tab');
+      if (!dialog || !selected) return;
+      unitDetailTab = selected;
+      dialog.querySelectorAll('[data-unit-detail-tab]').forEach((tab) => {
+        const active = tab === unitTab;
+        tab.setAttribute('aria-selected', String(active));
+        tab.setAttribute('tabindex', active ? '0' : '-1');
+      });
+      dialog.querySelectorAll('[data-unit-detail-panel]').forEach((panel) => {
+        panel.hidden = panel.getAttribute('data-unit-detail-panel') !== selected;
+      });
+      return;
+    }
     if (target?.closest?.('[data-workspace-panel]')) { collapsed = !collapsed; refresh(); }
     const detail = target?.closest?.('[data-open-unit-details]');
     if (detail) {
-      returnFocus = detail; unitId = detail.getAttribute('data-open-unit-details'); logOpen = false;
+      returnFocus = detail; unitId = detail.getAttribute('data-open-unit-details'); logOpen = false; unitDetailTab = 'profile';
       refresh(); container.querySelector('[data-army-back]')?.focus?.();
     }
     const log = target?.closest?.('[data-open-battle-log]');
@@ -88,13 +104,13 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     if (target?.closest?.('[data-open-army-roster]')) { unitId = null; logOpen = false; }
     if (target?.closest?.('[data-army-back]')) {
       const unit = session.getState().units.find(item => item.id === unitId);
-      unitId = null;
+      unitId = null; unitDetailTab = 'profile';
       const button = [...container.querySelectorAll('[data-open-army-roster]')]
         .find(item => item.getAttribute('data-open-army-roster') === unit?.ownerId);
       button?.click?.();
     }
     if (target?.closest?.('[data-close-army-roster]') || target === container.querySelector('[data-army-roster-overlay]')) {
-      unitId = null; logOpen = false; returnFocus?.focus?.();
+      unitId = null; logOpen = false; unitDetailTab = 'profile'; returnFocus?.focus?.();
     }
     const shock = target?.closest?.('[data-manual-battle-shock]');
     if (shock) {
@@ -110,6 +126,17 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   }
 
   function keydown(event) {
+    const selectedTab = event.target?.closest?.('[data-unit-detail-tab]');
+    if (selectedTab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+      const tabs = [...selectedTab.closest('[role="tablist"]').querySelectorAll('[data-unit-detail-tab]')];
+      const index = tabs.indexOf(selectedTab);
+      const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+        : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      event.preventDefault();
+      tabs[nextIndex]?.focus?.();
+      tabs[nextIndex]?.click?.();
+      return;
+    }
     if (event.key === 'Escape' && !container.querySelector('[data-army-roster-overlay]')?.hidden) {
       container.querySelector('[data-close-army-roster]')?.click?.();
     }

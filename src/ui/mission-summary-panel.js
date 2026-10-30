@@ -1,6 +1,6 @@
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
-import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -89,25 +89,72 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
   const cards = active.length ? active.map((item) => {
     const definition = item.definition ?? {};
     const cardKey = "mission-secondary-card-" + item.instanceId;
-    const windows = Array.isArray(definition.scoringWindows) ? definition.scoringWindows : [];
+    const mode = getSecondaryMissionMode(state, playerId) ?? definition.missionMode ?? null;
+    const allWindows = Array.isArray(definition.scoringWindows) ? definition.scoringWindows : [];
+    const windows = allWindows.filter((window) =>
+      !mode || !Array.isArray(window.modes) || window.modes.length === 0 || window.modes.includes(mode));
     const timing = windows.length
       ? windows.map((window) => missionTimingLabel(window.timing) +
+        (window.modes?.length ? " · " + window.modes.join("/") : "") +
         (Number.isInteger(window.minRound) ? " (from Round " + window.minRound + ")" : "")).join(" · ")
       : definition.timing ? missionTimingLabel(definition.timing) : "Scoring timing not configured";
     const description = definition.description ?? definition.summary ?? "";
-    const referenceNotes = Array.isArray(definition.referenceNotes) ? definition.referenceNotes : [];
+    const whenDrawn = definition.whenDrawn
+      ? '<p><strong>When drawn:</strong> ' + escapeHtml(definition.whenDrawn) + '</p>'
+      : '';
+    const unitName = (unitId) => state.units?.find((unit) => unit.id === unitId)?.name ?? unitId;
+    const objectiveName = (objectiveId) => {
+      const objective = state.objectives?.find((item) => item.id === objectiveId);
+      return objective?.name ?? objective?.label ?? objectiveId;
+    };
+    let cardChoiceSummary = '';
+    if (item.definitionId === "secondary-beacon") {
+      cardChoiceSummary = item.cardState?.beaconUnitId
+        ? '<p><strong>Beacon unit:</strong> ' + escapeHtml(unitName(item.cardState.beaconUnitId)) + '</p>'
+        : '<p><strong>Beacon unit:</strong> selection is still required in the Command phase.</p>';
+    } else if (item.definitionId === "secondary-a-tempting-target") {
+      cardChoiceSummary = item.cardState?.temptingTargetObjectiveId
+        ? '<p><strong>Tempting Target:</strong> ' + escapeHtml(objectiveName(item.cardState.temptingTargetObjectiveId)) + '</p>'
+        : '<p><strong>Tempting Target:</strong> opponent’s objective selection is still required in the Command phase.</p>';
+    } else if (item.definitionId === "secondary-burden-of-trust") {
+      const guards = getActiveBurdenTrustAssignments(state, item);
+      cardChoiceSummary = guards.length
+        ? '<p><strong>Guard assignments:</strong> ' + guards.map((assignment) =>
+          escapeHtml(objectiveName(assignment.objectiveId)) + ' — ' + escapeHtml(unitName(assignment.unitId))).join('; ') +
+          '</p><p>Check range and objective control at each scoring checkpoint.</p>'
+        : '<p><strong>Guard assignments:</strong> none active. Assign units in the Command phase.</p>';
+    }
+    const missionAction = definition.missionAction;
+    const actionTiming = missionAction?.phase === "shooting" ? "Shooting phase" : missionAction?.phase;
+    const actionText = missionAction
+      ? '<p><strong>' + escapeHtml(missionAction.name ?? "Mission Action") +
+        (actionTiming ? " · " + escapeHtml(actionTiming) : "") +
+        (missionAction.completion ? " · completes " + escapeHtml(missionAction.completion) : "") +
+        ':</strong> ' + escapeHtml(missionAction.summary ?? "") + '</p>'
+      : '';
+    const referenceNotes = [
+      ...(Array.isArray(definition.referenceNotes) ? definition.referenceNotes : []),
+      ...(Array.isArray(definition.notes) ? definition.notes : [])
+    ].filter((note) => note !== definition.whenDrawn);
     const missionText = referenceNotes.length
       ? '<p><strong>Mission text</strong></p><ul>' + referenceNotes.map((note) => '<li>' + escapeHtml(note) + '</li>').join('') + '</ul>'
       : '';
-    const scoring = windows.flatMap((window) => (window.tiers ?? []).map((tier) =>
-      '<li><strong>' + escapeHtml(tier.vp) + ' VP:</strong> ' + escapeHtml(tier.summary) + '</li>')).join("");
+    const scoring = windows.map((window) => '<li><strong>' + escapeHtml(missionTimingLabel(window.timing)) +
+      (window.modes?.length ? " · " + escapeHtml(window.modes.join("/")) : "") +
+      (Number.isInteger(window.minRound) ? " (from Round " + escapeHtml(window.minRound) + ")" : "") +
+      '</strong><ul>' + (window.tiers ?? []).map((tier) =>
+        '<li><strong>' + escapeHtml(tier.vp) + ' VP' +
+        (Number.isInteger(tier.maxVP) ? ' (up to ' + escapeHtml(tier.maxVP) + ' VP)' : '') +
+        (tier.relationship === "cumulative" ? ' · cumulative' : tier.relationship === "or" ? ' · OR' : '') +
+        ':</strong> ' + escapeHtml(tier.summary) + '</li>').join('') + '</ul></li>').join("");
     return '<details class="battle-mission-summary__card" data-mission-summary-key="' + escapeHtml(cardKey) + '"' +
       openAttribute(openStates, cardKey) + '><summary>' + escapeHtml(definition.name ?? item.definitionId) +
       '<span class="battle-context__badge">' + escapeHtml(item.status) + '</span></summary>' +
       '<div class="battle-mission-summary__detail"><p>' + escapeHtml(timing) + '</p>' +
       (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
-      missionText +
-      (scoring ? '<p><strong>Scoring</strong></p><ul>' + scoring + '</ul>' : '') +
+      whenDrawn + cardChoiceSummary + actionText + missionText +
+      (scoring ? '<p><strong>Scoring windows</strong></p><ul>' + scoring + '</ul>' : '') +
+      '<p>Scoring remains player-confirmed; this reference does not award VP automatically.</p>' +
       '</div></details>';
   }).join("") : '<p class="battle-context__empty">No active secondary missions are recorded for this player.</p>';
   const mode = getSecondaryMissionMode(state, playerId);

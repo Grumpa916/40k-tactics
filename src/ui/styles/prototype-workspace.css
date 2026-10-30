@@ -350,3 +350,72 @@
 
 /* Reserve 56px controls + 10px bottom offset + 12px breathing room. */
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] { --live-phase-footer-clearance:78px; }
+
+
+.prototype-unit-tabs { display:flex; gap:6px; margin:16px 0 12px; border-bottom:1px solid #53676a; }
+.prototype-unit-tabs [role="tab"] { flex:1; min-width:0; border:0; border-bottom:3px solid transparent; border-radius:8px 8px 0 0; color:#a7b7ba; background:transparent; font-weight:700; }
+.prototype-unit-tabs [role="tab"][aria-selected="true"] { color:#c4e99b; border-bottom-color:#c4e99b; background:#202d26; }
+.prototype-unit-tabs [role="tab"]:focus-visible { outline:2px solid #c4e99b; outline-offset:2px; }
+.prototype-unit-tab-panel[hidden],.prototype-unit-dialog [data-unit-detail-panel][hidden] { display:none!important; }
+.prototype-unit-dialog [data-unit-detail-panel] { padding:2px 4px 14px; }
+.prototype-unit-dialog [data-unit-detail-panel] > h3 { margin:14px 0 8px; }
+.prototype-unit-data-status,.prototype-unit-loadout-note { margin:8px 0 12px; padding:9px 11px; border:1px solid #465840; border-radius:8px; background:#202d26; color:#c4e99b; }
+.prototype-unit-loadout-note[data-tone="warning"] { border-color:#7a6549; background:#29251e; color:#f2d6a4; }
+.prototype-unit-weapon-count { display:block; margin-top:3px; color:#a7b7ba; font-size:.82em; font-weight:500; }
+.prototype-unit-dialog .battle-shell__army-weapon-heading { align-items:flex-start; gap:8px; }
+.prototype-unit-dialog .battle-shell__army-weapon-heading strong { flex:1; }
+.prototype-unit-keywords { line-height:1.6; color:#dce5e2; }
+.prototype-unit-note { margin:10px 0; padding:12px; border:1px solid #304149; border-radius:9px; background:#10191f; }
+.prototype-unit-note h3 { margin:0 0 8px; color:#c4e99b; font-size:1rem; }
+.prototype-unit-note p { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; }
+
+.prototype-unit-dialog .prototype-unit-stat-row {
+  grid-template-columns: repeat(var(--unit-stat-count), minmax(0, 1fr));
+  gap: 6px;
+}
+.prototype-unit-dialog .prototype-unit-stat-row > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.prototype-unit-dialog .prototype-unit-stat-row dt { overflow-wrap: anywhere; text-align: center; }
+.prototype-unit-dialog .prototype-unit-stat-row dd {
+  order: -1;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.prototype-unit-dialog .prototype-unit-weapon-characteristics {
+  grid-template-columns: repeat(var(--unit-stat-count), minmax(54px, 1fr));
+  min-width: 0;
+  overflow-x: auto;
+}
+.prototype-unit-dialog .battle-shell__army-weapons > li { min-width: 0; }
+@media (max-width: 640px) {
+  .prototype-unit-dialog .prototype-unit-profile-characteristics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.prototype-unit-weapon-keywords {
+  margin: 8px 0 0;
+  color: #c4e99b;
+  font-size: .9em;
+}
+
+.prototype-attached-roster{padding:10px;border:1px solid #6c8269;border-radius:10px;background:#182720}
+.prototype-attached-roster h3{margin:0 0 8px;font-size:1rem;color:#c4e99b}
+.prototype-attached-roster>div>small{display:block;margin:8px 0 3px;color:#c4e99b}
+.prototype-formation-vitals{display:grid;gap:7px;padding:0;list-style:none}
+.prototype-formation-vitals li{display:flex;align-items:center;flex-wrap:wrap;gap:5px 12px;padding:8px 10px;border:1px solid #394b52;border-radius:8px;background:#10191f}
+.prototype-formation-vitals li strong{flex:1;min-width:150px;overflow-wrap:anywhere}
+.prototype-formation-vitals li span{color:#a7b7ba}
+.prototype-formation-vitals li b{color:#c4e99b;white-space:nowrap}
+.prototype-unit-member-section+ .prototype-unit-member-section{margin-top:20px;padding-top:12px;border-top:1px solid #53676a}
+.prototype-unit-member-section>h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin:8px 0;color:#f1f3e9}
+.prototype-unit-member-section>h3 small{color:#c4e99b;font-size:.8em}
+.prototype-unit-dialog [data-unit-detail-panel] h4{margin:12px 0 8px}
+.prototype-unit-dialog .battle-shell__army-dialog-header h2{min-width:0;overflow-wrap:anywhere}
