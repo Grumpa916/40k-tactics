@@ -531,10 +531,14 @@ export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab =
   if (!original) return '<p>Unit no longer available.</p><button data-army-back>Back to army</button>';
   const unit = getArmyUnitReference(state, original);
   const rosterUnit = getBattleRosterUnit(state, original);
-  const datasheetCharacteristics = getBattleUnitDatasheet(state, original)?.characteristics;
-  const profileCharacteristics = datasheetCharacteristics && Object.keys(datasheetCharacteristics).length
-    ? datasheetCharacteristics
-    : unit.profile?.characteristics;
+  const savedCharacteristics = rosterUnit?.datasheet?.characteristics;
+  const battleCharacteristics = original.profile?.characteristics ?? original.characteristics;
+  const fallbackCharacteristics = getBattleUnitDatasheet(state, original)?.characteristics;
+  const profileCharacteristics = savedCharacteristics && Object.keys(savedCharacteristics).length
+    ? savedCharacteristics
+    : battleCharacteristics && Object.keys(battleCharacteristics).length
+      ? battleCharacteristics
+      : fallbackCharacteristics;
   const tabs = ["profile", "weapons", "abilities", "notes"];
   const activeTab = tabs.includes(selectedTab) ? selectedTab : "profile";
   const tabTitle = { profile: "Profile", weapons: "Weapons", abilities: "Abilities", notes: "Notes" };
