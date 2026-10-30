@@ -5,6 +5,7 @@ import { getTriangulationObjectiveOptions, getTriangulationState } from "../rule
 import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js";
 import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
 import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-link-state.js";
+import { getSecureAssetState } from "../rules/secure-asset-state.js";
 import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
