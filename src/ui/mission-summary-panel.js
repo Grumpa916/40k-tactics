@@ -1,6 +1,7 @@
 import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
+import { getCleanseActionState, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -124,6 +125,21 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
           '</p><p>Check range and objective control at each scoring checkpoint.</p>'
         : '<p><strong>Guard assignments:</strong> none active. Assign units in the Command phase.</p>';
     }
+    let actionProgressSummary = '';
+    if (item.definitionId === "secondary-cleanse") {
+      const progress = getCleanseActionState(state, { playerId, instanceId: item.instanceId });
+      actionProgressSummary = '<p><strong>Cleanse this turn:</strong> ' + escapeHtml(progress.cleansedCount) +
+        ' completed · ' + escapeHtml(progress.pendingCount) + ' awaiting end-of-turn review · ' +
+        escapeHtml(progress.attemptCount) + ' attempted. Scoring: 2 VP for one objective, 5 VP for two or more.</p>';
+    } else if (item.definitionId === "secondary-plunder") {
+      const progress = getPlunderActionState(state, { playerId, instanceId: item.instanceId });
+      const targets = progress.plunderedTerrainAreaIds.length
+        ? progress.plunderedTerrainAreaIds.join(', ')
+        : 'none';
+      actionProgressSummary = '<p><strong>Plunder this turn:</strong> ' +
+        (progress.usedThisTurn ? 'used · ' + escapeHtml(targets) : 'available') +
+        '. One successful Action is worth 5 VP at end of turn.</p>';
+    }
     const missionAction = definition.missionAction;
     const actionTiming = missionAction?.phase === "shooting" ? "Shooting phase" : missionAction?.phase;
     const actionText = missionAction
@@ -152,7 +168,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       '<span class="battle-context__badge">' + escapeHtml(item.status) + '</span></summary>' +
       '<div class="battle-mission-summary__detail"><p>' + escapeHtml(timing) + '</p>' +
       (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
-      whenDrawn + cardChoiceSummary + actionText + missionText +
+      whenDrawn + cardChoiceSummary + actionProgressSummary + actionText + missionText +
       (scoring ? '<p><strong>Scoring windows</strong></p><ul>' + scoring + '</ul>' : '') +
       '<p>Scoring remains player-confirmed; this reference does not award VP automatically.</p>' +
       '</div></details>';
