@@ -136,6 +136,8 @@ export function getExtractRelicPrimaryStrategyContext(state, {
   const lastMarkerVp = relic.activeOpponentMarkerCount === 1 && relic.lastMarkerPositionMapSatisfied ? 4 : 0;
   const rawAdvisoryVp = actionVp + killVp + lastMarkerVp + controlVpForRound;
   const cappedAdvisoryVp = projectedRoundVp(rawAdvisoryVp, recordedMissionVpThisTurn, additionalPrimaryAllowance);
+  const projectedAdditionalRoundVp = Math.max(0, cappedAdvisoryVp - recordedMissionVpThisTurn);
+  const remainingPrimaryGameAfterProjectedRound = Math.max(0, remainingPrimaryGameVp - projectedAdditionalRoundVp);
   const currentRoundAllowance = Math.max(0, Math.min(additionalPrimaryAllowance, 15 - recordedMissionVpThisTurn));
   const targetKill = targetKillOpportunity(state, relic, targetUnitId);
   const nextKillVpLeverage = Math.min(currentRoundAllowance, targetKill.vpLeverage);
@@ -148,18 +150,22 @@ export function getExtractRelicPrimaryStrategyContext(state, {
   const lastMarkerCurrentVpLeverage = relic.activeOpponentMarkerCount === 1 && !relic.lastMarkerPositionMapSatisfied
     ? Math.min(currentRoundAllowance, 4)
     : 0;
-  const endgameLastMarkerVp = relic.activeOpponentMarkerCount === 1 && relic.lastMarkerPositionMapSatisfied
-    ? Math.min(5, remainingPrimaryGameVp)
+  const endgameLastMarkerVpLeverage = relic.activeOpponentMarkerCount === 1
+    ? Math.min(5, remainingPrimaryGameAfterProjectedRound)
     : 0;
+  const endgameLastMarkerVp = relic.lastMarkerPositionMapSatisfied ? endgameLastMarkerVpLeverage : 0;
   const targetIsLastMarkerEnemy = !!targetUnitId && relic.activeOpponentMarkerCount === 1 && relic.enemyUnitIdsInLastMarkerTerrain.includes(targetUnitId);
   const targetLastMarkerCurrentVpLeverage = targetIsLastMarkerEnemy ? lastMarkerCurrentVpLeverage : 0;
-  const targetEndgameVpLeverage = targetIsLastMarkerEnemy ? Math.min(5, remainingPrimaryGameVp) : 0;
+  const targetCurrentVpLeverage = Math.min(currentRoundAllowance,
+    (targetKill.mapSupportsQualification ? 3 : 0) + (targetIsLastMarkerEnemy && !relic.lastMarkerPositionMapSatisfied ? 4 : 0));
+  const targetEndgameVpLeverage = targetIsLastMarkerEnemy
+    ? Math.min(endgameLastMarkerVpLeverage, Math.max(0, remainingPrimaryGameAfterProjectedRound - targetCurrentVpLeverage))
+    : 0;
 
   let targetingScore = 0.05;
-  if (nextKillVpLeverage > 0) targetingScore += 0.32;
-  if (targetLastMarkerCurrentVpLeverage > 0) targetingScore += 0.34;
+  if (targetCurrentVpLeverage > 0) targetingScore += Math.min(0.5, targetCurrentVpLeverage * 0.075);
   if (targetEndgameVpLeverage > 0) targetingScore += round >= 5 ? 0.28 : 0.12;
-  if (nextKillVpLeverage > 0 && targetIsLastMarkerEnemy) targetingScore += 0.07;
+  if (targetKill.mapSupportsQualification && targetIsLastMarkerEnemy && targetCurrentVpLeverage > 0) targetingScore += 0.05;
   if (remainingPrimaryGameVp === 0) targetingScore = Math.min(targetingScore, 0.08);
   targetingScore = clamp01(targetingScore);
 
@@ -253,6 +259,7 @@ export function getExtractRelicPrimaryStrategyContext(state, {
     nextKillVpLeverage,
     targetIsLastMarkerEnemy,
     targetLastMarkerCurrentVpLeverage,
+    targetCurrentVpLeverage,
     targetEndgameVpLeverage,
     targetingScore,
     controlStateKnown: relic.controlKnown,
@@ -263,6 +270,7 @@ export function getExtractRelicPrimaryStrategyContext(state, {
     liveControlVp,
     controlVpForRound,
     lastMarkerCurrentVpLeverage,
+    endgameLastMarkerVpLeverage,
     endgameLastMarkerVp,
     objectivePreservationScore,
     actionVp,
@@ -270,6 +278,8 @@ export function getExtractRelicPrimaryStrategyContext(state, {
     lastMarkerVp,
     rawAdvisoryVp,
     cappedAdvisoryVp,
+    projectedAdditionalRoundVp,
+    remainingPrimaryGameAfterProjectedRound,
     recordedMissionVpThisTurn,
     additionalPrimaryAllowance,
     remainingPrimaryGameVp,
