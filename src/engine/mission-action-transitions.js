@@ -11,7 +11,7 @@ export function reviewMissionAction(state, { actionKey, playerId, checkpoint, ou
   const action=getMissionActionReviews(state,{playerId,checkpoint}).find(item=>item.actionKey===actionKey);
   if (!action) throw new Error('A linked mission action for this checkpoint is required.');
   if (action.review) throw new Error('This action has already been reviewed.');
-  if (action.missionDefinitionId === "secondary-cleanse" && outcome === "completed") {
+  if (action.missionDefinitionId === "secondary-cleanse" && action.missionRulesVerified === true && outcome === "completed") {
     const objective = state.objectives?.find((item) => item.id === action.objectiveId);
     const unit = state.units?.find((item) => item.id === action.unitId);
     if (!objective || objective.control?.controlState !== "controlled" ||
