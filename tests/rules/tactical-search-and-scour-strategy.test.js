@@ -94,7 +94,7 @@ function centroid(points) {
 }
 
 function seed({ round = 2, phase = "command", history = [], centralController = "p1", secondCentralController = "p2" } = {}) {
-  const state = {
+  return {
     phase,
     turn: round,
     activePlayer: "p1",
@@ -127,7 +127,6 @@ function seed({ round = 2, phase = "command", history = [], centralController = 
       p2: { units: [rosterUnit("r-enemy-a"), rosterUnit("r-enemy-b")] }
     }
   };
-  return state;
 }
 
 function strategy(state, targetUnitId = null) {
@@ -187,15 +186,12 @@ test("terrain-start destruction scores only one binary 2 VP condition even with 
 
 test("a live target that began the turn in terrain carries 2 VP kill leverage until the condition is satisfied", () => {
   const state = seed({ round: 2, phase: "shooting" });
-  putEnemyAtTerrainStart(state, ["enemy-a"]);
+  putEnemyAtTerrainStart(state, ["enemy-a", "enemy-b"]);
   const before = strategy(state, "enemy-a");
   assert.equal(before.targetOpportunity.startedInTerrain, true);
   assert.equal(before.nextKillVpLeverage, 2);
 
   state.history.push({ type: "unit.destroyed", payload: { unitId: "enemy-b", ownerId: "p2", turn: 2, round: 2 } });
-  const snapshot = state.scoring.turnSnapshots[0];
-  const enemyBStart = snapshot.units.find((unit) => unit.id === "enemy-b");
-  enemyBStart.position = { ...snapshot.units.find((unit) => unit.id === "enemy-a").position };
   const after = strategy(state, "enemy-a");
   assert.equal(after.terrainKillSatisfied, true);
   assert.equal(after.nextKillVpLeverage, 0);
