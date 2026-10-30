@@ -2,6 +2,7 @@ const LABELS = {
   'rules.record_reminder_use': 'rule reminder use',
   'custodes.record_venatari_ability_use': 'rule reminder use',
   'custodes.record_guardians_stratagem_use': 'rule reminder use',
+  'custodes.record_detachment_stratagem_use': 'rule reminder use',
   'unit.transfer_map_reserve': 'reserve transfer',
   'custodes.record_katah_use': 'rule reminder use',
   'unit.set_battle_note': 'unit note',

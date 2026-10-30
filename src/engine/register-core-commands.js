@@ -1,6 +1,7 @@
 import { recordRulesReminderUse, setUnitBattleNote } from './rules-reminder-transitions.js';
 import { recordVenatariAbilityUse } from './venatari-ability-transitions.js';
 import { recordGuardiansStratagemUse } from './guardians-stratagem-transitions.js';
+import { recordCustodesDetachmentStratagemUse } from './custodes-detachment-stratagem-transitions.js';
 import { transferMapReserve } from './map-reserve-transitions.js';
 import { updateDeploymentWorkspace } from './deployment-workspace-transitions.js';
 import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
@@ -58,6 +59,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_RULES_REMINDER_USE, (state, command) => recordRulesReminderUse(state, command.payload)],
     [COMMAND_TYPES.RECORD_VENATARI_ABILITY_USE, (state, command) => recordVenatariAbilityUse(state, command.payload)],
     [COMMAND_TYPES.RECORD_GUARDIANS_STRATAGEM_USE, (state, command) => recordGuardiansStratagemUse(state, command.payload)],
+    [COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE, (state, command) => recordCustodesDetachmentStratagemUse(state, command.payload)],
     [COMMAND_TYPES.SET_UNIT_BATTLE_NOTE, (state, command) => setUnitBattleNote(state, command.payload)],
     [COMMAND_TYPES.TRANSFER_MAP_RESERVE, (state, command) => transferMapReserve(state, command.payload)],
     [COMMAND_TYPES.UPDATE_DEPLOYMENT_WORKSPACE, (state, command) => updateDeploymentWorkspace(state, command.payload)],

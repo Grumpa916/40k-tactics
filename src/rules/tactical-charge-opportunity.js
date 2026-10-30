@@ -163,6 +163,17 @@ export function getChargeOpportunity(state, {
     battleShockPenalty;
 
   const custodesCharge = exactSuccessProbability != null ? measuredCustodesCharge : mapCustodesCharge;
+  const baseRecommendation=recommendationFor({
+    successProbability: exactSuccessProbability,
+    measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
+    strategicContext,
+    projectedFight,
+    projectedCounterFight,
+    custodesCharge
+  });
+  const recommendation=custodesCharge?.advanceChargePermission
+    ? `${baseRecommendation} Preternatural Rapidity is recorded; this unit’s Advance does not prevent it from declaring a Charge this turn.`
+    : baseRecommendation;
 
   return Object.freeze({
     playerId,
@@ -180,16 +191,9 @@ export function getChargeOpportunity(state, {
     projectedCounterFight,
     strategicContext,
     decisionScore,
-    recommendation: recommendationFor({
-      successProbability: exactSuccessProbability,
-      measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
-      strategicContext,
-      projectedFight,
-      projectedCounterFight,
-      custodesCharge
-    }),
+    recommendation,
     assumption: custodesCharge?.rerollCharge
-      ? `Charge probability uses 2D6 and the ${custodesCharge.ruleName} full Charge re-roll. Projected melee assumes a successful charge. Other modifiers, terrain and model placement remain tabletop-authoritative.`
+      ? `Charge probability uses 2D6 and the ${custodesCharge.ruleName} full Charge re-roll.${custodesCharge.advanceChargePermission?' Preternatural Rapidity also permits this unit to charge after its Advance.':''} Projected melee assumes a successful charge. Other modifiers, terrain and model placement remain tabletop-authoritative.`
       : "Projected melee assumes a successful charge. Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
   });
 }

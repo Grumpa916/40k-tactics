@@ -4,6 +4,7 @@ import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venata
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
 import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
 import { getCustodesDetachmentRuleReminders, getCustodesDetachmentStratagemReminders } from '../rules/custodes-detachment-rule-reminders.js';
+import { renderCustodesDetachmentStratagemControls, readCustodesDetachmentStratagemForm } from './custodes-detachment-stratagem-controls.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const stylesheet=new URL('./styles/rules-reminders.css',import.meta.url).href;
@@ -45,6 +46,7 @@ function renderDetachmentStratagemReminders(state,playerId) {
   return '<details class="unit-rules-reminders" data-view-key="detachment-stratagem-windows"><summary>Detachment Stratagems · current phase · '+entries.length+'</summary>'+entries.map(entry=>
     '<article class="rules-reminder-card"><header><strong>'+esc(entry.detachmentName)+' · '+esc(entry.title)+' · '+esc(entry.cpCost)+' CP</strong><span>'+(entry.affordable?'Check trigger':'Needs more CP')+'</span></header>'+
     '<small>'+esc(entry.timing)+'</small><p>'+esc(entry.effect)+'</p><small>Confirm the exact trigger, target eligibility, and phase limits in the rule reference; enough CP does not by itself make this Stratagem usable.</small>'+
+    (entry.title==='Preternatural Rapidity'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'preternatural-rapidity'}):'')+
     '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>'
   ).join('')+'</details>';
 }
@@ -145,6 +147,12 @@ export function createRulesReminderController(container,{session,perspectivePlay
     if(event.target?.hasAttribute?.('data-venatari-ability-form')) {
       event.preventDefault?.();
       try {session.dispatch({type:COMMAND_TYPES.RECORD_VENATARI_ABILITY_USE,payload:readVenatariAbilityForm(event.target)});message='Venatari ability recorded.';}
+      catch(error){message=error.message;open=true;}
+      refresh();return;
+    }
+    if(event.target?.hasAttribute?.('data-custodes-detachment-stratagem-form')) {
+      event.preventDefault?.();
+      try {session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE,payload:readCustodesDetachmentStratagemForm(event.target)});message='Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';}
       catch(error){message=error.message;open=true;}
       refresh();return;
     }
