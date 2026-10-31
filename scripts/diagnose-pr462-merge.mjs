@@ -10,7 +10,9 @@ function run(command, options = {}) {
   }
 }
 
-console.log(run('git fetch origin main --depth=1'));
+console.log(run('git fetch --unshallow origin'));
+console.log(run('git fetch origin main'));
+console.log(`MERGE_BASE ${run('git merge-base HEAD origin/main').trim()}`);
 console.log(run('git merge --no-commit --no-ff origin/main'));
 const conflicts = run('git diff --name-only --diff-filter=U').trim();
 console.log('CONFLICT_FILES');
