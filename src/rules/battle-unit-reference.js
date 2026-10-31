@@ -5,8 +5,30 @@ function normalizeWeaponName(value) {
     .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function catalogDatasheetFor({ datasheetId = null, name = null, faction = null } = {}) {
+  if (datasheetId) {
+    const catalogUnit = ARMY_UNIT_CATALOG.find(item => item?.id === datasheetId);
+    if (catalogUnit?.datasheet) return catalogUnit.datasheet;
+  }
+  const unitName = String(name ?? "").trim().toLowerCase();
+  if (!unitName) return null;
+  const rosterFaction = String(faction ?? "").trim().toLowerCase();
+  const catalogUnit = ARMY_UNIT_CATALOG.find(item =>
+    String(item?.name ?? "").trim().toLowerCase() === unitName &&
+    (!rosterFaction || String(item?.faction ?? "").trim().toLowerCase() === rosterFaction)
+  );
+  return catalogUnit?.datasheet ?? null;
+}
+
 export function getBattleRosterUnit(state, unit) {
-  return state?.armyRosters?.[unit?.ownerId]?.units?.find(item => item.id === unit?.metadata?.rosterUnitId) ?? null;
+  const rosterUnit = state?.armyRosters?.[unit?.ownerId]?.units?.find(item => item.id === unit?.metadata?.rosterUnitId) ?? null;
+  if (!rosterUnit || rosterUnit.datasheet) return rosterUnit;
+  const datasheet = catalogDatasheetFor({
+    datasheetId: rosterUnit.datasheetId ?? unit?.metadata?.datasheetId,
+    name: rosterUnit.name ?? unit?.name,
+    faction: state?.armyRosters?.[unit?.ownerId]?.faction
+  });
+  return datasheet ? { ...rosterUnit, datasheet } : rosterUnit;
 }
 
 function findBattleUnitForRosterId(state, ownerId, rosterUnitId) {
@@ -76,20 +98,11 @@ export function getBattleUnitDatasheet(state, unit) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (rosterUnit?.datasheet) return rosterUnit.datasheet;
 
-  const datasheetId = unit?.metadata?.datasheetId;
-  if (datasheetId) {
-    const catalogUnit = ARMY_UNIT_CATALOG.find(item => item?.id === datasheetId);
-    if (catalogUnit?.datasheet) return catalogUnit.datasheet;
-  }
-
-  const unitName = String(unit?.name ?? "").trim().toLowerCase();
-  if (!unitName) return null;
-  const rosterFaction = String(state?.armyRosters?.[unit?.ownerId]?.faction ?? "").trim().toLowerCase();
-  const catalogUnit = ARMY_UNIT_CATALOG.find(item =>
-    String(item?.name ?? "").trim().toLowerCase() === unitName &&
-    (!rosterFaction || String(item?.faction ?? "").trim().toLowerCase() === rosterFaction)
-  );
-  return catalogUnit?.datasheet ?? null;
+  return catalogDatasheetFor({
+    datasheetId: unit?.metadata?.datasheetId,
+    name: unit?.name,
+    faction: state?.armyRosters?.[unit?.ownerId]?.faction
+  });
 }
 
 export function getBattleUnitMovement(state, unit, model = {}) {
