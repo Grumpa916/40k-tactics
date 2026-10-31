@@ -99,133 +99,60 @@ import {
   getVanguardOperationObjectiveStrategySignal,
   isVanguardOperationMissionForPlayer
 } from "./tactical-vanguard-operation-strategy.js";
+import {
+  getSabotagePrimaryStrategyContext,
+  getSabotageObjectiveStrategySignal,
+  isSabotageMissionForPlayer
+} from "./tactical-sabotage-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
-  if (playerId && isBattlefieldDominanceMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getBattlefieldDominancePrimaryStrategyContext(state, options);
-  }
-  if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getImmovableObjectPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getDeterminedAcquisitionPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getPurgeAndSecurePrimaryStrategyContext(state, options);
-  }
-  if (playerId && isInescapableDominionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getInescapableDominionPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isDeathTrapMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getDeathTrapPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isDelayingActionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getDelayingActionPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isOutmanoeuvreMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getOutmanoeuvrePrimaryStrategyContext(state, options);
-  }
-  if (playerId && isSmokeAndMirrorsMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSmokeAndMirrorsPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isLocateAndDenyMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getLocateAndDenyPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isReconnaissanceSweepMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getReconnaissanceSweepPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isTriangulationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getTriangulationPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSurveilTheFoePrimaryStrategyContext(state, options);
-  }
-  if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getGatherIntelPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getVitalLinkPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSearchAndScourPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSecureAssetPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isExtractRelicMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getExtractRelicPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getVanguardOperationPrimaryStrategyContext(state, options);
-  }
-  if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getConsecratePrimaryStrategyContext(state, options);
-  }
+  if (playerId && isBattlefieldDominanceMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getBattlefieldDominancePrimaryStrategyContext(state, options);
+  if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getImmovableObjectPrimaryStrategyContext(state, options);
+  if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getDeterminedAcquisitionPrimaryStrategyContext(state, options);
+  if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getPurgeAndSecurePrimaryStrategyContext(state, options);
+  if (playerId && isInescapableDominionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getInescapableDominionPrimaryStrategyContext(state, options);
+  if (playerId && isDeathTrapMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getDeathTrapPrimaryStrategyContext(state, options);
+  if (playerId && isDelayingActionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getDelayingActionPrimaryStrategyContext(state, options);
+  if (playerId && isOutmanoeuvreMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getOutmanoeuvrePrimaryStrategyContext(state, options);
+  if (playerId && isSmokeAndMirrorsMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSmokeAndMirrorsPrimaryStrategyContext(state, options);
+  if (playerId && isLocateAndDenyMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getLocateAndDenyPrimaryStrategyContext(state, options);
+  if (playerId && isReconnaissanceSweepMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getReconnaissanceSweepPrimaryStrategyContext(state, options);
+  if (playerId && isTriangulationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getTriangulationPrimaryStrategyContext(state, options);
+  if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSurveilTheFoePrimaryStrategyContext(state, options);
+  if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getGatherIntelPrimaryStrategyContext(state, options);
+  if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getVitalLinkPrimaryStrategyContext(state, options);
+  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSearchAndScourPrimaryStrategyContext(state, options);
+  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSecureAssetPrimaryStrategyContext(state, options);
+  if (playerId && isExtractRelicMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getExtractRelicPrimaryStrategyContext(state, options);
+  if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getVanguardOperationPrimaryStrategyContext(state, options);
+  if (playerId && isSabotageMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSabotagePrimaryStrategyContext(state, options);
+  if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getConsecratePrimaryStrategyContext(state, options);
   return getBasePrimaryStrategyContext(state, options);
 }
 
 export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   const playerId = options.playerId;
-  if (playerId && isBattlefieldDominanceMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getBattlefieldDominanceObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getImmovableObjectObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getDeterminedAcquisitionObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getPurgeAndSecureObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isInescapableDominionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getInescapableDominionObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isDeathTrapMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getDeathTrapObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isDelayingActionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getDelayingActionObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isOutmanoeuvreMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getOutmanoeuvreObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isSmokeAndMirrorsMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSmokeAndMirrorsObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isLocateAndDenyMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getLocateAndDenyObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isReconnaissanceSweepMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getReconnaissanceSweepObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isTriangulationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getTriangulationObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSurveilTheFoeObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getGatherIntelObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getVitalLinkObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSearchAndScourObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSecureAssetObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isExtractRelicMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getExtractRelicObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getVanguardOperationObjectiveStrategySignal(state, options);
-  }
-  if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getConsecrateObjectiveStrategySignal(state, options);
-  }
+  if (playerId && isBattlefieldDominanceMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getBattlefieldDominanceObjectiveStrategySignal(state, options);
+  if (playerId && isImmovableObjectMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getImmovableObjectObjectiveStrategySignal(state, options);
+  if (playerId && isDeterminedAcquisitionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getDeterminedAcquisitionObjectiveStrategySignal(state, options);
+  if (playerId && isPurgeAndSecureMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getPurgeAndSecureObjectiveStrategySignal(state, options);
+  if (playerId && isInescapableDominionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getInescapableDominionObjectiveStrategySignal(state, options);
+  if (playerId && isDeathTrapMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getDeathTrapObjectiveStrategySignal(state, options);
+  if (playerId && isDelayingActionMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getDelayingActionObjectiveStrategySignal(state, options);
+  if (playerId && isOutmanoeuvreMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getOutmanoeuvreObjectiveStrategySignal(state, options);
+  if (playerId && isSmokeAndMirrorsMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSmokeAndMirrorsObjectiveStrategySignal(state, options);
+  if (playerId && isLocateAndDenyMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getLocateAndDenyObjectiveStrategySignal(state, options);
+  if (playerId && isReconnaissanceSweepMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getReconnaissanceSweepObjectiveStrategySignal(state, options);
+  if (playerId && isTriangulationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getTriangulationObjectiveStrategySignal(state, options);
+  if (playerId && isSurveilTheFoeMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSurveilTheFoeObjectiveStrategySignal(state, options);
+  if (playerId && isGatherIntelMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getGatherIntelObjectiveStrategySignal(state, options);
+  if (playerId && isVitalLinkMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getVitalLinkObjectiveStrategySignal(state, options);
+  if (playerId && isSearchAndScourMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSearchAndScourObjectiveStrategySignal(state, options);
+  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSecureAssetObjectiveStrategySignal(state, options);
+  if (playerId && isExtractRelicMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getExtractRelicObjectiveStrategySignal(state, options);
+  if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getVanguardOperationObjectiveStrategySignal(state, options);
+  if (playerId && isSabotageMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getSabotageObjectiveStrategySignal(state, options);
+  if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) return getConsecrateObjectiveStrategySignal(state, options);
   return getBasePrimaryObjectiveStrategySignal(state, options);
 }

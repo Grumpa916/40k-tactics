@@ -45,6 +45,8 @@ import { isExtractRelicMissionForPlayer } from "./extract-relic-state.js";
 import { enhanceExtractRelicMovementRecommendations } from "./tactical-extract-relic-movement.js";
 import { isVanguardOperationMissionForPlayer } from "./vanguard-operation-state.js";
 import { enhanceVanguardOperationMovementRecommendations } from "./tactical-vanguard-operation-movement.js";
+import { isSabotageMissionForPlayer } from "./sabotage-state.js";
+import { enhanceSabotageMovementRecommendations } from "./tactical-sabotage-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
 function purposeFor(control, signal) {
@@ -361,6 +363,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isVanguardOperationMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceVanguardOperationMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isSabotageMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceSabotageMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;

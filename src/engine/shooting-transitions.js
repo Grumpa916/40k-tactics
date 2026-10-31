@@ -7,6 +7,7 @@ import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
 import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-link-state.js";
 import { getSecureAssetObjectiveOptions, getSecureAssetState } from "../rules/secure-asset-state.js";
 import { getVanguardOperationTerrainOptions, getVanguardOperationState } from "../rules/vanguard-operation-state.js";
+import { getSabotageObjectiveOptions } from "../rules/sabotage-state.js";
 import {
   getExtractRelicCentralObjectiveOptions,
   getExtractRelicMarkerRemovalOptions,
@@ -170,6 +171,12 @@ export function recordShootingActivation(state, {
       if (reviewTiming !== "end-of-turn") throw new Error("Vanguard Operation completes at the end of your turn.");
       if (!terrainAreaId || !getVanguardOperationTerrainOptions(state, { playerId: activePlayerId }).some(item => item.terrainAreaId === terrainAreaId)) {
         throw new Error("Select a terrain area in the opponent's territory for Vanguard Operation and confirm the physical terrain placement.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-sabotage") {
+      if (reviewTiming !== "end-of-turn") throw new Error("Sabotage completes at the end of your turn.");
+      if (!objectiveId || !getSabotageObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select a different non-home objective that has not already been selected for another Sabotage attempt this turn.");
       }
     }
     if (linkedMission.definitionId === "primary-extract-relic") {
