@@ -35,7 +35,7 @@ test('mission review uses the iPad viewport as a stacked scrollable review works
   assert.match(html, /height:calc\(100dvh - 24px\)/);
   assert.match(html, /overflow-y:auto/);
   assert.match(html, /battle-mission-summary\{box-sizing:border-box;display:grid!important;grid-template-columns:minmax\(0,1fr\)!important/);
-  assert.match(html, /battle-mission-summary__section-content\{display:grid!important;grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(html, /battle-mission-summary__section-content\{position:static!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:minmax\(0,1fr\)!important[\s\S]*max-height:none!important;overflow:visible!important/);
   assert.match(html, /data-mission-summary-key="mission-section-primary" open>/);
   assert.match(html, /data-mission-summary-key="mission-section-secondary" open>/);
 });
