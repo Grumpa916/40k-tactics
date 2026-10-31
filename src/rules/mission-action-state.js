@@ -6,6 +6,7 @@ import { getTriangulationState } from './triangulation-state.js';
 import { getVitalLinkState } from './vital-link-state.js';
 import { getSecureAssetState } from './secure-asset-state.js';
 import { getVanguardOperationState } from './vanguard-operation-state.js';
+import { getSabotageState } from './sabotage-state.js';
 
 export const ACTION_REVIEW_TIMINGS = ['command-phase','end-of-turn','end-of-opponent-turn'];
 
@@ -46,6 +47,10 @@ function getPrimaryMissionActionOption(state, playerId) {
   if (definition?.id === 'primary-vanguard-operation') {
     const vanguard = getVanguardOperationState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
     if (!vanguard.actionAvailableThisTurn) return null;
+  }
+  if (definition?.id === 'primary-sabotage') {
+    const sabotage = getSabotageState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
+    if (!sabotage.actionAvailableThisTurn) return null;
   }
   if (!definition || !action || action.phase !== 'shooting') return null;
   const round = state.battle?.round ?? 0;
