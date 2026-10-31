@@ -127,6 +127,7 @@ test("Movement Advisor UI shows selected advice, destination comparisons, priori
 test('Movement Advisor objective names exactly match named live-map markers without exposing internal IDs', async()=>{
  const {renderBattlefieldMap}=await import('../../src/ui/battlefield-map.js');
  const {applyApprovedLiveMapSymbols}=await import('../../src/ui/live-map-symbols.js');
+ const {liveMapObjectiveLabel}=await import('../../src/rules/objective-display-labels.js');
  const {getBattlePrimaryMissions,getEventCompanionMapLayout}=await import('../../src/rules/event-companion-map-catalog.js');
  const s=state();s.battlefieldMap={missionSetup:{myDisposition:'Take and Hold',opponentDisposition:'Take and Hold',layout:'A'}};
  s.preGameSetup={attackerPlayerId:'p1',defenderPlayerId:'p2'};
@@ -138,15 +139,18 @@ test('Movement Advisor objective names exactly match named live-map markers with
   const result=getMovementStrategicRecommendations(s,{playerId:'p1',perspectivePlayerId:perspective});
   const option=result.recommendations.find(r=>r.unitId==='scorer');
   const objective=[option,...option.alternatives].find(o=>o.objectiveId===s.objectives[0].id);
-  assert.ok(objective);assert.match(objective.objectiveName,/^(My|Opp) Exp$/);
+  assert.ok(objective);assert.match(objective.objectiveName,/^(My|Opponent) Expansion \((MY|OPP) EXP\)$/);
   assert.doesNotMatch(objective.reason,/event-companion:/);
+  const expectedLabel=liveMapObjectiveLabel(s,objective.objectiveId,perspective);
+  assert.match(expectedLabel,/^(My|Opp) Exp$/);
   const html=renderMovementAdvisor(s,{playerId:'p1',selectedUnitId:'scorer',perspectivePlayerId:perspective});
-  assert.ok(html.includes(`Objective · ${objective.objectiveName}`));
+  assert.ok(html.includes(`Objective · ${expectedLabel}`));
   assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
   const map=renderBattlefieldMap(s,{perspectivePlayerId:perspective});
-  assert.ok(map.includes(`>${objective.objectiveName}</button>`));
+  const legacyCompact=objective.objectiveName.match(/\((.*?)\)/)[1];
+  assert.ok(map.includes(`>${legacyCompact}</button>`));
   const liveMap=applyApprovedLiveMapSymbols(map,s);
-  const [first,second]=objective.objectiveName.split(' ');
+  const [first,second]=expectedLabel.split(' ');
   assert.match(liveMap,new RegExp(`data-map-objective-id="event-companion:Expansion 2"[^>]*><span class="battlefield-map__objective-label-line">${first}<\\/span><span class="battlefield-map__objective-label-line">${second}<\\/span><\\/button>`));
   assert.doesNotMatch(liveMap,/data-objective-number=/);
  }
