@@ -6,9 +6,14 @@ import {
 } from '../../src/application/full-game-verification-preset.js';
 import { getBattlePrimaryMissionDefinitions } from '../../src/data/primary-mission-catalog.js';
 import { createLocalBattleStore } from '../../src/persistence/local-battle-store.js';
+import { getDatasheetWeaponOptions } from '../../src/rules/saved-roster-combat-profile.js';
 
 function rosterTotal(roster) {
   return (roster?.units ?? []).reduce((sum, unit) => sum + (Number.isFinite(Number(unit.points)) ? Number(unit.points) : 0), 0);
+}
+
+function battleUnitFor(state, rosterUnit) {
+  return state.units.find(unit => unit.metadata?.rosterUnitId === rosterUnit.id);
 }
 
 test('full-game verification preset preloads two real rosters and repeatable mission setup', () => {
@@ -58,6 +63,44 @@ test('full-game verification preset preloads two real rosters and repeatable mis
   for (const unit of state.units) {
     assert.ok(state.battlefieldMap.deploymentPlan[unit.id], `missing deployment plan position for ${unit.id}`);
   }
+});
+
+test('full-game verification preset supplies explicit legal quantity-aware combat loadouts', () => {
+  const state = createFullGameVerificationState();
+  const rosters = [...state.armyRosters.p1.units, ...state.armyRosters.p2.units];
+  assert.ok(rosters.every(unit => Array.isArray(unit.equippedWeapons) && unit.equippedWeapons.length > 0));
+  assert.ok(rosters.every(unit => !['source-invalid', 'rules-invalid', 'manual-selection-required', 'unverified']
+    .includes(unit.loadoutValidation?.status)));
+
+  const telemon = state.armyRosters.p1.units.find(unit => unit.id === 'telemon');
+  assert.equal(telemon.loadoutValidation.status, 'rules-reviewed-valid');
+  assert.deepEqual(telemon.equippedWargear.map(item => [item.name, item.quantity]), [
+    ['Spiculus Bolt Launcher', 1],
+    ['Caestus Fist', 1],
+    ['Twin Neutronium Cascade Projectors', 1],
+    ['Arachnus Storm Cannon', 1]
+  ]);
+  const telemonRanged = getDatasheetWeaponOptions(state, battleUnitFor(state, telemon), { type: 'ranged' });
+  assert.ok(telemonRanged.some(item => item.name === 'Arachnus Storm Cannon'));
+  assert.ok(telemonRanged.some(item => item.name === 'Twin Neutronium Cascade Projectors'));
+  assert.ok(!telemonRanged.some(item => item.name === 'Adrathic Desolator'));
+  assert.ok(!telemonRanged.some(item => item.name === 'Iliastus Accelerator Culverin'));
+
+  const termagants = state.armyRosters.p2.units.find(unit => unit.id === 'termagants');
+  assert.equal(termagants.loadoutValidation.status, 'rules-reviewed-valid');
+  const termagantRanged = getDatasheetWeaponOptions(state, battleUnitFor(state, termagants), { type: 'ranged' });
+  const fleshborer = termagantRanged.find(item => item.name === 'Fleshborer');
+  assert.equal(fleshborer.equippedQuantity, termagants.modelCount - 3);
+  assert.equal(fleshborer.activeQuantity, termagants.modelCount - 3);
+  for (const name of ['Shardlauncher', 'Spike rifle', 'Strangleweb']) {
+    const special = termagantRanged.find(item => item.name === name);
+    assert.equal(special.equippedQuantity, 1, `${name} quantity`);
+  }
+
+  const hormagaunts = state.armyRosters.p2.units.find(unit => unit.id === 'hormagaunts');
+  const hormagauntMelee = getDatasheetWeaponOptions(state, battleUnitFor(state, hormagaunts), { type: 'melee' });
+  assert.ok(hormagauntMelee.length > 0);
+  assert.ok(hormagauntMelee.every(item => item.equippedQuantity === hormagaunts.modelCount));
 });
 
 test('verification mode can use a separate IndexedDB recovery database name', async () => {
