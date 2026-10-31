@@ -5,7 +5,16 @@ export function renderMissionReviewToggle({ visible = false, open = false } = {}
 }
 
 export function renderMissionReviewPanel(summary, { open = false } = {}) {
+  const layout = '<style data-mission-review-layout>' +
+    '[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:min(1180px,calc(100vw - 24px));max-width:100%;max-height:calc(100dvh - 24px);overflow-x:hidden;}' +
+    '[data-mission-review-overlay] .battle-shell__mission-review-body,[data-mission-review-overlay] .battle-mission-summary,[data-mission-review-overlay] .battle-mission-summary__section,[data-mission-review-overlay] .battle-mission-summary__section-content,[data-mission-review-overlay] .battle-mission-summary__player,[data-mission-review-overlay] .battle-mission-summary__detail,[data-mission-review-overlay] .battle-mission-summary__card{box-sizing:border-box;width:100%;max-width:100%;min-width:0;}' +
+    '[data-mission-review-overlay] .battle-shell__mission-review-body{overflow-x:hidden;overflow-wrap:anywhere;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__section>summary,[data-mission-review-overlay] .battle-mission-summary__player>summary,[data-mission-review-overlay] .battle-mission-summary__card>summary{flex-wrap:wrap;min-width:0;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:12px;padding-right:12px;}' +
+    '@media (max-width:760px),(orientation:portrait){[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:12px;}[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:8px;padding-right:8px;}}' +
+    '</style>';
   return '<div class="battle-shell__mission-review"' + (open ? "" : " hidden") + ' data-mission-review-overlay>' +
+    layout +
     '<section class="battle-shell__mission-review-dialog" role="dialog" aria-modal="true" aria-labelledby="battle-mission-review-title">' +
     '<header class="battle-shell__mission-review-heading"><h2 id="battle-mission-review-title">Mission review</h2>' +
     '<button type="button" data-close-mission-review aria-label="Close mission review">Close</button></header>' +
