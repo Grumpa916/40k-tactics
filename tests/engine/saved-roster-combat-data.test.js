@@ -11,11 +11,30 @@ import { getDamageOutcomeDistribution } from '../../src/rules/damage-outcome-dis
 import { getExpectedDamage } from '../../src/rules/expected-damage.js';
 import { resolveAttackRoll } from '../../src/rules/combat-resolution.js';
 
+function legalHiveTyrant(id = 'hive-tyrant') {
+ return {
+  id,
+  name:'Hive Tyrant',
+  modelCount:1,
+  datasheetId:'tyranids:hive-tyrant',
+  equippedWargear:[
+   {name:'Monstrous bonesword and lash whip',quantity:1},
+   {name:'Monstrous scything talons',quantity:1}
+  ],
+  equippedWeapons:[
+   {name:'Monstrous bonesword and lash whip',quantity:1},
+   {name:'Monstrous scything talons',quantity:1}
+  ],
+  loadoutValidation:{status:'rules-reviewed-valid'}
+ };
+}
+
 function fixture() {
  let state=createGameState({phase:'setup',battle:{id:'b',status:'setup',round:0},players:[{id:'p1'},{id:'p2'}]});
- for (const [id,name,owner] of [['neurotyrant','Neurotyrant','p1'],['hive-tyrant','Hive Tyrant','p2']]) {
-  state=applyArmyRosterToBattle(state,{playerId:owner,roster:createArmyRoster({id:owner,name:owner,faction:'Tyranids',units:[{id,name,modelCount:1,datasheetId:'tyranids:'+id} ]})});
- }
+ state=applyArmyRosterToBattle(state,{playerId:'p1',roster:createArmyRoster({id:'p1',name:'p1',faction:'Tyranids',units:[{
+  id:'neurotyrant',name:'Neurotyrant',modelCount:1,datasheetId:'tyranids:neurotyrant'
+ }]})});
+ state=applyArmyRosterToBattle(state,{playerId:'p2',roster:createArmyRoster({id:'p2',name:'p2',faction:'Tyranids',units:[legalHiveTyrant()]})});
  return state;
 }
 test('saved roster Neurotyrant has 9 wounds and one model, with a usable Torrent forecast',()=>{
@@ -82,10 +101,15 @@ test('explicit imported loadout hides unselected optional weapons and can confir
  let state=createGameState({phase:'setup',battle:{id:'loadout',status:'setup',round:0},players:[{id:'p1'},{id:'p2'}]});
  const roster=createArmyRoster({id:'r',name:'Melee Tyrant',faction:'Tyranids',units:[{
   id:'ht',name:'Hive Tyrant',modelCount:1,datasheetId:'tyranids:hive-tyrant',
+  equippedWargear:[
+   {name:'Monstrous bonesword and lash whip',quantity:1},
+   {name:'Monstrous scything talons',quantity:1}
+  ],
   equippedWeapons:[
    {name:'Monstrous bonesword and lash whip',quantity:1},
    {name:'Monstrous scything talons',quantity:1}
-  ]
+  ],
+  loadoutValidation:{status:'rules-reviewed-valid'}
  }]});
  state=applyArmyRosterToBattle(state,{playerId:'p1',roster});
  const unit=state.units.find(item=>item.ownerId==='p1');
@@ -108,40 +132,43 @@ test('explicit equipped quantity scales unit-level attacks for Tactical Advisor 
  assert.equal(weapon.characteristics.attacks,'3D6+3');
 });
 
-test('legacy or manual roster without explicit loadout keeps full datasheet weapon choices',()=>{
- const state=fixture();
- const tyrant=state.units.find(unit=>unit.name==='Hive Tyrant');
- const ranged=getDatasheetWeaponOptions(state,tyrant,{type:'ranged'}).map(item=>item.name);
- assert.deepEqual(ranged,['Heavy venom cannon','Stranglethorn cannon']);
- assert.equal(hasConfirmedNoRangedWeapons(state,tyrant),false);
+test('reviewed manual roster without explicit loadout is rejected before battle assignment',()=>{
+ const state=createGameState({phase:'setup',battle:{id:'legacy-loadout',status:'setup',round:0},players:[{id:'p1'},{id:'p2'}]});
+ const roster=createArmyRoster({id:'legacy',name:'Legacy Tyrant',faction:'Tyranids',units:[{
+  id:'hive-tyrant',name:'Hive Tyrant',modelCount:1,datasheetId:'tyranids:hive-tyrant'
+ }]});
+ assert.throws(
+  ()=>applyArmyRosterToBattle(state,{playerId:'p1',roster}),
+  /Resolve required combat loadouts.*Hive Tyrant/i
+ );
 });
 
-test('source-invalid imported wargear is unresolved and cannot feed combat options',()=>{
- let state=createGameState({phase:'setup',battle:{id:'b2',status:'setup',round:0},players:[{id:'p1'}]});
+test('source-invalid imported wargear is rejected before battle assignment',()=>{
+ const state=createGameState({phase:'setup',battle:{id:'b2',status:'setup',round:0},players:[{id:'p1'}]});
  const roster=createArmyRoster({id:'invalid',name:'Invalid import',faction:'Tyranids',units:[{
   id:'termagants',name:'Termagants',modelCount:10,datasheetId:'tyranids:termagants',
+  equippedWargear:[{name:'Chitinous claws and teeth',quantity:10},{name:'Fleshborer',quantity:7},{name:'Spike rifle',quantity:1}],
   equippedWeapons:[{name:'Fleshborer',quantity:7},{name:'Spike rifle',quantity:1}],
   loadoutValidation:{status:'source-invalid',source:'warhammer-app-export',errors:['Invalid wargear configuration for Termagants']}
  }]});
- state=applyArmyRosterToBattle(state,{playerId:'p1',roster});
- const unit=state.units[0];
- assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'ranged'}),[]);
- assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}),[]);
- assert.equal(hasConfirmedNoRangedWeapons(state,unit),false);
+ assert.throws(
+  ()=>applyArmyRosterToBattle(state,{playerId:'p1',roster}),
+  /Invalid wargear configuration for Termagants/i
+ );
 });
 
-test('rules-invalid reviewed wargear is unresolved and cannot feed combat options',()=>{
- let state=createGameState({phase:'setup',battle:{id:'b3',status:'setup',round:0},players:[{id:'p1'}]});
+test('rules-invalid reviewed wargear is rejected before battle assignment',()=>{
+ const state=createGameState({phase:'setup',battle:{id:'b3',status:'setup',round:0},players:[{id:'p1'}]});
  const roster=createArmyRoster({id:'rules-invalid',name:'Invalid reviewed loadout',faction:'Tyranids',units:[{
   id:'ht',name:'Hive Tyrant',modelCount:1,datasheetId:'tyranids:hive-tyrant',
+  equippedWargear:[{name:'Heavy venom cannon',quantity:1},{name:'Stranglethorn cannon',quantity:1}],
   equippedWeapons:[{name:'Heavy venom cannon',quantity:1},{name:'Stranglethorn cannon',quantity:1}],
   loadoutValidation:{status:'rules-invalid',reviewedRules:true,errors:['Heavy venom cannon and Stranglethorn cannon cannot be equipped together.']}
  }]});
- state=applyArmyRosterToBattle(state,{playerId:'p1',roster});
- const unit=state.units[0];
- assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'ranged'}),[]);
- assert.deepEqual(getDatasheetWeaponOptions(state,unit,{type:'melee'}),[]);
- assert.equal(hasConfirmedNoRangedWeapons(state,unit),false);
+ assert.throws(
+  ()=>applyArmyRosterToBattle(state,{playerId:'p1',roster}),
+  /Heavy venom cannon and Stranglethorn cannon cannot be equipped together/i
+ );
 });
 
 
