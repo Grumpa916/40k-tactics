@@ -59,8 +59,9 @@ function objectiveOptions(state, recommendation, spatial, { playerId, perspectiv
       });
       if (!signal.active || signal.vpLeverage <= 0 && signal.score < 0.2) return null;
       const cannotControl = recommendation.battleShocked === true || recommendation.effectiveOc === 0;
+      const controlDependentVp = signal.controlVpLeverage > 0 || signal.endgameVpLeverage > 0;
       let score = clamp01(0.12 + reachBoost(entry.distance, recommendation.movement) + signal.score);
-      if (cannotControl && signal.controlVpLeverage > 0) score = Math.min(score, 0.22);
+      if (cannotControl && controlDependentVp) score = Math.min(score, 0.22);
       const objectiveName = objectiveAdvisorLabel(state, entry.objectiveId, perspectivePlayerId);
       return Object.freeze({
         kind: "objective",
@@ -73,14 +74,14 @@ function objectiveOptions(state, recommendation, spatial, { playerId, perspectiv
         control,
         primaryStrategySignal: signal,
         confidence: Number.isFinite(recommendation.movement) ? "moderate" : "low",
-        actionHint: cannotControl && signal.controlVpLeverage > 0
-          ? "Do not rely on this unit for the control checkpoint until its effective OC is restored"
+        actionHint: cannotControl && controlDependentVp
+          ? "Do not rely on this unit for control-dependent Vanguard Operation scoring until its effective OC is restored"
           : entry.distance <= 3
             ? "Hold or make only a small reposition"
             : Number.isFinite(recommendation.movement) && entry.distance <= recommendation.movement + 3
               ? "A Normal Move can plausibly reach the objective area"
               : "Reposition toward this objective without assuming exact legality from the map",
-        reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map. ${signal.reason}${cannotControl && signal.controlVpLeverage > 0 ? " This unit currently has no reliable effective OC for the control-dependent plan." : ""}`
+        reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map. ${signal.reason}${cannotControl && controlDependentVp ? " This unit currently has no reliable effective OC for the control-dependent plan." : ""}`
       });
     })
     .filter(Boolean);
