@@ -94,6 +94,11 @@ import {
   getVanguardOperationObjectiveStrategySignal,
   isVanguardOperationMissionForPlayer
 } from "./tactical-vanguard-operation-strategy.js";
+import {
+  getSabotagePrimaryStrategyContext,
+  getSabotageObjectiveStrategySignal,
+  isSabotageMissionForPlayer
+} from "./tactical-sabotage-strategy.js";
 
 export function getPrimaryStrategyContext(state, options = {}) {
   const playerId = options.playerId;
@@ -153,6 +158,9 @@ export function getPrimaryStrategyContext(state, options = {}) {
   }
   if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getVanguardOperationPrimaryStrategyContext(state, options);
+  }
+  if (playerId && isSabotageMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSabotagePrimaryStrategyContext(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecratePrimaryStrategyContext(state, options);
@@ -215,6 +223,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getVanguardOperationObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isSabotageMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getSabotageObjectiveStrategySignal(state, options);
   }
   if (playerId && isConsecrateMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getConsecrateObjectiveStrategySignal(state, options);
