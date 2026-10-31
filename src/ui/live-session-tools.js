@@ -3,7 +3,15 @@ import { getCombatDataReadiness } from '../rules/combat-data-readiness.js';
 import { createDialogLifecycle } from './dialog-lifecycle.js';
 
 const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-export function mountLiveSessionTools({ root, session, store, onRetryCloud = () => {}, document = root.ownerDocument, window = globalThis.window }) {
+export function mountLiveSessionTools({
+  root,
+  session,
+  store,
+  onRetryCloud = () => {},
+  document = root.ownerDocument,
+  window = globalThis.window,
+  recoveryEmergencyKey = undefined
+}) {
   const overlay = document.createElement('div');
   overlay.className = 'live-session-overlay'; overlay.hidden = true; document.body.append(overlay);
   let details = false, incompatibleDismissed = false, cloudMessage = 'Cloud connecting…', recovery;
@@ -42,7 +50,7 @@ export function mountLiveSessionTools({ root, session, store, onRetryCloud = () 
   }
   let emergencyStorage = null;
   try { emergencyStorage = window?.localStorage ?? null; } catch { /* Safari can deny local storage. */ }
-  recovery = createLocalBattleRecovery({ session, store, onChange: refresh, emergencyStorage });
+  recovery = createLocalBattleRecovery({ session, store, onChange: refresh, emergencyStorage, emergencyKey: recoveryEmergencyKey });
   const unsubscribe = session.subscribe(() => refresh());
   const click = event => {
     if (event.target.closest?.('a[href][target="_blank"]')?.textContent?.trim() === 'Rule reference') recovery.saveForExternalReference();

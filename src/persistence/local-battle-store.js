@@ -1,5 +1,5 @@
 // One device-local recovery slot plus the preceding valid snapshot.
-export function createLocalBattleStore(database) {
+export function createLocalBattleStore(database, { databaseName = '40k-tactics-recovery' } = {}) {
   let opened;
   function open() {
     try { if (database === undefined) database = globalThis.indexedDB; }
@@ -8,7 +8,7 @@ export function createLocalBattleStore(database) {
     if (opened) return opened;
     let abandoned = false;
     const attempt = new Promise((resolve, reject) => {
-      const request = database.open('40k-tactics-recovery', 1);
+      const request = database.open(databaseName, 1);
       request.onupgradeneeded = () => {
         if (abandoned) { request.transaction?.abort(); return; }
         request.result.createObjectStore('snapshots');
