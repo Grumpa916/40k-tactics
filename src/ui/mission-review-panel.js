@@ -16,7 +16,7 @@ function expandReviewSections(summary) {
 export function renderMissionReviewPanel(summary, { open = false } = {}) {
   const reviewSummary = expandReviewSections(summary);
   const layout = '<style data-mission-review-layout>' +
-    '[data-mission-review-overlay]{align-items:stretch;}' +
+    '[data-mission-review-overlay]{align-items:stretch;padding:12px;}' +
     '[data-mission-review-overlay] .battle-shell__mission-review-dialog{box-sizing:border-box;display:flex;flex-direction:column;width:min(1180px,calc(100vw - 24px));max-width:100%;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;}' +
     '[data-mission-review-overlay] .battle-shell__mission-review-heading{flex:0 0 auto;}' +
     '[data-mission-review-overlay] .battle-shell__mission-review-body{box-sizing:border-box;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;overflow-wrap:anywhere;-webkit-overflow-scrolling:touch;}' +
@@ -27,7 +27,7 @@ export function renderMissionReviewPanel(summary, { open = false } = {}) {
     '[data-mission-review-overlay] .battle-mission-summary__section>summary{min-height:48px;padding:10px 12px;}' +
     '[data-mission-review-overlay] .battle-mission-summary__player>summary{min-height:44px;padding:9px 12px;}' +
     '[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:12px;padding-right:12px;}' +
-    '@media (max-width:760px),(orientation:portrait){[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:12px;}[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:8px;padding-right:8px;}}' +
+    '@media (max-width:760px),(orientation:portrait){[data-mission-review-overlay]{padding:8px;}[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:12px;}[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:8px;padding-right:8px;}}' +
     '</style>';
   return '<div class="battle-shell__mission-review"' + (open ? "" : " hidden") + ' data-mission-review-overlay>' +
     layout +
