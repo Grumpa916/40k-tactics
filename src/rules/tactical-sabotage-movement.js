@@ -122,17 +122,18 @@ export function enhanceSabotageMovementRecommendations(state, base, {
       const cannotControl = recommendation.battleShocked === true || recommendation.effectiveOc === 0;
       const controlDependent = best.primaryStrategySignal?.controlVpLeverage > 0 || best.primaryStrategySignal?.actionVpLeverage > 0;
       const suppressedSameDestination = same && cannotControl && controlDependent;
+      const missionAttachedToPrimary = same && !suppressedSameDestination;
       const rankedAlternatives = [
         ...(recommendation.alternatives ?? []),
         ...options.filter((option) => !sameDestination(option, recommendation))
       ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-      const alternatives = suppressedSameDestination
-        ? [best, ...rankedAlternatives.filter((option) => !sameDestination(option, best))].slice(0, 2)
-        : rankedAlternatives.slice(0, 2);
+      const alternatives = missionAttachedToPrimary
+        ? rankedAlternatives.slice(0, 2)
+        : [best, ...rankedAlternatives.filter((option) => !sameDestination(option, best))].slice(0, 2);
       return Object.freeze({
         ...recommendation,
-        primaryStrategySignal: same && !suppressedSameDestination ? best.primaryStrategySignal : recommendation.primaryStrategySignal,
-        reason: same && !suppressedSameDestination && best.primaryStrategySignal?.reason
+        primaryStrategySignal: missionAttachedToPrimary ? best.primaryStrategySignal : recommendation.primaryStrategySignal,
+        reason: missionAttachedToPrimary && best.primaryStrategySignal?.reason
           ? `${recommendation.reason} ${best.primaryStrategySignal.reason}`
           : recommendation.reason,
         alternatives: Object.freeze(alternatives)
