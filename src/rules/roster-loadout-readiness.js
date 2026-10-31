@@ -8,19 +8,26 @@ function issueText(unit, fallback) {
   return Array.isArray(errors) && errors.length ? errors.join(' ') : fallback;
 }
 
+function invalidAssessment(unit, { reviewedRules, fallback }) {
+  return Object.freeze({
+    unitId: unit?.id ?? null,
+    name: unit?.name ?? 'Unit',
+    status: 'invalid',
+    blocking: true,
+    reviewedRules,
+    reason: issueText(unit, fallback)
+  });
+}
+
 export function assessUnitLoadoutReadiness(unit) {
   const ruleSet = getTyranidWargearRuleSet(unit?.datasheetId);
   const recordedStatus = unit?.loadoutValidation?.status ?? null;
 
   if (!ruleSet) {
     if (INVALID_STATUSES.has(recordedStatus)) {
-      return Object.freeze({
-        unitId: unit?.id ?? null,
-        name: unit?.name ?? 'Unit',
-        status: 'invalid',
-        blocking: true,
+      return invalidAssessment(unit, {
         reviewedRules: false,
-        reason: issueText(unit, 'Imported equipment is unresolved or invalid and must be corrected before battle use.')
+        fallback: 'Imported equipment is unresolved or invalid and must be corrected before battle use.'
       });
     }
     if (recordedStatus === 'manual-selection-required') {
@@ -43,14 +50,14 @@ export function assessUnitLoadoutReadiness(unit) {
     });
   }
 
-  if (recordedStatus === 'source-invalid') {
-    return Object.freeze({
-      unitId: unit?.id ?? null,
-      name: unit?.name ?? 'Unit',
-      status: 'invalid',
-      blocking: true,
+  // Preserve unresolved import/validation state. A legal matched subset must not
+  // erase an unmatched or otherwise unresolved selection from the source roster.
+  // Manual Army Builder save replaces this status after the user explicitly
+  // resolves the loadout against the reviewed rule set.
+  if (INVALID_STATUSES.has(recordedStatus)) {
+    return invalidAssessment(unit, {
       reviewedRules: true,
-      reason: issueText(unit, 'The imported loadout could not be matched safely to the reviewed datasheet rules.')
+      fallback: 'The saved loadout still contains unresolved or invalid equipment. Review and save the unit loadout before battle use.'
     });
   }
 
