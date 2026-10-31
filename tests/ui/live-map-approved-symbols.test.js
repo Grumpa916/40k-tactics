@@ -19,14 +19,16 @@ test('live unit symbols stay short and keep duplicate numbering stable', () => {
   assert.equal(labels.get('trajann'), 'TRA');
 });
 
-test('approved symbol transform preserves unit status badge and named objective markers', () => {
+test('approved symbol transform preserves unit status badge and abbreviates objective markers', () => {
   const html = '<div class="battlefield-map__unit friendly is-compact" data-map-unit-id="hive">Hive Tyrant<span class="unit-activation-badge">✓</span></div>' +
-    '<button type="button" class="battlefield-map__objective is-mine" data-map-objective-id="a">My Home</button>' +
-    '<button type="button" class="battlefield-map__objective is-contested" data-map-objective-id="b">Center 1</button>';
+    '<button type="button" class="battlefield-map__objective is-mine" data-map-objective-id="a">MY HOME</button>' +
+    '<button type="button" class="battlefield-map__objective is-contested" data-map-objective-id="b">C1</button>' +
+    '<button type="button" class="battlefield-map__objective is-opponent" data-map-objective-id="c">OPP EXP</button>';
   const result = applyApprovedLiveMapSymbols(html, {units});
   assert.match(result, />HT<span class="unit-activation-badge">✓<\/span>/);
-  assert.match(result, /data-map-objective-id="a"><span class="battlefield-map__objective-label-line">My<\/span><span class="battlefield-map__objective-label-line">Home<\/span><\/button>/);
-  assert.match(result, /data-map-objective-id="b"><span class="battlefield-map__objective-label-line">Center<\/span><span class="battlefield-map__objective-label-line">1<\/span><\/button>/);
+  assert.match(result, /data-map-objective-id="a">mH<\/button>/);
+  assert.match(result, /data-map-objective-id="b">C1<\/button>/);
+  assert.match(result, /data-map-objective-id="c">oE<\/button>/);
   assert.doesNotMatch(result, /data-objective-number=/);
 });
 
@@ -60,13 +62,13 @@ test('live map replaces the old legend with a key for visible friendly designato
   assert.doesNotMatch(empty, /class="battlefield-map__unit-key"|class="battlefield-map__legend"/);
 });
 
-test('approved live symbol CSS overrides prototype pills with circles, touch targets and named hex objectives', () => {
+test('approved live symbol CSS keeps compact objectives below both armies', () => {
   const css = fs.readFileSync(new URL('../../src/ui/styles/live-map-symbols.css', import.meta.url), 'utf8');
-  assert.match(css, /battlefield-map__unit\.is-compact[\s\S]*width:32px[\s\S]*height:32px[\s\S]*border-radius:50%/);
-  assert.match(css, /battlefield-map__unit\.is-compact::before[\s\S]*width:48px[\s\S]*height:48px/);
-  assert.match(css, /battlefield-map__unit\.is-selected[\s\S]*box-shadow:/);
-  assert.match(css, /battlefield-map__objective[\s\S]*font-size:8px[\s\S]*flex-direction:column/);
-  assert.match(css, /battlefield-map__objective-label-line[\s\S]*display:block/);
+  assert.match(css, /battlefield-map__unit\.is-compact[\s\S]*width:32px[\s\S]*height:32px[\s\S]*z-index:6/);
+  assert.match(css, /battlefield-map__unit\.opponent[\s\S]*z-index:6/);
+  assert.match(css, /battlefield-map__unit\.friendly[\s\S]*z-index:7/);
+  assert.match(css, /battlefield-map__unit\.is-selected[\s\S]*z-index:8/);
+  assert.match(css, /battlefield-map__objective[\s\S]*width:36px[\s\S]*height:36px[\s\S]*font-size:8px[\s\S]*z-index:4/);
   assert.match(css, /battlefield-map__objective::before[\s\S]*clip-path:polygon\(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%\)/);
   assert.match(css, /is-contested[\s\S]*linear-gradient\(90deg,#205d87 0 50%,#7a3035 50% 100%\)/);
 });
