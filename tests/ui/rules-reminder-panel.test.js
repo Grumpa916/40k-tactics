@@ -10,6 +10,13 @@ import { createFightTabletopScreen } from '../../src/ui/fight-tabletop-screen.js
 import { renderTargetDefenseReminders, renderRulesReminderDialog, renderUnitRulesReminders, createRulesReminderController } from '../../src/ui/rules-reminder-panel.js';
 import { setUnitBattleNote, recordRulesReminderUse } from '../../src/engine/rules-reminder-transitions.js';
 
+test('Aquila Commander is the first Command reminder when its CP decision is available',()=>{
+  const state=custodesReminderState({phase:'command',activePlayer:'p1'});
+  state.battle.firstPlayerId='p1';
+  const html=renderUnitRulesReminders(state,{perspectivePlayerId:'p1'});
+  assert.ok(html.indexOf('Aquila Commander') < html.indexOf('Ka’tah readiness'));
+});
+
 test('an opponent shooter selecting Wardens displays their incoming AP reminder after native select dismissal',async()=>{
   clearCommandHandlers();registerCoreCommandHandlers();
   const session=createGameSession(custodesReminderState()),root=fakeDom();

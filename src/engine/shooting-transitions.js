@@ -8,6 +8,11 @@ import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-
 import { getSecureAssetObjectiveOptions, getSecureAssetState } from "../rules/secure-asset-state.js";
 import { getVanguardOperationTerrainOptions, getVanguardOperationState } from "../rules/vanguard-operation-state.js";
 import { getSabotageObjectiveOptions } from "../rules/sabotage-state.js";
+import {
+  getExtractRelicCentralObjectiveOptions,
+  getExtractRelicMarkerRemovalOptions,
+  getExtractRelicState
+} from "../rules/extract-relic-state.js";
 import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
@@ -34,7 +39,9 @@ export function recordShootingActivation(state, {
   reviewTiming = null,
   rulesConfirmed = false,
   locateSetupOnly = false,
-  locateMarkerSetupTerrainAreaIds = null
+  locateMarkerSetupTerrainAreaIds = null,
+  extractRelicSetupOnly = false,
+  extractRelicMarkerSetupTerrainAreaIds = null
 } = {}) {
   if (!unitId) throw new TypeError("Shooting activation unit id is required.");
   if (!SHOOTING_ACTION_TYPES.has(actionType)) {
@@ -74,6 +81,24 @@ export function recordShootingActivation(state, {
     return recordLocateAndDenyMarkerSetup(state, {
       playerId: activePlayerId,
       terrainAreaIds: locateMarkerSetupTerrainAreaIds
+    });
+  }
+
+  if (extractRelicSetupOnly) {
+    if (actionType !== "mission_action" || actionId !== "primary-extract-relic") {
+      throw new Error("Extract Relic opponent-marker setup must be recorded from its mission Action workflow.");
+    }
+    if (!Array.isArray(extractRelicMarkerSetupTerrainAreaIds)) {
+      throw new TypeError("Extract Relic opponent-marker setup requires selected terrain areas.");
+    }
+    const extractRelic = getExtractRelicState(state, { playerId: activePlayerId });
+    if (!extractRelic.opponentId || !extractRelic.opponentMarkerMissionAvailable) {
+      throw new Error("The opponent's Locate and Deny mission is not available for marker setup.");
+    }
+    return recordLocateAndDenyMarkerSetup(state, {
+      playerId: extractRelic.opponentId,
+      terrainAreaIds: extractRelicMarkerSetupTerrainAreaIds,
+      perspectivePlayerId: state?.players?.[0]?.id ?? activePlayerId
     });
   }
 
@@ -152,6 +177,19 @@ export function recordShootingActivation(state, {
       if (reviewTiming !== "end-of-turn") throw new Error("Sabotage completes at the end of your turn.");
       if (!objectiveId || !getSabotageObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
         throw new Error("Select a different non-home objective that has not already been selected for another Sabotage attempt this turn.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-extract-relic") {
+      const extractRelic = getExtractRelicState(state, { playerId: activePlayerId });
+      if (!extractRelic.opponentMarkerSetupComplete) throw new Error("Record the opponent's Locate and Deny operation-marker setup before starting Sensor Sweep.");
+      if (extractRelic.activeOpponentMarkerCount <= 1) throw new Error("Sensor Sweep cannot be started when only one opponent operation marker remains.");
+      if (extractRelic.sensorSweepUsedThisTurn) throw new Error("Sensor Sweep can only be started once per turn.");
+      if (reviewTiming !== "end-of-turn") throw new Error("Sensor Sweep completes at the end of your turn.");
+      if (!objectiveId || !getExtractRelicCentralObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
+        throw new Error("Select the central objective this unit is within range of for Sensor Sweep.");
+      }
+      if (!terrainAreaId || !getExtractRelicMarkerRemovalOptions(state, { playerId: activePlayerId }).some(item => item.terrainAreaId === terrainAreaId)) {
+        throw new Error("Select one of the opponent's remaining Locate and Deny operation markers to remove.");
       }
     }
     if (linkedMission.definitionId === "primary-locate-and-deny") {

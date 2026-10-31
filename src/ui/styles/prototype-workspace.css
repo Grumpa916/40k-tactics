@@ -316,11 +316,11 @@
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary:not(.is-active) .battle-shell__summary-time { display:none; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-row { display:flex; align-items:center; gap:5px; min-width:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips { display:flex; flex:1; gap:5px; min-width:0; }
-.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { flex:1; min-width:0; min-height:40px; padding:4px 8px; font-size:12px; font-weight:750; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { flex:1; min-width:0; min-height:44px; padding:4px 8px; font-size:12px; font-weight:750; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button[aria-pressed=true] { background:#c4e99b; border-color:#c4e99b; color:#17212b; }
-.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-missions-button { flex:0 0 auto; min-width:82px; min-height:40px; padding:4px 11px; border:1px solid #a7cd72; border-radius:8px; background:#26392c; color:#c7e89a; font-size:12px; font-weight:750; white-space:nowrap; cursor:pointer; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-missions-button { flex:0 0 auto; min-width:82px; min-height:44px; padding:4px 11px; border:1px solid #a7cd72; border-radius:8px; background:#26392c; color:#c7e89a; font-size:12px; font-weight:750; white-space:nowrap; cursor:pointer; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-missions-button[aria-expanded=true] { background:#c4e99b; color:#17212b; }
-.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > summary { min-height:40px; width:44px; justify-content:center; padding:0; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > summary { min-height:44px; width:44px; justify-content:center; padding:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div {
   display:flex; flex-wrap:nowrap; align-items:center; width:max-content; max-width:calc(100vw - 24px);
   right:0; left:auto; gap:5px;
@@ -329,10 +329,10 @@
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu [data-live-session-tools] { display:flex; flex-wrap:nowrap; margin:0; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] {
   position:fixed; right:calc(10px + env(safe-area-inset-right,0px)); bottom:calc(10px + env(safe-area-inset-bottom,0px)); z-index:1100;
-  box-sizing:border-box; height:56px; min-width:68px; min-height:48px; padding:5px 8px; font-size:12px;
+  box-sizing:border-box; width:var(--live-panel-toggle-width); height:56px; min-width:0; min-height:48px; padding:5px 8px; font-size:12px; white-space:nowrap;
 }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] > [data-phase-progression-host] {
-  position:fixed; left:10px; right:calc(88px + env(safe-area-inset-right,0px)); bottom:calc(10px + env(safe-area-inset-bottom,0px)); z-index:1090;
+  position:fixed; left:calc(10px + env(safe-area-inset-left,0px)); right:calc(20px + var(--live-panel-toggle-width) + env(safe-area-inset-right,0px)); bottom:calc(10px + env(safe-area-inset-bottom,0px)); z-index:1090;
   max-width:none; margin:0;
 }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress { padding:0; margin:0; border:0; background:transparent; }
@@ -348,8 +348,12 @@
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { padding:3px; font-size:10px; }
 }
 
-/* Reserve 56px controls + 10px bottom offset + 12px breathing room. */
-.battle-shell.is-tabletop-experiment[data-battle-focus=true] { --live-phase-footer-clearance:78px; }
+/* Keep the panel toggle width stable for both labels, with a 10px gap to the phase control.
+   The vertical clearance covers 56px controls + 10px bottom offset + 12px space. */
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] {
+  --live-phase-footer-clearance:78px;
+  --live-panel-toggle-width:96px;
+}
 
 
 .prototype-unit-tabs { display:flex; gap:6px; margin:16px 0 12px; border-bottom:1px solid #53676a; }
@@ -388,6 +392,12 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+.prototype-unit-dialog .prototype-unit-profile-characteristics > .prototype-unit-defence-stat {
+  grid-row:2;
+  grid-column:var(--unit-defence-column);
+  border-color:#465840;
+}
+.prototype-unit-dialog .prototype-unit-defence-stat dd { color:#c4e99b; }
 .prototype-unit-dialog .prototype-unit-weapon-characteristics {
   grid-template-columns: repeat(var(--unit-stat-count), minmax(54px, 1fr));
   min-width: 0;
@@ -397,6 +407,10 @@
 @media (max-width: 640px) {
   .prototype-unit-dialog .prototype-unit-profile-characteristics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .prototype-unit-dialog .prototype-unit-profile-characteristics > .prototype-unit-defence-stat {
+    grid-row:auto;
+    grid-column:auto;
   }
 }
 

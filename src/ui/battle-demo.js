@@ -41,6 +41,8 @@ const state = createGameState({
     { id: "p1", name: "You" },
     { id: "p2", name: "Opponent" }
   ],
+  battleSetup: { battleSize: "strike_force" },
+  scoring: { turnSnapshots: [], secondaryMissionModeByPlayer: { p1: "tactical", p2: "tactical" } },
   battle: {
     id: "integrated-demo",
     status: "setup",

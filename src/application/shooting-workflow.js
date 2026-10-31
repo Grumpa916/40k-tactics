@@ -52,7 +52,9 @@ function shootingActivationPayload({
   reviewTiming,
   rulesConfirmed,
   locateSetupOnly,
-  locateMarkerSetupTerrainAreaIds
+  locateMarkerSetupTerrainAreaIds,
+  extractRelicSetupOnly,
+  extractRelicMarkerSetupTerrainAreaIds
 }) {
   return {
     unitId,
@@ -65,7 +67,9 @@ function shootingActivationPayload({
     reviewTiming,
     rulesConfirmed,
     ...(locateSetupOnly === true ? { locateSetupOnly: true } : {}),
-    ...(Array.isArray(locateMarkerSetupTerrainAreaIds) ? { locateMarkerSetupTerrainAreaIds } : {})
+    ...(Array.isArray(locateMarkerSetupTerrainAreaIds) ? { locateMarkerSetupTerrainAreaIds } : {}),
+    ...(extractRelicSetupOnly === true ? { extractRelicSetupOnly: true } : {}),
+    ...(Array.isArray(extractRelicMarkerSetupTerrainAreaIds) ? { extractRelicMarkerSetupTerrainAreaIds } : {})
   };
 }
 
@@ -100,7 +104,9 @@ export function recordShootingActivation(state, {
   reviewTiming = null,
   rulesConfirmed = false,
   locateSetupOnly = false,
-  locateMarkerSetupTerrainAreaIds = null
+  locateMarkerSetupTerrainAreaIds = null,
+  extractRelicSetupOnly = false,
+  extractRelicMarkerSetupTerrainAreaIds = null
 } = {}, context = {}) {
   return executeCommand(
     state,
@@ -115,7 +121,9 @@ export function recordShootingActivation(state, {
       reviewTiming,
       rulesConfirmed,
       locateSetupOnly,
-      locateMarkerSetupTerrainAreaIds
+      locateMarkerSetupTerrainAreaIds,
+      extractRelicSetupOnly,
+      extractRelicMarkerSetupTerrainAreaIds
     })),
     context
   );
@@ -140,7 +148,9 @@ export function activateShootingUnit(session, {
   reviewTiming = null,
   rulesConfirmed = false,
   locateSetupOnly = false,
-  locateMarkerSetupTerrainAreaIds = null
+  locateMarkerSetupTerrainAreaIds = null,
+  extractRelicSetupOnly = false,
+  extractRelicMarkerSetupTerrainAreaIds = null
 } = {}, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");
@@ -157,7 +167,9 @@ export function activateShootingUnit(session, {
       reviewTiming,
       rulesConfirmed,
       locateSetupOnly,
-      locateMarkerSetupTerrainAreaIds
+      locateMarkerSetupTerrainAreaIds,
+      extractRelicSetupOnly,
+      extractRelicMarkerSetupTerrainAreaIds
     })),
     context
   );

@@ -15,5 +15,6 @@ test("live phase navigation opens an expandable mission review overlay", () => {
   assert.match(panel, /data-toggle-mission-review/);
   assert.match(panel, /event\.key !== "Escape"/);
   assert.match(page, /\.battle-shell__mission-review\[hidden\] \{ display:none !important; \}/);
+  assert.match(page, /\.battle-shell__mission-review-dialog \{[^}]*max-height:calc\(100dvh - 32px\)[^}]*overflow-y:auto/);
   assert.doesNotMatch(shell, /tabletopExperiment \? '' : '<div data-battle-mission-summary-host>/);
 });
