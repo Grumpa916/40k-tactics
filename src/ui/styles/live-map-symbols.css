@@ -16,6 +16,7 @@
   letter-spacing:-.02em;
   overflow:visible;
   box-shadow:none;
+  z-index:6;
 }
 
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-compact::before {
@@ -30,15 +31,16 @@
   background:transparent;
 }
 
-/* Keep friendly live-map tokens and their status badges above overlapping enemy tokens. */
+/* Unit markers always sit above objective labels; friendly units remain above enemy units. */
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.opponent {
-  z-index:2;
+  z-index:6;
 }
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.friendly {
-  z-index:3;
+  z-index:7;
 }
 
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-selected {
+  z-index:8;
   outline:0;
   box-shadow:0 0 0 3px #fff6b0, 0 0 0 5px rgba(255,246,176,.34);
 }
@@ -47,41 +49,35 @@
   --objective-fill:#4b535b;
   --objective-stroke:#b9c1c7;
   box-sizing:border-box;
-  width:44px;
-  height:44px;
-  min-width:44px;
-  max-width:44px;
-  min-height:44px;
-  padding:0 7px;
+  width:36px;
+  height:36px;
+  min-width:36px;
+  max-width:36px;
+  min-height:36px;
+  padding:0;
   border:0;
   border-radius:0;
   background:transparent;
   color:#fff;
   font-size:8px;
   font-weight:900;
-  line-height:1.02;
-  letter-spacing:-.02em;
+  line-height:1;
+  letter-spacing:0;
   text-align:center;
-  flex-direction:column;
-  gap:0;
   isolation:isolate;
   box-shadow:none;
   filter:none;
-}
-
-.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective-label-line {
-  display:block;
-  white-space:nowrap;
+  z-index:4;
 }
 
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective::before {
   content:"";
   position:absolute;
   z-index:-1;
-  left:5px;
-  right:5px;
-  top:7px;
-  bottom:7px;
+  left:4px;
+  right:4px;
+  top:5px;
+  bottom:5px;
   background:var(--objective-fill);
   clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
   filter:drop-shadow(0 0 1px var(--objective-stroke));
