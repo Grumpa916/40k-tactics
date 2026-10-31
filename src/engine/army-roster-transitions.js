@@ -1,5 +1,6 @@
 import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
+import { assessRosterLoadoutReadiness } from '../rules/roster-loadout-readiness.js';
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { createUnit, UNIT_STATUS } from "../state/unit.js";
@@ -8,6 +9,15 @@ import { selectRosterForBattle } from "../state/army-roster-library.js";
 function makeId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return "battle-roster-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+}
+
+function assertBattleReadyLoadouts(roster) {
+  const readiness = assessRosterLoadoutReadiness(roster);
+  if (readiness.battleReady) return readiness;
+  const blockers = readiness.units.filter((unit) => unit.blocking);
+  const details = blockers.slice(0, 3).map((unit) => `${unit.name}: ${unit.reason}`).join(' ');
+  const extra = blockers.length > 3 ? ` ${blockers.length - 3} more unit(s) need loadout review.` : '';
+  throw new Error(`Resolve required combat loadouts before assigning this roster to battle. ${details}${extra}`.trim());
 }
 
 /**
@@ -24,6 +34,10 @@ export function applyArmyRosterToBattle(state, { roster, playerId, snapshotId = 
   if (!playerId || !state.players?.some((player) => player.id === playerId)) {
     throw new Error("Choose a player in this battle.");
   }
+  // This shared boundary is used by both the Army Builder and the normal
+  // battle-side Army Selection screen, so unresolved reviewed loadouts cannot
+  // bypass the Battle Ready gate through another UI path.
+  assertBattleReadyLoadouts(roster);
   const snapshot = selectRosterForBattle(roster, {
     playerId, snapshotId, battleId: state.battle.id, selectedAt
   });
@@ -63,4 +77,3 @@ export function applyArmyRosterToBattle(state, { roster, playerId, snapshotId = 
     snapshotId, unitCount: units.length
   }));
 }
-
