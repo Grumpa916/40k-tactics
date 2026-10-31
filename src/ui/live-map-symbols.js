@@ -23,7 +23,6 @@ export function liveUnitSymbolLabels(units = []) {
   for (const unit of units) {
     if (!unit?.id) continue;
     const label = readable.get(unit.id);
-    // Explicit designators retain their case and full prefix when numbered.
     result.set(unit.id, preferredMapUnitDesignator(unit)
       ? label.replace(/\s+(\d+)$/, '$1')
       : compactSymbol(label));
@@ -44,29 +43,20 @@ function replaceUnitMarkerText(html, unitId, symbol) {
   return html.slice(0, contentStart + 1) + escapeHtml(symbol) + html.slice(contentEnd);
 }
 
-const OBJECTIVE_LABEL_LINES = new Map([
-  ['My Home', ['My', 'Home']],
-  ['Opp Home', ['Opp', 'Home']],
-  ['My Exp', ['My', 'Exp']],
-  ['Opp Exp', ['Opp', 'Exp']],
-  ['Center 1', ['Center', '1']],
-  ['Center 2', ['Center', '2']],
-  // Accept the previous compact text so cached/test markup degrades safely.
-  ['MY HOME', ['My', 'Home']],
-  ['OPP HOME', ['Opp', 'Home']],
-  ['MY EXP', ['My', 'Exp']],
-  ['OPP EXP', ['Opp', 'Exp']],
-  ['C1', ['Center', '1']],
-  ['C2', ['Center', '2']]
+const OBJECTIVE_MARKER_LABELS = new Map([
+  ['My Home', 'mH'], ['MY HOME', 'mH'],
+  ['Opp Home', 'oH'], ['OPP HOME', 'oH'],
+  ['My Exp', 'mE'], ['MY EXP', 'mE'],
+  ['Opp Exp', 'oE'], ['OPP EXP', 'oE'],
+  ['Center 1', 'C1'], ['C1', 'C1'],
+  ['Center 2', 'C2'], ['C2', 'C2']
 ]);
 
 function formatObjectiveMarkerLabels(html) {
   return html.replace(/(<button\b[^>]*class="[^"]*\bbattlefield-map__objective\b[^"]*"[^>]*>)([^<]*)(<\/button>)/g,
     (_match, opening, rawLabel, closing) => {
-      const lines = OBJECTIVE_LABEL_LINES.get(String(rawLabel ?? '').trim());
-      if (!lines) return opening + rawLabel + closing;
-      const label = lines.map((line) => `<span class="battlefield-map__objective-label-line">${escapeHtml(line)}</span>`).join('');
-      return opening + label + closing;
+      const label = OBJECTIVE_MARKER_LABELS.get(String(rawLabel ?? '').trim());
+      return opening + escapeHtml(label ?? rawLabel) + closing;
     });
 }
 
