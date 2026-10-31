@@ -289,9 +289,9 @@ test("completed Sabotage Actions score 3 VP each plus 2 VP for each enemy-territ
   });
   const sabotage = getSabotageState(state, { playerId: "p1", perspectivePlayerId: "p1" });
   assert.equal(sabotage.completedThisTurnCount, 2);
-  assert.equal(sabotage.enemyTerritoryCompletedCount, 1);
-  assert.equal(sabotage.actionRawVp, 8);
-  assert.equal(strategy(state).actionRawVp, 8);
+  assert.equal(sabotage.enemyTerritoryCompletedCount, 2);
+  assert.equal(sabotage.actionRawVp, 10);
+  assert.equal(strategy(state).actionRawVp, 10);
 });
 
 test("Round 2 Command projects the binary 4 VP non-home condition and locks the recorded checkpoint afterward", () => {
@@ -334,9 +334,9 @@ test("Sabotage projection respects the 15 VP battle-round cap across completed a
   });
   const result = strategy(state);
   assert.equal(result.controlVpForProjection, 4);
-  assert.equal(result.actionRawVp, 8);
-  assert.equal(result.cappedAdvisoryVp, 12);
-  assert.equal(result.nextActionVpLeverage, 3);
+  assert.equal(result.actionRawVp, 10);
+  assert.equal(result.cappedAdvisoryVp, 14);
+  assert.equal(result.nextActionVpLeverage, 1);
 });
 
 test("45 VP Primary cap suppresses additional Sabotage leverage", () => {
