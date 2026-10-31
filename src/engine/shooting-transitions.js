@@ -6,6 +6,7 @@ import { getSurveilTheFoeTargetOptions } from "../rules/surveil-the-foe-state.js
 import { getGatherIntelObjectiveOptions } from "../rules/gather-intel-state.js";
 import { getVitalLinkObjectiveOptions, getVitalLinkState } from "../rules/vital-link-state.js";
 import { getSecureAssetObjectiveOptions, getSecureAssetState } from "../rules/secure-asset-state.js";
+import { getVanguardOperationTerrainOptions, getVanguardOperationState } from "../rules/vanguard-operation-state.js";
 import {
   getExtractRelicCentralObjectiveOptions,
   getExtractRelicMarkerRemovalOptions,
@@ -161,6 +162,14 @@ export function recordShootingActivation(state, {
       if (reviewTiming !== "end-of-turn") throw new Error("Maintain Control completes at the end of your turn.");
       if (!objectiveId || !getVitalLinkObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
         throw new Error("Select the central objective this unit is within range of for Maintain Control.");
+      }
+    }
+    if (linkedMission.definitionId === "primary-vanguard-operation") {
+      const vanguard = getVanguardOperationState(state, { playerId: activePlayerId });
+      if (vanguard.usedThisTurn) throw new Error("Vanguard Operation can only be started once per turn.");
+      if (reviewTiming !== "end-of-turn") throw new Error("Vanguard Operation completes at the end of your turn.");
+      if (!terrainAreaId || !getVanguardOperationTerrainOptions(state, { playerId: activePlayerId }).some(item => item.terrainAreaId === terrainAreaId)) {
+        throw new Error("Select a terrain area in the opponent's territory for Vanguard Operation and confirm the physical terrain placement.");
       }
     }
     if (linkedMission.definitionId === "primary-extract-relic") {
