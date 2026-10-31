@@ -1,6 +1,10 @@
 import { createGameState } from "../state/game-state.js";
 import { createUnit } from "../state/unit.js";
 import { createGameSession } from "../application/game-session.js";
+import {
+  createFullGameVerificationState,
+  FULL_GAME_VERIFICATION_PRESET
+} from "../application/full-game-verification-preset.js";
 import { registerCoreCommandHandlers } from "../engine/register-core-commands.js";
 import { clearCommandHandlers } from "../engine/command-engine.js";
 import { createBattleShell } from "./battle-shell.js";
@@ -33,64 +37,69 @@ const gameData = {
   ]
 };
 
-const state = createGameState({
-  phase: "setup",
-  turn: 0,
-  activePlayer: "p1",
-  players: [
-    { id: "p1", name: "You" },
-    { id: "p2", name: "Opponent" }
-  ],
-  battleSetup: { battleSize: "strike_force" },
-  scoring: { turnSnapshots: [], secondaryMissionModeByPlayer: { p1: "tactical", p2: "tactical" } },
-  battle: {
-    id: "integrated-demo",
-    status: "setup",
-    round: 0,
-    firstPlayerId: "p1",
-    activePlayerId: "p1"
-  },
-  objectives: [],
-  units: [
-    createUnit({
-      id: "intercessors",
-      ownerId: "p1",
-      name: "Intercessor Squad",
-      status: "deployed",
-      wounds: 10,
-      position: { x: 0, y: 0 },
-      profile: {
-        weaponIds: ["rifle", "blade"],
-        characteristics: { movement: 6, ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
-      }
-    }),
-    createUnit({
-      id: "captain",
-      ownerId: "p1",
-      name: "Captain",
-      status: "deployed",
-      wounds: 5,
-      position: { x: 3, y: 0 },
-      profile: {
-        weaponIds: ["rifle", "blade"],
-        characteristics: { ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
-      }
-    }),
-    createUnit({
-      id: "enemy",
-      ownerId: "p2",
-      name: "Enemy Guard",
-      status: "deployed",
-      wounds: 10,
-      position: { x: 6, y: 0 },
-      profile: {
-        weaponIds: ["blade"],
-        characteristics: { movement: 6, ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 4 }
-      }
-    })
-  ]
-});
+function createDefaultDemoState() {
+  return createGameState({
+    phase: "setup",
+    turn: 0,
+    activePlayer: "p1",
+    players: [
+      { id: "p1", name: "You" },
+      { id: "p2", name: "Opponent" }
+    ],
+    battleSetup: { battleSize: "strike_force" },
+    scoring: { turnSnapshots: [], secondaryMissionModeByPlayer: { p1: "tactical", p2: "tactical" } },
+    battle: {
+      id: "integrated-demo",
+      status: "setup",
+      round: 0,
+      firstPlayerId: "p1",
+      activePlayerId: "p1"
+    },
+    objectives: [],
+    units: [
+      createUnit({
+        id: "intercessors",
+        ownerId: "p1",
+        name: "Intercessor Squad",
+        status: "deployed",
+        wounds: 10,
+        position: { x: 0, y: 0 },
+        profile: {
+          weaponIds: ["rifle", "blade"],
+          characteristics: { movement: 6, ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
+        }
+      }),
+      createUnit({
+        id: "captain",
+        ownerId: "p1",
+        name: "Captain",
+        status: "deployed",
+        wounds: 5,
+        position: { x: 3, y: 0 },
+        profile: {
+          weaponIds: ["rifle", "blade"],
+          characteristics: { ballisticSkill: 3, weaponSkill: 3, toughness: 4, save: 3 }
+        }
+      }),
+      createUnit({
+        id: "enemy",
+        ownerId: "p2",
+        name: "Enemy Guard",
+        status: "deployed",
+        wounds: 10,
+        position: { x: 6, y: 0 },
+        profile: {
+          weaponIds: ["blade"],
+          characteristics: { movement: 6, ballisticSkill: 4, weaponSkill: 4, toughness: 4, save: 4 }
+        }
+      })
+    ]
+  });
+}
 
+const searchParams = new URLSearchParams(window.location.search);
+const verificationMode = searchParams.get('verification') === FULL_GAME_VERIFICATION_PRESET;
+const state = verificationMode ? createFullGameVerificationState() : createDefaultDemoState();
 const session = createGameSession(state);
 
 function bindMissionSummaryToggle(root) {
@@ -106,9 +115,8 @@ function bindMissionSummaryToggle(root) {
 }
 
 function initializeBattleDemo() {
-  const layoutMode = new URLSearchParams(window.location.search).get("ui") === "classic"
-    ? "classic"
-    : "tabletop";
+  const layoutMode = searchParams.get("ui") === "classic" ? "classic" : "tabletop";
+  if (verificationMode) document.title = '40K Tactics — Full Game Verification';
   const root = document.getElementById("battle-app");
   bindMissionSummaryToggle(root);
   installTerritoryMapOverlay(root, { session, perspectivePlayerId: "p1" });
@@ -116,14 +124,23 @@ function initializeBattleDemo() {
   const app = startLiveApp({
     mount() {
       const shell = createBattleShell(root, {
-    session,
-    perspectivePlayerId: "p1",
-    gameData,
-    secondaryMissionCatalog: COMPLETE_SECONDARY_MISSION_CATALOG,
-    layoutMode,
-    onRender: () => tools?.refresh()
+        session,
+        perspectivePlayerId: "p1",
+        gameData,
+        secondaryMissionCatalog: COMPLETE_SECONDARY_MISSION_CATALOG,
+        layoutMode,
+        onRender: () => tools?.refresh()
       });
-      tools = mountLiveSessionTools({ root, session, store: createLocalBattleStore(), onRetryCloud: () => app.retryCloud() });
+      const recoveryStore = verificationMode
+        ? createLocalBattleStore(undefined, { databaseName: '40k-tactics-verification-recovery' })
+        : createLocalBattleStore();
+      tools = mountLiveSessionTools({
+        root,
+        session,
+        store: recoveryStore,
+        recoveryEmergencyKey: verificationMode ? '40k-tactics-verification-external-reference-recovery' : undefined,
+        onRetryCloud: () => app.retryCloud()
+      });
       return { connectCloud(client) { shell.connectCloud(client); tools.setCloudStatus('Cloud available'); } };
     },
     loadCloud() {
