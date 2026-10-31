@@ -4,6 +4,7 @@ import { getMissionActionOptions } from "../../src/rules/mission-action-state.js
 import { getSabotageObjectiveOptions, getSabotageState } from "../../src/rules/sabotage-state.js";
 import { getPrimaryObjectiveStrategySignal, getPrimaryStrategyContext } from "../../src/rules/tactical-primary-strategy-router.js";
 import { getMovementStrategicRecommendations } from "../../src/rules/tactical-movement-router.js";
+import { getEventCompanionMapForForceDispositions } from "../../src/rules/event-companion-map-catalog.js";
 import { recordShootingActivation } from "../../src/engine/shooting-transitions.js";
 import { reviewMissionAction } from "../../src/engine/mission-action-transitions.js";
 import { createMissionActionPicker } from "../../src/ui/mission-action-picker.js";
@@ -131,18 +132,26 @@ function seed({
   controls = { home: true, central1: true, central2: false, enemyHome: false },
   runnerBattleShocked = false
 } = {}) {
+  const map = getEventCompanionMapForForceDispositions("Priority Assets", "Priority Assets", "A");
+  assert.ok(map, "Sabotage Layout A geometry must exist");
+  const attackerHome = map.objectivePositions["Attacker Home"];
+  const defenderHome = map.objectivePositions["Defender Home"];
+  const central1 = map.objectivePositions["Central 1"];
+  const central2 = map.objectivePositions["Central 2"];
+  assert.ok(attackerHome && defenderHome && central1 && central2, "Sabotage Layout A objectives must use catalog geometry");
+
   const objectives = [
-    { id: "home-p1", name: "Attacker Home", layoutObjective: "Attacker Home", position: { x: 7, y: 22 }, control: control(controls.home ? "p1" : null) },
-    { id: "central-1", name: "Central 1", layoutObjective: "Central 1", position: { x: 25, y: 15 }, control: control(controls.central1 ? "p1" : null) },
-    { id: "central-2", name: "Central 2", layoutObjective: "Central 2", position: { x: 35, y: 29 }, control: control(controls.central2 ? "p1" : "p2") },
-    { id: "home-p2", name: "Defender Home", layoutObjective: "Defender Home", position: { x: 53, y: 22 }, control: control(controls.enemyHome ? "p1" : "p2") }
+    { id: "home-p1", name: "Attacker Home", layoutObjective: "Attacker Home", position: { ...attackerHome }, control: control(controls.home ? "p1" : null) },
+    { id: "central-1", name: "Central 1", layoutObjective: "Central 1", position: { ...central1 }, control: control(controls.central1 ? "p1" : null) },
+    { id: "central-2", name: "Central 2", layoutObjective: "Central 2", position: { ...central2 }, control: control(controls.central2 ? "p1" : "p2") },
+    { id: "home-p2", name: "Defender Home", layoutObjective: "Defender Home", position: { ...defenderHome }, control: control(controls.enemyHome ? "p1" : "p2") }
   ];
   const units = [
-    unit("runner", "p1", { x: 25, y: 15 }, { battleShocked: runnerBattleShocked }),
-    unit("runner-two", "p1", { x: 35, y: 29 }),
-    unit("runner-three", "p1", { x: 51, y: 22 }),
-    unit("home-guard", "p1", { x: 8, y: 22 }),
-    unit("enemy", "p2", { x: 45, y: 22 })
+    unit("runner", "p1", central1, { battleShocked: runnerBattleShocked }),
+    unit("runner-two", "p1", central2),
+    unit("runner-three", "p1", defenderHome),
+    unit("home-guard", "p1", attackerHome),
+    unit("enemy", "p2", defenderHome)
   ];
   return {
     phase,
@@ -339,6 +348,31 @@ test("45 VP Primary cap suppresses additional Sabotage leverage", () => {
   assert.equal(result.nextActionVpLeverage, 0);
   assert.equal(result.objectivePreservationScore <= 0.15, true);
   assert.match(result.reason, /45 VP Primary game cap/);
+});
+
+test("Sabotage objective signal does not invent Action leverage after the remaining game allowance is covered", () => {
+  const state = seed({
+    round: 4,
+    phase: "shooting",
+    history: [
+      ...priorPrimaryAwards(42),
+      sabotageAttempt("central-1", { round: 4, turn: 4, unitId: "runner" }),
+      sabotageReview({ round: 4, turn: 4, unitId: "runner" })
+    ]
+  });
+  const result = strategy(state);
+  assert.equal(result.remainingPrimaryGameVp, 3);
+  assert.equal(result.cappedAdvisoryVp, 3);
+  assert.equal(result.nextActionVpLeverage, 0);
+
+  const signal = getPrimaryObjectiveStrategySignal(state, {
+    playerId: "p1",
+    perspectivePlayerId: "p1",
+    objectiveId: "home-p2"
+  });
+  assert.equal(signal.eligibleForAction, true);
+  assert.equal(signal.actionRawVp, 5);
+  assert.equal(signal.actionVpLeverage, 0);
 });
 
 test("Sabotage objective signals prioritize pending and enemy-territory Action value", () => {
