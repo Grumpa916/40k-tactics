@@ -30,20 +30,37 @@ export function perspectiveObjectiveName(name, state, perspectivePlayerId) {
 }
 export function compactObjectiveLabel(label) {
   return ({
-    "My Home": "My Home",
-    "Opponent Home": "Opp Home",
-    "My Expansion": "My Exp",
-    "Opponent Expansion": "Opp Exp",
-    "Center 1": "Center 1",
-    "Center 2": "Center 2"
+    "My Home": "MY HOME",
+    "Opponent Home": "OPP HOME",
+    "My Expansion": "MY EXP",
+    "Opponent Expansion": "OPP EXP",
+    "Center 1": "C1",
+    "Center 2": "C2"
   })[label] ?? label;
 }
 
-export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
+function objectiveNameForId(state,id) {
  const objective=(state.objectives ?? []).find(o=>o.id===id);
- const name=objective?.layoutObjective ?? (id?.startsWith('event-companion:')?id.slice('event-companion:'.length):objective?.name ?? id);
- const label=perspectiveObjectiveName(name,state,perspectivePlayerId);
- return compactObjectiveLabel(label);
+ return objective?.layoutObjective ?? (id?.startsWith('event-companion:')?id.slice('event-companion:'.length):objective?.name ?? id);
+}
+
+export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
+ const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
+ const compact=compactObjectiveLabel(label);
+ return label===compact?label:label+' ('+compact+')';
+}
+
+// Canonical text shown on the approved named live-map objective markers.
+export function liveMapObjectiveLabel(state,id,perspectivePlayerId) {
+ const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
+ return ({
+   "My Home": "My Home",
+   "Opponent Home": "Opp Home",
+   "My Expansion": "My Exp",
+   "Opponent Expansion": "Opp Exp",
+   "Center 1": "Center 1",
+   "Center 2": "Center 2"
+ })[label] ?? label;
 }
 
 // Retained for compatibility with older callers and saved verification helpers.
