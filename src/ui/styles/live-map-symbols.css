@@ -30,6 +30,14 @@
   background:transparent;
 }
 
+/* Keep friendly live-map tokens and their status badges above overlapping enemy tokens. */
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.opponent {
+  z-index:2;
+}
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.friendly {
+  z-index:3;
+}
+
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-selected {
   outline:0;
   box-shadow:0 0 0 3px #fff6b0, 0 0 0 5px rgba(255,246,176,.34);

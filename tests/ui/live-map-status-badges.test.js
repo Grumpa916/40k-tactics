@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { getLiveMapStatusBadges, applyLiveMapStatusBadges } from '../../src/ui/live-map-status-badges.js';
 
 function state(overrides = {}) {
@@ -63,4 +64,14 @@ test('Custodes map badges use the approved readied, re-readied and active colors
 test('map badges are omitted when a unit has no current visible status', () => {
   const current = state({phase:'movement',units:[{id:'plain',ownerId:'p2',name:'Opponent',status:'deployed'}],history:[]});
   assert.deepEqual(getLiveMapStatusBadges(current,'plain'),[]);
+});
+
+test('friendly live-map units stack above enemy units so friendly status badges remain visible', () => {
+  const css = readFileSync(new URL('../../src/ui/styles/live-map-symbols.css', import.meta.url), 'utf8');
+  const opponent = css.match(/\.battlefield-map__unit\.opponent\s*\{[^}]*z-index:(\d+)/s);
+  const friendly = css.match(/\.battlefield-map__unit\.friendly\s*\{[^}]*z-index:(\d+)/s);
+  const badges = css.match(/\.unit-map-status-badges\s*\{[^}]*z-index:(\d+)/s);
+  assert.ok(opponent && friendly && badges);
+  assert.ok(Number(friendly[1]) > Number(opponent[1]));
+  assert.ok(Number(badges[1]) > Number(friendly[1]));
 });
