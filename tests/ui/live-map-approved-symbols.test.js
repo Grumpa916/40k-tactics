@@ -41,6 +41,25 @@ test('live map loads the approved symbol stylesheet after the base live-map styl
   assert.match(html, /approved-symbols-1/);
 });
 
+test('live map replaces the old legend with a key for visible friendly designators', () => {
+  const positioned = [
+    {id:'trajann',ownerId:'p1',name:'Trajann Valoris',status:'deployed',position:{x:10,y:10}},
+    {id:'telemon',ownerId:'p1',name:'Telemon Heavy Dreadnought',status:'deployed',position:{x:20,y:10}},
+    {id:'reserve',ownerId:'p1',name:'Blade Champion',status:'reserves',position:{x:25,y:10}},
+    {id:'enemy',ownerId:'p2',name:'Hellblaster Squad',status:'deployed',position:{x:40,y:10}}
+  ];
+  const html = createLiveMapView().render({units:positioned,objectives:[]}, {perspectivePlayerId:'p1'});
+  const key = html.match(/<div class="battlefield-map__unit-key"[^>]*>(.*?)<\/div>/)?.[1];
+  assert.ok(key);
+  assert.match(key, /<strong>TRA<\/strong> Trajann Valoris/);
+  assert.match(key, /<strong>TEL<\/strong> Telemon Heavy Dreadnought/);
+  assert.doesNotMatch(key, /Blade Champion|Hellblaster Squad|Your army|Opponent control/);
+  assert.ok(html.indexOf('battlefield-map-board-end') < html.indexOf('battlefield-map__unit-key'));
+  assert.doesNotMatch(html, /class="battlefield-map__legend"/);
+  const empty = createLiveMapView().render({units:positioned.filter(unit=>unit.ownerId==='p2')}, {perspectivePlayerId:'p1'});
+  assert.doesNotMatch(empty, /class="battlefield-map__unit-key"|class="battlefield-map__legend"/);
+});
+
 test('approved live symbol CSS overrides prototype pills with circles, touch targets and hex objectives', () => {
   const css = fs.readFileSync(new URL('../../src/ui/styles/live-map-symbols.css', import.meta.url), 'utf8');
   assert.match(css, /battlefield-map__unit\.is-compact[\s\S]*width:32px[\s\S]*height:32px[\s\S]*border-radius:50%/);
