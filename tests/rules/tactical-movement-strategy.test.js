@@ -113,7 +113,7 @@ test("Movement Advisor UI shows selected advice, destination comparisons, priori
   assert.match(html, /Movement Advisor/);
   assert.match(html, /move toward centre/i);
   assert.match(html, /Possible destinations · 3/);
-  assert.match(html, /Objective · centre/);
+  assert.match(html, /Objective 1 · centre/);
   assert.match(html, /data-movement-option-rank="2"/);
   assert.match(html, /data-movement-option-rank="3"/);
   assert.match(html, /relative fit/);
@@ -126,6 +126,8 @@ test("Movement Advisor UI shows selected advice, destination comparisons, priori
 
 test('Movement Advisor objective names match map markers without exposing internal IDs', async()=>{
  const {renderBattlefieldMap}=await import('../../src/ui/battlefield-map.js');
+ const {applyApprovedLiveMapSymbols}=await import('../../src/ui/live-map-symbols.js');
+ const {liveMapObjectiveNumber}=await import('../../src/rules/objective-display-labels.js');
  const {getBattlePrimaryMissions,getEventCompanionMapLayout}=await import('../../src/rules/event-companion-map-catalog.js');
  const s=state();s.battlefieldMap={missionSetup:{myDisposition:'Take and Hold',opponentDisposition:'Take and Hold',layout:'A'}};
  s.preGameSetup={attackerPlayerId:'p1',defenderPlayerId:'p2'};
@@ -145,5 +147,9 @@ test('Movement Advisor objective names match map markers without exposing intern
   const map=renderBattlefieldMap(s,{perspectivePlayerId:perspective});
   const abbreviation=objective.objectiveName.match(/\((.*?)\)/)[1];
   assert.ok(map.includes('>'+abbreviation+'</button>'));
+  const number=liveMapObjectiveNumber(s,objective.objectiveId);
+  assert.ok(html.includes(`Objective ${number} · ${objective.objectiveName}`));
+  const liveMap=applyApprovedLiveMapSymbols(map,s);
+  assert.match(liveMap,new RegExp(`data-map-objective-id="event-companion:Expansion 2"[^>]*data-objective-number="${number}">${number}<\\/button>`));
  }
 });

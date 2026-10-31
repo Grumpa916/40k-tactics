@@ -46,3 +46,21 @@ export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
  const compact=compactObjectiveLabel(label);
  return label===compact?label:label+' ('+compact+')';
 }
+
+// Live map markers are numbered in rendered order: layout objectives use the
+// Event Companion geometry order, otherwise positioned state objectives do.
+export function liveMapObjectiveNumber(state, id) {
+ const geometry=layoutGeometry(state);
+ if(geometry){
+  const names=Object.keys(geometry.objectivePositions ?? {});
+  const objective=(state.objectives ?? []).find(item=>item.id===id);
+  const name=objective?.layoutObjective ?? (String(id).startsWith('event-companion:')?String(id).slice('event-companion:'.length):null);
+  const index=names.indexOf(name);
+  return index < 0 ? null : index+1;
+ }
+ const objectives=(state.objectives ?? []).filter(item=>item?.position &&
+  Number.isFinite(item.position.x) && Number.isFinite(item.position.y) &&
+  item.position.x>=0 && item.position.x<=60 && item.position.y>=0 && item.position.y<=44);
+ const index=objectives.findIndex(item=>item.id===id);
+ return index < 0 ? null : index+1;
+}
