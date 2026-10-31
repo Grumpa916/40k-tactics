@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --test",
     "build": "node scripts/build.mjs",
-    "verify": "node --test --test-name-pattern=\"Sabotage objective signals prioritize\" tests/rules/tactical-sabotage-strategy.test.js"
+    "verify": "npm test && npm run build"
   },
   "engines": {
     "node": ">=20"
