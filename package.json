@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --test",
     "build": "node scripts/build.mjs",
-    "verify": "node --test --test-name-pattern=\"Sabotage routes|multiple Sabotage|Sabotage review|completed Sabotage|Round 2|Round 5\" tests/rules/tactical-sabotage-strategy.test.js"
+    "verify": "node --test --test-name-pattern=\"Sabotage projection|45 VP Primary|does not invent Action leverage\" tests/rules/tactical-sabotage-strategy.test.js"
   },
   "engines": {
     "node": ">=20"
