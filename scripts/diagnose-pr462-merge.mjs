@@ -12,6 +12,8 @@ function run(command, options = {}) {
 
 console.log(run('git fetch --unshallow origin'));
 console.log(run('git fetch origin main'));
+console.log(run('git config user.name "PR 462 merge diagnostic"'));
+console.log(run('git config user.email "diagnostic@example.invalid"'));
 console.log(`MERGE_BASE ${run('git merge-base HEAD origin/main').trim()}`);
 console.log(run('git merge --no-commit --no-ff origin/main'));
 const conflicts = run('git diff --name-only --diff-filter=U').trim();
