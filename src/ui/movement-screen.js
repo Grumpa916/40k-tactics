@@ -3,6 +3,7 @@ import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
+import { captureViewContinuity } from './view-continuity.js';
 import { renderMovementAdvisor } from './movement-advisor.js';
 import { renderMovementRosterRail, renderMovementSelectedUnitCard } from './movement-dashboard-view.js';
 import { renderSmokeAndMirrorsRemovalControls } from './smoke-and-mirrors-removal-controls.js';
@@ -119,6 +120,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   function render() {
+    const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const playerId = state.activePlayer ?? state.battle?.activePlayerId;
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
@@ -200,6 +202,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
         leftRail,mapExtra:reserveTray,controls,footer:''});
       mapView.bind(container);
+      restoreView();
       return;
     }
     container.innerHTML = `<main class="movement-screen">
@@ -216,6 +219,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       <section><div class="move-heading"><h2>Eligible units</h2><span>Active player only</span></div><div class="move-units">${unitCards}</div></section>
       <section>${editor}</section>
     </main>`;
+    restoreView();
   }
 
   function handleLivePointerDown(event) {

@@ -22,6 +22,23 @@ test('view refresh retains panel scroll position and expanded additional targets
   nodes={'.shoot-tabletop__control-scroll':{scrollTop:0},'.combat-workspace__scroll':{scrollTop:0},'[data-comparison-more]':{open:false}};
   restore();assert.equal(nodes['.shoot-tabletop__control-scroll'].scrollTop,180);assert.equal(nodes['.combat-workspace__scroll'].scrollTop,95);assert.equal(nodes['[data-comparison-more]'].open,true);
 });
+test('phase redraw retains collapsed and expanded menus after a secondary is recorded', () => {
+  const detail = (label, open, key = null) => ({
+    open,
+    hasAttribute: name => name === 'data-view-key' && key !== null,
+    getAttribute: () => key,
+    querySelector: () => ({ textContent: label })
+  });
+  let menus = [detail('Martial Ka’tah · Command Phase', false, 'command-katah'),
+    detail('Secondaries', true), detail('Scoring review', false)];
+  const container = { querySelectorAll: selector => selector === '[data-view-key]'
+    ? menus.filter(menu => menu.hasAttribute('data-view-key')) : selector === 'details' ? menus : [] };
+  const restore = captureViewContinuity(container);
+  menus = [detail('Martial Ka’tah · Command Phase', true, 'command-katah'),
+    detail('Secondaries', false), detail('Scoring review', true)];
+  restore();
+  assert.deepEqual(menus.map(menu => menu.open), [false, true, false]);
+});
 test('top three comparisons remain compact while all additional targets stay reachable', () => {
   const comparisons=Array.from({length:5},(_,i)=>({targetUnitId:'t'+i,targetName:'Target '+i,rank:i+1}));
   const html=shootingTargetComparisonCards('a','w',null,{units:[{id:'a',ownerId:'p1'}]},[{id:'w'}],'p1',{comparisons});
