@@ -27,14 +27,28 @@ function panel(state, tab) {
     .split('data-unit-detail-panel="' + tab + '"')[1].split('</dl>')[0];
 }
 
-test('Trajann groups his 4+ invulnerable save beneath his 2+ armour save without changing battle data', () => {
+test('Trajann has separate invulnerable and Feel No Pain boxes below his armour save without changing battle data', () => {
   const state = referenceState();
   const before = structuredClone(state);
   const html = panel(state, 'profile');
   assert.match(html, /--unit-stat-count:6/);
-  assert.match(html, /<dt>Save<\/dt><dd>2\+<span class="prototype-unit-invulnerable-save" aria-label="Invulnerable save 4\+">Inv 4\+<\/span><\/dd>/);
-  assert.doesNotMatch(html, /<dt>Invulnerable Save<\/dt>/);
+  assert.match(html, /<dt>Save<\/dt><dd>2\+<\/dd><\/div>/);
+  assert.match(html, /data-unit-defence="invulnerable" style="--unit-defence-column:3"><dt>Invulnerable Save<\/dt><dd>4\+<\/dd><\/div>/);
+  assert.match(html, /data-unit-defence="feel-no-pain" style="--unit-defence-column:4"><dt>Feel No Pain<\/dt><dd>5\+<\/dd><\/div>/);
+  assert.doesNotMatch(html, /prototype-unit-invulnerable-save/);
   assert.deepEqual(state, before);
+});
+
+test('defence boxes follow the Save column in an older snapshot with the screenshot ordering', () => {
+  const state = referenceState();
+  const saved = state.armyRosters.p1.units[0];
+  const c = saved.datasheet.characteristics;
+  saved.datasheet.characteristics = Object.fromEntries([
+    'Move', 'Save', 'Wounds', 'Toughness', 'Leadership', 'Invulnerable save', 'Objective Control'
+  ].map(key => [key, c[key]]));
+  const html = panel(state, 'profile');
+  assert.match(html, /data-unit-defence="invulnerable" style="--unit-defence-column:2"/);
+  assert.match(html, /data-unit-defence="feel-no-pain" style="--unit-defence-column:3"/);
 });
 
 test('save presentation accepts existing invulnerable-save key formats and numeric values', () => {
@@ -46,21 +60,32 @@ test('save presentation accepts existing invulnerable-save key formats and numer
     c[key] = 4;
     const html = panel(state, 'profile');
     assert.match(html, /<dt>Save<\/dt><dd>2\+</);
-    assert.equal((html.match(/class="prototype-unit-invulnerable-save"/g) ?? []).length, 1);
-    assert.match(html, />Inv 4\+<\/span>/);
+    assert.equal((html.match(/data-unit-defence="invulnerable"/g) ?? []).length, 1);
+    assert.match(html, /<dt>Invulnerable Save<\/dt><dd>4\+<\/dd>/);
   }
 });
 
 test('missing armour or invulnerable saves are not invented or discarded', () => {
   const withoutInvulnerable = referenceState();
   delete withoutInvulnerable.armyRosters.p1.units[0].datasheet.characteristics['Invulnerable save'];
-  assert.doesNotMatch(panel(withoutInvulnerable, 'profile'), /prototype-unit-invulnerable-save|Inv 4\+/);
+  assert.doesNotMatch(panel(withoutInvulnerable, 'profile'), /data-unit-defence="invulnerable"/);
 
   const withoutArmour = referenceState();
   withoutArmour.armyRosters.p1.units[0].datasheet.characteristics = { 'Invulnerable save': '4+' };
   const html = panel(withoutArmour, 'profile');
   assert.match(html, /<dt>Invulnerable Save<\/dt><dd>4\+<\/dd>/);
   assert.doesNotMatch(html, /<dt>Save<\/dt>/);
+});
+
+test('conditional or missing Feel No Pain is not presented as general protection', () => {
+  for (const abilities of [[], [
+    { name: 'Aegis of the Emperor', description: 'This unit has Feel No Pain 5+ against mortal wounds.' },
+    { name: 'Feel No Pain 5+', description: 'This model has Feel No Pain 5+ against psychic attacks.' }
+  ]]) {
+    const state = referenceState();
+    state.armyRosters.p1.units[0].datasheet.abilities = abilities;
+    assert.doesNotMatch(panel(state, 'profile'), /data-unit-defence="feel-no-pain"/);
+  }
 });
 
 test('Trajann weapon references match the October 2026 profiles and keep loadout confirmation explicit', () => {

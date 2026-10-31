@@ -3,6 +3,7 @@ import { getBattleRosterUnit, getBattleUnitDatasheet, hasInvalidWargear } from '
 import { getEquippedWeaponReferences } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { getArmyUnitDisplayGroup, armyUnitMemberRole } from './army-unit-display-groups.js';
+import { getRecordedCombatRules } from '../rules/recorded-combat-rules.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -26,7 +27,7 @@ function saveLabel(value) {
   return /^[1-6]$/.test(text) ? text + '+' : value;
 }
 
-function renderCharacteristics(characteristics, { singleLine = false, weapon = false } = {}) {
+function renderCharacteristics(characteristics, { singleLine = false, weapon = false, feelNoPain = null } = {}) {
   if (!characteristics || typeof characteristics !== "object" || Array.isArray(characteristics)) {
     return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
   }
@@ -36,6 +37,16 @@ function renderCharacteristics(characteristics, { singleLine = false, weapon = f
   const armourSave = singleLine && !weapon && entries.find(([key]) => saveCharacteristic(key) === 'save');
   const invulnerableSave = armourSave && entries.find(([key]) => saveCharacteristic(key) === 'invulnerable');
   if (invulnerableSave) entries = entries.filter(([key]) => saveCharacteristic(key) !== 'invulnerable');
+  const defenceStats = [];
+  const saveColumn = armourSave ? entries.findIndex(([key]) => key === armourSave[0]) + 1 : 1;
+  if (invulnerableSave) defenceStats.push({
+    id: 'invulnerable', label: 'Invulnerable Save', value: invulnerableSave[1], column: saveColumn
+  });
+  if (singleLine && !weapon && Number.isInteger(feelNoPain) && feelNoPain >= 2 && feelNoPain <= 6) {
+    let column = saveColumn;
+    if (invulnerableSave) column = saveColumn < Math.max(entries.length, 2) ? saveColumn + 1 : saveColumn - 1;
+    defenceStats.push({ id: 'feel-no-pain', label: 'Feel No Pain', value: feelNoPain, column });
+  }
   if (weapon) {
     const order = { range: 0, attacks: 1, a: 1, skill: 2, ballisticskill: 2, weaponskill: 2,
       bs: 2, ws: 2, strength: 3, s: 3, ap: 4, armourpenetration: 4, armorpenetration: 4, damage: 5, d: 5 };
@@ -43,17 +54,17 @@ function renderCharacteristics(characteristics, { singleLine = false, weapon = f
     entries.sort(([left], [right]) => rank(left) - rank(right));
   }
   const layout = singleLine || weapon
-    ? ` class="battle-shell__army-characteristics prototype-unit-stat-row ${weapon ? 'prototype-unit-weapon-characteristics' : 'prototype-unit-profile-characteristics'}" style="--unit-stat-count:${entries.length}"`
+    ? ` class="battle-shell__army-characteristics prototype-unit-stat-row ${weapon ? 'prototype-unit-weapon-characteristics' : 'prototype-unit-profile-characteristics'}" style="--unit-stat-count:${Math.max(entries.length, defenceStats.length)}"`
     : ' class="battle-shell__army-characteristics"';
   return '<dl' + layout + '>' + entries.map(([key, value]) => {
     const save = !weapon && saveCharacteristic(key);
-    const invulnerable = invulnerableSave && key === armourSave[0]
-      ? '<span class="prototype-unit-invulnerable-save" aria-label="Invulnerable save ' +
-        escapeHtml(saveLabel(invulnerableSave[1])) + '">Inv ' + escapeHtml(saveLabel(invulnerableSave[1])) + '</span>'
-      : '';
     return '<div><dt>' + escapeHtml(displayLabel(key)) + '</dt><dd>' +
-      escapeHtml(save ? saveLabel(value) : value) + invulnerable + '</dd></div>';
-  }).join("") + '</dl>';
+      escapeHtml(save ? saveLabel(value) : value) + '</dd></div>';
+  }).join("") + defenceStats.map(stat =>
+    '<div class="prototype-unit-defence-stat" data-unit-defence="' + stat.id +
+    '" style="--unit-defence-column:' + stat.column + '"><dt>' + stat.label +
+    '</dt><dd>' + escapeHtml(saveLabel(stat.value)) + '</dd></div>'
+  ).join('') + '</dl>';
 }
 
 function weaponProfilesForUnit(unit, gameData) {
@@ -206,7 +217,9 @@ function renderMemberProfile(state, original, unit) {
     ? 'Army data status · ' + escapeHtml(sourceStatus)
     : rosterUnit ? 'Reference from the saved army list' : 'Reference data attached to this battle';
   return '<p class="prototype-unit-data-status">' + sourceLine + '</p>' +
-    '<h4>Characteristics</h4>' + renderCharacteristics(characteristics, { singleLine: true }) +
+    '<h4>Characteristics</h4>' + renderCharacteristics(characteristics, {
+      singleLine: true, feelNoPain: getRecordedCombatRules(state, original).feelNoPain
+    }) +
     '<h4>Keywords</h4>' + renderUnitKeywords(unit);
 }
 
