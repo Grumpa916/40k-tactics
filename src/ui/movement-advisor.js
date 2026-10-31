@@ -1,7 +1,7 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-router.js";
 import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
-import { liveMapObjectiveNumber } from '../rules/objective-display-labels.js';
+import { liveMapObjectiveLabel } from '../rules/objective-display-labels.js';
 
 let highlightEventsBound = false;
 let activeHighlight = null;
@@ -23,10 +23,9 @@ function purposeLabel(purpose) {
   return String(purpose ?? "reposition").replaceAll("-", " ");
 }
 
-function destinationLabel(option, state) {
+function destinationLabel(option, state, perspectivePlayerId) {
   if (option?.objectiveId) {
-    const number = liveMapObjectiveNumber(state, option.objectiveId);
-    return `Objective${number == null ? '' : ` ${number}`} · ${option.objectiveName ?? option.objectiveId}`;
+    return `Objective · ${liveMapObjectiveLabel(state, option.objectiveId, perspectivePlayerId)}`;
   }
   if (option?.targetName) return `Enemy · ${option.targetName}`;
   if (option?.territoryTarget === "boundary") return "Territory · Boundary";
@@ -46,13 +45,13 @@ function highlightDescriptor(option) {
   return { kind: "none", id: "" };
 }
 
-function renderMovementOption(option, index, selectedRank, state) {
+function renderMovementOption(option, index, selectedRank, state, perspectivePlayerId) {
   const recommended = index === 0;
   const rank = index + 1;
   const descriptor = highlightDescriptor(option);
   const selected = selectedRank === rank;
   return `<a href="#movement-destination-${rank}" role="button" class="move-unit movement-advisor__option${selected ? " is-selected" : ""}" data-movement-option-rank="${rank}" data-movement-highlight-kind="${escapeHtml(descriptor.kind)}" data-movement-highlight-id="${escapeHtml(descriptor.id)}" aria-pressed="${selected}">
-    <strong>${rank}. ${escapeHtml(destinationLabel(option, state))}${recommended ? " · Recommended" : ""}</strong>
+    <strong>${rank}. ${escapeHtml(destinationLabel(option, state, perspectivePlayerId))}${recommended ? " · Recommended" : ""}</strong>
     <span>${escapeHtml(purposeLabel(option.purpose))} · ${escapeHtml(strategicFitLabel(option.score))} relative fit</span>
     <small>${escapeHtml(option.actionHint ?? "Reposition for this strategic purpose")}</small>
     ${option.reason ? `<small>${escapeHtml(option.reason)}</small>` : ""}
@@ -200,7 +199,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     <details open>
       <summary>Possible destinations · ${selectedOptions.length}</summary>
       <p><small>Ranked for ${escapeHtml(selected.unitName)}. Strategic fit is comparative guidance, not a movement-success probability.</small></p>
-      <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank, state)).join("")}</div>
+      <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank, state, perspectivePlayerId)).join("")}</div>
       <p><small>Tap an objective or enemy option to highlight it. Territory options use the dotted boundary already shown on the map. Highlight only — the unit is not moved and no movement choice is recorded.</small></p>
     </details>
     <details>

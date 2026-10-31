@@ -39,16 +39,32 @@ export function compactObjectiveLabel(label) {
   })[label] ?? label;
 }
 
-export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
+function objectiveNameForId(state,id) {
  const objective=(state.objectives ?? []).find(o=>o.id===id);
- const name=objective?.layoutObjective ?? (id?.startsWith('event-companion:')?id.slice('event-companion:'.length):objective?.name ?? id);
- const label=perspectiveObjectiveName(name,state,perspectivePlayerId);
+ return objective?.layoutObjective ?? (id?.startsWith('event-companion:')?id.slice('event-companion:'.length):objective?.name ?? id);
+}
+
+export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
+ const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
  const compact=compactObjectiveLabel(label);
  return label===compact?label:label+' ('+compact+')';
 }
 
-// Live map markers are numbered in rendered order: layout objectives use the
-// Event Companion geometry order, otherwise positioned state objectives do.
+// Canonical text shown on the approved named live-map objective markers.
+export function liveMapObjectiveLabel(state,id,perspectivePlayerId) {
+ const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
+ return ({
+   "My Home": "My Home",
+   "Opponent Home": "Opp Home",
+   "My Expansion": "My Exp",
+   "Opponent Expansion": "Opp Exp",
+   "Center 1": "Center 1",
+   "Center 2": "Center 2"
+ })[label] ?? label;
+}
+
+// Retained for compatibility with older callers and saved verification helpers.
+// Named live-map markers no longer expose this number to players.
 export function liveMapObjectiveNumber(state, id) {
  const geometry=layoutGeometry(state);
  if(geometry){

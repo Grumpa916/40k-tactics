@@ -52,17 +52,26 @@
   min-width:44px;
   max-width:44px;
   min-height:44px;
-  padding:0;
+  padding:0 7px;
   border:0;
   border-radius:0;
   background:transparent;
   color:#fff;
-  font-size:12px;
+  font-size:8px;
   font-weight:900;
-  line-height:1;
+  line-height:1.02;
+  letter-spacing:-.02em;
+  text-align:center;
+  flex-direction:column;
+  gap:0;
   isolation:isolate;
   box-shadow:none;
   filter:none;
+}
+
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective-label-line {
+  display:block;
+  white-space:nowrap;
 }
 
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__objective::before {

@@ -44,13 +44,29 @@ function replaceUnitMarkerText(html, unitId, symbol) {
   return html.slice(0, contentStart + 1) + escapeHtml(symbol) + html.slice(contentEnd);
 }
 
-function numberObjectiveMarkers(html) {
-  let objectiveNumber = 0;
+const OBJECTIVE_LABEL_LINES = new Map([
+  ['My Home', ['My', 'Home']],
+  ['Opp Home', ['Opp', 'Home']],
+  ['My Exp', ['My', 'Exp']],
+  ['Opp Exp', ['Opp', 'Exp']],
+  ['Center 1', ['Center', '1']],
+  ['Center 2', ['Center', '2']],
+  // Accept the previous compact text so cached/test markup degrades safely.
+  ['MY HOME', ['My', 'Home']],
+  ['OPP HOME', ['Opp', 'Home']],
+  ['MY EXP', ['My', 'Exp']],
+  ['OPP EXP', ['Opp', 'Exp']],
+  ['C1', ['Center', '1']],
+  ['C2', ['Center', '2']]
+]);
+
+function formatObjectiveMarkerLabels(html) {
   return html.replace(/(<button\b[^>]*class="[^"]*\bbattlefield-map__objective\b[^"]*"[^>]*>)([^<]*)(<\/button>)/g,
-    (_match, opening, _label, closing) => {
-      objectiveNumber += 1;
-      const taggedOpening = opening.slice(0, -1) + ` data-objective-number="${objectiveNumber}">`;
-      return taggedOpening + objectiveNumber + closing;
+    (_match, opening, rawLabel, closing) => {
+      const lines = OBJECTIVE_LABEL_LINES.get(String(rawLabel ?? '').trim());
+      if (!lines) return opening + rawLabel + closing;
+      const label = lines.map((line) => `<span class="battlefield-map__objective-label-line">${escapeHtml(line)}</span>`).join('');
+      return opening + label + closing;
     });
 }
 
@@ -58,5 +74,5 @@ export function applyApprovedLiveMapSymbols(mapHtml, state) {
   let html = String(mapHtml ?? '');
   const labels = liveUnitSymbolLabels(Array.isArray(state?.units) ? state.units : []);
   for (const [unitId, symbol] of labels) html = replaceUnitMarkerText(html, unitId, symbol);
-  return numberObjectiveMarkers(html);
+  return formatObjectiveMarkerLabels(html);
 }
