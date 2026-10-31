@@ -39,6 +39,17 @@ export function compactObjectiveLabel(label) {
   })[label] ?? label;
 }
 
+export function mapObjectiveMarkerLabel(label) {
+ return ({
+   "My Home": "mH",
+   "Opponent Home": "oH",
+   "My Expansion": "mE",
+   "Opponent Expansion": "oE",
+   "Center 1": "C1",
+   "Center 2": "C2"
+ })[label] ?? label;
+}
+
 function objectiveNameForId(state,id) {
  const objective=(state.objectives ?? []).find(o=>o.id===id);
  return objective?.layoutObjective ?? (id?.startsWith('event-companion:')?id.slice('event-companion:'.length):objective?.name ?? id);
@@ -50,17 +61,10 @@ export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
  return label===compact?label:label+' ('+compact+')';
 }
 
-// Canonical compact text shown on live-map objective markers and in Movement advice.
+// Canonical compact text shown on battlefield objective markers and in Movement advice.
 export function liveMapObjectiveLabel(state,id,perspectivePlayerId) {
  const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
- return ({
-   "My Home": "mH",
-   "Opponent Home": "oH",
-   "My Expansion": "mE",
-   "Opponent Expansion": "oE",
-   "Center 1": "C1",
-   "Center 2": "C2"
- })[label] ?? label;
+ return mapObjectiveMarkerLabel(label);
 }
 
 // Retained for compatibility with older callers and saved verification helpers.
