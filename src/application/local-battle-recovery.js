@@ -22,8 +22,14 @@ export function createRecoveryRecord(state, now = Date.now()) {
 }
 
 // Subscribe independently of UI rendering. Coalesce changes while a write is in flight.
-export function createLocalBattleRecovery({ session, store, onChange = () => {}, now = Date.now, emergencyStorage = null }) {
-  const emergencyKey = '40k-tactics-external-reference-recovery';
+export function createLocalBattleRecovery({
+  session,
+  store,
+  onChange = () => {},
+  now = Date.now,
+  emergencyStorage = null,
+  emergencyKey = '40k-tactics-external-reference-recovery'
+}) {
   const readEmergency = () => {
     try { const record = JSON.parse(emergencyStorage?.getItem(emergencyKey) ?? 'null'); return validateRecoveryRecord(record) ? record : null; }
     catch { return null; }
