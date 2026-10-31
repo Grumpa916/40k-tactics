@@ -1,10 +1,13 @@
 import { escapeHtml as e } from './army-builder-html.js';
 import { unitStats } from './army-unit-details.js';
 import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
+import { loadoutReadinessLabel } from '../rules/roster-loadout-readiness.js';
 
 function resolveRosterUnit(unit, faction = null) {
  if (unit?.datasheet || !faction) return unit;
- return findArmyUnitCandidates({ faction }).find(candidate => candidate.id === unit.datasheetId || candidate.name === unit.name) ?? unit;
+ const candidate = findArmyUnitCandidates({ faction }).find(item => item.id === unit.datasheetId || item.name === unit.name);
+ if (!candidate) return unit;
+ return { ...candidate, ...unit, datasheet: unit.datasheet ?? candidate.datasheet };
 }
 
 /** Group saved attachment IDs for display without changing the roster or stat lines. */
@@ -22,7 +25,8 @@ export function renderRosterRows(units, selectedId, faction = null) {
  function row(rawUnit, role = '') {
   const unit = resolveRosterUnit(rawUnit, faction);
   const models = unit.modelCount ?? 1;
-  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''}</small>${unitStats(unit)}</button>`;
+  const loadoutLabel = loadoutReadinessLabel(unit);
+  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${unitStats(unit)}</button>`;
  }
  return units.map(unit => {
   if (rendered.has(unit.id)) return '';
