@@ -18,6 +18,11 @@ import { getPrimaryObjectiveStrategySignal, getPrimaryStrategyContext } from "..
 import { getMovementStrategicRecommendations } from "../../src/rules/tactical-movement-router.js";
 import { recordShootingActivation } from "../../src/engine/shooting-transitions.js";
 import { createMissionActionPicker } from "../../src/ui/mission-action-picker.js";
+import { createGameSession } from "../../src/application/game-session.js";
+import { activateShootingUnit, recordShootingActivation as recordApplicationShootingActivation } from "../../src/application/shooting-workflow.js";
+import { registerCoreCommandHandlers } from "../../src/engine/register-core-commands.js";
+
+registerCoreCommandHandlers();
 
 function control(controllerId) {
   return controllerId == null
@@ -243,7 +248,7 @@ test("Extract Relic routes to its strategy and captures opponent marker setup wi
   const selected = markerSelection(state).map((entry) => entry.terrainAreaId);
   const before = getShootingCandidates(state);
   assert.ok(before.available.includes("runner") || before.actionOnly.includes("runner"));
-  const next = recordShootingActivation(state, {
+  const payload = {
     unitId: "runner",
     actionType: "mission_action",
     actionId: "primary-extract-relic",
@@ -252,11 +257,17 @@ test("Extract Relic routes to its strategy and captures opponent marker setup wi
     rulesConfirmed: true,
     extractRelicSetupOnly: true,
     extractRelicMarkerSetupTerrainAreaIds: selected
-  });
-  assert.equal(getExtractRelicState(next, { playerId: "p1", perspectivePlayerId: "p1" }).opponentMarkerSetupComplete, true);
-  assert.equal(next.history.filter((event) => event.type === "shooting.unit_activated").length, 0);
-  const after = getShootingCandidates(next);
-  assert.ok(after.available.includes("runner") || after.actionOnly.includes("runner"));
+  };
+  const session = createGameSession(state);
+  const sessionResult = activateShootingUnit(session, payload);
+  const applicationResult = recordApplicationShootingActivation(state, payload);
+  for (const next of [sessionResult, applicationResult]) {
+    assert.equal(getExtractRelicState(next, { playerId: "p1", perspectivePlayerId: "p1" }).opponentMarkerSetupComplete, true);
+    assert.equal(next.history.filter((event) => event.type === "shooting.unit_activated").length, 0);
+    const after = getShootingCandidates(next);
+    assert.ok(after.available.includes("runner") || after.actionOnly.includes("runner"));
+  }
+  assert.equal(session.getState(), sessionResult);
 });
 
 test("Extract Relic Sensor Sweep is once per turn and removes the opponent marker from the shared Locate and Deny pool", () => {
@@ -406,8 +417,11 @@ test("Round 5 uses live non-home control at end of turn", () => {
 });
 
 test("a central non-home objective can combine Sensor Sweep and control leverage without duplicating the binary control award", () => {
-  const seeded = seed({ round: 2, phase: "movement", centralController: "p1", secondCentralController: "p1" });
+  const seeded = seed({ round: 2, phase: "movement", centralController: "p1" });
   const { state } = withMarkerSetup(seeded.state);
+  const other = state.objectives.find((objective) => /expansion/i.test(objective.layoutObjective));
+  assert.ok(other, "the layout must supply a second non-home objective");
+  other.control = control("p1");
   const signal = getPrimaryObjectiveStrategySignal(state, {
     playerId: "p1", perspectivePlayerId: "p1", objectiveId: seeded.central.id
   });
@@ -415,8 +429,7 @@ test("a central non-home objective can combine Sensor Sweep and control leverage
   assert.equal(signal.actionVpLeverage, 4);
   assert.equal(signal.controlVpLeverage, 0);
 
-  const other = state.objectives.find((objective) => objective.id !== seeded.central.id && /cent(er|ral)/i.test(objective.layoutObjective));
-  if (other) other.control = control("p2");
+  other.control = control("p2");
   const soleSignal = getPrimaryObjectiveStrategySignal(state, {
     playerId: "p1", perspectivePlayerId: "p1", objectiveId: seeded.central.id
   });
