@@ -8,6 +8,7 @@ import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionS
 import { getVitalLinkObjectiveOptions } from '../rules/vital-link-state.js';
 import { getSecureAssetObjectiveOptions } from '../rules/secure-asset-state.js';
 import { getExtractRelicCentralObjectiveOptions, getExtractRelicMarkerRemovalOptions, getExtractRelicState } from '../rules/extract-relic-state.js';
+import { getVanguardOperationTerrainOptions } from '../rules/vanguard-operation-state.js';
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -46,6 +47,7 @@ export function createMissionActionPicker() {
       const isSecureAsset=option?.definitionId==='primary-secure-asset';
       const isVitalLink=option?.definitionId==='primary-vital-link';
       const isExtractRelic=option?.definitionId==='primary-extract-relic';
+      const isVanguardOperation=option?.definitionId==='primary-vanguard-operation';
       const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
       const isCleanse=option?.definitionId==='secondary-cleanse'&&option?.rulesVerified===true;
       const isPlunder=option?.definitionId==='secondary-plunder'&&option?.rulesVerified===true;
@@ -78,6 +80,7 @@ export function createMissionActionPicker() {
       const vitalLinkObjectives=isVitalLink ? getVitalLinkObjectiveOptions(state,{playerId}) : [];
       const extractRelicObjectives=isExtractRelic && !extractRelicSetupMode ? getExtractRelicCentralObjectiveOptions(state,{playerId}) : [];
       const extractRelicMarkers=isExtractRelic && !extractRelicSetupMode ? getExtractRelicMarkerRemovalOptions(state,{playerId}) : [];
+      const vanguardTerrain=isVanguardOperation ? getVanguardOperationTerrainOptions(state,{playerId}) : [];
       const locateObjectives=isLocateAndDeny && !locateSetupMode ? getLocateAndDenyCentralObjectiveOptions(state,{playerId}) : [];
       const locateMarkers=isLocateAndDeny && !locateSetupMode ? getLocateAndDenyMarkerRemovalOptions(state,{playerId}) : [];
       if (isDeathTrap && terrainArea && !deathTrapTerrain.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
@@ -89,6 +92,7 @@ export function createMissionActionPicker() {
       if (isVitalLink && objective && !vitalLinkObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isExtractRelic && !extractRelicSetupMode && objective && !extractRelicObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isExtractRelic && !extractRelicSetupMode && terrainArea && !extractRelicMarkers.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
+      if (isVanguardOperation && terrainArea && !vanguardTerrain.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
       if (isLocateAndDeny && !locateSetupMode && objective && !locateObjectives.some(item=>item.objectiveId===objective)) objective='';
       if (isLocateAndDeny && !locateSetupMode && terrainArea && !locateMarkers.some(item=>item.terrainAreaId===terrainArea)) terrainArea='';
       if (isCleanse && objective && !cleanseObjectives.some(item=>item.objectiveId===objective)) objective='';
@@ -134,13 +138,15 @@ export function createMissionActionPicker() {
                       ? `<label class="mission-action-picker__field"><span>Central objective for Maintain Control</span><select data-action-objective><option value="">Choose central objective…</option>${vitalLinkObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}${item.markerCount?` · ${item.markerCount} marker${item.markerCount===1?'':'s'}`:''}${item.controlledByPlayer?' · currently controlled':''}</option>`).join('')}</select><small>Only central objectives are shown. Existing operation markers can be stacked again on later turns. Confirm this unit is within range on the physical tabletop.</small></label>`
                       : isExtractRelic
                         ? `<label class="mission-action-picker__field"><span>Central objective for Sensor Sweep</span><select data-action-objective><option value="">Choose central objective…</option>${extractRelicObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}${item.controlledByPlayer?' · currently controlled':''}</option>`).join('')}</select><small>Only central objectives are shown. Confirm this unit is within range on the physical tabletop.</small></label><label class="mission-action-picker__field"><span>Opponent operation marker to remove</span><select data-action-terrain><option value="">Choose remaining marker…</option>${extractRelicMarkers.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>The selected opponent marker is removed only if Sensor Sweep completes at end of turn. Sensor Sweep cannot start when only one marker remains.</small></label>`
-                        : isLocateAndDeny
-                          ? `<label class="mission-action-picker__field"><span>Central objective for Sensor Sweep</span><select data-action-objective><option value="">Choose central objective…</option>${locateObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}</option>`).join('')}</select><small>Confirm this unit is within range on the physical tabletop.</small></label><label class="mission-action-picker__field"><span>Operation marker to remove</span><select data-action-terrain><option value="">Choose remaining marker…</option>${locateMarkers.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>The selected marker is removed only if Sensor Sweep completes at end of turn.</small></label>`
-                          : isCleanse
-                            ? `<label class="mission-action-picker__field"><span>Objective to Cleanse</span><select data-action-objective><option value="">Choose non-home objective…</option>${cleanseObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}</option>`).join('')}</select><small>Your home objective and objectives already used by a Cleanse attempt this turn are hidden. Confirm the unit is within range on the tabletop.</small></label>`
-                            : isPlunder
-                              ? `<label class="mission-action-picker__field"><span>Terrain area to Plunder</span><select data-action-terrain><option value="">Choose terrain area…</option>${plunderTerrains.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Terrain areas wholly within your deployment zone are hidden. Confirm the selected area is outside your territory and the unit is within it on the tabletop.</small></label>`
-                              : `<label class="mission-action-picker__field"><span>Objective used for this Action <small>(optional)</small></span><select data-action-objective><option value="">No objective selected</option>${(state.objectives??[]).map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>`;
+                        : isVanguardOperation
+                          ? `<label class="mission-action-picker__field"><span>Terrain area for Vanguard Operation</span><select data-action-terrain><option value="">Choose enemy-territory terrain…</option>${vanguardTerrain.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Terrain mapped wholly in your territory is hidden. Boundary or uncertain terrain remains selectable only so you can confirm the physical battlefield; the acting unit must be within a terrain area that is within the opponent's territory.</small></label>`
+                          : isLocateAndDeny
+                            ? `<label class="mission-action-picker__field"><span>Central objective for Sensor Sweep</span><select data-action-objective><option value="">Choose central objective…</option>${locateObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}</option>`).join('')}</select><small>Confirm this unit is within range on the physical tabletop.</small></label><label class="mission-action-picker__field"><span>Operation marker to remove</span><select data-action-terrain><option value="">Choose remaining marker…</option>${locateMarkers.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>The selected marker is removed only if Sensor Sweep completes at end of turn.</small></label>`
+                            : isCleanse
+                              ? `<label class="mission-action-picker__field"><span>Objective to Cleanse</span><select data-action-objective><option value="">Choose non-home objective…</option>${cleanseObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}</option>`).join('')}</select><small>Your home objective and objectives already used by a Cleanse attempt this turn are hidden. Confirm the unit is within range on the tabletop.</small></label>`
+                              : isPlunder
+                                ? `<label class="mission-action-picker__field"><span>Terrain area to Plunder</span><select data-action-terrain><option value="">Choose terrain area…</option>${plunderTerrains.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Terrain areas wholly within your deployment zone are hidden. Confirm the selected area is outside your territory and the unit is within it on the tabletop.</small></label>`
+                                : `<label class="mission-action-picker__field"><span>Objective used for this Action <small>(optional)</small></span><select data-action-objective><option value="">No objective selected</option>${(state.objectives??[]).map(item=>`<option value="${esc(item.id)}" ${item.id===objective?'selected':''}>${esc(item.name??item.id)}</option>`).join('')}</select></label>`;
       const completionNote=locateSetupMode
         ? '<p class="mission-action-picker__note">Setup capture can be corrected until the first Locate and Deny Sensor Sweep is started. The physical marker placement remains authoritative.</p>'
         : extractRelicSetupMode
@@ -161,15 +167,17 @@ export function createMissionActionPicker() {
                         ? '<p class="mission-action-picker__note">Maintain Control completes at the end of your turn only if this unit controls the selected central objective. A completed review adds a persistent operation marker there. Starting the Action spends its once-per-turn use even if it later fails.</p>'
                         : isExtractRelic
                           ? '<p class="mission-action-picker__note">Sensor Sweep completes at the end of your turn only if this unit controls the selected central objective. A completed review is worth 4 VP before Primary caps and removes the selected opponent operation marker. Starting the Action spends its once-per-turn use even if it fails.</p>'
-                          : isLocateAndDeny
-                            ? '<p class="mission-action-picker__note">Sensor Sweep completes at the end of your turn only if this unit controls the selected central objective. A completed review removes the selected operation marker. Starting the Action spends the once-per-turn use even if it fails.</p>'
-                            : isCleanse
-                              ? '<p class="mission-action-picker__note">Cleanse is unlimited, but each unit that starts this Action this phase must use a different objective. At your turn’s end, confirm completion only if the unit still controls its selected objective. One cleansed objective is 2 VP; two or more are 5 VP.</p>'
-                              : isPlunder
-                                ? (plunderState?.usedThisTurn
-                                  ? '<p class="mission-action-picker__note">Plunder has already been used this turn. Check its 5 VP at the end-of-turn scoring review.</p>'
-                                  : '<p class="mission-action-picker__note">Plunder is limited to once per turn and completes immediately. A recorded Plunder is worth 5 VP at the end of your turn; confirm the terrain-area rule on the tabletop.</p>')
-                                : '<p class="mission-action-picker__note">This records the Action attempt only. Completion and VP are confirmed later at the scoring checkpoint.</p>';
+                          : isVanguardOperation
+                            ? '<p class="mission-action-picker__note">Vanguard Operation completes at the end of your turn only if no enemy units are within the selected terrain area. Starting the Action spends its once-per-turn use even if the area is not clear at the end-turn review.</p>'
+                            : isLocateAndDeny
+                              ? '<p class="mission-action-picker__note">Sensor Sweep completes at the end of your turn only if this unit controls the selected central objective. A completed review removes the selected operation marker. Starting the Action spends the once-per-turn use even if it fails.</p>'
+                              : isCleanse
+                                ? '<p class="mission-action-picker__note">Cleanse is unlimited, but each unit that starts this Action this phase must use a different objective. At your turn’s end, confirm completion only if the unit still controls its selected objective. One cleansed objective is 2 VP; two or more are 5 VP.</p>'
+                                : isPlunder
+                                  ? (plunderState?.usedThisTurn
+                                    ? '<p class="mission-action-picker__note">Plunder has already been used this turn. Check its 5 VP at the end-of-turn scoring review.</p>'
+                                    : '<p class="mission-action-picker__note">Plunder is limited to once per turn and completes immediately. A recorded Plunder is worth 5 VP at the end of your turn; confirm the terrain-area rule on the tabletop.</p>')
+                                  : '<p class="mission-action-picker__note">This records the Action attempt only. Completion and VP are confirmed later at the scoring checkpoint.</p>';
       const linkedFields=option?.instanceId
         ? setupMode
           ? `${actionReminder}${targetControl}${completionNote}`
@@ -181,7 +189,7 @@ export function createMissionActionPicker() {
       const pickerHref=new URL('./styles/mission-action-picker.css',import.meta.url).href;
       const targetReady=setupMode
         ? locateSetupTerrain.size===expectedLocateSetupCount
-        : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isSecureAsset ? !!objective : isVitalLink ? !!objective : isExtractRelic ? !!objective && !!terrainArea : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
+        : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isSecureAsset ? !!objective : isVitalLink ? !!objective : isExtractRelic ? !!objective && !!terrainArea : isVanguardOperation ? !!terrainArea : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
       const buttonLabel=setupMode?'Record marker setup':isPlunder&&plunderState?.usedThisTurn?'Plunder already used this turn':'Record Action attempt';
       return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
         ${!options.length?'<p class="mission-action-picker__note">No active mission Actions are available. Select cards in Command before linking an Action.</p>':''}
@@ -212,6 +220,7 @@ export function createMissionActionPicker() {
         const isSecureAsset=option?.definitionId==='primary-secure-asset';
         const isVitalLink=option?.definitionId==='primary-vital-link';
         const isExtractRelic=option?.definitionId==='primary-extract-relic';
+        const isVanguardOperation=option?.definitionId==='primary-vanguard-operation';
         const isLocateAndDeny=option?.definitionId==='primary-locate-and-deny';
         const isCleanse=option?.definitionId==='secondary-cleanse'&&option?.rulesVerified===true;
         const isPlunder=option?.definitionId==='secondary-plunder'&&option?.rulesVerified===true;
@@ -233,7 +242,7 @@ export function createMissionActionPicker() {
           onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming:'end-of-turn',rulesConfirmed:true,extractRelicSetupOnly:true,extractRelicMarkerSetupTerrainAreaIds:[...locateSetupTerrain]});
           return;
         }
-        if((option.instanceId&&!confirmed)||(isDeathTrap&&!terrainArea)||(isSmokeAndMirrors&&!objective)||(isTriangulation&&!objective)||(isSurveilTheFoe&&!targetUnit)||(isGatherIntel&&!objective)||(isSecureAsset&&!objective)||(isVitalLink&&!objective)||(isExtractRelic&&(!objective||!terrainArea))||(isLocateAndDeny&&(!objective||!terrainArea))||(isCleanse&&!objective)||(isPlunder&&(!terrainArea||getPlunderActionState(renderState,{playerId,instanceId:option.instanceId}).usedThisTurn)))return;
+        if((option.instanceId&&!confirmed)||(isDeathTrap&&!terrainArea)||(isSmokeAndMirrors&&!objective)||(isTriangulation&&!objective)||(isSurveilTheFoe&&!targetUnit)||(isGatherIntel&&!objective)||(isSecureAsset&&!objective)||(isVitalLink&&!objective)||(isExtractRelic&&(!objective||!terrainArea))||(isVanguardOperation&&!terrainArea)||(isLocateAndDeny&&(!objective||!terrainArea))||(isCleanse&&!objective)||(isPlunder&&(!terrainArea||getPlunderActionState(renderState,{playerId,instanceId:option.instanceId}).usedThisTurn)))return;
         const allowedTimings=timingsFor(option);
         const reviewTiming=allowedTimings.includes(timing)?timing:allowedTimings[0];
         onSubmit({actionId:option.definitionId??option.id,missionInstanceId:option.instanceId??null,reviewTiming,objectiveId:objective||null,terrainAreaId:terrainArea||null,targetUnitId:targetUnit||null,rulesConfirmed:confirmed});
