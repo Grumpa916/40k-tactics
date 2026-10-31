@@ -50,16 +50,16 @@ export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
  return label===compact?label:label+' ('+compact+')';
 }
 
-// Canonical text shown on the approved named live-map objective markers.
+// Canonical compact text shown on live-map objective markers and in Movement advice.
 export function liveMapObjectiveLabel(state,id,perspectivePlayerId) {
  const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
  return ({
-   "My Home": "My Home",
-   "Opponent Home": "Opp Home",
-   "My Expansion": "My Exp",
-   "Opponent Expansion": "Opp Exp",
-   "Center 1": "Center 1",
-   "Center 2": "Center 2"
+   "My Home": "mH",
+   "Opponent Home": "oH",
+   "My Expansion": "mE",
+   "Opponent Expansion": "oE",
+   "Center 1": "C1",
+   "Center 2": "C2"
  })[label] ?? label;
 }
 
