@@ -53,20 +53,25 @@ function renderDetachmentStratagemReminders(state,playerId) {
   ).join('')+'</details>';
 }
 
-export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
+export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
+  const playerId=perspective(state,perspectivePlayerId);
+  const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId});
+  const detachment=renderDetachmentStratagemReminders(state,playerId);
+  return guardians||detachment?style()+guardians+detachment:'';
+}
+
+export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true}={}) {
   const playerId=perspective(state,perspectivePlayerId);
   const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
   entries.sort((a,b)=>Number(b.ruleId==='aquila-commander')-Number(a.ruleId==='aquila-commander'));
   const detachmentEntries=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});
-  const stratagemEntries=getCustodesDetachmentStratagemReminders(state,{playerId});
-  const stratagemHtml=renderDetachmentStratagemReminders(state,playerId);
+  const stratagemHtml=includeStratagems?renderStratagemOpportunityReminders(state,{perspectivePlayerId,selectedUnitId}):'';
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
-  const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId});
-  if(!entries.length&&!detachmentEntries.length&&!note)return guardians||stratagemHtml?style()+guardians+stratagemHtml:'';
+  if(!entries.length&&!detachmentEntries.length&&!note)return stratagemHtml;
   const opening=entries.some(entry=>entry.kind==='decision');
-  return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+(entries.length+detachmentEntries.length+stratagemEntries.length)+'</summary>'+
+  return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+(entries.length+detachmentEntries.length)+'</summary>'+
     (note?'<div class="rules-personal-note"><strong>My notes</strong><p>'+esc(note)+'</p></div>':'')+
-    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+guardians+stratagemHtml;
+    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+stratagemHtml;
 }
 
 export function renderTargetDefenseReminders(state,options={}) {
