@@ -27,6 +27,13 @@ function panel(state, tab) {
     .split('data-unit-detail-panel="' + tab + '"')[1].split('</dl>')[0];
 }
 
+test('Martial Ka\'tah appears after other unit abilities', () => {
+  const state = referenceState();
+  const html = renderArmyUnitDialog(state, 'battle-trajann', {}, 'abilities');
+  const abilities = html.split('data-unit-detail-panel="abilities"')[1].split('</ul>')[0];
+  assert.ok(abilities.indexOf('Martial Ka&#039;tah') > abilities.indexOf('Supreme Commander'));
+});
+
 test('Trajann has separate invulnerable and Feel No Pain boxes below his armour save without changing battle data', () => {
   const state = referenceState();
   const before = structuredClone(state);

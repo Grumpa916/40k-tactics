@@ -177,7 +177,9 @@ function renderUnitAbilities(unit) {
     : Array.isArray(unit.abilities) ? unit.abilities
     : Array.isArray(unit.metadata?.abilities) ? unit.metadata.abilities : [];
   if (!abilities.length) return '<p class="battle-context__empty">Ability reference data is not loaded for this unit.</p>';
-  return '<ul class="battle-shell__army-abilities">' + abilities.map((ability) => {
+  const ordered = [...abilities.filter(ability => (typeof ability === 'string' ? ability : ability?.name ?? ability?.label) !== "Martial Ka'tah"),
+    ...abilities.filter(ability => (typeof ability === 'string' ? ability : ability?.name ?? ability?.label) === "Martial Ka'tah")];
+  return '<ul class="battle-shell__army-abilities">' + ordered.map((ability) => {
     const name = typeof ability === "string" ? ability : ability?.name ?? ability?.label ?? "Unnamed ability";
     const text = typeof ability === "string" ? "" : ability?.description ?? ability?.text ?? ability?.summary ?? "";
     return '<li><strong>' + escapeHtml(name) + '</strong>' +
