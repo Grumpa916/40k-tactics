@@ -119,16 +119,23 @@ export function enhanceSabotageMovementRecommendations(state, base, {
 
     if (best.score <= recommendation.score) {
       const same = sameDestination(recommendation, best);
+      const cannotControl = recommendation.battleShocked === true || recommendation.effectiveOc === 0;
+      const controlDependent = best.primaryStrategySignal?.controlVpLeverage > 0 || best.primaryStrategySignal?.actionVpLeverage > 0;
+      const suppressedSameDestination = same && cannotControl && controlDependent;
+      const rankedAlternatives = [
+        ...(recommendation.alternatives ?? []),
+        ...options.filter((option) => !sameDestination(option, recommendation))
+      ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+      const alternatives = suppressedSameDestination
+        ? [best, ...rankedAlternatives.filter((option) => !sameDestination(option, best))].slice(0, 2)
+        : rankedAlternatives.slice(0, 2);
       return Object.freeze({
         ...recommendation,
-        primaryStrategySignal: same ? best.primaryStrategySignal : recommendation.primaryStrategySignal,
-        reason: same && best.primaryStrategySignal?.reason
+        primaryStrategySignal: same && !suppressedSameDestination ? best.primaryStrategySignal : recommendation.primaryStrategySignal,
+        reason: same && !suppressedSameDestination && best.primaryStrategySignal?.reason
           ? `${recommendation.reason} ${best.primaryStrategySignal.reason}`
           : recommendation.reason,
-        alternatives: Object.freeze([
-          ...(recommendation.alternatives ?? []),
-          ...options.filter((option) => !sameDestination(option, recommendation))
-        ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 2))
+        alternatives: Object.freeze(alternatives)
       });
     }
 
