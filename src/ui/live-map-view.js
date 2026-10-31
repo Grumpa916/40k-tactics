@@ -13,7 +13,7 @@ export function createLiveMapView() {
       stylesheet.searchParams.set('v', 'approved-symbols-1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
-      symbolsStylesheet.searchParams.set('v', 'approved-symbols-1');
+      symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
       const symbolsHref = symbolsStylesheet.href;
       const showZoomControls = options?.showZoomControls !== false;
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, activationForUnit:id => getUnitActivationPresentation(state,id) });
