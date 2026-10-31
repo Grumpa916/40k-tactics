@@ -24,11 +24,18 @@ test('verification attached-unit reference hydrates the full reviewed datasheet 
   }
 });
 
-test('mission review reserves the iPad viewport width and prevents nested mission cards from clipping', () => {
-  const html = renderMissionReviewPanel('<section class="battle-mission-summary"><details class="battle-mission-summary__section"><summary>Primary Missions</summary></details></section>', { open: true });
+test('mission review uses the iPad viewport as a stacked scrollable review workspace', () => {
+  const summary = '<section class="battle-mission-summary">' +
+    '<details class="battle-mission-summary__section" data-mission-summary-key="mission-section-primary"><summary>Primary Missions</summary><div class="battle-mission-summary__section-content">Primary detail</div></details>' +
+    '<details class="battle-mission-summary__section" data-mission-summary-key="mission-section-secondary"><summary>Secondary Missions</summary><div class="battle-mission-summary__section-content">Secondary detail</div></details>' +
+    '</section>';
+  const html = renderMissionReviewPanel(summary, { open: true });
   assert.match(html, /data-mission-review-layout/);
   assert.match(html, /width:min\(1180px,calc\(100vw - 24px\)\)/);
-  assert.match(html, /overflow-x:hidden/);
-  assert.match(html, /battle-mission-summary__card\{box-sizing:border-box;width:100%;max-width:100%;min-width:0;\}/);
-  assert.match(html, /battle-mission-summary__card>summary\{flex-wrap:wrap;min-width:0;\}/);
+  assert.match(html, /height:calc\(100dvh - 24px\)/);
+  assert.match(html, /overflow-y:auto/);
+  assert.match(html, /battle-mission-summary\{box-sizing:border-box;display:grid!important;grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(html, /battle-mission-summary__section-content\{display:grid!important;grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(html, /data-mission-summary-key="mission-section-primary" open>/);
+  assert.match(html, /data-mission-summary-key="mission-section-secondary" open>/);
 });
