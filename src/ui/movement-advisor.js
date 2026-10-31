@@ -1,7 +1,7 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-router.js";
 import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
-import { objectiveAdvisorLabel } from '../rules/objective-display-labels.js';
+import { liveMapObjectiveLabel } from '../rules/objective-display-labels.js';
 
 let highlightEventsBound = false;
 let activeHighlight = null;
@@ -25,7 +25,7 @@ function purposeLabel(purpose) {
 
 function destinationLabel(option, state, perspectivePlayerId) {
   if (option?.objectiveId) {
-    return `Objective · ${objectiveAdvisorLabel(state, option.objectiveId, perspectivePlayerId)}`;
+    return `Objective · ${liveMapObjectiveLabel(state, option.objectiveId, perspectivePlayerId)}`;
   }
   if (option?.targetName) return `Enemy · ${option.targetName}`;
   if (option?.territoryTarget === "boundary") return "Territory · Boundary";
