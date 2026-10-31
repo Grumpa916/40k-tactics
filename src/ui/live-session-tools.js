@@ -40,9 +40,12 @@ export function mountLiveSessionTools({ root, session, store, onRetryCloud = () 
       (status.mode === 'incompatible' ? '<button type="button" data-dialog-key="new" data-live-new>Use new session</button>' : status.conflict ? '<button type="button" data-dialog-key="use-window" data-live-use-window>Use this window for device recovery</button>' : '<button type="button" data-dialog-key="save" data-live-save>Save on device now</button>') + '<button type="button" data-dialog-key="close" data-live-close>Close</button>') + '</section>';
     dialog.render(html, { canDismiss: !resume });
   }
-  recovery = createLocalBattleRecovery({ session, store, onChange: refresh });
+  let emergencyStorage = null;
+  try { emergencyStorage = window?.localStorage ?? null; } catch { /* Safari can deny local storage. */ }
+  recovery = createLocalBattleRecovery({ session, store, onChange: refresh, emergencyStorage });
   const unsubscribe = session.subscribe(() => refresh());
   const click = event => {
+    if (event.target.closest?.('a[href][target="_blank"]')?.textContent?.trim() === 'Rule reference') recovery.saveForExternalReference();
     const opener = event.target.closest?.('[data-live-tools-open]');
     if (opener) { dialog.rememberOpener(opener); details = true; refresh(); }
     if (event.target.closest?.('[data-live-close]')) dismiss();

@@ -56,6 +56,7 @@ function renderDetachmentStratagemReminders(state,playerId) {
 export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
   const playerId=perspective(state,perspectivePlayerId);
   const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
+  entries.sort((a,b)=>Number(b.ruleId==='aquila-commander')-Number(a.ruleId==='aquila-commander'));
   const detachmentEntries=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});
   const stratagemEntries=getCustodesDetachmentStratagemReminders(state,{playerId});
   const stratagemHtml=renderDetachmentStratagemReminders(state,playerId);

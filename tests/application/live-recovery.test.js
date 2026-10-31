@@ -47,6 +47,26 @@ test('recovery waits for a resume choice and never overwrites an existing battle
   assert.equal(s.getState().turn,7); assert.equal(writes.at(-1).state.turn,7);
   recovery.destroy();
 });
+test('external rule navigation leaves a synchronous recovery record when the device write has not finished', async () => {
+  const data = new Map(), emergencyStorage = {
+    getItem: key => data.get(key) ?? null,
+    setItem: (key, value) => data.set(key, value),
+    removeItem: key => data.delete(key)
+  };
+  const s = session(); let finishWrite;
+  const store = {load: async () => ({}), save: () => new Promise(resolve => { finishWrite = resolve; })};
+  const first = createLocalBattleRecovery({session:s,store,emergencyStorage});
+  await first.ready;
+  s.dispatch({type:'advance'});
+  first.saveForExternalReference();
+  assert.equal(JSON.parse([...data.values()][0]).state.turn, 1);
+  const reopened = createLocalBattleRecovery({session:session(),store:{load:async()=>({}),save:async()=>{}},emergencyStorage});
+  await reopened.ready;
+  assert.equal(reopened.getStatus().mode,'resume');
+  assert.equal(reopened.resume(),true);
+  assert.equal(reopened.getStatus().record.state.turn,1);
+  reopened.destroy(); first.destroy(); finishWrite?.();
+});
 test('corrupt latest slot falls back to a valid previous snapshot; incompatible data stays preserved', async () => {
   const s=session(), writes=[], valid=createRecoveryRecord(s.getState(),1000);
   const fallback=createLocalBattleRecovery({session:s,store:{load:async()=>({latest:{bad:true},previous:valid}),save:async r=>writes.push(r)}});

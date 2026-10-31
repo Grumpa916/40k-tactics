@@ -22,7 +22,13 @@ export function createRecoveryRecord(state, now = Date.now()) {
 }
 
 // Subscribe independently of UI rendering. Coalesce changes while a write is in flight.
-export function createLocalBattleRecovery({ session, store, onChange = () => {}, now = Date.now }) {
+export function createLocalBattleRecovery({ session, store, onChange = () => {}, now = Date.now, emergencyStorage = null }) {
+  const emergencyKey = '40k-tactics-external-reference-recovery';
+  const readEmergency = () => {
+    try { const record = JSON.parse(emergencyStorage?.getItem(emergencyKey) ?? 'null'); return validateRecoveryRecord(record) ? record : null; }
+    catch { return null; }
+  };
+  const clearEmergency = () => { try { emergencyStorage?.removeItem(emergencyKey); } catch { /* Device storage may be unavailable. */ } };
   let status = { mode: 'loading', message: 'Checking device recovery…' };
   let pending = null, writing = null, enabled = false, destroyed = false, dirtyBeforeReady = false;
   let expectedRevision = null;
@@ -33,6 +39,7 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
       try {
         await store.save(record, { expectedRevision });
         expectedRevision = record.revision;
+        if (readEmergency()?.revision === record.revision) clearEmergency();
         publish({ mode: pending ? 'saving' : 'saved', conflict: false, savedAt: record.savedAt, message: pending ? 'Saving on device…' : 'Saved on this device' });
       } catch (error) {
         publish({ mode: 'error', conflict: error.code === 'RECOVERY_CONFLICT', message: 'Device save failed: ' + error.message });
@@ -62,7 +69,9 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
     try {
       const records = await store.load();
       expectedRevision = records.latest?.revision ?? records.latest?.savedAt ?? null;
-      const record = [records.latest, records.previous].find(validateRecoveryRecord);
+      const stored = [records.latest, records.previous].find(validateRecoveryRecord);
+      const emergency = readEmergency();
+      const record = emergency && (!stored || emergency.savedAt >= stored.savedAt) ? emergency : stored;
       if (record) publish({ mode: 'resume', record, message: 'A saved battle is available on this device.' });
       else if (records.latest || records.previous) publish({ mode: 'incompatible', message: 'The saved recovery file cannot be loaded by this app version. It has been preserved. Use a compatible cloud save.' });
       else {
@@ -81,6 +90,12 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
     ready,
     getStatus: () => status,
     save,
+    saveForExternalReference() {
+      if (status.mode === 'resume' || status.mode === 'incompatible') return;
+      try { emergencyStorage?.setItem(emergencyKey, JSON.stringify(createRecoveryRecord(session.getState(), now()))); }
+      catch { /* IndexedDB recovery remains available if synchronous storage fails. */ }
+      save();
+    },
     async flush() { save(); while (writing) await writing; },
     async useThisWindow() {
       while (writing) await writing;
@@ -96,7 +111,7 @@ export function createLocalBattleRecovery({ session, store, onChange = () => {},
       session.replaceState(structuredClone(status.record.state));
       enabled = true; save(); return true;
     },
-    startFresh() { enabled = true; publish({ mode: 'ready', record: null, message: 'New session · previous recovery retained until your next action' }); },
+    startFresh() { clearEmergency(); enabled = true; publish({ mode: 'ready', record: null, message: 'New session · previous recovery retained until your next action' }); },
     destroy() { destroyed = true; unsubscribe(); }
   };
 }
