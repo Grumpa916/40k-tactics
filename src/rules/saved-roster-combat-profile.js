@@ -88,6 +88,11 @@ function profileIsSelection(profileName, selection) {
 }
 
 function reviewedQuantityContext(rosterUnit, profileName, loadoutEntry) {
+  const explicitPerModel = Number(loadoutEntry?.casualtyPerModel);
+  if (Number.isInteger(explicitPerModel) && explicitPerModel > 0) {
+    return { exactPerModel: true, perModel: explicitPerModel, kind: 'explicit-per-model' };
+  }
+
   const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   if (!ruleSet) return null;
   const selectionName = loadoutEntry?.selectionName ?? loadoutEntry?.name ?? profileName;

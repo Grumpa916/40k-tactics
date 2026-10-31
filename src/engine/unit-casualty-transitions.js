@@ -28,6 +28,37 @@ function cloneLiveWargear(value) {
   };
 }
 
+function reviewedPerModelSelectionKeys(ruleSet) {
+  const keys = new Set();
+  const add = (item) => {
+    if (!item?.perModel) return;
+    const key = normalizeCasualtySelectionName(item.name);
+    if (key) keys.add(key);
+  };
+  for (const item of ruleSet?.fixed ?? []) add(item);
+  for (const item of ruleSet?.optional ?? []) add(item);
+  for (const slot of ruleSet?.slots ?? []) {
+    if (!slot?.perModel) continue;
+    for (const choice of slot.choices ?? []) add({ ...choice, perModel: slot.perModel });
+  }
+  return keys;
+}
+
+function explicitPerModelSelections(rosterUnit, ruleSet) {
+  const reviewedKeys = reviewedPerModelSelectionKeys(ruleSet);
+  const values = new Map();
+  for (const item of rosterUnit?.equippedWeapons ?? []) {
+    const perModel = Number(item?.casualtyPerModel);
+    if (!Number.isInteger(perModel) || perModel <= 0) continue;
+    const name = item?.selectionName ?? item?.name;
+    const key = normalizeCasualtySelectionName(name);
+    if (!key || reviewedKeys.has(key)) continue;
+    const current = values.get(key);
+    if (!current || perModel > current.perModel) values.set(key, { name, perModel });
+  }
+  return [...values.values()];
+}
+
 export function recordUnitCasualty(state, {
   unitId,
   slotSelections = {},
@@ -51,6 +82,14 @@ export function recordUnitCasualty(state, {
   const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const activeSelections = { ...casualty.activeSelections };
   const removedSelections = [];
+
+  // Explicit fixed-profile loadouts can declare per-model ownership even when
+  // there is no reviewed selectable-wargear rule set. This keeps acceptance
+  // fixtures and imported fixed profiles model-aware without guessing globally.
+  for (const item of explicitPerModelSelections(rosterUnit, ruleSet)) {
+    decrement(activeSelections, item.name, item.perModel);
+    removedSelections.push(item.name);
+  }
 
   // Fixed per-model equipment always leaves with the removed model.
   for (const item of ruleSet?.fixed ?? []) {
