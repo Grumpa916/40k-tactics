@@ -39,6 +39,21 @@ test('exact legal reviewed loadouts are accepted even when imported status is ol
   assert.equal(loadoutReadinessLabel(unit), 'Loadout ready');
 });
 
+test('unresolved imported equipment remains blocking even when matched selections are legal', () => {
+  const unit = legalTermagants({
+    unmatchedWargear: [{ sourceName: 'Mystery bio-weapon', quantity: 1 }],
+    loadoutValidation: {
+      status: 'unverified',
+      errors: ['No combat profile matched imported wargear: 1x Mystery bio-weapon.']
+    }
+  });
+  const result = assessUnitLoadoutReadiness(unit);
+  assert.equal(result.status, 'invalid');
+  assert.equal(result.blocking, true);
+  assert.match(result.reason, /Mystery bio-weapon/i);
+  assert.equal(loadoutReadinessLabel(unit), 'Loadout invalid');
+});
+
 test('illegal reviewed quantities block battle readiness', () => {
   const unit = legalTermagants({
     equippedWargear: [
