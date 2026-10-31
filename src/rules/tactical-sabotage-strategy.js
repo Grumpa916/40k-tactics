@@ -275,7 +275,8 @@ export function getSabotageObjectiveStrategySignal(state, {
     if (!controlled && strategy.nonHomeControlled === 0) controlVpLeverage = 4;
   }
   const actionRawVp = pending?.projectedVp ?? option?.potentialVp ?? 0;
-  const actionVpLeverage = Math.min(strategy.remainingPrimaryGameVp, strategy.remainingRoundVpAfterPending + (pending ? strategy.pendingActionVpLeverage : strategy.nextActionVpLeverage), actionRawVp || 0);
+  const actionAllowance = pending ? strategy.pendingActionVpLeverage : strategy.nextActionVpLeverage;
+  const actionVpLeverage = Math.min(strategy.remainingPrimaryGameVp, actionAllowance, actionRawVp || 0);
   const rawVpLeverage = controlVpLeverage + actionVpLeverage;
   const vpLeverage = Math.min(strategy.remainingPrimaryGameVp, rawVpLeverage);
 
