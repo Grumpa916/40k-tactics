@@ -42,6 +42,8 @@ import { getSecureAssetObjectiveStrategySignal } from "./tactical-secure-asset-s
 import { enhanceSecureAssetMovementRecommendations } from "./tactical-secure-asset-movement.js";
 import { isVanguardOperationMissionForPlayer } from "./vanguard-operation-state.js";
 import { enhanceVanguardOperationMovementRecommendations } from "./tactical-vanguard-operation-movement.js";
+import { isSabotageMissionForPlayer } from "./sabotage-state.js";
+import { enhanceSabotageMovementRecommendations } from "./tactical-sabotage-movement.js";
 import { enhanceSearchAndScourMovementRecommendations } from "./tactical-search-and-scour-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
@@ -355,6 +357,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isVanguardOperationMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceVanguardOperationMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isSabotageMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceSabotageMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
