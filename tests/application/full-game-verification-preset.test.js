@@ -5,6 +5,7 @@ import {
   FULL_GAME_VERIFICATION_BATTLE_ID
 } from '../../src/application/full-game-verification-preset.js';
 import { getBattlePrimaryMissionDefinitions } from '../../src/data/primary-mission-catalog.js';
+import { recordUnitCasualty } from '../../src/engine/unit-casualty-transitions.js';
 import { createLocalBattleStore } from '../../src/persistence/local-battle-store.js';
 import { getDatasheetWeaponOptions } from '../../src/rules/saved-roster-combat-profile.js';
 
@@ -101,6 +102,33 @@ test('full-game verification preset supplies explicit legal quantity-aware comba
   const hormagauntMelee = getDatasheetWeaponOptions(state, battleUnitFor(state, hormagaunts), { type: 'melee' });
   assert.ok(hormagauntMelee.length > 0);
   assert.ok(hormagauntMelee.every(item => item.equippedQuantity === hormagaunts.modelCount));
+});
+
+test('fixed-profile verification units lose per-model weapon quantities with casualties', () => {
+  for (const [playerId, rosterUnitId] of [['p2', 'hormagaunts'], ['p2', 'zoanthropes'], ['p1', 'prosecutors']]) {
+    let state = createFullGameVerificationState();
+    const rosterUnit = state.armyRosters[playerId].units.find(unit => unit.id === rosterUnitId);
+    assert.ok(rosterUnit.modelCount > 1, `${rosterUnitId} must be multi-model for this regression`);
+    const battleUnit = battleUnitFor(state, rosterUnit);
+    state = {
+      ...state,
+      phase: 'fight',
+      battle: { ...state.battle, status: 'active', round: 1, activePlayerId: playerId },
+      units: state.units.map(unit => unit.id === battleUnit.id ? { ...unit, status: 'deployed' } : unit)
+    };
+    const deployed = state.units.find(unit => unit.id === battleUnit.id);
+    const before = getDatasheetWeaponOptions(state, deployed);
+    assert.ok(before.length > 0, `${rosterUnitId} should expose combat profiles`);
+    assert.ok(before.every(weapon => weapon.activeQuantity === rosterUnit.modelCount));
+
+    const next = recordUnitCasualty(state, { unitId: deployed.id });
+    const afterUnit = next.units.find(unit => unit.id === deployed.id);
+    const after = getDatasheetWeaponOptions(next, afterUnit);
+    assert.equal(afterUnit.currentStrength, rosterUnit.modelCount - 1);
+    assert.ok(after.every(weapon => weapon.activeQuantity === rosterUnit.modelCount - 1), `${rosterUnitId} active quantities should follow remaining models`);
+    const activeSelections = next.history.at(-1).payload.activeSelectionsAfter;
+    assert.ok(Object.values(activeSelections).every(quantity => quantity === rosterUnit.modelCount - 1), `${rosterUnitId} casualty selections should decrement`);
+  }
 });
 
 test('verification mode can use a separate IndexedDB recovery database name', async () => {
