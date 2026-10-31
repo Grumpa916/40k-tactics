@@ -5,7 +5,9 @@ import { loadoutReadinessLabel } from '../rules/roster-loadout-readiness.js';
 
 function resolveRosterUnit(unit, faction = null) {
  if (unit?.datasheet || !faction) return unit;
- return findArmyUnitCandidates({ faction }).find(candidate => candidate.id === unit.datasheetId || candidate.name === unit.name) ?? unit;
+ const candidate = findArmyUnitCandidates({ faction }).find(item => item.id === unit.datasheetId || item.name === unit.name);
+ if (!candidate) return unit;
+ return { ...candidate, ...unit, datasheet: unit.datasheet ?? candidate.datasheet };
 }
 
 /** Group saved attachment IDs for display without changing the roster or stat lines. */
