@@ -90,6 +90,11 @@ import {
 import { isSecureAssetMissionForPlayer } from "./secure-asset-state.js";
 import { getSecureAssetPrimaryStrategyContext, getSecureAssetObjectiveStrategySignal } from "./tactical-secure-asset-strategy.js";
 import {
+  getExtractRelicPrimaryStrategyContext,
+  getExtractRelicObjectiveStrategySignal,
+  isExtractRelicMissionForPlayer
+} from "./tactical-extract-relic-strategy.js";
+import {
   getVanguardOperationPrimaryStrategyContext,
   getVanguardOperationObjectiveStrategySignal,
   isVanguardOperationMissionForPlayer
@@ -148,8 +153,8 @@ export function getPrimaryStrategyContext(state, options = {}) {
   if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSecureAssetPrimaryStrategyContext(state, options);
   }
-  if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
-    return getSecureAssetPrimaryStrategyContext(state, options);
+  if (playerId && isExtractRelicMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getExtractRelicPrimaryStrategyContext(state, options);
   }
   if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getVanguardOperationPrimaryStrategyContext(state, options);
@@ -212,6 +217,9 @@ export function getPrimaryObjectiveStrategySignal(state, options = {}) {
   }
   if (playerId && isSecureAssetMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getSecureAssetObjectiveStrategySignal(state, options);
+  }
+  if (playerId && isExtractRelicMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
+    return getExtractRelicObjectiveStrategySignal(state, options);
   }
   if (playerId && isVanguardOperationMissionForPlayer(state, playerId, options.perspectivePlayerId ?? undefined)) {
     return getVanguardOperationObjectiveStrategySignal(state, options);
