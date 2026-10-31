@@ -1,6 +1,7 @@
 import { createLiveMapView } from './live-map-view.js';
 import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
+import { captureViewContinuity } from './view-continuity.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getChargeOpportunity } from '../rules/tactical-charge-opportunity.js';
 
@@ -25,6 +26,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
   const completeMeasurements = () => targetIds.size > 0 && [...targetIds].every(id => Number.isFinite(distances.get(id)));
 
   function render() {
+    const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
     const model = getChargeViewModel(state, { perspectivePlayerId: perspectivePlayerId ?? state.activePlayer });
@@ -97,6 +99,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
     container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
 
+    restoreView();
     mapView.bind(container);
     const chooseUnit = id => { selectedUnitId = id; targetIds = new Set(); distances = new Map(); error = ''; render(); };
     const toggleTarget = id => {

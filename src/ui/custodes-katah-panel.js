@@ -59,7 +59,7 @@ export function renderCustodesKatahCommandPanel(state, { playerId = state?.activ
     const tone = readiness.readied ? 'is-readied' : readiness.lastKatah ? 'is-spent' : 'is-unavailable';
     return '<li><span>' + esc(unit.name ?? unit.id) + '</span><strong class="' + tone + '">' + esc(label) + '</strong></li>';
   }).join('');
-  return styleLink + '<details class="custodes-katah-panel" open><summary>Martial Ka’tah · Command Phase</summary>' +
+  return styleLink + '<details class="custodes-katah-panel" data-view-key="command-katah" open><summary>Martial Ka’tah · Command Phase</summary>' +
     readinessLabel(state) + '<ul class="custodes-katah-panel__units">' + unitRows + '</ul>' +
     '<div class="custodes-katah-panel__options">' + cards + '</div></details>';
 }

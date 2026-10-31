@@ -9,6 +9,7 @@ import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
 import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
+import { captureViewContinuity } from './view-continuity.js';
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -474,6 +475,7 @@ export function createCommandScreen(container, {
   }
 
   function render() {
+    const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const playerId = scoringCheckpointPlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
     const players = Array.isArray(state.players) ? state.players : [];
@@ -834,6 +836,7 @@ export function createCommandScreen(container, {
         footer: ''
       });
       mapView.bind(container);
+      restoreView();
       return;
     }
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
@@ -847,6 +850,7 @@ export function createCommandScreen(container, {
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
       '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
+    restoreView();
   }
 
   container.addEventListener?.("click", handleClick);

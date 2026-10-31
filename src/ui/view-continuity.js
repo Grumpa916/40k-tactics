@@ -5,6 +5,17 @@ export function captureViewContinuity(container) {
   const more = container.querySelector?.('[data-comparison-more]')?.open;
   const disclosures = [...(container.querySelectorAll?.('[data-view-key]') ?? [])]
     .map(node => [node.getAttribute('data-view-key'), node.open]);
+  // Unkeyed menus also need to survive a phase redraw (for example, recording
+  // a secondary card). Match by their summary within the current phase view.
+  const menuState = new Map();
+  for (const node of container.querySelectorAll?.('details') ?? []) {
+    if (node.hasAttribute?.('data-view-key')) continue;
+    const label = node.querySelector?.(':scope > summary')?.textContent?.trim();
+    if (!label) continue;
+    const states = menuState.get(label) ?? [];
+    states.push(Boolean(node.open));
+    menuState.set(label, states);
+  }
   const active = container.ownerDocument?.activeElement;
   const focusSelectors = ['[data-weapon]', '[data-target]', '[data-shoot-precision]',
     '[data-shooting-unit-picker]', '[data-fight-weapon]', '[data-fight-target]', '[data-fight-precision]'];
@@ -17,6 +28,16 @@ export function captureViewContinuity(container) {
     for (const node of container.querySelectorAll?.('[data-view-key]') ?? []) {
       const previous = disclosures.find(([key]) => key === node.getAttribute('data-view-key'));
       if (previous) node.open = previous[1];
+    }
+    const menuPositions = new Map();
+    for (const node of container.querySelectorAll?.('details') ?? []) {
+      if (node.hasAttribute?.('data-view-key')) continue;
+      const label = node.querySelector?.(':scope > summary')?.textContent?.trim();
+      if (!label) continue;
+      const position = menuPositions.get(label) ?? 0;
+      menuPositions.set(label, position + 1);
+      const previous = menuState.get(label)?.[position];
+      if (previous !== undefined) node.open = previous;
     }
     const focusNode = focusedControl ? container.querySelector?.(focusedControl) : focusedTarget !== null
       ? [...(container.querySelectorAll?.('[data-advisor-target]') ?? [])]
