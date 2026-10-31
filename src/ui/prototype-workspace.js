@@ -105,9 +105,14 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     if (target?.closest?.('[data-army-back]')) {
       const unit = session.getState().units.find(item => item.id === unitId);
       unitId = null; unitDetailTab = 'profile';
-      const button = [...container.querySelectorAll('[data-open-army-roster]')]
-        .find(item => item.getAttribute('data-open-army-roster') === unit?.ownerId);
-      button?.click?.();
+      const row = [...container.querySelectorAll('[data-open-unit-details]')]
+        .find(item => item.getAttribute('data-open-unit-details') === unit?.id);
+      armyView = row?.closest?.('[data-phase-army-list]')?.getAttribute('data-phase-army-list') ?? armyView;
+      const overlay = container.querySelector('[data-army-roster-overlay]');
+      if (overlay) { overlay.innerHTML = ''; overlay.hidden = true; }
+      refreshPhaseArmyRoster(container, armyView);
+      (row ?? returnFocus)?.focus?.();
+      return;
     }
     if (target?.closest?.('[data-close-army-roster]') || target === container.querySelector('[data-army-roster-overlay]')) {
       unitId = null; logOpen = false; unitDetailTab = 'profile'; returnFocus?.focus?.();

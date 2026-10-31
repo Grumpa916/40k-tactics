@@ -96,6 +96,30 @@ test('unit detail manually changes either army Battle-shock in Shooting through 
   assert.equal(session.getState().history.filter(item=>item.type==='battle_shock.test_recorded').length,0);
   x.controller.destroy();
 });
+test('Army list returns from a unit detail to the matching phase army list',()=>{
+  const initial=state(), x=workspaceFixture({getState:()=>initial});
+  let focused=false;
+  const row={getAttribute:()=> 'enemy',closest:selector=>selector==='[data-phase-army-list]'?{getAttribute:()=> 'opponent'}:null,focus:()=>{focused=true;}};
+  const lists=[{getAttribute:()=> 'mine',hidden:false},{getAttribute:()=> 'opponent',hidden:true}];
+  const tabs=[{getAttribute:()=> 'mine',setAttribute(key,value){this[key]=value;}},{getAttribute:()=> 'opponent',setAttribute(key,value){this[key]=value;}}];
+  x.controller.destroy();
+  const handlers={};
+  const root={querySelector:selector=>selector==='[data-army-roster-overlay]'?x.overlay:selector==='.battle-shell'?x.shell:null,
+    querySelectorAll:selector=>selector==='[data-open-unit-details]'?[row]:selector==='[data-phase-army-list]'?lists:selector==='[data-phase-army-view]'?tabs:[],
+    addEventListener:(type,fn)=>handlers[type]=fn,removeEventListener:()=>{}};
+  const controller=createPrototypeWorkspace(root,{session:{getState:()=>initial}});
+  const click=attr=>{const target={getAttribute:()=> 'enemy',closest:selector=>selector===`[${attr}]`?target:null};handlers.click({target});};
+  click('data-open-unit-details');
+  assert.equal(x.overlay.hidden,false);
+  click('data-army-back');
+  assert.equal(x.overlay.hidden,true);
+  assert.equal(x.overlay.innerHTML,'');
+  assert.equal(lists[0].hidden,true);
+  assert.equal(lists[1].hidden,false);
+  assert.equal(tabs[1]['aria-pressed'],'true');
+  assert.equal(focused,true);
+  controller.destroy();
+});
 test('a passed Command test clears all Battle-shock representations after manual marking',()=>{
   const initial=state();initial.phase='command';initial.units[0]={...initial.units[0],battleShocked:true,battleShock:{active:true,status:'battle-shocked'}};
   const next=recordBattleShockTest(initial,{unitId:'shooter',result:'passed'});
