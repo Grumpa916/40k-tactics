@@ -79,6 +79,7 @@ function fixedProfileLoadout(unit) {
       name: weapon.name,
       quantity: unit.modelCount,
       selectionName: weapon.name,
+      casualtyPerModel: 1,
       sourceName: 'Full-game verification preset'
     })),
     loadoutValidation: {
