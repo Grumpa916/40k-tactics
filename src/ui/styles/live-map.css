@@ -10,6 +10,9 @@
 .live-map .battlefield-map__unit.is-compact { width:36px; height:36px; min-width:36px; max-width:none; display:flex; align-items:center; justify-content:center; padding:2px; border-radius:50%; font-size:11px; line-height:1; touch-action:manipulation; }
 .live-map .battlefield-map__unit.is-selected, .live-map .battlefield-map__unit.is-targeted { z-index:9; }
 .live-map .battlefield-map__notice { font-size:10px; margin:4px 0; }
+.live-map .battlefield-map__unit-key { display:flex; gap:4px 12px; overflow-x:auto; white-space:nowrap; padding:5px 2px 3px; font-size:10px; line-height:1.2; color:#c5d2d4; -webkit-overflow-scrolling:touch; }
+.live-map .battlefield-map__unit-key span { flex:none; }
+.live-map .battlefield-map__unit-key strong { color:#b5dcff; font-size:11px; }
 .shoot-tabletop__unit-picker { margin:8px 0; }
 .shoot-tabletop__unit-picker select { width:100%; min-height:44px; margin:4px 0; padding:8px; background:#16222a; color:#eef3f0; border:1px solid #60737e; border-radius:8px; font:inherit; }
 .combat-end-review { border:1px solid #c6e99e; padding:10px; margin:8px 0; border-radius:8px; }
