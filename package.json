@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --test",
     "build": "node scripts/build.mjs",
-    "verify": "node scripts/diagnose-sabotage-movement.mjs"
+    "verify": "node --test --test-name-pattern=\"Sabotage movement routing\" tests/rules/tactical-sabotage-strategy.test.js"
   },
   "engines": {
     "node": ">=20"
