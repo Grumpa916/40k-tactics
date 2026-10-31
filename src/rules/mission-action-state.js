@@ -5,6 +5,7 @@ import { getLocateAndDenyState } from './locate-and-deny-state.js';
 import { getTriangulationState } from './triangulation-state.js';
 import { getVitalLinkState } from './vital-link-state.js';
 import { getSecureAssetState } from './secure-asset-state.js';
+import { getExtractRelicState } from './extract-relic-state.js';
 import { getVanguardOperationState } from './vanguard-operation-state.js';
 import { getSabotageState } from './sabotage-state.js';
 
@@ -43,6 +44,10 @@ function getPrimaryMissionActionOption(state, playerId) {
   if (definition?.id === 'primary-secure-asset') {
     const secure = getSecureAssetState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
     if (!secure.actionAvailableThisTurn) return null;
+  }
+  if (definition?.id === 'primary-extract-relic') {
+    const extractRelic = getExtractRelicState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
+    if (extractRelic.opponentMarkerSetupComplete && !extractRelic.sensorSweepAvailable) return null;
   }
   if (definition?.id === 'primary-vanguard-operation') {
     const vanguard = getVanguardOperationState(state, { playerId, perspectivePlayerId: myPlayerId ?? playerId });
