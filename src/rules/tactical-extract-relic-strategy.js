@@ -327,7 +327,10 @@ export function getExtractRelicObjectiveStrategySignal(state, {
   const eligibleSensorSweepObjective = central && context.sensorSweepAvailable;
 
   let controlVpLeverage = 0;
-  if (context.round >= 2 && !ownHome && context.controlStateKnown && !context.controlCheckpointCompleted) {
+  // Current-round projection remains locked after the Command checkpoint above, but
+  // Movement still needs the marginal value of preserving or establishing the
+  // sole non-home objective for the next available control checkpoint.
+  if (context.round >= 2 && !ownHome && context.controlStateKnown) {
     if (controlledNow && context.nonHomeControlled === 1) controlVpLeverage = 4;
     if (!controlledNow && context.nonHomeControlled === 0) controlVpLeverage = 4;
   }
@@ -350,8 +353,8 @@ export function getExtractRelicObjectiveStrategySignal(state, {
   if (pending) notes.push("This central objective is tied to the pending Sensor Sweep; preserving control through end of turn protects the 4 VP Action completion and marker removal.");
   else if (eligibleSensorSweepObjective) notes.push(`A qualifying unit at this central objective can start Sensor Sweep and reduce the opponent marker count from ${context.activeOpponentMarkerCount} to ${context.activeOpponentMarkerCount - 1}.`);
   if (ownHome) notes.push("Your home objective does not satisfy Extract Relic's Round 2+ non-home control condition.");
-  if (controlVpLeverage && controlledNow) notes.push("This is your only controlled non-home objective, so losing it can cost the binary 4 VP control condition.");
-  if (controlVpLeverage && !controlledNow) notes.push("You currently control no non-home objective; taking this one can establish the binary 4 VP condition.");
+  if (controlVpLeverage && controlledNow) notes.push("This is your only controlled non-home objective, so losing it can cost the binary 4 VP control condition at the next available checkpoint.");
+  if (controlVpLeverage && !controlledNow) notes.push("You currently control no non-home objective; taking this one can establish the binary 4 VP condition at the next available checkpoint.");
   if (!controlVpLeverage && !ownHome && context.nonHomeControlled > 0) notes.push("The binary non-home control condition is already supported elsewhere; this objective adds resilience rather than another 4 VP award.");
 
   return Object.freeze({
