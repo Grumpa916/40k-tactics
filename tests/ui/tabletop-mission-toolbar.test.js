@@ -11,6 +11,6 @@ test("Missions is a visible, labeled control in the tabletop phase toolbar", () 
   assert.match(shell, /renderPrototypeWorkspaceTools\(\{ missionReviewOpen \}\)/);
   assert.match(workspace, /prototype-missions-button[^>]*data-toggle-mission-review/);
   assert.match(workspace, /Missions<\/button>/);
-  assert.match(workspace, /live-controls-1/);
+  assert.match(workspace, /live-controls-2/);
   assert.match(styles, /prototype-missions-button/);
 });

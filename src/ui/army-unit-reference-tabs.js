@@ -14,13 +14,28 @@ function displayLabel(key) {
     .replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function saveCharacteristic(key) {
+  const normalized = String(key).replace(/[^a-z]/gi, '').toLowerCase();
+  if (['save', 'sv', 'armoursave', 'armorsave'].includes(normalized)) return 'save';
+  if (['invulnerablesave', 'invulnerable', 'invsave', 'insv'].includes(normalized)) return 'invulnerable';
+  return null;
+}
+
+function saveLabel(value) {
+  const text = String(value).trim();
+  return /^[1-6]$/.test(text) ? text + '+' : value;
+}
+
 function renderCharacteristics(characteristics, { singleLine = false, weapon = false } = {}) {
   if (!characteristics || typeof characteristics !== "object" || Array.isArray(characteristics)) {
     return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
   }
-  const entries = Object.entries(characteristics).filter(([, value]) =>
+  let entries = Object.entries(characteristics).filter(([, value]) =>
     value !== null && value !== undefined && value !== "");
   if (!entries.length) return '<p class="battle-context__empty">Characteristics are not loaded for this unit.</p>';
+  const armourSave = singleLine && !weapon && entries.find(([key]) => saveCharacteristic(key) === 'save');
+  const invulnerableSave = armourSave && entries.find(([key]) => saveCharacteristic(key) === 'invulnerable');
+  if (invulnerableSave) entries = entries.filter(([key]) => saveCharacteristic(key) !== 'invulnerable');
   if (weapon) {
     const order = { range: 0, attacks: 1, a: 1, skill: 2, ballisticskill: 2, weaponskill: 2,
       bs: 2, ws: 2, strength: 3, s: 3, ap: 4, armourpenetration: 4, armorpenetration: 4, damage: 5, d: 5 };
@@ -30,9 +45,15 @@ function renderCharacteristics(characteristics, { singleLine = false, weapon = f
   const layout = singleLine || weapon
     ? ` class="battle-shell__army-characteristics prototype-unit-stat-row ${weapon ? 'prototype-unit-weapon-characteristics' : 'prototype-unit-profile-characteristics'}" style="--unit-stat-count:${entries.length}"`
     : ' class="battle-shell__army-characteristics"';
-  return '<dl' + layout + '>' + entries.map(([key, value]) =>
-    '<div><dt>' + escapeHtml(displayLabel(key)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>'
-  ).join("") + '</dl>';
+  return '<dl' + layout + '>' + entries.map(([key, value]) => {
+    const save = !weapon && saveCharacteristic(key);
+    const invulnerable = invulnerableSave && key === armourSave[0]
+      ? '<span class="prototype-unit-invulnerable-save" aria-label="Invulnerable save ' +
+        escapeHtml(saveLabel(invulnerableSave[1])) + '">Inv ' + escapeHtml(saveLabel(invulnerableSave[1])) + '</span>'
+      : '';
+    return '<div><dt>' + escapeHtml(displayLabel(key)) + '</dt><dd>' +
+      escapeHtml(save ? saveLabel(value) : value) + invulnerable + '</dd></div>';
+  }).join("") + '</dl>';
 }
 
 function weaponProfilesForUnit(unit, gameData) {

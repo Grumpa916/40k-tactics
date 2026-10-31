@@ -392,6 +392,13 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+.prototype-unit-invulnerable-save {
+  display:block;
+  margin-top:3px;
+  color:#c4e99b;
+  font-size:.85em;
+  font-weight:600;
+}
 .prototype-unit-dialog .prototype-unit-weapon-characteristics {
   grid-template-columns: repeat(var(--unit-stat-count), minmax(54px, 1fr));
   min-width: 0;
