@@ -40,6 +40,8 @@ import { isSearchAndScourMissionForPlayer } from "./search-and-scour-state.js";
 import { isSecureAssetMissionForPlayer } from "./secure-asset-state.js";
 import { getSecureAssetObjectiveStrategySignal } from "./tactical-secure-asset-strategy.js";
 import { enhanceSecureAssetMovementRecommendations } from "./tactical-secure-asset-movement.js";
+import { isVanguardOperationMissionForPlayer } from "./vanguard-operation-state.js";
+import { enhanceVanguardOperationMovementRecommendations } from "./tactical-vanguard-operation-movement.js";
 import { enhanceSearchAndScourMovementRecommendations } from "./tactical-search-and-scour-movement.js";
 import { clamp01 } from "./tactical-context-utils.js";
 
@@ -349,6 +351,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
 
   if (isSecureAssetMissionForPlayer(state, playerId, perspectivePlayerId)) {
     return enhanceSecureAssetMovementRecommendations(state, base, { playerId, perspectivePlayerId });
+  }
+
+  if (isVanguardOperationMissionForPlayer(state, playerId, perspectivePlayerId)) {
+    return enhanceVanguardOperationMovementRecommendations(state, base, { playerId, perspectivePlayerId });
   }
 
   return base;
