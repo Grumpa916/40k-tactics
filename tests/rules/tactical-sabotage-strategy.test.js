@@ -137,18 +137,18 @@ function seed({
   const attackerHome = map.objectivePositions["Attacker Home"];
   const defenderHome = map.objectivePositions["Defender Home"];
   const central1 = map.objectivePositions["Central 1"];
-  const central2 = map.objectivePositions["Central 2"];
-  assert.ok(attackerHome && defenderHome && central1 && central2, "Sabotage Layout A objectives must use catalog geometry");
+  const expansion1 = map.objectivePositions["Expansion 1"];
+  assert.ok(attackerHome && defenderHome && central1 && expansion1, "Sabotage Layout A objectives must use catalog geometry");
 
   const objectives = [
     { id: "home-p1", name: "Attacker Home", layoutObjective: "Attacker Home", position: { ...attackerHome }, control: control(controls.home ? "p1" : null) },
     { id: "central-1", name: "Central 1", layoutObjective: "Central 1", position: { ...central1 }, control: control(controls.central1 ? "p1" : null) },
-    { id: "central-2", name: "Central 2", layoutObjective: "Central 2", position: { ...central2 }, control: control(controls.central2 ? "p1" : "p2") },
+    { id: "central-2", name: "Expansion 1", layoutObjective: "Expansion 1", position: { ...expansion1 }, control: control(controls.central2 ? "p1" : "p2") },
     { id: "home-p2", name: "Defender Home", layoutObjective: "Defender Home", position: { ...defenderHome }, control: control(controls.enemyHome ? "p1" : "p2") }
   ];
   const units = [
     unit("runner", "p1", central1, { battleShocked: runnerBattleShocked }),
-    unit("runner-two", "p1", central2),
+    unit("runner-two", "p1", expansion1),
     unit("runner-three", "p1", defenderHome),
     unit("home-guard", "p1", attackerHome),
     unit("enemy", "p2", defenderHome)
