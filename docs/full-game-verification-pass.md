@@ -41,7 +41,7 @@ Roster:
 
 Roster:
 - Neurotyrant
-- Winged Tyranid Prime — attached to Hormagaunts
+- Tyranid Prime with Lash Whip — attached to Hormagaunts
 - Hormagaunts
 - Termagants
 - Norn Emissary
@@ -92,7 +92,7 @@ Confirm:
 - Vanguard Onslaught is visible for Tyranids.
 - Unit counts, points, and factions render without missing/undefined values.
 - Open Trajann, the Telemon, the Norn and the Exocrine reference details and verify stats/weapons display.
-- Verify Trajann → Wardens and Winged Prime → Hormagaunts attachment information is visible.
+- Verify Trajann → Wardens and Tyranid Prime → Hormagaunts attachment information is visible.
 
 **Pass:** both roster snapshots and detachment selections are correctly represented without manual roster loading.
 
@@ -333,7 +333,7 @@ Select:
 1. Position an eligible unit for Plunder.
 2. In Shooting choose **Action → Plunder**.
 3. Select an eligible terrain area and complete the immediate action.
-4. Try to destroy Neurotyrant, Winged Prime or Deathleaper to produce Assassination evidence.
+4. Try to destroy Neurotyrant, Tyranid Prime or Deathleaper to produce Assassination evidence.
 
 ## Stratagem/CP test
 
