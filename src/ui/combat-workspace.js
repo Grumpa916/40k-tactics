@@ -1,4 +1,4 @@
-import { renderUnitRulesReminders } from './rules-reminder-panel.js';
+import { renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster } from './phase-army-roster.js';
 import { createLiveMapView } from './live-map-view.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
@@ -35,7 +35,7 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     ${hasLeftRail ? `<aside class="combat-workspace__rail" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
-      <div class="combat-workspace__scroll">${renderSelectedUnitActiveStatus(state, selectedUnitId)}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId}) : ''}</div>${footer ? `<footer>${footer}</footer>` : ''}
+      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId, includeStratagems:false}) : ''}</div>${footer ? `<footer>${footer}</footer>` : ''}
     </section></main>`;
 }
 

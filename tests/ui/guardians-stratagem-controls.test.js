@@ -10,6 +10,7 @@ import { registerCoreCommandHandlers } from '../../src/engine/register-core-comm
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
 import { fakeDom } from '../helpers/combat-dom.js';
 import { renderCustodesKatahPhasePanel } from '../../src/ui/custodes-katah-panel.js';
+import { renderCombatWorkspace } from '../../src/ui/combat-workspace.js';
 
 const base={playerId:'p1',unitId:'sentinel',stratagemId:'in-auramite-clad',enemyUnitId:'marine',timingConfirmed:true,unitLimitConfirmed:true};
 function form(patch={}) {
@@ -48,6 +49,16 @@ test('the Rules drawer groups stratagems, preserves end-phase wording and condit
   assert.match(html,/This phase has ended/);assert.match(html,/Start of Fight, before phase actions/);
   assert.equal((html.match(/<strong>Shield of Honour · 1 CP/g)??[]).length,1);
   assert.match(html,/enemy model/);
+});
+
+test('live phase panels put stratagem opportunities ahead of phase controls without duplicating them',()=>{
+  const state=custodesReminderState({phase:'fight'});
+  const html=renderCombatWorkspace({state,phase:'fight',perspectivePlayerId:'p1',selectedUnitId:'sentinel',
+    controls:'<h1>Fight controls</h1>',mapView:{render:()=>'<div>map</div>'}});
+  const opportunity=html.indexOf('Guardians stratagem opportunities');
+  assert.ok(opportunity>=0);
+  assert.ok(opportunity<html.indexOf('<h1>Fight controls</h1>'));
+  assert.equal((html.match(/Guardians stratagem opportunities/g)??[]).length,1);
 });
 
 test('a submitted stratagem form spends once, displays attacker-specific protection and supports immediate undo',()=>{
