@@ -7,13 +7,19 @@
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-status { margin:4px 0 8px; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__control-scroll { padding:10px; scroll-padding-bottom:12px; display:flex; flex-direction:column; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__control-scroll > * { order:10; }
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__phase-heading { order:0; }
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-status { order:1; }
+/* Live attack decisions come first; general army reminders stay below them. */
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls,
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__action-choice { order:2; }
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-picker { order:3; }
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls { margin:4px 0 8px; padding:8px; border:1px solid #506454; border-radius:10px; background:#111a16; }
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__advisor { margin-top:10px; padding:8px; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__action-choice { order:0; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__advisor { order:1; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__phase-heading { order:2; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-status { order:3; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-picker { order:4; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls { margin:4px 0 8px; padding:8px; border:1px solid #506454; border-radius:10px; background:#111a16; display:flex; flex-direction:column; gap:6px; }
+/* Target is the first control needed during live play; weapon/Precision follow. */
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls label:has([data-target]) { order:0; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls label:has([data-weapon]) { order:1; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls label:has([data-shoot-precision]) { order:2; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__advisor { margin-top:4px; padding:8px; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-advisory { padding:8px; margin-top:6px; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-advisory__grid { gap:6px; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-advisory__grid > div { padding:6px; }
