@@ -4,6 +4,7 @@ import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './comba
 import { captureViewContinuity } from './view-continuity.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getChargeOpportunity } from '../rules/tactical-charge-opportunity.js';
+import { getCombatFormationMembers } from '../rules/battle-unit-reference.js';
 
 function modelsFor(unit) {
   return Array.isArray(unit.models) && unit.models.length
@@ -198,17 +199,20 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       const state = session.getState();
       const unit = state.units.find(item => item.id === drag.unitId);
       if (!unit) throw new Error('Selected unit is no longer available.');
-      const moves = modelsFor(unit).map(model => ({
-        modelId:model.id,
-        position:{
-          x:Math.round(Math.max(0, Math.min(60, model.position.x + dx)) * 10) / 10,
-          y:Math.round(Math.max(0, Math.min(44, model.position.y + dy)) * 10) / 10
-        }
-      }));
-      session.dispatch({
-        type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,
-        payload:{ unitId:unit.id, playerId:unit.ownerId, moves }
-      });
+      const formation = getCombatFormationMembers(state, unit);
+      for (const member of formation) {
+        const moves = modelsFor(member).map(model => ({
+          modelId:model.id,
+          position:{
+            x:Math.round(Math.max(0, Math.min(60, model.position.x + dx)) * 10) / 10,
+            y:Math.round(Math.max(0, Math.min(44, model.position.y + dy)) * 10) / 10
+          }
+        }));
+        session.dispatch({
+          type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,
+          payload:{ unitId:member.id, playerId:member.ownerId, moves }
+        });
+      }
       error = '';
     } catch (cause) {
       error = cause?.message ?? String(cause);
