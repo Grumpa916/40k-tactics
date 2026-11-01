@@ -3,7 +3,7 @@ import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclined
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
-import { getChargeOpportunity } from '../rules/tactical-charge-opportunity.js';
+import { getChargeOpportunity, getChargeTargetPriorities } from '../rules/tactical-charge-opportunity.js';
 import { getCombatFormationMembers } from '../rules/battle-unit-reference.js';
 
 function modelsFor(unit) {
@@ -32,6 +32,23 @@ function percent(value) {
   return Number.isFinite(value) ? Math.round(value * 100) + '%' : '—';
 }
 
+function chargePrioritySummary(advice) {
+  const chance = Number.isFinite(advice?.successProbability)
+    ? `${advice.measuredDistance}″ · ${percent(advice.successProbability)} success`
+    : Number.isFinite(advice?.mapSuccessProbability)
+      ? `Map ≈ ${advice.mapDistance}″ · ~${percent(advice.mapSuccessProbability)} success`
+      : 'Measure on table for exact charge chance';
+  const fight = advice?.projectedFight?.available
+    ? `${advice.projectedFight.expectedDamage.toFixed(1)} expected Fight damage`
+    : 'Fight damage unavailable';
+  const counter = advice?.projectedCounterFight?.available
+    ? ` · counter ≈ ${advice.projectedCounterFight.expectedDamage.toFixed(1)}`
+    : '';
+  const strategic = advice?.strategicContext?.label ?? 'unknown';
+  const flip = advice?.strategicContext?.objectiveSwing?.potentialFlip ? ' · objective swing possible' : '';
+  return { chance, fight: fight + counter, strategic: `Strategic value: ${strategic}${flip}` };
+}
+
 export function createChargeTabletopScreen(container, { session, perspectivePlayerId = null }) {
   const mapView = createLiveMapView();
   let selectedUnitId = null;
@@ -52,6 +69,13 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     const valid = new Set((candidate?.targets ?? []).map(item => item.targetUnitId));
     for (const id of targetIds) if (!valid.has(id)) { targetIds.delete(id); distances.delete(id); }
     const targets = candidate?.targets ?? [];
+    const priorities = candidate ? getChargeTargetPriorities(state, {
+      playerId:activePlayerId,
+      attackerId:candidate.unit.unitId,
+      targets,
+      measuredDistances:distances,
+      limit:3
+    }) : [];
     const selectedAdvice = targetIds.size && candidate ? targets.filter(item => targetIds.has(item.targetUnitId)).map(item => {
       try {
         return {
@@ -74,7 +98,19 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       <p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
-      ${candidate ? `<h2>Targets</h2>
+      ${candidate ? `<aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor priorities"><h2>Charge Priorities · Top ${priorities.length} of ${targets.length}</h2>
+        ${priorities.length ? priorities.map(({ rank, target, advice }) => {
+          const summary = chargePrioritySummary(advice);
+          return `<section class="combat-workspace__card">
+            <button type="button" data-charge-priority-target="${esc(target.targetUnitId)}"><strong>#${rank} ${esc(target.name)}</strong></button>
+            <small>${esc(summary.chance)}</small>
+            <p>${esc(summary.fight)}</p>
+            <p><strong>${esc(summary.strategic)}</strong></p>
+            <p>${esc(advice.recommendation)}</p>
+          </section>`;
+        }).join('') : '<p>No ranked charge targets are available for this unit.</p>'}
+      </aside>
+      <h2>Targets</h2>
         ${targets.map(item => {
           const measured = distances.get(item.targetUnitId);
           let exactChance = null;
@@ -92,11 +128,11 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
           return `<section class="combat-workspace__card">
           <button type="button" data-charge-target-toggle="${esc(item.targetUnitId)}" aria-pressed="${targetIds.has(item.targetUnitId)}">${targetIds.has(item.targetUnitId) ? '✓ ' : '+ '}${esc(item.target.name)}</button>
           <small>Map ≈ ${esc(item.targetDistance)}″ · ${esc(item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
-          ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${Number.isFinite(measured) ? measured + '″ · ' + percent(exactChance) + ' unmodified 2D6 success' : 'choose distance for exact 2D6 chance'}</small>` : ''}
+          ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${Number.isFinite(measured) ? measured + '″ · ' + percent(exactChance) + ' success' : 'choose distance for exact 2D6 chance'}</small>` : ''}
         </section>`;
         }).join('')}
         <div class="combat-workspace__choices"><button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button><button type="button" data-charge-decline>Do not charge</button></div>` : ''}
-      <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor"><h2>Tactical Advisor</h2>
+      <aside class="combat-workspace__card combat-workspace__advisor" aria-label="Selected Charge Tactical Advisor"><h2>Selected Target Analysis</h2>
         ${selectedAdvice.length ? selectedAdvice.map(({ item, advice }) => {
           if (!advice) return `<p><strong>${esc(item.target.name)}</strong><br>${esc(item.reason)}</p>`;
           const fight = advice.projectedFight?.available
@@ -111,7 +147,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
           const strategic = advice.strategicContext?.label ?? 'unknown';
           const flip = advice.strategicContext?.objectiveSwing?.potentialFlip ? ' · objective swing possible' : '';
           return `<section class="combat-workspace__card"><p><strong>${esc(item.target.name)}</strong><br>${esc(measured)}</p><p>${esc(fight + counter)}</p><p><strong>Strategic value: ${esc(strategic)}</strong>${esc(flip)}</p><p>${esc(advice.recommendation)}</p></section>`;
-        }).join('') : '<p>Select a charger and targets to review strategic value; choose the measured distance for the exact unmodified 2D6 success chance.</p>'}
+        }).join('') : '<p>Tap a ranked recommendation or another target, then enter the measured distance for exact charge analysis.</p>'}
       </aside>
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
     container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
@@ -123,12 +159,19 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       if (targetIds.has(id)) { targetIds.delete(id); distances.delete(id); } else targetIds.add(id);
       error = ''; render();
     };
+    const selectPriorityTarget = id => {
+      if (!valid.has(id)) return;
+      targetIds.add(id);
+      error = '';
+      render();
+    };
     bindCombatMap(container, { selectedUnitId, targetIds:[...targetIds], selectableIds:[...model.candidates.map(item => item.unit.unitId), ...valid], onSelect:id => {
       if (valid.has(id)) toggleTarget(id);
       else if (model.candidates.some(item => item.unit.unitId === id)) chooseUnit(id);
       else { error = 'Select an available charger, then one of its recommended enemy targets. Map range remains approximate.'; render(); }
     } });
     container.querySelectorAll('[data-charge-unit]').forEach(button => button.addEventListener('click', () => chooseUnit(button.getAttribute('data-charge-unit'))));
+    container.querySelectorAll('[data-charge-priority-target]').forEach(button => button.addEventListener('click', () => selectPriorityTarget(button.getAttribute('data-charge-priority-target'))));
     container.querySelectorAll('[data-charge-target-toggle]').forEach(button => button.addEventListener('click', () => toggleTarget(button.getAttribute('data-charge-target-toggle'))));
     container.querySelectorAll('[data-charge-distance-value]').forEach(button => button.addEventListener('click', () => {
       distances.set(button.getAttribute('data-charge-distance'), Number(button.getAttribute('data-charge-distance-value')));
