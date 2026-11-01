@@ -22,6 +22,28 @@ function state(phase = 'charge') {
   });
 }
 
+function attachedState() {
+  return createGameState({
+    phase:'charge',
+    turn:1,
+    activePlayer:'p1',
+    players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
+    battle:{id:'b',status:'active',round:1,firstPlayerId:'p1',activePlayerId:'p1'},
+    armyRosters:{
+      p1:{units:[
+        {id:'wardens',name:'Custodian Wardens',attachedLeaderIds:['trajann']},
+        {id:'trajann',name:'Trajann Valoris',attachedToBodyguardId:'wardens'}
+      ]},
+      p2:{units:[]}
+    },
+    units:[
+      {id:'wardens-live',name:'Custodian Wardens',ownerId:'p1',status:'deployed',position:{x:20,y:20},metadata:{rosterUnitId:'wardens'}},
+      {id:'trajann-live',name:'Trajann Valoris',ownerId:'p1',status:'deployed',position:{x:18,y:20},metadata:{rosterUnitId:'trajann'}},
+      {id:'enemy',name:'Enemy',ownerId:'p2',status:'deployed',position:{x:25,y:20}}
+    ]
+  });
+}
+
 function setup(initial = state()) {
   clearCommandHandlers();
   registerCoreCommandHandlers();
@@ -68,6 +90,45 @@ test('Charge live map lets the active player drag deployed units without adding 
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'support').position, {x:18,y:12});
     assert.equal(x.session.getState().history.length, historyBefore + 2);
     assert.ok(x.session.getState().history.slice(historyBefore).every(e=>e.type==='battlefield_map.position_adjusted'));
+  } finally {
+    x.screen.destroy();
+  }
+});
+
+test('Charge live map translates an attached Leader and Bodyguard together and one undo restores both', () => {
+  const x = setup(attachedState());
+  try {
+    const historyBefore = x.session.getState().history.length;
+    x.drag('trajann-live', {x:22,y:24});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:22,y:24});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:24,y:24});
+    assert.equal(x.session.getState().history.length, historyBefore + 2);
+    assert.equal(x.session.getLastCorrection()?.label, 'map move');
+
+    assert.equal(x.session.undoLastAction(), true);
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:20,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:18,y:20});
+    assert.equal(x.session.getState().history.length, historyBefore);
+
+    x.drag('wardens-live', {x:24,y:24});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:24,y:24});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:22,y:24});
+    assert.ok(x.session.getState().history.slice(historyBefore).every(event => event.type === 'battlefield_map.position_adjusted'));
+  } finally {
+    x.screen.destroy();
+  }
+});
+
+test('Charge formation drag clamps a shared delta at the battlefield edge', () => {
+  const x = setup(attachedState());
+  try {
+    x.drag('wardens-live', {x:1,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:2,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:0,y:20});
+
+    x.drag('wardens-live', {x:20,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:20,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:18,y:20});
   } finally {
     x.screen.destroy();
   }

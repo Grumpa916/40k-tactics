@@ -1,3 +1,5 @@
+import { getCombatFormationRootId } from "./battle-unit-reference.js";
+
 const CHARGE_EVENT = "charge.outcome_recorded";
 const FIGHT_ATTACK_EVENT = "combat.attack_resolved";
 const FALL_BACK_EVENT = "unit.fell_back";
@@ -31,6 +33,20 @@ function addPair(map, a, b, source, index) {
   });
 }
 
+function relationshipIncludesFormation(state, relationship, unitId) {
+  const rootId = getCombatFormationRootId(state, unitId);
+  if (!rootId) return relationship.unitIds.includes(unitId);
+  return relationship.unitIds.some((relatedId) =>
+    getCombatFormationRootId(state, relatedId) === rootId
+  );
+}
+
+function deleteFormationRelationships(state, relationships, unitId) {
+  for (const [key, relationship] of relationships) {
+    if (relationshipIncludesFormation(state, relationship, unitId)) relationships.delete(key);
+  }
+}
+
 /**
  * Derive only engagement relationships that are supported by authoritative
  * action history. This deliberately does not use map coordinates as a legal
@@ -57,26 +73,18 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
     if (!event?.type) continue;
 
     if (event.type === 'unit.entered_reserves') {
-      for (const [key, relationship] of relationships) {
-        if (relationship.unitIds.includes(event.payload?.unitId)) relationships.delete(key);
-      }
+      if (event.payload?.unitId) deleteFormationRelationships(state, relationships, event.payload.unitId);
       continue;
     }
     if (event.type === 'unit.mortal_wounds_recorded' && event.payload?.stateDelta?.target?.statusAfter === 'destroyed') {
-      for (const [key, relationship] of relationships) {
-        if (relationship.unitIds.includes(event.payload.targetId)) relationships.delete(key);
-      }
+      if (event.payload?.targetId) deleteFormationRelationships(state, relationships, event.payload.targetId);
       continue;
     }
     if (event.type === FALL_BACK_EVENT && event.payload?.unitId) {
-      fallBacks.add(event.payload.unitId);
-      fallBackIndexes.set(event.payload.unitId, index);
-
-      for (const [key, relationship] of relationships) {
-        if (relationship.unitIds.includes(event.payload.unitId)) {
-          relationships.delete(key);
-        }
-      }
+      const rootId = getCombatFormationRootId(state, event.payload.unitId) ?? event.payload.unitId;
+      fallBacks.add(rootId);
+      fallBackIndexes.set(rootId, index);
+      deleteFormationRelationships(state, relationships, event.payload.unitId);
       continue;
     }
 
@@ -96,11 +104,7 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
       event.payload?.targetId
     ) {
       if (event.payload?.stateDelta?.target?.statusAfter === "destroyed") {
-        for (const [key, relationship] of relationships) {
-          if (relationship.unitIds.includes(event.payload.targetId)) {
-            relationships.delete(key);
-          }
-        }
+        deleteFormationRelationships(state, relationships, event.payload.targetId);
       } else {
         addPair(
           relationships,
@@ -165,7 +169,6 @@ export function getFightStepStartEngagementState(state) {
   };
 }
 
-
 export function hasFightEngagementHistory(state) {
   return eventSequence(state).some((event) =>
     event?.type === FALL_BACK_EVENT ||
@@ -174,12 +177,23 @@ export function hasFightEngagementHistory(state) {
   );
 }
 
+/**
+ * Engagement history can be recorded against either an attached Leader marker
+ * or its Bodyguard marker. Compare the current combat-formation roots so the
+ * relationship remains valid when Fight activates the combined formation.
+ */
 export function areUnitsEngaged(state, firstUnitId, secondUnitId) {
   if (!firstUnitId || !secondUnitId || firstUnitId === secondUnitId) return false;
-  const current = getFightEngagementState(state);
-  const key = pairKey(firstUnitId, secondUnitId);
-  return current.relationships.some((relationship) =>
-    pairKey(relationship.unitIds[0], relationship.unitIds[1]) === key
-  );
-}
+  const firstRootId = getCombatFormationRootId(state, firstUnitId);
+  const secondRootId = getCombatFormationRootId(state, secondUnitId);
+  if (!firstRootId || !secondRootId || firstRootId === secondRootId) return false;
 
+  const current = getFightEngagementState(state);
+  const key = pairKey(firstRootId, secondRootId);
+  return current.relationships.some((relationship) => {
+    const relationshipFirst = getCombatFormationRootId(state, relationship.unitIds[0]);
+    const relationshipSecond = getCombatFormationRootId(state, relationship.unitIds[1]);
+    return relationshipFirst && relationshipSecond && relationshipFirst !== relationshipSecond &&
+      pairKey(relationshipFirst, relationshipSecond) === key;
+  });
+}
