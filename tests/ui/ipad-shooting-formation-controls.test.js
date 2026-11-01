@@ -6,6 +6,11 @@ import { getCombatFormationRoot } from '../../src/rules/battle-unit-reference.js
 import { getCombatFormationWeaponOptions } from '../../src/rules/saved-roster-combat-profile.js';
 import { renderCombatMapPanel } from '../../src/ui/combat-workspace.js';
 
+const LIVE_TEST_POSITIONS = Object.freeze({
+  trajann: { x: 13, y: 7 },
+  wardens: { x: 15, y: 7 }
+});
+
 function battleUnit(state, rosterUnitId) {
   return state.units.find(unit => unit.metadata?.rosterUnitId === rosterUnitId);
 }
@@ -17,7 +22,11 @@ function activeVerificationState() {
     phase: 'shooting',
     activePlayer: 'p1',
     battle: { ...state.battle, status: 'active', round: 1, activePlayerId: 'p1' },
-    units: state.units.map(unit => ({ ...unit, status: 'deployed' }))
+    units: state.units.map(unit => ({
+      ...unit,
+      status: 'deployed',
+      position: LIVE_TEST_POSITIONS[unit.metadata?.rosterUnitId] ?? unit.position
+    }))
   };
 }
 
@@ -51,6 +60,20 @@ test('combat map routes attached-member markers through the formation root in Sh
   });
 
   assert.match(html, new RegExp(`data-map-unit-id="${wardens.id}" data-map-member-id="${trajann.id}"`));
+});
+
+test('attached-member marker keeps its own map identity outside Shooting', () => {
+  const state = activeVerificationState();
+  const trajann = battleUnit(state, 'trajann');
+  const html = renderCombatMapPanel({
+    state: { ...state, phase: 'charge' },
+    phase: 'charge',
+    perspectivePlayerId: 'p1',
+    selectedUnitId: null
+  });
+
+  assert.match(html, new RegExp(`data-map-unit-id="${trajann.id}"`));
+  assert.doesNotMatch(html, new RegExp(`data-map-member-id="${trajann.id}"`));
 });
 
 test('iPad Shooting layout surfaces attack controls before reminder content', () => {
