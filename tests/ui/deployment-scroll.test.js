@@ -20,14 +20,19 @@ test('Deploy & Begin uses the available iPad landscape height instead of reservi
   assert.match(deployCss, /\.deploy-begin \.battlefield-map__board \{ flex:1; min-height:250px; max-height:none; aspect-ratio:auto; \}/);
 });
 
-test('Deploy & Begin objective labels are abbreviated and stay below both armies', () => {
+test('Deploy & Begin objective labels abbreviate known objectives, retain fallback text, and stay below both armies', () => {
   const deployCss = readFileSync(new URL('../../src/ui/styles/deploy-begin.css', import.meta.url), 'utf8');
   assert.match(deployCss, /battlefield-map__unit\.is-compact[\s\S]*z-index:5/);
   assert.match(deployCss, /battlefield-map__unit\.opponent[\s\S]*z-index:5/);
   assert.match(deployCss, /battlefield-map__unit\.friendly[\s\S]*z-index:5/);
-  assert.match(deployCss, /battlefield-map__objective[\s\S]*width:30px[\s\S]*font-size:0[\s\S]*z-index:4/);
-  for (const [title, label] of [['My Home','mH'],['Opponent Home','oH'],['My Expansion','mE'],['Opponent Expansion','oE'],['Center 1','C1'],['Center 2','C2']]) {
-    assert.match(deployCss, new RegExp(`title\\^="${title.replace(' ', '\\s?')}"`));
-    assert.ok(deployCss.includes(`content:"${label}"`));
+  assert.match(deployCss, /battlefield-map__objective \{[^}]*width:30px[^}]*font-size:7px[^}]*z-index:4/);
+  assert.match(deployCss, /battlefield-map__objective::after \{[^}]*display:none/);
+  for (const [title, label] of [
+    ['My Home','mH'],['Opponent Home','oH'],['My Expansion','mE'],['Opponent Expansion','oE'],['Center 1','C1'],['Center 2','C2'],
+    ['Attacker Home','AH'],['Defender Home','DH'],['Expansion 1','E1'],['Expansion 2','E2'],['Central 1','C1'],['Central 2','C2']
+  ]) {
+    assert.ok(deployCss.includes(`[title^="${title}"]`));
+    assert.ok(deployCss.includes(`content:"${label}"; display:block;`));
   }
+  assert.doesNotMatch(deployCss, /battlefield-map__objective \{[^}]*font-size:0/);
 });
