@@ -12,6 +12,28 @@ const LIVE_PHASES = Object.freeze([
   ['fight', 'Fight']
 ]);
 
+// Live-play cleanup policy: when headings and controls already explain the action,
+// omit repeated helper prose. Keep warnings, timing/legality text and decision support.
+const REDUNDANT_LIVE_HELPER_PREFIXES = Object.freeze([
+  "Drag an active player's deployed unit on the live map to update its approximate Charge position.",
+  'Select the target(s), enter the measured tabletop distance, and record the outcome.',
+  'At the end of your Command phase, spend 1 CP to discard one active Tactical card',
+  'Recorded-state outlook only;'
+]);
+
+export function removeRedundantLiveHelperCopy(container) {
+  for (const element of container.querySelectorAll?.('p, small') ?? []) {
+    const text = element.textContent?.trim?.() ?? '';
+    if (!REDUNDANT_LIVE_HELPER_PREFIXES.some(prefix => text.startsWith(prefix))) continue;
+    const parent = element.parentElement;
+    if (element.tagName === 'SMALL' && parent?.tagName === 'P' && parent.textContent?.trim?.() === text) {
+      parent.remove?.();
+    } else {
+      element.remove?.();
+    }
+  }
+}
+
 export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}) {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
   stylesheet.searchParams.set('v', 'live-controls-3');
@@ -23,6 +45,7 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
   ).join('');
   return `<link rel="stylesheet" href="${href}"><link rel="stylesheet" href="${navigationHref}"><link rel="stylesheet" href="${planningMapHref}"><style>
     .battle-shell.is-tabletop-experiment .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
+    .prototype-unit-weapon-count,.prototype-unit-weapon-keywords{font-size:.82em!important}
   </style><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
     <div class="prototype-score-host" data-workspace-score-host></div>
     <div class="prototype-phase-row">
@@ -44,6 +67,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const shell = container.querySelector?.('.battle-shell');
     if (!shell) return;
     const state = session.getState();
+    removeRedundantLiveHelperCopy(container);
     refreshPhaseArmyRoster(container, armyView);
     const combat = !!container.querySelector?.('.shoot-screen--tabletop, .combat-workspace');
     shell.setAttribute('data-battle-focus', String(combat));
