@@ -61,6 +61,16 @@ test('engine rejection is visible and keeps the current phase', () => {
   } finally { x.shell.destroy(); }
 });
 
+test('stale current-phase rejection is hidden while previewing another phase', () => {
+  const state = createGameState({ phase: 'shooting', activePlayer: 'p1', players: [{ id: 'p1' }, { id: 'p2' }], battle: { status: 'active', round: 1, activePlayerId: 'p1' } });
+  const message = 'Shooting phase cannot be completed while eligible units remain.';
+  const current = renderPhaseProgressionPanel(state, 'shooting', message);
+  const preview = renderPhaseProgressionPanel(state, 'fight', message);
+  assert.match(current, /Shooting phase cannot be completed while eligible units remain/);
+  assert.match(preview, /Return to current phase · Shooting/);
+  assert.doesNotMatch(preview, /Shooting phase cannot be completed while eligible units remain/);
+});
+
 test('setup and completed battles do not offer phase advancement', () => {
   for (const status of ['setup', 'deployment', 'complete']) {
     const state = { phase: 'command', battle: { status } };
