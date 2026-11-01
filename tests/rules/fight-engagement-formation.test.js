@@ -46,3 +46,21 @@ test('a successful charge recorded on an attached Leader carries into the Bodygu
   assert.ok(options.attackers.some(unit => unit.unitId === 'wardens'));
   assert.ok(options.targets.some(unit => unit.unitId === 'enemy'));
 });
+
+test('a Fall Back by either attached member clears the formation engagement', () => {
+  const current = state();
+  current.history.push({
+    type: 'unit.fell_back',
+    payload: { unitId: 'wardens', round: 1, turn: 1 }
+  });
+
+  assert.equal(areUnitsEngaged(current, 'trajann', 'enemy'), false);
+  assert.equal(areUnitsEngaged(current, 'wardens', 'enemy'), false);
+
+  const options = getFightAttackOptions(current, {
+    attackerId: 'wardens',
+    perspectivePlayerId: 'p1',
+    includeCandidates: true
+  });
+  assert.equal(options.targets.some(unit => unit.unitId === 'enemy'), false);
+});
