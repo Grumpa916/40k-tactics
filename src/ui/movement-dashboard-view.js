@@ -2,6 +2,7 @@ import { getArmyUnitReference } from './army-unit-summary.js';
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
 import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
+import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { getArmyUnitDisplayGroups, armyUnitMemberRole } from './army-unit-display-groups.js';
 
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -55,7 +56,7 @@ export function renderMovementRosterRail(state, {
     const wounds = (vitals.wounds ?? '—') + (Number.isFinite(vitals.startingWounds) ? '/' + vitals.startingWounds : '');
     return `<div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : `data-open-unit-details="${esc(unit.id)}"`} aria-pressed="${selected}">
       <span class="movement-roster__token ${unit.ownerId === myId ? 'is-friendly' : 'is-opponent'}">${esc(symbols.get(unit.id) ?? 'U')}</span>
-      <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}</span><b>W ${esc(wounds)}</b></small></span>
+      <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}${isUnitBattleShocked(unit) ? ' · BS' : ''}</span><b>W ${esc(wounds)}</b></small></span>
     </button>${selectable ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>`;
   };
   const rows = getArmyUnitDisplayGroups(state, units).map(group => group.attached
@@ -84,14 +85,17 @@ export function renderMovementSelectedUnitCard(state, unit, { action = null, ref
     ['OC', characteristic(ref,'objectiveControl','Objective Control','oc')]
   ];
   const status = movementStatus(state, unit, action, refinement);
+  const battleShocked = isUnitBattleShocked(unit);
   return `<section class="movement-selected-unit" data-movement-selected-unit>
     <div class="movement-selected-unit__heading">
       <span class="movement-selected-unit__token ${tokenSide}">${esc(symbols.get(unit.id) ?? 'U')}</span>
       <span><small>SELECTED UNIT</small><strong>${esc(unit.name ?? unit.id)}</strong><em>${esc(ownerName(state, unit.ownerId))}</em></span>
-      <b>${esc(status)}</b>
+      <b>${esc(status)}${battleShocked ? ' · BS' : ''}</b>
     </div>
     <div class="movement-selected-unit__stats">${stats.map(([key,value]) => `<span><small>${key}</small><strong>${esc(value)}</strong></span>`).join('')}</div>
+    <button type="button" class="movement-selected-unit__battle-shock" data-movement-battle-shock="${esc(unit.id)}" aria-pressed="${battleShocked}" aria-label="${battleShocked ? 'Clear' : 'Mark'} Battle-shock for ${esc(unit.name ?? unit.id)}">Battle-shock: ${battleShocked ? 'On' : 'Off'}</button>
     <div class="movement-selected-unit__tabs" aria-label="Unit reference tabs"><span class="is-active">Movement</span><span>Weapons</span><span>Abilities</span><span>Profile</span></div>
   </section>`;
 }
+
 

@@ -102,3 +102,25 @@ test('Movement Advance choice records the selected roll before dragging the map 
     screen.destroy();
   }
 });
+
+test('Movement selected unit can toggle Battle-shock and retains the status after rendering', () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const game = createGameSession(baseState('movement'));
+  const handlers = {};
+  const root = {
+    innerHTML: '', replaceChildren() {}, querySelector() { return null; }, querySelectorAll() { return []; },
+    addEventListener(type, fn) { handlers[type] = fn; }, removeEventListener(type) { delete handlers[type]; }
+  };
+  const screen = createMovementScreen(root, { session: game, perspectivePlayerId: 'p1', layoutMode: 'tabletop' });
+  const button = { getAttribute: () => 'tyrannofex' };
+  try {
+    assert.match(root.innerHTML, /data-movement-battle-shock="tyrannofex" aria-pressed="false"/);
+    handlers.click({ target: { closest: selector => selector === '[data-movement-battle-shock]' ? button : null } });
+    assert.equal(game.getState().units.find(unit => unit.id === 'tyrannofex').battleShocked, true);
+    assert.equal(game.getState().history.at(-1).type, 'battle_shock.status_changed');
+    assert.match(root.innerHTML, /data-movement-battle-shock="tyrannofex" aria-pressed="true"/);
+    handlers.click({ target: { closest: selector => selector === '[data-movement-battle-shock]' ? button : null } });
+    assert.equal(game.getState().units.find(unit => unit.id === 'tyrannofex').battleShocked, false);
+  } finally { screen.destroy(); }
+});

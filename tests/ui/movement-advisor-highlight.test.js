@@ -65,6 +65,19 @@ test("Movement destination options expose objective/enemy highlight hooks withou
   assert.doesNotMatch(html, /onclick=/);
 });
 
+test("Move priorities lists every recommendation counted in its heading", () => {
+  const current = state();
+  for (let index = 2; index <= 6; index += 1) {
+    current.units.push(unit(`scorer-${index}`, 'p1', 8 + index, 12 + index, { rosterUnitId: `r-scorer-${index}` }));
+    current.armyRosters.p1.units.push(rosterUnit(`r-scorer-${index}`));
+  }
+  const html = renderMovementAdvisor(current, { playerId: 'p1', selectedUnitId: 'scorer' });
+  const priorities = html.match(/<summary>Move priorities · (\d+)<\/summary>([\s\S]*?)<\/details>/);
+  assert.ok(priorities);
+  assert.equal(Number(priorities[1]), 6);
+  assert.equal((priorities[2].match(/data-move-unit=/g) ?? []).length, 6);
+});
+
 test("Movement destination highlighting is UI-only and has no game-command dispatch path", () => {
   const source = readFileSync(new URL("../../src/ui/movement-advisor.js", import.meta.url), "utf8");
   assert.match(source, /is-advisor-highlight/);
