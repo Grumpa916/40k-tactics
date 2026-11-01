@@ -26,14 +26,32 @@
 .deploy-begin .battlefield-map__unit.friendly { z-index:5; }
 .deploy-begin .battlefield-map__unit.is-selected { z-index:6; outline:2px solid #c4e99b; outline-offset:2px; }
 .deploy-begin .battlefield-map__unit.is-unplaced { border-style:dashed; }
-.deploy-begin .battlefield-map__objective { width:30px; min-width:30px; max-width:30px; height:26px; min-height:26px; padding:0; font-size:0; line-height:1; z-index:4; }
-.deploy-begin .battlefield-map__objective::after { display:block; font-size:8px; font-weight:900; line-height:1; letter-spacing:0; }
-.deploy-begin .battlefield-map__objective[title^="My Home"]::after { content:"mH"; }
-.deploy-begin .battlefield-map__objective[title^="Opponent Home"]::after { content:"oH"; }
-.deploy-begin .battlefield-map__objective[title^="My Expansion"]::after { content:"mE"; }
-.deploy-begin .battlefield-map__objective[title^="Opponent Expansion"]::after { content:"oE"; }
-.deploy-begin .battlefield-map__objective[title^="Center 1"]::after { content:"C1"; }
-.deploy-begin .battlefield-map__objective[title^="Center 2"]::after { content:"C2"; }
+.deploy-begin .battlefield-map__objective { width:30px; min-width:30px; max-width:30px; height:26px; min-height:26px; padding:0 2px; font-size:7px; line-height:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; z-index:4; }
+.deploy-begin .battlefield-map__objective::after { display:none; font-size:8px; font-weight:900; line-height:1; letter-spacing:0; }
+.deploy-begin .battlefield-map__objective[title^="My Home"],
+.deploy-begin .battlefield-map__objective[title^="Opponent Home"],
+.deploy-begin .battlefield-map__objective[title^="My Expansion"],
+.deploy-begin .battlefield-map__objective[title^="Opponent Expansion"],
+.deploy-begin .battlefield-map__objective[title^="Center 1"],
+.deploy-begin .battlefield-map__objective[title^="Center 2"],
+.deploy-begin .battlefield-map__objective[title^="Attacker Home"],
+.deploy-begin .battlefield-map__objective[title^="Defender Home"],
+.deploy-begin .battlefield-map__objective[title^="Expansion 1"],
+.deploy-begin .battlefield-map__objective[title^="Expansion 2"],
+.deploy-begin .battlefield-map__objective[title^="Central 1"],
+.deploy-begin .battlefield-map__objective[title^="Central 2"] { font-size:0; }
+.deploy-begin .battlefield-map__objective[title^="My Home"]::after { content:"mH"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Opponent Home"]::after { content:"oH"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="My Expansion"]::after { content:"mE"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Opponent Expansion"]::after { content:"oE"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Center 1"]::after { content:"C1"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Center 2"]::after { content:"C2"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Attacker Home"]::after { content:"AH"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Defender Home"]::after { content:"DH"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Expansion 1"]::after { content:"E1"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Expansion 2"]::after { content:"E2"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Central 1"]::after { content:"C1"; display:block; }
+.deploy-begin .battlefield-map__objective[title^="Central 2"]::after { content:"C2"; display:block; }
 .deploy-reserve-tray { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding-top:6px; max-height:110px; overflow:auto; }
 .deploy-reserve-tray > strong { font-size:12px; }
 .deploy-reserve-tray > small { width:100%; }
