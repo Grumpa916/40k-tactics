@@ -15,9 +15,15 @@ function clamp01(value) {
   return Math.max(0, Math.min(1, Number(value) || 0));
 }
 
+function finiteDistance(value) {
+  if (value == null || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 export function getChargeSuccessProbability(distance) {
-  const numeric = Number(distance);
-  if (!Number.isFinite(numeric)) return null;
+  const numeric = finiteDistance(distance);
+  if (numeric == null) return null;
   const required = Math.ceil(numeric);
   if (required <= 2) return 1;
   if (required > 12) return 0;
@@ -131,11 +137,13 @@ export function getChargeOpportunity(state, {
   if (!attacker || attacker.ownerId !== playerId) throw new Error("Charge attacker must belong to playerId.");
   if (!target || target.ownerId === playerId) throw new Error("Charge target must be an enemy unit.");
 
+  const measured = finiteDistance(measuredDistance);
+  const mapped = finiteDistance(mapDistance);
   const strategicContext = getTargetStrategicContext(state, { playerId, targetUnitId });
   const projectedFight = meleeProjection(state, attacker, target, true);
   const projectedCounterFight = meleeProjection(state, target, attacker);
-  const unmodifiedSuccessProbability = getChargeSuccessProbability(measuredDistance);
-  const unmodifiedMapSuccessProbability = getChargeSuccessProbability(mapDistance);
+  const unmodifiedSuccessProbability = getChargeSuccessProbability(measured);
+  const unmodifiedMapSuccessProbability = getChargeSuccessProbability(mapped);
   const measuredCustodesCharge = getCustodesChargeAdvisorContext(state, {
     playerId,
     unitId: attackerId,
@@ -165,7 +173,7 @@ export function getChargeOpportunity(state, {
   const custodesCharge = exactSuccessProbability != null ? measuredCustodesCharge : mapCustodesCharge;
   const baseRecommendation=recommendationFor({
     successProbability: exactSuccessProbability,
-    measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
+    measuredDistance: measured,
     strategicContext,
     projectedFight,
     projectedCounterFight,
@@ -179,8 +187,8 @@ export function getChargeOpportunity(state, {
     playerId,
     attackerId,
     targetUnitId,
-    measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
-    mapDistance: Number.isFinite(Number(mapDistance)) ? Number(mapDistance) : null,
+    measuredDistance: measured,
+    mapDistance: mapped,
     successProbability: exactSuccessProbability,
     unmodifiedSuccessProbability,
     mapSuccessProbability,
@@ -220,10 +228,14 @@ export function getChargeTargetPriorities(state, {
           playerId,
           attackerId,
           targetUnitId,
-          measuredDistance: distances.has(targetUnitId) ? Number(distances.get(targetUnitId)) : null,
+          measuredDistance: distances.has(targetUnitId) ? distances.get(targetUnitId) : null,
           mapDistance: target?.targetDistance ?? target?.mapDistance ?? null
         });
-        return Object.freeze({ target, advice });
+        const normalizedTarget = Object.freeze({
+          ...target,
+          name: target?.name ?? target?.target?.name ?? targetUnitId
+        });
+        return Object.freeze({ target: normalizedTarget, advice });
       } catch {
         return null;
       }
