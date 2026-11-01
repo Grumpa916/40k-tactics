@@ -2,6 +2,7 @@ import { renderUnitRulesReminders, renderStratagemOpportunityReminders } from '.
 import { renderPhaseArmyRoster } from './phase-army-roster.js';
 import { createLiveMapView } from './live-map-view.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
+import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 export { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -16,12 +17,31 @@ export function renderSelectedUnitActiveStatus(state, selectedUnitId) {
   </section>`;
 }
 
+function formationAwareMapHtml(state, phase, mapHtml) {
+  if (phase !== 'shooting') return mapHtml;
+  let html = mapHtml;
+  for (const unit of state?.units ?? []) {
+    const root = getCombatFormationRoot(state, unit);
+    if (!root?.id || root.id === unit?.id) continue;
+    const memberId = escapeHtml(unit.id);
+    const rootId = escapeHtml(root.id);
+    html = html.replaceAll(
+      `data-map-unit-id="${memberId}"`,
+      `data-map-unit-id="${rootId}" data-map-member-id="${memberId}"`
+    );
+  }
+  return html;
+}
+
 // Tabletop mode keeps the battlefield as the dominant surface. Phase-specific
 // guidance belongs in the context panel instead of consuming map height.
 export function renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, mapView = createLiveMapView(), mapExtra = '' }) {
   const styles = new URL('./styles/combat-workspace.css', import.meta.url).href;
+  const mapHtml = formationAwareMapHtml(state, phase, mapView.render(state, {
+    mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: false
+  }));
   return `<link rel="stylesheet" href="${escapeHtml(styles)}"><section class="combat-workspace__map" data-tabletop-map-phase="${escapeHtml(phase)}">
-      ${mapView.render(state, { mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: false })}
+      ${mapHtml}
       ${mapExtra}
     </section>`;
 }
