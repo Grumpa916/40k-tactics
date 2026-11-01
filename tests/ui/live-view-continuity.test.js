@@ -78,6 +78,6 @@ test('attack receipt escapes imported names and offers one immediate correction'
 
 test('Shooting panel reset key tracks acting unit only, not weapon or target changes', () => {
   const source = readFileSync(new URL('../../src/ui/shooting-screen.js', import.meta.url), 'utf8');
-  assert.match(source, /const activeSelection = selectedAttackerId \?\? pendingUnitId \?\? null;/);
+  assert.match(source, /const renderedActiveUnitId = selectedAttackerId \?\? pendingUnitId \?\? null;/);
   assert.doesNotMatch(source, /\[selectedAttackerId, selectedWeaponId, selectedTargetId\]\.join/);
 });
