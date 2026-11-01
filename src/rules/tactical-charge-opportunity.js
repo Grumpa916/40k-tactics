@@ -15,9 +15,15 @@ function clamp01(value) {
   return Math.max(0, Math.min(1, Number(value) || 0));
 }
 
+function finiteDistance(value) {
+  if (value == null || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 export function getChargeSuccessProbability(distance) {
-  const numeric = Number(distance);
-  if (!Number.isFinite(numeric)) return null;
+  const numeric = finiteDistance(distance);
+  if (numeric == null) return null;
   const required = Math.ceil(numeric);
   if (required <= 2) return 1;
   if (required > 12) return 0;
@@ -131,20 +137,22 @@ export function getChargeOpportunity(state, {
   if (!attacker || attacker.ownerId !== playerId) throw new Error("Charge attacker must belong to playerId.");
   if (!target || target.ownerId === playerId) throw new Error("Charge target must be an enemy unit.");
 
+  const measured = finiteDistance(measuredDistance);
+  const mapped = finiteDistance(mapDistance);
   const strategicContext = getTargetStrategicContext(state, { playerId, targetUnitId });
   const projectedFight = meleeProjection(state, attacker, target, true);
   const projectedCounterFight = meleeProjection(state, target, attacker);
-  const unmodifiedSuccessProbability = getChargeSuccessProbability(measuredDistance);
-  const unmodifiedMapSuccessProbability = getChargeSuccessProbability(mapDistance);
+  const unmodifiedSuccessProbability = getChargeSuccessProbability(measured);
+  const unmodifiedMapSuccessProbability = getChargeSuccessProbability(mapped);
   const measuredCustodesCharge = getCustodesChargeAdvisorContext(state, {
     playerId,
     unitId: attackerId,
-    baseProbability: unmodifiedSuccessProbability
+    baseProbability: unmodifiedSuccessProbability ?? Number.NaN
   });
   const mapCustodesCharge = getCustodesChargeAdvisorContext(state, {
     playerId,
     unitId: attackerId,
-    baseProbability: unmodifiedMapSuccessProbability
+    baseProbability: unmodifiedMapSuccessProbability ?? Number.NaN
   });
   const exactSuccessProbability = measuredCustodesCharge.adjustedProbability;
   const mapSuccessProbability = mapCustodesCharge.adjustedProbability;
@@ -165,7 +173,7 @@ export function getChargeOpportunity(state, {
   const custodesCharge = exactSuccessProbability != null ? measuredCustodesCharge : mapCustodesCharge;
   const baseRecommendation=recommendationFor({
     successProbability: exactSuccessProbability,
-    measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
+    measuredDistance: measured,
     strategicContext,
     projectedFight,
     projectedCounterFight,
@@ -179,8 +187,8 @@ export function getChargeOpportunity(state, {
     playerId,
     attackerId,
     targetUnitId,
-    measuredDistance: Number.isFinite(Number(measuredDistance)) ? Number(measuredDistance) : null,
-    mapDistance: Number.isFinite(Number(mapDistance)) ? Number(mapDistance) : null,
+    measuredDistance: measured,
+    mapDistance: mapped,
     successProbability: exactSuccessProbability,
     unmodifiedSuccessProbability,
     mapSuccessProbability,
@@ -196,4 +204,49 @@ export function getChargeOpportunity(state, {
       ? `Charge probability uses 2D6 and the ${custodesCharge.ruleName} full Charge re-roll.${custodesCharge.advanceChargePermission?' Preternatural Rapidity also permits this unit to charge after its Advance.':''} Projected melee assumes a successful charge. Other modifiers, terrain and model placement remain tabletop-authoritative.`
       : "Projected melee assumes a successful charge. Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
   });
+}
+
+export function getChargeTargetPriorities(state, {
+  playerId,
+  attackerId,
+  targets = [],
+  measuredDistances = null,
+  limit = 3
+} = {}) {
+  if (!playerId) throw new TypeError("playerId is required.");
+  if (!attackerId) throw new TypeError("attackerId is required.");
+  const distances = measuredDistances instanceof Map
+    ? measuredDistances
+    : new Map(Object.entries(measuredDistances ?? {}));
+
+  return Object.freeze((Array.isArray(targets) ? targets : [])
+    .map((target) => {
+      const targetUnitId = target?.targetUnitId ?? target?.unitId;
+      if (!targetUnitId) return null;
+      try {
+        const advice = getChargeOpportunity(state, {
+          playerId,
+          attackerId,
+          targetUnitId,
+          measuredDistance: distances.has(targetUnitId) ? distances.get(targetUnitId) : null,
+          mapDistance: target?.targetDistance ?? target?.mapDistance ?? null
+        });
+        const normalizedTarget = Object.freeze({
+          ...target,
+          name: target?.name ?? target?.target?.name ?? targetUnitId
+        });
+        return Object.freeze({ target: normalizedTarget, advice });
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      b.advice.decisionScore - a.advice.decisionScore ||
+      (b.advice.successProbability ?? b.advice.mapSuccessProbability ?? 0) -
+        (a.advice.successProbability ?? a.advice.mapSuccessProbability ?? 0) ||
+      String(a.target?.name ?? a.advice.targetUnitId).localeCompare(String(b.target?.name ?? b.advice.targetUnitId))
+    )
+    .slice(0, Math.max(0, Number(limit) || 0))
+    .map((item, index) => Object.freeze({ ...item, rank: index + 1 })));
 }

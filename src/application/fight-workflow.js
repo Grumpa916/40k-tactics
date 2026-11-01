@@ -3,9 +3,9 @@ import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getFightState } from "../rules/fight-state.js";
-import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
+import { getFightEngagementState } from "../rules/fight-engagement-state.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
-import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
+import { getCombatFormationMembers, getCombatFormationRoot, getCombatFormationRootId } from "../rules/battle-unit-reference.js";
 import { unitDisplayLabels } from "../ui/map-unit-labels.js";
 
 function playerName(player) {
@@ -45,6 +45,48 @@ function describeActivation(state, activation, perspectivePlayerId) {
     ...activation,
     unit: describeUnit(state, activation.unitId, perspectivePlayerId)
   };
+}
+
+function formationChargedThisTurn(state, unitId) {
+  const rootId = getCombatFormationRootId(state, unitId);
+  if (!rootId) return false;
+  return (Array.isArray(state?.history) ? state.history : []).some((event) =>
+    event?.type === "charge.outcome_recorded" &&
+    event?.payload?.outcome === "successful" &&
+    event?.payload?.turn === state?.turn &&
+    event?.payload?.round === state?.battle?.round &&
+    getCombatFormationRootId(state, event?.payload?.unitId) === rootId
+  );
+}
+
+function hasRecordedLiveEngagement(state, unitId) {
+  const rootId = getCombatFormationRootId(state, unitId);
+  if (!rootId) return false;
+  const deployedRoots = new Set(
+    (Array.isArray(state?.units) ? state.units : [])
+      .filter((unit) => unit?.status === "deployed" && getCombatFormationRoot(state, unit)?.id === unit.id)
+      .map((unit) => unit.id)
+  );
+  const current = getFightEngagementState(state);
+  return current.relationships.some((relationship) => {
+    const roots = relationship.unitIds
+      .map((relatedId) => getCombatFormationRootId(state, relatedId))
+      .filter(Boolean);
+    return roots.includes(rootId) && roots.some((relatedRootId) =>
+      relatedRootId !== rootId && deployedRoots.has(relatedRootId)
+    );
+  });
+}
+
+function tabletopFightTargets(state, attacker, perspectivePlayerId) {
+  return state.units
+    .filter((unit) =>
+      unit?.status === "deployed" &&
+      unit?.id !== attacker.id &&
+      unit?.ownerId !== attacker.ownerId &&
+      getCombatFormationRoot(state, unit)?.id === unit.id
+    )
+    .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 }
 
 export function getFightViewModel(state, { perspectivePlayerId = null } = {}) {
@@ -180,7 +222,11 @@ export function getFightAttackOptions(
       attackers,
       targets: state.units
         .filter((unit) => unit?.status === "deployed" && !activated.has(unit?.id) && getCombatFormationRoot(state, unit)?.id === unit.id)
-        .map((unit) => describeUnit(state, unit.id, perspectivePlayerId))
+        .map((unit) => describeUnit(state, unit.id, perspectivePlayerId)),
+      chargedThisTurn: false,
+      recordedEngagement: false,
+      overrunAvailable: false,
+      targetSelectionPolicy: "tabletop-confirmed"
     };
   }
 
@@ -188,21 +234,27 @@ export function getFightAttackOptions(
   if (!attacker || !selectable.has(attackerId)) {
     return {
       attackers,
-      targets: []
+      targets: [],
+      chargedThisTurn: false,
+      recordedEngagement: false,
+      overrunAvailable: false,
+      targetSelectionPolicy: "tabletop-confirmed"
     };
   }
 
+  const chargedThisTurn = formationChargedThisTurn(state, attackerId);
+  const recordedEngagement = hasRecordedLiveEngagement(state, attackerId);
+
   return {
     attackers,
-    targets: state.units
-      .filter((unit) =>
-        unit?.status === "deployed" &&
-        unit?.id !== attackerId &&
-        unit?.ownerId !== attacker.ownerId &&
-        getCombatFormationRoot(state, unit)?.id === unit.id &&
-        (!hasFightEngagementHistory(state) || areUnitsEngaged(state, attackerId, unit.id))
-      )
-      .map((unit) => describeUnit(state, unit.id, perspectivePlayerId))
+    // Charge history is context, not a Fight target lock. The battlefield map is
+    // approximate, so the player confirms legal Pile In/Engagement Range on the
+    // physical table before choosing a target here.
+    targets: tabletopFightTargets(state, attacker, perspectivePlayerId),
+    chargedThisTurn,
+    recordedEngagement,
+    overrunAvailable: chargedThisTurn && !recordedEngagement,
+    targetSelectionPolicy: "tabletop-confirmed"
   };
 }
 
