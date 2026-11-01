@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { captureViewContinuity } from '../../src/ui/view-continuity.js';
 import { createShootingComparisonCache } from '../../src/rules/tactical-shooting-comparison.js';
 import { shootingTargetComparisonCards } from '../../src/ui/shooting-advisor-view.js';
@@ -21,6 +22,14 @@ test('view refresh retains panel scroll position and expanded additional targets
   const restore=captureViewContinuity({querySelector:s=>nodes[s]});
   nodes={'.shoot-tabletop__control-scroll':{scrollTop:0},'.combat-workspace__scroll':{scrollTop:0},'[data-comparison-more]':{open:false}};
   restore();assert.equal(nodes['.shoot-tabletop__control-scroll'].scrollTop,180);assert.equal(nodes['.combat-workspace__scroll'].scrollTop,95);assert.equal(nodes['[data-comparison-more]'].open,true);
+});
+test('shooting target and weapon changes preserve panel scroll while acting-unit changes may reset it', () => {
+  const source=readFileSync(new URL('../../src/ui/shooting-screen.js', import.meta.url), 'utf8');
+  assert.match(source,/let lastRenderedActiveUnitId = null;/);
+  assert.match(source,/const renderedActiveUnitId = selectedAttackerId \?\? pendingUnitId \?\? null;/);
+  assert.match(source,/if \(renderedActiveUnitId !== lastRenderedActiveUnitId\)/);
+  assert.doesNotMatch(source,/lastRenderedSelection/);
+  assert.doesNotMatch(source,/\[selectedAttackerId, selectedWeaponId, selectedTargetId\]\.join/);
 });
 test('phase redraw retains collapsed and expanded menus after a secondary is recorded', () => {
   const detail = (label, open, key = null) => ({
