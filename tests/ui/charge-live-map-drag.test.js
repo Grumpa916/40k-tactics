@@ -95,7 +95,7 @@ test('Charge live map lets the active player drag deployed units without adding 
   }
 });
 
-test('Charge live map translates an attached Leader and Bodyguard together', () => {
+test('Charge live map translates an attached Leader and Bodyguard together and one undo restores both', () => {
   const x = setup(attachedState());
   try {
     const historyBefore = x.session.getState().history.length;
@@ -103,12 +103,32 @@ test('Charge live map translates an attached Leader and Bodyguard together', () 
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:22,y:24});
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:24,y:24});
     assert.equal(x.session.getState().history.length, historyBefore + 2);
+    assert.equal(x.session.getLastCorrection()?.label, 'map move');
+
+    assert.equal(x.session.undoLastAction(), true);
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:20,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:18,y:20});
+    assert.equal(x.session.getState().history.length, historyBefore);
+
+    x.drag('wardens-live', {x:24,y:24});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:24,y:24});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:22,y:24});
+    assert.ok(x.session.getState().history.slice(historyBefore).every(event => event.type === 'battlefield_map.position_adjusted'));
+  } finally {
+    x.screen.destroy();
+  }
+});
+
+test('Charge formation drag clamps a shared delta at the battlefield edge', () => {
+  const x = setup(attachedState());
+  try {
+    x.drag('wardens-live', {x:1,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:2,y:20});
+    assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:0,y:20});
 
     x.drag('wardens-live', {x:20,y:20});
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'wardens-live').position, {x:20,y:20});
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'trajann-live').position, {x:18,y:20});
-    assert.equal(x.session.getState().history.length, historyBefore + 4);
-    assert.ok(x.session.getState().history.slice(historyBefore).every(event => event.type === 'battlefield_map.position_adjusted'));
   } finally {
     x.screen.destroy();
   }
