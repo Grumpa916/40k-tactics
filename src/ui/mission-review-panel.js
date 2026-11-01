@@ -4,21 +4,40 @@ export function renderMissionReviewToggle({ visible = false, open = false } = {}
     String(open) + '"><strong>Missions</strong><span>Review both armies</span></button></li>';
 }
 
-export function renderMissionReviewPanel(summary, { open = false } = {}) {
+function expandReviewSections(summary, openStates) {
+  return String(summary ?? '').replace(
+    /<details class="battle-mission-summary__(?:section|player|card)"([^>]*)>/g,
+    (match, attributes) => {
+      const key = attributes.match(/data-mission-summary-key="([^"]+)"/)?.[1];
+      return (key && Object.hasOwn(openStates, key)) || /(?:^|\s)open(?:\s|$)/.test(attributes)
+      ? match
+      : match.slice(0, -1) + ' open>';
+    }
+  );
+}
+
+export function renderMissionReviewPanel(summary, { open = false, openStates = {} } = {}) {
+  const reviewSummary = expandReviewSections(summary, openStates);
   const layout = '<style data-mission-review-layout>' +
-    '[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:min(1180px,calc(100vw - 24px));max-width:100%;max-height:calc(100dvh - 24px);overflow-x:hidden;}' +
-    '[data-mission-review-overlay] .battle-shell__mission-review-body,[data-mission-review-overlay] .battle-mission-summary,[data-mission-review-overlay] .battle-mission-summary__section,[data-mission-review-overlay] .battle-mission-summary__section-content,[data-mission-review-overlay] .battle-mission-summary__player,[data-mission-review-overlay] .battle-mission-summary__detail,[data-mission-review-overlay] .battle-mission-summary__card{box-sizing:border-box;width:100%;max-width:100%;min-width:0;}' +
-    '[data-mission-review-overlay] .battle-shell__mission-review-body{overflow-x:hidden;overflow-wrap:anywhere;}' +
+    '[data-mission-review-overlay]{align-items:stretch;padding:12px;}' +
+    '[data-mission-review-overlay] .battle-shell__mission-review-dialog{box-sizing:border-box;display:flex;flex-direction:column;width:min(1180px,calc(100vw - 24px));max-width:100%;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;}' +
+    '[data-mission-review-overlay] .battle-shell__mission-review-heading{flex:0 0 auto;}' +
+    '[data-mission-review-overlay] .battle-shell__mission-review-body{box-sizing:border-box;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;overflow-wrap:anywhere;-webkit-overflow-scrolling:touch;}' +
+    '[data-mission-review-overlay] .battle-mission-summary{box-sizing:border-box;display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start;gap:12px;width:100%;max-width:100%;min-width:0;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__section,[data-mission-review-overlay] .battle-mission-summary__section-content,[data-mission-review-overlay] .battle-mission-summary__player,[data-mission-review-overlay] .battle-mission-summary__detail,[data-mission-review-overlay] .battle-mission-summary__card{box-sizing:border-box;width:100%;max-width:100%;min-width:0;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__section-content{position:static!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start;gap:10px;max-height:none!important;overflow:visible!important;}' +
     '[data-mission-review-overlay] .battle-mission-summary__section>summary,[data-mission-review-overlay] .battle-mission-summary__player>summary,[data-mission-review-overlay] .battle-mission-summary__card>summary{flex-wrap:wrap;min-width:0;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__section>summary{min-height:48px;padding:10px 12px;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__player>summary{min-height:44px;padding:9px 12px;}' +
     '[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:12px;padding-right:12px;}' +
-    '@media (max-width:760px),(orientation:portrait){[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:12px;}[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:8px;padding-right:8px;}}' +
+    '@media (max-width:760px),(orientation:portrait){[data-mission-review-overlay]{padding:8px;}[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:12px;}[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:8px;padding-right:8px;}}' +
     '</style>';
   return '<div class="battle-shell__mission-review"' + (open ? "" : " hidden") + ' data-mission-review-overlay>' +
     layout +
     '<section class="battle-shell__mission-review-dialog" role="dialog" aria-modal="true" aria-labelledby="battle-mission-review-title">' +
     '<header class="battle-shell__mission-review-heading"><h2 id="battle-mission-review-title">Mission review</h2>' +
     '<button type="button" data-close-mission-review aria-label="Close mission review">Close</button></header>' +
-    '<div class="battle-shell__mission-review-body" data-battle-mission-summary-host>' + summary + '</div>' +
+    '<div class="battle-shell__mission-review-body" data-battle-mission-summary-host>' + reviewSummary + '</div>' +
     '</section></div>';
 }
 
@@ -54,3 +73,4 @@ export function bindMissionReviewPanel(container, { open = false, onOpenChange =
     container.removeEventListener?.("keydown", handleKeydown);
   };
 }
+

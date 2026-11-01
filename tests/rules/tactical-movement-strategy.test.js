@@ -124,7 +124,7 @@ test("Movement Advisor UI shows selected advice, destination comparisons, priori
   assert.match(html, /Only verified mission text changes movement ranking/);
 });
 
-test('Movement Advisor objective names exactly match named live-map markers without exposing internal IDs', async()=>{
+test('Movement Advisor objective names exactly match abbreviated live-map markers without exposing internal IDs', async()=>{
  const {renderBattlefieldMap}=await import('../../src/ui/battlefield-map.js');
  const {applyApprovedLiveMapSymbols}=await import('../../src/ui/live-map-symbols.js');
  const {liveMapObjectiveLabel}=await import('../../src/rules/objective-display-labels.js');
@@ -142,7 +142,7 @@ test('Movement Advisor objective names exactly match named live-map markers with
   assert.ok(objective);assert.match(objective.objectiveName,/^(My|Opponent) Expansion \((MY|OPP) EXP\)$/);
   assert.doesNotMatch(objective.reason,/event-companion:/);
   const expectedLabel=liveMapObjectiveLabel(s,objective.objectiveId,perspective);
-  assert.match(expectedLabel,/^(My|Opp) Exp$/);
+  assert.match(expectedLabel,/^(mE|oE)$/);
   const html=renderMovementAdvisor(s,{playerId:'p1',selectedUnitId:'scorer',perspectivePlayerId:perspective});
   assert.ok(html.includes(`Objective · ${expectedLabel}`));
   assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
@@ -150,8 +150,7 @@ test('Movement Advisor objective names exactly match named live-map markers with
   const legacyCompact=objective.objectiveName.match(/\((.*?)\)/)[1];
   assert.ok(map.includes(`>${legacyCompact}</button>`));
   const liveMap=applyApprovedLiveMapSymbols(map,s);
-  const [first,second]=expectedLabel.split(' ');
-  assert.match(liveMap,new RegExp(`data-map-objective-id="event-companion:Expansion 2"[^>]*><span class="battlefield-map__objective-label-line">${first}<\\/span><span class="battlefield-map__objective-label-line">${second}<\\/span><\\/button>`));
+  assert.match(liveMap,new RegExp(`data-map-objective-id="event-companion:Expansion 2"[^>]*>${expectedLabel}<\\/button>`));
   assert.doesNotMatch(liveMap,/data-objective-number=/);
  }
 });
