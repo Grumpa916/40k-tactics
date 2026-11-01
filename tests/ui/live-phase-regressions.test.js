@@ -35,7 +35,7 @@ test('Do not fight resolves the unit without making it an attack option', () => 
   assert.equal(getFightAttackOptions(next, { perspectivePlayerId: 'p1' }).attackers.some((unit) => unit.unitId === 'tyrannofex'), false);
 });
 
-test('Movement UI uses drag-first Normal Move and only exposes refinements after movement', () => {
+test('Movement UI shows explicit Normal Move, Advance, and Did Not Move choices before movement', () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
   const game = createGameSession(baseState('movement'));
@@ -53,7 +53,10 @@ test('Movement UI uses drag-first Normal Move and only exposes refinements after
     assert.doesNotMatch(root.innerHTML, /data-move-x|data-move-y|move-coordinate-row/);
     assert.doesNotMatch(root.innerHTML, /p1:|p2:/);
     assert.match(root.innerHTML, /data-move-stationary>Did Not Move<\/button>/);
-    assert.doesNotMatch(root.innerHTML, /data-move-save>Normal Move<\/button>/);
+    assert.match(root.innerHTML, /data-move-save>Normal Move<\/button>/);
+    assert.match(root.innerHTML, /data-move-advance disabled>Select Advance roll<\/button>/);
+    assert.match(root.innerHTML, /data-advance-roll="1"/);
+    assert.match(root.innerHTML, /data-advance-roll="6"/);
     assert.doesNotMatch(root.innerHTML, /data-refine-advance/);
 
     game.dispatch({
@@ -68,6 +71,33 @@ test('Movement UI uses drag-first Normal Move and only exposes refinements after
     assert.match(root.innerHTML, /data-refine-advance disabled>Select Advance roll<\/button>/);
     assert.match(root.innerHTML, /data-refine-fallback>Mark Fall Back<\/button>/);
     assert.match(root.innerHTML, /data-refine-special>Special movement<\/button>/);
+  } finally {
+    screen.destroy();
+  }
+});
+
+test('Movement Advance choice records the selected roll before dragging the map marker', () => {
+  clearCommandHandlers();
+  registerCoreCommandHandlers();
+  const game = createGameSession(baseState('movement'));
+  const handlers = {};
+  const root = {
+    innerHTML: '', replaceChildren() {}, querySelector() { return null; }, querySelectorAll() { return []; },
+    addEventListener(type, fn) { handlers[type] = fn; }, removeEventListener(type) { delete handlers[type]; }
+  };
+  const screen = createMovementScreen(root, { session: game, perspectivePlayerId: 'p1', layoutMode: 'tabletop' });
+  const tap = (name, value = null) => {
+    const button = { dataset: {}, hasAttribute: key => key === name, getAttribute: key => key === name ? value : null };
+    handlers.click({ target: { closest: selector => selector === 'button' ? button : null } });
+  };
+  try {
+    assert.match(root.innerHTML, /data-move-save>Normal Move<\/button>/);
+    tap('data-advance-roll', '3');
+    assert.match(root.innerHTML, /data-move-advance>Advance \+3"<\/button>/);
+    tap('data-move-advance');
+    assert.equal(game.getState().history.at(-1).type, 'unit.advanced');
+    assert.equal(game.getState().history.at(-1).payload.advanceRoll, 3);
+    assert.match(root.innerHTML, /Advance recorded · \+3&quot;/);
   } finally {
     screen.destroy();
   }

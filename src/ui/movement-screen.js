@@ -148,6 +148,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const action = movementAction(state, selected.id);
       const refinement = movementRefinement(state, selected.id);
       const advanceReady = Number.isInteger(advanceRoll) && advanceRoll >= 1 && advanceRoll <= 6;
+      const advanceRollButtons = [1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" aria-pressed="${value === advanceRoll}" class="${value === advanceRoll ? "is-selected" : ""}"${value === advanceRoll ? ' style="background:#c4e99b;color:#17212b;border-color:#c4e99b;font-weight:800"' : ""}>${value}</button>`).join("");
       const canRefine = action && action.type !== 'unit.stationary_recorded';
       const markerRemovalControls = renderSmokeAndMirrorsRemovalControls(state, {
         playerId,
@@ -159,7 +160,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         <div class="move-actions">
           <div class="advance-choice">
             <span>Advance roll: <strong data-advance-roll-value>${advanceReady ? advanceRoll : "—"}</strong></span>
-            <div class="advance-roll-buttons">${[1,2,3,4,5,6].map((value) => `<button type="button" data-advance-roll="${value}" aria-pressed="${value === advanceRoll}" class="${value === advanceRoll ? "is-selected" : ""}"${value === advanceRoll ? ' style="background:#c4e99b;color:#17212b;border-color:#c4e99b;font-weight:800"' : ""}>${value}</button>`).join("")}</div>
+            <div class="advance-roll-buttons">${advanceRollButtons}</div>
             <button type="button" data-refine-advance${advanceReady ? "" : " disabled"}>${advanceReady ? `Mark Advance +${advanceRoll}\"` : "Select Advance roll"}</button>
           </div>
           <button type="button" data-refine-fallback>Mark Fall Back</button>
@@ -168,7 +169,6 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       </details>` : '';
       editor = `<div class="move-editor">
         <h2>${escapeHtml(selected.name)}</h2>
-        ${renderCalistus(state, selected, action)}
         ${action
           ? `<p class="move-editor__status"><strong>✓ ${escapeHtml(movementActionLabel(action, refinement))}</strong></p>
              ${markerRemovalControls}
@@ -176,7 +176,16 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
              <div class="move-actions">${refinement
                ? '<button type="button" data-undo-move-refinement>Undo refinement</button>'
                : '<button type="button" data-reset-position>Undo movement</button>'}</div>`
-          : `<div class="move-actions"><button type="button" data-move-stationary>Did Not Move</button></div>`}
+          : `<div class="move-actions move-actions--choices">
+              <button type="button" data-move-save>Normal Move</button>
+              <button type="button" data-move-stationary>Did Not Move</button>
+              <div class="advance-choice">
+                <span>Advance roll: <strong data-advance-roll-value>${advanceReady ? advanceRoll : "—"}</strong></span>
+                <div class="advance-roll-buttons">${advanceRollButtons}</div>
+                <button type="button" data-move-advance${advanceReady ? "" : " disabled"}>${advanceReady ? `Advance +${advanceRoll}"` : "Select Advance roll"}</button>
+              </div>
+            </div>`}
+        ${renderCalistus(state, selected, action)}
       </div>`;
     }
 
@@ -188,7 +197,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;
       const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
       const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url);
-      dashboardStyles.searchParams.set('v', 'opponent-token-color-1');
+      dashboardStyles.searchParams.set('v', 'movement-choices-1');
       const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
         playerId,
         perspectivePlayerId: perspectivePlayerId ?? playerId,
@@ -438,3 +447,4 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     }
   };
 }
+
