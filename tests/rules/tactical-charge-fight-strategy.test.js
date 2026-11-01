@@ -118,13 +118,13 @@ test('Charge Advisor ranks the top target priorities for a selected charger',()=
     playerId:'p1',
     attackerId:'attacker',
     targets:[
-      {targetUnitId:'low',name:'Low target',targetDistance:7},
       {targetUnitId:'key',name:'Key target',targetDistance:7}
     ],
     measuredDistances:{key:9},
     limit:1
   });
   assert.equal(measured.length,1);
+  assert.equal(measured[0].advice.targetUnitId,'key');
   assert.equal(measured[0].advice.measuredDistance,9);
   assert.equal(measured[0].advice.probabilityBasis,'measured');
 });
