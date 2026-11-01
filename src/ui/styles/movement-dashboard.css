@@ -23,6 +23,8 @@
 .movement-selected-unit__stats span{display:flex;flex-direction:column;align-items:center;gap:2px}
 .movement-selected-unit__stats small{font-size:9px;color:#93a6ab}
 .movement-selected-unit__stats strong{font-size:13px}
+.movement-selected-unit__battle-shock{width:100%;min-height:44px;margin:0 0 7px;padding:6px 10px;border:1px solid #62765d;border-radius:7px;background:#233529;color:#c4e99b;font:inherit;font-size:12px;font-weight:800;text-align:left}
+.movement-selected-unit__battle-shock[aria-pressed=true]{border-color:#dc9b70;background:#4a2a26;color:#ffe2c6}
 .movement-selected-unit__tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #40545c}
 .movement-selected-unit__tabs span{padding:6px 2px;text-align:center;font-size:9px;color:#91a2a7}
 .movement-selected-unit__tabs .is-active{color:#8ccaff;border-bottom:2px solid #79bbff;font-weight:800}

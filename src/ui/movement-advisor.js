@@ -169,7 +169,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
   const territoryReviewText = context.territorySignal?.reviewOnlyMissions?.length
     ? `Review-only territory context: ${context.territorySignal.reviewOnlyMissions.join(", ")}. These cards do not change the numeric ranking until verified.`
     : "";
-  const top = context.recommendations.slice(0, 3);
+  const priorities = context.recommendations;
   const selectedOptions = [selected, ...(selected.alternatives ?? [])].slice(0, 3);
   const selectedRank = activeHighlight?.unitId === selected.unitId ? activeHighlight.rank : null;
 
@@ -209,7 +209,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     </details>
     <details>
       <summary>Move priorities · ${context.recommendations.length}</summary>
-      <div class="move-units">${top.map((item, index) => `<button type="button" class="move-unit${item.unitId === selected.unitId ? " is-selected" : ""}" data-move-unit="${escapeHtml(item.unitId)}">
+      <div class="move-units">${priorities.map((item, index) => `<button type="button" class="move-unit${item.unitId === selected.unitId ? " is-selected" : ""}" data-move-unit="${escapeHtml(item.unitId)}">
         <strong>${index + 1}. ${escapeHtml(item.unitName)}</strong>
         <span>${escapeHtml(purposeLabel(item.purpose))}</span>
         <small>${escapeHtml(item.recommendation)}</small>
@@ -226,3 +226,4 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     <small>Map distances are approximate; territory classification is also advisory. Positions within ±3\" of the dotted territory line remain uncertain. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
   </aside>`;
 }
+

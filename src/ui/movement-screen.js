@@ -9,6 +9,7 @@ import { renderMovementRosterRail, renderMovementSelectedUnitCard } from './move
 import { renderSmokeAndMirrorsRemovalControls } from './smoke-and-mirrors-removal-controls.js';
 import { getCustodesKatahDefinition, getCustodesKatahState } from '../rules/custodes-tactical-advisor.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
+import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
 function escapeHtml(value) {
@@ -197,7 +198,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;
       const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
       const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url);
-      dashboardStyles.searchParams.set('v', 'movement-choices-1');
+      dashboardStyles.searchParams.set('v', 'movement-battle-shock-1');
       const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
         playerId,
         perspectivePlayerId: perspectivePlayerId ?? playerId,
@@ -312,6 +313,17 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   function handleClick(event) {
+    const battleShock = event.target?.closest?.('[data-movement-battle-shock]');
+    if (battleShock) {
+      const unit = session.getState().units.find(item => item.id === battleShock.getAttribute('data-movement-battle-shock'));
+      try {
+        if (!unit) throw new Error('Select a unit before changing Battle-shock.');
+        session.dispatch({ type: COMMAND_TYPES.SET_MANUAL_BATTLE_SHOCK, payload: { unitId: unit.id, battleShocked: !isUnitBattleShocked(unit) } });
+        errorMessage = '';
+      } catch (error) { errorMessage = error?.message ?? String(error); }
+      render();
+      return;
+    }
     const rosterTab = event.target?.closest?.('[data-movement-roster-view]');
     if (rosterTab) { rosterView = rosterTab.getAttribute('data-movement-roster-view') === 'opponent' ? 'opponent' : 'mine'; render(); return; }
     const rosterUnit = event.target?.closest?.('[data-move-roster-unit]');
