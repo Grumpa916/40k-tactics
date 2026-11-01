@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getChargeSuccessProbability, getChargeOpportunity } from '../../src/rules/tactical-charge-opportunity.js';
+import { getChargeSuccessProbability, getChargeOpportunity, getChargeTargetPriorities } from '../../src/rules/tactical-charge-opportunity.js';
 import { getTacticalCombatRecommendations } from '../../src/rules/tactical-combat-recommendations.js';
 import { getFightOpportunityRecommendations } from '../../src/rules/tactical-fight-opportunities.js';
 
@@ -95,6 +95,38 @@ test('Charge Advisor combines measured chance, saved melee projection and strate
   assert.ok(key.projectedFight?.available);
   assert.ok(key.strategicContext?.score>0);
   assert.ok(Number.isFinite(key.decisionScore));
+});
+
+test('Charge Advisor ranks the top target priorities for a selected charger',()=>{
+  const state=strategicState('charge');
+  const priorities=getChargeTargetPriorities(state,{
+    playerId:'p1',
+    attackerId:'attacker',
+    targets:[
+      {targetUnitId:'low',name:'Low target',targetDistance:7},
+      {targetUnitId:'key',name:'Key target',targetDistance:7}
+    ],
+    limit:3
+  });
+  assert.equal(priorities.length,2);
+  assert.equal(priorities[0].rank,1);
+  assert.equal(priorities[0].advice.targetUnitId,'key');
+  assert.ok(priorities[0].advice.decisionScore>priorities[1].advice.decisionScore);
+  assert.ok(Number.isFinite(priorities[0].advice.mapSuccessProbability));
+
+  const measured=getChargeTargetPriorities(state,{
+    playerId:'p1',
+    attackerId:'attacker',
+    targets:[
+      {targetUnitId:'low',name:'Low target',targetDistance:7},
+      {targetUnitId:'key',name:'Key target',targetDistance:7}
+    ],
+    measuredDistances:{key:9},
+    limit:1
+  });
+  assert.equal(measured.length,1);
+  assert.equal(measured[0].advice.measuredDistance,9);
+  assert.equal(measured[0].advice.probabilityBasis,'measured');
 });
 
 test('Fight Advisor ranks strategic scoring target above equal raw combat target',()=>{
