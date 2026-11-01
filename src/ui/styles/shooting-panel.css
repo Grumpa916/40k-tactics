@@ -15,7 +15,7 @@
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-status { order:3; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-picker { order:4; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls { margin:4px 0 8px; padding:8px; border:1px solid #506454; border-radius:10px; background:#111a16; display:flex; flex-direction:column; gap:6px; }
-/* Target is the first control needed during live play; weapon/Precision follow. */
+/* Target selector is first, followed by the selected weapon and optional Precision allocation. */
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls label:has([data-target]) { order:0; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls label:has([data-weapon]) { order:1; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls label:has([data-shoot-precision]) { order:2; }
