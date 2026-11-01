@@ -82,7 +82,9 @@ test('iPad Shooting layout puts target controls and Tactical Advisor before gene
   assert.match(css, /shoot-tabletop__attack-controls[^\{]*\{\s*order:0;/);
   assert.match(css, /shoot-tabletop__advisor\s*\{\s*order:1;/);
   assert.match(css, /shoot-tabletop__phase-heading\s*\{\s*order:2;/);
+  assert.match(css, /shoot-tabletop__unit-status\s*\{\s*order:3;/);
   assert.match(css, /shoot-tabletop__unit-picker\s*\{\s*order:4;/);
   assert.match(css, /label:has\(\[data-target\]\)\s*\{\s*order:0;/);
   assert.match(css, /label:has\(\[data-weapon\]\)\s*\{\s*order:1;/);
+  assert.match(css, /label:has\(\[data-shoot-precision\]\)\s*\{\s*order:2;/);
 });
