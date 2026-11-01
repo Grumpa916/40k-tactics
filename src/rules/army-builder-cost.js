@@ -8,6 +8,26 @@ const ORDINAL_START = {
  'tyranids:hierophant': 2, 'tyranids:tyrannocyte': 4, 'tyranids:norn-assimilator': 2,
  'tyranids:norn-emissary': 2, 'tyranids:hyperadapted-raveners': 3, 'tyranids:raveners': 3
 };
+
+function ordinalRange(condition) {
+ const normalized = String(condition ?? '').toLowerCase().replace(/[–—]/g, '-');
+ let match = normalized.match(/\b(\d+)(?:st|nd|rd|th)\s*-\s*(\d+)(?:st|nd|rd|th)\b/);
+ if (match) return { min: Number(match[1]), max: Number(match[2]) };
+ match = normalized.match(/\b(\d+)(?:st|nd|rd|th)\s*\+/);
+ if (match) return { min: Number(match[1]), max: Number.POSITIVE_INFINITY };
+ match = normalized.match(/\b(\d+)(?:st|nd|rd|th)\b/);
+ return match ? { min: Number(match[1]), max: Number(match[1]) } : null;
+}
+
+function resolveReviewedOrdinalOption(options, ordinal) {
+ const tagged = options.map(option => ({ option, range: ordinalRange(option.condition) }));
+ // Only use the generic ordinal resolver when every candidate price explicitly
+ // declares an ordinal range. Mixed ordinal/wargear pricing remains review-gated.
+ if (!tagged.length || tagged.some(entry => !entry.range)) return null;
+ const matches = tagged.filter(({ range }) => ordinal >= range.min && ordinal <= range.max);
+ return matches.length === 1 ? matches[0].option : null;
+}
+
 export function getBuilderPriceOptions(unit) {
  const catalog = ARMY_UNIT_CATALOG.find(candidate => candidate.id === unit?.datasheetId);
  return catalog?.pointsOptions ?? unit?.pointsOptions ?? [];
@@ -32,6 +52,11 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   });
   return option ? { points: option.points, reason: option.condition } : { points: null, reason: 'No matching reviewed weapon price.' };
  }
+ const reviewedOrdinalOption = resolveReviewedOrdinalOption(options, ordinal);
+ if (reviewedOrdinalOption) return {
+  points: reviewedOrdinalOption.points,
+  reason: reviewedOrdinalOption.condition || `${unit.modelCount} models`
+ };
  const threshold = ORDINAL_START[unit.datasheetId];
  if (threshold) {
   const surcharge = ordinal >= threshold;
