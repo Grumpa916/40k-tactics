@@ -175,6 +175,11 @@ export function hasFightEngagementHistory(state) {
   );
 }
 
+/**
+ * Engagement history can be recorded against either an attached Leader marker
+ * or its Bodyguard marker. Compare the current combat-formation roots so the
+ * relationship remains valid when Fight activates the combined formation.
+ */
 export function areUnitsEngaged(state, firstUnitId, secondUnitId) {
   if (!firstUnitId || !secondUnitId || firstUnitId === secondUnitId) return false;
   const firstRootId = getCombatFormationRootId(state, firstUnitId);
