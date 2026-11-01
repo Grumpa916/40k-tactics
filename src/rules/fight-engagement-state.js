@@ -1,3 +1,5 @@
+import { getCombatFormationRootId } from "./battle-unit-reference.js";
+
 const CHARGE_EVENT = "charge.outcome_recorded";
 const FIGHT_ATTACK_EVENT = "combat.attack_resolved";
 const FALL_BACK_EVENT = "unit.fell_back";
@@ -165,7 +167,6 @@ export function getFightStepStartEngagementState(state) {
   };
 }
 
-
 export function hasFightEngagementHistory(state) {
   return eventSequence(state).some((event) =>
     event?.type === FALL_BACK_EVENT ||
@@ -176,10 +177,16 @@ export function hasFightEngagementHistory(state) {
 
 export function areUnitsEngaged(state, firstUnitId, secondUnitId) {
   if (!firstUnitId || !secondUnitId || firstUnitId === secondUnitId) return false;
-  const current = getFightEngagementState(state);
-  const key = pairKey(firstUnitId, secondUnitId);
-  return current.relationships.some((relationship) =>
-    pairKey(relationship.unitIds[0], relationship.unitIds[1]) === key
-  );
-}
+  const firstRootId = getCombatFormationRootId(state, firstUnitId);
+  const secondRootId = getCombatFormationRootId(state, secondUnitId);
+  if (!firstRootId || !secondRootId || firstRootId === secondRootId) return false;
 
+  const current = getFightEngagementState(state);
+  const key = pairKey(firstRootId, secondRootId);
+  return current.relationships.some((relationship) => {
+    const relationshipFirst = getCombatFormationRootId(state, relationship.unitIds[0]);
+    const relationshipSecond = getCombatFormationRootId(state, relationship.unitIds[1]);
+    return relationshipFirst && relationshipSecond && relationshipFirst !== relationshipSecond &&
+      pairKey(relationshipFirst, relationshipSecond) === key;
+  });
+}
