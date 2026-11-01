@@ -24,7 +24,7 @@ test('verification attached-unit reference hydrates the full reviewed datasheet 
   }
 });
 
-test('mission review uses the iPad viewport as a stacked scrollable review workspace', () => {
+test('mission review uses the iPad viewport for two independently scrollable landscape columns', () => {
   const summary = '<section class="battle-mission-summary">' +
     '<details class="battle-mission-summary__section" data-mission-summary-key="mission-section-primary"><summary>Primary Missions</summary><div class="battle-mission-summary__section-content">Primary detail</div></details>' +
     '<details class="battle-mission-summary__section" data-mission-summary-key="mission-section-secondary"><summary>Secondary Missions</summary><div class="battle-mission-summary__section-content">Secondary detail</div></details>' +
@@ -34,8 +34,10 @@ test('mission review uses the iPad viewport as a stacked scrollable review works
   assert.match(html, /width:min\(1180px,calc\(100vw - 24px\)\)/);
   assert.match(html, /height:calc\(100dvh - 24px\)/);
   assert.match(html, /overflow-y:auto/);
-  assert.match(html, /battle-mission-summary\{box-sizing:border-box;display:grid!important;grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(html, /battle-mission-summary\{box-sizing:border-box;display:grid!important;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important;grid-template-rows:minmax\(0,1fr\)/);
+  assert.match(html, /battle-mission-summary__section\{min-height:0;max-height:100%;overflow-y:auto/);
   assert.match(html, /battle-mission-summary__section-content\{position:static!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:minmax\(0,1fr\)!important[\s\S]*max-height:none!important;overflow:visible!important/);
   assert.match(html, /data-mission-summary-key="mission-section-primary" open>/);
   assert.match(html, /data-mission-summary-key="mission-section-secondary" open>/);
 });
+
