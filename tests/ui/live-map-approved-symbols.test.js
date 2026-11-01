@@ -32,6 +32,13 @@ test('approved symbol transform preserves unit status badge and abbreviates obje
   assert.doesNotMatch(result, /data-objective-number=/);
 });
 
+test('approved symbol transform preserves already-escaped custom objective text', () => {
+  const html = '<button type="button" class="battlefield-map__objective is-uncontrolled" data-map-objective-id="custom">A &amp; B&#039;s Point</button>';
+  const result = applyApprovedLiveMapSymbols(html, {units:[]});
+  assert.match(result, /data-map-objective-id="custom">A &amp; B&#039;s Point<\/button>/);
+  assert.doesNotMatch(result, /&amp;amp;|&amp;#039;/);
+});
+
 test('live map loads the approved symbol stylesheet after the base live-map stylesheet', () => {
   const view = createLiveMapView();
   const state = {units:[],objectives:[],players:[],history:[],battle:{status:'active',round:1,activePlayerId:'p1'},activePlayer:'p1',phase:'movement'};
