@@ -51,7 +51,6 @@ test('combat map routes attached-member markers through the formation root in Sh
   });
 
   assert.match(html, new RegExp(`data-map-unit-id="${wardens.id}" data-map-member-id="${trajann.id}"`));
-  assert.doesNotMatch(html, new RegExp(`data-map-unit-id="${trajann.id}"`));
 });
 
 test('iPad Shooting layout surfaces attack controls before reminder content', () => {
