@@ -61,6 +61,27 @@ export function createGameSession(initialState, { commandExecutor = executeComma
       return state;
     },
 
+    dispatchBatch(commands, context = {}) {
+      if (!Array.isArray(commands) || commands.length === 0) {
+        throw new TypeError("A non-empty command batch is required.");
+      }
+      const previous = state;
+      let nextState = state;
+      let description = null;
+      for (const command of commands) {
+        if (!description) description = describeSessionCorrection(command, nextState);
+        const candidate = commandExecutor(nextState, command, context);
+        if (!candidate || typeof candidate !== "object") {
+          throw new TypeError("A command executor must return a game state.");
+        }
+        nextState = candidate;
+      }
+      correction = description && nextState !== previous ? { previous, after: nextState, ...description } : null;
+      state = nextState;
+      notify();
+      return state;
+    },
+
     getLastCorrection() {
       return correction ? { label: correction.label, detail: correction.detail } : null;
     },
@@ -83,4 +104,3 @@ export function createGameSession(initialState, { commandExecutor = executeComma
     }
   });
 }
-
