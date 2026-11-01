@@ -76,9 +76,15 @@ test('attached-member marker keeps its own map identity outside Shooting', () =>
   assert.doesNotMatch(html, new RegExp(`data-map-member-id="${trajann.id}"`));
 });
 
-test('iPad Shooting layout surfaces attack controls before reminder content', () => {
+test('iPad Shooting layout puts target controls and Tactical Advisor before general reminders', () => {
   const css = readFileSync(new URL('../../src/ui/styles/shooting-panel.css', import.meta.url), 'utf8');
   assert.match(css, /shoot-tabletop__control-scroll\s*>\s*\*\s*\{\s*order:10;/);
-  assert.match(css, /shoot-tabletop__attack-controls[^\{]*\{\s*order:2;/);
-  assert.match(css, /shoot-tabletop__unit-picker\s*\{\s*order:3;/);
+  assert.match(css, /shoot-tabletop__attack-controls[^\{]*\{\s*order:0;/);
+  assert.match(css, /shoot-tabletop__advisor\s*\{\s*order:1;/);
+  assert.match(css, /shoot-tabletop__phase-heading\s*\{\s*order:2;/);
+  assert.match(css, /shoot-tabletop__unit-status\s*\{\s*order:3;/);
+  assert.match(css, /shoot-tabletop__unit-picker\s*\{\s*order:4;/);
+  assert.match(css, /label:has\(\[data-target\]\)\s*\{\s*order:0;/);
+  assert.match(css, /label:has\(\[data-weapon\]\)\s*\{\s*order:1;/);
+  assert.match(css, /label:has\(\[data-shoot-precision\]\)\s*\{\s*order:2;/);
 });

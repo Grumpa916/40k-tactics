@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { captureViewContinuity } from '../../src/ui/view-continuity.js';
 import { createShootingComparisonCache } from '../../src/rules/tactical-shooting-comparison.js';
 import { shootingTargetComparisonCards } from '../../src/ui/shooting-advisor-view.js';
@@ -73,4 +74,10 @@ test('attack receipt escapes imported names and offers one immediate correction'
   const html=renderActionReceipt({getLastCorrection:()=>({label:'attack',detail:'<Shooter> → Target · 3 damage'})});
   assert.match(html,/&lt;Shooter&gt;/);assert.match(html,/data-live-undo/);
   assert.equal(renderActionReceipt({getLastCorrection:()=>null}),'');
+});
+
+test('Shooting panel reset key tracks acting unit only, not weapon or target changes', () => {
+  const source = readFileSync(new URL('../../src/ui/shooting-screen.js', import.meta.url), 'utf8');
+  assert.match(source, /const renderedActiveUnitId = selectedAttackerId \?\? pendingUnitId \?\? null;/);
+  assert.doesNotMatch(source, /\[selectedAttackerId, selectedWeaponId, selectedTargetId\]\.join/);
 });
