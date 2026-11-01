@@ -18,7 +18,7 @@ export function renderSelectedUnitActiveStatus(state, selectedUnitId) {
 }
 
 function formationAwareMapHtml(state, phase, mapHtml) {
-  if (!['shooting', 'charge', 'fight'].includes(phase)) return mapHtml;
+  if (phase !== 'shooting') return mapHtml;
   let html = mapHtml;
   for (const unit of state?.units ?? []) {
     const root = getCombatFormationRoot(state, unit);
