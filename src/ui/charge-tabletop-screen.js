@@ -12,6 +12,22 @@ function modelsFor(unit) {
     : unit.position ? [{ id: unit.id, position: unit.position }] : [];
 }
 
+function clampFormationDelta(formation, dx, dy) {
+  const positions = formation
+    .flatMap(modelsFor)
+    .map(model => model?.position)
+    .filter(position => Number.isFinite(position?.x) && Number.isFinite(position?.y));
+  if (!positions.length) return { dx, dy };
+  const minX = Math.min(...positions.map(position => position.x));
+  const maxX = Math.max(...positions.map(position => position.x));
+  const minY = Math.min(...positions.map(position => position.y));
+  const maxY = Math.max(...positions.map(position => position.y));
+  return {
+    dx: Math.max(-minX, Math.min(60 - maxX, dx)),
+    dy: Math.max(-minY, Math.min(44 - maxY, dy))
+  };
+}
+
 function percent(value) {
   return Number.isFinite(value) ? Math.round(value * 100) + '%' : '—';
 }
@@ -141,6 +157,19 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     return model;
   }
 
+  function dragDeltaForPointer(drag, event) {
+    const rect = drag.board.getBoundingClientRect?.();
+    if (!rect || !rect.width || !rect.height) return null;
+    const pointerX = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
+    const pointerY = Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44));
+    const state = session.getState();
+    const unit = state.units.find(item => item.id === drag.unitId);
+    if (!unit) return null;
+    const formation = getCombatFormationMembers(state, unit);
+    const delta = clampFormationDelta(formation, pointerX - drag.markerX, pointerY - drag.markerY);
+    return { ...delta, formation };
+  }
+
   function handleLivePointerDown(event) {
     const marker = event.target?.closest?.('[data-map-unit-id]');
     if (!marker || !marker.closest?.('[data-map-mode="live"]')) return;
@@ -174,10 +203,10 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     if (!drag || drag.pointerId !== event.pointerId) return;
     if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 8) drag.moved = true;
     if (!drag.moved) return;
-    const rect = drag.board.getBoundingClientRect?.();
-    if (!rect || !rect.width || !rect.height) return;
-    const x = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
-    const y = Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44));
+    const dragged = dragDeltaForPointer(drag, event);
+    if (!dragged) return;
+    const x = drag.markerX + dragged.dx;
+    const y = drag.markerY + dragged.dy;
     event.preventDefault?.();
     drag.marker.style.left = x / 60 * 100 + '%';
     drag.marker.style.top = (44 - y) / 44 * 100 + '%';
@@ -189,30 +218,24 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     livePointerDrag = null;
     drag.marker.classList?.remove?.('is-dragging');
     if (!drag.moved) return;
-    const rect = drag.board.getBoundingClientRect?.();
-    if (!rect || !rect.width || !rect.height) return;
-    const x = Math.max(0, Math.min(60, (event.clientX - rect.left) / rect.width * 60));
-    const y = Math.max(0, Math.min(44, (1 - (event.clientY - rect.top) / rect.height) * 44));
-    const dx = x - drag.markerX;
-    const dy = y - drag.markerY;
+    const dragged = dragDeltaForPointer(drag, event);
+    if (!dragged) return;
     try {
-      const state = session.getState();
-      const unit = state.units.find(item => item.id === drag.unitId);
-      if (!unit) throw new Error('Selected unit is no longer available.');
-      const formation = getCombatFormationMembers(state, unit);
-      for (const member of formation) {
-        const moves = modelsFor(member).map(model => ({
-          modelId:model.id,
-          position:{
-            x:Math.round(Math.max(0, Math.min(60, model.position.x + dx)) * 10) / 10,
-            y:Math.round(Math.max(0, Math.min(44, model.position.y + dy)) * 10) / 10
-          }
-        }));
-        session.dispatch({
-          type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,
-          payload:{ unitId:member.id, playerId:member.ownerId, moves }
-        });
-      }
+      const commands = dragged.formation.map(member => ({
+        type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,
+        payload:{
+          unitId:member.id,
+          playerId:member.ownerId,
+          moves:modelsFor(member).map(model => ({
+            modelId:model.id,
+            position:{
+              x:Math.round((model.position.x + dragged.dx) * 10) / 10,
+              y:Math.round((model.position.y + dragged.dy) * 10) / 10
+            }
+          }))
+        }
+      }));
+      session.dispatchBatch(commands);
       error = '';
     } catch (cause) {
       error = cause?.message ?? String(cause);
