@@ -56,7 +56,7 @@ function formatObjectiveMarkerLabels(html) {
   return html.replace(/(<button\b[^>]*class="[^"]*\bbattlefield-map__objective\b[^"]*"[^>]*>)([^<]*)(<\/button>)/g,
     (_match, opening, rawLabel, closing) => {
       const label = OBJECTIVE_MARKER_LABELS.get(String(rawLabel ?? '').trim());
-      return opening + escapeHtml(label ?? rawLabel) + closing;
+      return opening + (label == null ? rawLabel : escapeHtml(label)) + closing;
     });
 }
 
