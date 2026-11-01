@@ -1,11 +1,67 @@
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from './event-companion-map-catalog.js';
+
+const BATTLEFIELD_CENTER = Object.freeze({ x: 30, y: 22 });
+
 function layoutGeometry(state) {
  const setup=state.battlefieldMap?.missionSetup;
  if(!setup?.myDisposition || !setup?.opponentDisposition || !setup?.layout)return null;
  const missions=getBattlePrimaryMissions(setup.myDisposition,setup.opponentDisposition);
  return missions?getEventCompanionMapLayout(missions.myMission,missions.opponentMission,setup.layout):null;
 }
+
+function distanceSquared(a,b) {
+ return (a.x-b.x)**2 + (a.y-b.y)**2;
+}
+
+function comparePositionEntries([nameA,a],[nameB,b]) {
+ return a.x-b.x || a.y-b.y || String(nameA).localeCompare(String(nameB));
+}
+
+// The Event Companion extraction preserves stable canonical objective IDs, but a few
+// six-objective layouts use Central/Expansion source names that do not match the
+// player's visual meaning of those roles. Display roles therefore come from the
+// verified geometry: the objective(s) nearest battlefield centre are Center 1/2;
+// the two remaining non-home objectives are the player/opponent expansions.
+function geometryDisplayRoles(state, perspectivePlayerId) {
+ const positions=layoutGeometry(state)?.objectivePositions;
+ if(!positions)return null;
+ const validEntries=Object.entries(positions).filter(([,point])=>
+  point && Number.isFinite(point.x) && Number.isFinite(point.y));
+ const nonHome=validEntries.filter(([name])=>!/home/i.test(name));
+ if(nonHome.length<3)return null;
+
+ const attacker=state.preGameSetup?.attackerPlayerId ?? null;
+ const defender=state.preGameSetup?.defenderPlayerId ?? null;
+ const roles=new Map();
+ if(attacker && positions['Attacker Home'])roles.set('Attacker Home',attacker===perspectivePlayerId?'My Home':'Opponent Home');
+ if(defender && positions['Defender Home'])roles.set('Defender Home',defender===perspectivePlayerId?'My Home':'Opponent Home');
+
+ // Every verified layout has two expansion objectives. Five-objective maps therefore
+ // have one centre objective; six-objective maps have two.
+ const centerCount=Math.max(1,nonHome.length-2);
+ const centerEntries=[...nonHome]
+  .sort((a,b)=>distanceSquared(a[1],BATTLEFIELD_CENTER)-distanceSquared(b[1],BATTLEFIELD_CENTER) || comparePositionEntries(a,b))
+  .slice(0,centerCount)
+  .sort(comparePositionEntries);
+ const centerNames=new Set(centerEntries.map(([name])=>name));
+ centerEntries.forEach(([name],index)=>roles.set(name,`Center ${index+1}`));
+
+ const expansionEntries=nonHome.filter(([name])=>!centerNames.has(name));
+ const myHomeName=perspectivePlayerId===attacker?'Attacker Home':
+  perspectivePlayerId===defender?'Defender Home':null;
+ const myHome=myHomeName?positions[myHomeName]:null;
+ if(myHome && expansionEntries.length){
+  const ranked=[...expansionEntries].sort((a,b)=>distanceSquared(a[1],myHome)-distanceSquared(b[1],myHome) || comparePositionEntries(a,b));
+  roles.set(ranked[0][0],'My Expansion');
+  for(const [name] of ranked.slice(1))roles.set(name,'Opponent Expansion');
+ }
+ return roles;
+}
+
 export function perspectiveObjectiveName(name, state, perspectivePlayerId) {
+  const geometryRole=geometryDisplayRoles(state,perspectivePlayerId)?.get(name);
+  if(geometryRole)return geometryRole;
+
   const attacker = state.preGameSetup?.attackerPlayerId ?? null;
   const defender = state.preGameSetup?.defenderPlayerId ?? null;
   const homeOwner = name === "Attacker Home" ? attacker : name === "Defender Home" ? defender : null;
@@ -18,8 +74,7 @@ export function perspectiveObjectiveName(name, state, perspectivePlayerId) {
     const expansion1 = positions["Expansion 1"];
     const expansion2 = positions["Expansion 2"];
     if (myHome && expansion1 && expansion2) {
-      const distance = (a,b) => (a.x-b.x)**2 + (a.y-b.y)**2;
-      const myExpansionName = distance(expansion1, myHome) <= distance(expansion2, myHome)
+      const myExpansionName = distanceSquared(expansion1, myHome) <= distanceSquared(expansion2, myHome)
         ? "Expansion 1" : "Expansion 2";
       return name === myExpansionName ? "My Expansion" : "Opponent Expansion";
     }
