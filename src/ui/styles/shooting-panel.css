@@ -9,7 +9,8 @@
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__control-scroll > * { order:10; }
 /* Live attack decisions come first; general army reminders stay below them. */
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls,
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__action-choice { order:0; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__action-choice,
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__action-picker { order:0; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__advisor { order:1; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__phase-heading { order:2; }
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__unit-status { order:3; }
