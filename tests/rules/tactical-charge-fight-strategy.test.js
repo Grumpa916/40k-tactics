@@ -69,6 +69,8 @@ function strategicState(phase = 'charge') {
 }
 
 test('measured charge distance converts to exact unmodified 2D6 probability',()=>{
+  assert.equal(getChargeSuccessProbability(null),null);
+  assert.equal(getChargeSuccessProbability(undefined),null);
   assert.equal(getChargeSuccessProbability(2),1);
   assert.ok(Math.abs(getChargeSuccessProbability(7)-21/36)<1e-12);
   assert.ok(Math.abs(getChargeSuccessProbability(9)-10/36)<1e-12);
@@ -103,14 +105,17 @@ test('Charge Advisor ranks the top target priorities for a selected charger',()=
     playerId:'p1',
     attackerId:'attacker',
     targets:[
-      {targetUnitId:'low',name:'Low target',targetDistance:7},
-      {targetUnitId:'key',name:'Key target',targetDistance:7}
+      {targetUnitId:'low',target:{name:'Low target'},targetDistance:8},
+      {targetUnitId:'key',target:{name:'Key target'},targetDistance:7}
     ],
     limit:3
   });
   assert.equal(priorities.length,2);
   assert.equal(priorities[0].rank,1);
   assert.equal(priorities[0].advice.targetUnitId,'key');
+  assert.equal(priorities[0].target.name,'Key target');
+  assert.equal(priorities[0].advice.measuredDistance,null);
+  assert.equal(priorities[0].advice.probabilityBasis,'map-approximation');
   assert.ok(priorities[0].advice.decisionScore>priorities[1].advice.decisionScore);
   assert.ok(Number.isFinite(priorities[0].advice.mapSuccessProbability));
 
@@ -118,13 +123,14 @@ test('Charge Advisor ranks the top target priorities for a selected charger',()=
     playerId:'p1',
     attackerId:'attacker',
     targets:[
-      {targetUnitId:'key',name:'Key target',targetDistance:7}
+      {targetUnitId:'key',target:{name:'Key target'},targetDistance:7}
     ],
     measuredDistances:{key:9},
     limit:1
   });
   assert.equal(measured.length,1);
   assert.equal(measured[0].advice.targetUnitId,'key');
+  assert.equal(measured[0].target.name,'Key target');
   assert.equal(measured[0].advice.measuredDistance,9);
   assert.equal(measured[0].advice.probabilityBasis,'measured');
 });
