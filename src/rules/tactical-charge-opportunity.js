@@ -197,3 +197,44 @@ export function getChargeOpportunity(state, {
       : "Projected melee assumes a successful charge. Charge probability uses an unmodified 2D6 roll against the measured distance. Re-rolls, charge modifiers, terrain, model placement and special rules are not applied unless separately modeled; tabletop legality remains authoritative."
   });
 }
+
+export function getChargeTargetPriorities(state, {
+  playerId,
+  attackerId,
+  targets = [],
+  measuredDistances = null,
+  limit = 3
+} = {}) {
+  if (!playerId) throw new TypeError("playerId is required.");
+  if (!attackerId) throw new TypeError("attackerId is required.");
+  const distances = measuredDistances instanceof Map
+    ? measuredDistances
+    : new Map(Object.entries(measuredDistances ?? {}));
+
+  return Object.freeze((Array.isArray(targets) ? targets : [])
+    .map((target) => {
+      const targetUnitId = target?.targetUnitId ?? target?.unitId;
+      if (!targetUnitId) return null;
+      try {
+        const advice = getChargeOpportunity(state, {
+          playerId,
+          attackerId,
+          targetUnitId,
+          measuredDistance: distances.has(targetUnitId) ? Number(distances.get(targetUnitId)) : null,
+          mapDistance: target?.targetDistance ?? target?.mapDistance ?? null
+        });
+        return Object.freeze({ target, advice });
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      b.advice.decisionScore - a.advice.decisionScore ||
+      (b.advice.successProbability ?? b.advice.mapSuccessProbability ?? 0) -
+        (a.advice.successProbability ?? a.advice.mapSuccessProbability ?? 0) ||
+      String(a.target?.name ?? a.advice.targetUnitId).localeCompare(String(b.target?.name ?? b.advice.targetUnitId))
+    )
+    .slice(0, Math.max(0, Number(limit) || 0))
+    .map((item, index) => Object.freeze({ ...item, rank: index + 1 })));
+}
