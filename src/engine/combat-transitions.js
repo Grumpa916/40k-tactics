@@ -11,7 +11,6 @@ import { isMeleeWeapon } from "../rules/weapon-rules.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
 import { getDamageOutcomeDistribution } from "../rules/damage-outcome-distribution.js";
-import { areUnitsEngaged, hasFightEngagementHistory } from "../rules/fight-engagement-state.js";
 
 function wasActivatedToShootThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
@@ -94,10 +93,8 @@ export function resolveUnitAttack(state, {
     throw new Error("The selected weapon does not belong to this combat formation.");
   }
 
-  if (state.phase === "fight" && hasFightEngagementHistory(state) && !areUnitsEngaged(state, attackerId, targetId)) {
-    throw new Error("Fight attacks require the attacker and target to be engaged.");
-  }
-
+  // Fight target legality is confirmed on the physical tabletop. Recorded Charge
+  // engagements remain tactical/history context and must not hard-lock execution.
   const allocationTarget = validatePrecisionAllocation(state, { targetId, allocationTargetId, weapon });
   const damageTarget = allocationTarget ?? target;
   if (damageTarget.status !== UNIT_STATUS.DEPLOYED) {
