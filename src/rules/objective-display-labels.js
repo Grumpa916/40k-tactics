@@ -28,7 +28,7 @@ function geometryDisplayRoles(state, perspectivePlayerId) {
  const validEntries=Object.entries(positions).filter(([,point])=>
   point && Number.isFinite(point.x) && Number.isFinite(point.y));
  const nonHome=validEntries.filter(([name])=>!/home/i.test(name));
- if(nonHome.length<3)return null;
+ if(nonHome.length<2)return null;
 
  const attacker=state.preGameSetup?.attackerPlayerId ?? null;
  const defender=state.preGameSetup?.defenderPlayerId ?? null;
@@ -36,8 +36,7 @@ function geometryDisplayRoles(state, perspectivePlayerId) {
  if(attacker && positions['Attacker Home'])roles.set('Attacker Home',attacker===perspectivePlayerId?'My Home':'Opponent Home');
  if(defender && positions['Defender Home'])roles.set('Defender Home',defender===perspectivePlayerId?'My Home':'Opponent Home');
 
- // Every verified layout has two expansion objectives. Five-objective maps therefore
- // have one centre objective; six-objective maps have two.
+ // Most layouts have two expansions; the four-objective layout has one.
  const centerCount=Math.max(1,nonHome.length-2);
  const centerEntries=[...nonHome]
   .sort((a,b)=>distanceSquared(a[1],BATTLEFIELD_CENTER)-distanceSquared(b[1],BATTLEFIELD_CENTER) || comparePositionEntries(a,b))
@@ -52,8 +51,15 @@ function geometryDisplayRoles(state, perspectivePlayerId) {
  const myHome=myHomeName?positions[myHomeName]:null;
  if(myHome && expansionEntries.length){
   const ranked=[...expansionEntries].sort((a,b)=>distanceSquared(a[1],myHome)-distanceSquared(b[1],myHome) || comparePositionEntries(a,b));
-  roles.set(ranked[0][0],'My Expansion');
-  for(const [name] of ranked.slice(1))roles.set(name,'Opponent Expansion');
+  if (ranked.length === 1) {
+   const opponentHomeName=myHomeName==='Attacker Home'?'Defender Home':'Attacker Home';
+   const opponentHome=positions[opponentHomeName];
+   roles.set(ranked[0][0],opponentHome && distanceSquared(ranked[0][1],opponentHome)<distanceSquared(ranked[0][1],myHome)
+    ? 'Opponent Expansion':'My Expansion');
+  } else {
+   roles.set(ranked[0][0],'My Expansion');
+   for(const [name] of ranked.slice(1))roles.set(name,'Opponent Expansion');
+  }
  }
  return roles;
 }

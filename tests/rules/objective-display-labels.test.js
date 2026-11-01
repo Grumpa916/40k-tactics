@@ -40,8 +40,8 @@ test('objective display roles follow verified battlefield geometry across every 
         assert.equal(liveMapObjectiveLabel(state, 'event-companion:Defender Home', 'p2'), 'mH');
 
         const nonHome = Object.entries(geometry.objectivePositions).filter(([name]) => !/home/i.test(name));
-        assert.ok(nonHome.length === 3 || nonHome.length === 4, 'verified layouts must have one or two center objectives plus two expansions');
-        const centerCount = nonHome.length - 2;
+        assert.ok(nonHome.length >= 2 && nonHome.length <= 4, 'verified layouts have one or two center objectives and one or two expansions');
+        const centerCount = Math.max(1, nonHome.length - 2);
         const expectedCenterNames = new Set([...nonHome]
           .sort((a, b) => distanceSquared(a[1], boardCenter) - distanceSquared(b[1], boardCenter))
           .slice(0, centerCount)
@@ -63,8 +63,13 @@ test('objective display roles follow verified battlefield geometry across every 
         }
 
         assert.deepEqual([...new Set(centerLabels)].sort(), Array.from({ length: centerCount }, (_, index) => `C${index + 1}`));
-        assert.deepEqual(expansionLabelsP1.sort(), ['mE', 'oE']);
-        assert.deepEqual(expansionLabelsP2.sort(), ['mE', 'oE']);
+        const expectedExpansionLabels = ['mE', 'oE'];
+        if (nonHome.length === 2) {
+          assert.deepEqual([expansionLabelsP1[0], expansionLabelsP2[0]].sort(), expectedExpansionLabels);
+        } else {
+          assert.deepEqual(expansionLabelsP1.sort(), expectedExpansionLabels);
+          assert.deepEqual(expansionLabelsP2.sort(), expectedExpansionLabels);
+        }
       }
     }
   }
