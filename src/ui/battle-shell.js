@@ -136,7 +136,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
-  const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen });
+  const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen, openStates: missionOpenStates });
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div><div data-rules-reminder-host></div>' +
     shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen }) : "") +

@@ -4,17 +4,20 @@ export function renderMissionReviewToggle({ visible = false, open = false } = {}
     String(open) + '"><strong>Missions</strong><span>Review both armies</span></button></li>';
 }
 
-function expandReviewSections(summary) {
+function expandReviewSections(summary, openStates) {
   return String(summary ?? '').replace(
-    /<details class="battle-mission-summary__section"([^>]*)>/g,
-    (match, attributes) => /(?:^|\s)open(?:\s|$)/.test(attributes)
+    /<details class="battle-mission-summary__(?:section|player|card)"([^>]*)>/g,
+    (match, attributes) => {
+      const key = attributes.match(/data-mission-summary-key="([^"]+)"/)?.[1];
+      return (key && Object.hasOwn(openStates, key)) || /(?:^|\s)open(?:\s|$)/.test(attributes)
       ? match
-      : '<details class="battle-mission-summary__section"' + attributes + ' open>'
+      : match.slice(0, -1) + ' open>';
+    }
   );
 }
 
-export function renderMissionReviewPanel(summary, { open = false } = {}) {
-  const reviewSummary = expandReviewSections(summary);
+export function renderMissionReviewPanel(summary, { open = false, openStates = {} } = {}) {
+  const reviewSummary = expandReviewSections(summary, openStates);
   const layout = '<style data-mission-review-layout>' +
     '[data-mission-review-overlay]{align-items:stretch;padding:12px;}' +
     '[data-mission-review-overlay] .battle-shell__mission-review-dialog{box-sizing:border-box;display:flex;flex-direction:column;width:min(1180px,calc(100vw - 24px));max-width:100%;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;}' +
@@ -70,3 +73,4 @@ export function bindMissionReviewPanel(container, { open = false, onOpenChange =
     container.removeEventListener?.("keydown", handleKeydown);
   };
 }
+
