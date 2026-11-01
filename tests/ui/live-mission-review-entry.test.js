@@ -39,3 +39,12 @@ test("mission review exposes scoring details on first open and respects later co
   assert.match(restored, /<details class="battle-mission-summary__card" data-mission-summary-key="mission-secondary-card-a"><summary>Cleanse/);
   assert.match(shell, /renderMissionReviewPanel\(persistentMissionSummary, \{ open: missionReviewOpen, openStates: missionOpenStates \}\)/);
 });
+
+test("landscape mission review keeps both missions side by side with separate scrolling", () => {
+  const html = renderMissionReviewPanel('<section class="battle-mission-summary"><details class="battle-mission-summary__section"><summary>Primary</summary></details><details class="battle-mission-summary__section"><summary>Secondary</summary></details></section>', { open: true });
+  assert.match(html, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
+  assert.match(html, /grid-template-rows:minmax\(0,1fr\)/);
+  assert.match(html, /battle-mission-summary__section\{min-height:0;max-height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch/);
+  assert.match(html, /battle-mission-summary__section>summary\{position:sticky;top:0/);
+  assert.match(html, /orientation:portrait[\s\S]*grid-template-columns:minmax\(0,1fr\)!important/);
+});
