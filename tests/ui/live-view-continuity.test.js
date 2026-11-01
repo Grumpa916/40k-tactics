@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { captureViewContinuity } from '../../src/ui/view-continuity.js';
 import { createShootingComparisonCache } from '../../src/rules/tactical-shooting-comparison.js';
 import { shootingTargetComparisonCards } from '../../src/ui/shooting-advisor-view.js';
