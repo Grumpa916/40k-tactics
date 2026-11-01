@@ -147,12 +147,12 @@ export function getChargeOpportunity(state, {
   const measuredCustodesCharge = getCustodesChargeAdvisorContext(state, {
     playerId,
     unitId: attackerId,
-    baseProbability: unmodifiedSuccessProbability
+    baseProbability: unmodifiedSuccessProbability ?? Number.NaN
   });
   const mapCustodesCharge = getCustodesChargeAdvisorContext(state, {
     playerId,
     unitId: attackerId,
-    baseProbability: unmodifiedMapSuccessProbability
+    baseProbability: unmodifiedMapSuccessProbability ?? Number.NaN
   });
   const exactSuccessProbability = measuredCustodesCharge.adjustedProbability;
   const mapSuccessProbability = mapCustodesCharge.adjustedProbability;
