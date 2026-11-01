@@ -27,6 +27,11 @@
 .movement-selected-unit__tabs span{padding:6px 2px;text-align:center;font-size:9px;color:#91a2a7}
 .movement-selected-unit__tabs .is-active{color:#8ccaff;border-bottom:2px solid #79bbff;font-weight:800}
 .movement-screen .move-editor h2{display:none}
+.movement-screen .move-actions--choices{margin:4px 0 10px}
+.movement-screen .move-actions--choices>button{min-width:0;padding:8px 4px}
+.movement-screen .advance-roll-buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:5px 0}
+.movement-screen .advance-roll-buttons button{min-width:0;padding:4px 0}
+.movement-screen .advance-choice>button{width:100%}
 .movement-screen .move-katah{margin-top:6px!important}
 .movement-screen .movement-advisor-drawer{margin-top:8px;border-top:1px solid #40545c}
 .movement-screen .movement-advisor-drawer>summary{font-weight:850;color:#c4e99b}
