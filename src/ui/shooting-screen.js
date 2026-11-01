@@ -96,7 +96,7 @@ export function createShootingScreen(container, {
   let actualDamage = "0";
   let attackError = "";
   let actionPickerOpen = false;
-  let lastRenderedSelection = null;
+  let lastRenderedActiveUnitId = null;
 
   function clearPending() {
     pendingUnitId = null;
@@ -305,11 +305,11 @@ export function createShootingScreen(container, {
     }
 
     restoreView();
-    const selection = [selectedAttackerId, selectedWeaponId, selectedTargetId].join(':');
-    if (selection !== lastRenderedSelection) {
+    const renderedActiveUnitId = selectedAttackerId ?? pendingUnitId ?? null;
+    if (renderedActiveUnitId !== lastRenderedActiveUnitId) {
       const controls = container.querySelector?.('.shoot-tabletop__control-scroll');
       if (controls) controls.scrollTop = 0;
-      lastRenderedSelection = selection;
+      lastRenderedActiveUnitId = renderedActiveUnitId;
     }
     if (layoutMode === "tabletop" && selectedTargetId) {
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
