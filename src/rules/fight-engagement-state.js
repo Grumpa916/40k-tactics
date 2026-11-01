@@ -33,6 +33,20 @@ function addPair(map, a, b, source, index) {
   });
 }
 
+function relationshipIncludesFormation(state, relationship, unitId) {
+  const rootId = getCombatFormationRootId(state, unitId);
+  if (!rootId) return relationship.unitIds.includes(unitId);
+  return relationship.unitIds.some((relatedId) =>
+    getCombatFormationRootId(state, relatedId) === rootId
+  );
+}
+
+function deleteFormationRelationships(state, relationships, unitId) {
+  for (const [key, relationship] of relationships) {
+    if (relationshipIncludesFormation(state, relationship, unitId)) relationships.delete(key);
+  }
+}
+
 /**
  * Derive only engagement relationships that are supported by authoritative
  * action history. This deliberately does not use map coordinates as a legal
@@ -59,26 +73,18 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
     if (!event?.type) continue;
 
     if (event.type === 'unit.entered_reserves') {
-      for (const [key, relationship] of relationships) {
-        if (relationship.unitIds.includes(event.payload?.unitId)) relationships.delete(key);
-      }
+      if (event.payload?.unitId) deleteFormationRelationships(state, relationships, event.payload.unitId);
       continue;
     }
     if (event.type === 'unit.mortal_wounds_recorded' && event.payload?.stateDelta?.target?.statusAfter === 'destroyed') {
-      for (const [key, relationship] of relationships) {
-        if (relationship.unitIds.includes(event.payload.targetId)) relationships.delete(key);
-      }
+      if (event.payload?.targetId) deleteFormationRelationships(state, relationships, event.payload.targetId);
       continue;
     }
     if (event.type === FALL_BACK_EVENT && event.payload?.unitId) {
-      fallBacks.add(event.payload.unitId);
-      fallBackIndexes.set(event.payload.unitId, index);
-
-      for (const [key, relationship] of relationships) {
-        if (relationship.unitIds.includes(event.payload.unitId)) {
-          relationships.delete(key);
-        }
-      }
+      const rootId = getCombatFormationRootId(state, event.payload.unitId) ?? event.payload.unitId;
+      fallBacks.add(rootId);
+      fallBackIndexes.set(rootId, index);
+      deleteFormationRelationships(state, relationships, event.payload.unitId);
       continue;
     }
 
@@ -98,11 +104,7 @@ export function getFightEngagementState(state, { throughHistoryIndex = null } = 
       event.payload?.targetId
     ) {
       if (event.payload?.stateDelta?.target?.statusAfter === "destroyed") {
-        for (const [key, relationship] of relationships) {
-          if (relationship.unitIds.includes(event.payload.targetId)) {
-            relationships.delete(key);
-          }
-        }
+        deleteFormationRelationships(state, relationships, event.payload.targetId);
       } else {
         addPair(
           relationships,
