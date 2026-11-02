@@ -61,11 +61,11 @@ export function renderCheckpointObjectiveConfirmation(state, reminder) {
     return `<button type="button" class="checkpoint-objective-confirmation__objective" data-checkpoint-objective-cycle="${esc(objective.id)}"><strong>${esc(label)}</strong><span>${esc(statusLabel(status))}</span></button>`;
   }).join('');
   return `<section class="checkpoint-objective-confirmation" data-checkpoint-objective-confirmation>
-    <h3>Confirm objective control before scoring</h3>
-    <p>This scoring opportunity depends on objective control. ${confirmed}/${objectives.length} objective states were confirmed this turn. Tap only anything that changed, or confirm the recorded state unchanged.</p>
+    <h3>Optional objective snapshot</h3>
+    <p>This scoring opportunity uses objective control as guidance. ${confirmed}/${objectives.length} objective states were confirmed this turn. Update anything that changed if you want the Advisor and recorded-state estimate to match the table.</p>
     <div class="checkpoint-objective-confirmation__grid">${rows}</div>
-    <button type="button" data-confirm-checkpoint-objectives>Confirm recorded objective state</button>
-    <small>The physical tabletop remains authoritative. This confirmation updates scoring evidence; it does not move units.</small>
+    <button type="button" data-confirm-checkpoint-objectives>Save recorded objective state</button>
+    <small>The physical tabletop is authoritative. You can record the agreed VP without completing this snapshot.</small>
   </section>`;
 }
 
