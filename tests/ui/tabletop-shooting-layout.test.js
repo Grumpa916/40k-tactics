@@ -162,7 +162,7 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
   }
 });
 
-test('Action picker returns to Shoot and enemy map taps cycle targets without reactivating shooter', () => {
+test('Secondary Action is absent from Shooting while enemy map taps still cycle targets', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const state = testState();
   state.units.push({ ...state.units[1], id: 'marine2', name: 'Second squad', position: { x: 30, y: 25 } });
@@ -171,16 +171,14 @@ test('Action picker returns to Shoot and enemy map taps cycle targets without re
     session,
     perspectivePlayerId: 'p1',
     gameData,
-    missionActions: [{ id: 'cleanse', name: 'Cleanse' }]
+    missionActions: [{ id: 'cleanse', name: 'Cleanse', missionKind: 'secondary', definitionId: 'secondary-cleanse' }]
   });
   try {
     root.click('[data-map-unit-id]', 'exo');
-    root.click('[data-choice-action-toggle]');
-    assert.match(root.innerHTML, /data-choice-action-confirm/);
-    root.change('[data-choice-action]', 'cleanse');
-    assert.equal(root.node('[data-choice-action-confirm]').disabled, false);
+    assert.equal(root.querySelector('[data-choice-action-toggle]'), null,
+      'Secondary cards do not create a Shooting-phase Action choice');
+    assert.doesNotMatch(root.innerHTML, /Cleanse/);
     root.click('[data-choice-shoot]');
-    assert.doesNotMatch(root.innerHTML, /data-choice-action-confirm/);
     assert.ok(root.querySelector('[data-target]'));
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('data-shoot-target-marker'), 'true');
     assert.equal(root.node('[data-map-unit-id]', 'marine2').getAttribute('data-shoot-target-marker'), 'true');
@@ -207,7 +205,7 @@ test('tap shooter then enemy selects a target directly and preserves a single ac
   } finally { screen.destroy(); }
 });
 
-test('browsing Shooting during Command shows rejection, closes action picker, and preserves battle state', () => {
+test('browsing Shooting during Command rejects activation and preserves battle state', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const state = testState(); state.phase = 'command';
   const session = createGameSession(state), root = fakeDom();
@@ -215,9 +213,8 @@ test('browsing Shooting during Command shows rejection, closes action picker, an
   try {
     assert.match(root.innerHTML, /game is still in command/);
     root.click('[data-map-unit-id]', 'exo');
-    root.click('[data-choice-action-toggle]');
+    assert.equal(root.querySelector('[data-choice-action-toggle]'), null);
     root.click('[data-choice-shoot]');
-    assert.doesNotMatch(root.innerHTML, /data-choice-action-confirm/);
     assert.match(root.innerHTML, /Shooting activations may only be recorded in the Shooting phase/);
     assert.equal(session.getState(), state);
     root.click('[data-map-unit-id]', 'marine');
