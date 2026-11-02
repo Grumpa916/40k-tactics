@@ -1,9 +1,8 @@
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from '../rules/secondary-mission-lifecycle.js';
 import { renderScoringCheckpointGroups, bindScoringActionReview } from './scoring-checkpoint-review.js';
-import { renderConsecrateReviewSection, bindConsecrateReview } from './consecrate-review.js';
-import { renderCheckpointObjectiveConfirmation, bindCheckpointObjectiveConfirmation } from './checkpoint-objective-confirmation.js';
 const escapeHtml=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export function renderScoringCheckpointDialog(state,scoringReminder) {
+  if (!scoringReminder) return "";
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
     getSecondaryMissionMode(state, reminderPlayerId) === SECONDARY_MISSION_MODES.TACTICAL && reminderPlayerId
@@ -21,22 +20,19 @@ export function renderScoringCheckpointDialog(state,scoringReminder) {
       ).join("") +
       '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
     : "";
-  const consecrateReview = renderConsecrateReviewSection(state);
-  const objectiveConfirmation = scoringReminder ? renderCheckpointObjectiveConfirmation(state, scoringReminder) : '';
-  if (!scoringReminder && !consecrateReview) return "";
   const stylesheet = new URL('./styles/scoring-checkpoints.css',import.meta.url);
-  stylesheet.searchParams.set('v','actionable-checkpoints-1');
+  stylesheet.searchParams.set('v','manual-checkpoints-1');
   return '<link rel="stylesheet" href="' + stylesheet.href + '"><div class="battle-scoring-reminder__backdrop">' +
     '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
-    '<h2 id="battle-scoring-reminder-title">' + (scoringReminder ? 'Scoring opportunity' : 'End-of-turn mission review') + '</h2>' +
-    objectiveConfirmation +
-    (scoringReminder ? renderScoringCheckpointGroups(state, scoringReminder) : '') +
-    (scoringReminder?.groups ? '' : scoringReminder ? '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
-      '<li>Review the recorded opportunity and confirm any points earned.</li>') + '</ul>' : '') +
-    consecrateReview + tacticalDiscardForm +
+    '<h2 id="battle-scoring-reminder-title">Scoring reminder</h2>' +
+    '<p>Use the physical tabletop and the mission requirements below to agree the score. Objective control, map position, combat history, and recorded Actions do not determine the award.</p>' +
+    (scoringReminder.groups ? renderScoringCheckpointGroups(state, scoringReminder) : '') +
+    (scoringReminder?.groups ? '' : '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
+      '<li>Review the mission card and record any agreed points earned.</li>') + '</ul>') +
+    tacticalDiscardForm +
     '<div class="battle-scoring-reminder__actions">' +
-    (scoringReminder?.groups ? '' : scoringReminder ? '<button type="button" data-review-scoring>Review scoring</button>' : '') +
-    (!consecrateReview ? '<button type="button" data-dismiss-scoring-reminder>Done / continue</button>' : '') +
+    (scoringReminder?.groups ? '' : '<button type="button" data-review-scoring>Review scoring</button>') +
+    '<button type="button" data-dismiss-scoring-reminder>Done / continue</button>' +
     '</div></section></div>';
 }
 export function refreshScoringCheckpointDialog(container,state,reminder,session) {
@@ -48,6 +44,4 @@ export function refreshScoringCheckpointDialog(container,state,reminder,session)
     if (node) {node.setAttribute('role','alert');node.textContent=message;host.append(node);}
   };
   bindScoringActionReview(host,session,showError);
-  bindCheckpointObjectiveConfirmation(host,session,reminder,showError);
-  bindConsecrateReview(host,session,showError);
 }
