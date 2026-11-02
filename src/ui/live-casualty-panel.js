@@ -25,7 +25,8 @@ function renderGlobalStateControls(state, unit) {
   }
 
   if (unit.status === 'deployed') {
-    controls.push(`<div><button type="button" data-live-reserve-transfer="reserves" data-unit-id="${esc(unit.id)}">Move to reserves</button></div>`);
+    controls.push(`<div><button type="button" data-live-map-reposition data-unit-id="${esc(unit.id)}">Reposition on map</button>` +
+      `<button type="button" data-live-reserve-transfer="reserves" data-unit-id="${esc(unit.id)}">Move to reserves</button></div>`);
   } else if (unit.status === 'reserves') {
     controls.push(`<div><button type="button" data-live-reserve-transfer="battlefield" data-unit-id="${esc(unit.id)}">Place on battlefield</button></div>`);
   }
