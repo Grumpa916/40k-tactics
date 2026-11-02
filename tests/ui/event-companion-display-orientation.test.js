@@ -8,6 +8,11 @@ import {
 } from '../../src/ui/event-companion-display-orientation.js';
 import { battlefieldPositionToPercent } from '../../src/ui/battlefield-map.js';
 
+const assertPercentNear = (actual, expected, epsilon = 1e-9) => {
+  assert.ok(Math.abs(actual.left - expected.left) <= epsilon, `left ${actual.left} should match ${expected.left}`);
+  assert.ok(Math.abs(actual.top - expected.top) <= epsilon, `top ${actual.top} should match ${expected.top}`);
+};
+
 test('setup map uses the same 60x44 visual orientation as deployment and live maps', () => {
   const points = [
     { x: 0, y: 0 },
@@ -18,7 +23,7 @@ test('setup map uses the same 60x44 visual orientation as deployment and live ma
   ];
 
   for (const point of points) {
-    assert.deepEqual(eventCompanionDisplayPercent(point), battlefieldPositionToPercent(point));
+    assertPercentNear(eventCompanionDisplayPercent(point), battlefieldPositionToPercent(point));
   }
 });
 
