@@ -49,17 +49,20 @@ test('cumulative secondary tiers expose valid total outcomes rather than the bon
   assert.deepEqual(getMissionVpOptions(cleanse), [2, 5]);
 });
 
-test('multi-tier scoring shows the current result and the higher scoring requirement together', () => {
+test('multi-tier scoring shows all rule choices without promoting a recorded-state result', () => {
   const html = renderCheckpointScore(state(), { playerId: 'p1', checkpoint: 'end-of-opponent-turn' }, defendStronghold);
   assert.match(html, /Scoring options/);
-  assert.match(html, /3 VP · Current recorded-state result/);
-  assert.match(html, /Score 3 VP now &amp; remove card|Score 3 VP now & remove card/);
+  assert.match(html, /3 VP/);
+  assert.match(html, /You control your home objective/);
+  assert.match(html, /Record 3 VP &amp; remove card|Record 3 VP & remove card/);
   assert.match(html, /5 VP/);
   assert.match(html, /No enemy units are within your deployment zone/);
-  assert.match(html, /Confirm on tabletop/);
-  assert.match(html, /Confirm 5 VP &amp; remove card|Confirm 5 VP & remove card/);
+  assert.match(html, /Record 5 VP &amp; remove card|Record 5 VP & remove card/);
+  assert.doesNotMatch(html, /Current recorded-state result/);
+  assert.doesNotMatch(html, /Completed in recorded state/);
+  assert.doesNotMatch(html, /Confirm on tabletop/);
   assert.doesNotMatch(html, /data-vp-option="2"/);
-  assert.doesNotMatch(html, /Choose VP/);
+  assert.doesNotMatch(html, /Choose agreed VP/);
 });
 
 test('clicked scoring tier supplies its own VP amount to the scoring action', () => {
