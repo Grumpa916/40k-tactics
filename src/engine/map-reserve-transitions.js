@@ -16,12 +16,16 @@ export function transferMapReserve(state, { unitId, destination, position } = {}
     if (destination==='battlefield') next=setActualDeploymentPosition(next,{unitId,playerId:unit.ownerId,position});
     return next;
   }
-  if (state.battle?.status!=='active' || state.phase!=='movement') throw new Error('Live reserve transfers are available during Movement.');
+  if (state.battle?.status!=='active') throw new Error('Live reserve transfers require an active battle.');
   const swiftRuin = destination === 'battlefield' && getPendingVenatariIngress(state).some(item => item.id === unitId);
-  if (unit.ownerId!==(state.activePlayer??state.battle?.activePlayerId) && !swiftRuin) throw new Error('Select a unit from the active army, or a confirmed Swift Ruin arrival.');
   if (destination==='battlefield' && unit.status!=='reserves') throw new Error('Select a reserve unit before placing it on the map.');
   if (destination==='reserves' && unit.status!=='deployed') throw new Error('Select a battlefield unit before moving it to reserves.');
-  return applyReserveTransfer(state, {unit, destination, position, reason:swiftRuin?'Swift Ruin':null});
+  return applyReserveTransfer(state, {
+    unit,
+    destination,
+    position,
+    reason: swiftRuin ? 'Swift Ruin' : 'Manual live-state correction'
+  });
 }
 
 // Shared atomic update after the calling command validates its own rules window.
