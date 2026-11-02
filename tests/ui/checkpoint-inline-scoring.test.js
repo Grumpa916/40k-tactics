@@ -4,8 +4,11 @@ import { missionConditionEvidence, primaryWindowDue } from '../../src/rules/chec
 import { recordSecondaryMissionScore } from '../../src/engine/secondary-mission-scoring.js';
 import { recordVictoryPointsAward, undoLatestVictoryPointsAward } from '../../src/engine/victory-points-ledger.js';
 import { getScoringCheckpointReminder } from '../../src/application/scoring-checkpoint-reminders.js';
+import { getPrimaryCheckpointOpportunity } from '../../src/application/scoring-checkpoint-opportunities.js';
 import { renderScoringCheckpointDialog } from '../../src/ui/scoring-checkpoint-dialog.js';
-import { checkpointScoreKey, bindCheckpointScores } from '../../src/ui/checkpoint-score-controls.js';
+import { renderScoringCheckpointGroups } from '../../src/ui/scoring-checkpoint-review.js';
+import { renderCheckpointObjectiveConfirmation } from '../../src/ui/checkpoint-objective-confirmation.js';
+import { checkpointScoreKey, bindCheckpointScores, renderCheckpointScore } from '../../src/ui/checkpoint-score-controls.js';
 function seed(mode='tactical') {return {phase:'end_turn',turn:3,activePlayer:'p1',battle:{round:2},players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],units:[],history:[],objectives:[{id:'central',name:'Central 1',control:{controlState:'controlled',controllerId:'p1'}}],battlefieldMap:{missionSetup:{myDisposition:'Disruption',opponentDisposition:'Take and Hold'}},scoring:{secondaryMissionModeByPlayer:{p1:mode},secondaryMissions:[{instanceId:'card',playerId:'p1',definitionId:'cleanse',status:'active',definition:{id:'cleanse',name:'Cleanse',category:'secondary',scoringWindows:[{timing:'end-of-turn',tiers:[{vp:3,summary:'Complete the action.'}]}]}}]}};}
 test('primary timing alternatives enforce their own round range and no-op checkpoints stay silent',()=>{
   const when='R2+ Command phase / R5 end of turn';
@@ -58,6 +61,30 @@ test('inline form dispatches selected VP and card lifecycle in one command',()=>
   bindCheckpointScores({querySelectorAll:()=>[form]},{getState:seed,dispatch:c=>{command=c;}},message=>assert.fail(message));
   submit({preventDefault(){}});
   assert.equal(command.type,'secondary_mission.record_score');assert.equal(command.payload.amount,4);assert.equal(command.payload.retireAfterScoring,true);
+});
+test('manual scoring offers any normal whole-number VP even when mission configuration lists only one value',()=>{
+  const state=seed();
+  const group={playerId:'p1',checkpoint:'end-of-turn'};
+  const mission={category:'secondary',instanceId:'card',definitionId:'cleanse',definitionName:'Cleanse',result:{scoringWindows:[{timing:'end-of-turn',tiers:[{vp:3,summary:'Complete the action.'}]}]}};
+  const markup=renderCheckpointScore(state,group,mission);
+  assert.match(markup,/Manual VP from tabletop/);
+  assert.match(markup,/<option value="4">4 VP<\/option>/);
+  assert.match(markup,/Tabletop confirmation is authoritative/);
+});
+test('stale objective evidence remains advisory and never hides manual primary scoring',()=>{
+  const state=seed();
+  const item={vp:5,summary:'Control at least one non-home objective.'};
+  const group={playerId:'p1',playerName:'You',checkpoint:'end-of-turn',review:{primary:[],secondary:[]},primaryReference:{id:'manual-primary',name:'Hold Ground'},primaryScoringWindows:[{when:'R1–5 end of your turn',items:[item]}]};
+  const opportunity=getPrimaryCheckpointOpportunity(state,group);
+  assert.equal(opportunity.actionable,true);
+  assert.equal(opportunity.needsObjectiveConfirmation,true);
+  const markup=renderScoringCheckpointGroups(state,{activePlayerId:'p1',groups:[group]});
+  assert.match(markup,/Objective snapshot is not current/);
+  assert.match(markup,/Record manual score/);
+  assert.doesNotMatch(markup,/before any VP are awarded/);
+  const snapshot=renderCheckpointObjectiveConfirmation(state,{requiresObjectiveConfirmation:true,perspectivePlayerId:'p1'});
+  assert.match(snapshot,/Optional objective snapshot/);
+  assert.match(snapshot,/record the agreed VP without completing this snapshot/);
 });
 test('destruction evidence resolves legacy combat target ownership from live units',()=>{
   const state=seed();state.units=[{id:'enemy',ownerId:'p2'}];
