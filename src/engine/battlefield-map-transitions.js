@@ -116,14 +116,11 @@ export function setActualDeploymentPosition(state, { unitId, playerId, position 
  * Adjust the approximate live-map position without recording another gameplay
  * movement action. The live map is advisory context, not a tabletop-rules
  * authority, so this transition intentionally does not enforce Movement
- * characteristics or append a game-history event.
+ * characteristics or a phase-specific rules window.
  */
 export function adjustLiveMapPosition(state, { unitId, playerId, moves } = {}) {
   if (!state.battle || state.battle.status !== "active") {
     throw new Error("Live map positions can only be adjusted during an active battle.");
-  }
-  if (!["movement", "charge"].includes(state.phase)) {
-    throw new Error("Live map positions can only be adjusted in the Movement or Charge phase.");
   }
   const unit = requirePlayerUnit(state, unitId, playerId);
   if (unit.status !== "deployed") throw new Error("Unit must be deployed before its map position can be adjusted.");
@@ -257,4 +254,3 @@ export function setEventCompanionMissionSetup(state, {
     previous, missionSetup: nextSetup
   }));
 }
-

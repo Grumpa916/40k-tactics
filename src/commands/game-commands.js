@@ -40,6 +40,7 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_CUSTODES_KATAH_USE: "custodes.record_katah_use",
   RECORD_UNIT_CASUALTY: "unit.record_casualty",
   UNDO_UNIT_CASUALTY: "unit.undo_casualty",
+  ADJUST_UNIT_WOUNDS: "unit.adjust_wounds",
   RECORD_CHARGE_OUTCOME: "charge.record_outcome",
   RECORD_CHARGE_DECLINED: "charge.decline",
   RECORD_SHOOTING_ACTIVATION: "shooting.record_activation",
