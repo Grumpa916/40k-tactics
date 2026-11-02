@@ -9,6 +9,7 @@ const LABELS = {
   'combat.resolve_attack': 'attack',
   'unit.normal_move': 'normal move', 'unit.advance': 'advance', 'unit.record_stationary': 'stationary choice',
   'unit.record_fall_back': 'fall back', 'battlefield_map.adjust_live_position': 'map move',
+  'unit.adjust_wounds': 'wound adjustment', 'battle_shock.set_status': 'Battle-shock adjustment',
   'victory_points.record_award': 'VP award', 'victory_points.adjust': 'VP adjustment',
   'secondary_mission.record_score': 'secondary score',
   'objective.record_control': 'objective control', 'command_points.record_change': 'CP adjustment'
