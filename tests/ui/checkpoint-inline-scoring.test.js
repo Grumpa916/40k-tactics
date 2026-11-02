@@ -43,7 +43,7 @@ test('confirmed secondary scoring is atomic, retires card, rejects repeat, persi
 });
 test('primary scores once per checkpoint, does not create a receipt-only popup, and stays available next turn',()=>{
   const state=seed();state.phase='movement';
-  const payload={playerId:'p1',amount:4,reason:'Death Trap',missionDefinitionId:'death-trap',category:'primary',scoringTiming:'command-phase',opportunityKey:checkpointScoreKey(state,'p1','command-phase')};
+  const payload={playerId:'p1',amount:4,reason:'Death Trap',missionDefinitionId:'primary-death-trap',category:'primary',scoringTiming:'command-phase',opportunityKey:checkpointScoreKey(state,'p1','command-phase')};
   const scored=recordVictoryPointsAward(state,payload);
   assert.equal(scored.battlefieldMap,state.battlefieldMap);
   assert.throws(()=>recordVictoryPointsAward(scored,payload),/already been recorded/);
