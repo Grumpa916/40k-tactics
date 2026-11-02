@@ -134,11 +134,16 @@ test('modified Rapid Ingress costs are charged once and insufficient CP leaves n
   assert.throws(()=>recordVenatariAbilityUse(after,{...swift,cpSpent:1}));
 });
 
-test('only the confirmed Swift Ruin unit may arrive on the opponent’s turn, and authorization expires with that phase', () => {
+test('Swift Ruin authorization stays specific while manual reserve corrections remain available', () => {
   const declared=JSON.parse(JSON.stringify(recordVenatariAbilityUse(reserveState(),swift)));
   assert.deepEqual(getPendingVenatariIngress(declared).map(item=>item.id),['venatari']);
   assert.throws(()=>changePhase(declared,{phase:'shooting'}),/Swift Ruin arrival/);
-  assert.throws(()=>transferMapReserve(declared,{unitId:'venatari2',destination:'battlefield',position:{x:10,y:10}}));
+
+  const correctedOther=transferMapReserve(declared,{unitId:'venatari2',destination:'battlefield',position:{x:10,y:10}});
+  assert.equal(unit(correctedOther,'venatari2').status,'deployed');
+  assert.equal(correctedOther.history.at(-1).payload.reason,'Manual live-state correction');
+  assert.deepEqual(getPendingVenatariIngress(correctedOther).map(item=>item.id),['venatari']);
+
   assert.throws(()=>transferMapReserve(declared,{unitId:'venatari',destination:'battlefield',position:{x:61,y:10}}));
   const arrived=transferMapReserve(declared,{unitId:'venatari',destination:'battlefield',position:{x:10,y:10}});
   assert.equal(unit(arrived,'venatari').status,'deployed');assert.deepEqual(unit(arrived,'venatari').position,{x:10,y:10});
@@ -146,15 +151,20 @@ test('only the confirmed Swift Ruin unit may arrive on the opponent’s turn, an
   assert.equal(arrived.history.at(-1).payload.reason,'Swift Ruin');
   assert.equal(changePhase(arrived,{phase:'shooting'}).phase,'shooting');
   assert.throws(()=>transferMapReserve(arrived,{unitId:'venatari',destination:'battlefield',position:{x:11,y:10}}));
-  declared.phase='shooting';assert.deepEqual(getPendingVenatariIngress(declared),[]);
-  assert.throws(()=>transferMapReserve(declared,{unitId:'venatari',destination:'battlefield',position:{x:10,y:10}}));
+
+  declared.phase='shooting';
+  assert.deepEqual(getPendingVenatariIngress(declared),[]);
+  const correctedExpired=transferMapReserve(declared,{unitId:'venatari',destination:'battlefield',position:{x:10,y:10}});
+  assert.equal(correctedExpired.history.at(-1).payload.reason,'Manual live-state correction');
 });
 
-test('legacy reminder-only Swift Ruin records never authorize a reserve transfer', () => {
+test('legacy reminder-only Swift Ruin records never authorize Swift Ruin but manual correction remains available', () => {
   const state=reserveState();
   state.history.push({type:'rules.reminder_used',payload:{ruleId:'swift-ruin',unitId:'venatari',playerId:'p1',contextKey:'2:1:p2:movement'}});
   assert.deepEqual(getPendingVenatariIngress(state),[]);
-  assert.throws(()=>transferMapReserve(state,{unitId:'venatari',destination:'battlefield',position:{x:10,y:10}}));
+  const corrected=transferMapReserve(state,{unitId:'venatari',destination:'battlefield',position:{x:10,y:10}});
+  assert.equal(unit(corrected,'venatari').status,'deployed');
+  assert.equal(corrected.history.at(-1).payload.reason,'Manual live-state correction');
 });
 
 test('Venatari commands undo wounds, reserve state or CP and use history as one transaction', () => {
