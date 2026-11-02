@@ -2,7 +2,7 @@ import { getSecondaryMissionHistory } from '../rules/secondary-mission-lifecycle
 import { evaluateScoringCheckpoint } from '../engine/scoring-check-coordinator.js';
 import { renderCheckpointScore, bindCheckpointScores } from './checkpoint-score-controls.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-const checkpointLabels={'command-phase':'End of own Command','end-of-turn':'End of own turn','end-of-opponent-turn':"End of opponent's turn"};
+const checkpointLabels={'command-phase':'End of own Command','end-of-turn':'End of own turn','end-of-opponent-turn':"End of opponent's turn",'end-of-battle':'End of battle'};
 
 function scoringRequirementMarkup(windows = []) {
   const rows = windows.flatMap(window => {

@@ -16,12 +16,15 @@ function unscoredPrimaryReview(state, group, mission) {
 }
 
 export function getScoringCheckpointReminder(state, { previousPhase, missionDefinitions=[], perspectivePlayerId=null } = {}) {
-  const timing=previousPhase==='command'&&state.phase==='movement'?'command-phase':state.phase==='end_turn'&&previousPhase!=='end_turn'?'end-of-turn':null;
+  const timing=previousPhase==='command'&&state.phase==='movement'?'command-phase':
+    state.phase==='end_turn'&&previousPhase!=='end_turn'?'end-of-turn':
+    state.phase==='complete'&&previousPhase!=='complete'?'end-of-battle':null;
   if (!timing) return null;
   const activePlayerId=state.activePlayer??state.battle?.activePlayerId;
   const players=state.players??[];
-  const groups=players.filter(player=>timing==='end-of-turn'||player.id===activePlayerId).map(player=>{
-    const checkpoint=player.id===activePlayerId?timing:'end-of-opponent-turn';
+  const endOfBattle=timing==='end-of-battle';
+  const groups=players.filter(player=>timing==='end-of-turn'||endOfBattle||player.id===activePlayerId).map(player=>{
+    const checkpoint=endOfBattle?'end-of-battle':player.id===activePlayerId?timing:'end-of-opponent-turn';
     const review=evaluateScoringCheckpoint(state,{checkpoint,scoringPlayerId:player.id,activePlayerId,primaryDefinitions:missionDefinitions});
     return {playerId:player.id,playerName:player.name??player.id,checkpoint,review};
   });
@@ -55,7 +58,8 @@ export function getScoringCheckpointReminder(state, { previousPhase, missionDefi
   );
   if (!actionableGroups.length) return null;
   const activeName=players.find(p=>p.id===activePlayerId)?.name??'active player';
-  return {timing,label:`End of ${activeName}'s ${timing==='command-phase'?'Command phase':'turn'}`,
+  const label=endOfBattle?'End of battle':`End of ${activeName}'s ${timing==='command-phase'?'Command phase':'turn'}`;
+  return {timing,label,
     activePlayerId,scoringPlayerId:activePlayerId,perspectivePlayerId:myPlayer,groups:actionableGroups,
     requiresObjectiveConfirmation:false,
     missions:actionableGroups.flatMap(group=>[
