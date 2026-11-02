@@ -1,13 +1,18 @@
+// Keep Event Companion setup maps visually aligned with the canonical live/deployment
+// battlefield: 60" wide by 44" high. The renderer still uses its historical 44x60
+// intermediate SVG viewBox, so points are scaled into that box without rotating them.
 export const EVENT_COMPANION_DISPLAY_WIDTH = 44;
 export const EVENT_COMPANION_DISPLAY_HEIGHT = 60;
+export const CANONICAL_BATTLEFIELD_WIDTH = 60;
+export const CANONICAL_BATTLEFIELD_HEIGHT = 44;
 
 export function orientEventCompanionPoint(point) {
   const x = Number(point?.x);
   const y = Number(point?.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return {
-    x: y,
-    y: x
+    x: x / CANONICAL_BATTLEFIELD_WIDTH * EVENT_COMPANION_DISPLAY_WIDTH,
+    y: y / CANONICAL_BATTLEFIELD_HEIGHT * EVENT_COMPANION_DISPLAY_HEIGHT
   };
 }
 
@@ -20,10 +25,6 @@ export function orientEventCompanionLine(line) {
 }
 
 export function orientEventCompanionEdge(edge) {
-  if (edge === "left") return "bottom";
-  if (edge === "right") return "top";
-  if (edge === "top") return "right";
-  if (edge === "bottom") return "left";
   return edge;
 }
 
@@ -35,4 +36,3 @@ export function eventCompanionDisplayPercent(point) {
     top: (EVENT_COMPANION_DISPLAY_HEIGHT - oriented.y) / EVENT_COMPANION_DISPLAY_HEIGHT * 100
   };
 }
-
