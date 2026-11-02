@@ -17,6 +17,7 @@ import { applyArmyRosterToBattle } from "./army-roster-transitions.js";
 import { setPreGameRoles, setBattleSize } from "./battle-setup-transitions.js";
 import { registerCommandHandler } from "./command-engine.js";
 import { recordUnitCasualty, undoUnitCasualty } from './unit-casualty-transitions.js';
+import { adjustUnitWounds } from './unit-vitals-transitions.js';
 import {
   startBattle,
   enterDeployment,
@@ -97,6 +98,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_CUSTODES_KATAH_USE, (state, command) => recordCustodesKatahUse(state, command.payload)],
     [COMMAND_TYPES.RECORD_UNIT_CASUALTY, (state, command) => recordUnitCasualty(state, command.payload)],
     [COMMAND_TYPES.UNDO_UNIT_CASUALTY, (state, command) => undoUnitCasualty(state, command.payload)],
+    [COMMAND_TYPES.ADJUST_UNIT_WOUNDS, (state, command) => adjustUnitWounds(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_DECLINED, (state, command) => recordChargeDeclined(state, command.payload)],
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) => recordShootingActivation(state, command.payload)],

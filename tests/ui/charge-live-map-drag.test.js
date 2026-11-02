@@ -145,12 +145,14 @@ test('Charge live map keeps opponent units locked', () => {
   }
 });
 
-test('live map adjustment remains unavailable outside Movement and Charge', () => {
+test('live map adjustment is available outside Movement and Charge as a manual correction', () => {
   clearCommandHandlers();
   registerCoreCommandHandlers();
   const session = createGameSession(state('shooting'));
-  assert.throws(() => session.dispatch({
+  session.dispatch({
     type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,
     payload:{unitId:'charger',playerId:'p1',moves:[{modelId:'charger',position:{x:22,y:22}}]}
-  }), /Movement or Charge phase/);
+  });
+  assert.deepEqual(session.getState().units.find(unit => unit.id === 'charger').position,{x:22,y:22});
+  assert.equal(session.getState().history.at(-1).type,'battlefield_map.position_adjusted');
 });
