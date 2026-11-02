@@ -37,10 +37,14 @@ test('Movement tap transfer works for opponent, persists and clears old engageme
     assert.equal(restored.history.at(-1).type,'unit.arrived_from_reserves');
   }finally{screen.destroy();}
 });
-test('live transfers reject wrong army, wrong phase, destroyed/embarked units and bad positions atomically',()=>{
+test('live transfers allow manual corrections across armies and phases while rejecting invalid states atomically',()=>{
   const state=seed();
-  assert.throws(()=>transferMapReserve(state,{unitId:'a',destination:'reserves'}),/active army/);
-  assert.throws(()=>transferMapReserve({...state,phase:'shooting'},{unitId:'b',destination:'reserves'}),/Movement/);
+  const otherArmy=transferMapReserve(state,{unitId:'a',destination:'reserves'});
+  assert.equal(otherArmy.units[0].status,'reserves');
+  assert.equal(otherArmy.history.at(-1).type,'unit.entered_reserves');
+  const otherPhase=transferMapReserve({...state,phase:'shooting'},{unitId:'b',destination:'reserves'});
+  assert.equal(otherPhase.units[1].status,'reserves');
+  assert.equal(otherPhase.history.at(-1).type,'unit.entered_reserves');
   for(const status of ['destroyed','embarked'])assert.throws(()=>transferMapReserve({...state,units:state.units.map(u=>u.id==='b'?{...u,status}:u)},{unitId:'b',destination:'reserves'}));
   const reserve=transferMapReserve(state,{unitId:'b',destination:'reserves'});
   assert.throws(()=>transferMapReserve(reserve,{unitId:'b',destination:'battlefield',position:{x:61,y:5}}));
