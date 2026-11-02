@@ -62,7 +62,7 @@ test('active Secondary cards do not become live Shooting mission Actions', () =>
   const state = baseState();
   assert.deepEqual(getLiveMissionActionOptions(state, 'p1'), []);
   const html = createMissionActionPicker().render(state, 'u1');
-  assert.doesNotMatch(html, /<option[^>]*>Cleanse<\/option>/);
+  assert.equal(html.includes('Cleanse'), false);
   assert.match(html, /Secondary missions are scored manually at their checkpoint/);
 });
 
@@ -73,7 +73,7 @@ test('Primary Actions remain available while an active Secondary stays out of th
   assert.equal(actions[0].definitionId, 'primary-death-trap');
   const html = createMissionActionPicker().render(state, 'u1');
   assert.match(html, /Death Trap|Booby Trap/);
-  assert.doesNotMatch(html, /<option[^>]*>Cleanse<\/option>/);
+  assert.equal(html.includes('Cleanse'), false);
 });
 
 test('Secondary mission summary is reference-only and does not show live Action progress', () => {
