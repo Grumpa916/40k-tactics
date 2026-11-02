@@ -12,8 +12,36 @@ function itemDependsOnObjectives(item){return OBJECTIVE_CONDITION_TYPES.has(cond
 function scoreValue(tier,count){const vp=Number(tier?.vp);if(!Number.isInteger(vp)||vp<=0||!(count>0))return 0;const raw=/\b(?:per|for each)\b/i.test(String(tier?.summary??''))?vp*count:vp;const cap=Number(tier?.maxVP);return Number.isInteger(cap)&&cap>0?Math.min(raw,cap):raw;}
 function scoreWindowFromEvidence(entries){const satisfied=entries.filter(e=>e.evidence.count>0);if(!satisfied.length)return 0;const values=satisfied.map(e=>scoreValue(e.tier,e.evidence.count));if(entries.length===1)return values[0]??0;const relationships=entries.map(e=>e.tier?.relationship).filter(Boolean);if(relationships.includes('cumulative'))return values.reduce((s,v)=>s+v,0);return Math.max(0,...values);}
 export function estimateReviewMissionVp(state,playerId,mission){const result=mission?.result??{};const windows=result.scoringWindows??(result.scoringWindow?[result.scoringWindow]:[]);const evidence=windows.flatMap(window=>(window?.tiers??[]).map(tier=>({window,tier,condition:conditionForItem(tier),evidence:missionConditionEvidence(state,playerId,{...tier,instanceId:mission.instanceId??null})})));const recognized=evidence.filter(e=>e.condition!=null);if(!recognized.length)return null;const points=windows.reduce((total,window)=>total+scoreWindowFromEvidence(recognized.filter(e=>e.window===window)),0);const requiresTabletopConfirmation=evidence.some(e=>e.evidence.requiresTabletopConfirmation===true);const partial=evidence.some(e=>e.condition==null||e.evidence.count==null||e.evidence.requiresTabletopConfirmation===true);const objectiveDependent=recognized.some(e=>OBJECTIVE_CONDITION_TYPES.has(e.condition?.type));return Object.freeze({points,partial,objectiveDependent,requiresTabletopConfirmation,evidence:Object.freeze(recognized)});}
-export function getPrimaryCheckpointOpportunity(state,group){const reference=group?.primaryReference;const windows=Array.isArray(group?.primaryScoringWindows)?group.primaryScoringWindows:[];if(!reference||!windows.length)return null;if(hasEffectiveVictoryPointOpportunity(state,group.playerId,reference.id,checkpointKey(state,group.playerId,group.checkpoint)))return null;const items=windows.flatMap(window=>window?.items??[]);if(!items.length)return null;const evidence=items.map(item=>({item,evidence:missionConditionEvidence(state,group.playerId,item)}));const objectiveDependent=items.some(itemDependsOnObjectives);const unknownEvidence=evidence.some(e=>e.evidence.count==null);const estimate=estimateCheckpointVp(state,group.playerId,{...reference,scoringWindows:windows},group.checkpoint);const calculatedPoints=Number(estimate?.points)>0?Number(estimate.points):0;const needsObjectiveConfirmation=objectiveDependent&&!areObjectiveControlsFresh(state);const needsManualConfirmation=unknownEvidence||estimate?.partial===true;const actionable=calculatedPoints>0||needsObjectiveConfirmation||needsManualConfirmation;return Object.freeze({kind:'primary',definitionId:reference.id,definitionName:reference.name,actionable,calculatedPoints,estimate:estimate??null,objectiveDependent,needsObjectiveConfirmation,needsManualConfirmation,evidence:Object.freeze(evidence)});}
-export function getMissionReviewOpportunity(state,mission,playerId=null){if(!mission)return null;const result=mission.result??{};const scoringPlayerId=playerId??mission.playerId??result.playerId??null;const estimate=scoringPlayerId?estimateReviewMissionVp(state,scoringPlayerId,mission):null;const objectiveDependent=estimate?.objectiveDependent===true||(result.conditions??[]).some(c=>c?.evidence==='objective-control');const needsObjectiveConfirmation=objectiveDependent&&!areObjectiveControlsFresh(state);const eligible=result.eligible===true;const calculatedPoints=Number(estimate?.points)>0?Number(estimate.points):0;const needsManualConfirmation=result.manualReviewRequired===true||estimate?.partial===true;const requiresTabletopConfirmation=estimate?.requiresTabletopConfirmation===true;const actionable=eligible||calculatedPoints>0||needsObjectiveConfirmation||requiresTabletopConfirmation;return Object.freeze({kind:mission.category??(mission.instanceId?'secondary':'mission'),definitionId:mission.definitionId,instanceId:mission.instanceId??null,definitionName:mission.definitionName??mission.definitionId,actionable,eligible,calculatedPoints,estimate:estimate??null,objectiveDependent,needsObjectiveConfirmation,needsManualConfirmation,requiresTabletopConfirmation});}
+
+export function getPrimaryCheckpointOpportunity(state,group){
+  const reference=group?.primaryReference;
+  const windows=Array.isArray(group?.primaryScoringWindows)?group.primaryScoringWindows:[];
+  if(!reference||!windows.length)return null;
+  if(hasEffectiveVictoryPointOpportunity(state,group.playerId,reference.id,checkpointKey(state,group.playerId,group.checkpoint)))return null;
+  const items=windows.flatMap(window=>window?.items??[]);
+  const evidence=items.map(item=>({item,evidence:missionConditionEvidence(state,group.playerId,item)}));
+  const objectiveDependent=items.some(itemDependsOnObjectives);
+  const unknownEvidence=!items.length||evidence.some(e=>e.evidence.count==null);
+  const estimate=estimateCheckpointVp(state,group.playerId,{...reference,scoringWindows:windows},group.checkpoint);
+  const calculatedPoints=Number(estimate?.points)>0?Number(estimate.points):0;
+  const needsObjectiveConfirmation=objectiveDependent&&!areObjectiveControlsFresh(state);
+  const needsManualConfirmation=true;
+  return Object.freeze({kind:'primary',definitionId:reference.id,definitionName:reference.name,actionable:true,calculatedPoints,estimate:estimate??null,objectiveDependent,needsObjectiveConfirmation,needsManualConfirmation,unknownEvidence,evidence:Object.freeze(evidence)});
+}
+
+export function getMissionReviewOpportunity(state,mission,playerId=null){
+  if(!mission)return null;
+  const result=mission.result??{};
+  const scoringPlayerId=playerId??mission.playerId??result.playerId??null;
+  const estimate=scoringPlayerId?estimateReviewMissionVp(state,scoringPlayerId,mission):null;
+  const objectiveDependent=estimate?.objectiveDependent===true||(result.conditions??[]).some(c=>c?.evidence==='objective-control');
+  const needsObjectiveConfirmation=objectiveDependent&&!areObjectiveControlsFresh(state);
+  const eligible=result.eligible===true;
+  const calculatedPoints=Number(estimate?.points)>0?Number(estimate.points):0;
+  const needsManualConfirmation=true;
+  const requiresTabletopConfirmation=estimate?.requiresTabletopConfirmation===true||result.manualReviewRequired===true;
+  return Object.freeze({kind:mission.category??(mission.instanceId?'secondary':'mission'),definitionId:mission.definitionId,instanceId:mission.instanceId??null,definitionName:mission.definitionName??mission.definitionId,actionable:true,eligible,calculatedPoints,estimate:estimate??null,objectiveDependent,needsObjectiveConfirmation,needsManualConfirmation,requiresTabletopConfirmation});
+}
 export const getSecondaryCheckpointOpportunity=getMissionReviewOpportunity;
 function actionableActions(actions=[]){return actions.filter(action=>!action?.review||action.review.outcome==='completed');}
 function decorateReviewMissions(state,playerId,missions=[]){return missions.map(mission=>({mission,opportunity:getMissionReviewOpportunity(state,mission,playerId)})).filter(entry=>entry.opportunity?.actionable);}
