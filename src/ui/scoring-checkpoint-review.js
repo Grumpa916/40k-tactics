@@ -1,4 +1,4 @@
-import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES } from '../rules/secondary-mission-lifecycle.js';
+import { getSecondaryMissionHistory } from '../rules/secondary-mission-lifecycle.js';
 import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
 import { evaluateScoringCheckpoint } from '../engine/scoring-check-coordinator.js';
 import { renderCheckpointScore, bindCheckpointScores } from './checkpoint-score-controls.js';
