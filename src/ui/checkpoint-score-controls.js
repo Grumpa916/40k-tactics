@@ -1,5 +1,5 @@
 import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
-import { getSecondaryMissionHistory } from '../rules/secondary-mission-lifecycle.js';
+import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES } from '../rules/secondary-mission-lifecycle.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export const checkpointScoreKey = (state, playerId, checkpoint) => [state.battle?.round ?? 0, state.turn ?? 0, playerId, checkpoint].join(':');
 
@@ -16,6 +16,18 @@ function scoreWindowsFor(mission) {
 
 function secondaryTierChoices(mission = {}) {
   return scoreWindowsFor(mission).flatMap(window => {
+    if (window?.scoringModel === 'fixed-character-kills') {
+      // Fixed Assassination: 3 VP per destroyed CHARACTER, plus 1 VP for
+      // each one with 4+ Wounds. A 1 VP bonus cannot score independently.
+      const totals = new Set();
+      for (let small = 0; small <= 5; small++) {
+        for (let large = 0; large <= 5; large++) {
+          const points = small * 3 + large * 4;
+          if (points > 0 && points <= 15) totals.add(points);
+        }
+      }
+      return [...totals].sort((a, b) => a - b).map(vp => ({vp, tiers:window.tiers ?? [], timingLabel:window.timingLabel ?? ''}));
+    }
     const choices = [];
     let runningTotal = 0;
     let requiredTiers = [];
@@ -83,7 +95,7 @@ export function getMissionVpOptions(mission = {}) {
   return [...totals].filter(value => value > 0).sort((a,b) => a-b);
 }
 
-function renderSecondaryTierChoices(mission, formAttrs) {
+function renderSecondaryTierChoices(mission, formAttrs, fixedCard = false) {
   const choices = secondaryTierChoices(mission);
   if (choices.length <= 1) return null;
   const unique = [];
@@ -93,6 +105,8 @@ function renderSecondaryTierChoices(mission, formAttrs) {
     seen.add(choice.vp);
     unique.push(choice);
   }
+  // Large repeatable score ranges fit a compact dropdown better than dozens of buttons.
+  if (unique.length > 6) return null;
   const rows = unique.map(choice => {
     const requirements = choice.tiers.map(tier =>
       `<p class="checkpoint-vp-requirement"><strong>${esc(tier.vp)} VP condition</strong> · ${esc(tier.summary ?? '')}</p>`
@@ -100,7 +114,7 @@ function renderSecondaryTierChoices(mission, formAttrs) {
     return `<section class="checkpoint-vp-option" data-vp-option="${choice.vp}">
       <h4>${choice.vp} VP</h4>
       ${requirements}
-      <button type="submit" name="vp" value="${choice.vp}">Record ${choice.vp} VP${mission.category === 'secondary' ? ' & remove card' : ''}</button>
+      <button type="submit" name="vp" value="${choice.vp}">Record ${choice.vp} VP${mission.category === 'secondary' && !fixedCard ? ' & remove card' : ''}</button>
     </section>`;
   }).join('');
   return `<form ${formAttrs}>
@@ -115,23 +129,26 @@ function renderSecondaryTierChoices(mission, formAttrs) {
 export function renderCheckpointScore(state, group, mission) {
   const { definitionId, definitionName, instanceId, category } = mission;
   const card = instanceId ? getSecondaryMissionHistory(state, group.playerId).find(c => c.instanceId === instanceId) : null;
+  const fixedCard = category === 'secondary' &&
+    (getSecondaryMissionMode(state, group.playerId) ?? card?.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED;
+  const scoreLabel = category === 'secondary' && !fixedCard ? ' & remove card' : '';
   const key = instanceId ? [instanceId, state.battle?.round ?? 0, state.turn ?? 0, group.checkpoint].join(':') : checkpointScoreKey(state, group.playerId, group.checkpoint);
   if (hasEffectiveVictoryPointOpportunity(state, group.playerId, definitionId, key)) {
-    return `<p role="status"><strong>VP recorded.</strong> ${category === 'secondary' ? 'Card removed from active missions.' : 'Primary remains active for later checkpoints.'}</p>`;
+    return `<p role="status"><strong>VP recorded.</strong> ${category === 'secondary' ? fixedCard ? 'Fixed card remains active for later checkpoints.' : 'Card removed from active missions.' : 'Primary remains active for later checkpoints.'}</p>`;
   }
   if (instanceId && card?.status !== 'active') return '<p>Card is no longer active.</p>';
   const vpOptions = getMissionVpOptions(mission);
   const formAttrs = `data-checkpoint-score data-player="${esc(group.playerId)}" data-checkpoint="${esc(group.checkpoint)}" data-mission="${esc(definitionId)}" data-name="${esc(definitionName)}" data-category="${esc(category)}" data-instance="${esc(instanceId ?? '')}"`;
-  const tierMarkup = category === 'secondary' ? renderSecondaryTierChoices(mission, formAttrs) : null;
+  const tierMarkup = category === 'secondary' ? renderSecondaryTierChoices(mission, formAttrs, fixedCard) : null;
   if (tierMarkup) return tierMarkup;
   if (vpOptions.length === 1) {
     const points = vpOptions[0];
-    return `<form ${formAttrs}><input type="hidden" name="vp" value="${points}"><button type="submit">Record +${points} VP${category === 'secondary' ? ' & remove card' : ''}</button><p>Use the tabletop result agreed by both players. Existing VP caps still apply.</p></form>`;
+    return `<form ${formAttrs}><input type="hidden" name="vp" value="${points}"><button type="submit">Record +${points} VP${scoreLabel}</button><p>Use the tabletop result agreed by both players. Existing VP caps still apply.</p></form>`;
   }
   const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
   return `<form ${formAttrs}>
     <label>Agreed VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}" ${vpOptions.length ? '' : 'disabled'}><option value="">${vpOptions.length ? 'Choose agreed VP…' : 'No configured VP value'}</option>${optionMarkup}</select></label>
-    <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Record score${category === 'secondary' ? ' & remove card' : ''}</button>
+    <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Record score${scoreLabel}</button>
     <p>The app does not infer completion from objective control, unit positions, combat history, or recorded Actions. Existing VP caps apply.</p>
   </form>`;
 }
@@ -147,7 +164,12 @@ export function bindCheckpointScores(container, session, onError) {
       const submittedValue = event.submitter?.name === 'vp' ? event.submitter.value : form.querySelector('[name="vp"]')?.value;
       const payload = { playerId, amount: Number(submittedValue), scoringTiming,
         round: state.battle?.round ?? 0, turn: state.turn ?? 0 };
-      if (instanceId) session.dispatch({type:'secondary_mission.record_score',payload:{...payload,instanceId,retireAfterScoring:true}});
+      if (instanceId) {
+        const card = getSecondaryMissionHistory(state, playerId).find(item => item.instanceId === instanceId);
+        const mode = getSecondaryMissionMode(state, playerId) ?? card?.definition?.missionMode;
+        session.dispatch({type:'secondary_mission.record_score',payload:{...payload,instanceId,
+          retireAfterScoring:mode !== SECONDARY_MISSION_MODES.FIXED}});
+      }
       else session.dispatch({type:'victory_points.record_award',payload:{...payload,
         category:'primary', reason:form.getAttribute('data-name'), missionDefinitionId:form.getAttribute('data-mission'),
         opportunityKey:checkpointScoreKey(state,playerId,scoringTiming)}});

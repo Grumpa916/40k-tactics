@@ -10,3 +10,12 @@
 - Checkpoint transition selection, dialog rendering and manual score controls remain focused modules coordinated by the battle shell.
 
 Validation covers Secondary cards being absent from the live Shooting Action picker, Primary Actions remaining available, Secondary mission summaries presenting Action text as reference only, and known Secondary cards remaining scoreable at the correct checkpoint without any recorded Action history. Physical iPad acceptance is still required.
+
+## 18-card manual scoring audit (2026-11-03)
+
+- All 18 secondary definitions are sourced from previously supplied card transcriptions; this is a **transcription audit**, not an independent verification of all 18 printed cards against a Games Workshop publication. Official pack and Event Companion references remain authoritative.
+- Fixed selections remain active after an agreed score and may score at a later valid checkpoint; Tactical cards retire on scoring. Fixed Assassination presents valid 3 VP / 4 VP per-CHARACTER combinations rather than a standalone 1 VP bonus.
+- Reopening a checkpoint after scoring does not repeat the same Fixed card opportunity or produce a receipt-only popup. VP scoring is always player-confirmed; no Action or map proof is required.
+- Secondary and Primary live awards share the 15 VP **per battle round** ceiling and their respective 45 VP game ceilings. Fixed cards have their own 20 VP game ceiling. Final end-of-battle awards follow the existing Event Companion exception.
+- Beacon, Burden of Trust, and Defend Stronghold also open at the final player's end-of-turn checkpoint in round 5 when the card owner goes second; these awards still count toward the round-5 cap (not the exempt end-of-battle cap).
+- Card-specific draw choices and optional Tactical discard/redraw remain unchanged. Full iPad acceptance remains outstanding.

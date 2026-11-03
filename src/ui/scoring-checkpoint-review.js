@@ -1,4 +1,5 @@
 import { getSecondaryMissionHistory } from '../rules/secondary-mission-lifecycle.js';
+import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
 import { evaluateScoringCheckpoint } from '../engine/scoring-check-coordinator.js';
 import { renderCheckpointScore, bindCheckpointScores } from './checkpoint-score-controls.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -47,7 +48,10 @@ export function renderScoringCheckpointGroups(state, reminder) {
     const liveReview=evaluateScoringCheckpoint(state,{checkpoint:group.checkpoint,scoringPlayerId:group.playerId,activePlayerId:reminder.activePlayerId});
     const primaryDue=primaryOpportunityMarkup(state,group);
     const reviewPrimaryDue=(group.review?.primary??[]).map(mission=>reviewMissionMarkup(state,group,mission)).join('');
-    const secondaryDue=liveReview.secondary.map(mission=>reviewMissionMarkup(state,group,mission)).join('');
+    const secondaryDue=liveReview.secondary.filter(mission=>!hasEffectiveVictoryPointOpportunity(
+      state,group.playerId,mission.definitionId,
+      [mission.instanceId,state.battle?.round??0,state.turn??0,group.checkpoint].join(':')
+    )).map(mission=>reviewMissionMarkup(state,group,mission)).join('');
     const scoredCards=getSecondaryMissionHistory(state,group.playerId).filter(card=>card.status==='scored' && card.scoredTurn===state.turn && card.scoredRound===state.battle?.round);
     const receipts=scoredCards.map(card=>`<p role="status"><strong>${esc(card.definition?.name??card.definitionId)}: VP recorded.</strong> Removed from active missions.</p>`).join('');
     const anyLive=Boolean(primaryDue||reviewPrimaryDue||secondaryDue);

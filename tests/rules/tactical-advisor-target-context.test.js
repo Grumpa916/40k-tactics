@@ -179,7 +179,7 @@ test("verified Centre Ground can score target removal and opponent denial contex
 
 test("unverified active secondary remains visible but does not alter ranking score", () => {
   const state = baseState();
-  state.scoring.secondaryMissions = [activeSecondary("p1", noPrisoners)];
+  state.scoring.secondaryMissions = [activeSecondary("p1", { ...noPrisoners, rulesVerified: false })];
   const impact = getTargetSecondaryMissionImpact(state, {
     playerId: "p1",
     targetUnitId: "plain-target"

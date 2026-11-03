@@ -32,7 +32,7 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
 const VERIFIED_WINDOW_SOURCE = "user-provided-card-text";
 const unverified = Object.freeze({ rulesVerified: false, scoringWindows: Object.freeze([]) });
 
-function windowDefinition({ id, timing, timingLabel, modes, tiers, minRound = null }) {
+function windowDefinition({ id, timing, timingLabel, modes, tiers, minRound = null, endOfFifthRoundAlternative = false }) {
   return {
     id,
     timing,
@@ -40,7 +40,8 @@ function windowDefinition({ id, timing, timingLabel, modes, tiers, minRound = nu
     modes,
     tiers,
     source: VERIFIED_WINDOW_SOURCE,
-    ...(minRound === null ? {} : { minRound })
+    ...(minRound === null ? {} : { minRound }),
+    ...(endOfFifthRoundAlternative ? { endOfFifthRoundAlternative: true } : {})
   };
 }
 
@@ -109,6 +110,7 @@ const verifiedRules = Object.freeze({
         id: "tactical-opponent-turn",
         timing: "end-of-opponent-turn",
         timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
+        endOfFifthRoundAlternative: true,
         modes: ["tactical"],
         tiers: [
           { vp: 3, relationship: "or", condition: { type: "beacon-outside-deployment-zone" }, summary: "The beacon unit is on the battlefield and not within your deployment zone." },
@@ -157,6 +159,7 @@ const verifiedRules = Object.freeze({
         id: "tactical-opponent-turn",
         timing: "end-of-opponent-turn",
         timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
+        endOfFifthRoundAlternative: true,
         modes: ["tactical"],
         tiers: [{ vp: 2, maxVP: 5, condition: { type: "burden-trust-guarded-objectives" }, summary: "For each objective guarded by your army." }]
       })
@@ -192,6 +195,7 @@ const verifiedRules = Object.freeze({
         id: "tactical-opponent-turn",
         timing: "end-of-opponent-turn",
         timingLabel: "End of opponent's turn or end of fifth battle round (whichever comes first)",
+        endOfFifthRoundAlternative: true,
         modes: ["tactical"],
         minRound: 2,
         tiers: [
@@ -343,6 +347,7 @@ const cardNames = [
     scoringWindows: [
       {
         id: "fixed-turn",
+        scoringModel: "fixed-character-kills",
         timing: "end-of-turn",
         timingLabel: "End of either player's turn",
         modes: ["fixed"],
@@ -354,6 +359,7 @@ const cardNames = [
       },
       {
         id: "fixed-opponent-turn",
+        scoringModel: "fixed-character-kills",
         timing: "end-of-opponent-turn",
         timingLabel: "End of opponent's turn",
         modes: ["fixed"],
@@ -416,11 +422,7 @@ const cardNames = [
 ];
 
 export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules]) => {
-  const resolvedRules = rules ?? {
-    rulesVerified: false,
-    referenceNotes: verifiedRules[slug]?.referenceNotes ?? [],
-    scoringWindows: verifiedRules[slug]?.scoringWindows ?? unverified.scoringWindows
-  };
+  const resolvedRules = rules ?? verifiedRules[slug] ?? unverified;
   return Object.freeze({
     id: "secondary-" + slug,
     name,

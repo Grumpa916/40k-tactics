@@ -32,7 +32,7 @@ function getEffectiveAwardEvents(state, playerId = null) {
 export function getRemainingPrimaryVictoryPoints(state, playerId, scoringTiming = null) {
   const awards = getEffectiveAwardEvents(state, playerId).filter(entry => entry.category === 'primary');
   const round = state?.battle?.round ?? 0, turn = state?.turn ?? 0;
-  const usedThisTurn = awards.filter(entry => entry.round === round && entry.turn === turn)
+  const usedThisTurn = awards.filter(entry => entry.round === round)
     .reduce((total, entry) => total + entry.amount, 0);
   const usedThisGame = awards.reduce((total, entry) => total + entry.amount, 0);
   const turnRemaining = scoringTiming === SCORING_TIMINGS.END_OF_BATTLE
@@ -48,8 +48,10 @@ function calculateCappedAward(state, {
 
   const prior = getEffectiveAwardEvents(state, playerId)
     .filter((entry) => entry.category === category);
+  // The 15 VP ceiling applies per battle round, including awards scored
+  // during the opponent's turn, not separately for each player turn.
   const turnUsed = prior
-    .filter((entry) => entry.turn === turn && entry.round === round)
+    .filter((entry) => entry.round === round)
     .reduce((sum, entry) => sum + entry.amount, 0);
   const gameUsed = prior.reduce((sum, entry) => sum + entry.amount, 0);
   const perTurnLimit = category === "primary"
@@ -84,7 +86,7 @@ function calculateCappedAward(state, {
       ? "the 20 VP Fixed Secondary card limit"
       : appliedCaps.includes(category + "-game")
         ? "the 45 VP " + category + " game limit"
-        : "the 15 VP " + category + " turn limit";
+        : "the 15 VP " + category + " battle-round limit";
     throw new Error("No VP can be added: " + capLabel + " has been reached.");
   }
   return { amount: allowed, appliedCaps: [...new Set(appliedCaps)] };
