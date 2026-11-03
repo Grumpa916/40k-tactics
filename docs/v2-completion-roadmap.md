@@ -11,8 +11,9 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
    - Audit all 18 Chapter Approved 2026–27 secondary cards for scoring windows, alternative scoring tiers, action handling, map/objective evidence, Tactical Advisor guidance, opponent-turn timing, and regression coverage.
 
 3. **Official rules-data verification**
-   - Audit mission and rules data against current official Chapter Approved / Event Companion sources.
-   - Version verified records explicitly and remove avoidable fallback/unverified behavior.
+   - **Publication/source-index pass completed 2026-11-03:** versions and catalog provenance are explicitly tracked; see [audit](official-rules-source-audit-2026-11-03.md).
+   - **Still pending, not falsely certified:** current official PDF content comparison, 25 Primary card texts, deferred 18 physical Secondary cards (issue #502), and October Space Marines faction/points data.
+   - Preserve accepted terrain maps and manual scoring until a documented official rules discrepancy requires a focused correction.
 
 4. **Army Builder and combat-data completeness audit**
    - Prioritize Adeptus Custodes, then Tyranids and Space Marines.
