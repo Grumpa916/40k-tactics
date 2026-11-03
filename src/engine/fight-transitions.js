@@ -3,9 +3,14 @@ import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getFightCandidates } from "../rules/fight-candidates.js";
+import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { changePhase } from "./state-transitions.js";
 
-export function recordFightActivation(state, { unitId, actionType = "fight" } = {}) {
+export function recordFightActivation(state, {
+  unitId,
+  actionType = "fight",
+  tabletopConfirmed = false
+} = {}) {
   if (!unitId) throw new TypeError("Fight activation unit id is required.");
   if (!new Set(["fight", "not_fight"]).has(actionType)) {
     throw new RangeError("Fight activation action type must be fight or not_fight.");
@@ -18,22 +23,12 @@ export function recordFightActivation(state, { unitId, actionType = "fight" } = 
   if (unit.status !== UNIT_STATUS.DEPLOYED) {
     throw new Error("Fight activation unit must be deployed.");
   }
+  if (getCombatFormationRoot(state, unit)?.id !== unit.id) {
+    throw new Error("Fight activations must be recorded for the combat formation, not an attached member.");
+  }
   if (!unit.ownerId) throw new Error("Fight activation unit must have an owner.");
   if (state.players.length > 0 && !state.players.some((player) => player.id === unit.ownerId)) {
     throw new Error("Fight activation unit owner must be a player in the game.");
-  }
-
-  const candidates = getFightCandidates(state);
-  const isCandidate = candidates.fightsFirst.includes(unitId) || candidates.normal.includes(unitId);
-  if (!isCandidate) {
-    throw new Error("Unit is not an available Fight candidate.");
-  }
-
-  if (
-    candidates.fightsFirst.length > 0 &&
-    candidates.normal.includes(unitId)
-  ) {
-    throw new Error("Fights First candidates must be activated before normal Fight candidates.");
   }
 
   if (state.history.some((event) =>
@@ -44,13 +39,28 @@ export function recordFightActivation(state, { unitId, actionType = "fight" } = 
     throw new Error("A unit can be activated to fight only once per turn.");
   }
 
+  const candidates = getFightCandidates(state);
+  const isCandidate = candidates.fightsFirst.includes(unitId) || candidates.normal.includes(unitId);
+  if (!tabletopConfirmed && !isCandidate) {
+    throw new Error("Unit is not an available Fight candidate.");
+  }
+
+  if (
+    !tabletopConfirmed &&
+    candidates.fightsFirst.length > 0 &&
+    candidates.normal.includes(unitId)
+  ) {
+    throw new Error("Fights First candidates must be activated before normal Fight candidates.");
+  }
+
   const event = createEvent("fight.unit_activated", {
     unitId,
     playerId: unit.ownerId,
     round: state.battle.round,
     turn: state.turn,
     fightsFirst: candidates.fightsFirst.includes(unitId),
-    actionType
+    actionType,
+    tabletopConfirmed: tabletopConfirmed === true
   });
   return appendHistoryEntry(state, event);
 }
@@ -59,8 +69,8 @@ export function completeFightPhase(state, { confirmRemaining = false } = {}) {
   if (state.phase !== "fight") throw new Error("End Fight during the Fight phase.");
   let next = state;
   if (confirmRemaining) {
-    // Explicit confirmation records each remaining unit as not fighting.
-    // Process Fights First before the normal group, through the same validator.
+    // Explicit confirmation records each remaining inferred candidate as not fighting.
+    // Tabletop-only eligibility is never invented during phase completion.
     let candidates = getFightCandidates(next);
     for (const id of [...candidates.fightsFirst, ...candidates.normal]) {
       next = recordFightActivation(next, { unitId:id, actionType:"not_fight" });
@@ -72,4 +82,3 @@ export function completeFightPhase(state, { confirmRemaining = false } = {}) {
   for (const activation of activations) next = finishCombatActivation(next, { unitId:activation.payload.unitId });
   return changePhase(next, { phase:"end_turn" });
 }
-

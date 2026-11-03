@@ -7,6 +7,7 @@ import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createChargeScreen } from '../../src/ui/charge-screen.js';
 import { createFightScreen } from '../../src/ui/fight-screen.js';
 import { getChargeViewModel } from '../../src/application/charge-workflow.js';
+import { getFightAttackOptions } from '../../src/application/fight-workflow.js';
 import { getFightAdvisorContext } from '../../src/application/fight-advisor-context.js';
 import { getFightOpportunityRecommendations } from '../../src/rules/tactical-fight-opportunities.js';
 import { fakeDom } from '../helpers/combat-dom.js';
@@ -72,6 +73,7 @@ test('Fight map preview does not activate; first attack and second weapon share 
   const x = setup('fight',engage(state('fight')));
   try {
     click(x,'data-map-unit-id','fighter');
+    assert.equal(x.root.querySelector('[data-fight-begin]'),null);
     x.root.change('[data-fight-weapon]','blade');
     click(x,'data-map-unit-id','enemy');
     assert.match(x.root.innerHTML,/value="enemy" selected/);
@@ -86,6 +88,7 @@ test('Fight map preview does not activate; first attack and second weapon share 
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
     const history=x.session.getState().history;
     assert.equal(history.filter(e => e.type === 'fight.unit_activated').length,1);
+    assert.equal(history.find(e => e.type === 'fight.unit_activated').payload.tabletopConfirmed,true);
     const attacks=history.filter(e => e.type === 'combat.attack_resolved');
     assert.deepEqual(attacks.map(e => e.payload.weaponId),['blade','claws']);
     assert.deepEqual(attacks.map(e => e.payload.actualDamage),[1,1]);
@@ -93,16 +96,18 @@ test('Fight map preview does not activate; first attack and second weapon share 
   } finally { x.screen.destroy(); }
 });
 
-test('Fight map cannot activate a normal fighter before Fights First; either side can record damage', () => {
+test('Fight map allows tabletop-confirmed activation while Fights First remains advisory', () => {
   const x = setup('fight',engage(state('fight'),['enemy']));
   try {
     click(x,'data-map-unit-id','enemy');
-    assert.match(x.root.innerHTML,/cannot begin a Fight activation yet/);
-    assert.equal(x.session.getState().history.filter(e => e.type === 'fight.unit_activated').length,0);
-    click(x,'data-map-unit-id','fighter'); click(x,'data-fight-begin'); click(x,'data-fight-finish-entry');
-    click(x,'data-map-unit-id','enemy'); x.root.change('[data-fight-weapon]','blade'); click(x,'data-map-unit-id','fighter');
+    assert.match(x.root.innerHTML,/Fights First still pending/);
+    x.root.change('[data-fight-weapon]','blade'); click(x,'data-map-unit-id','fighter');
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
+    const activation=x.session.getState().history.find(e => e.type === 'fight.unit_activated' && e.payload.unitId === 'enemy');
+    assert.equal(activation.payload.tabletopConfirmed,true);
+    assert.equal(activation.payload.fightsFirst,false);
     assert.equal(x.session.getState().units.find(u => u.id === 'fighter').wounds,19);
+    assert.ok(x.session.getState().history.every(e => e.type !== 'combat.activation_finished' || e.payload.unitId !== 'fighter'));
   } finally { x.screen.destroy(); }
 });
 
@@ -110,13 +115,15 @@ test('Do not fight excludes attack entry, wrong-phase rejection is visible and l
   const x = setup('fight',state('fight'));
   try {
     click(x,'data-map-unit-id','fighter'); click(x,'data-fight-skip');
+    assert.equal(getFightAttackOptions(x.session.getState(), { attackerId:'fighter', includeCandidates:true }).attackers.some(unit => unit.unitId === 'fighter'),false,
+      'skipped formations must not re-enter the tabletop-confirmed Fight picker');
     click(x,'data-map-unit-id','fighter');
-    assert.match(x.root.innerHTML,/cannot begin a Fight activation yet/);
+    assert.match(x.root.innerHTML,/finished its Fight activation/);
     assert.equal(x.root.querySelector('[data-fight-attack]'),null);
   } finally { x.screen.destroy(); }
   const initial=state('command'), y=setup('fight',initial);
   try {
-    click(y,'data-map-unit-id','fighter'); click(y,'data-fight-begin');
+    click(y,'data-map-unit-id','fighter'); y.root.change('[data-fight-weapon]','blade'); click(y,'data-map-unit-id','enemy'); click(y,'data-fight-attack');
     assert.match(y.root.innerHTML,/Fight activations may only be recorded in the Fight phase/);
     assert.equal(y.session.getState(),initial);
   } finally { y.screen.destroy(); }
@@ -148,12 +155,12 @@ test('finishing Fight activation persists across remount and rejects further att
   } finally { x.screen.destroy(); }
 });
 
-test('End Fight reviews remaining units and explicitly records skips before advancing', () => {
+test('End Fight reviews remaining inferred combats and closes open activations before advancing', () => {
   const x=setup('fight',engage(state('fight'),['enemy']));
   try {
-    click(x,'data-map-unit-id','fighter'); click(x,'data-fight-begin');
+    click(x,'data-map-unit-id','fighter'); x.root.change('[data-fight-weapon]','blade'); click(x,'data-map-unit-id','enemy'); click(x,'data-fight-attack');
     x.screen.requestPhaseEnd();
-    assert.match(x.root.innerHTML,/Record these remaining units as not fighting/);
+    assert.match(x.root.innerHTML,/remaining inferred combats/);
     click(x,'data-fight-cancel-end');
     assert.equal(x.session.getState().phase,'fight');
     click(x,'data-fight-complete'); click(x,'data-fight-confirm-end');
