@@ -130,3 +130,41 @@ test('15 VP caps apply per battle round across both players turns, not separatel
     assert.equal(three.victoryPoints.p1,20,category+' new round resets cap');
   }
 });
+
+
+test('Beacon, Burden of Trust and Defend Stronghold offer end-of-fifth-round scoring when going second', () => {
+  const alternatives = ['beacon','burden-of-trust','defend-stronghold'];
+  for(const slug of alternatives) {
+    const card = byId.get('secondary-'+slug);
+    const lastPlayer = stateFor(card,'tactical',5,'p1');
+    lastPlayer.battle.firstPlayerId = 'p2';
+    const due=evaluateScoringCheckpoint(lastPlayer,{checkpoint:'end-of-turn',scoringPlayerId:'p1',activePlayerId:'p1'});
+    assert.equal(due.secondary.length,1,slug+' final-round fallback');
+    assert.equal(due.secondary[0].result.scoringWindow.timing,'end-of-turn');
+    assert.match(due.secondary[0].result.scoringWindow.timingLabel,/fifth battle round/i);
+    assert.equal(due.secondary[0].result.manualReviewRequired,true);
+    const reminder=getScoringCheckpointReminder(lastPlayer,{previousPhase:'fight'});
+    assert.equal(reminder.groups.find(group=>group.playerId==='p1').review.secondary.length,1,slug+' reminder');
+
+    const firstPlayer=stateFor(card,'tactical',5,'p1');
+    firstPlayer.battle.firstPlayerId='p1';
+    const notYet=evaluateScoringCheckpoint(firstPlayer,{checkpoint:'end-of-turn',scoringPlayerId:'p1',activePlayerId:'p1'});
+    assert.equal(notYet.secondary.length,0,slug+' first player waits until opponent turn');
+    assert.equal(evaluateScoringCheckpoint(lastPlayer,{checkpoint:'end-of-battle',scoringPlayerId:'p1',activePlayerId:'p1'}).secondary.length,0,
+      'end of fifth battle round must not be treated as uncapped end of battle');
+  }
+});
+
+test('fifth-round alternative Secondary award respects remaining battle-round allowance',()=>{
+  const card=byId.get('secondary-beacon');
+  const game=stateFor(card,'tactical',5,'p1');
+  game.battle.firstPlayerId='p2';
+  const preexisting=recordVictoryPointsAward(game,{playerId:'p1',amount:13,category:'secondary',reason:'Other Secondary',
+    missionDefinitionId:'other',opportunityKey:'other-r5',round:5,turn:3,scoringTiming:'end-of-turn'});
+  const scored=recordSecondaryMissionScore(preexisting,{playerId:'p1',instanceId:'reviewed-card',amount:5,
+    round:5,turn:3,scoringTiming:'end-of-turn'});
+  assert.equal(scored.victoryPoints.p1,15);
+  assert.equal(scored.history.at(-1)?.type,'victory_points.awarded');
+  assert.equal(scored.history.at(-1)?.payload.amount,2);
+  assert.equal(scored.scoring.secondaryMissions[0].status,'scored');
+});
