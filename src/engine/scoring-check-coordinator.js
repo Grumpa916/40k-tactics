@@ -19,11 +19,26 @@ function scoringWindowsForInstance(state, instance, checkpoint = null) {
   if (!Array.isArray(definition?.scoringWindows)) return [];
   const missionMode = getSecondaryMissionMode(state, instance.playerId) ?? definition.missionMode ?? null;
   const currentRound = state?.battle?.round ?? state?.round ?? null;
-  return definition.scoringWindows.filter((window) =>
-    (checkpoint == null || window?.timing === checkpoint) &&
-    (window?.minRound == null || currentRound == null || currentRound >= window.minRound) &&
-    (!missionMode || !Array.isArray(window?.modes) || window.modes.length === 0 ||
-      window.modes.includes(missionMode)));
+  const modeMatches = window => !missionMode || !Array.isArray(window?.modes) ||
+    window.modes.length === 0 || window.modes.includes(missionMode);
+  const roundMatches = window => window?.minRound == null || currentRound == null || currentRound >= window.minRound;
+  const due = definition.scoringWindows.filter(window =>
+    (checkpoint == null || window?.timing === checkpoint) && roundMatches(window) && modeMatches(window));
+  // Beacon, Burden of Trust, and Defend Stronghold can score at the end of
+  // the fifth battle round when the owning player goes second and has not yet
+  // reached an opponent-turn checkpoint since drawing that card. This is a
+  // fifth-round award, NOT an end-of-battle award (the VP caps differ).
+  const lastPlayerTurn = checkpoint === SCORING_CHECKPOINTS.END_OF_TURN && currentRound === 5 &&
+    state?.battle?.firstPlayerId && state.battle.firstPlayerId !== instance.playerId &&
+    (state.activePlayer ?? state.battle?.activePlayerId) === instance.playerId;
+  if (!lastPlayerTurn) return due;
+  const fifthRound = definition.scoringWindows.filter(window =>
+    window?.endOfFifthRoundAlternative && window.timing === SCORING_CHECKPOINTS.END_OF_OPPONENT_TURN &&
+    roundMatches(window) && modeMatches(window)).map(window => ({
+      ...window, id: window.id + '-fifth-round', timing: SCORING_CHECKPOINTS.END_OF_TURN,
+      timingLabel: 'End of the fifth battle round (when going second)'
+    }));
+  return [...due, ...fifthRound];
 }
 
 function evaluateSecondaryInstance(state, instance, checkpoint) {
