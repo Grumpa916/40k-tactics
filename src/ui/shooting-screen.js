@@ -179,10 +179,6 @@ export function createShootingScreen(container, {
       : [];
     if (!precisionOptions.some((option) => option.unitId === precisionAllocationId)) precisionAllocationId = null;
 
-    const missionActionOptions = availableMissionActions
-      .map((action) => `<option value="${escapeHtml(action.id)}">${escapeHtml(action.name ?? action.id)}</option>`)
-      .join("");
-
     if (layoutMode === "tabletop") {
       const activeUnitId = selectedAttackerId ?? pendingUnitId;
       const activeSummary = tabletopUnitSummary(state, activeUnitId);
@@ -264,14 +260,11 @@ export function createShootingScreen(container, {
           <div><strong>${escapeHtml(pendingUnit.name)}</strong><span>${escapeHtml(ownerLabel(pendingUnit))} — choose this unit's Shooting-phase choice</span></div>
           <div class="choice-buttons">
             <button type="button" data-choice-shoot ${actionOnly.some(unit => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
+            ${hasPrimaryMissionAction ? `<button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Primary Action</button>` : ''}
             <button type="button" data-choice-not-shoot>Do not shoot</button>
-            ${hasPrimaryMissionAction ? `<label>Primary Action<select data-choice-action>
-              <option value="">Select a Primary Action</option>
-              ${missionActionOptions}
-            </select></label>
-            <button type="button" data-choice-action-confirm disabled>Record Primary Action</button>` : ''}
             <button type="button" data-choice-cancel>Cancel</button>
           </div>
+          ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, availableMissionActions) : ""}
         </div>` : ""}
       </section>
 
@@ -408,11 +401,6 @@ export function createShootingScreen(container, {
         attackError = "";
         render();
       }));
-      container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
-        actionPickerOpen = !actionPickerOpen;
-        attackError = "";
-        render();
-      });
       container.querySelector?.("[data-finish-unit]")?.addEventListener?.("click", () => {
         try { finishCombatUnit(session, selectedAttackerId); }
         catch (cause) { attackError = cause?.message ?? String(cause); render(); return; }
@@ -426,6 +414,12 @@ export function createShootingScreen(container, {
         render();
       });
     }
+
+    container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
+      actionPickerOpen = !actionPickerOpen;
+      attackError = "";
+      render();
+    });
 
     container.querySelector("[data-choice-shoot]")?.addEventListener("click", () => {
       if (!pendingUnitId) return;
@@ -445,20 +439,11 @@ export function createShootingScreen(container, {
       render();
     });
 
-    if (layoutMode === "tabletop" && actionPickerOpen) {
+    if (actionPickerOpen) {
       missionActionPicker.bind(container, payload => {
         if (!pendingUnitId || !tryActivate({unitId:pendingUnitId,actionType:"mission_action",...payload})) return;
         actionPickerOpen=false; clearPending(); render();
       }, render);
-    } else {
-      container.querySelector("[data-choice-action]")?.addEventListener("change", event => {
-        const button=container.querySelector("[data-choice-action-confirm]"); if (button) button.disabled=!event.target.value;
-      });
-      container.querySelector("[data-choice-action-confirm]")?.addEventListener("click", () => {
-        const actionId=container.querySelector("[data-choice-action]")?.value;
-        if (!pendingUnitId||!actionId||!tryActivate({unitId:pendingUnitId,actionType:"mission_action",actionId})) return;
-        actionPickerOpen=false; clearPending(); render();
-      });
     }
 
     container.querySelector("[data-choice-cancel]")?.addEventListener("click", () => {
