@@ -5,17 +5,18 @@ import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createBattleShell } from '../../src/ui/battle-shell.js';
-import { renderPhaseProgressionPanel, getPhaseProgressionAction } from '../../src/ui/phase-progression-panel.js';
+import { renderPhaseProgressionPanel, getPhaseProgressionAction, screenOwnsPhaseProgression } from '../../src/ui/phase-progression-panel.js';
+import { setupScreenOwnsContinue } from '../../src/ui/setup-navigation-labels.js';
 
 function setup({ phase = 'command', rejected = false } = {}) {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const state = createGameState({ phase, turn: 1, activePlayer: 'p1', players: [{ id: 'p1', name: 'You' }, { id: 'p2', name: 'Opponent' }], units: [], timers: { turnClock: { elapsedMsByPlayer: { p1: 1000, p2: 0 }, activePlayerId: 'p1', running: true, startedAtMs: Date.now() } }, battle: { id: 'test', status: 'active', round: 1, firstPlayerId: 'p1', activePlayerId: 'p1' } });
   const session = createGameSession(state, rejected ? { commandExecutor: () => { throw Error('Record remaining activations before continuing.'); } } : {});
-  const listeners = new Set(), host = { innerHTML: '' }, screen = { innerHTML: '', replaceChildren() {} };
-  const root = { innerHTML: '', replaceChildren() {}, contains: () => true, querySelector(selector) { return selector === '[data-phase-progression-host]' ? host : selector === '[data-battle-screen]' ? screen : null; }, addEventListener(type, fn) { if (type === 'click') listeners.add(fn); }, removeEventListener(type, fn) { listeners.delete(fn); } };
+  const listeners = new Set(), host = { innerHTML: '' }, screen = { innerHTML: '', replaceChildren() {} }, setupFooter = { hidden: false };
+  const root = { innerHTML: '', replaceChildren() {}, contains: () => true, querySelector(selector) { return selector === '[data-phase-progression-host]' ? host : selector === '[data-battle-screen]' ? screen : selector === '.battle-shell__setup-bottom-nav' ? setupFooter : null; }, addEventListener(type, fn) { if (type === 'click') listeners.add(fn); }, removeEventListener(type, fn) { listeners.delete(fn); } };
   const shell = createBattleShell(root, { session, screenFactories: {} });
   const click = (selector, phase) => { const button = { getAttribute: name => ['data-battle-phase-button','data-setup-workspace-tab'].includes(name) ? phase : null }; const event = { target: { closest: value => value === selector ? button : null } }; for (const fn of [...listeners]) fn(event); };
-  return { state, session, root, host, shell, click };
+  return { state, session, root, host, setupFooter, shell, click };
 }
 
 test('real shell advances all phases, switches player within Round 1, then starts Round 2', () => {
@@ -100,4 +101,35 @@ test('cloud arrival never remounts the current live phase', () => {
     x.shell.connectCloud({auth:{getUser:async()=>({data:{user:null}})},from(){}});
     assert.equal(x.root.innerHTML,before);
   } finally {x.shell.destroy();}
+});
+
+test('screen-owned completion hides duplicate global buttons but keeps fallback and preview return', () => {
+  for (const phase of ['shooting', 'charge', 'fight']) {
+    const state = { phase, battle: { status: 'active' } };
+    const factories = { [phase]: () => ({}) };
+    assert.equal(screenOwnsPhaseProgression(state, phase, factories), true, phase);
+    assert.equal(renderPhaseProgressionPanel(state, phase, '', true), '');
+    assert.match(renderPhaseProgressionPanel(state, phase), /data-advance-game-phase/, 'fallback remains for a screen without its own action');
+    assert.equal(screenOwnsPhaseProgression(state, 'command', factories), false);
+    assert.match(renderPhaseProgressionPanel(state, 'command'), /data-return-current-phase/, 'historical phase viewing retains return control');
+  }
+  const state = { phase: 'fight', battle: { status: 'active' } };
+  assert.equal(screenOwnsPhaseProgression(state, 'review', { review: () => ({}) }), true);
+  assert.equal(renderPhaseProgressionPanel(state, 'review', '', true), '');
+  assert.equal(screenOwnsPhaseProgression(state, 'review', {}), false, 'review fallback remains when not mounted');
+  assert.equal(screenOwnsPhaseProgression({ phase: 'command', battle: { status: 'active' } }, 'command', { command(){} }), false);
+  assert.equal(screenOwnsPhaseProgression({ phase: 'movement', battle: { status: 'active' } }, 'movement', { movement(){} }), false);
+});
+
+test('setup uses its local Continue/Begin controls, preserving shell navigation for account and armies', () => {
+  for (const tab of ['pre-game', 'battlefield', 'mission-map', 'deployment']) assert.equal(setupScreenOwnsContinue(tab), true);
+  for (const tab of ['saves', 'army-selection', 'army-builder']) assert.equal(setupScreenOwnsContinue(tab), false);
+  const x = setup({ phase: 'setup' });
+  try {
+    assert.equal(x.setupFooter.hidden, false);
+    x.click('[data-setup-workspace-tab]', 'pre-game');
+    assert.equal(x.setupFooter.hidden, true);
+    x.click('[data-setup-workspace-tab]', 'army-selection');
+    assert.equal(x.setupFooter.hidden, false);
+  } finally { x.shell.destroy(); }
 });
