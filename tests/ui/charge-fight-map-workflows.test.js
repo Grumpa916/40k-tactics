@@ -7,6 +7,7 @@ import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createChargeScreen } from '../../src/ui/charge-screen.js';
 import { createFightScreen } from '../../src/ui/fight-screen.js';
 import { getChargeViewModel } from '../../src/application/charge-workflow.js';
+import { getFightAttackOptions } from '../../src/application/fight-workflow.js';
 import { getFightAdvisorContext } from '../../src/application/fight-advisor-context.js';
 import { getFightOpportunityRecommendations } from '../../src/rules/tactical-fight-opportunities.js';
 import { fakeDom } from '../helpers/combat-dom.js';
@@ -114,6 +115,8 @@ test('Do not fight excludes attack entry, wrong-phase rejection is visible and l
   const x = setup('fight',state('fight'));
   try {
     click(x,'data-map-unit-id','fighter'); click(x,'data-fight-skip');
+    assert.equal(getFightAttackOptions(x.session.getState(), { attackerId:'fighter', includeCandidates:true }).attackers.some(unit => unit.unitId === 'fighter'),false,
+      'skipped formations must not re-enter the tabletop-confirmed Fight picker');
     click(x,'data-map-unit-id','fighter');
     assert.match(x.root.innerHTML,/finished its Fight activation/);
     assert.equal(x.root.querySelector('[data-fight-attack]'),null);
