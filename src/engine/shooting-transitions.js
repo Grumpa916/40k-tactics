@@ -101,15 +101,15 @@ export function recordShootingActivation(state, {
     });
   }
 
-  const candidates = getShootingCandidates(state);
-  if (!candidates.available.includes(unitId) && !(actionType !== "shoot" && candidates.actionOnly.includes(unitId))) {
-    throw new Error("Unit is not an available Shooting candidate.");
-  }
-
   const liveMissionActions = getLiveMissionActionOptions(state, activePlayerId);
   if (actionType === "mission_action" && !missionInstanceId &&
       !liveMissionActions.some(item => item.id === actionId || item.definitionId === actionId)) {
     throw new Error("Mission action is not currently active.");
+  }
+
+  const candidates = getShootingCandidates(state);
+  if (!candidates.available.includes(unitId) && !(actionType !== "shoot" && candidates.actionOnly.includes(unitId))) {
+    throw new Error("Unit is not an available Shooting candidate.");
   }
 
   let linkedMission = null;
