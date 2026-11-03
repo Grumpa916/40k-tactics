@@ -37,9 +37,9 @@ function commandPointsFor(state, playerId) {
 
 function vpCapDescription(cap) {
   return ({
-    "primary-turn": "15 VP primary turn cap",
+    "primary-turn": "15 VP primary battle-round cap",
     "primary-game": "45 VP primary game cap",
-    "secondary-turn": "15 VP secondary turn cap",
+    "secondary-turn": "15 VP secondary battle-round cap",
     "secondary-game": "45 VP secondary game cap",
     "fixed-secondary-card": "20 VP Fixed Secondary card cap"
   })[cap] ?? "mission scoring cap";
