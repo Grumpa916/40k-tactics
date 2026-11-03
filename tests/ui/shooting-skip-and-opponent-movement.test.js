@@ -36,12 +36,12 @@ test('confirmed melee-only units do not block completion and cannot perform Seco
   const initial = state(); initial.units[1].profile.weapons = [{ name: 'Claws', range: 'Melee' }];
   initial.activeSecondaryMissions = { p2: ['cleanse'] };
   assert.deepEqual(getShootingCandidates(initial).available, []);
-  assert.deepEqual(getShootingCandidates(initial).actionOnly, ['enemy']);
+  assert.deepEqual(getShootingCandidates(initial).actionOnly, []);
   assert.equal(completeShootingPhase(initial).phase, 'charge');
   assert.throws(() => recordShootingActivation(initial, { unitId: 'enemy', actionType: 'shoot' }), /available/);
   assert.throws(
     () => recordShootingActivation(initial, { unitId: 'enemy', actionType: 'mission_action', actionId: 'cleanse' }),
-    /Mission action is not currently active/
+    /available Shooting candidate/
   );
   assert.equal(initial.history.some(event => event.type === 'shooting.unit_activated'), false);
 });
