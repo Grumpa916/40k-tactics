@@ -455,7 +455,9 @@ export function recordSecondaryMissionScored(state, {
   const isFixed = (getSecondaryMissionMode(state, playerId) ?? entry.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED;
   const updated = Object.freeze({
     ...entry,
-    status: isFixed && !retireAfterScoring ? SECONDARY_MISSION_STATUS.ACTIVE : SECONDARY_MISSION_STATUS.SCORED,
+    // A Fixed card always remains available for later rounds, including when
+    // older callers pass the legacy retireAfterScoring flag.
+    status: isFixed ? SECONDARY_MISSION_STATUS.ACTIVE : SECONDARY_MISSION_STATUS.SCORED,
     scoredRound: round,
     scoredTurn: turn,
     scoringHistory: [...(entry.scoringHistory ?? []), scoringEvent]
