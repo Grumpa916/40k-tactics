@@ -53,7 +53,7 @@ export function fightAdvisory(attackerId, weaponId, targetId, state, weapons, pe
         </div>
         <p><strong>Strategic value: ${escapeHtml(strategicLabel)}</strong>${scoringRole ? ` · ${escapeHtml(scoringRole.replaceAll("-", " "))}` : ""}${escapeHtml(objectiveSwing)}</p>
         ${renderAdvisorAppliedRules(recommendation.appliedRules)}
-        <p>Estimates are advisory; confirm eligibility and rules on the tabletop.</p>
+        <p>Uses known weapon profiles and wounds; Charge history, Fight order and approximate map positions are advisory only. Retaliation estimates reflect the strongest known eligible return attack across possible target survival outcomes, not every enemy attack added together. A dash means no estimate is established, not guaranteed safety. Confirm exact eligibility, abilities and results on the physical tabletop.</p>
       </details>
     </aside>
   `;
