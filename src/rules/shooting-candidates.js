@@ -6,6 +6,7 @@ import {
   hasInvalidWargear
 } from "./battle-unit-reference.js";
 import { getCombatFormationWeaponOptions } from "./saved-roster-combat-profile.js";
+import { getLiveMissionActionOptions } from "./mission-action-state.js";
 import { UNIT_STATUS } from "../state/unit.js";
 
 const SHOOTING_ACTIVATION_EVENT = "shooting.unit_activated";
@@ -40,6 +41,7 @@ export function getShootingCandidates(state) {
       .filter(Boolean)
   );
   const activePlayerId = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
+  const hasLivePrimaryAction = getLiveMissionActionOptions(state, activePlayerId).length > 0;
 
   const deployedRoots = units.filter((unit) =>
     unit?.status === UNIT_STATUS.DEPLOYED &&
@@ -50,10 +52,11 @@ export function getShootingCandidates(state) {
     (!activePlayerId || unit.ownerId === activePlayerId) &&
     !activated.has(unit.id)
   );
+  const actionOnly = unresolved.filter((unit) => isActionOnlyCandidate(state, unit));
 
   return {
     available: unresolved.filter((unit) => !isActionOnlyCandidate(state, unit)).map((unit) => unit.id),
-    actionOnly: unresolved.filter((unit) => isActionOnlyCandidate(state, unit)).map((unit) => unit.id),
+    actionOnly: hasLivePrimaryAction ? actionOnly.map((unit) => unit.id) : [],
     activated: deployedRoots
       .filter((unit) => activated.has(unit.id))
       .map((unit) => unit.id)
