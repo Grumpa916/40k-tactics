@@ -1,4 +1,4 @@
-import { getMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
+import { getLiveMissionActionOptions, ACTION_REVIEW_TIMINGS } from "../rules/mission-action-state.js";
 import { getDeathTrapTerrainOptions } from "../rules/death-trap-state.js";
 import { getSmokeAndMirrorsObjectiveOptions } from "../rules/smoke-and-mirrors-state.js";
 import { getTriangulationObjectiveOptions, getTriangulationState } from "../rules/triangulation-state.js";
@@ -13,7 +13,6 @@ import {
   getExtractRelicMarkerRemovalOptions,
   getExtractRelicState
 } from "../rules/extract-relic-state.js";
-import { getCleanseObjectiveOptions, getPlunderTerrainOptions, getPlunderActionState } from "../rules/secondary-mission-action-state.js";
 import {
   getLocateAndDenyCentralObjectiveOptions,
   getLocateAndDenyMarkerRemovalOptions,
@@ -107,12 +106,18 @@ export function recordShootingActivation(state, {
     throw new Error("Unit is not an available Shooting candidate.");
   }
 
+  const liveMissionActions = getLiveMissionActionOptions(state, activePlayerId);
+  if (actionType === "mission_action" && !missionInstanceId &&
+      !liveMissionActions.some(item => item.id === actionId || item.definitionId === actionId)) {
+    throw new Error("Mission action is not currently active.");
+  }
+
   let linkedMission = null;
   let deathTrapTerrain = null;
   if (missionInstanceId) {
     if (actionType !== "mission_action") throw new Error("Only a mission Action can link a mission card.");
-    linkedMission = getMissionActionOptions(state, activePlayerId).find(item => item.instanceId === missionInstanceId);
-    if (!linkedMission) throw new Error("Select one of the active player's active secondary mission Actions or available primary mission Actions.");
+    linkedMission = liveMissionActions.find(item => item.instanceId === missionInstanceId);
+    if (!linkedMission) throw new Error("Select an available primary mission Action.");
     if (!rulesConfirmed) throw new Error("Confirm action eligibility against the physical mission card.");
     if (!ACTION_REVIEW_TIMINGS.includes(reviewTiming)) throw new Error("Choose the card's scoring checkpoint.");
     if (objectiveId && !state.objectives.some(item=>item.id===objectiveId)) throw new Error("Select an objective on this battlefield.");
@@ -139,7 +144,7 @@ export function recordShootingActivation(state, {
       if (triangulation.usedThisTurn) throw new Error("Triangulate can only be started once per turn.");
       if (reviewTiming !== "end-of-turn") throw new Error("Triangulate completes at the end of your turn.");
       if (!objectiveId || !getTriangulationObjectiveOptions(state, { playerId: activePlayerId }).some(item => item.objectiveId === objectiveId)) {
-        throw new Error("Select a non-home objective that is not already triangulated or reserved by another Triangulate attempt.");
+        throw new Error("Select a non-home objective that is not already triangulated or reserved by another Triangulate attempt this turn.");
       }
     }
     if (linkedMission.definitionId === "primary-gather-intel") {
@@ -204,26 +209,6 @@ export function recordShootingActivation(state, {
         throw new Error("Select one of your remaining Locate and Deny operation markers to remove.");
       }
     }
-    if (linkedMission.definitionId === "secondary-cleanse" && linkedMission.rulesVerified === true) {
-      if (reviewTiming !== "end-of-turn") throw new Error("Cleanse completes at the end of your turn.");
-      if (!objectiveId || !getCleanseObjectiveOptions(state, { playerId: activePlayerId })
-          .some(item => item.objectiveId === objectiveId)) {
-        throw new Error("Select a different eligible non-home objective for this Cleanse attempt.");
-      }
-    }
-    if (linkedMission.definitionId === "secondary-plunder" && linkedMission.rulesVerified === true) {
-      if (reviewTiming !== "end-of-turn") throw new Error("Plunder scores at the end of your turn.");
-      if (getPlunderActionState(state, { playerId: activePlayerId }).usedThisTurn) {
-        throw new Error("Plunder can only be started once per turn.");
-      }
-      if (!terrainAreaId) throw new Error("Select the terrain area where Plunder is performed.");
-      const terrain = getPlunderTerrainOptions(state, { playerId: activePlayerId })
-        .find(item => item.terrainAreaId === terrainAreaId);
-      if (!terrain) throw new Error("Select a terrain area from the current Event Companion battlefield.");
-      if (terrain.withinOwnDeploymentZone === true) {
-        throw new Error("The Plunder terrain area cannot be within your territory.");
-      }
-    }
     if (linkedMission.definitionId === "primary-surveil-the-foe") {
       if (!targetUnitId) throw new Error("Select the enemy unit being Surveilled.");
       const eligibleTarget = getSurveilTheFoeTargetOptions(state, { playerId: activePlayerId, unitId })
@@ -241,7 +226,7 @@ export function recordShootingActivation(state, {
     actionType,
     actionId:linkedMission?.definitionId ?? actionId,
     ...(linkedMission ? { missionInstanceId, missionDefinitionId:linkedMission.definitionId, missionName:linkedMission.name,
-      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), missionRulesVerified: linkedMission.rulesVerified === true, ...(targetUnitId ? { targetUnitId } : {}), ...((deathTrapTerrain || (linkedMission?.definitionId === "secondary-plunder" && linkedMission?.rulesVerified === true)) ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
+      reviewTiming, objectiveId, ...(terrainAreaId ? { terrainAreaId } : {}), missionRulesVerified: linkedMission.rulesVerified === true, ...(targetUnitId ? { targetUnitId } : {}), ...(deathTrapTerrain ? { actionCompletedImmediately: true } : {}), rulesConfirmed:true } : {})
   }));
 }
 
