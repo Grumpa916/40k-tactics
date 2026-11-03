@@ -142,8 +142,13 @@ test('finishing Fight activation persists across remount and rejects further att
   try {
     click(x,'data-map-unit-id','fighter'); x.root.change('[data-fight-weapon]','blade');
     click(x,'data-map-unit-id','enemy'); click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
+    const [scrollContent, footerContent] = x.root.innerHTML.split('<footer>');
+    assert.doesNotMatch(scrollContent, /data-fight-finish-entry/, 'Finish unit must not be buried inside the scrollable controls');
+    assert.match(footerContent, /data-fight-finish-entry>Finish unit<\/button>/, 'Finish unit stays in the fixed footer');
+    assert.equal(x.root.querySelector('[data-fight-complete]'), null, 'do not offer phase completion while recording a unit');
     click(x,'data-fight-finish-entry');
     assert.ok(x.session.getState().history.some(e => e.type === 'combat.activation_finished'));
+    assert.ok(x.root.querySelector('[data-fight-complete]'), 'End Fight returns after the activation is finished');
     x.screen.destroy();
     const reloaded=setup('fight',JSON.parse(JSON.stringify(x.session.getState())));
     try {
@@ -163,6 +168,7 @@ test('End Fight reviews remaining inferred combats and closes open activations b
     assert.match(x.root.innerHTML,/remaining inferred combats/);
     click(x,'data-fight-cancel-end');
     assert.equal(x.session.getState().phase,'fight');
+    click(x,'data-fight-finish-entry');
     click(x,'data-fight-complete'); click(x,'data-fight-confirm-end');
     const result=x.session.getState();
     assert.equal(result.phase,'end_turn');
