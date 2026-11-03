@@ -2,6 +2,8 @@
 
 Use the dedicated verification preset rather than a normal saved battle. The preset exists to exercise as many V2 systems as possible with a repeatable configuration.
 
+**Manual-scoring acceptance update (November 3, 2026):** Primary and Secondary VP is agreed by players at the appropriate checkpoint. No Secondary Action is selected, started, or completed in the live Shooting phase. Cleanse and Plunder are resolved on the physical tabletop; choose normal Shooting / Not Shoot controls as appropriate. Keep two Tactical cards per Command-phase draw and retain unscored cards; only scoring or voluntary discard removes a Tactical card. Fixed cards remain active after scoring and can score at later checkpoints. Check opponent-turn reminders and final-round Beacon, Burden of Trust, and Defend Stronghold alternatives. The 15 VP limit applies per battle round, not separately to each player's turn.
+
 ## Preset URL
 
 After this feature is merged, open:
@@ -183,7 +185,7 @@ Also:
 Exercise four paths:
 1. **Telemon** shoots the Norn Emissary. Record a non-zero actual damage result.
 2. Use a unit with multiple ranged profiles to test weapon selection/split-fire if available.
-3. Use an eligible unit to start **Cleanse** instead of shooting.
+3. Resolve **Cleanse** on the physical tabletop, but do not record the Secondary Action in the app. Choose the unit's normal **Not Shoot** option if appropriate. Check the Cleanse card's action rules from mission reference.
 4. Choose **Not Shoot** with one otherwise eligible unit.
 
 Check:
@@ -193,7 +195,7 @@ Check:
 - Next Phase becomes green when the phase is eligible to advance;
 - units with no ranged weapon do not block phase completion.
 
-**Pass:** Shoot / Action / Not Shoot all coexist without trapping the phase.
+**Pass:** Shoot / available Primary Action / Not Shoot coexist without trapping the phase. No Secondary Action appears as a live Shooting choice.
 
 ## Charge phase
 
@@ -218,13 +220,13 @@ Check:
 
 ## End of your turn
 
-1. Complete/review Cleanse.
+1. Review the physical Cleanse result, select the agreed 2 or 5 VP option, or defer scoring without recording VP.
 2. Review A Tempting Target and choose the appropriate score rather than automatically taking the maximum.
 3. Use the objective-control popup to record OC/controllers.
 4. Review Consecrate Primary opportunities if a qualifying destruction occurred near an objective.
 5. Confirm scored secondary cards retire correctly.
 
-**Pass:** scoring is player-confirmed and no card can be scored twice.
+**Pass:** scoring is player-confirmed; no automatic Action/evidence check gates scoring; Tactical cards retire only when scored and repeat awards at the same checkpoint are blocked.
 
 ## Opponent Turn 1
 
@@ -318,7 +320,7 @@ Select:
 
 ## End of opponent turn
 
-Review Burden of Trust at its opponent-turn checkpoint and confirm only qualifying guarded objectives are counted.
+Review Burden of Trust at its opponent-turn checkpoint; use the tabletop rules and agreed VP, not automatic objective counting. On the second player's turn in Round 5, confirm the end-of-fifth-round alternative is available if still active.
 
 ---
 
@@ -331,8 +333,8 @@ Select:
 ## Movement/Shooting
 
 1. Position an eligible unit for Plunder.
-2. In Shooting choose **Action → Plunder**.
-3. Select an eligible terrain area and complete the immediate action.
+2. Resolve **Plunder** on the tabletop; it must not appear as a Secondary Action in the live Shooting picker.
+3. At the end-of-turn scoring checkpoint, select the agreed VP using Plunder's card conditions.
 4. Try to destroy Neurotyrant, Tyranid Prime or Deathleaper to produce Assassination evidence.
 
 ## Stratagem/CP test
@@ -379,7 +381,7 @@ Use the final round to verify:
 
 1. Record final objective control.
 2. Review Consecrate end-of-battle conditions.
-3. Review any remaining Secondary end-of-battle/opponent-turn checkpoints.
+3. Review remaining Secondary end-of-opponent-turn checkpoints and the end-of-fifth-round alternatives for Beacon, Burden of Trust, and Defend Stronghold. Distinguish end of fifth round (round cap applies) from end of battle (round cap exception).
 4. Verify Primary caps: no more than the applicable round cap and no more than 45 Primary VP for the game.
 5. Confirm Battle Ready / other non-Primary score handling if present in the live score.
 6. Finish the battle.
