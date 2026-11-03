@@ -48,7 +48,11 @@ export function getScoringCheckpointReminder(state, { previousPhase, missionDefi
     }
     group.review={
       ...group.review,
-      primary:(group.review?.primary??[]).filter(mission=>unscoredPrimaryReview(state,group,mission))
+      primary:(group.review?.primary??[]).filter(mission=>unscoredPrimaryReview(state,group,mission)),
+      secondary:(group.review?.secondary??[]).filter(mission=>!hasEffectiveVictoryPointOpportunity(
+        state,group.playerId,mission.definitionId,
+        [mission.instanceId,state.battle?.round??0,state.turn??0,group.checkpoint].join(':')
+      ))
     };
   }
   const actionableGroups=groups.filter(group=>
