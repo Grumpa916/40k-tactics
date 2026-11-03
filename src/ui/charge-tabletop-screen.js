@@ -114,7 +114,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
             <p>${esc(advice.recommendation)}</p>
           </section>`;
         }).join('') : '<p>No ranked charge targets are available for this unit.</p>'}
-      </aside>`}
+      </aside>` : ''}
       <h2>Record Charge</h2>
       <p><small>Select the target(s), enter the measured tabletop distance, and record the outcome. These targets remain history and Tactical Advisor context only; Fight confirms its legal targets fresh from the tabletop.</small></p>
         ${targets.map(item => {
