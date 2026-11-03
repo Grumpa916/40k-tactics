@@ -76,7 +76,7 @@ test('every Secondary mode and checkpoint exposes its correct manual VP choices'
         }
         const game=stateFor(card,mode,2,timing==='end-of-opponent-turn'?'p2':'p1');
         const review=evaluateScoringCheckpoint(game,{checkpoint:timing,scoringPlayerId:'p1',activePlayerId:game.activePlayer});
-        assert.equal(review.secondary.length,expected!==null,slug+' '+mode+' '+timing+' review');
+        assert.equal(review.secondary.length > 0,expected!==null,slug+' '+mode+' '+timing+' review');
         if(review.secondary.length) {
           assert.equal(review.secondary[0].result.manualReviewRequired,true);
           assert.equal(review.secondary[0].result.eligible,false,'recorded evidence must not auto-score');
