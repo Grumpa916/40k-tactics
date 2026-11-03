@@ -343,6 +343,7 @@ const cardNames = [
     scoringWindows: [
       {
         id: "fixed-turn",
+        scoringModel: "fixed-character-kills",
         timing: "end-of-turn",
         timingLabel: "End of either player's turn",
         modes: ["fixed"],
@@ -354,6 +355,7 @@ const cardNames = [
       },
       {
         id: "fixed-opponent-turn",
+        scoringModel: "fixed-character-kills",
         timing: "end-of-opponent-turn",
         timingLabel: "End of opponent's turn",
         modes: ["fixed"],
@@ -416,11 +418,7 @@ const cardNames = [
 ];
 
 export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, name, fixedAvailable, rules]) => {
-  const resolvedRules = rules ?? {
-    rulesVerified: false,
-    referenceNotes: verifiedRules[slug]?.referenceNotes ?? [],
-    scoringWindows: verifiedRules[slug]?.scoringWindows ?? unverified.scoringWindows
-  };
+  const resolvedRules = rules ?? verifiedRules[slug] ?? unverified;
   return Object.freeze({
     id: "secondary-" + slug,
     name,
