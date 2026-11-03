@@ -29,6 +29,7 @@ Original Library uploads dated October 10, 2026:
 - `IMG_0178.jpeg`: Meatgrinder, Search and Scour, Immovable Object, Unstoppable Force, Delaying Action, Outmanoeuvre, Consecrate and Punishment (card faces).
 - `IMG_0179.jpeg`: Sabotage, Extract Relic, Vital Link, Destroyer's Wrath, Gather Intel and Vanguard Operation (card faces; some additional card backs).
 - `IMG_0182.jpeg` / `IMG_0183.jpeg`: closeups of Sabotage/Punishment and Extract Relic/Vital Link.
+- `IMG_0180.jpeg`, `IMG_0181.jpeg`, `IMG_0188.jpeg`, `IMG_0189.jpeg`, `IMG_0190.jpeg`, `IMG_0191.jpeg`: legible Action-side photos, including Triangulate, Decoy, Surveil the Foe, Sensor Sweep, Booby Trap, Secure Asset, Sabotage, Maintain Control, Extract Intelligence and Vanguard Operation. Use these for subsequent precise Action-timing/rules cross-checks rather than re-requesting uploads.
 
 Fourteen photographed **front-side VP tier sequences** have been compared to `PRIMARY_MISSION_MATRIX` in an explicit regression test. This is stronger evidence than the previous community-only references for those tiers, but **not certification of all reverse-side Action rules, all 25 printed mission cards or errata**. The source records remain conservatively labeled.
 
