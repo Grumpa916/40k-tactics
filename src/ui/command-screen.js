@@ -566,7 +566,7 @@ export function createCommandScreen(container, {
             item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span>' +
           (item.result.manualReviewRequired
             ? '<p>' + (item.result.rulesVerified
-              ? 'Scoring window reference was transcribed from an official sample card. Check the physical card and battlefield state; the app does not infer eligibility.'
+              ? 'Scoring window reference comes from previously supplied card transcription, not an independently checked official card. Confirm the tabletop result; the app does not infer eligibility.'
               : 'Card scoring conditions are not configured from a verified rules source. Check the printed mission rules; no eligibility is inferred.') + '</p>' +
               ((item.result.scoringWindows ?? []).length
                 ? '<ul class="command-scoring__tiers">' + item.result.scoringWindows.flatMap((window) =>
