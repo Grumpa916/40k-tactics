@@ -16,8 +16,9 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
    - Preserve accepted terrain maps and manual scoring until a documented official rules discrepancy requires a focused correction.
 
 4. **Army Builder and combat-data completeness audit**
-   - Prioritize Adeptus Custodes, then Tyranids and Space Marines.
-   - Verify points, unit sizes, weapons, wargear, enhancements, invulnerable saves/FNP, Leader restrictions, detachment rules, and imported-list loadout matching.
+   - **First coverage and conditional-pricing audit in progress:** see [2026-11-03 findings](army-builder-wargear-completeness-audit-2026-11-03.md). Preserve saved points and equipment; detect known invalid unit-copy pricing and report unresolved source coverage.
+   - Follow-on: **Space Marines official MFM/Codex vs exported points and missing wargear**, then Custodes and Tyranids datasheet/points/wargear/Leader reconciliation. Include enhancements, invulnerable saves/FNP, and detachment data.
+   - 14 photographed Primary card front-side scoring tiers recovered and cross-checked; remaining Primary card reverse sides and missing images still await source review.
 
 5. **Combat and Tactical Advisor validation**
    - Validate expected-vs-actual damage, split fire, focus fire, range filtering, charge distance/rerolls, fight-back estimates, Fights First, engaged Vehicle/Monster shooting, Battle-shock/OC effects, and opponent-turn history.
