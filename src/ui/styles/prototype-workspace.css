@@ -433,3 +433,7 @@
 .prototype-unit-member-section>h3 small{color:#c4e99b;font-size:.8em}
 .prototype-unit-dialog [data-unit-detail-panel] h4{margin:12px 0 8px}
 .prototype-unit-dialog .battle-shell__army-dialog-header h2{min-width:0;overflow-wrap:anywhere}
+
+/* Only one visible completion control per phase; the screen-specific button wins. */
+.battle-shell > [data-phase-progression-host]:empty,
+.battle-shell__setup-bottom-nav[hidden] { display:none !important; }
