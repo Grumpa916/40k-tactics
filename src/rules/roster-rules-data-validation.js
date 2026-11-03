@@ -1,6 +1,7 @@
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { createRulesDataRevisionStamp, getRulesDataRevisionForFaction } from "../data/rules-data-revisions.js";
 import { validateWargearLoadout } from "./wargear-loadout-validation.js";
+import { resolveBuilderUnitCost } from "./army-builder-cost.js";
 
 function clone(value) {
   if (typeof structuredClone === "function") return structuredClone(value);
@@ -11,11 +12,37 @@ function sameValue(a, b) {
   return String(a ?? "") === String(b ?? "");
 }
 
-function pointsMatch(candidate, unit) {
-  if (unit?.points == null || !Array.isArray(candidate?.pointsOptions) || !candidate.pointsOptions.length) return true;
-  return candidate.pointsOptions.some((option) =>
-    Number(option.models) === Number(unit.modelCount) && Number(option.points) === Number(unit.points)
-  );
+/**
+ * Compare a saved unit's cost with reviewed model-count options, then check
+ * the resolved copy-order/wargear condition where the catalog can determine it.
+ * Never guess a price when the official option depends on unresolved wargear.
+ */
+export function assessSavedUnitCost(candidate, unit, roster) {
+  if (unit?.points == null || !Number.isFinite(Number(unit.points)) || Number(unit.points) < 0) {
+    return { status: "missing", reason: "No valid saved points cost; confirm the unit's current MFM cost." };
+  }
+  const options = Array.isArray(candidate?.pointsOptions) ? candidate.pointsOptions : [];
+  if (!options.length) {
+    return { status: "unverified", reason: "This datasheet has no reviewed points options in the local catalog." };
+  }
+  if (!options.some((option) =>
+    Number(option.models) === Number(unit.modelCount) && Number(option.points) === Number(unit.points))) {
+    return { status: "mismatch", reason: unit.modelCount + " model(s) at " + unit.points +
+      " pts does not match a current catalog points option." };
+  }
+  const priced = resolveBuilderUnitCost({ ...unit, pointsOptions: options }, roster,
+    unit.equippedWargear ?? []);
+  if (priced.points != null && Number(priced.points) !== Number(unit.points)) {
+    return { status: "mismatch", reason: "Saved " + unit.points + " pts, but the reviewed " +
+      "unit-copy/wargear pricing option is " + priced.points + " pts (" + priced.reason + ")." };
+  }
+  const differentPrices = new Set(options.filter(option =>
+    Number(option.models) === Number(unit.modelCount)).map(option => Number(option.points)));
+  if (priced.points == null && differentPrices.size > 1) {
+    return { status: "unverified", reason: "Price depends on a copy-order or weapon option (" +
+      priced.reason + "); confirm against the current MFM before marking it verified." };
+  }
+  return { status: "matched", reason: priced.reason ?? "Reviewed catalog price matches." };
 }
 
 function refreshLoadoutValidation(unit) {
@@ -78,8 +105,21 @@ export function revalidateRosterRulesData(roster, { updatedAt = roster?.updatedA
       refreshedUnits.push(unit);
       continue;
     }
-    if (!pointsMatch(candidate, unit)) {
-      issues.push(`${unit.name}: ${unit.modelCount} model(s) at ${unit.points} pts does not match a current catalog points option.`);
+    const priceAssessment = assessSavedUnitCost(candidate, unit, roster);
+    if (priceAssessment.status === "missing" || priceAssessment.status === "mismatch") {
+      issues.push(`${unit.name}: ${priceAssessment.reason}`);
+    } else if (priceAssessment.status === "unverified") {
+      warnings.push(`${unit.name}: ${priceAssessment.reason}`);
+    }
+
+    // Missing datasheets or loadout-rule coverage are reported, not silently
+    // certified. These warnings do not prevent an agreed manual tabletop game.
+    if (!candidate.datasheet?.characteristics || !Array.isArray(candidate.datasheet?.weapons) ||
+        candidate.datasheet.weapons.length === 0) {
+      warnings.push(`${unit.name}: complete combat datasheet/weapon profiles are not available in the local catalog.`);
+    }
+    if (candidate.officialRulesCrossCheck === "pending" || candidate.officialRulesCrossCheck == null) {
+      warnings.push(`${unit.name}: official rules/points cross-check is still pending.`);
     }
 
     const currentWeaponNames = new Set((candidate.datasheet?.weapons ?? []).map((weapon) => String(weapon?.name ?? "").toLowerCase()));
