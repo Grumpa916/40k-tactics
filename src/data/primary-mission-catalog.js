@@ -3,7 +3,10 @@ export const PRIMARY_MISSION_CATALOG_SOURCE = Object.freeze({
   missionPack: "Chapter Approved 2026–27",
   datasetVersion: "2026.10.02-triangulation-action",
   datasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/main/datasets/wh40k-11e-missions.json",
-  provenance: "Community-derived structured reference cross-checked against the Warhammer Event Companion. Scoring remains player-confirmed."
+  provenance: "Community-derived structured reference cross-checked against the Warhammer Event Companion. Scoring remains player-confirmed.",
+  officialCardVerified: false,
+  verificationLevel: "community-structured-reference",
+  sourceIndexCheckedAt: "2026-11-03"
 });
 
 export const PRIMARY_FORCE_DISPOSITIONS = Object.freeze([
@@ -16,6 +19,8 @@ const m = (id, name, scoring, extra = {}) => Object.freeze({
   name,
   category: "primary",
   rulesVerified: false,
+  officialCardVerified: false,
+  sourceVerification: "community-structured-reference",
   scoring: Object.freeze(scoring),
   manualConfirmationRequired: true,
   ...extra

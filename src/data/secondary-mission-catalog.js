@@ -20,6 +20,9 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
     "https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/"
   ]),
   crossCheckStatus: "all-18-card-texts-reviewed-from-user-supplied-transcription",
+  verificationLevel: "user-supplied-card-transcription",
+  officialCardVerified: false,
+  sourceIndexCheckedAt: "2026-11-03",
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards2-myplj4vtwi.jpg"
@@ -430,6 +433,10 @@ export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, nam
     fixedAvailable,
     availableModes: Object.freeze(fixedAvailable ? ["fixed", "tactical"] : ["tactical"]),
     rulesVerified: resolvedRules.rulesVerified,
+    // Existing rulesVerified means checked against the user's supplied
+    // transcription, not an independently checked physical official card.
+    officialCardVerified: false,
+    sourceVerification: "user-supplied-card-transcription",
     referenceNotes: Object.freeze([...(resolvedRules.referenceNotes ?? [])]),
     scoringWindows: Object.freeze(resolvedRules.scoringWindows.map((window) =>
       Object.freeze({

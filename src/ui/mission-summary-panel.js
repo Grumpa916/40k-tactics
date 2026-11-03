@@ -2,6 +2,7 @@ import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-m
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { getBeaconMissionState } from "../rules/beacon-mission-state.js";
+import { missionSourceNotice } from "../data/official-rules-source-index.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -78,6 +79,7 @@ function renderPrimaryPlayer(state, player, playerId, missionName, definition, s
     (detail.length ? '<p>' + detail.map(escapeHtml).join(" · ") + '</p>' : '') +
     setupText + actionText +
     (scoring ? '<p><strong>Primary scoring reference</strong></p><ul>' + scoring + '</ul>' : '<p>Check the selected mission card for its exact scoring timing and conditions.</p>') +
+    '<p><small>' + escapeHtml(missionSourceNotice(definition, 'primary')) + '</small></p>' +
     '<p>Primary scoring remains player-confirmed; this reference never awards VP automatically.</p>' +
     '</div></details>';
 }
@@ -158,6 +160,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
       whenDrawn + cardChoiceSummary + actionText + missionText +
       (scoring ? '<p><strong>Scoring windows</strong></p><ul>' + scoring + '</ul>' : '') +
+      '<p><small>' + escapeHtml(missionSourceNotice(definition, 'secondary')) + '</small></p>' +
       '<p>Secondary scoring is manual and player-confirmed; the app reminds you at the configured checkpoint and records the agreed VP.</p>' +
       '</div></details>';
   }).join("") : '<p class="battle-context__empty">No active secondary missions are recorded for this player.</p>';
