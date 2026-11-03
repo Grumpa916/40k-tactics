@@ -241,3 +241,24 @@ test('opponent shooter can be chosen by name and resolve damage without Advisor 
     assert.equal(root.querySelector('[data-attack]'),null);
   } finally { screen.destroy(); }
 });
+
+test('classic Shooting opens the linked Primary mission picker instead of the legacy action selector', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const state = testState();
+  state.battlefieldMap = { missionSetup: { myDisposition: 'Disruption', opponentDisposition: 'Take and Hold' } };
+  const session = createGameSession(state), root = fakeDom();
+  const screen = createShootingScreen(root, {
+    session,
+    perspectivePlayerId: 'p1',
+    gameData,
+    layoutMode: 'classic'
+  });
+  try {
+    root.click('[data-shoot-unit]');
+    assert.ok(root.querySelector('[data-choice-action-toggle]'));
+    root.click('[data-choice-action-toggle]');
+    assert.match(root.innerHTML, /mission-action-picker/);
+    assert.match(root.innerHTML, /Death Trap|Booby Trap/);
+    assert.match(root.innerHTML, /Action requirements met/);
+  } finally { screen.destroy(); }
+});
