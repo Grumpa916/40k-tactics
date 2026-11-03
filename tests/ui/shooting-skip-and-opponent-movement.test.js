@@ -113,9 +113,9 @@ function movementFixture({ savedMovement = false } = {}) {
 for (const savedMovement of [false, true]) test(`opponent can drag its units with fixed p1 perspective; saved Movement fallback=${savedMovement}`, () => {
   const x = movementFixture({ savedMovement });
   try {
-    assert.match(x.root.innerHTML, /data-move-roster-unit="enemy"/);
-    assert.doesNotMatch(x.root.innerHTML, /data-move-roster-unit="friendly"/);
     assert.match(x.root.innerHTML, /data-opponent-defensive-advisor/);
+    assert.match(x.root.innerHTML, /data-move-save/);
+    assert.doesNotMatch(x.root.innerHTML, /data-move-roster-unit="friendly"/);
     assert.match(x.root.innerHTML, /class="battlefield-map__unit opponent[^>]*data-map-unit-id="enemy" role="button"/);
     const friendly = { ...x.game.getState().units[0].position };
     x.drag('friendly', 60, 400); assert.deepEqual(x.game.getState().units[0].position, friendly);
