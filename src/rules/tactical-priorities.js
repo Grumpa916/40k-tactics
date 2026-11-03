@@ -119,7 +119,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
       })
     : null;
 
-  const scoringActions = scoringOpportunities
+  const scoringActions = scoringOpportunities && !defending
     ? getTacticalScoringActions(state, {
         playerId,
         scoringAdvisories: scoringOpportunities
