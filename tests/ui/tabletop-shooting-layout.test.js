@@ -256,9 +256,15 @@ test('classic Shooting opens the linked Primary mission picker instead of the le
   try {
     root.click('[data-shoot-unit]');
     assert.ok(root.querySelector('[data-choice-action-toggle]'));
+    assert.equal(root.querySelector('[data-choice-action]'), null,
+      'linked Primary Action controls stay collapsed until explicitly opened');
     root.click('[data-choice-action-toggle]');
     assert.match(root.innerHTML, /mission-action-picker/);
-    assert.match(root.innerHTML, /Death Trap|Booby Trap/);
-    assert.match(root.innerHTML, /Action requirements met/);
+    assert.ok(root.querySelector('[data-choice-action]'));
+    assert.match(root.innerHTML, /Death Trap/);
+    root.change('[data-choice-action]', 'primary:p1:primary-death-trap');
+    assert.ok(root.querySelector('[data-action-terrain]'));
+    assert.match(root.innerHTML, /data-action-rules-confirmed/);
+    assert.match(root.innerHTML, /Confirm the unit satisfies the card’s Action requirements/);
   } finally { screen.destroy(); }
 });
