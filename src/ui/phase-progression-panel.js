@@ -25,7 +25,16 @@ export function getPhaseProgressionAction(state) {
   return { type: COMMAND_TYPES.CHANGE_PHASE, payload: { phase: next }, label: phase === 'start_turn' ? 'Begin Command phase' : phase === 'fight' ? 'End Fight · Review end of turn' : 'End ' + LABELS[phase] + ' · Continue to ' + LABELS[next] };
 }
 
-export function renderPhaseProgressionPanel(state, viewedPhase, message = '') {
+// The shared footer is a fallback. Phase-specific screens with their own
+// completion workflow should expose only their local action.
+export function screenOwnsPhaseProgression(state, viewedPhase, screenFactories = {}) {
+  if (typeof screenFactories?.[viewedPhase] !== 'function') return false;
+  if (viewedPhase === 'review') return state?.battle?.status === 'active';
+  return viewedPhase === state?.phase && ['shooting', 'charge', 'fight'].includes(viewedPhase);
+}
+
+export function renderPhaseProgressionPanel(state, viewedPhase, message = '', localCompletion = false) {
+  if (localCompletion) return '';
   const action = getPhaseProgressionAction(state);
   if (!action) return '';
   const current = LABELS[state.phase] ?? state.phase;
