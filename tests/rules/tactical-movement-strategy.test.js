@@ -146,8 +146,13 @@ test('Movement Advisor objective names exactly match abbreviated live-map marker
   const expectedLabel=liveMapObjectiveLabel(s,objective.objectiveId,perspective);
   assert.match(expectedLabel,/^(mE|oE)$/);
   const html=renderMovementAdvisor(s,{playerId:'p1',selectedUnitId:'scorer',perspectivePlayerId:perspective});
-  assert.ok(html.includes(`Objective · ${expectedLabel}`));
-  assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
+  if (perspective === 'p1') {
+    assert.ok(html.includes(`Objective · ${expectedLabel}`));
+    assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
+  } else {
+    assert.match(html, /data-opponent-defensive-advisor/);
+    assert.doesNotMatch(html, /data-movement-highlight-id=/);
+  }
   const map=renderBattlefieldMap(s,{perspectivePlayerId:perspective});
   const legacyCompact=objective.objectiveName.match(/\((.*?)\)/)[1];
   assert.ok(map.includes(`>${legacyCompact}</button>`));
