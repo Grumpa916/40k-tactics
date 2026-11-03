@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getMovementStrategicRecommendations } from "../../src/rules/tactical-movement-opportunities.js";
 import { getTacticalCombatRecommendations } from "../../src/rules/tactical-combat-recommendations.js";
+import { getTacticalPriorities } from "../../src/rules/tactical-priorities.js";
+import { getOpponentTurnDefensiveContext } from "../../src/rules/tactical-opponent-turn.js";
 import { renderMovementAdvisor } from "../../src/ui/movement-advisor.js";
 
 function unit(id, ownerId, x, y, { oc = 2, move = 6, battleShocked = false, rosterUnitId = id } = {}) {
@@ -144,8 +146,13 @@ test('Movement Advisor objective names exactly match abbreviated live-map marker
   const expectedLabel=liveMapObjectiveLabel(s,objective.objectiveId,perspective);
   assert.match(expectedLabel,/^(mE|oE)$/);
   const html=renderMovementAdvisor(s,{playerId:'p1',selectedUnitId:'scorer',perspectivePlayerId:perspective});
-  assert.ok(html.includes(`Objective · ${expectedLabel}`));
-  assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
+  if (perspective === 'p1') {
+    assert.ok(html.includes(`Objective · ${expectedLabel}`));
+    assert.ok(html.includes('data-movement-highlight-id="event-companion:Expansion 2"'));
+  } else {
+    assert.match(html, /data-opponent-defensive-advisor/);
+    assert.doesNotMatch(html, /data-movement-highlight-id=/);
+  }
   const map=renderBattlefieldMap(s,{perspectivePlayerId:perspective});
   const legacyCompact=objective.objectiveName.match(/\((.*?)\)/)[1];
   assert.ok(map.includes(`>${legacyCompact}</button>`));
@@ -153,4 +160,64 @@ test('Movement Advisor objective names exactly match abbreviated live-map marker
   assert.match(liveMap,new RegExp(`data-map-objective-id="event-companion:Expansion 2"[^>]*>${expectedLabel}<\\/button>`));
   assert.doesNotMatch(liveMap,/data-objective-number=/);
  }
+});
+
+
+test("opponent turn filters offensive tactical recommendations for the viewing player", () => {
+  const current = state();
+  current.activePlayer = "p2";
+  current.battle.activePlayerId = "p2";
+  const combat = getTacticalCombatRecommendations(current, {
+    playerId: "p1", shootingContext: { attackerId: "scorer", weapon: { id: "w", name: "Rifle" } }
+  });
+  assert.equal(combat.mode, "defence");
+  assert.deepEqual(combat.shooting, []);
+  assert.deepEqual(combat.movement, []);
+  assert.deepEqual(combat.charge, []);
+  assert.deepEqual(combat.custodes, []);
+
+  const shared = getTacticalPriorities(current, { playerId: "p1" });
+  assert.equal(shared.mode, "defence");
+  assert.ok(shared.recommendations.every(item => !["movement", "charge", "shooting-target", "objective", "scoring"].includes(item.type)));
+  assert.ok(shared.recommendations.some(item => item.type === "threat"));
+  const activePlayer = getTacticalCombatRecommendations(current, { playerId: "p2" });
+  assert.equal(activePlayer.mode, "active");
+  assert.ok(activePlayer.movement.length > 0);
+});
+
+test("opponent Movement view shows friendly defensive threats, not opponent move rankings", () => {
+  const current = state();
+  current.activePlayer = "p2";
+  current.battle.activePlayerId = "p2";
+  const html = renderMovementAdvisor(current, { playerId: "p2", perspectivePlayerId: "p1", selectedUnitId: "enemy" });
+  assert.match(html, /data-opponent-defensive-advisor/);
+  assert.match(html, /Opponent turn · Defensive Advisor/);
+  assert.match(html, /Defensive priorities/);
+  assert.match(html, /scorer/);
+  assert.match(html, /Incoming damage estimates appear in Shooting and Fight/);
+  assert.doesNotMatch(html, /Move priorities|Possible destinations|Strategic value:/);
+  const ownHtml = renderMovementAdvisor(current, { playerId: "p2", perspectivePlayerId: "p2", selectedUnitId: "enemy" });
+  assert.match(ownHtml, /Movement Advisor/);
+  assert.doesNotMatch(ownHtml, /data-opponent-defensive-advisor/);
+});
+
+test("opponent-turn threats use current recorded attacks and charges, not old-round events", () => {
+  const current = state();
+  current.activePlayer = "p2";
+  current.battle.activePlayerId = "p2";
+  current.history.push(
+    {type:"combat.attack_resolved",payload:{attackerId:"enemy",targetId:"scorer",phase:"shooting",actualDamage:2,round:2,turn:0}},
+    {type:"combat.attack_resolved",payload:{attackerId:"enemy",targetId:"scorer",phase:"shooting",actualDamage:3,round:3,turn:1}},
+    {type:"charge.outcome_recorded",payload:{unitId:"enemy",outcome:"successful",targetIds:["scorer"],round:3,turn:1}}
+  );
+  const view = getOpponentTurnDefensiveContext(current, { playerId:"p1" });
+  assert.equal(view.active, true);
+  const scorer = view.threats.find(item => item.unitId === "scorer");
+  assert.ok(scorer);
+  assert.equal(scorer.attacksReceived, 1);
+  assert.equal(scorer.damageTakenThisTurn, 3);
+  assert.equal(scorer.chargesReceived, 1);
+  assert.equal(scorer.priority, 5);
+  assert.ok(view.threats.every(item => current.units.find(unit => unit.id === item.unitId)?.ownerId === "p1"));
+  assert.equal(getOpponentTurnDefensiveContext(current, {playerId:"p2"}).active, false);
 });

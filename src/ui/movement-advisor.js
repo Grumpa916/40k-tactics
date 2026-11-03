@@ -2,6 +2,7 @@ import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-router.js";
 import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
 import { liveMapObjectiveLabel } from '../rules/objective-display-labels.js';
+import { getOpponentTurnDefensiveContext, isOpponentTurnFor } from "../rules/tactical-opponent-turn.js";
 
 let highlightEventsBound = false;
 let activeHighlight = null;
@@ -132,8 +133,30 @@ function scheduleHighlightRestore(unitId) {
   });
 }
 
+function renderOpponentMovementDefence(state, playerId) {
+  const context = getOpponentTurnDefensiveContext(state, { playerId });
+  const threats = context.threats.map(item => `<li><strong>${escapeHtml(item.unitName)}</strong> · ${escapeHtml(item.reason)}
+    ${item.nearestEnemy ? `<small>Nearby: ${escapeHtml(item.nearestEnemy.enemyName)} · about ${escapeHtml(item.nearestEnemy.distance)}″ on map</small>` : ''}
+    ${item.attacksReceived ? `<small>${escapeHtml(item.attacksReceived)} incoming attack(s) recorded · ${escapeHtml(item.damageTakenThisTurn)} damage this turn</small>` : ''}
+    ${item.battleShocked ? '<small>Battle-shocked · confirm defensive eligibility</small>' : ''}</li>`).join('');
+  const windows = context.windows.map(item => `<li><strong>${escapeHtml(item.name)}</strong>
+    ${item.unitName ? `· ${escapeHtml(item.unitName)}` : ''}
+    <small>${escapeHtml(item.timing ?? 'Confirm timing at tabletop')}</small></li>`).join('');
+
+  return `<aside class="movement-advisor" data-opponent-defensive-advisor>
+    <div class="move-heading"><h2>Opponent turn · Defensive Advisor</h2><span>Protect your army</span></div>
+    <p>Record the opponent's movement on the map. Review your units under threat; the opponent's movement destinations and offensive targets are not recommendations for you.</p>
+    <details open><summary>Defensive priorities · ${context.threats.length}</summary>
+      ${threats ? `<ol>${threats}</ol>` : '<p>No close enemy threats or new attacks are established from recorded data. Check the physical tabletop for untracked threats.</p>'}
+    </details>
+    ${windows ? `<details open><summary>Current defensive rule windows · ${context.windows.length}</summary><ul>${windows}</ul><small>References only; confirm triggers, targets, timing and CP on the tabletop before using an ability or Stratagem.</small></details>` : ''}
+    <p><small>Incoming damage estimates appear in Shooting and Fight after you select the enemy attacker, its weapon and your target. No ranged damage or legal charge is inferred from approximate map proximity alone.</small></p>
+  </aside>`;
+}
+
 export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, perspectivePlayerId = playerId } = {}) {
   if (!playerId || state?.phase !== "movement") return "";
+  if (isOpponentTurnFor(state, perspectivePlayerId)) return renderOpponentMovementDefence(state, perspectivePlayerId);
 
   let context;
   try {
