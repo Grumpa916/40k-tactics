@@ -17,4 +17,5 @@ Validation covers Secondary cards being absent from the live Shooting Action pic
 - Fixed selections remain active after an agreed score and may score at a later valid checkpoint; Tactical cards retire on scoring. Fixed Assassination presents valid 3 VP / 4 VP per-CHARACTER combinations rather than a standalone 1 VP bonus.
 - Reopening a checkpoint after scoring does not repeat the same Fixed card opportunity or produce a receipt-only popup. VP scoring is always player-confirmed; no Action or map proof is required.
 - Secondary and Primary live awards share the 15 VP **per battle round** ceiling and their respective 45 VP game ceilings. Fixed cards have their own 20 VP game ceiling. Final end-of-battle awards follow the existing Event Companion exception.
-- Card-specific draw choices and optional Tactical discard/redraw remain unchanged. Full iPad acceptance and a final end-of-fifth-round timing check remain on the verification checklist.
+- Beacon, Burden of Trust, and Defend Stronghold also open at the final player's end-of-turn checkpoint in round 5 when the card owner goes second; these awards still count toward the round-5 cap (not the exempt end-of-battle cap).
+- Card-specific draw choices and optional Tactical discard/redraw remain unchanged. Full iPad acceptance remains outstanding.
