@@ -100,6 +100,16 @@ function selectableFightAttackers(state, fight, perspectivePlayerId, { includeCa
       .map((event) => event?.payload?.unitId)
       .filter(Boolean)
   );
+  const skippedFight = new Set(
+    (Array.isArray(state?.history) ? state.history : [])
+      .filter((event) =>
+        event?.type === "fight.unit_activated" &&
+        event?.payload?.turn === state?.turn &&
+        event?.payload?.actionType === "not_fight"
+      )
+      .map((event) => event?.payload?.unitId)
+      .filter(Boolean)
+  );
   const fightsFirst = new Set(fight.candidates.fightsFirst);
   const normal = new Set(fight.candidates.normal);
   const inferred = new Set([...fightsFirst, ...normal]);
@@ -109,13 +119,13 @@ function selectableFightAttackers(state, fight, perspectivePlayerId, { includeCa
     for (const unit of state.units ?? []) {
       if (unit?.status !== "deployed") continue;
       if (getCombatFormationRoot(state, unit)?.id !== unit.id) continue;
-      if (isCombatActivationFinished(state, unit.id, "fight")) continue;
+      if (skippedFight.has(unit.id) || isCombatActivationFinished(state, unit.id, "fight")) continue;
       selectable.add(unit.id);
     }
   }
 
   return state.units
-    .filter((unit) => unit?.status === "deployed" && selectable.has(unit?.id) && getCombatFormationRoot(state, unit)?.id === unit.id && !isCombatActivationFinished(state, unit.id, "fight"))
+    .filter((unit) => unit?.status === "deployed" && selectable.has(unit?.id) && getCombatFormationRoot(state, unit)?.id === unit.id && !skippedFight.has(unit.id) && !isCombatActivationFinished(state, unit.id, "fight"))
     .map((unit) => ({
       ...describeUnit(state, unit.id, perspectivePlayerId),
       fightsFirst: fightsFirst.has(unit.id),
