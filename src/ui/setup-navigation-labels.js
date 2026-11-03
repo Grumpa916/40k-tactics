@@ -20,3 +20,8 @@ export function setupContinueLabel(tab) {
     deployment: "Deploy and Begin"
   })[tab] ?? "Continue";
 }
+
+// The preparation and deployment screens already render their own Continue/Begin actions.
+export function setupScreenOwnsContinue(tab) {
+  return ['pre-game', 'battlefield', 'mission-map', 'deployment'].includes(tab);
+}
