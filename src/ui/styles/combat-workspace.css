@@ -51,3 +51,13 @@
 .combat-workspace li { margin:8px 0; font-size:12px; line-height:1.5; }
 @media (max-width:1100px) and (orientation:landscape) { .combat-workspace.has-left-rail { grid-template-columns:152px minmax(0,1fr) 290px; } }
 @media (max-width:760px), (orientation:portrait) { .combat-workspace, .combat-workspace.has-left-rail { height:auto; grid-template-columns:minmax(0,1fr); } .combat-workspace__map { min-height:440px; } .combat-workspace__scroll { overflow:visible; } .combat-workspace__rail { max-height:260px; } }
+/* Fight: compact receipt and action-first Advisor; preserve 44px touch target. */
+.combat-workspace[data-combat-phase="fight"] .live-action-receipt--compact { display:flex; align-items:center; gap:8px; min-width:0; max-width:100%; margin-bottom:6px; }
+.combat-workspace[data-combat-phase="fight"] .live-action-receipt__summary { display:block; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; }
+.combat-workspace[data-combat-phase="fight"] .live-action-receipt--compact button { width:auto; min-width:62px; min-height:44px; flex:none; padding:8px 10px; }
+.combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__confidence { display:block; color:#b8d1b0; margin-bottom:4px; }
+.combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__recommendation { margin:0 0 8px; line-height:1.35; }
+.combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__grid { gap:5px; }
+.combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more { margin-top:5px; border-top:1px solid #52664b; }
+.combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more summary { min-height:44px; display:flex; align-items:center; }
+.combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more > .fight-advisory__grid { padding:8px 0; }
