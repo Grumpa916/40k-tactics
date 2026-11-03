@@ -182,3 +182,18 @@ test('Fight map keeps unit coordinates and selected fighter without zoom control
     assert.match(x.root.innerHTML,/<h1>fighter<\/h1>/);
   } finally { x.screen.destroy(); }
 });
+
+
+test('opponent Charge screen shows incoming threat, not the opponent offensive ranking', () => {
+  const x = setup('charge', state('charge', 'p2'));
+  try {
+    click(x, 'data-map-unit-id', 'enemy');
+    assert.match(x.root.innerHTML, /data-incoming-charge-advisor/);
+    assert.match(x.root.innerHTML, /Incoming charge · Defensive review/);
+    assert.match(x.root.innerHTML, /incoming Fight damage|confirm measured distance/);
+    assert.doesNotMatch(x.root.innerHTML, /Charge Priorities|Strategic value:/);
+    click(x, 'data-map-unit-id', 'fighter');
+    measured(x, 'fighter', 6);
+    assert.equal(x.root.node('[data-charge-success]').disabled, false);
+  } finally { x.screen.destroy(); }
+});
