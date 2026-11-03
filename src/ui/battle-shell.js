@@ -3,7 +3,7 @@ import { createRulesReminderController } from './rules-reminder-panel.js';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
 import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from "./scoring-checkpoint-dialog.js";
-import { getPhaseProgressionAction, renderPhaseProgressionPanel } from "./phase-progression-panel.js";
+import { getPhaseProgressionAction, renderPhaseProgressionPanel, screenOwnsPhaseProgression } from "./phase-progression-panel.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { createBattlePersistencePanel } from "./battle-persistence-panel.js";
@@ -26,7 +26,7 @@ import {
   renderScoreAdjustStyles,
   renderStatusSummaryContent
 } from "./battle-shell-scoreboard.js";
-import { setupContinueLabel, setupTabLabel } from "./setup-navigation-labels.js";
+import { setupContinueLabel, setupTabLabel, setupScreenOwnsContinue } from "./setup-navigation-labels.js";
 
 
 function escapeHtml(value) {
@@ -54,6 +54,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   setupWorkspaceTab = "saves",
   setupNavigationMessage = "",
   layoutMode = "tabletop",
+  phaseProgressionOwned = false,
   scoreAdjustPlayerId = null,
   scoreAdjustCollapsed = false,
   scoreAdjustMessage = "",
@@ -140,7 +141,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div><div data-rules-reminder-host></div>' +
     shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen }) : "") +
-    clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase) + '</div>' +
+    clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase, '', phaseProgressionOwned) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
         '<button type="button" data-setup-workspace-tab="saves" aria-pressed="' + String(setupWorkspaceTab === "saves") + '">Account &amp; Saves</button>' +
@@ -156,7 +157,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
             '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section>' +
             '<section data-setup-workspace-panel="army-selection"' + (setupWorkspaceTab === "army-selection" ? '' : ' hidden') + '><div data-army-selection-panel></div></section></section>'
           : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section><section data-setup-workspace-panel="army-selection" hidden><p>Sign in to select saved army lists.</p></section>') +
-        '<style>.battle-shell__setup-bottom-nav [data-setup-workspace-continue]{width:auto;min-width:0;max-width:190px;padding:8px 12px;white-space:nowrap}</style><footer class="battle-shell__setup-bottom-nav"><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
+        '<style>.battle-shell__setup-bottom-nav [data-setup-workspace-continue]{width:auto;min-width:0;max-width:190px;padding:8px 12px;white-space:nowrap}</style><footer class="battle-shell__setup-bottom-nav"' + (setupScreenOwnsContinue(setupWorkspaceTab) ? ' hidden' : '') + '><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
         '<p role="status" data-setup-navigation-message>' + escapeHtml(setupNavigationMessage) + '</p></div>' +
         '<button type="button" data-setup-workspace-continue>' + setupContinueLabel(setupWorkspaceTab) + '</button></footer>'
       : "") +
@@ -256,6 +257,8 @@ export function createBattleShell(container, {
     if (status) status.textContent = "";
     const next = container.querySelector?.("[data-setup-workspace-continue]");
     if (next) next.textContent = setupContinueLabel(tab);
+    const setupFooter = container.querySelector?.('.battle-shell__setup-bottom-nav');
+    if (setupFooter) setupFooter.hidden = setupScreenOwnsContinue(tab);
     mountedScreen?.setTab?.(tab === "battlefield" ? "battlefield" : tab === "mission-map" ? "mission-map" : "pre-game");
   }
 
@@ -278,7 +281,7 @@ export function createBattleShell(container, {
   function refreshPersistentPanels() {
     const decisionState = decisionReminders.getState();
     const phaseHost = container.querySelector?.("[data-phase-progression-host]");
-    if (phaseHost) phaseHost.innerHTML = renderPhaseProgressionPanel(session.getState(), viewedPhase, phaseProgressionMessage);
+    if (phaseHost) phaseHost.innerHTML = renderPhaseProgressionPanel(session.getState(), viewedPhase, phaseProgressionMessage, screenOwnsPhaseProgression(session.getState(), viewedPhase, screenFactories));
     const state = session.getState();
     refreshScoringCheckpointDialog(container, state, scoringReminder, session);
     const decisionHost = container.querySelector?.("[data-decision-reminder-host]");
@@ -401,7 +404,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
