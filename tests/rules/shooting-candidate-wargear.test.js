@@ -38,14 +38,14 @@ function carnifexState({ validationStatus = 'source-invalid', equippedWeapons = 
   });
 }
 
-test('roster-backed unit with no usable ranged weapon options is action-only instead of a Shoot candidate', () => {
+test('roster-backed unit with no usable ranged weapon options is omitted when no Primary Action is live', () => {
   const state = carnifexState({
     validationStatus: 'source-invalid',
     equippedWeapons: [{ name: 'Carnifex scything talons', quantity: 2 }]
   });
   const candidates = getShootingCandidates(state);
   assert.deepEqual(candidates.available, []);
-  assert.deepEqual(candidates.actionOnly, ['carnifexes-live']);
+  assert.deepEqual(candidates.actionOnly, []);
   assert.throws(
     () => recordShootingActivation(state, { unitId: 'carnifexes-live', actionType: 'shoot' }),
     /available Shooting candidate/

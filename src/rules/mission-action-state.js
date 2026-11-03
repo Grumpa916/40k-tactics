@@ -79,6 +79,14 @@ function getPrimaryMissionActionOption(state, playerId) {
   };
 }
 
+// Live play intentionally exposes only Primary mission Actions. Secondary missions are
+// resolved manually at their scoring checkpoints; historical secondary Action helpers
+// remain available below for Advisor/review compatibility with older battles.
+export function getLiveMissionActionOptions(state, playerId = state.activePlayer) {
+  const primary = getPrimaryMissionActionOption(state, playerId);
+  return primary ? [primary] : [];
+}
+
 export function getMissionActionOptions(state, playerId = state.activePlayer) {
   const mode = getSecondaryMissionMode(state, playerId);
   const secondary = getSecondaryMissionHistory(state, playerId).filter(item => item.status === SECONDARY_MISSION_STATUS.ACTIVE).map(item => {

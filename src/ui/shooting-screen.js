@@ -7,6 +7,7 @@ import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
 import { renderCombatMapPanel } from './combat-workspace.js';
 import { createMissionActionPicker } from "./mission-action-picker.js";
+import { getLiveMissionActionOptions } from '../rules/mission-action-state.js';
 import {
   getShootingViewModel,
   getShootingWeaponOptions,
@@ -42,7 +43,7 @@ function actionLabel(activation) {
 
 function unitButton(unit) {
   return `<button class="shoot-unit shoot-unit--${unit.side ?? "unknown"}" type="button" data-shoot-unit="${escapeHtml(unit.unitId)}">
-    <strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(ownerLabel(unit))}</span><small>Tap to choose Shoot or Action</small>
+    <strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(ownerLabel(unit))}</span><small>Tap to choose Shooting option</small>
   </button>`;
 }
 
@@ -151,7 +152,12 @@ export function createShootingScreen(container, {
     const phaseNotice = state.phase !== "shooting"
       ? `<p class="shoot-error" role="status">Viewing Shooting. The game is still in ${escapeHtml(state.phase)}. Use Return to current phase, then the phase advance button to reach Shooting.</p>`
       : "";
-    const actionOnly = model.actionOnly ?? [];
+    const configuredPrimaryActions = missionActions.filter((action) =>
+      action?.missionKind === 'primary' || String(action?.definitionId ?? '').startsWith('primary-'));
+    const livePrimaryActions = getLiveMissionActionOptions(state, model.activePlayerId);
+    const availableMissionActions = livePrimaryActions.length ? livePrimaryActions : configuredPrimaryActions;
+    const hasPrimaryMissionAction = availableMissionActions.length > 0;
+    const actionOnly = hasPrimaryMissionAction ? (model.actionOnly ?? []) : [];
 
     if (selectedAttackerId && (isCombatActivationFinished(state, selectedAttackerId, "shooting") || !model.activations.some((activation) =>
       activation.unitId === selectedAttackerId && activation.actionType === "shoot"
@@ -172,10 +178,6 @@ export function createShootingScreen(container, {
       ? getPrecisionAllocationOptions(state, selectedTargetId)
       : [];
     if (!precisionOptions.some((option) => option.unitId === precisionAllocationId)) precisionAllocationId = null;
-
-    const missionActionOptions = missionActions
-      .map((action) => `<option value="${escapeHtml(action.id)}">${escapeHtml(action.name ?? action.id)}</option>`)
-      .join("");
 
     if (layoutMode === "tabletop") {
       const activeUnitId = selectedAttackerId ?? pendingUnitId;
@@ -213,10 +215,10 @@ export function createShootingScreen(container, {
             ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
             ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
               <button type="button" data-choice-shoot ${actionOnly.some((unit) => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
-              <button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Action</button>
+              ${hasPrimaryMissionAction ? `<button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Primary Action</button>` : ''}
               <button type="button" data-choice-not-shoot>Do not shoot</button>
             </div>
-            ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, missionActions) : ""}` : ""}
+            ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, availableMissionActions) : ""}` : ""}
 
             ${selectedAttackerId && activeActivation ? `<div class="shoot-tabletop__attack-controls">
               <label>Ranged weapon<select data-weapon><option value="" ${selectedWeaponId ? "" : "selected"}>Choose weapon…</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
@@ -248,24 +250,21 @@ export function createShootingScreen(container, {
       <strong>${model.canComplete ? "All Shooting choices recorded" : "Resolve the next eligible unit"}</strong></header>
       ${phaseNotice}
       ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
-      <p class="note">Select a unit, then record whether it Shoots, performs an Action, or Does not shoot. The app records the choice; range, visibility, modifiers, action eligibility and dice remain table-side decisions.</p>
+      <p class="note">Record shooting choices only. Secondary mission completion is decided manually at the scoring checkpoint. A Primary Action appears here only when the active Primary mission requires one.</p>
 
       <section>
         <div class="heading"><h2>Eligible units</h2><span>${model.candidates.length} remaining</span></div>
         <div class="candidates">${model.candidates.length ? model.candidates.map(unitButton).join("") : "<p>None</p>"}</div>
-        ${actionOnly.length ? `<div class="heading"><h3>No ranged weapons · optional Actions</h3></div><p>These units do not need a Shooting choice to finish this phase. Select one only if recording an Action.</p><div class="candidates">${actionOnly.map(unitButton).join("")}</div>` : ""}
+        ${actionOnly.length ? `<div class="heading"><h3>No ranged weapons · optional Primary Action</h3></div><p>These units do not need a Shooting choice to finish this phase. Select one only if recording the active Primary mission Action.</p><div class="candidates">${actionOnly.map(unitButton).join("")}</div>` : ""}
         ${pendingUnit ? `<div class="choice">
           <div><strong>${escapeHtml(pendingUnit.name)}</strong><span>${escapeHtml(ownerLabel(pendingUnit))} — choose this unit's Shooting-phase choice</span></div>
           <div class="choice-buttons">
             <button type="button" data-choice-shoot ${actionOnly.some(unit => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
+            ${hasPrimaryMissionAction ? `<button type="button" data-choice-action-toggle aria-pressed="${String(actionPickerOpen)}">Primary Action</button>` : ''}
             <button type="button" data-choice-not-shoot>Do not shoot</button>
-            <label>Action<select data-choice-action>
-              <option value="">Select an action</option>
-              ${missionActionOptions}
-            </select></label>
-            <button type="button" data-choice-action-confirm disabled>Record Action</button>
             <button type="button" data-choice-cancel>Cancel</button>
           </div>
+          ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, availableMissionActions) : ""}
         </div>` : ""}
       </section>
 
@@ -402,11 +401,6 @@ export function createShootingScreen(container, {
         attackError = "";
         render();
       }));
-      container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
-        actionPickerOpen = !actionPickerOpen;
-        attackError = "";
-        render();
-      });
       container.querySelector?.("[data-finish-unit]")?.addEventListener?.("click", () => {
         try { finishCombatUnit(session, selectedAttackerId); }
         catch (cause) { attackError = cause?.message ?? String(cause); render(); return; }
@@ -420,6 +414,12 @@ export function createShootingScreen(container, {
         render();
       });
     }
+
+    container.querySelector?.("[data-choice-action-toggle]")?.addEventListener?.("click", () => {
+      actionPickerOpen = !actionPickerOpen;
+      attackError = "";
+      render();
+    });
 
     container.querySelector("[data-choice-shoot]")?.addEventListener("click", () => {
       if (!pendingUnitId) return;
@@ -439,20 +439,11 @@ export function createShootingScreen(container, {
       render();
     });
 
-    if (layoutMode === "tabletop" && actionPickerOpen) {
+    if (actionPickerOpen) {
       missionActionPicker.bind(container, payload => {
         if (!pendingUnitId || !tryActivate({unitId:pendingUnitId,actionType:"mission_action",...payload})) return;
         actionPickerOpen=false; clearPending(); render();
       }, render);
-    } else {
-      container.querySelector("[data-choice-action]")?.addEventListener("change", event => {
-        const button=container.querySelector("[data-choice-action-confirm]"); if (button) button.disabled=!event.target.value;
-      });
-      container.querySelector("[data-choice-action-confirm]")?.addEventListener("click", () => {
-        const actionId=container.querySelector("[data-choice-action]")?.value;
-        if (!pendingUnitId||!actionId||!tryActivate({unitId:pendingUnitId,actionType:"mission_action",actionId})) return;
-        actionPickerOpen=false; clearPending(); render();
-      });
     }
 
     container.querySelector("[data-choice-cancel]")?.addEventListener("click", () => {

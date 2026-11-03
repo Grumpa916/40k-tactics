@@ -298,7 +298,7 @@ test("recording Triangulate stores the selected objective and blocks a second us
     objectiveId: "central-2",
     reviewTiming: "end-of-turn",
     rulesConfirmed: true
-  }), /active secondary mission Actions|available primary mission Actions|once per turn/i);
+  }), /active secondary mission Actions|available primary mission Action|once per turn/i);
 });
 
 test("Triangulate fails closed when the home-objective role is unknown", () => {

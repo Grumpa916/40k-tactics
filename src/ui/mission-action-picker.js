@@ -1,4 +1,4 @@
-import { getMissionActionOptions } from '../rules/mission-action-state.js';
+import { getLiveMissionActionOptions } from '../rules/mission-action-state.js';
 import { getDeathTrapTerrainOptions } from '../rules/death-trap-state.js';
 import { getSmokeAndMirrorsObjectiveOptions } from '../rules/smoke-and-mirrors-state.js';
 import { getTriangulationObjectiveOptions } from '../rules/triangulation-state.js';
@@ -33,8 +33,10 @@ export function createMissionActionPicker() {
   return {
     render(state,unitId,customActions=[]) {
       renderState=state;
-      options=getMissionActionOptions(state);
-      if (!options.length) options=customActions.map(item=>({...item,timings:['end-of-turn']}));
+      options=getLiveMissionActionOptions(state);
+      if (!options.length) options=customActions
+        .filter(item=>item?.missionKind==='primary'||String(item?.definitionId??'').startsWith('primary-'))
+        .map(item=>({...item,timings:['end-of-turn']}));
       const unitKey=[state.battle?.round,state.turn,unitId].join(':');
       if (unit!==unitKey || !options.some(item=>item.id===selected)) {
         unit=unitKey; selected=options.length===1?options[0].id:''; confirmed=false; objective=''; terrainArea=''; targetUnit=''; timing=''; locateSetupTerrain=new Set();
@@ -199,8 +201,8 @@ export function createMissionActionPicker() {
         ? locateSetupTerrain.size===expectedLocateSetupCount
         : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isSecureAsset ? !!objective : isVitalLink ? !!objective : isExtractRelic ? !!objective && !!terrainArea : isVanguardOperation ? !!terrainArea : isSabotage ? !!objective : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
       const buttonLabel=setupMode?'Record marker setup':isPlunder&&plunderState?.usedThisTurn?'Plunder already used this turn':'Record Action attempt';
-      return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Mission Action</span><select data-choice-action><option value="">Choose mission…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
-        ${!options.length?'<p class="mission-action-picker__note">No active mission Actions are available. Select cards in Command before linking an Action.</p>':''}
+      return `<link rel="stylesheet" href="${scoringHref}"><link rel="stylesheet" href="${pickerHref}"><div class="shoot-tabletop__action-picker mission-action-picker"><label class="mission-action-picker__field"><span>Primary Mission Action</span><select data-choice-action><option value="">Choose Primary Action…</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name)}</option>`).join('')}</select></label>
+        ${!options.length?'<p class="mission-action-picker__note">No Primary mission Action is available in this Shooting phase. Secondary missions are scored manually at their checkpoint.</p>':''}
         ${linkedFields}
         <button type="button" data-choice-action-confirm ${selected && targetReady && (setupMode||!option?.instanceId||confirmed)?'':'disabled'}>${buttonLabel}</button></div>`;
     },

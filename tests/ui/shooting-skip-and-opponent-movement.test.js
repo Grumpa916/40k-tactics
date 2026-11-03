@@ -32,15 +32,27 @@ test('opting not to shoot records the choice without an action ID and permits Ch
   assert.throws(() => recordShootingActivation(state(), { unitId: 'friendly', actionType: 'not_shoot' }), /active player/);
 });
 
-test('confirmed melee-only units do not block completion but may still perform Actions', () => {
+test('confirmed melee-only units do not block completion and cannot perform Secondary Actions', () => {
   const initial = state(); initial.units[1].profile.weapons = [{ name: 'Claws', range: 'Melee' }];
+  initial.activeSecondaryMissions = { p2: ['cleanse'] };
   assert.deepEqual(getShootingCandidates(initial).available, []);
-  assert.deepEqual(getShootingCandidates(initial).actionOnly, ['enemy']);
+  assert.deepEqual(getShootingCandidates(initial).actionOnly, []);
   assert.equal(completeShootingPhase(initial).phase, 'charge');
   assert.throws(() => recordShootingActivation(initial, { unitId: 'enemy', actionType: 'shoot' }), /available/);
-  const action = recordShootingActivation(initial, { unitId: 'enemy', actionType: 'mission_action', actionId: 'cleanse' });
-  assert.equal(action.history.at(-1).payload.actionType, 'mission_action');
-  assert.deepEqual(getShootingCandidates(action).actionOnly, []);
+  assert.throws(
+    () => recordShootingActivation(initial, { unitId: 'enemy', actionType: 'mission_action', actionId: 'cleanse' }),
+    /Mission action is not currently active/
+  );
+  assert.throws(
+    () => recordShootingActivation(initial, {
+      unitId: 'enemy',
+      actionType: 'mission_action',
+      actionId: 'primary-death-trap',
+      missionInstanceId: 'primary:p2:not-active'
+    }),
+    /Select an available primary mission Action/
+  );
+  assert.equal(initial.history.some(event => event.type === 'shooting.unit_activated'), false);
 });
 
 test('saved melee-only datasheets are recognized; missing and mixed weapon data remain unresolved', () => {
