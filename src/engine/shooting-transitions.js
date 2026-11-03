@@ -102,9 +102,14 @@ export function recordShootingActivation(state, {
   }
 
   const liveMissionActions = getLiveMissionActionOptions(state, activePlayerId);
-  if (actionType === "mission_action" && !missionInstanceId &&
-      !liveMissionActions.some(item => item.id === actionId || item.definitionId === actionId)) {
-    throw new Error("Mission action is not currently active.");
+  let linkedMission = null;
+  if (actionType === "mission_action") {
+    if (missionInstanceId) {
+      linkedMission = liveMissionActions.find(item => item.instanceId === missionInstanceId);
+      if (!linkedMission) throw new Error("Select an available primary mission Action.");
+    } else if (!liveMissionActions.some(item => item.id === actionId || item.definitionId === actionId)) {
+      throw new Error("Mission action is not currently active.");
+    }
   }
 
   const candidates = getShootingCandidates(state);
@@ -112,12 +117,9 @@ export function recordShootingActivation(state, {
     throw new Error("Unit is not an available Shooting candidate.");
   }
 
-  let linkedMission = null;
   let deathTrapTerrain = null;
   if (missionInstanceId) {
     if (actionType !== "mission_action") throw new Error("Only a mission Action can link a mission card.");
-    linkedMission = liveMissionActions.find(item => item.instanceId === missionInstanceId);
-    if (!linkedMission) throw new Error("Select an available primary mission Action.");
     if (!rulesConfirmed) throw new Error("Confirm action eligibility against the physical mission card.");
     if (!ACTION_REVIEW_TIMINGS.includes(reviewTiming)) throw new Error("Choose the card's scoring checkpoint.");
     if (objectiveId && !state.objectives.some(item=>item.id===objectiveId)) throw new Error("Select an objective on this battlefield.");
