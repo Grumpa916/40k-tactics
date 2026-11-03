@@ -7,6 +7,7 @@ import { getMovementStrategicRecommendations } from "./tactical-movement-router.
 import { getCustodesPhaseRecommendations } from "./custodes-tactical-advisor.js";
 import { getCustodesMovementRecommendations } from "./custodes-movement-advisor.js";
 import { getCustodesFightKatahRecommendations } from "./custodes-fight-katah-recommendations.js";
+import { isOpponentTurnFor } from "./tactical-opponent-turn.js";
 
 const CHARGE_MAX_DISTANCE = 12;
 const CHARGE_RANGE_UNCERTAINTY_MARGIN = 3;
@@ -126,7 +127,8 @@ export function getTacticalCombatRecommendations(
 ) {
   if (!playerId) throw new TypeError("playerId is required.");
 
-  const shooting = shootingContext?.attackerId
+  const defending = isOpponentTurnFor(state, playerId);
+  const shooting = !defending && shootingContext?.attackerId
     ? getShootingTargetPriorities(state, {
         playerId,
         attackerId: shootingContext.attackerId,
@@ -134,18 +136,25 @@ export function getTacticalCombatRecommendations(
       }).priorities
     : [];
 
-  const movement = state?.phase === "movement"
+  const movement = !defending && state?.phase === "movement"
     ? getMovementStrategicRecommendations(state, { playerId }).recommendations
     : [];
-  const charge = chargeCandidates(state, { playerId });
-  const fight = fightRecommendations(state);
-  const phaseCustodes = getCustodesPhaseRecommendations(state, { playerId })
+  const charge = defending ? [] : chargeCandidates(state, { playerId });
+  const fight = fightRecommendations(state)
+    .filter(item => !defending || unitById(state, item.unitId)?.ownerId === playerId)
+    .map(item => defending ? {
+      ...item,
+      type: "defensive-fight",
+      reason: "Possible friendly Fight response in the opponent's Fight phase; confirm activation order on the tabletop."
+    } : item);
+  const phaseCustodes = defending ? [] : getCustodesPhaseRecommendations(state, { playerId })
     .filter((item) => item.katahName !== "Calistus");
-  const custodesMovement = getCustodesMovementRecommendations(state, { playerId });
-  const custodesFight = getCustodesFightKatahRecommendations(state, { playerId });
+  const custodesMovement = defending ? [] : getCustodesMovementRecommendations(state, { playerId });
+  const custodesFight = defending ? [] : getCustodesFightKatahRecommendations(state, { playerId });
   const custodes = [...phaseCustodes, ...custodesMovement, ...custodesFight];
 
   return {
+    mode: defending ? "defence" : "active",
     shooting,
     movement,
     charge,
