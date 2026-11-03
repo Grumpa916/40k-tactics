@@ -24,14 +24,15 @@ test('objective evidence distinguishes recorded success, failure, and unavailabl
   assert.equal(missionConditionEvidence({...state,objectives:[{id:'unknown'}]},'p1',condition).count,null);
   assert.equal(missionConditionEvidence(state,'p1','Wholly within enemy deployment zone.').count,null);
 });
-test('confirmed secondary scoring is atomic, retires card, rejects repeat, persists, stays silent when resolved, and undo restores card',()=>{
+test('confirmed Secondary scoring retires Tactical, retains Fixed, prevents repeat, and supports undo',()=>{
   for(const mode of ['tactical','fixed']) {
     const state=seed(mode),payload={playerId:'p1',instanceId:'card',amount:3,scoringTiming:'end-of-turn',retireAfterScoring:true};
     assert.throws(()=>recordSecondaryMissionScore(state,{...payload,amount:0}));
     assert.equal(state.scoring.secondaryMissions[0].status,'active');
     const scored=JSON.parse(JSON.stringify(recordSecondaryMissionScore(state,payload)));
-    assert.equal(scored.victoryPoints.p1,3);assert.equal(scored.scoring.secondaryMissions[0].status,'scored');
-    assert.throws(()=>recordSecondaryMissionScore(scored,payload),/active secondary/);
+    assert.equal(scored.victoryPoints.p1,3);
+    assert.equal(scored.scoring.secondaryMissions[0].status,mode==='fixed'?'active':'scored');
+    assert.throws(()=>recordSecondaryMissionScore(scored,payload),mode==='fixed'?/already been recorded/: /active secondary/);
     const isolated={...scored,battlefieldMap:null};
     const reminder=getScoringCheckpointReminder(isolated,{previousPhase:'fight'});
     assert.equal(reminder,null);
@@ -58,6 +59,10 @@ test('inline form dispatches selected VP and card lifecycle in one command',()=>
   bindCheckpointScores({querySelectorAll:()=>[form]},{getState:seed,dispatch:c=>{command=c;}},message=>assert.fail(message));
   submit({preventDefault(){}});
   assert.equal(command.type,'secondary_mission.record_score');assert.equal(command.payload.amount,4);assert.equal(command.payload.retireAfterScoring,true);
+  let fixed;
+  bindCheckpointScores({querySelectorAll:()=>[form]}, {getState:()=>seed('fixed'),dispatch:c=>{fixed=c;}},message=>assert.fail(message));
+  submit({preventDefault(){}});
+  assert.equal(fixed.payload.retireAfterScoring,false,'Fixed card must remain active');
 });
 test('destruction evidence resolves legacy combat target ownership from live units',()=>{
   const state=seed();state.units=[{id:'enemy',ownerId:'p2'}];
