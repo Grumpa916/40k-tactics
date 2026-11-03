@@ -43,6 +43,15 @@ test('confirmed melee-only units do not block completion and cannot perform Seco
     () => recordShootingActivation(initial, { unitId: 'enemy', actionType: 'mission_action', actionId: 'cleanse' }),
     /Mission action is not currently active/
   );
+  assert.throws(
+    () => recordShootingActivation(initial, {
+      unitId: 'enemy',
+      actionType: 'mission_action',
+      actionId: 'primary-death-trap',
+      missionInstanceId: 'primary:p2:not-active'
+    }),
+    /Select an available primary mission Action/
+  );
   assert.equal(initial.history.some(event => event.type === 'shooting.unit_activated'), false);
 });
 
