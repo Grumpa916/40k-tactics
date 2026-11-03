@@ -4,6 +4,7 @@ import { getScoringOpportunityAdvisories } from "./tactical-scoring-opportunitie
 import { getTacticalScoringActions } from "./tactical-scoring-actions.js";
 import { getTacticalCombatRecommendations } from "./tactical-combat-recommendations.js";
 import { rankTacticalRecommendations } from "./tactical-decision.js";
+import { isOpponentTurnFor } from "./tactical-opponent-turn.js";
 
 function unitById(state, unitId) {
 
@@ -54,6 +55,7 @@ function getScoringRecommendations(scoringActions) {
 export function getTacticalPriorities(state, { playerId, scoringDefinitions = [], scoringTiming = null, shootingContext = null } = {}) {
   if (!playerId) throw new TypeError("playerId is required.");
 
+  const defending = isOpponentTurnFor(state, playerId);
   const combat = getCombatHistorySummary(state, { playerId });
   const spatial = getSpatialContext(state, { playerId });
   const priorities = [];
@@ -96,7 +98,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
     }
   }
 
-  for (const objective of spatial.objectiveProximity) {
+  for (const objective of defending ? [] : spatial.objectiveProximity) {
     if (objective.band === "close" || objective.band === "near") {
       priorities.push({
         type: "objective",
@@ -124,7 +126,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
       })
     : null;
 
-  const scoringRecommendations = getScoringRecommendations(scoringActions);
+  const scoringRecommendations = defending ? [] : getScoringRecommendations(scoringActions);
   const combatRecommendations = getTacticalCombatRecommendations(state, {
     playerId,
     shootingContext
@@ -138,6 +140,7 @@ export function getTacticalPriorities(state, { playerId, scoringDefinitions = []
 
   return {
     playerId,
+    mode: defending ? "defence" : "active",
     phase: state?.phase ?? null,
     priorities,
     scoringOpportunities,
