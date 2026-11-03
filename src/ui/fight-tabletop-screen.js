@@ -73,7 +73,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} inferred</summary>
         <h3>Fights First · recommended priority</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
         <h3>Other inferred combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal) || '<small>None remaining</small>'}</div>
-        ${tabletopOnly.length ? `<h3>Tabletop-confirmed fighters</h3><div class="combat-workspace__choices">${chooseButtons(tabletopOnly)}</div><small>Use these when the physical table confirms a legal Fight that the saved engagement state did not infer.</small>` : ''}
+        ${tabletopOnly.length ? '<small>Other deployed formations: tap their map marker to record a tabletop-confirmed Fight. They are omitted from this list to keep the order compact.</small>' : ''}
         ${unfinished.length ? `<h3>Unfinished activations</h3><div class="combat-workspace__choices">${chooseButtons(unfinished)}</div>` : ''}
       </details>
       ${unit ? `<p>${active ? 'Fight activation recorded · add any remaining weapon/target results below.' : 'Choose weapon and target. The first recorded attack begins this activation automatically.'}</p>
@@ -102,7 +102,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     bindCustodesKatahActions(container, session, message => { error = message; }, render);
     const choose = id => {
       if (!options.attackers.some(unit => unit.unitId === id)) {
-        error = isCombatActivationFinished(state, id, 'fight') ? 'This unit has finished its Fight activation this turn.' : 'This unit is not available as a separate deployed Fight formation.'; render(); return;
+        const skipped = model.activations.some(item => item.unitId === id && item.actionType === 'not_fight');
+        error = skipped || isCombatActivationFinished(state, id, 'fight') ? 'This unit has finished its Fight activation this turn.' : 'This unit is not available as a separate deployed Fight formation.'; render(); return;
       }
       if (id !== attackerId) { reset(); attackerId = id; }
       error = ''; render();
