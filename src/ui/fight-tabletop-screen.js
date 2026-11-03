@@ -86,7 +86,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         <label>${options.overrunAvailable ? 'Overrun target · confirm within 5″ on tabletop' : 'Target · confirm legal after Pile In'}<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
         ${precisionOptions.length ? `<label>Precision allocation · optional<select data-fight-precision><option value="">Normal allocation</option>${precisionOptions.map(option => `<option value="${esc(option.unitId)}" ${option.unitId === precisionAllocationId ? 'selected' : ''}>${esc(option.name)}</option>`).join('')}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ''}
         ${!options.targets.length ? '<p>No deployed enemy formations remain.</p>' : ''}
-        <div class="combat-workspace__choices">${!active ? '<button type="button" data-fight-skip>Do not fight</button>' : '<button type="button" data-fight-finish-entry>Finish activation</button>'}</div>` : ''}
+        ${!active ? '<div class="combat-workspace__choices"><button type="button" data-fight-skip>Do not fight</button></div>' : ''}` : ''}
       <aside class="combat-workspace__card combat-workspace__advisor" aria-label="${incomingAttackMode ? 'Incoming damage estimate' : 'Fight Tactical Advisor'}"><h2>${incomingAttackMode ? 'Incoming attack' : 'Tactical Advisor'}</h2>
         ${incomingAttackMode
           ? renderIncomingDamageForecast(state, { attackerId, targetId, weapon: selectedWeapon })
@@ -95,7 +95,9 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       </aside>
       <details data-view-key="fight-history"><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(attack.allocationTargetName ? `${state.units.find(unit => unit.id === attack.targetId)?.name} (${attack.allocationTargetName})` : state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining inferred combats as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${renderActionReceipt(session)}${attackControls}${endPrompt}<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>` });
+    const finishUnitControl = active && unit ? '<button type="button" data-fight-finish-entry>Finish unit</button>' : '';
+    const endFightControl = active && unit ? '' : `<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${renderActionReceipt(session)}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}` });
 
     restoreView();
     mapView.bind(container);
