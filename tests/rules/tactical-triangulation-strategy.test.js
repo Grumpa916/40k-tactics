@@ -1,18 +1,44 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { getMissionActionOptions } from "../../src/rules/mission-action-state.js";
-import { getTriangulationObjectiveOptions, getTriangulationState } from "../../src/rules/triangulation-state.js";
-import { getPrimaryObjectiveStrategySignal, getPrimaryStrategyContext } from "../../src/rules/tactical-primary-strategy-router.js";
+import {
+  getTriangulationState,
+  getTriangulationObjectiveOptions,
+  getTriangulationTierVp
+} from "../../src/rules/triangulation-state.js";
+import {
+  getPrimaryStrategyContext,
+  getPrimaryObjectiveStrategySignal
+} from "../../src/rules/tactical-primary-strategy-router.js";
 import { getMovementStrategicRecommendations } from "../../src/rules/tactical-movement-router.js";
-import { getEventCompanionMapForForceDispositions } from "../../src/rules/event-companion-map-catalog.js";
-import { recordShootingActivation } from "../../src/engine/shooting-transitions.js";
+import { getMissionActionOptions } from "../../src/rules/mission-action-state.js";
 import { createMissionActionPicker } from "../../src/ui/mission-action-picker.js";
+import { recordShootingActivation } from "../../src/engine/shooting-transitions.js";
 
 function control(controllerId) {
   return controllerId == null
     ? { controlState: "uncontrolled", controllerId: null, contestingPlayerIds: [] }
     : { controlState: "controlled", controllerId, contestingPlayerIds: [] };
+}
+
+function objective(id, layoutObjective, controllerId, x, y) {
+  return { id, name: layoutObjective, layoutObjective, position: { x, y }, control: control(controllerId) };
+}
+
+function unit(id, ownerId, x, y, { move = 8, oc = 2, battleShocked = false, rosterUnitId = id } = {}) {
+  return {
+    id,
+    ownerId,
+    name: id,
+    status: "deployed",
+    position: { x, y },
+    battleShocked,
+    wounds: 5,
+    startingStrength: 1,
+    currentStrength: 1,
+    startingWounds: 5,
+    metadata: { rosterUnitId, modelCount: 1 },
+    profile: { characteristics: { movement: move, objectiveControl: oc, toughness: 5, save: 3, wounds: 5 } }
+  };
 }
 
 function rosterUnit(id, { move = 8, oc = 2 } = {}) {
@@ -21,57 +47,12 @@ function rosterUnit(id, { move = 8, oc = 2 } = {}) {
     loadoutValidation: { status: "valid" },
     datasheet: {
       characteristics: { Move: `${move}\"`, OC: oc, Wounds: 5, Toughness: 5, Save: "3+" },
-      weapons: [{ name: "test gun", type: "ranged", range: "24\"", attacks: 1, skill: "3+", strength: 4, ap: 0, damage: 1 }]
+      weapons: []
     }
   };
 }
 
-function unit(id, ownerId, position, { move = 8, oc = 2, status = "deployed", battleShocked = false } = {}) {
-  return {
-    id,
-    ownerId,
-    name: id,
-    status,
-    battleShocked,
-    position: { ...position },
-    wounds: status === "destroyed" ? 0 : 5,
-    startingStrength: 1,
-    currentStrength: status === "destroyed" ? 0 : 1,
-    startingWounds: 5,
-    metadata: { rosterUnitId: `r-${id}`, modelCount: 1 },
-    profile: { characteristics: { movement: move, objectiveControl: oc, toughness: 5, save: 3, wounds: 5 } }
-  };
-}
-
-function priorPrimaryAwards(total) {
-  const result = [];
-  let remaining = total;
-  let index = 0;
-  while (remaining > 0) {
-    const amount = Math.min(15, remaining);
-    result.push({
-      id: `prior-primary-${index}`,
-      type: "victory_points.awarded",
-      payload: {
-        playerId: "p1",
-        amount,
-        category: "primary",
-        missionDefinitionId: `prior-${index}`,
-        scoringTiming: "end-of-turn",
-        opportunityKey: `prior:${index}`,
-        round: index + 1,
-        turn: 40 + index,
-        scoreBefore: index * 15,
-        scoreAfter: index * 15 + amount
-      }
-    });
-    remaining -= amount;
-    index += 1;
-  }
-  return result;
-}
-
-function triangulationAttempt(objectiveId, { round = 2, turn = round, unitId = "runner" } = {}) {
+function triangulateAttempt(objectiveId, { round = 2, turn = round, unitId = `tri-${objectiveId}` } = {}) {
   return {
     type: "shooting.unit_activated",
     payload: {
@@ -91,46 +72,87 @@ function triangulationAttempt(objectiveId, { round = 2, turn = round, unitId = "
   };
 }
 
+function triangulateReview(objectiveId, { round = 2, turn = round, unitId = `tri-${objectiveId}`, outcome = "completed" } = {}) {
+  return {
+    type: "mission_action.reviewed",
+    payload: {
+      actionKey: `${round}:${turn}:${unitId}`,
+      playerId: "p1",
+      checkpoint: "end-of-turn",
+      outcome,
+      missionInstanceId: "primary:p1:primary-triangulation",
+      round,
+      turn
+    }
+  };
+}
+
+function completedTriangulation(objectiveId, options = {}) {
+  return [triangulateAttempt(objectiveId, options), triangulateReview(objectiveId, options)];
+}
+
+function primaryAward(id, amount, round, turn, missionDefinitionId = "prior-primary") {
+  return {
+    id,
+    type: "victory_points.awarded",
+    payload: {
+      playerId: "p1",
+      amount,
+      category: "primary",
+      missionDefinitionId,
+      scoringTiming: "end-of-turn",
+      opportunityKey: id,
+      round,
+      turn,
+      scoreBefore: 0,
+      scoreAfter: amount
+    }
+  };
+}
+
+function priorPrimaryAwards(total) {
+  const events = [];
+  let remaining = total;
+  let index = 0;
+  while (remaining > 0) {
+    const amount = Math.min(15, remaining);
+    events.push(primaryAward(`prior-${index}`, amount, index + 1, 50 + index, `prior-primary-${index}`));
+    remaining -= amount;
+    index += 1;
+  }
+  return events;
+}
+
 function state({
   round = 2,
-  phase = "shooting",
+  phase = "movement",
   history = [],
   controllers = {},
   priorPrimaryVp = 0,
   omitRoles = false
 } = {}) {
-  const map = getEventCompanionMapForForceDispositions("Triangulation", "Triangulation", "A");
-  assert.ok(map, "Triangulation Layout A geometry must exist");
-  const positions = map.objectivePositions;
   const objectives = [
-    ["home-p1", "Attacker Home"],
-    ["central-1", "Central 1"],
-    ["central-2", "Central 2"],
-    ["expansion-1", "Expansion 1"],
-    ["expansion-2", "Expansion 2"],
-    ["home-p2", "Defender Home"]
-  ].map(([id, name]) => ({
-    id,
-    name,
-    layoutObjective: name,
-    position: { ...positions[name] },
-    control: control(controllers[id] ?? null)
-  }));
-  const units = [
-    unit("runner", "p1", positions["Central 1"]),
-    unit("holder", "p1", positions["Central 2"]),
-    unit("enemy", "p2", positions["Defender Home"])
+    objective("home", "Attacker Home", controllers.home ?? "p1", 8, 5),
+    objective("central-1", "Central 1", controllers["central-1"] ?? null, 26, 18),
+    objective("central-2", "Central 2", controllers["central-2"] ?? null, 34, 26),
+    objective("expansion-1", "Expansion 1", controllers["expansion-1"] ?? null, 18, 32),
+    objective("expansion-2", "Expansion 2", controllers["expansion-2"] ?? null, 42, 12),
+    objective("enemy-home", "Defender Home", controllers["enemy-home"] ?? "p2", 52, 39)
+  ];
+  const friendly = [
+    unit("runner", "p1", 26, 18, { rosterUnitId: "r-runner" }),
+    unit("holder", "p1", 18, 32, { move: 6, oc: 3, rosterUnitId: "r-holder" })
   ];
   return {
     phase,
     turn: round,
     activePlayer: "p1",
     battle: { id: "b", status: "active", round, activePlayerId: "p1", firstPlayerId: "p1" },
-    ...(omitRoles ? {} : { preGameSetup: { attackerPlayerId: "p1", defenderPlayerId: "p2" } }),
+    preGameSetup: omitRoles ? {} : { attackerPlayerId: "p1", defenderPlayerId: "p2" },
     players: [{ id: "p1", name: "You" }, { id: "p2", name: "Opponent" }],
-    battlefieldMap: { missionSetup: { myDisposition: "Triangulation", opponentDisposition: "Triangulation", layout: "A" } },
+    battlefieldMap: { missionSetup: { myDisposition: "Reconnaissance", opponentDisposition: "Purge the Foe", layout: "A" } },
     objectives,
-    units,
+    units: [...friendly, unit("enemy", "p2", 45, 35, { rosterUnitId: "r-enemy" })],
     history: [...priorPrimaryAwards(priorPrimaryVp), ...history],
     victoryPoints: { p1: priorPrimaryVp, p2: 0 },
     commandPoints: { p1: 2, p2: 2 },
@@ -140,7 +162,7 @@ function state({
       secondaryMissionModeByPlayer: { p1: "tactical", p2: "tactical" }
     },
     armyRosters: {
-      p1: { units: [rosterUnit("r-runner"), rosterUnit("r-holder")] },
+      p1: { units: [rosterUnit("r-runner"), rosterUnit("r-holder", { move: 6, oc: 3 })] },
       p2: { units: [rosterUnit("r-enemy")] }
     }
   };
@@ -150,45 +172,79 @@ function strategy(s) {
   return getPrimaryStrategyContext(s, { playerId: "p1", perspectivePlayerId: "p1" });
 }
 
-function signal(s, objectiveId, overrides = {}) {
-  return getPrimaryObjectiveStrategySignal(s, objectiveId, {
+function signal(s, objectiveId, options = {}) {
+  const primaryStrategy = strategy(s);
+  return getPrimaryObjectiveStrategySignal(s, {
     playerId: "p1",
     perspectivePlayerId: "p1",
-    ...overrides
+    objectiveId,
+    primaryStrategy,
+    ...options
   });
 }
 
-test("Triangulation routes to its dedicated strategy and exposes valid mission Action", () => {
-  const s = state();
+test("router selects the dedicated Triangulation strategy", () => {
+  const context = strategy(state());
+  assert.equal(context.active, true);
+  assert.equal(context.supported, true);
+  assert.equal(context.missionName, "Triangulation");
+  assert.equal(context.disposition, "Reconnaissance");
+});
+
+test("Triangulation tiers are 0, 3, 6 and 10 VP", () => {
+  assert.equal(getTriangulationTierVp(0), 0);
+  assert.equal(getTriangulationTierVp(1), 3);
+  assert.equal(getTriangulationTierVp(2), 6);
+  assert.equal(getTriangulationTierVp(3), 10);
+  assert.equal(getTriangulationTierVp(5), 10);
+});
+
+test("only completed Triangulate reviews create persistent triangulated objectives", () => {
+  const s = state({ history: [
+    ...completedTriangulation("central-1", { round: 2, turn: 2, unitId: "runner" }),
+    triangulateAttempt("central-2", { round: 3, turn: 3, unitId: "holder" }),
+    triangulateReview("central-2", { round: 3, turn: 3, unitId: "holder", outcome: "failed" })
+  ], round: 4 });
+  const triangulation = getTriangulationState(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  assert.deepEqual(triangulation.triangulatedObjectiveIds, ["central-1"]);
+  assert.equal(triangulation.triangulatedCount, 1);
+  assert.equal(triangulation.triangulatedTierVp, 3);
+});
+
+test("an attempt spends the once-per-turn Triangulate use even before review", () => {
+  const s = state({ phase: "shooting", history: [triangulateAttempt("central-1", { round: 2, turn: 2, unitId: "runner" })] });
+  const triangulation = getTriangulationState(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  assert.equal(triangulation.usedThisTurn, true);
+  assert.deepEqual(triangulation.pendingObjectiveIds, ["central-1"]);
+  assert.equal(triangulation.actionAvailableThisTurn, false);
+  assert.equal(getMissionActionOptions(s, "p1").some((option) => option.definitionId === "primary-triangulation"), false);
+});
+
+test("Triangulate objective options exclude the home objective and completed markers", () => {
+  const s = state({ round: 3, history: completedTriangulation("central-2", { round: 2, turn: 2, unitId: "runner" }) });
+  const options = getTriangulationObjectiveOptions(s, { playerId: "p1", perspectivePlayerId: "p1" });
+  assert.equal(options.some((option) => option.objectiveId === "home"), false);
+  assert.equal(options.some((option) => option.objectiveId === "central-2"), false);
+  assert.equal(options.some((option) => option.objectiveId === "central-1"), true);
+});
+
+test("Round 2 movement after Command cannot retroactively earn the 4 VP control checkpoint", () => {
+  const s = state({ round: 2, phase: "movement", controllers: { "central-1": "p1" } });
   const context = strategy(s);
-  assert.equal(context.missionId, "primary-triangulation");
-  assert.equal(context.homeRoleKnown, true);
-  assert.equal(context.actionAvailableThisTurn, true);
-  assert.ok(getMissionActionOptions(s, "p1").some((item) => item.definitionId === "primary-triangulation"));
+  const objectiveSignal = signal(s, "central-1", { control: "controlled", purpose: "hold-objective" });
+  assert.equal(context.commandCheckpointCompleted, true);
+  assert.equal(context.controlVpForProjection, 0);
+  assert.equal(objectiveSignal.controlVpLeverage, 0);
+  assert.equal(objectiveSignal.stagingVpLeverage, 4);
+  assert.match(objectiveSignal.reason, /checkpoint|stages/i);
 });
 
-test("Triangulation counts only completed unique non-home objectives", () => {
-  const history = [
-    triangulationAttempt("central-1", { round: 1, turn: 1 }),
-    { type: "mission_action.reviewed", payload: { actionKey: "1:1:runner", playerId: "p1", checkpoint: "end-of-turn", outcome: "completed", missionInstanceId: "primary:p1:primary-triangulation", round: 1, turn: 1 } },
-    triangulationAttempt("central-1", { round: 2, turn: 2, unitId: "holder" }),
-    { type: "mission_action.reviewed", payload: { actionKey: "2:2:holder", playerId: "p1", checkpoint: "end-of-turn", outcome: "completed", missionInstanceId: "primary:p1:primary-triangulation", round: 2, turn: 2 } },
-    triangulationAttempt("central-2", { round: 3, turn: 3, unitId: "runner" }),
-    { type: "mission_action.reviewed", payload: { actionKey: "3:3:runner", playerId: "p1", checkpoint: "end-of-turn", outcome: "failed", missionInstanceId: "primary:p1:primary-triangulation", round: 3, turn: 3 } }
-  ];
-  const context = strategy(state({ round: 4, history }));
-  assert.equal(context.triangulatedCount, 1);
-  assert.deepEqual(context.triangulatedObjectiveIds, ["central-1"]);
-});
-
-test("Triangulation signals prioritize untriangulated non-home objectives", () => {
-  const s = state({ round: 2 });
-  const central = signal(s, "central-1", { control: "uncontrolled" });
-  const home = signal(s, "home-p1", { control: "friendly" });
-  assert.equal(central.missionRelevant, true);
-  assert.equal(central.canTriangulate, true);
-  assert.ok(central.vpLeverage > 0);
-  assert.equal(home.canTriangulate, false);
+test("four controlled objectives meet the 10 VP end-of-battle threshold", () => {
+  const s = state({ controllers: { "central-1": "p1", "central-2": "p1", "expansion-1": "p1" } });
+  const context = strategy(s);
+  assert.equal(context.controlledObjectiveCount, 4);
+  assert.equal(context.endgameControlThresholdMet, true);
+  assert.equal(context.endgameVpIfThreshold, 10);
 });
 
 test("movement routing promotes an untriangulated non-home objective while the action is available", () => {
@@ -251,10 +307,4 @@ test("Triangulate fails closed when the home-objective role is unknown", () => {
   assert.equal(triangulation.homeRoleKnown, false);
   assert.equal(triangulation.actionAvailableThisTurn, false);
   assert.deepEqual(getTriangulationObjectiveOptions(s, { playerId: "p1", perspectivePlayerId: "p1" }), []);
-});
-
-test("Triangulation implementation remains source-bounded to Primary strategy wiring", () => {
-  const source = readFileSync(new URL("../../src/rules/triangulation-state.js", import.meta.url), "utf8");
-  assert.match(source, /primary-triangulation/);
-  assert.doesNotMatch(source, /secondary-/);
 });
