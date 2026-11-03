@@ -74,12 +74,12 @@ export function getOpponentTurnDefensiveContext(state, { playerId, limit = 4 } =
   let windows = [];
   try {
     const guardians = getGuardiansStratagemOpportunities(state, { playerId })
-      .filter(item => item.available)
+      .filter(item => item.available && ["swift-as-the-eagle", "in-auramite-clad", "shield-of-honour"].includes(item.stratagemId))
       .map(item => ({ name: item.title, unitName: item.unitName, timing: item.timing, kind: "stratagem" }));
     const detachment = getCustodesDetachmentStratagemReminders(state, { playerId })
       .map(item => ({ name: item.title, unitName: item.detachmentName, timing: item.timing, kind: "stratagem" }));
     const abilities = getBattleRulesReminders(state, { playerId })
-      .filter(item => item.kind === "decision" || item.kind === "unit" && item.timing && item.available)
+      .filter(item => item.available && (item.turn === "opponent" || /targeted|attacked|enemy attack|defensive/i.test(item.timing ?? "")))
       .map(item => ({ name: item.title, unitName: item.unitName, timing: item.timing, kind: "ability" }));
     const seen = new Set();
     windows = [...guardians, ...detachment, ...abilities].filter(item => {
