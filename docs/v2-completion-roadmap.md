@@ -27,6 +27,10 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 7. **Game Review / endgame analysis**
    - Complete objective-control history, positioning history, losses, expected-vs-actual attacks, missed scoring opportunities, CP/resource use, and Tactical Advisor forecast review.
 
+## Deferred verification reminder
+
+- **Physical Secondary Mission card review — ON HOLD.** Retain [issue #502](https://github.com/Grumpa916/40k-tactics/issues/502) until the user has the Chapter Approved 2026–27 cards available. Code-level 18-card manual scoring audit completed in merged PR #501; printed-card/FAQ comparison must not block subsequent development.
+
 ## Current priority
 
 Work through the roadmap in order unless a live-game blocker changes priority. Item 1, the full-game verification pass, is the active workstream.

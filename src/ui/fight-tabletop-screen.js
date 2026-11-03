@@ -57,7 +57,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const adviceState = !incomingAttackMode && unit && targetId && weaponId ? getFightAdvisorContext(state, gameData) : state;
     let advice = '';
     if (!incomingAttackMode) {
-      try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId); }
+      try { advice = fightAdvisory(attackerId, weaponId, targetId, adviceState, weapons, perspectivePlayerId, { compact:true }); }
       catch { advice = '<p>Combat profile incomplete. Check unit details; record the physical result below.</p>'; }
     }
     const unitNameColor = unit ? (unit.ownerId === perspectivePlayerId ? '#79bbff' : '#ff8585') : '';
@@ -91,13 +91,12 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         ${incomingAttackMode
           ? renderIncomingDamageForecast(state, { attackerId, targetId, weapon: selectedWeapon })
           : advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
-        ${incomingAttackMode ? '' : '<details data-view-key="fight-assumptions"><summary>Advisor assumptions</summary><p>Uses known weapon profiles, wounds and the fighter/target you confirm from the physical tabletop. Fight order, Charge history and approximate map position provide tactical context but do not determine what you are allowed to record. Return damage is the strongest known eligible retaliation estimate across possible target survival outcomes, not the sum of every enemy attack. A dash means no response estimate is established, not guaranteed safety. Unknown profiles or abilities can change the result.</p></details>'}
       </aside>
       <details data-view-key="fight-history"><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(attack.allocationTargetName ? `${state.units.find(unit => unit.id === attack.targetId)?.name} (${attack.allocationTargetName})` : state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining inferred combats as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     const finishUnitControl = active && unit ? '<button type="button" data-fight-finish-entry>Finish unit</button>' : '';
-    const endFightControl = active && unit ? '' : `<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${renderActionReceipt(session)}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}` });
+    const endFightControl = active && unit || endReview ? '' : `<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}` });
 
     restoreView();
     mapView.bind(container);

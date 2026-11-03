@@ -78,12 +78,20 @@ test('Fight map preview does not activate; first attack and second weapon share 
     click(x,'data-map-unit-id','enemy');
     assert.match(x.root.innerHTML,/value="enemy" selected/);
     assert.match(x.root.innerHTML,/expected retaliation/);
+    assert.match(x.root.innerHTML,/data-view-key="fight-advisor-details"/);
+    assert.match(x.root.innerHTML,/<summary>More analysis · survival, destruction &amp; rules<\/summary>/);
+    assert.match(x.root.innerHTML,/class="fight-advisory__recommendation"/);
+    assert.doesNotMatch(x.root.innerHTML,/<h2>Fight Advisor<\/h2>/, 'avoid duplicate panel headings in tabletop mode');
     click(x,'data-map-unit-id','enemy2');
     assert.match(x.root.innerHTML,/value="enemy2" selected/);
     assert.equal(x.session.getState().history.filter(e => e.type === 'fight.unit_activated').length,0);
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
     assert.equal(x.session.getState().units.find(u => u.id === 'enemy2').wounds,19);
     assert.equal(x.root.node('[data-fight-target]').disabled,false);
+    const receiptMarkup = x.root.innerHTML.split('<footer>')[1];
+    assert.match(receiptMarkup,/live-action-receipt--compact/);
+    assert.match(receiptMarkup,/data-live-undo aria-label="Undo attack" title="Undo attack">Undo<\/button>/);
+    assert.ok(receiptMarkup.indexOf('data-live-undo') < receiptMarkup.indexOf('data-fight-finish-entry'));
     x.root.change('[data-fight-weapon]','claws'); click(x,'data-map-unit-id','enemy');
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
     const history=x.session.getState().history;
@@ -166,6 +174,7 @@ test('End Fight reviews remaining inferred combats and closes open activations b
     click(x,'data-map-unit-id','fighter'); x.root.change('[data-fight-weapon]','blade'); click(x,'data-map-unit-id','enemy'); click(x,'data-fight-attack');
     x.screen.requestPhaseEnd();
     assert.match(x.root.innerHTML,/remaining inferred combats/);
+    assert.equal(x.root.querySelector('[data-fight-complete]'),null,'confirmation replaces, not duplicates, End Fight');
     click(x,'data-fight-cancel-end');
     assert.equal(x.session.getState().phase,'fight');
     click(x,'data-fight-finish-entry');
