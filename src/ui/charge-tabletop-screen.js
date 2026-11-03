@@ -84,7 +84,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       <p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
-      ${candidate ? defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
+      ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
         <h2>Incoming charge · Defensive review</h2>
         <p>Review the enemy charger and your threatened units. Confirm the declared targets and measured distance on the tabletop; map positions do not establish charge legality.</p>
         ${targets.slice(0, 4).map(target => {
@@ -114,7 +114,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
             <p>${esc(advice.recommendation)}</p>
           </section>`;
         }).join('') : '<p>No ranked charge targets are available for this unit.</p>'}
-      </aside>` : ''}
+      </aside>`}
       <h2>Record Charge</h2>
       <p><small>Select the target(s), enter the measured tabletop distance, and record the outcome. These targets remain history and Tactical Advisor context only; Fight confirms its legal targets fresh from the tabletop.</small></p>
         ${targets.map(item => {
