@@ -190,7 +190,7 @@ test('opponent Charge screen shows incoming threat, not the opponent offensive r
     click(x, 'data-map-unit-id', 'enemy');
     assert.match(x.root.innerHTML, /data-incoming-charge-advisor/);
     assert.match(x.root.innerHTML, /Incoming charge · Defensive review/);
-    assert.match(x.root.innerHTML, /incoming Fight damage|confirm measured distance/);
+    assert.match(x.root.innerHTML, /estimated charge chance|incoming Fight damage|confirm measured distance/);
     assert.doesNotMatch(x.root.innerHTML, /Charge Priorities|Strategic value:/);
     click(x, 'data-map-unit-id', 'fighter');
     measured(x, 'fighter', 6);
