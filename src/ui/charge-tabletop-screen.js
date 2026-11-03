@@ -5,6 +5,7 @@ import { captureViewContinuity } from './view-continuity.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getChargeOpportunity, getChargeTargetPriorities } from '../rules/tactical-charge-opportunity.js';
 import { getCombatFormationMembers } from '../rules/battle-unit-reference.js';
+import { isOpponentTurnFor } from '../rules/tactical-opponent-turn.js';
 
 function modelsFor(unit) {
   return Array.isArray(unit.models) && unit.models.length
@@ -63,13 +64,14 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId;
+    const defending = isOpponentTurnFor(state, perspectivePlayerId ?? state.players?.[0]?.id);
     const model = getChargeViewModel(state, { perspectivePlayerId: perspectivePlayerId ?? state.activePlayer });
     if (!model.candidates.some(item => item.unit.unitId === selectedUnitId)) clearSelection();
     const candidate = model.candidates.find(item => item.unit.unitId === selectedUnitId);
     const valid = new Set((candidate?.targets ?? []).map(item => item.targetUnitId));
     for (const id of targetIds) if (!valid.has(id)) { targetIds.delete(id); distances.delete(id); }
     const targets = candidate?.targets ?? [];
-    const priorities = candidate ? getChargeTargetPriorities(state, {
+    const priorities = candidate && !defending ? getChargeTargetPriorities(state, {
       playerId:activePlayerId,
       attackerId:candidate.unit.unitId,
       targets,
@@ -82,7 +84,26 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       <p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
-      ${candidate ? `<aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor priorities"><h2>Charge Priorities · Top ${priorities.length} of ${targets.length}</h2>
+      ${candidate ? defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
+        <h2>Incoming charge · Defensive review</h2>
+        <p>Review the enemy charger and your threatened units. Confirm the declared targets and measured distance on the tabletop; map positions do not establish charge legality.</p>
+        ${targets.slice(0, 4).map(target => {
+          let advice = null;
+          try {
+            advice = getChargeOpportunity(state, {
+              playerId: activePlayerId, attackerId: candidate.unit.unitId,
+              targetUnitId: target.targetUnitId, mapDistance: target.targetDistance,
+              measuredDistance: distances.get(target.targetUnitId) ?? null
+            });
+          } catch {}
+          const chance = advice?.successProbability ?? advice?.mapSuccessProbability;
+          const damage = advice?.projectedFight?.available ? advice.projectedFight.expectedDamage : null;
+          return `<p><strong>${esc(target.target?.name ?? target.name)}</strong> · ${Number.isFinite(chance) ? esc(percent(chance)) + ' estimated charge chance' : 'confirm measured distance'}
+            ${Number.isFinite(damage) ? ` · about ${esc(damage.toFixed(1))} incoming Fight damage` : ''}
+            <small>${Number.isFinite(distances.get(target.targetUnitId)) ? 'Tabletop distance entered' : 'Approximate map only'}</small></p>`;
+        }).join('') || '<p>No nearby target established by the map. Check the tabletop for legal charge threats.</p>'}
+        <small>Estimates are optional references, not permission, range or damage rulings. Check defensive abilities when the target is declared.</small>
+      </aside>` : `<aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor priorities"><h2>Charge Priorities · Top ${priorities.length} of ${targets.length}</h2>
         ${priorities.length ? priorities.map(({ rank, target, advice }) => {
           const summary = chargePrioritySummary(advice);
           return `<section class="combat-workspace__card">
@@ -93,7 +114,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
             <p>${esc(advice.recommendation)}</p>
           </section>`;
         }).join('') : '<p>No ranked charge targets are available for this unit.</p>'}
-      </aside>
+      </aside>`}
       <h2>Record Charge</h2>
       <p><small>Select the target(s), enter the measured tabletop distance, and record the outcome. These targets remain history and Tactical Advisor context only; Fight confirms its legal targets fresh from the tabletop.</small></p>
         ${targets.map(item => {
