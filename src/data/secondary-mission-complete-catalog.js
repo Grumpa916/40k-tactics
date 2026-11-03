@@ -14,7 +14,9 @@ export const SECONDARY_MISSION_IMPORT_SOURCE = Object.freeze({
   datasetVersion: "2026.10.02-triangulation-action",
   datasetRepository: "IRONBUILT-LLC/ironbuilt-data",
   rulesSource: "user-provided-card-text",
-  scoringAuthority: "manual-player-confirmation"
+  scoringAuthority: "manual-player-confirmation",
+  verificationLevel: "user-supplied-card-transcription",
+  officialCardVerified: false
 });
 
 const reference = Object.freeze({
