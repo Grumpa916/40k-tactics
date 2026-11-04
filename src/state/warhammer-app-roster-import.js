@@ -125,7 +125,11 @@ const AUTO_FIXED_REVIEWED_SPACE_MARINES=new Set([
  'space-marines:storm-speeder-hailstrike','space-marines:storm-speeder-hammerstrike',
  'space-marines:storm-speeder-thunderstrike','space-marines:techmarine',
  'space-marines:captain-in-phobos-armour','space-marines:chaplain',
- 'space-marines:librarian','space-marines:librarian-in-phobos-armour'
+ 'space-marines:librarian','space-marines:librarian-in-phobos-armour',
+ 'space-marines:ancient-in-terminator-armour','space-marines:apothecary',
+ 'space-marines:apothecary-biologis','space-marines:bladeguard-ancient',
+ 'space-marines:chaplain-on-bike','space-marines:chaplain-with-jump-pack',
+ 'space-marines:judiciar','space-marines:librarian-in-terminator-armour'
 ]);
 function hydrateReviewedFixedEquipment(unit) {
  if(!AUTO_FIXED_REVIEWED_SPACE_MARINES.has(unit?.datasheetId))return;
