@@ -57,6 +57,16 @@ All other 23 mission numeric VP sets matched directly. These are value compariso
 
 New FAQ note metadata appears in the expanded mission summary and in the appropriate Primary scoring reminder; it does **not** automatically judge conditions or award VP.
 
+## Clarified scoring references, preserving manual scoring
+
+- **Extract Relic:** the user's IMG_0183 printed scoring face confirms that both the end-of-turn 4 VP and end-of-battle 5 VP last-marker conditions require exactly one opponent marker, a friendly unit in the same terrain area, and no enemy unit there. The formerly vague displayed summaries now state that condition.
+- **Purge and Secure:** the independent community card transcription distinguishes two alternative objective-related destruction conditions, worth 3 VP **once**, not twice. The live reference now explains these OR alternatives explicitly; this scoring face was not in the supplied original photographs and is not certified official.
+- **Locate and Deny:** the independent card transcription explains the exact-one-friendly-marker, friendly-in-same-terrain, enemy-absent conditions, replacing an unhelpful placeholder. This face remains pending official original comparison.
+- **Surveil the Foe:** the official Event Companion FAQ quotes the protected-marker exclusion; the UI scoring reference now mentions it and the FAQ note covers removing a marker later in the same turn.
+- **Reconnaissance Sweep:** the independent card transcription supports the 6-inch centre exclusion and alternative three-/four-quarter tiers. The original scoring face remains pending.
+
+These are changes to human-readable condition reminders, not a reinterpretation by automatic scoring logic. Players continue to confirm and enter actual tabletop VP.
+
 ## Functional correction from the photographs
 
 Locate and Deny's **Sensor Sweep** was already implemented by the special-case primary Action picker in `src/rules/mission-action-state.js`, but the core Primary mission definition lacked the `action` entry, so its expanded reference omitted the official Action. The definition now exposes the previously working Action and its once-per-turn, central-objective, end-of-turn completion and last-marker restrictions. No new live action engine was added.
