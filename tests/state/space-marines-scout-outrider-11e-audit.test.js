@@ -58,7 +58,7 @@ test('Scout Squad: 5/10 model legal Sergeant and ordinary Scout selections, one 
   const built=buildManualWargearLoadout(u,selected);
   assert.equal(qty(built.equippedWeapons,'Missile Launcher - Frag'),size===10?1:0);
   assert.equal(qty(built.equippedWeapons,'Missile Launcher - Krak'),size===10?1:0);
-  assert.match(renderWargearEditor(u),/Scout Sergeant/);
+  assert.match(renderWargearEditor(u),/scout sergeant ranged/);
   const invalid={...state,assignments:{...state.assignments}};
   // A second heavy weapon is impermissible for a five-Scout unit.
   if(size===5) {
@@ -115,7 +115,7 @@ test('Outrider: 3/6 models retain twin rifles and legal Sergeant melee plus 1 pl
   assert.equal(u.datasheet.characteristics['Objective Control'],'2');
   assert.equal(u.datasheet.weapons.find(x=>x.name==='Twin Bolt Rifle').skill,'2+');
   assert.match(u.datasheet.abilities.find(a=>a.name==='Full-throttle Assault').description,/charge/);
-  assert.match(renderWargearEditor(u),/full October Codex/i);
+  assert.match(renderWargearEditor(u),/complete October Codex/i);
  }
 });
 
