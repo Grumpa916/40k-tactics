@@ -199,6 +199,50 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:scout-squad":reviewed({
+    sourceName:"Scout Squad 11e datasheet cross-check; October Codex direct comparison pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Scout-Squad",
+    fixed:Object.freeze([fixed("Bolt Pistol"),nonSergeantFixed("Combat Knife")]),
+    slots:Object.freeze([
+      sergeantSlot("scout-sergeant-ranged",["Boltgun","Shotgun"]),
+      sergeantSlot("scout-sergeant-melee",["Combat Knife","Chainsword"]),
+      trooperSlot("scout-ranged",[
+        "Boltgun","Shotgun","Sniper Rifle","Heavy Bolter",
+        {name:"Missile Launcher",profiles:["Missile Launcher - Frag","Missile Launcher - Krak"]}
+      ])
+    ]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Sniper Rifle",models:5,maxEach:1}),
+      Object.freeze({type:"max-combined-per-models",selections:Object.freeze(["Heavy Bolter","Missile Launcher"]),models:5,maxEach:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "The Sergeant alone may swap their Boltgun for a Shotgun and their Combat Knife for a Chainsword.",
+      "Ordinary Scouts may take Shotguns; at most one Sniper Rifle and one Heavy Bolter OR Missile Launcher for every five unit models. Heavy weapons cannot go on the Sergeant.",
+      "Frag and Krak are alternative firing modes of one Missile Launcher, not two equipped weapons.",
+      "Scouts 6 inches, Infiltrators and Flexible Asset action eligibility after an advance or fall-back require tabletop confirmation."
+    ])
+  }),
+  "space-marines:outrider-squad":reviewed({
+    sourceName:"Outrider Squad 11e equipment/profile cross-check; 3-model points discrepancy pending official MFM",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Outrider-Squad",
+    fixed:Object.freeze([fixed("Twin Bolt Rifle"),nonSergeantFixed("Chainsword")]),
+    slots:Object.freeze([
+      sergeantSlot("outrider-sergeant-melee",["Chainsword","Power Weapon","Thunder Hammer"]),
+      slot("outrider-pistol",[
+        "Heavy Bolt Pistol",
+        {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}
+      ])
+    ]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Plasma Pistol",models:3,maxEach:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Only the Outrider Sergeant can swap a Chainsword for a Power Weapon or Thunder Hammer.",
+      "One model per three may replace its Heavy Bolt Pistol with a Plasma Pistol (1 at 3 models; 2 at 6); all models keep a Twin Bolt Rifle.",
+      "Plasma Standard and Supercharge are modes of one pistol. Full-throttle Assault only applies after a charge and requires manual confirmation.",
+      "Independent October references disagree between 80 and 85 points for three models; preserve imported 80 pending direct official MFM verification."
+    ])
+  }),
   "space-marines:aggressor-squad": reviewed({
     fixed:Object.freeze([fixed("Twin Power Fists")]),
     slots:Object.freeze([slot("unit-ranged-loadout",[
