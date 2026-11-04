@@ -80,6 +80,31 @@ const groups=Object.freeze({
   transport:['Transport','Vehicle'],
   fortification:['Fortification']
 });
+// GW distinguishes these from Legends: models use the indicated modern
+// datasheet as Legendary Proxies, subject to event-organiser permission.
+export const SPACE_MARINES_LEGENDARY_PROXY_REFERENCES=Object.freeze({
+  'Tactical Squad':'Intercessor Squad',
+  'Devastator Squad':'Desolation Squad',
+  'Suppressor Squad':'Inceptor Squad',
+  'Pedro Kantor':'Captain',
+  'Uriel Ventris':'Captain'
+});
+const LEGENDARY_PROXY_SOURCE='https://www.warhammer-community.com/en-gb/articles/bbnskauh/big-space-marines-news/';
+
+// These figures are supplementary identity/source notes, not an October 2026
+// current-Codex combat profile or official up-to-date MFM price certification.
+const GW_UNIT_COMPOSITIONS=Object.freeze({
+  'Victrix Honour Guard':Object.freeze({
+    permittedModels:Object.freeze([3,6]),
+    optionalChapterAncientMaximum:1,optionalChapterChampionMaximum:1,
+    sourceVersion:'June 2026 11e Faction Pack v1.0; October Codex recheck outstanding'
+  }),
+  'Wardens of Ultramar':Object.freeze({
+    permittedModels:Object.freeze([6]),
+    sourceVersion:'June 2026 11e Faction Pack v1.0; October Codex recheck outstanding'
+  })
+});
+const GW_DATASHEET_SOURCE='https://assets.warhammer-community.com/eng_08-06_warhammer40000_faction_pack_space-marines-nd2ezs5yzn-wxe2nf2ckk.pdf';
 const sourceUrl='https://warmind.online/factions/space-marines';
 const base={faction:'Space Marines',
   sourceName:'Independent 11e Space Marines datasheet-name index (not official datasheet verification)',
@@ -92,14 +117,27 @@ export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_M
     pointsOptions:Object.freeze([Object.freeze({models,points})]),
     verificationStatus:'name-and-points-reference-only',
     pointsSourceName:'Independent Nov 2, 2026 list (direct MFM comparison pending)',
-    pointsSourceUrl:sourceUrl,legends:false})
+    pointsSourceUrl:sourceUrl,legends:false,
+    ...(GW_UNIT_COMPOSITIONS[name] ? {
+      officialCompositionSourceUrl:GW_DATASHEET_SOURCE,
+      officialComposition:GW_UNIT_COMPOSITIONS[name],
+      completeOctoberCodexCrossCheck:false
+    } : {})})
 ));
 
 export const SPACE_MARINES_LEGENDS_CANDIDATES=Object.freeze(Object.entries(LEGENDS).flatMap(([role,names])=>
-  names.map(name=>Object.freeze({...base,id:'space-marines:'+slug(name),name,
-    keywords:Object.freeze(groups[role]),legends:true,
-    sourceName:'Legends name index; matched-play eligibility must be checked',
-    verificationStatus:'legends-name-only-unverified'}))
+  names.map(name=>{
+    const proxyAs=SPACE_MARINES_LEGENDARY_PROXY_REFERENCES[name];
+    return Object.freeze({...base,id:'space-marines:'+slug(name),name,
+      keywords:Object.freeze(groups[role]),legends:true,
+      ...(proxyAs ? {
+        legendaryProxy:true,proxyAs,
+        sourceName:'Games Workshop 2026 Codex Legendary Proxy list',
+        sourceUrl:LEGENDARY_PROXY_SOURCE
+      } : {}),
+      ...(!proxyAs ? {sourceName:'Legends name index; matched-play eligibility must be checked'} : {}),
+      verificationStatus:proxyAs?'legendary-proxy-reference-only':'legends-name-only-unverified'});
+  })
 ));
 
 export const SPACE_MARINES_COVERAGE_SOURCE=Object.freeze({

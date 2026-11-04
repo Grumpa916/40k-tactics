@@ -125,6 +125,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
 export function getArmyUnitCandidateLabel(unit) {
   if (!unit || typeof unit !== "object") return "Unit · verify";
   if (!unit.datasheet) {
+    if (unit.legendaryProxy) return unit.name + " · Legendary Proxy for " + unit.proxyAs + "; event permission required";
     if (unit.legends) return unit.name + " · Legends; full rules and legality unverified";
     if (unit.verificationStatus === "name-and-points-reference-only") return unit.name + " · reference price only; datasheet review pending";
     return unit.verificationStatus === "points-reviewed"
@@ -143,6 +144,7 @@ export function findArmyUnitCandidates({ faction, query = "" } = {}) {
   if (!normalizedFaction) return [];
   return ARMY_UNIT_CATALOG.filter((unit) =>
     unit.faction.toLowerCase() === normalizedFaction &&
-    (!normalizedQuery || unit.name.toLowerCase().includes(normalizedQuery))
+    (!normalizedQuery || unit.name.toLowerCase().includes(normalizedQuery) ||
+      (unit.importAliases ?? []).some(alias => alias.toLowerCase().includes(normalizedQuery)))
   );
 }
