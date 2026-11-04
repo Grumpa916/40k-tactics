@@ -47,6 +47,23 @@ export function unitStats(unit) {
   ? `<span class="ab-save-stat"><small>${label}</small><strong>${e(c[key] ?? '—')}</strong>${invulnerable != null && invulnerable !== '' ? `<em>Inv ${e(invulnerable)}</em>` : ''}</span>`
   : `<span><small>${label}</small><strong>${e(c[key] ?? '—')}</strong></span>`).join('')+'</div>';
 }
+function renderIndividualModelStats(unit) {
+ const models=unit.datasheet?.modelProfiles;
+ if(!Array.isArray(models)||!models.length)return '';
+ const headers=['Model','T','Sv','Inv','W','OC','Equipment'];
+ const rows=models.map(model=>{
+  const c=model.characteristics??{};
+  const fields=[model.name,c.Toughness,c.Save,c['Invulnerable save']??'—',
+    c.Wounds,c['Objective Control'],(model.wargear??[]).join(', ')];
+  return '<tr>'+fields.map(value=>'<td>'+e(value??'—')+'</td>').join('')+'</tr>';
+ }).join('');
+ return '<section aria-label="Per-model characteristics and equipment">'+
+   '<h4>Individual named models</h4>'+
+   '<p role="note">This unit has mixed Toughness, saves and Wounds. Use each physical model’s stats when allocating damage; no whole-unit value is inferred.</p>'+
+   '<div class="ab-table"><table><thead><tr>'+
+   headers.map(header=>'<th>'+e(header)+'</th>').join('')+
+   '</tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+}
 export function renderUnitDetails(unit, {current=null,busy=false,editable=false}={}) {
  if(!unit) return '';
  const displayUnit = resolveUnitProfile(unit, current?.faction);
@@ -56,7 +73,7 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  const safeSource=typeof source==='string' && /^https?:\/\//i.test(source);
  const weapons=unit.datasheet?.weapons ?? [];
  const abilities=orderAbilitiesForDisplay(unit.datasheet?.abilities ?? []);
- return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button>${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}<h3>${e(unit.name)}</h3>${unitStats(unit)}
+ return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button>${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}<h3>${e(unit.name)}</h3>${unitStats(unit)}${renderIndividualModelStats(unit)}
  ${editable?`${renderUnitSizeControls(unit,current)}${renderWargearEditor(unit)}<label>Enhancements / notes<textarea data-unit-notes="${e(unit.id)}" maxlength="2000">${e(unit.notes ?? '')}</textarea></label><button data-save-unit="${e(unit.id)}" ${d}>Save unit changes</button>${renderAttachmentControls(unit,current,busy)}`:`<button class="ab-primary" data-add-catalog-unit="${e(unit.id)}" ${d}>+ Add to list · ${e(unit.defaultPoints ?? 'Unknown')} pts</button>`}
  ${editable&&getTyranidWargearRuleSet(unit.datasheetId)?'<details class="ab-profile-reference"><summary>Full weapon profiles and alternate attack modes</summary>':''}
  ${['Ranged','Melee'].map(kind=>{const list=weapons.filter(w=>(String(w.range).toLowerCase()==='melee')===(kind==='Melee'));return `<h4>${kind} weapons</h4>${list.length?`<div class="ab-table"><table><thead><tr><th>Weapon</th><th>Range</th><th>A</th><th>Skill</th><th>S</th><th>AP</th><th>D</th></tr></thead><tbody>${list.map(w=>`<tr><th>${e(w.name)}${w.abilities?`<small>${e(w.abilities)}</small>`:''}</th>${['range','attacks','skill','strength','ap','damage'].map(k=>`<td>${e(w[k] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<p>Profiles unavailable.</p>'}`}).join('')}
