@@ -107,5 +107,5 @@ test('Invader copy order and 1/2 model sizes; Multi-melta upgrade is added to ba
  }
  const a=get('Invictor Tactical Warsuit',1,'i1'),b=get('Invictor Tactical Warsuit',1,'i2'),c=get('Invictor Tactical Warsuit',1,'i3');
  assert.deepEqual([a,b,c].map(x=>resolveBuilderUnitCost(x,{units:[a,b,c]}).points),[135,135,150]);
- assert.equal(getTyranidWargearRuleSet('space-marines:ancient'),null);
+ assert.equal(getTyranidWargearRuleSet('space-marines:lieutenant-in-phobos-armour'),null);
 });
