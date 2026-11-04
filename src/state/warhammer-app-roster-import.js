@@ -2,7 +2,8 @@ import { createArmyRoster } from './army-roster-library.js';
 import { ARMY_UNIT_CATALOG } from '../data/army-unit-catalog.js';
 import { createRulesDataRevisionStamp } from '../data/rules-data-revisions.js';
 import { resolveInitialUnitPoints } from './army-roster-unit-costs.js';
-import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout } from '../rules/wargear-loadout-validation.js';
+import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout, buildManualWargearLoadout } from '../rules/wargear-loadout-validation.js';
+import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 
 const pointsPattern = /\b(\d[\d,]*)\s*(?:pts?\.?|points?)\b/i;
 const sections = /^(?:ATTACHED UNITS|CHARACTERS|BATTLELINE|OTHER DATASHEETS|DEDICATED TRANSPORTS|ALLIED UNITS)$/i;
@@ -111,6 +112,29 @@ function attachSourceValidationErrors(units, sourceErrors) {
    };
   }
  }
+}
+// Some named Ultramarines have an unambiguous, mandatory fixed loadout.
+// Populate their known weapons when the pasted export lists no equipment,
+// rather than demanding pointless live-play keyboard confirmation. Never
+// override a supplied or unmatched choice, or expand to selectable squads.
+const AUTO_FIXED_NAMED_ULTRAMARINES=new Set([
+ 'space-marines:marneus-calgar','space-marines:cato-sicarius',
+ 'space-marines:wardens-of-ultramar'
+]);
+function hydrateNamedFixedEquipment(unit) {
+ if(!AUTO_FIXED_NAMED_ULTRAMARINES.has(unit?.datasheetId))return;
+ if(unit.equippedWargear?.length||unit.unmatchedWargear?.length||
+    unit.loadoutValidation?.status==='source-invalid')return;
+ const rules=getTyranidWargearRuleSet(unit.datasheetId);
+ if(!rules?.fixed?.length||rules.slots?.length||rules.optional?.length)return;
+ const selections=rules.fixed.map(item=>({
+  name:item.name,quantity:(item.count??0)+(item.perModel??0)*unit.modelCount
+ })).filter(item=>item.quantity>0);
+ const built=buildManualWargearLoadout(unit,selections);
+ if(built.loadoutValidation.status!=='rules-reviewed-valid')return;
+ unit.equippedWargear=built.equippedWargear;
+ unit.equippedWeapons=built.equippedWeapons;
+ unit.loadoutValidation={...built.loadoutValidation,source:'reviewed-fixed-equipment-import'};
 }
 function finalizeLoadoutValidation(unit) {
  const reviewed = validateWargearLoadout(unit);
@@ -221,6 +245,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   } else warnings.push('Review Attached unit ' + number + ': leader/bodyguard pairing could not be resolved.');
  }
  attachSourceValidationErrors(units, sourceErrors);
+ units.forEach(hydrateNamedFixedEquipment);
  units.forEach(finalizeLoadoutValidation);
  warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);
