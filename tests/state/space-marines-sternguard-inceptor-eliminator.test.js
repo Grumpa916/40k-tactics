@@ -143,7 +143,7 @@ test('Eliminator Sergeant can select Instigator; non-Sergeants only Bolt Sniper 
 });
 
 test('Only the three newly reviewed unit sets gain wargear selection; other faction behavior stays untouched',()=>{
- const other=make('Captain');
+ const other=make('Ancient');
  assert.equal(getTyranidWargearRuleSet(other.datasheetId),null);
  assert.match(renderWargearEditor(other),/review pending/);
  for(const name of ['Sternguard Veteran Squad','Inceptor Squad','Eliminator Squad']){
