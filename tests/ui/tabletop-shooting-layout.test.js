@@ -125,7 +125,7 @@ test('tabletop Shooting mode renders the preferred map-plus-controls workspace w
     assert.match(root.innerHTML, /Bio-plasmic cannon/);
     const targetMarker = root.node('[data-map-unit-id]', 'marine');
     assert.equal(targetMarker.getAttribute('data-shoot-target-marker'), 'true');
-    assert.equal(targetMarker.style.touchAction, 'manipulation');
+    assert.equal(targetMarker.style.touchAction, 'none', 'iPad markers accept drag gestures while remaining tappable');
     root.click('[data-map-unit-id]', 'marine');
     assert.equal(root.querySelector('.shoot-tabletop__control-scroll').scrollTop, 0,
       'target selection keeps the shooter and weapon controls visible');
