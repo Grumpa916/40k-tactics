@@ -17,6 +17,15 @@ const target=matches=>({closest:selector=>matches[selector]??null});
 const attr=(name,value)=>({getAttribute:key=>key===name?value:null});
 const board={getBoundingClientRect:()=>({left:0,top:0,width:600,height:440}),closest:()=>true};
 
+test('Reserves button uses the complete selected unit name and stable duplicate number', () => {
+  const state=seed(true);
+  state.units[0].name='Captain in Gravis Armour';
+  state.units.push({...state.units[0],id:'c'});
+  const html=renderMapReserveTray(state,{selectedUnitId:'a',playerId:'p1'});
+  assert.match(html,/Reserves · 0 · Move Captain in Gravis Armour 1 here/);
+  assert.doesNotMatch(html,/Move Captain Gravis here/);
+});
+
 test('Movement tap transfer works for opponent, persists and clears old engagements',()=>{
   const state=seed();state.history=[{type:'charge.outcome_recorded',payload:{unitId:'b',targetIds:['a'],outcome:'successful'}}];
   assert.ok(getFightEngagementState(state).engagedUnitIds.includes('b'));

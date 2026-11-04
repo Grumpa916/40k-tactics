@@ -13,7 +13,10 @@ test('compact labels retain recognizable names and distinguish variants', () => 
   assert.equal(shortMapUnitName({name:'Termagants'}), 'Term');
   assert.equal(shortMapUnitName({name:'Tyrannofex'}), 'Tfex');
   assert.notEqual(shortMapUnitName({name:'Custodian Guard'}), shortMapUnitName({name:'Custodian Wardens'}));
-  assert.ok(shortMapUnitName({name:'An unfamiliar very long unit name'}).length <= 9);
+  assert.equal(shortMapUnitName({name:'Captain in Gravis Armour'}), 'Captain Gravis');
+  assert.equal(shortMapUnitName({name:'Hellblaster Squad'}), 'Hellblaster');
+  assert.equal(shortMapUnitName({name:'Librarian in Terminator Armour'}), 'Librarian Term.');
+  assert.ok(shortMapUnitName({name:'An unfamiliar very long unit name'}).length <= 15);
 });
 
 const unit = (id, ownerId, status = 'deployed') => ({id, ownerId, name:'Exocrine', status, position:{x:10,y:10}});
