@@ -197,6 +197,28 @@ export function resolveShootingAttack(session, {
   );
 }
 
+export function skipRemainingShootingUnits(session, context = {}) {
+  if (!session || typeof session.getState !== "function" || typeof session.dispatchBatch !== "function") {
+    throw new TypeError("A game session with batch dispatch is required.");
+  }
+  const state = session.getState();
+  if (state.phase !== "shooting") throw new Error("Skipping units is only available during Shooting.");
+  const shooting = getShootingState(state);
+  const commands = [
+    ...shooting.activations
+      .filter((activation) => activation.actionType === "shoot" &&
+        !isCombatActivationFinished(state, activation.unitId, "shooting"))
+      .map((activation) => createCommand(COMMAND_TYPES.FINISH_COMBAT_ACTIVATION, { unitId: activation.unitId })),
+    ...shooting.candidates.available
+      .map((unitId) => createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION,
+        shootingActivationPayload({ unitId, actionType: "not_shoot" }))),
+    createCommand(COMMAND_TYPES.COMPLETE_SHOOTING_PHASE)
+  ];
+  // Commit all choices and the phase transition together, so a failed command
+  // cannot leave some units skipped and others still awaiting a choice.
+  return session.dispatchBatch(commands, context);
+}
+
 export function finishShootingPhase(session, context = {}) {
   if (!session || typeof session.dispatch !== "function") {
     throw new TypeError("A game session is required.");

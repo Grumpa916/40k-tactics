@@ -51,3 +51,5 @@
 .shoot-advisory__decision { border-left:2px solid #bddf91; padding-left:8px; margin:8px 0; }
 .shoot-advisory__decision p { margin:5px 0; }
 .shoot-advisory__decision li { margin:8px 0; }
+
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__footer .shoot-tabletop__skip { grid-column:1/-1; background:#c4e99b; border-color:#c4e99b; color:#17212b; font-weight:700; }
