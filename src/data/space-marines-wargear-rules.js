@@ -18,6 +18,9 @@ const source={
 const pick=(name,profiles=[name])=>Object.freeze({name,profiles:Object.freeze(profiles)});
 const fixed=(name,perModel=1,profiles=[name])=>Object.freeze({...pick(name,profiles),perModel});
 const slot=(id,choices)=>Object.freeze({id,perModel:1,choices:Object.freeze(choices.map(c=>typeof c==="string"?pick(c):pick(c.name,c.profiles)))});
+const sergeantSlot=(id,choices)=>Object.freeze({id,count:1,choices:Object.freeze(choices.map(c=>typeof c==="string"?pick(c):pick(c.name,c.profiles)))});
+const nonSergeantFixed=(name,profiles=[name])=>Object.freeze({...fixed(name,1,profiles),count:-1});
+const addition=(name,perModels,profiles=[name])=>Object.freeze({...pick(name,profiles),perModels,maxEach:1});
 const reviewed=body=>Object.freeze({...source,...body});
 export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
   "space-marines:aggressor-squad": reviewed({
@@ -39,6 +42,56 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       fixed("Bolt pistol"),
       fixed("Heavy Bolter"),
       fixed("Close combat weapon")
+    ])
+  }),
+
+  "space-marines:intercessor-squad":reviewed({
+    sourceName:"GW August 2026 Codex preview plus current 11e Intercessor datasheet cross-check",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Intercessor-Squad",
+    verificationLevel:"official-codex-preview-and-current-11e-reference",
+    fixed:Object.freeze([
+      fixed("Bolt Pistol"),
+      nonSergeantFixed("Bolt Rifle",["Bolt Rifle - Focused Fire","Bolt Rifle - Saturation"]),
+      nonSergeantFixed("Knives and Fists")
+    ]),
+    slots:Object.freeze([
+      sergeantSlot("sergeant-melee",[
+        "Knives and Fists","Chainsword","Power Fist","Power Weapon","Thunder Hammer"
+      ]),
+      sergeantSlot("sergeant-rifle",[
+        {name:"Bolt Rifle",profiles:["Bolt Rifle - Focused Fire","Bolt Rifle - Saturation"]},
+        "Chainsword","Hand Flamer",
+        {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]},
+        "Power Weapon"
+      ])
+    ]),
+    optional:Object.freeze([
+      addition("Grenade Launcher",5,["Grenade Launcher - Frag","Grenade Launcher - Krak"])
+    ]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Grenade Launcher",models:5,maxEach:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Sergeant replacements affect the Sergeant only; the other 4 or 9 Intercessors keep their Bolt Rifles and Knives and Fists.",
+      "Only one regular Intercessor (not the Sergeant) per five models may add a Grenade Launcher.",
+      "Focused Fire and Saturation are alternative attacks from the same Bolt Rifle; choose one legal profile when firing."
+    ])
+  }),
+  "space-marines:eradicator-squad-with-melta-rifles":reviewed({
+    sourceName:"Current 11e Melta Eradicator datasheet transcription, October official Codex check pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Eradicator-Squad-with-Melta-Rifles",
+    fixed:Object.freeze([fixed("Bolt Pistol"),fixed("Ceramite Fists")]),
+    slots:Object.freeze([slot("rifle",[
+      {name:"Melta Rifle",profiles:["Melta Rifle","Melta Rifle - Hunter"]},
+      {name:"Multi-melta",profiles:["Multi-melta","Multi-melta - Hunter"]}
+    ])]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Multi-melta",models:3,maxEach:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "One non-Sergeant Eradicator per three models may replace its Melta Rifle with a Multi-melta.",
+      "Hunter profiles target Monster or Vehicle models only; the normal/Hunter entries are modes of one weapon, not extra equipped weapons.",
+      "Total Obliteration permits damage-roll re-rolls. Confirm application on the physical tabletop."
     ])
   }),
   "space-marines:terminator-assault-squad":reviewed({
