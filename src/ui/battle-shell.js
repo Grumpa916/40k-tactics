@@ -511,7 +511,7 @@ export function createBattleShell(container, {
     if (!Number.isInteger(amount) || !["vp","cp"].includes(kind)) return;
     try {
       if (kind === "vp") session.dispatch({ type: COMMAND_TYPES.ADJUST_VICTORY_POINTS, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
-      else session.dispatch({ type: COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", note: "Scoreboard popup", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
+      else session.dispatch({ type: COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, payload: { playerId: scoreAdjustPlayerId, amount, reason: "adjustment", note: "Scoreboard popup", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
       scoreAdjustMessage = (amount > 0 ? "+" : "") + amount + " " + kind.toUpperCase() + " recorded.";
     } catch (error) {
       scoreAdjustMessage = error?.message ?? String(error);
