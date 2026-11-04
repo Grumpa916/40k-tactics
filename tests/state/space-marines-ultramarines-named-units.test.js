@@ -134,7 +134,7 @@ test('reviewed Calgar/Cato/Victrix and Wardens attachment paths require legal ro
 
 test('pasted fixed-only named Ultramarines units enter battle without redundant equipment prompts',()=>{
  const imported=importWarhammerAppRoster({
-  text:'Space Marines\\nCHARACTERS\\nMarneus Calgar (180 pts)\\nCato Sicarius (115 pts)\\nOTHER DATASHEETS\\nWardens of Ultramar (115 pts)',
+  text:'Space Marines\nCHARACTERS\nMarneus Calgar (180 pts)\nCato Sicarius (115 pts)\nOTHER DATASHEETS\nWardens of Ultramar (115 pts)',
   faction:'Space Marines',name:'Ultramarines named units',id:'ultramarines-fixed',pointsLimit:2000
  });
  assert.equal(imported.unrecognized.length,0);
