@@ -64,6 +64,18 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed base price for this Assault Terminator copy/size.'};
   return {points:base.points+5*shields,reason:base.condition+'; '+shields+' Storm Shield(s) at 5 pts each'};
  }
+ // Cyclone Terminators retain their storm bolter and pay a per-launcher
+ // upgrade. Apply that on top of the correct squad-size/copy-order base.
+ if (unit.datasheetId === 'space-marines:terminator-squad') {
+  const launchers=selections.filter(x=>x.name==='Cyclone Missile Launcher and Storm Bolter')
+    .reduce((total,x)=>total+Number(x.quantity ?? 0),0);
+  const maximum=Math.floor(unit.modelCount/5);
+  if(!Number.isInteger(launchers)||launchers<0||launchers>maximum)
+   return {points:null,reason:'Cyclone Launcher limit: at most one per five models.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
+  return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
+ }
  const reviewedOrdinalOption = resolveReviewedOrdinalOption(options, ordinal);
  if (reviewedOrdinalOption) return {
   points: reviewedOrdinalOption.points,
