@@ -417,40 +417,6 @@ export function createCommandScreen(container, {
       render();
       return;
     }
-    const secondaryForm = event.target?.closest?.("[data-secondary-vp-form]");
-    if (secondaryForm && container.contains(secondaryForm)) {
-      event.preventDefault();
-      const state = session.getState();
-      const formData = new FormData(secondaryForm);
-      const instanceId = String(formData.get("secondary-vp-card") ?? "");
-      const amount = Number(formData.get("secondary-vp-amount"));
-      const entry = getSecondaryMissionHistory(state).find((item) =>
-        item.instanceId === instanceId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
-      const playerId = entry?.playerId;
-      if (!playerId || !entry || !Number.isInteger(amount) || amount <= 0) {
-        secondaryMissionMessage = "Select an active secondary card and enter a positive whole-number VP amount.";
-        render();
-        return;
-      }
-      const round = state.battle?.round ?? 0;
-      const turn = state.turn ?? 0;
-      const missionMode = getSecondaryMissionMode(state, playerId) ?? entry.definition?.missionMode;
-      if (!missionMode) {
-        secondaryMissionMessage = "Set this player's Fixed or Tactical mode before recording secondary scoring.";
-        render();
-        return;
-      }
-      try {
-        session.dispatch({ type: COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, payload: {
-          playerId, instanceId, amount, turn, round, scoringTiming:scoringCheckpoint
-        }});
-        secondaryMissionMessage = "Secondary VP recorded for " + (entry.definition?.name ?? entry.definitionId) + ". Check the ledger for any cap applied.";
-      } catch (error) {
-        secondaryMissionMessage = error?.message ?? String(error);
-      }
-      render();
-      return;
-    }
     const form = event.target?.closest?.("[data-vp-form]");
     if (!form || !container.contains(form)) return;
     event.preventDefault();
@@ -635,12 +601,6 @@ export function createCommandScreen(container, {
       !(getSecondaryMissionMode(state, selectedSecondaryPlayerId) === "tactical" && seenSecondaryIds.has(definition.id)) &&
       (!secondaryMissionMode || definition.availableModes?.includes(secondaryMissionMode) !== false) &&
       !(getSecondaryMissionMode(state, selectedSecondaryPlayerId) === "fixed" && definition.fixedAvailable === false));
-    const activeSecondaryForVp = secondaryHistory.filter((item) =>
-      item.status === SECONDARY_MISSION_STATUS.ACTIVE &&
-      (!scoringCheckpointPlayerId || item.playerId === scoringCheckpointPlayerId) &&
-      !(((getSecondaryMissionMode(state, item.playerId) ?? item.definition?.missionMode) === "fixed") &&
-        (item.scoringHistory ?? []).some((scored) =>
-          scored.round === (state.battle?.round ?? 0) && scored.turn === (state.turn ?? 0))));
     const activePlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
     const activeTacticalCards = secondaryHistory.filter((item) =>
       item.playerId === activePlayerId &&
@@ -667,18 +627,6 @@ export function createCommandScreen(container, {
                 '<label>Card to discard<select name="secondary-redraw-card" required>' + secondaryRedrawOptions + '</select></label>' +
                 '<button type="submit">Use New Orders (−1 CP)</button></form>'
               : '<p>No active Tactical cards are available to replace.</p>') + '</section>'
-      : "";
-    const secondaryVpCardOptions = activeSecondaryForVp.map((item) =>
-      '<option value="' + escapeHtml(item.instanceId) + '">' +
-      escapeHtml(playerName(state, item.playerId) + " — " + (item.definition?.name ?? item.definitionId)) + '</option>'
-    ).join("");
-    const secondaryVpForm = players.length && activeSecondaryForVp.length
-      ? '<section class="command-secondary-award"><h3>Confirm secondary mission VP</h3>' +
-        '<p>Use only after checking the physical card and confirming the actual score. Mission caps are applied by the ledger.</p>' +
-        '<form data-secondary-vp-form class="command-vp-form">' +
-        '<label>Active secondary card<select name="secondary-vp-card" required>' + secondaryVpCardOptions + '</select></label>' +
-        '<label>VP actually scored<input name="secondary-vp-amount" type="number" min="1" step="1" value="3" required></label>' +
-        '<button type="submit">Confirm secondary VP</button></form></section>'
       : "";
     const secondaryDefinitionOptions = '<option value="">Select a mission…</option>' +
       selectableSecondaryDefinitions.map((definition) =>
@@ -823,7 +771,7 @@ export function createCommandScreen(container, {
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       renderCustodesKatahCommandPanel(state, { playerId }) +
       '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
-      secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm + '</details>' +
+      secondaryMissionManager + secondaryRedrawMarkup + '</details>' +
       '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details></div>';
     if (layoutMode === "tabletop") {
       container.innerHTML = renderCombatWorkspace({
@@ -846,7 +794,7 @@ export function createCommandScreen(container, {
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
-      secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm +
+      secondaryMissionManager + secondaryRedrawMarkup +
       '<section><h2>Live battlefield map</h2>' +
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
       '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +
