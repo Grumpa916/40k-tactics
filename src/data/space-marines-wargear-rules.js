@@ -199,6 +199,62 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:assault-intercessors-with-jump-packs":reviewed({
+    sourceName:"Current 11e Jump Pack Assault Intercessors datasheet cross-check; October Codex official full-text comparison pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html",
+    fixed:Object.freeze([nonSergeantFixed("Chainsword")]),
+    slots:Object.freeze([
+      sergeantSlot("jump-assault-sergeant-melee",["Chainsword","Power Fist","Power Weapon"]),
+      sergeantSlot("jump-assault-sergeant-pistol",[
+        "Heavy Bolt Pistol","Hand Flamer",
+        {name:"Sergeant Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}
+      ]),
+      trooperSlot("jump-assault-trooper-pistol",[
+        "Heavy Bolt Pistol",
+        {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}
+      ])
+    ]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Plasma Pistol",models:5,maxEach:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "The Sergeant alone may take a Hand Flamer or Sergeant Plasma Pistol in place of their Heavy Bolt Pistol, and a Power Fist or Power Weapon instead of the Chainsword.",
+      "For every five models, at most one ordinary Jump Pack Intercessor may replace its Heavy Bolt Pistol with a Plasma Pistol. Sergeant Plasma Pistol is deliberately named separately in the picker to enforce independent limits.",
+      "Standard and Supercharge are alternate attack modes of one equipped plasma pistol; never count either mode as a second gun.",
+      "Hammer of Wrath triggers after a charge move; count engaged models and resolve each 4+ mortal wound roll on the tabletop. Deep Strike and Doctrine timing remain manual."
+    ])
+  }),
+  "space-marines:vanguard-veteran-squad-with-jump-packs":reviewed({
+    sourceName:"Current 11e Vanguard Veterans with Jump Packs datasheet cross-check; October Codex official full-text comparison pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html",
+    fixed:Object.freeze([nonSergeantFixed("Master-crafted Power Weapon")]),
+    slots:Object.freeze([
+      sergeantSlot("jump-vanguard-sergeant-melee",["Relic Blade","Power Fist","Thunder Hammer"]),
+      sergeantSlot("jump-vanguard-sergeant-pistol",[
+        "Heavy Bolt Pistol",
+        {name:"Sergeant Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]},
+        {name:"Combat Shield",profiles:[]}
+      ]),
+      trooperSlot("jump-vanguard-trooper-pistol",[
+        "Heavy Bolt Pistol",
+        {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]},
+        {name:"Combat Shield",profiles:[]}
+      ])
+    ]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Plasma Pistol",models:5,maxEach:2})
+    ]),
+    modelSpecificWargear:Object.freeze([
+      Object.freeze({selection:"Combat Shield",effect:"Each equipped model has a 5+ invulnerable save. Do not apply a unit-wide invulnerable save automatically.",automaticVitalsApplied:false})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Only the Sergeant can exchange the Relic Blade for a Power Fist or Thunder Hammer; all regular Veterans keep their Master-crafted Power Weapons.",
+      "The Sergeant has an independent Plasma Pistol option; up to two ordinary Veterans for every five squad models may replace their Heavy Bolt Pistols with Plasma Pistols.",
+      "Any model may instead replace its Heavy Bolt Pistol with a Combat Shield, which grants a 5+ invulnerable save only to that model. Track mixed allocations manually.",
+      "Older 10th-edition Storm Shields, Grav-pistols, Hand Flamers and Inferno Pistols are not options on this reviewed 11e datasheet.",
+      "Vanguard Assault adds one melee Attack only in a turn this unit made a charge move; confirm the charge before adjusting combat expectations."
+    ])
+  }),
   "space-marines:scout-squad":reviewed({
     sourceName:"Scout Squad 11e datasheet cross-check; October Codex direct comparison pending",
     sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Scout-Squad",
