@@ -44,3 +44,7 @@ Current 11th-edition **independent datasheet transcriptions**, not a direct cert
 - Known remaining work: full direct official October GW Codex/MFM page-by-page certification; attachment UI validation; conditional ability integration in tactical advisor; iPad live-play verification; saved roster compatibility with grouped Captain weapon packages.
 
 **PR #524 has merged; PR #525 was reconciled to `main`, and its user-approved merge requires a fresh successful CI run.** Never update V1 or unreviewed saved roster state in this audit.
+
+## CI reconciliation check
+
+PR #525 was rebased by reconstruction onto `main` after PR #524 squash-merged. Its application logic is unchanged from the already-tested source-reviewed implementation. Re-run all GitHub Actions on the reconciled branch before merging; a prior November 4 Actions incident caused its initial reconciled run to remain queued.
