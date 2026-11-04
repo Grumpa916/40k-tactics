@@ -52,6 +52,56 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  'Ballistus Dreadnought':Object.freeze({
+    characteristics:Object.freeze({Move:'8"',Toughness:'10',Save:'2+',Wounds:'12',Leadership:'6+','Objective Control':'4'}),
+    weapons:Object.freeze([
+      ranged('Ballistus Lascannon','48"','2','3+','12','-3','D3+3',''),
+      ranged('Ballistus Missile Launcher - Frag','48"','D6+6','3+','5','-1','1','Blast 2'),
+      ranged('Ballistus Missile Launcher - Krak','48"','2','3+','10','-2','D3+3',''),
+      ranged('Storm Bolters','24"','4','3+','5','-1','1','Rapid Fire 4'),
+      melee('Armoured Feet','5','3+','7','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Ballistus Strike','Ranged attacks gain Sustained Hits 1 only when targeting an enemy unit within 24 inches. Check live target distance manually.'),
+      ability('Damaged 4','Apply the current damaged-vehicle core rule when 4 or fewer wounds remain; confirm manually.'),
+      ability('Deadly Demise D3','Resolve Deadly Demise D3 on the tabletop; never auto-score.')
+    ])
+  }),
+  'Brutalis Dreadnought':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'10',Save:'2+',Wounds:'12',Leadership:'6+','Objective Control':'4'}),
+    weapons:Object.freeze([
+      ranged('Bolt Rifles','24"','4','3+','5','-1','1','Twin-linked'),
+      ranged('Twin Heavy Bolter','36"','3','3+','5','-1','2','Twin-linked, Sustained Hits 1, Rapid Fire 2'),
+      ranged('Twin Icarus Ironhail Heavy Stubber','36"','3','3+','4','-1','1','Anti-Fly 3+, Rapid Fire 3, Twin-linked'),
+      ranged('Twin Multi-melta','18"','2','3+','10','-3','D3+2','Melta 3, Twin-linked'),
+      melee('Brutalis Fists','6','3+','12','-3','D3+3','Twin-linked'),
+      melee('Brutalis Talons','8','3+','10','-2','2','Sustained Hits 1: non-Monster/Vehicle, Twin-linked, Cleave 2')
+    ]),
+    abilities:Object.freeze([
+      ability('Brutalis Charge','Once per phase, per unit: this unit may be targeted by Crushing Impact even after another use; its use is -1 CP and does not prevent further uses. Confirm stratagem timing and CP manually.'),
+      ability('Damaged 4','Apply the current damaged-vehicle rule at 4 or fewer wounds; no old 10e damage-to-hit assumption.'),
+      ability('Deadly Demise D3','Resolve Deadly Demise D3 manually.')
+    ])
+  }),
+  'Redemptor Dreadnought':Object.freeze({
+    characteristics:Object.freeze({Move:'8"',Toughness:'10',Save:'2+',Wounds:'12',Leadership:'6+','Objective Control':'4'}),
+    weapons:Object.freeze([
+      ranged('Fragstorm Grenade Launchers','18"','6','3+','4','-1','1','Blast 2'),
+      ranged('Heavy Flamer','12"','3','N/A','5','-1','1','Blast 2, Torrent'),
+      ranged('Heavy Onslaught Gatling Cannon','24"','12','3+','6','-1','1','Devastating Wounds: non-Monster/Vehicle, Sustained Hits 2: non-Monster/Vehicle'),
+      ranged('Icarus Rocket Pod','24"','3','3+','6','-1','2','Anti-Fly 2+'),
+      ranged('Macro Plasma Incinerator - Standard','36"','D3+3','3+','9','-3','2','Blast 1'),
+      ranged('Macro Plasma Incinerator - Supercharge','36"','D3+3','3+','10','-4','3','Blast 1, Hazardous'),
+      ranged('Onslaught Gatling Cannon','24"','8','3+','5','-1','1','Devastating Wounds: non-Monster/Vehicle'),
+      ranged('Storm Bolters','24"','4','3+','5','-1','1','Rapid Fire 4'),
+      melee('Redemptor Fist','5','3+','12','-3','D3+3','')
+    ]),
+    abilities:Object.freeze([
+      ability('Duty Eternal','Attacks targeting this unit with Strength GREATER than its Toughness have -1 to wound rolls; not universal -1 Damage. Confirm strength and modifiers manually.'),
+      ability('Damaged 4','Apply damaged-vehicle core rule at 4 or fewer wounds; confirm manually.'),
+      ability('Deadly Demise D3','Resolve Deadly Demise D3 manually.')
+    ])
+  }),
   'Assault Intercessor Squad':Object.freeze({
     characteristics:Object.freeze({Move:'6"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'2'}),
     weapons:Object.freeze([
