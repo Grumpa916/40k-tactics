@@ -76,6 +76,18 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
   return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
  }
+ // Executioner Heavy Laser Destroyer costs 10 points above the size/copy-tier base,
+ // not its alternative Macro Plasma Incinerator (whose two modes are one gun).
+ if(unit.datasheetId==='space-marines:repulsor-executioner'){
+  const laser=selections.filter(x=>x.name==='Heavy Laser Destroyer')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  if(!Number.isInteger(laser)||laser<0||laser>1)
+   return {points:null,reason:'Exactly zero or one Heavy Laser Destroyer is possible.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Repulsor Executioner copy-price tier.'};
+  return {points:base.points+10*laser,
+    reason:(base.condition??'reviewed base')+'; '+laser+' Heavy Laser Destroyer at 10 pts'};
+ }
  // Each Invader ATV can swap its main Gatling Cannon to Multi-melta for +5 pts.
  // The 1/2 model and 1st–2nd/3rd+ base points must be chosen first.
  if(unit.datasheetId==='space-marines:invader-atvs'){
