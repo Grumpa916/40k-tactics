@@ -20,7 +20,10 @@ export function filterCatalog({current,unitSearch='',category='',sort='name',fit
  }).sort((a,b)=>sort==='points'?(a.defaultPoints??Infinity)-(b.defaultPoints??Infinity)||a.name.localeCompare(b.name):sort==='alpha'?a.name.localeCompare(b.name):compareCatalogRoleOrder(a,b));
 }
 function renderCatalogUnit(u,state) {
- return `<article class="ab-candidate"><button data-preview-unit="${e(u.id)}"><strong>${e(u.name)}</strong><small>${e(u.defaultModelCount)} models · ${e(u.defaultPoints ?? 'Unknown')} pts</small></button><button aria-label="Add ${e(u.name)}" data-add-catalog-unit="${e(u.id)}" ${state.busy?'disabled':''}>+</button></article>`;
+ const size=Number.isInteger(u.defaultModelCount)?u.defaultModelCount+' models':'size unverified';
+ const price=u.defaultPoints==null?'points unverified':u.defaultPoints+' pts';
+ const caution=u.legends?' · Legends; check event permission':!u.datasheet?' · profile unverified':'';
+ return `<article class="ab-candidate"><button data-preview-unit="${e(u.id)}"><strong>${e(u.name)}</strong><small>${e(size)} · ${e(price)}${e(caution)}</small></button><button aria-label="Add ${e(u.name)}" data-add-catalog-unit="${e(u.id)}" ${state.busy?'disabled':''}>+</button></article>`;
 }
 export function renderCatalogResults(state) {
  const rows=filterCatalog(state);
