@@ -52,6 +52,18 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   });
   return option ? { points: option.points, reason: option.condition } : { points: null, reason: 'No matching reviewed weapon price.' };
  }
+ // Assault Terminators have a per-model Storm Shield upgrade. Apply it on
+ // top of the applicable 1st/2nd or 3rd+ base size price; never assume all
+ // models carry a shield or silently upgrade saved army points.
+ if(unit.datasheetId==='space-marines:terminator-assault-squad'){
+  const shields=selections.filter(item=>item.name==='Thunder Hammer and Storm Shield')
+    .reduce((sum,item)=>sum+(Number(item.quantity)||0),0);
+  if(!Number.isInteger(shields)||shields<0||shields>unit.modelCount)
+   return {points:null,reason:'Storm Shield quantity must be between zero and the unit model count.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed base price for this Assault Terminator copy/size.'};
+  return {points:base.points+5*shields,reason:base.condition+'; '+shields+' Storm Shield(s) at 5 pts each'};
+ }
  const reviewedOrdinalOption = resolveReviewedOrdinalOption(options, ordinal);
  if (reviewedOrdinalOption) return {
   points: reviewedOrdinalOption.points,
