@@ -103,8 +103,9 @@ test('Assault Terminators handle individual shield choices without inventing mix
  assert.equal(built.equippedWeapons.find(x=>x.name==='Twin Lightning Claws').quantity,4);
  assert.equal(assessUnitLoadoutReadiness({...squad,...built}).status,'complete');
  assert.equal(resolveBuilderUnitCost(squad,{units:[squad]},equip).points,175);
- assert.equal(assessSavedUnitCost(squad,{...squad,points:175,equippedWargear:equip},{units:[squad]}).status,'matched');
- assert.equal(assessSavedUnitCost(squad,{...squad,points:170,equippedWargear:equip},{units:[squad]}).status,'mismatch');
+ const catalogEntry=findArmyUnitCandidates({faction:'Space Marines'}).find(x=>x.name==='Terminator Assault Squad');
+ assert.equal(assessSavedUnitCost(catalogEntry,{...squad,points:175,equippedWargear:equip},{units:[squad]}).status,'matched');
+ assert.equal(assessSavedUnitCost(catalogEntry,{...squad,points:170,equippedWargear:equip},{units:[squad]}).status,'mismatch');
  const editor=renderWargearEditor(squad);
  assert.match(editor,/The app does not automatically adjust mixed-model wounds/);
  assert.match(editor,/Storm Shield/);
