@@ -30,6 +30,11 @@ export function renderWargearEditor(unit) {
  const selections=readWargearChoiceState(unit,state);
  const count=name=>selections.find(item=>item.name===name)?.quantity??0;
  let html=`<section class="ab-wargear" data-wargear-editor="${e(unit.id)}"><h4>Selected wargear</h4><p>Choose one weapon in each replacement group. Switching a choice replaces the previous weapon. Save unit changes to apply this loadout in battle.</p>${state.needsReview?'<p role="alert">Saved equipment needs review. Check the choices below before saving.</p>':''}`;
+ if(String(unit?.datasheetId??'').startsWith('space-marines:')){
+  html+='<p class="ab-muted" role="note">Reviewed 11th-edition loadout subset; complete October Codex and weapon-effect verification remains outstanding.</p>';
+  for(const detail of rules.modelSpecificWargear??[])
+   html+=`<p role="note" class="ab-muted"><strong>${e(detail.selection)}:</strong> ${e(detail.effect)} The app does not automatically adjust mixed-model wounds.</p>`;
+ }
  if(rules.fixed?.length) html+=`<p class="ab-fixed-wargear"><strong>Always equipped:</strong> ${rules.fixed.map(item=>`${(item.count??0)+(item.perModel??0)*unit.modelCount} × ${e(item.name)}`).join(' · ')}</p>`;
  const perModelCards=(rules.slots?.length??0)>1 && rules.slots.some(slot=>slot.perModel);
  const models=perModelCards?Array.from({length:unit.modelCount},(_,i)=>i+1):[null];
