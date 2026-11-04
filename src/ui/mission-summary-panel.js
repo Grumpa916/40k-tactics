@@ -73,11 +73,15 @@ function renderPrimaryPlayer(state, player, playerId, missionName, definition, s
     '</ul></li>').join('');
   const setupText = definition?.setup ? '<p><strong>Setup:</strong> ' + escapeHtml(definition.setup) + '</p>' : '';
   const actionText = definition?.action ? '<p><strong>Shooting Action — ' + escapeHtml(definition.action.name) + ':</strong> ' + escapeHtml(definition.action.summary) + '</p>' : '';
+  const officialFaqText = (definition?.officialCompanionFaqNotes ?? []).length
+    ? '<p><strong>Official Event Companion FAQ</strong></p><ul>' +
+      definition.officialCompanionFaqNotes.map(note => '<li>' + escapeHtml(note) + '</li>').join('') + '</ul>'
+    : '';
   return '<details class="battle-mission-summary__player" data-mission-summary-key="' + escapeHtml(key) + '"' +
     openAttribute(openStates, key) + '><summary><span>' + escapeHtml(sideLabel) + '</span><strong>' +
     escapeHtml(name) + '</strong></summary><div class="battle-mission-summary__detail">' +
     (detail.length ? '<p>' + detail.map(escapeHtml).join(" · ") + '</p>' : '') +
-    setupText + actionText +
+    setupText + actionText + officialFaqText +
     (scoring ? '<p><strong>Primary scoring reference</strong></p><ul>' + scoring + '</ul>' : '<p>Check the selected mission card for its exact scoring timing and conditions.</p>') +
     '<p><small>' + escapeHtml(missionSourceNotice(definition, 'primary')) + '</small></p>' +
     '<p>Primary scoring remains player-confirmed; this reference never awards VP automatically.</p>' +
