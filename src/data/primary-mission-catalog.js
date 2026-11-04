@@ -1,3 +1,9 @@
+import {
+  PRIMARY_PHOTOGRAPHED_SCORING_FACES,
+  PRIMARY_PHOTOGRAPHED_ACTION_FACES,
+  PRIMARY_OFFICIAL_FAQ_NOTES
+} from "./primary-mission-evidence.js";
+
 export const PRIMARY_MISSION_CATALOG_SOURCE = Object.freeze({
   edition: "11th",
   missionPack: "Chapter Approved 2026–27",
@@ -21,6 +27,9 @@ const m = (id, name, scoring, extra = {}) => Object.freeze({
   rulesVerified: false,
   officialCardVerified: false,
   sourceVerification: "community-structured-reference",
+  photographedScoringFace: PRIMARY_PHOTOGRAPHED_SCORING_FACES[id] ?? null,
+  photographedActionFace: PRIMARY_PHOTOGRAPHED_ACTION_FACES[id] ?? null,
+  officialCompanionFaqNotes: PRIMARY_OFFICIAL_FAQ_NOTES[id] ?? Object.freeze([]),
   scoring: Object.freeze(scoring),
   manualConfirmationRequired: true,
   ...extra
