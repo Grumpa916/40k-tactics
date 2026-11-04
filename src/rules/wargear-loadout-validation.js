@@ -1,4 +1,5 @@
 import { getTyranidWargearRuleSet, getTyranidWargearSelections } from "../data/tyranid-wargear-rules.js";
+import { getOptionalWargearLimit } from "./wargear-quantity-limits.js";
 
 export function normalizeWargearName(value) {
   return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -110,7 +111,7 @@ export function validateWargearLoadout(unit) {
   }
   for (const item of ruleSet.optional ?? []) {
     const actual = quantity(counts, item.name);
-    const maximum = (item.perModel ?? 1) * modelCount;
+    const maximum = getOptionalWargearLimit(modelCount,item);
     if (actual > maximum) addError(errors, `${item.name}: selected ${actual}, maximum ${maximum}.`);
     if (item.allOrNone && actual !== 0 && actual !== maximum) addError(errors, `${item.name}: must be equipped by all models or none.`);
   }
