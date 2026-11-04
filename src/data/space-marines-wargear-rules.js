@@ -25,6 +25,78 @@ const sergeantFixed=(name,profiles=[name])=>Object.freeze({...pick(name,profiles
 const addition=(name,perModels,profiles=[name])=>Object.freeze({...pick(name,profiles),perModels,maxEach:1});
 const reviewed=body=>Object.freeze({...source,...body});
 export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
+  "space-marines:ancient":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Ancient",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Ceramite Fists",1,["Ceramite Fists"])]),
+    slots:Object.freeze([slot("ancient-primary",[{"name":"Bolt Rifle","profiles":["Bolt Rifle - Focused Fire","Bolt Rifle - Saturation"]},"Power Weapon"])]),
+    manualWargearNotes:Object.freeze(["One Bolt Rifle with Focused Fire/Saturation alternate profiles may be replaced by one Power Weapon. Bolt Pistol and Ceramite Fists stay fixed.","Raise the Banner: at END of own Movement phase, if controlling an objective, secure it. Honour of the Company adds +1 OC to this unit; do not auto-score a primary objective.","Support attachment is confirmed separately from Leader; do not add weapon or auto-adjust objective control from banner state."])
+  }),
+  "space-marines:ancient-in-terminator-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Ancient-In-Terminator-Armour",
+    fixed:Object.freeze([fixed("Storm Bolter",1,["Storm Bolter"]),fixed("Master-crafted Power Weapon",1,["Master-crafted Power Weapon"])]),
+    manualWargearNotes:Object.freeze(["Fixed Storm Bolter and Master-crafted Power Weapon; no current 11e weapon swaps. Deep Strike and innate 4+ invulnerable.","Raise the Banner at END of Movement on a controlled objective. Never Shall the Standard Fall: while within objective range, incoming attacks with Strength greater than this unit's Toughness suffer -1 to wound.","Support for Terminator or Terminator Assault Squad; no automatic OC or invulnerable modification."])
+  }),
+  "space-marines:apothecary":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Apothecary",
+    fixed:Object.freeze([fixed("Absolvor Bolt Pistol",1,["Absolvor Bolt Pistol"]),fixed("Reductor Pistol",1,["Reductor Pistol"]),fixed("Servo-armature",1,["Servo-armature"])]),
+    manualWargearNotes:Object.freeze(["Reductor Pistol is a MELEE Extra Attacks profile, not a ranged pistol; standard Absolvor Bolt Pistol is the one ranged weapon.","Narthecium in YOUR Command phase heals D3+1 wounds to this unit; not resurrected models. Actual healed wounds must be entered manually.","Support attachment permits one Captain/Chapter Master/Lieutenant alongside it when allowed by source; do not auto-attach."])
+  }),
+  "space-marines:apothecary-biologis":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Apothecary-Biologis",
+    fixed:Object.freeze([fixed("Absolvor Bolt Pistol",1,["Absolvor Bolt Pistol"]),fixed("Servo-armature",1,["Servo-armature"])]),
+    manualWargearNotes:Object.freeze(["Fixed Absolvor Bolt Pistol and Servo-armature. No wargear alternatives, Reductor Pistol or automatic revive effect.","Vivispectral Analysis Targeting gives this unit Lethal Hits against non-VEHICLE units, not universally. The Support slot attaches to Gravis units such as Aggressors/Eradicators/Heavy Intercessors.","Do not apply lethal hits against a target with the VEHICLE keyword."])
+  }),
+  "space-marines:bladeguard-ancient":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Bladeguard-Ancient",
+    fixed:Object.freeze([fixed("Heavy Bolt Pistol",1,["Heavy Bolt Pistol"]),fixed("Relics of Battle",1,["Relics of Battle"])]),
+    manualWargearNotes:Object.freeze(["Fixed Heavy Bolt Pistol and Relics of Battle melee weapon; no legal weapon swaps. 4+ invulnerable comes from datasheet, not a paid shield.","Raise the Banner at END of Movement if this unit controls an objective. Deeds of Legend adds +1 melee Attack to this unit while within range of an objective.","Support may attach to Bladeguard Veteran Squad; no automatic OC scoring or objective control."])
+  }),
+  "space-marines:chaplain-on-bike":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Chaplain-On-Bike",
+    fixed:Object.freeze([fixed("Absolvor Bolt Pistol",1,["Absolvor Bolt Pistol"]),fixed("Crozius Arcanum",1,["Crozius Arcanum"]),fixed("Twin Bolt Rifle",1,["Twin Bolt Rifle"])]),
+    manualWargearNotes:Object.freeze(["All three weapons fixed. Twin Bolt Rifle is a ranged twin-linked Rapid Fire 2 gun; no Captain-on-Bike pistol or hammer swaps apply to this Chaplain.","Litany of Hate gives this unit's melee attacks Lance. Catechism of Fire in OWN Shooting phase when selected to shoot: choose one visible enemy unit; ranged attacks targeting it have Devastating Wounds.","4+ invulnerable. Leader may attach to Outrider Squad. Target selection is manual."])
+  }),
+  "space-marines:chaplain-with-jump-pack":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Chaplain-With-Jump-Pack",
+    fixed:Object.freeze([fixed("Absolvor Bolt Pistol",1,["Absolvor Bolt Pistol"]),fixed("Crozius Arcanum",1,["Crozius Arcanum"])]),
+    manualWargearNotes:Object.freeze(["Both weapons fixed. Deep Strike, 4+ invulnerable and 12-inch Move; no Captain Jump Pack shield or thunder hammer options.","Litany of Hate gives melee Lance. Exhortation of Rage allows this unit's melee wound re-rolls ONLY while this unit is at or below half-strength.","Confirm half-strength and whether engaged/charged before advising re-rolls."])
+  }),
+  "space-marines:judiciar":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Judiciar",
+    fixed:Object.freeze([fixed("Absolvor Bolt Pistol",1,["Absolvor Bolt Pistol"]),fixed("Executioner Relic Blade",1,["Executioner Relic Blade"])]),
+    manualWargearNotes:Object.freeze(["Fixed Absolvor Bolt Pistol and Executioner Relic Blade (Precision, Devastating Wounds). No wargear swaps.","Tempormortis grants Fights First to this unit. 4+ invulnerable is specifically against MELEE attacks; do not apply it against ranged attacks.","Support may attach to eligible infantry squads; activation priority follows current Fights First rules."])
+  }),
+  "space-marines:librarian-in-terminator-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Librarian-In-Terminator-Armour",
+    fixed:Object.freeze([fixed("Force Weapon",1,["Force Weapon"]),fixed("Smite",1,["Smite - Witchfire","Smite - Focused Witchfire"]),fixed("Storm Bolter",1,["Storm Bolter"])]),
+    manualWargearNotes:Object.freeze(["Current October 11e version has Force Weapon, one Smite (Witchfire/Focused Witchfire alternate profiles) AND a fixed Storm Bolter; do not restore the older Faction Pack option to replace Storm Bolter with a Combi-weapon.","T6 Sv2+ W5 4++ and Deep Strike. Might of Heroes (Fight) +2 melee Strength and Thunderous Force (Shooting) +6 inches Range are psychic LEVEL 1 choices. Psychic roll 1 battle-shocks the unit. Only level-1 budget once each battle round.","Psychic Hood gives FNP 4+ against Psychic attacks ONLY; not universal FNP. Confirm actual psychic use and wounds manually."])
+  }),
+  "space-marines:lieutenant":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Lieutenant",
+    
+    slots:Object.freeze([slot("lieutenant-complete-loadout",[{"name":"Bolt Pistol / Master-crafted Bolter / Ceramite Fists","profiles":["Bolt Pistol","Master-crafted Bolter","Ceramite Fists"]},{"name":"Bolt Pistol / Master-crafted Bolter / Master-crafted Power Weapon","profiles":["Bolt Pistol","Master-crafted Bolter","Master-crafted Power Weapon"]},{"name":"Bolt Pistol / Master-crafted Bolter / Power Fist","profiles":["Bolt Pistol","Master-crafted Bolter","Power Fist"]},{"name":"Bolt Pistol / Master-crafted Power Weapon / Ceramite Fists","profiles":["Bolt Pistol","Master-crafted Power Weapon","Ceramite Fists"]},{"name":"Bolt Pistol / Master-crafted Power Weapon / Master-crafted Power Weapon","profiles":["Bolt Pistol","Master-crafted Power Weapon","Master-crafted Power Weapon"]},{"name":"Bolt Pistol / Master-crafted Power Weapon / Power Fist","profiles":["Bolt Pistol","Master-crafted Power Weapon","Power Fist"]},{"name":"Bolt Pistol / Plasma Pistol / Ceramite Fists","profiles":["Bolt Pistol","Plasma Pistol - Standard","Plasma Pistol - Supercharge","Ceramite Fists"]},{"name":"Bolt Pistol / Plasma Pistol / Master-crafted Power Weapon","profiles":["Bolt Pistol","Plasma Pistol - Standard","Plasma Pistol - Supercharge","Master-crafted Power Weapon"]},{"name":"Bolt Pistol / Plasma Pistol / Power Fist","profiles":["Bolt Pistol","Plasma Pistol - Standard","Plasma Pistol - Supercharge","Power Fist"]},{"name":"Bolt Pistol / Power Fist / Ceramite Fists","profiles":["Bolt Pistol","Power Fist","Ceramite Fists"]},{"name":"Bolt Pistol / Power Fist / Master-crafted Power Weapon","profiles":["Bolt Pistol","Power Fist","Master-crafted Power Weapon"]},{"name":"Bolt Pistol / Power Fist / Power Fist","profiles":["Bolt Pistol","Power Fist","Power Fist"]},{"name":"Heavy Bolt Pistol / Master-crafted Bolter / Ceramite Fists","profiles":["Heavy Bolt Pistol","Master-crafted Bolter","Ceramite Fists"]},{"name":"Heavy Bolt Pistol / Master-crafted Bolter / Master-crafted Power Weapon","profiles":["Heavy Bolt Pistol","Master-crafted Bolter","Master-crafted Power Weapon"]},{"name":"Heavy Bolt Pistol / Master-crafted Bolter / Power Fist","profiles":["Heavy Bolt Pistol","Master-crafted Bolter","Power Fist"]},{"name":"Heavy Bolt Pistol / Master-crafted Power Weapon / Ceramite Fists","profiles":["Heavy Bolt Pistol","Master-crafted Power Weapon","Ceramite Fists"]},{"name":"Heavy Bolt Pistol / Master-crafted Power Weapon / Master-crafted Power Weapon","profiles":["Heavy Bolt Pistol","Master-crafted Power Weapon","Master-crafted Power Weapon"]},{"name":"Heavy Bolt Pistol / Master-crafted Power Weapon / Power Fist","profiles":["Heavy Bolt Pistol","Master-crafted Power Weapon","Power Fist"]},{"name":"Heavy Bolt Pistol / Plasma Pistol / Ceramite Fists","profiles":["Heavy Bolt Pistol","Plasma Pistol - Standard","Plasma Pistol - Supercharge","Ceramite Fists"]},{"name":"Heavy Bolt Pistol / Plasma Pistol / Master-crafted Power Weapon","profiles":["Heavy Bolt Pistol","Plasma Pistol - Standard","Plasma Pistol - Supercharge","Master-crafted Power Weapon"]},{"name":"Heavy Bolt Pistol / Plasma Pistol / Power Fist","profiles":["Heavy Bolt Pistol","Plasma Pistol - Standard","Plasma Pistol - Supercharge","Power Fist"]},{"name":"Heavy Bolt Pistol / Power Fist / Ceramite Fists","profiles":["Heavy Bolt Pistol","Power Fist","Ceramite Fists"]},{"name":"Heavy Bolt Pistol / Power Fist / Master-crafted Power Weapon","profiles":["Heavy Bolt Pistol","Power Fist","Master-crafted Power Weapon"]},{"name":"Heavy Bolt Pistol / Power Fist / Power Fist","profiles":["Heavy Bolt Pistol","Power Fist","Power Fist"]},{"name":"Neo-volkite Pistol / Master-crafted Power Weapon","profiles":["Neo-volkite Pistol","Master-crafted Power Weapon"]},{"name":"Neo-volkite Pistol / Master-crafted Power Weapon / Storm Shield","profiles":["Neo-volkite Pistol","Master-crafted Power Weapon"]}])]),
+    manualWargearNotes:Object.freeze(["Choose one of 26 source-valid complete weapon packages: Bolt Pistol or Heavy Bolt Pistol, with Master-crafted Bolter/Power Weapon/Plasma Pistol/Power Fist, and Ceramite Fists/Power Weapon/Power Fist; OR the specific paired replacement Neo-volkite Pistol + Master-crafted Power Weapon, with optional Storm Shield.","Storm Shield is ONLY legal with Neo-volkite package and grants 4+ Invulnerable, not an extra shooting attack. Two Master-crafted Power Weapons can legitimately occur as separate guns if both originals are replaced by one each.","Tactical Precision: this unit has Lethal Hits only against targets OTHER THAN MONSTER/VEHICLE. Demi-company Commander can mirror a nearby Captain unit's Strategic Acumen doctrine when that Captain activates; manually confirm once/turn.","Do not silently replace any imported older edition Lieutenant equipment."])
+  }),
   "space-marines:captain":reviewed({
     reviewedAt:"2026-11-04",
     sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
