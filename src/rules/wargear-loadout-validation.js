@@ -70,7 +70,19 @@ function canAssignToSlots(ruleSet, modelCount, counts) {
   if (!slots.length) return { ok: true };
 
   const slotNames = new Set(slots.flatMap((slot) => [...slot.choices]));
-  const items = [...counts.entries()].filter(([name, count]) => slotNames.has(name) && count > 0);
+  // A weapon can be fixed on ordinary models and selectable for a Sergeant.
+  // Remove the mandatory fixed quantity before assigning only the remainder
+  // to selectable slots. The fixed quantities are checked separately below.
+  const fixedCounts = new Map();
+  for (const fixed of ruleSet.fixed ?? []) {
+    const name = normalizeWargearName(fixed.name);
+    fixedCounts.set(name,(fixedCounts.get(name) ?? 0)
+      +(fixed.count ?? 0)+(fixed.perModel ?? 0)*modelCount);
+  }
+  const items = [...counts.entries()]
+    .filter(([name]) => slotNames.has(name))
+    .map(([name,count]) => [name,count-(fixedCounts.get(name) ?? 0)])
+    .filter(([,count]) => count > 0);
   const totalCapacity = slots.reduce((sum, slot) => sum + slot.remaining, 0);
   const totalItems = items.reduce((sum, [, count]) => sum + count, 0);
   if (totalItems !== totalCapacity) return { ok: false, reason: `Selected slot weapons total ${totalItems}; expected ${totalCapacity}.` };
@@ -107,7 +119,11 @@ export function validateWargearLoadout(unit) {
   for (const item of ruleSet.fixed ?? []) {
     const expected = (item.count ?? 0) + (item.perModel ?? 0) * modelCount;
     const actual = quantity(counts, item.name);
-    if (actual !== expected) addError(errors, `${item.name}: selected ${actual}, expected ${expected}.`);
+    const selectable=(ruleSet.slots ?? []).some(slot=>
+      (slot.choices ?? []).some(choice=>normalizeWargearName(choice.name)===normalizeWargearName(item.name)));
+    if (selectable ? actual < expected : actual !== expected) {
+      addError(errors, `${item.name}: selected ${actual}, expected ${selectable?"at least ":""}${expected}.`);
+    }
   }
   for (const item of ruleSet.optional ?? []) {
     const actual = quantity(counts, item.name);
