@@ -6,6 +6,8 @@ import { filterCatalog, renderCatalogResults, renderArmyBuilder } from '../../sr
 import { importWarhammerAppRoster } from '../../src/state/warhammer-app-roster-import.js';
 import { createGameState } from '../../src/state/game-state.js';
 import { applyArmyRosterToBattle } from '../../src/engine/army-roster-transitions.js';
+import {createWargearChoiceState,readWargearChoiceState} from '../../src/rules/army-wargear-choices.js';
+import {buildManualWargearLoadout} from '../../src/rules/wargear-loadout-validation.js';
 import { getCatalogRoleGroup } from '../../src/ui/army-builder-catalog-order.js';
 
 const currentNames=[
@@ -122,7 +124,14 @@ Victrix Honour Guard (120 pts)
  assert.equal(imported.roster.units[1].datasheetId,'space-marines:victrix-honour-guard');
  const game=createGameState({phase:'setup',battle:{id:'calgar-game',status:'setup',round:0},
   players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}]});
- const assigned=applyArmyRosterToBattle(game,{roster:imported.roster,playerId:'p2',
+ assert.throws(()=>applyArmyRosterToBattle(game,{roster:imported.roster,playerId:'p2',
+  snapshotId:'unconfirmed-victrix',selectedAt:'2026-11-03T23:00:00Z'}),/Victrix Honour Guard/,
+  'Victrix specialist model roles must be confirmed before battle');
+ const victrix=imported.roster.units[1];
+ const reviewed=readWargearChoiceState(victrix,createWargearChoiceState(victrix));
+ const confirmed={...victrix,...buildManualWargearLoadout(victrix,reviewed)};
+ const readyRoster={...imported.roster,units:[imported.roster.units[0],confirmed]};
+ const assigned=applyArmyRosterToBattle(game,{roster:readyRoster,playerId:'p2',
   snapshotId:'calgar-battle-snapshot',selectedAt:'2026-11-03T23:00:00Z'});
  assert.ok(assigned.units.some(unit=>unit.name==='Marneus Calgar'&&unit.ownerId==='p2'));
  assert.ok(assigned.units.some(unit=>unit.name==='Victrix Honour Guard'&&unit.ownerId==='p2'));
