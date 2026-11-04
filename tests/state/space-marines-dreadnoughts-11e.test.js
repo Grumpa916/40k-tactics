@@ -109,7 +109,7 @@ test('Redemptor: 3 independent weapon swaps, Icarus is additive, plasma is one g
  assert.equal(u.datasheet.weapons.find(w=>w.name==='Redemptor Fist').damage,'D3+3');
  assert.equal(u.datasheet.weapons.find(w=>w.name==='Macro Plasma Incinerator - Supercharge').strength,'10');
  assert.match(u.datasheet.abilities.find(a=>a.name==='Duty Eternal').description,/GREATER than/);
- assert.doesNotMatch(u.datasheet.abilities.find(a=>a.name==='Duty Eternal').description,/universal -1 Damage/);
+ assert.match(u.datasheet.abilities.find(a=>a.name==='Duty Eternal').description,/not universal -1 Damage/);
  assert.match(renderWargearEditor(u),/adds 10 points/);
 });
 test('First-two/third Dreadnought pricing remains copy-sensitive and Redemptor plasma upgrades cost 10 points',()=>{
