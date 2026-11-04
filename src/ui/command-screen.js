@@ -7,6 +7,7 @@ import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scorin
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getPendingSecondaryMissionCardChoice, getSecondaryMissionCardChoiceOptions, getActiveBurdenTrustAssignments, getSecondaryMissionReplacementOpportunity, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
+import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
 import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
 import { captureViewContinuity } from './view-continuity.js';
@@ -856,10 +857,14 @@ export function createCommandScreen(container, {
   container.addEventListener?.("click", handleClick);
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("submit", handleSubmit);
+  const unbindMapCorrection = layoutMode === "tabletop"
+    ? bindLiveMapPositionCorrection(container, session, { phase:"command", onError:message => { objectiveMessage = message; render(); } })
+    : () => {};
   const unsubscribe = session.subscribe(render);
   render();
   return { render, destroy() {
     unsubscribe();
+    unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
     container.removeEventListener?.("change", handleChange);
     container.removeEventListener?.("submit", handleSubmit);

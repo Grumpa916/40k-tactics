@@ -1,5 +1,6 @@
 import { renderTargetDefenseReminders } from './rules-reminder-panel.js';
 import { createLiveMapView } from './live-map-view.js';
+import { bindLiveMapPositionCorrection } from './live-map-position-correction.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { renderActionReceipt } from './action-receipt.js';
 import { finishCombatUnit } from '../application/combat-activation-workflow.js';
@@ -163,7 +164,9 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     endReview = true; error = ''; render();
     container.querySelector('[data-fight-confirm-end]')?.focus?.();
   }
+  const unbindMapCorrection = bindLiveMapPositionCorrection(container, session,
+    { phase:"fight", onError:message => { error = message; render(); } });
   const unsubscribe = session.subscribe(render);
   render();
-  return { getState:session.getState, render, requestPhaseEnd, destroy:() => { unsubscribe(); container.replaceChildren(); } };
+  return { getState:session.getState, render, requestPhaseEnd, destroy:() => { unsubscribe(); unbindMapCorrection(); container.replaceChildren(); } };
 }

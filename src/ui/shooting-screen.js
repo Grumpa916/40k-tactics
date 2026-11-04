@@ -20,6 +20,7 @@ import {
 import { createShootingComparisonCache } from "../rules/tactical-shooting-comparison.js";
 import { shootingTargetComparisonCards, shootingAdvisory, shootingDamageForecast } from './shooting-advisor-view.js';
 import { createLiveMapView } from "./live-map-view.js";
+import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
 import { finishCombatUnit } from "../application/combat-activation-workflow.js";
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
@@ -388,7 +389,7 @@ export function createShootingScreen(container, {
         marker.setAttribute?.("tabindex", "0");
         marker.setAttribute?.("aria-pressed", unitId === selectedTargetId ? "true" : "false");
         if (isTarget) marker.setAttribute?.("data-shoot-target-marker", "true");
-        if (marker.style) marker.style.touchAction = "manipulation";
+        if (marker.style) marker.style.touchAction = "none";
         marker.addEventListener?.("click", () => selectMapUnit(unitId));
         marker.addEventListener?.("keydown", (event) => {
           if (event?.key === "Enter" || event?.key === " ") {
@@ -530,11 +531,14 @@ export function createShootingScreen(container, {
     return model;
   }
 
+  const unbindMapCorrection = layoutMode === "tabletop"
+    ? bindLiveMapPositionCorrection(container, session, { phase:"shooting", onError:message => { attackError = message; render(); } })
+    : () => {};
   const unsubscribe = session.subscribe(render);
   render();
   return {
     getState: () => session.getState(),
     render,
-    destroy: () => { unsubscribe(); container.replaceChildren(); }
+    destroy: () => { unsubscribe(); unbindMapCorrection(); container.replaceChildren(); }
   };
 }
