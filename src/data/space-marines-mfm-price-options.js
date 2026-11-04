@@ -40,7 +40,8 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Incursor Squad":copies([[5,90],[10,170]],[[5,100],[10,180]]),
   "Infiltrator Squad":fixed([5,85],[10,150]),
   "Reiver Squad":fixed([5,85],[10,165]),
-  "Infernus Squad":fixed([5,95],[10,190]),
+  "Infernus Squad":copies([[5,95],[10,190]],[[5,105],[10,200]]),
+  "Desolation Squad":copies([[5,140]],[[5,150]]),
   "Scout Squad":fixed([5,65],[10,120]),
   // 3-model 80 vs 85 remains disputed between independent current sources;
   // retain the imported 80 rather than pretending an official MFM check.
