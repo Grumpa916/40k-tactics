@@ -76,6 +76,22 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
   return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
  }
+ // Victrix composition counts the Chapter Ancient within the 3/6 selected
+ // models. The Banner of Macragge has a separate reviewed points surcharge.
+ if(unit.datasheetId==='space-marines:victrix-honour-guard'){
+  const ancient=selections.filter(x=>x.name==='Chapter Ancient')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  const champion=selections.filter(x=>x.name==='Chapter Champion')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  if(!Number.isInteger(ancient)||!Number.isInteger(champion)||
+     ancient<0||champion<0||ancient>1||champion>1||
+     ancient+champion>=unit.modelCount)
+   return {points:null,reason:'Victrix composition: max one Ancient and Champion, at least one ordinary Guard.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Victrix squad size/copy base price.'};
+  return {points:base.points+15*ancient,
+    reason:(base.condition??'reviewed base')+'; '+ancient+' Banner of Macragge at 15 pts'};
+ }
  const reviewedOrdinalOption = resolveReviewedOrdinalOption(options, ordinal);
  if (reviewedOrdinalOption) return {
   points: reviewedOrdinalOption.points,
