@@ -199,6 +199,41 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:gladiator-lancer":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines Gladiator Lancer datasheet cross-check; official Codex/MFM direct certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Gladiator-Lancer",
+    fixed:Object.freeze([fixed("Defensive Array"),fixed("Laser Destroyer"),fixed("Armoured Hull")]),
+    manualWargearNotes:Object.freeze([
+      "The 11e Lancer has exactly one Defensive Array, one Laser Destroyer and one Armoured Hull. No optional Ironhail Heavy Stubber, Icarus Rocket Pod, Multi-melta or old Storm Bolter swap in this Space Marines datasheet.",
+      "Aquilon Optics: against MONSTER or VEHICLE targets, this unit may re-roll one Hit roll, one Wound roll and one Damage roll. It does not grant generic re-rolls against all targets.",
+      "Apply Damaged 4 and Deadly Demise D3 manually; do not restore older 10e hit-roll damage threshold wording."
+    ])
+  }),
+  "space-marines:gladiator-reaper":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines Gladiator Reaper datasheet cross-check; official Codex/MFM direct certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Gladiator-Reaper",
+    fixed:Object.freeze([fixed("Defensive Array"),fixed("Twin Heavy Onslaught Gatling Cannon"),fixed("Armoured Hull")]),
+    manualWargearNotes:Object.freeze([
+      "The 11e Reaper has exactly one Defensive Array (12 shots and Rapid Fire 12), Twin Heavy Onslaught Gatling Cannon and Armoured Hull; no extra optional secondary guns.",
+      "The Twin Heavy Onslaught Gatling Cannon gains Sustained Hits 2 and Devastating Wounds against non-MONSTER/VEHICLE units. Those conditions are not active against MONSTERS or VEHICLES.",
+      "Reaping Tally: ranged attacks targeting units other than MONSTERS or VEHICLES have +1 AP. Confirm the target keyword manually before estimating attacks.",
+      "Damaged 4 and Deadly Demise D3 remain manual."
+    ])
+  }),
+  "space-marines:gladiator-valiant":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines Gladiator Valiant datasheet cross-check; official Codex/MFM direct certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Gladiator-Valiant",
+    fixed:Object.freeze([fixed("Defensive Array"),fixed("Multi-melta",2),fixed("Twin Las-talon"),fixed("Armoured Hull")]),
+    manualWargearNotes:Object.freeze([
+      "The current 11e Valiant has one Defensive Array, TWO Multi-meltas, one Twin Las-talon and one Armoured Hull. There are no optional Icarus or Ironhail additions in the current standard Space Marines sheet.",
+      "Priority Target Acquisition gives the unit's ranged attacks +1 Strength against targets within 12 inches. It is not the older rule granting +1 to hit the closest MONSTER or VEHICLE.",
+      "Both Multi-meltas have Melta 3 and Damage D3+2; Twin Las-talon has Twin-linked and Damage D3+3. Confirm the appropriate half-range Melta bonus on the tabletop.",
+      "Damaged 4 and Deadly Demise D3 remain manual."
+    ])
+  }),
   "space-marines:invictor-tactical-warsuit":reviewed({
     sourceName:"Current 11e Invictor Tactical Warsuit datasheet cross-check; official October Codex comparison pending",
     sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Invictor-Tactical-Warsuit",
