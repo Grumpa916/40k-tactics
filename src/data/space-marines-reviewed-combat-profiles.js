@@ -11,6 +11,50 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  'Bladeguard Veteran Squad':Object.freeze({
+    characteristics:Object.freeze({'Toughness':'5','Invulnerable save':'4+'}),
+    weapons:Object.freeze([
+      ranged('Heavy Bolt Pistol','18"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Neo-volkite Pistol','12"','1','3+','5','0','2','Close-Quarters, Devastating Wounds'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      melee('Master-crafted Power Sword','4','3+','5','-2','2','')
+    ]),
+    abilities:Object.freeze([
+      ability('Bladeguard','Once per turn in a Fight phase, when selected to fight or targeted by an enemy, choose either +1 to this unit’s melee Hit rolls or -1 to attacks targeting it. Confirm the choice on the tabletop.')
+    ])
+  }),
+  'Hellblaster Squad':Object.freeze({
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Plasma Incinerator - Standard','24"','2','3+','7','-2','2','Assault, Rapid Fire 1'),
+      ranged('Plasma Incinerator - Supercharge','24"','2','3+','8','-3','2','Assault, Rapid Fire 1, Hazardous'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Rites of Thermal Appeasement','Plasma Incinerator and Plasma Pistol weapons of this unit have +1 to Hazardous rolls; track actual rolls manually.')
+    ])
+  }),
+  'Terminator Squad':Object.freeze({
+    characteristics:Object.freeze({'Toughness':'6','Invulnerable save':'4+'}),
+    weapons:Object.freeze([
+      ranged('Storm Bolter','24"','2','3+','5','-1','1','Rapid Fire 2'),
+      ranged('Assault Cannon','24"','6','3+','6','-2','1','Sustained Hits 1'),
+      ranged('Heavy Flamer','12"','3','N/A','5','-1','1','Blast 2, Torrent'),
+      ranged('Cyclone Missile Launcher - Frag','36"','8','3+','4','-1','1','Blast 2'),
+      ranged('Cyclone Missile Launcher - Krak','36"','2','3+','10','-2','D3+3',''),
+      melee('Power Fist','3','3+','8','-2','2',''),
+      melee('Chainfist - Standard','2','4+','8','-2','2',''),
+      melee('Chainfist - Hunter','3','3+','12','-2','3','Hunter: Monster/Vehicle only'),
+      melee('Power Weapon','5','3+','5','-2','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Fury of the First','This unit’s attacks against enemy units within 9 inches gain +1 AP. Check distance manually.'),
+      ability('Teleport Homer','Once per battle, a placed homer can give -1 CP to Rapid Ingress if the placement requirements are met; track use and position manually.')
+    ])
+  }),
   'Intercessor Squad':Object.freeze({
     weapons:Object.freeze([
       ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
@@ -81,6 +125,7 @@ export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
  const patch=changes[name];
  return Object.freeze({
    ...datasheet,
+   ...(patch.characteristics ? {characteristics:Object.freeze({...datasheet.characteristics,...patch.characteristics})}:{}),
    weapons:patch.weapons,
    abilities:patch.abilities,
    sourceName:'November 2026 11e selected loadout/profile cross-check',
