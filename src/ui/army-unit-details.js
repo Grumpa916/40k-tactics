@@ -63,6 +63,8 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  ${editable&&getTyranidWargearRuleSet(unit.datasheetId)?'</details>':''}
  <h4>Abilities</h4>${abilities.map(a=>`<details><summary>${e(a.name)}</summary><p>${e(a.description)}</p></details>`).join('')||'<p>Ability text unavailable.</p>'}
  <p>${e((unit.datasheet?.keywords ?? []).join(' · '))}</p>
+ ${unit.officialDatasheetName ? `<p class="ab-muted"><strong>Official datasheet identity:</strong> ${e(unit.officialDatasheetName)}. Full October Codex weapon/points verification is outstanding; older saved rosters keep their original unit ID.</p>` : ''}
+ ${unit.officialComposition?.permittedModels?.length ? `<p class="ab-muted"><strong>Published unit composition:</strong> ${unit.officialComposition.permittedModels.map(n=>e(n)).join(' or ')} models (official June 2026 Faction Pack). ${e(unit.officialComposition.sourceVersion ?? '')}. Only priced sizes shown below can currently be selected automatically.</p>` : ''}
  <h4>Published model / points options</h4>${(unit.pointsOptions ?? []).map(o=>`<p>${e(o.models)} models · ${e(o.points)} pts ${e(o.condition ?? '')}</p>`).join('')||'<p>No cost options available.</p>'}
  <p class="ab-muted">Data status: ${e(unit.dataSource?.status ?? unit.verificationStatus ?? 'manual-entry')}. Check current source rules; missing values are not treated as zero.</p>
  ${safeSource?`<p><a href="${e(source)}" target="_blank" rel="noopener noreferrer">Open datasheet source</a></p>`:''}

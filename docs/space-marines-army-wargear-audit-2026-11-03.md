@@ -35,6 +35,6 @@ This audit updates a **verified subset** of the Space Marines Army Builder data,
 | Medium | Every Leader/Support attachment restriction from the official current MFM and Codex, including revised Ultramarines choices |
 | Medium | Detachment stratagems, enhancement points, invulnerable saves, FNP, specific abilities, and damage-calculation effects |
 
-**Dependency:** PR #505 (general roster-cost consistency/completeness audit) remains separate and unmerged; this PR modifies different implementation files. After both are merged, its conditional-pricing validator can flag saved copy-order prices against these new Space Marine tiers.
+**Dependency:** PR #505 (general roster-cost consistency/completeness audit) has merged into main. Its conditional-pricing validator can now check saved Space Marine unit-copy costs against the reviewed MFM options in this change.
 
 **Acceptance:** automated verification + production build required; manual iPad Safari and user Army Builder roster comparison still pending. No changes to current game battles, mission/scoring code or saved rosters.

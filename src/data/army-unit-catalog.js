@@ -3,6 +3,7 @@ import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 import { getRulesDataRevisionForFaction } from "./rules-data-revisions.js";
 import { ADEPTUS_CUSTODES_ARMY_CATALOG } from "./adeptus-custodes-army-catalog.js";
 import { SPACE_MARINES_ARMY_CATALOG } from "./space-marines-army-catalog.js";
+import { SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES, SPACE_MARINES_LEGENDS_CANDIDATES } from "./space-marines-catalog-coverage.js";
 
 const TYRANID_RULES_REVISION = getRulesDataRevisionForFaction("Tyranids");
 
@@ -24,6 +25,8 @@ function applyReviewedTyranidCorrections(id, details) {
 export const ARMY_UNIT_CATALOG = Object.freeze([
   ...ADEPTUS_CUSTODES_ARMY_CATALOG,
   ...SPACE_MARINES_ARMY_CATALOG,
+  ...SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES,
+  ...SPACE_MARINES_LEGENDS_CANDIDATES,
   ...[
     "Hive Tyrant",
     "Winged Hive Tyrant",
@@ -122,6 +125,9 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
 export function getArmyUnitCandidateLabel(unit) {
   if (!unit || typeof unit !== "object") return "Unit · verify";
   if (!unit.datasheet) {
+    if (unit.legendaryProxy) return unit.name + " · Legendary Proxy for " + unit.proxyAs + "; event permission required";
+    if (unit.legends) return unit.name + " · Legends; full rules and legality unverified";
+    if (unit.verificationStatus === "name-and-points-reference-only") return unit.name + " · reference price only; datasheet review pending";
     return unit.verificationStatus === "points-reviewed"
       ? unit.name + " · points only; details incomplete"
       : unit.name + " · name only; verify";
@@ -138,6 +144,7 @@ export function findArmyUnitCandidates({ faction, query = "" } = {}) {
   if (!normalizedFaction) return [];
   return ARMY_UNIT_CATALOG.filter((unit) =>
     unit.faction.toLowerCase() === normalizedFaction &&
-    (!normalizedQuery || unit.name.toLowerCase().includes(normalizedQuery))
+    (!normalizedQuery || unit.name.toLowerCase().includes(normalizedQuery) ||
+      (unit.importAliases ?? []).some(alias => alias.toLowerCase().includes(normalizedQuery)))
   );
 }

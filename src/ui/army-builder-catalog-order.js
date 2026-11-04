@@ -8,7 +8,7 @@ const ROLE_GROUPS = Object.freeze([
 ]);
 
 function normalizedKeywords(unit) {
-  return (unit?.datasheet?.keywords ?? []).map(keyword => String(keyword).trim().toLowerCase());
+  return (unit?.datasheet?.keywords ?? unit?.keywords ?? []).map(keyword => String(keyword).trim().toLowerCase());
 }
 
 export function getCatalogRoleGroup(unit) {

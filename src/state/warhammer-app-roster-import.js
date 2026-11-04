@@ -184,14 +184,21 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    current = null; continue;
   }
   if (/^(?:army roster|army list|warhammer|battle forge|battle size|strike force|incursion|onslaught|total|grand total|points limit|force disposition|exported (?:from|with))\b/i.test(line)) { current = null; continue; }
-  const candidate = available.find(unit => normalize(unit.name) === headerName(line));
+  const importedName=headerName(line);
+  // Match only explicitly reviewed aliases; never guess a different
+  // armour variant or silently substitute a Gravis Calgar datasheet.
+  const candidate = available.find(unit => normalize(unit.name) === importedName ||
+    (unit.importAliases ?? []).some(alias => normalize(alias) === importedName));
   if (!candidate) {
    if (getPoints(line) != null && line !== firstLine) unrecognized.push(line);
    current = null; continue;
   }
   const models = modelCount(line, candidate);
   if (!Number.isInteger(models) || models < 1 || models > 500) { unrecognized.push(line); current = null; continue; }
-  current = {id: id + '-unit-' + (units.length + 1), name: candidate.name, modelCount: models,
+  const usedVariantAlias=normalize(candidate.name)!==importedName &&
+    (candidate.importAliases ?? []).some(alias => normalize(alias) === importedName);
+  current = {id: id + '-unit-' + (units.length + 1),
+   name: usedVariantAlias ? candidate.officialDatasheetName : candidate.name, modelCount: models,
    points: getPoints(line), pointsOptions: candidate.pointsOptions ?? [], notes: line,
    datasheet: candidate.datasheet ? structuredClone(candidate.datasheet) : null, datasheetId: candidate.id,
    dataSource: {status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,

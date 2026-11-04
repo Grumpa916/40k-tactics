@@ -19,20 +19,36 @@ export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, poin
  const standard = reviewedOptions?.find(option => option.models === models &&
    (!option.condition || option.condition.startsWith('1st')));
  return Object.freeze({
-   id: `space-marines:${slug(name)}`, name, faction: 'Space Marines', defaultModelCount: models,
-   defaultPoints: standard?.points ?? points,
-   pointsOptions: reviewedOptions ?? Object.freeze([{ models, points }]),
-   datasheet: applyReviewedSpaceMarineCharacteristics(name, SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null),
-   sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
-   sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
-   verificationStatus: 'points-reviewed',
-   ...(reviewedOptions ? {
-     pointsSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
-     pointsSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
-     pointsReviewedAt: SPACE_MARINES_MFM_PRICE_SOURCES.sourceReviewDate,
-     officialPointsCrossCheck: 'pending-direct-current-mfm-read'
-   } : {}),
-   officialRulesCrossCheck: 'pending',
-   selectableWargearCoverage: 'not-fully-reviewed'
+ id: `space-marines:${slug(name)}`, name, faction: 'Space Marines', defaultModelCount: models,
+ defaultPoints: standard?.points ?? points,
+ pointsOptions: reviewedOptions ?? Object.freeze([{ models, points }]),
+ // The original imported name was abbreviated. The reviewed 11e Ultramarines
+ // datasheet is specifically Calgar in Armour of Antilochus (Terminator).
+ // Retain the existing ID and stored name for backward-compatible rosters.
+ ...(name === 'Marneus Calgar' ? {
+   officialDatasheetName: 'Marneus Calgar in Armour of Antilochus',
+   importAliases: Object.freeze([
+     'Marneus Calgar in Armour of Antilochus',
+     'Marneus Calgar (Armour of Antilochus)'
+   ]),
+   verifiedArmourVariant: 'Terminator – Armour of Antilochus',
+   officialVariantSourceUrl: 'https://www.warhammer-community.com/en-gb/articles/isqbppri/ultramarines-rules-reveal-datasheet-previews-for-the-new-marneus-calgar-cato-sicarius-and-victrix-honour-guard/',
+   officialVariantIdentityChecked: true,
+   // Published 2026-06 faction-pack text confirms the named variant, but the
+   // post-Codex October weapon/points/abilities audit remains outstanding.
+   completeOctoberCodexCrossCheck: false
+ } : {}),
+ datasheet: applyReviewedSpaceMarineCharacteristics(name, SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null),
+ sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
+ sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
+ verificationStatus: 'points-reviewed',
+ ...(reviewedOptions ? {
+   pointsSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
+   pointsSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
+   pointsReviewedAt: SPACE_MARINES_MFM_PRICE_SOURCES.sourceReviewDate,
+   officialPointsCrossCheck: 'pending-direct-current-mfm-read'
+ } : {}),
+ officialRulesCrossCheck: 'pending',
+ selectableWargearCoverage: 'not-fully-reviewed'
  });
 }));

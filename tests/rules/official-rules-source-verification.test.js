@@ -16,7 +16,7 @@ test('official publication index is dated and does not imply full document compa
   assert.match(sources.downloadsUrl,/warhammer-community\.com\/en-gb\/downloads\/warhammer-40000/);
   assert.equal(sources.publications.eventCompanion.version,'1.2');
   assert.equal(sources.publications.eventCompanion.updatedAt,'2026-10-14');
-  assert.equal(sources.publications.eventCompanion.status,'publication-listed-content-not-rechecked');
+  assert.equal(sources.publications.eventCompanion.status,'official-source-authenticated-content-partially-checked');
   assert.equal(sources.publications.eventCompanion.geometryStatus,'previously-reviewed-by-user');
   assert.equal(sources.publications.munitorumFieldManual.updatedAt,'2026-10-14');
   assert.equal(sources.publications.coreRules.updatedAt,'2026-06-01');

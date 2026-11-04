@@ -55,13 +55,14 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   let category = "";
   let sort = "name";
   let fits = false;
+  let includeLegends = false;
   let previewId = "";
   const unitEditor=createArmyUnitEditorController(container,{
     getUnit:()=>current?.units?.find(unit=>unit.id===openUnitDetailId),getRoster:()=>current,render
   });
   function render() {
     if (destroyed) return;
-    container.innerHTML = renderArmyBuilder({records, current, unitDraft:unitEditor.getDraft(current?.units?.find(unit=>unit.id===openUnitDetailId)), page, busy, message, unitSearch, category, sort, fits, previewId, openUnitDetailId, players, canApply, onApplyRoster});
+    container.innerHTML = renderArmyBuilder({records, current, unitDraft:unitEditor.getDraft(current?.units?.find(unit=>unit.id===openUnitDetailId)), page, busy, message, unitSearch, category, sort, fits, includeLegends, previewId, openUnitDetailId, players, canApply, onApplyRoster});
   }
   async function refresh() {
     try {
@@ -326,7 +327,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   }
   function updateCatalog() {
     const results=container.querySelector("[data-catalog-results]");
-    if(results) results.innerHTML=renderCatalogResults({current, unitSearch, category, sort, fits, busy});
+    if(results) results.innerHTML=renderCatalogResults({current, unitSearch, category, sort, fits, includeLegends, busy});
   }
   function updateWarhammerImportPreview() {
     const host=container.querySelector("[data-warhammer-import-preview]"); if(!host) return;
@@ -349,6 +350,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if(event.target?.matches?.("[data-catalog-category]")) { category=event.target.value; updateCatalog(); return; }
     if(event.target?.matches?.("[data-catalog-sort]")) { sort=event.target.value; updateCatalog(); return; }
     if(event.target?.matches?.("[data-catalog-fits]")) { fits=event.target.checked; updateCatalog(); return; }
+    if(event.target?.matches?.("[data-catalog-include-legends]")) { includeLegends=event.target.checked; updateCatalog(); return; }
 
     if (event.target?.matches?.("[data-roster-create-faction]")) {
       const select = container.querySelector("[data-roster-detachment-select]");
