@@ -16,7 +16,11 @@ export const OFFICIAL_RULES_SOURCE_INDEX = Object.freeze({
     eventCompanion: Object.freeze({
       name:"Warhammer Event Companion", version:"1.2", updatedAt:"2026-10-14",
       url:"https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf",
-      status:"publication-listed-content-not-rechecked",
+      officialSourceAuthority:"verified-games-workshop-publication",
+      inspectedDocumentVersion:"1.2",
+      inspectedPages:Object.freeze([1,2,8,9]),
+      verifiedProcedures:Object.freeze(["event mission sequence","40K 44x60 battlefield","Fixed/Tactical timing","VP caps","layout legend"]),
+      status:"official-source-authenticated-content-partially-checked",
       geometryStatus:"previously-reviewed-by-user"
     }),
     munitorumFieldManual: Object.freeze({
