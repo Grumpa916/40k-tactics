@@ -26,28 +26,6 @@ export function battlefieldPositionToPercent(position) {
   return { left: position.x / BATTLEFIELD_WIDTH_IN * 100, top: (BATTLEFIELD_HEIGHT_IN - position.y) / BATTLEFIELD_HEIGHT_IN * 100 };
 }
 
-function averagePosition(positions) {
-  const valid = positions.filter(isValidBattlefieldPosition);
-  if (!valid.length) return null;
-  return { x: valid.reduce((sum, position) => sum + position.x, 0) / valid.length,
-    y: valid.reduce((sum, position) => sum + position.y, 0) / valid.length };
-}
-
-function unitPosition(unit, state) {
-  const initialDeployment = state.battlefieldMap?.actualDeployment?.[unit.id];
-  const hasRecordedMovement = (state.history ?? []).some((event) =>
-    ["unit.normal_move_resolved", "unit.advanced"].includes(event?.type) && event.payload?.unitId === unit.id &&
-    Array.isArray(event.payload?.moves) && event.payload.moves.length > 0);
-  if (initialDeployment && !hasRecordedMovement) {
-    const position = initialDeployment.position ?? initialDeployment;
-    if (isValidBattlefieldPosition(position)) return position;
-  }
-  if (Array.isArray(unit.models) && unit.models.length && unit.models.every((model) => isValidBattlefieldPosition(model?.position))) {
-    return averagePosition(unit.models.map((model) => model.position));
-  }
-  return isValidBattlefieldPosition(unit.position) ? unit.position : null;
-}
-
 function selectedLayoutGeometry(state) {
   const setup = state.battlefieldMap?.missionSetup;
   if (!setup?.myDisposition || !setup?.opponentDisposition || !setup?.layout) return null;
