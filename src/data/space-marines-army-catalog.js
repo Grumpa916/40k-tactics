@@ -1,6 +1,7 @@
 import { SPACE_MARINES_DATASHEET_DATA } from './space-marines-datasheet-data.js';
 import { SPACE_MARINES_SUPPLEMENTAL_DATASHEETS } from './space-marines-supplemental-datasheets.js';
 import { SPACE_MARINES_MFM_PRICE_OPTIONS, SPACE_MARINES_MFM_PRICE_SOURCES } from './space-marines-mfm-price-options.js';
+import { applyReviewedSpaceMarineCharacteristics } from './space-marines-codex-characteristics.js';
 
 // Space Marines unit names and points captured from the supplied Warhammer App export.
 // Datasheet profiles are linked from the reviewed 11th-edition community reference projection;
@@ -21,7 +22,7 @@ export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, poin
    id: `space-marines:${slug(name)}`, name, faction: 'Space Marines', defaultModelCount: models,
    defaultPoints: standard?.points ?? points,
    pointsOptions: reviewedOptions ?? Object.freeze([{ models, points }]),
-   datasheet: SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null,
+   datasheet: applyReviewedSpaceMarineCharacteristics(name, SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null),
    sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
    sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
    verificationStatus: 'points-reviewed',
