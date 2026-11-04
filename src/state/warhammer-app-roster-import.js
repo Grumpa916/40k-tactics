@@ -129,7 +129,8 @@ const AUTO_FIXED_REVIEWED_SPACE_MARINES=new Set([
  'space-marines:ancient-in-terminator-armour','space-marines:apothecary',
  'space-marines:apothecary-biologis','space-marines:bladeguard-ancient',
  'space-marines:chaplain-on-bike','space-marines:chaplain-with-jump-pack',
- 'space-marines:judiciar','space-marines:librarian-in-terminator-armour'
+ 'space-marines:judiciar','space-marines:librarian-in-terminator-armour',
+ 'space-marines:adrax-agatone','space-marines:vulkan-hestan','space-marines:lieutenant-with-combi-weapon','space-marines:aethon-shaan','space-marines:caanok-var','space-marines:captain-titus','space-marines:chief-librarian-tigurius','space-marines:darnath-lysander','space-marines:iron-father-feirros','space-marines:kaius-konorius','space-marines:kayvaan-shrike','space-marines:korsarro-khan','space-marines:roboute-guilliman','space-marines:suboden-khan','space-marines:tor-garadon'
 ]);
 function hydrateReviewedFixedEquipment(unit) {
  if(!AUTO_FIXED_REVIEWED_SPACE_MARINES.has(unit?.datasheetId))return;
