@@ -69,10 +69,10 @@ const BY_FACTION = Object.freeze({
     revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-04.19",
     reviewedAt: "2026-11-04", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
-      indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
+      indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-04",
       status:"pending-current-official-profile-and-points-comparison",
-      description:"October Space Marines rules and MFM are listed by GW. A limited MFM size/copy-cost and official baseline-characteristic check is complete; full per-datasheet and selectable-wargear comparison is outstanding.",
-      partialPricingAuditAt:"2026-11-03", baselineCharacteristicAuditAt:"2026-11-03"
+      description:"GW publishes a 14 October 2026 MFM and Codex errata; full current GW price table and October Codex are not directly accessible here. 48 changed first-copy and 23 changed extra-copy MFM price rows are independently cross-checked, with a limited direct GW September balance/datasheet-preview check. Do not label 87 independently reviewed datasheets officially certified.",
+      partialPricingAuditAt:"2026-11-04", baselineCharacteristicAuditAt:"2026-11-04"
     }),
     points: Object.freeze({
       name: "Warhammer App export supplied for 40K Tactics Space Marines expansion",
