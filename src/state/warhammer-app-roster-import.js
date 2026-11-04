@@ -119,7 +119,8 @@ function attachSourceValidationErrors(units, sourceErrors) {
 // override a supplied or unmatched choice, or expand to selectable squads.
 const AUTO_FIXED_REVIEWED_SPACE_MARINES=new Set([
  'space-marines:marneus-calgar','space-marines:cato-sicarius',
- 'space-marines:wardens-of-ultramar','space-marines:incursor-squad'
+ 'space-marines:wardens-of-ultramar','space-marines:incursor-squad',
+ 'space-marines:infernus-squad','space-marines:company-heroes'
 ]);
 function hydrateReviewedFixedEquipment(unit) {
  if(!AUTO_FIXED_REVIEWED_SPACE_MARINES.has(unit?.datasheetId))return;
