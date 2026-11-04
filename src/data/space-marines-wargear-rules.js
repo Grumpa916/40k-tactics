@@ -20,6 +20,8 @@ const fixed=(name,perModel=1,profiles=[name])=>Object.freeze({...pick(name,profi
 const slot=(id,choices)=>Object.freeze({id,perModel:1,choices:Object.freeze(choices.map(c=>typeof c==="string"?pick(c):pick(c.name,c.profiles)))});
 const sergeantSlot=(id,choices)=>Object.freeze({id,count:1,choices:Object.freeze(choices.map(c=>typeof c==="string"?pick(c):pick(c.name,c.profiles)))});
 const nonSergeantFixed=(name,profiles=[name])=>Object.freeze({...fixed(name,1,profiles),count:-1});
+const trooperSlot=(id,choices)=>Object.freeze({id,perModel:1,count:-1,choices:Object.freeze(choices.map(c=>typeof c==="string"?pick(c):pick(c.name,c.profiles)))});
+const sergeantFixed=(name,profiles=[name])=>Object.freeze({...pick(name,profiles),count:1});
 const addition=(name,perModels,profiles=[name])=>Object.freeze({...pick(name,profiles),perModels,maxEach:1});
 const reviewed=body=>Object.freeze({...source,...body});
 export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
@@ -92,6 +94,76 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "One non-Sergeant Eradicator per three models may replace its Melta Rifle with a Multi-melta.",
       "Hunter profiles target Monster or Vehicle models only; the normal/Hunter entries are modes of one weapon, not extra equipped weapons.",
       "Total Obliteration permits damage-roll re-rolls. Confirm application on the physical tabletop."
+    ])
+  }),
+  "space-marines:bladeguard-veteran-squad":reviewed({
+    sourceName:"Current 11e Bladeguard Veteran Squad datasheet; official October Codex direct text not yet checked",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Bladeguard-Veteran-Squad",
+    fixed:Object.freeze([
+      fixed("Master-crafted Power Sword"),
+      nonSergeantFixed("Heavy Bolt Pistol")
+    ]),
+    slots:Object.freeze([sergeantSlot("bladeguard-sergeant-pistol",[
+      "Heavy Bolt Pistol","Neo-volkite Pistol",
+      {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}
+    ])]),
+    manualWargearNotes:Object.freeze([
+      "Only the Bladeguard Veteran Sergeant can exchange their Heavy Bolt Pistol for a Neo-volkite or Plasma Pistol.",
+      "The unit's 4+ invulnerable save is printed on the datasheet; its once-per-turn melee offence/defence choice must be resolved on the tabletop."
+    ])
+  }),
+  "space-marines:hellblaster-squad":reviewed({
+    sourceName:"Current 11e Hellblaster Squad datasheet; October Codex direct check outstanding",
+    sourceUrl:"https://wh-rules.ru/factions/space-marines/datasheets/hellblaster-squad",
+    fixed:Object.freeze([
+      nonSergeantFixed("Bolt Pistol"),
+      fixed("Plasma Incinerator",1,["Plasma Incinerator - Standard","Plasma Incinerator - Supercharge"]),
+      fixed("Ceramite Fists")
+    ]),
+    slots:Object.freeze([sergeantSlot("hellblaster-sergeant-pistol",[
+      "Bolt Pistol",
+      {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}
+    ])]),
+    manualWargearNotes:Object.freeze([
+      "Only the Hellblaster Sergeant may replace a Bolt Pistol with a Plasma Pistol.",
+      "Plasma Standard and Supercharge are alternate firing profiles of a single equipped gun. Hazardous rolls and Rites of Thermal Appeasement remain player-confirmed."
+    ])
+  }),
+  "space-marines:terminator-squad":reviewed({
+    sourceName:"Current 11e Terminator Squad datasheet; October Codex direct check outstanding",
+    sourceUrl:"https://wh-rules.ru/factions/space-marines/datasheets/terminator-squad",
+    fixed:Object.freeze([sergeantFixed("Storm Bolter")]),
+    slots:Object.freeze([
+      sergeantSlot("terminator-sergeant-melee",[
+        "Power Fist",
+        {name:"Chainfist",profiles:["Chainfist - Standard","Chainfist - Hunter"]},
+        "Power Weapon"
+      ]),
+      trooperSlot("terminator-trooper-melee",[
+        "Power Fist",
+        {name:"Chainfist",profiles:["Chainfist - Standard","Chainfist - Hunter"]}
+      ]),
+      trooperSlot("terminator-trooper-ranged",[
+        "Storm Bolter","Assault Cannon","Heavy Flamer",
+        {name:"Cyclone Missile Launcher and Storm Bolter",profiles:[
+          "Storm Bolter","Cyclone Missile Launcher - Frag","Cyclone Missile Launcher - Krak"
+        ]}
+      ])
+    ]),
+    constraints:Object.freeze([Object.freeze({
+      type:"max-combined-per-models",
+      selections:Object.freeze(["Assault Cannon","Heavy Flamer","Cyclone Missile Launcher and Storm Bolter"]),
+      models:5,maxEach:1
+    })]),
+    pointsAdjustment:Object.freeze({
+      selection:"Cyclone Missile Launcher and Storm Bolter",
+      perModel:10,maxPerModels:5,
+      sourceUrl:"https://wh-rules.ru/factions/space-marines/datasheets/terminator-squad"
+    }),
+    manualWargearNotes:Object.freeze([
+      "Only non-Sergeant Terminators can carry the heavy weapons; at most one per five squad models across all three heavy-weapon types.",
+      "A Cyclone Missile Launcher keeps its model's Storm Bolter. Frag and Krak are alternative missile firing profiles.",
+      "Chainfist Hunter attacks require a Monster or Vehicle target. Keep the Teleport Homer placement and Rapid Ingress timing manual."
     ])
   }),
   "space-marines:terminator-assault-squad":reviewed({
