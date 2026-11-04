@@ -52,7 +52,7 @@ test('exactly ten source-scoped 11e support leaders receive correct named points
   complete(u,createWargearChoiceState(u));
   assert.match(renderWargearEditor(u),/Reviewed 11th-edition loadout subset/);
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:lieutenant-in-phobos-armour'),null);
+ assert.equal(getTyranidWargearRuleSet('space-marines:tactical-squad'),null);
 });
 test('Ancient Bolt Rifle has two alternate modes, or exactly one Power Weapon; banner not auto-scored',()=>{
  const u=unit('Ancient'),state=createWargearChoiceState(u);
