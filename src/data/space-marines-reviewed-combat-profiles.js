@@ -52,6 +52,40 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  'Scout Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'6"',Toughness:'4',Save:'4+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Boltgun','24"','1','3+','5','-1','1','Rapid Fire 1'),
+      ranged('Shotgun','18"','2','3+','4','-1','1','Assault, Blast 1'),
+      ranged('Sniper Rifle','36"','1','3+','5','-2','2','Heavy, Precision'),
+      ranged('Heavy Bolter','36"','3','4+','5','-1','2','Heavy, Rapid Fire 2, Sustained Hits 1'),
+      ranged('Missile Launcher - Frag','48"','4','4+','4','-1','1','Blast 1, Heavy'),
+      ranged('Missile Launcher - Krak','48"','1','4+','10','-2','D3+3',''),
+      melee('Combat Knife','3','3+','4','-1','1',''),
+      melee('Chainsword','4','3+','4','-1','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Infiltrators','Check Scout deployment placement and restriction manually.'),
+      ability('Scouts 6"','Use the Scouts 6 inches deployment rule.'),
+      ability('Flexible Asset','An advance or fall-back move does not prevent this unit from starting an action. Confirm scoring manually.')
+    ])
+  }),
+  'Outrider Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'12"',Toughness:'6',Save:'3+',Wounds:'4',Leadership:'6+','Objective Control':'2'}),
+    weapons:Object.freeze([
+      ranged('Heavy Bolt Pistol','18"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      ranged('Twin Bolt Rifle','24"','2','2+','5','-1','1','Twin-linked, Assault, Rapid Fire 2'),
+      melee('Chainsword','4','3+','5','-1','1',''),
+      melee('Power Weapon','3','3+','5','-2','1',''),
+      melee('Thunder Hammer','3','4+','8','-2','3','Devastating Wounds')
+    ]),
+    abilities:Object.freeze([
+      ability('Full-throttle Assault','After a successful charge, Thunder Hammer attacks have +1 to Hit and Sustained Hits 1; other melee weapons gain +1 Damage and Sustained Hits 1. Confirm charge history manually.')
+    ])
+  }),
   'Sternguard Veteran Squad':Object.freeze({
     characteristics:Object.freeze({'Toughness':'5'}),
     weapons:Object.freeze([

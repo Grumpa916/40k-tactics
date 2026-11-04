@@ -155,7 +155,7 @@ test('Phobos equipment slot limits do not alter unrelated factions or unreviewed
  assert.equal(getOptionalWargearLimit(3,{perModel:2}),6);
  assert.equal(getOptionalWargearLimit(10,{perModels:5,maxEach:1}),2);
  assert.equal(getOptionalWargearLimit(10,{maxTotal:1}),1);
- const unreviewed=make('Scout Squad');
+ const unreviewed=make('Desolation Squad');
  assert.equal(getTyranidWargearRuleSet(unreviewed.datasheetId),null);
  assert.match(renderWargearEditor(unreviewed),/Space Marines wargear review pending/);
 });

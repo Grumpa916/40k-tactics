@@ -41,6 +41,10 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Infiltrator Squad":fixed([5,85],[10,150]),
   "Reiver Squad":fixed([5,85],[10,165]),
   "Infernus Squad":fixed([5,95],[10,190]),
+  "Scout Squad":fixed([5,65],[10,120]),
+  // 3-model 80 vs 85 remains disputed between independent current sources;
+  // retain the imported 80 rather than pretending an official MFM check.
+  "Outrider Squad":fixed([3,80],[6,160]),
   // Current 11e datasheet also records a 3rd+ copy tier. A storm shield
   // costs an additional 5 points per equipped model (handled by cost resolver).
   "Terminator Assault Squad":copies([[5,170],[10,340]],[[5,210],[10,380]]),
