@@ -91,6 +91,71 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Wardens use Support with the eligible infantry named on their current datasheet; the live game must not infer a joined unit from this fixed weapon list."
     ])
   }),
+  "space-marines:sternguard-veteran-squad":reviewed({
+    sourceName:"Current 11e Sternguard Veteran Squad datasheet cross-check; official October Codex pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Sternguard-Veteran-Squad",
+    fixed:Object.freeze([
+      fixed("Bolt Pistol"),
+      nonSergeantFixed("Ceramite Fists"),
+      sergeantFixed("Artificer Firearm",[
+        "Artificer Firearm - Infernus","Artificer Firearm - Purgatus","Artificer Firearm - Damnatus"
+      ])
+    ]),
+    slots:Object.freeze([
+      sergeantSlot("sternguard-sergeant-melee",["Chainsword","Power Fist","Power Weapon"]),
+      trooperSlot("sternguard-veteran-ranged",[
+        {name:"Artificer Firearm",profiles:[
+          "Artificer Firearm - Infernus","Artificer Firearm - Purgatus","Artificer Firearm - Damnatus"
+        ]},
+        "Heavy Bolter","Pyrecannon"
+      ])
+    ]),
+    constraints:Object.freeze([Object.freeze({
+      type:"max-combined-per-models",
+      selections:Object.freeze(["Heavy Bolter","Pyrecannon"]),models:5,maxEach:1
+    })]),
+    manualWargearNotes:Object.freeze([
+      "Only the Sergeant can exchange their Chainsword for a Power Fist or Power Weapon.",
+      "At most one regular Veteran per five squad models can replace an Artificer Firearm with a Heavy Bolter or Pyrecannon. The Sergeant retains the Artificer Firearm.",
+      "Artificer Firearm Infernus, Purgatus and Damnatus are alternate modes of the same weapon, not three separately equipped guns.",
+      "Veteran Marksmen rerolls ranged hit rolls of 1; resolve actual rerolls on the tabletop."
+    ])
+  }),
+  "space-marines:inceptor-squad":reviewed({
+    sourceName:"Current 11e Inceptor Squad comparison; October Codex direct verification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Inceptor-Squad",
+    fixed:Object.freeze([fixed("Ceramite Fists")]),
+    slots:Object.freeze([slot("inceptor-ranged",[
+      "Assault Bolters",
+      {name:"Plasma Exterminators",profiles:[
+        "Plasma Exterminators - Standard","Plasma Exterminators - Supercharge"
+      ]}
+    ])]),
+    manualWargearNotes:Object.freeze([
+      "Each Inceptor can replace its Assault Bolters with Plasma Exterminators. Select equipment per model.",
+      "Standard and Supercharge are alternate Plasma Exterminator attacks, not separate equipped weapons.",
+      "Meteoric Descent and Parabolic Jetleap movement windows are manual. Hazardous attacks require tabletop confirmation.",
+      "Independent October-era references disagree on Inceptor points. Existing prices are preserved pending direct current GW Munitorum Field Manual comparison."
+    ])
+  }),
+  "space-marines:eliminator-squad":reviewed({
+    sourceName:"Current 11e Eliminator Squad comparison; October Codex direct verification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Eliminator-Squad",
+    fixed:Object.freeze([fixed("Bolt Pistol"),fixed("Ceramite Fists")]),
+    slots:Object.freeze([
+      sergeantSlot("eliminator-sergeant-ranged",[
+        "Bolt Sniper Rifle","Instigator Bolt Carbine","Las Fusil"
+      ]),
+      trooperSlot("eliminator-trooper-ranged",[
+        "Bolt Sniper Rifle","Las Fusil"
+      ])
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Only the Eliminator Sergeant may replace its Bolt Sniper Rifle with an Instigator Bolt Carbine. Regular Eliminators may replace theirs with Las Fusils.",
+      "Instigator Precision and non-Monster/Vehicle Lethal Hits target conditions require player confirmation.",
+      "Chameleoline Cloaks and Special-issue Optics and Ammunition choices are reminders; do not automatically adjust range or attacks."
+    ])
+  }),
   "space-marines:aggressor-squad": reviewed({
     fixed:Object.freeze([fixed("Twin Power Fists")]),
     slots:Object.freeze([slot("unit-ranged-loadout",[
