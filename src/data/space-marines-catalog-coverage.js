@@ -1,4 +1,5 @@
 import { SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS } from './space-marines-named-ultramarines-datasheets.js';
+import { addReviewedUltramarinesAttachmentMetadata } from './space-marines-ultramarines-attachments.js';
 
 /**
  * November 2026 Space Marines catalog coverage.
@@ -125,7 +126,7 @@ export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_M
       ])
       :Object.freeze([Object.freeze({models,points})]),
     ...(SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name]
-      ? {datasheet:SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name],
+      ? {datasheet:addReviewedUltramarinesAttachmentMetadata(name,SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name]),
          combatDataCoverage:SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name].modelSpecificStatline
            ? 'per-model-reference-manual-allocation'
            : 'current-11e-profile-cross-checked',
