@@ -141,7 +141,7 @@ test('Melta Eradicators select one Multi-melta per three models while preserving
 test('Existing Tyranid and Custodes optional caps and unreviewed Marine warnings remain unchanged',()=>{
  assert.equal(getOptionalWargearLimit(3,{perModel:2}),6);
  assert.equal(getOptionalWargearLimit(3,{perModel:1}),3);
- const unreviewed=make('Invader ATVs');
+ const unreviewed=make('Land Speeder');
  assert.equal(getTyranidWargearRuleSet(unreviewed.datasheetId),null);
  assert.match(renderWargearEditor(unreviewed),/wargear review pending/);
 });
