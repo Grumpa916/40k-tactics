@@ -94,7 +94,6 @@ export function renderMovementSelectedUnitCard(state, unit, { action = null, ref
     </div>
     <div class="movement-selected-unit__stats">${stats.map(([key,value]) => `<span><small>${key}</small><strong>${esc(value)}</strong></span>`).join('')}</div>
     <button type="button" class="movement-selected-unit__battle-shock" data-movement-battle-shock="${esc(unit.id)}" aria-pressed="${battleShocked}" aria-label="${battleShocked ? 'Clear' : 'Mark'} Battle-shock for ${esc(unit.name ?? unit.id)}">Battle-shock: ${battleShocked ? 'On' : 'Off'}</button>
-    <div class="movement-selected-unit__tabs" aria-label="Unit reference tabs"><span class="is-active">Movement</span><span>Weapons</span><span>Abilities</span><span>Profile</span></div>
   </section>`;
 }
 

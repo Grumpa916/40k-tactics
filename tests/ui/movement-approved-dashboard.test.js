@@ -40,10 +40,8 @@ test('selected-unit Movement card colors its token by army perspective and shows
   assert.match(enemyHtml,/movement-selected-unit__token is-opponent/);
   for (const key of ['M','T','SV','W','OC']) assert.match(html,new RegExp(`<small>${key}<\\/small>`));
   assert.match(html,/Shield Captain/);
-  assert.match(html,/Movement/);
-  assert.match(html,/Weapons/);
-  assert.match(html,/Abilities/);
-  assert.match(html,/Profile/);
+  assert.match(html,/data-movement-battle-shock="u1"/);
+  assert.doesNotMatch(html,/Unit reference tabs|movement-selected-unit__tabs/);
 });
 
 test('Movement screen makes selected-unit controls primary and advisor expandable', () => {
