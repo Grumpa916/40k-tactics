@@ -199,6 +199,64 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:ballistus-dreadnought":reviewed({
+    sourceName:"Current 11e Ballistus Dreadnought datasheet cross-check; direct official Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Ballistus-Dreadnought",
+    fixed:Object.freeze([
+      fixed("Ballistus Lascannon"),
+      fixed("Ballistus Missile Launcher",1,["Ballistus Missile Launcher - Frag","Ballistus Missile Launcher - Krak"]),
+      fixed("Storm Bolters"),fixed("Armoured Feet")
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Ballistus has four mandatory weapons and no selectable equipment swaps in the current 11e datasheet.",
+      "Ballistus Missile Launcher Frag and Krak are alternative profiles of ONE launcher; do not allocate both as independently equipped guns.",
+      "Ballistus Strike grants Sustained Hits 1 only to ranged attacks against a target within 24 inches. Confirm range when evaluating attacks; this is not a permanent weapon characteristic.",
+      "Damaged 4 and Deadly Demise D3 are separate core rules; resolve actual table results manually."
+    ])
+  }),
+  "space-marines:brutalis-dreadnought":reviewed({
+    sourceName:"Current 11e Brutalis Dreadnought datasheet cross-check; full official October Codex comparison pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html",
+    fixed:Object.freeze([fixed("Twin Icarus Ironhail Heavy Stubber")]),
+    slots:Object.freeze([
+      slot("brutalis-primary-loadout",[
+        {name:"Bolt Rifles and Brutalis Fists",profiles:["Bolt Rifles","Brutalis Fists"]},
+        {name:"Brutalis Talons",profiles:["Brutalis Talons"]}
+      ]),
+      slot("brutalis-ranged",["Twin Heavy Bolter","Twin Multi-melta"])
+    ]),
+    manualWargearNotes:Object.freeze([
+      "The Bolt Rifles and Brutalis Fists are a linked pair: taking Brutalis Talons replaces BOTH together, not merely the fists. Talons are a single melee profile in current 11e.",
+      "Twin Heavy Bolter can be swapped for Twin Multi-melta independently of the linked melee loadout.",
+      "Brutalis Charge no longer automatically rolls mortal wounds: once per phase this unit may use Crushing Impact even if used elsewhere, at -1 CP, without blocking other uses. Confirm available CP, eligibility and stratagem timing manually.",
+      "Damaged 4 and Deadly Demise D3 are manually resolved; no old 10e Brutalis Charge mortal wounds are automatically inferred."
+    ])
+  }),
+  "space-marines:redemptor-dreadnought":reviewed({
+    sourceName:"Current 11e Redemptor Dreadnought datasheet cross-check; direct official October Codex verification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Redemptor-Dreadnought",
+    fixed:Object.freeze([fixed("Redemptor Fist")]),
+    slots:Object.freeze([
+      slot("redemptor-launchers",["Fragstorm Grenade Launchers","Storm Bolters"]),
+      slot("redemptor-secondary-gun",["Heavy Flamer","Onslaught Gatling Cannon"]),
+      slot("redemptor-main-gun",[
+        "Heavy Onslaught Gatling Cannon",
+        {name:"Macro Plasma Incinerator",profiles:["Macro Plasma Incinerator - Standard","Macro Plasma Incinerator - Supercharge"]}
+      ])
+    ]),
+    optional:Object.freeze([Object.freeze({...pick("Icarus Rocket Pod"),maxTotal:1})]),
+    pointsAdjustment:Object.freeze({
+      selection:"Macro Plasma Incinerator",perModel:10,
+      sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Redemptor-Dreadnought"
+    }),
+    manualWargearNotes:Object.freeze([
+      "Select one launcher (Fragstorm Grenade Launchers OR Storm Bolters), one secondary gun (Heavy Flamer OR Onslaught Gatling Cannon), and one main gun (Heavy Onslaught Gatling Cannon OR Macro Plasma Incinerator). Redemptor Fist stays equipped.",
+      "An Icarus Rocket Pod may be added once; its attacks only exist if selected. It does not replace another weapon.",
+      "Macro Plasma Incinerator adds 10 points to the selected copy's 170 or 190 base price. Standard and Supercharge are alternative firing modes of ONE gun, not two guns.",
+      "Duty Eternal: attacks targeting this unit have -1 to wound rolls only when Strength is GREATER than Toughness; this replaces the older 10e -1 Damage effect.",
+      "Damaged 4 and Deadly Demise D3 require tabletop handling; no automatic game-state mutation."
+    ])
+  }),
   "space-marines:assault-intercessor-squad":reviewed({
     sourceName:"Current 11e Assault Intercessor Squad datasheet cross-check",
     sourceUrl:"https://www.40k.app/995/factions/space-marines/units/assault-intercessor-squad",
