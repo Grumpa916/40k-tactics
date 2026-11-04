@@ -199,6 +199,78 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:assault-intercessor-squad":reviewed({
+    sourceName:"Current 11e Assault Intercessor Squad datasheet cross-check",
+    sourceUrl:"https://www.40k.app/995/factions/space-marines/units/assault-intercessor-squad",
+    fixed:Object.freeze([nonSergeantFixed("Heavy Bolt Pistol"),nonSergeantFixed("Chainsword")]),
+    slots:Object.freeze([
+      sergeantSlot("assault-intercessor-sergeant-pistol",[
+        "Heavy Bolt Pistol","Hand Flamer",
+        {name:"Plasma Pistol",profiles:["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}
+      ]),
+      sergeantSlot("assault-intercessor-sergeant-melee",["Chainsword","Power Fist","Power Weapon","Thunder Hammer"])
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Only the Sergeant may swap their Heavy Bolt Pistol for a Hand Flamer or Plasma Pistol, or their Chainsword for a Power Fist, Power Weapon or Thunder Hammer.",
+      "Plasma Standard and Supercharge are one equipped pistol's alternative attack modes, not two pistols.",
+      "Targeted Intercession adds +1 Strength and +1 AP to this unit's melee attacks only if it made a charge move this turn. Confirm charge and combat manually."
+    ])
+  }),
+  "space-marines:heavy-intercessor-squad":reviewed({
+    sourceName:"Current 11e Heavy Intercessor Squad equipment and profiles cross-check",
+    sourceUrl:"https://www.40k.app/995/factions/space-marines/units/heavy-intercessor-squad",
+    fixed:Object.freeze([fixed("Bolt Pistol"),fixed("Ceramite Fists"),sergeantFixed("Heavy Bolt Rifle")]),
+    slots:Object.freeze([trooperSlot("heavy-intercessor-ranged",["Heavy Bolt Rifle","Heavy Bolter"])]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max-per-models",selection:"Heavy Bolter",models:5,maxEach:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Only ordinary Heavy Intercessors can replace a Heavy Bolt Rifle with a Heavy Bolter. At most one per five squad models. The Sergeant always keeps their Heavy Bolt Rifle.",
+      "Unyielding in the Face of the Foe: +1 to armour save rolls while this unit controls an objective. Confirm control manually at the appropriate time."
+    ])
+  }),
+  "space-marines:infernus-squad":reviewed({
+    sourceName:"Current 11e Infernus Squad fixed equipment and profiles cross-check",
+    sourceUrl:"https://www.40k.app/995/factions/space-marines/units/infernus-squad",
+    fixed:Object.freeze([fixed("Bolt Pistol"),fixed("Ceramite Fists"),fixed("Pyreblaster")]),
+    manualWargearNotes:Object.freeze([
+      "Each model has exactly one Bolt Pistol, Pyreblaster and Ceramite Fists. No 11th-edition selectable weapon changes are on this datasheet.",
+      "Pyreblaster now has Blast 1 and Torrent, with three attacks; do not restore the old 10th-edition D6 profile.",
+      "Driven from Cover triggers after this unit shoots and hits an enemy unit; friendly Astartes ranged attacks targeting it Ignore Cover. Confirm the chosen enemy and hits manually."
+    ])
+  }),
+  "space-marines:desolation-squad":reviewed({
+    sourceName:"Current 11e Desolation Squad fixed-size rocket loadout cross-check",
+    sourceUrl:"https://www.40k.app/995/factions/space-marines/units/desolation-squad",
+    fixed:Object.freeze([fixed("Bolt Pistol"),fixed("Ceramite Fists"),fixed("Castellan Launcher")]),
+    slots:Object.freeze([
+      sergeantSlot("desolation-sergeant-rocket",["Superfrag Rocket Launcher","Superkrak Rocket Launcher","Vengor Launcher"]),
+      trooperSlot("desolation-marine-rocket",["Superfrag Rocket Launcher","Superkrak Rocket Launcher"])
+    ]),
+    pointsAdjustment:Object.freeze({selection:"Vengor Launcher",perModel:5,sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html"}),
+    manualWargearNotes:Object.freeze([
+      "Exactly five models. The Sergeant can take a Vengor Launcher in place of either rocket launcher; ordinary Desolation Marines can choose Superfrag or Superkrak only.",
+      "Each model retains one Castellan Launcher. A Vengor Launcher adds 5 points to this unit's cost; third+ copies have their own 10-point increase.",
+      "Targeter Optics grants Ignores Cover against visible units. Indirect Fire for Vengor remains subject to the tabletop visibility rules."
+    ])
+  }),
+  "space-marines:company-heroes":reviewed({
+    sourceName:"Current 11e Company Heroes four-role fixed equipment cross-check",
+    sourceUrl:"https://www.40k.app/995/factions/space-marines/units/company-heroes",
+    fixed:Object.freeze([
+      Object.freeze({...pick("Master-crafted Bolt Pistol"),count:4}),
+      Object.freeze({...pick("Master-crafted Bolt Rifle"),count:2}),
+      Object.freeze({...pick("Master-crafted Heavy Bolter"),count:1}),
+      Object.freeze({...pick("Combat Knife"),count:3}),
+      Object.freeze({...pick("Master-crafted Power Weapon"),count:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Exactly four distinct models: Ancient, Company Champion, Company Veteran with Bolt Rifle, and Company Veteran with Heavy Bolter.",
+      "The Ancient and bolt-rifle Veteran each have Bolt Pistol, Bolt Rifle and Combat Knife; the Champion has Bolt Pistol and Master-crafted Power Weapon; the heavy-bolter Veteran has Bolt Pistol, Heavy Bolter and Combat Knife.",
+      "Current 11e Company Heroes have no selectable wargear options. The Ancient/Champion carry model-specific keywords; do not infer which model suffers wounds from aggregate unit health.",
+      "Command Squad applies -1 to wound rolls for attacks targeting this unit. Raise the Banner secures an objective at the end of Movement if controlled; confirm manually. Do not restore older 10e Captain-required text."
+    ])
+  }),
   "space-marines:assault-intercessors-with-jump-packs":reviewed({
     sourceName:"Current 11e Jump Pack Assault Intercessors datasheet cross-check; October Codex official full-text comparison pending",
     sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html",

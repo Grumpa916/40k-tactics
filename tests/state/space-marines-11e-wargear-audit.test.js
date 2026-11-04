@@ -17,7 +17,7 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('22 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('27 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
@@ -29,16 +29,18 @@ test('22 source-reviewed Space Marine rule sets match the 11e catalog source sco
  'space-marines:eliminator-squad',
  'space-marines:incursor-squad','space-marines:infiltrator-squad',
  'space-marines:reiver-squad','space-marines:scout-squad','space-marines:outrider-squad',
- 'space-marines:assault-intercessors-with-jump-packs','space-marines:vanguard-veteran-squad-with-jump-packs'].sort());
+ 'space-marines:assault-intercessors-with-jump-packs','space-marines:vanguard-veteran-squad-with-jump-packs',
+ 'space-marines:assault-intercessor-squad','space-marines:heavy-intercessor-squad',
+ 'space-marines:infernus-squad','space-marines:desolation-squad','space-marines:company-heroes'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
   assert.equal(rules.reviewedAt,'2026-11-03');
   assert.ok(getTyranidWargearSelections(id).length>0);
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:desolation-squad'),null,
+ assert.equal(getTyranidWargearRuleSet('space-marines:invader-atvs'),null,
   'unreviewed units must not appear certified');
- assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,18);
+ assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,23);
 });
 
 test('Aggressors select a legal unit-wide flamestorm or bolter+grenade loadout',()=>{
@@ -134,7 +136,7 @@ test('Assault Terminator base price and 5-point per-shield upgrade work with 3rd
 });
 
 test('unverified Hellblaster, Bladeguard and other weapons remain flagged for review',()=>{
- for(const name of ['Desolation Squad','Heavy Intercessor Squad','Infernus Squad']){
+ for(const name of ['Invader ATVs','Land Speeder','Firestrike Servo-turrets']){
   const unit=find(name);
   assert.equal(getTyranidWargearRuleSet(unit.datasheetId),null,name+' should remain awaiting wargear audit');
   assert.match(renderWargearEditor(unit),/wargear review pending/);
