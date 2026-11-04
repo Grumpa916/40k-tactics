@@ -27,7 +27,8 @@ export function assessSavedUnitCost(candidate, unit, roster) {
   }
   // These equipment-dependent prices cannot be checked by looking for the
   // saved total among *base* prices alone. Validate full equipped cost first.
-  if(['space-marines:terminator-assault-squad','space-marines:terminator-squad'].includes(candidate?.id)){
+  if(['space-marines:terminator-assault-squad','space-marines:terminator-squad',
+      'space-marines:victrix-honour-guard'].includes(candidate?.id)){
     const priced=resolveBuilderUnitCost({...unit,pointsOptions:options},roster,unit.equippedWargear??[]);
     if(priced.points==null)return {status:"unverified",reason:priced.reason};
     return Number(priced.points)===Number(unit.points)
