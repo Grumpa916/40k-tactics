@@ -76,6 +76,18 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
   return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
  }
+ // The 11e Redemptor Macro Plasma Incinerator is a +10 point weapon upgrade.
+ // Do not silently multiply alternative Standard/Supercharge attack profiles.
+ if(unit.datasheetId==='space-marines:redemptor-dreadnought'){
+  const plasma=selections.filter(x=>x.name==='Macro Plasma Incinerator')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  if(!Number.isInteger(plasma)||plasma<0||plasma>1)
+   return {points:null,reason:'At most one Macro Plasma Incinerator can be equipped.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Redemptor Dreadnought first-two / third+ points tier.'};
+  return {points:base.points+10*plasma,
+    reason:(base.condition??'reviewed base')+'; '+plasma+' Macro Plasma Incinerator at 10 pts'};
+ }
  // Desolation Sergeant's Vengor Launcher costs 5 points above the squad's
  // reviewed first-two / third+ price. It is never available to a second model.
  if(unit.datasheetId==='space-marines:desolation-squad'){
