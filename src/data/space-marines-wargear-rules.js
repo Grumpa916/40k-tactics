@@ -199,6 +199,45 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:repulsor":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"11e Space Marines Repulsor datasheet transcription review; official GW Codex/MFM direct verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Repulsor",
+    fixed:Object.freeze([fixed("Armoured Hull"),fixed("Defensive Array"),fixed("Hunter-slayer Missile")]),
+    slots:Object.freeze([
+      slot("repulsor-primary-gun",["Heavy Onslaught Gatling Cannon","Las-talon"]),
+      slot("repulsor-secondary-gun",["Twin Heavy Bolter","Twin Lascannon"])
+    ]),
+    manualWargearNotes:Object.freeze([
+      "The 11e Repulsor always carries Armoured Hull, Defensive Array and one Hunter-slayer Missile. Pick Heavy Onslaught Gatling Cannon OR Las-talon and independently Twin Heavy Bolter OR Twin Lascannon.",
+      "Hunter-slayer Missile is One Shot with Indirect Fire. Track its once-per-battle use manually.",
+      "Combat Embarkation triggers in the OPPONENT Charge phase when a friendly unengaged infantry charge target is wholly within 3 inches and eligible to embark. The enemy may select new charge targets. Do not auto-move on the live map.",
+      "Capacity 14 ADEPTUS ASTARTES INFANTRY, excludes JUMP PACK, GRAVIS/TERMINATOR count double. Damaged 6 and Deadly Demise D6 remain manual."
+    ])
+  }),
+  "space-marines:repulsor-executioner":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"11e Space Marines Repulsor Executioner datasheet transcription review; official GW Codex/MFM direct verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Repulsor-Executioner",
+    fixed:Object.freeze([fixed("Armoured Hull"),fixed("Defensive Array"),fixed("Heavy Onslaught Gatling Cannon"),fixed("Twin Heavy Bolter")]),
+    slots:Object.freeze([
+      slot("executioner-main-gun",[
+        "Heavy Laser Destroyer",
+        {name:"Macro Plasma Incinerator",profiles:["Macro Plasma Incinerator - Standard","Macro Plasma Incinerator - Supercharge"]}
+      ])
+    ]),
+    pointsAdjustment:Object.freeze({
+      selection:"Heavy Laser Destroyer",perModel:10,
+      sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Repulsor-Executioner"
+    }),
+    manualWargearNotes:Object.freeze([
+      "The 11e Executioner keeps Armoured Hull, Defensive Array, Heavy Onslaught Gatling Cannon and Twin Heavy Bolter. Choose exactly one Heavy Laser Destroyer OR Macro Plasma Incinerator.",
+      "The HEAVY LASER DESTROYER, not the plasma, costs +10 points above the 260 first/second or 280 third+ base. Retain any old saved roster's points until the player reviews and saves.",
+      "Macro Plasma Incinerator Standard and Supercharge are alternative profiles of the same gun. Supercharge is Hazardous.",
+      "Executioner grants +1 to hit rolls for ranged attacks targeting a unit NOT below half-strength. Check the target's actual models/wounds manually.",
+      "Capacity 7 ADEPTUS ASTARTES INFANTRY, no JUMP PACK, GRAVIS/TERMINATOR occupy two spaces. Damaged 6 and Deadly Demise D6 are manual."
+    ])
+  }),
   "space-marines:land-raider":reviewed({
     reviewedAt:"2026-11-04",
     sourceName:"11e Space Marines Land-Raider datasheet cross-check; direct official October Codex/MFM pending",
