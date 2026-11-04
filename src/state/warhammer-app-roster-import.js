@@ -117,12 +117,12 @@ function attachSourceValidationErrors(units, sourceErrors) {
 // Populate their known weapons when the pasted export lists no equipment,
 // rather than demanding pointless live-play keyboard confirmation. Never
 // override a supplied or unmatched choice, or expand to selectable squads.
-const AUTO_FIXED_NAMED_ULTRAMARINES=new Set([
+const AUTO_FIXED_REVIEWED_SPACE_MARINES=new Set([
  'space-marines:marneus-calgar','space-marines:cato-sicarius',
- 'space-marines:wardens-of-ultramar'
+ 'space-marines:wardens-of-ultramar','space-marines:incursor-squad'
 ]);
-function hydrateNamedFixedEquipment(unit) {
- if(!AUTO_FIXED_NAMED_ULTRAMARINES.has(unit?.datasheetId))return;
+function hydrateReviewedFixedEquipment(unit) {
+ if(!AUTO_FIXED_REVIEWED_SPACE_MARINES.has(unit?.datasheetId))return;
  if(unit.equippedWargear?.length||unit.unmatchedWargear?.length||
     unit.loadoutValidation?.status==='source-invalid')return;
  const rules=getTyranidWargearRuleSet(unit.datasheetId);
@@ -247,7 +247,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   } else warnings.push('Review Attached unit ' + number + ': leader/bodyguard pairing could not be resolved.');
  }
  attachSourceValidationErrors(units, sourceErrors);
- units.forEach(hydrateNamedFixedEquipment);
+ units.forEach(hydrateReviewedFixedEquipment);
  units.forEach(finalizeLoadoutValidation);
  warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);
