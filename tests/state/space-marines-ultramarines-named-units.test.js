@@ -10,6 +10,7 @@ import {renderUnitDetails} from '../../src/ui/army-unit-details.js';
 import {renderWargearEditor} from '../../src/ui/army-wargear-editor.js';
 import {getEligibleBodyguards,attachLeaderToBodyguard} from '../../src/state/leader-bodyguard-attachments.js';
 import {WARDENS_OF_ULTRAMAR_MODELS} from '../../src/data/space-marines-named-ultramarines-datasheets.js';
+import {importWarhammerAppRoster} from '../../src/state/warhammer-app-roster-import.js';
 
 const make=(name,id='one',size)=>{
  const c=findArmyUnitCandidates({faction:'Space Marines'}).find(unit=>unit.name===name);
@@ -28,7 +29,9 @@ test('Calgar and Sicarius fixed weapons are loaded as equipped weapons, not extr
   assert.equal(validateWargearLoadout({...unit,equippedWargear:selection}).status,'rules-reviewed-valid');
   const result=buildManualWargearLoadout(unit,selection);
   assert.equal(result.loadoutValidation.status,'rules-reviewed-valid');
-  assert.ok(result.equippedWeapons.length>=3);
+  // Calgar's ranged and melee Gauntlets share a name: one saved profile
+  // reference still exposes both range variants through the live datasheet.
+  assert.ok(result.equippedWeapons.length>=2);
   assert.ok(result.equippedWargear.length<=2);
  }
  assert.equal(calgar.defaultPoints,180);
@@ -127,6 +130,26 @@ test('reviewed Calgar/Cato/Victrix and Wardens attachment paths require legal ro
  assert.deepEqual(secondCalgar.units.find(x=>x.id==='bg').attachedLeaderIds,['wo','mc']);
  const calgarOnTerm=attachLeaderToBodyguard(roster,'mc','ts');
  assert.equal(getEligibleBodyguards(calgarOnTerm,'cs').some(x=>x.id==='ts'),false);
+});
+
+test('pasted fixed-only named Ultramarines units enter battle without redundant equipment prompts',()=>{
+ const imported=importWarhammerAppRoster({
+  text:'Space Marines\\nCHARACTERS\\nMarneus Calgar (180 pts)\\nCato Sicarius (115 pts)\\nOTHER DATASHEETS\\nWardens of Ultramar (115 pts)',
+  faction:'Space Marines',name:'Ultramarines named units',id:'ultramarines-fixed',pointsLimit:2000
+ });
+ assert.equal(imported.unrecognized.length,0);
+ assert.equal(imported.roster.units.length,3);
+ for(const unit of imported.roster.units){
+  assert.equal(unit.loadoutValidation?.status,'rules-reviewed-valid',unit.name);
+  assert.equal(unit.loadoutValidation?.source,'reviewed-fixed-equipment-import');
+  assert.ok(unit.equippedWeapons?.length>0,unit.name);
+  assert.ok(unit.equippedWargear?.length>0,unit.name);
+ }
+ const calgar=imported.roster.units[0];
+ assert.equal(calgar.equippedWeapons.some(x=>x.name==='Gauntlets of Ultramar'),true);
+ assert.equal(calgar.equippedWeapons.some(x=>x.name==='Gauntlets of Ultramar - Overhead Smash'),true);
+ const wardens=imported.roster.units[2];
+ assert.equal(qty(wardens.equippedWeapons,'Archeotech Laspistol'),3);
 });
 
 test('named-unit source labels do not overstate direct October Codex verification',()=>{
