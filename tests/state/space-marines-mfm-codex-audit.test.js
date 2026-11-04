@@ -83,11 +83,15 @@ test('official GW Codex characteristics correct 15 Tacticus, Terminator and Phob
 });
 
 test('Space Marines wargear remains flagged as unverified instead of displaying misleading choices',()=>{
- const marine=unit('Aggressor Squad');
- const html=renderWargearEditor(marine);
+ const unresolved=unit('Intercessor Squad');
+ const html=renderWargearEditor(unresolved);
  assert.match(html,/Space Marines wargear review pending/);
  assert.match(html,/possible weapon profiles, not a confirmed equipped loadout/);
  assert.doesNotMatch(html,/data-wargear-choice=/);
+ const reviewed=renderWargearEditor(unit('Aggressor Squad'));
+ assert.match(reviewed,/Reviewed 11th-edition loadout subset/);
+ assert.match(reviewed,/data-wargear-baseline/);
+ assert.match(reviewed,/Flamestorm Gauntlets/);
  const rev=getRulesDataRevisionForFaction('Space Marines');
  assert.equal(rev.catalog.revision,'2026-11-03.1');
  assert.equal(rev.officialRevisionCheck.status,'pending-current-official-profile-and-points-comparison');
