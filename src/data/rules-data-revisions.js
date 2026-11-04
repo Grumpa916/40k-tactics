@@ -66,7 +66,7 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.6",
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.7",
     reviewedAt: "2026-11-03", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
@@ -79,7 +79,7 @@ const BY_FACTION = Object.freeze({
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-11-03.6", description: "Adds 11e Sternguard ranged/Sergeant replacements, Inceptor plasma choices, and Eliminator sniper/Sergeant choices; full official Codex recheck pending" })
+    catalog: Object.freeze({ revision: "2026-11-03.7", description: "Adds current 11e Incursor, Infiltrator and Reiver Phobos profiles, legal unit-wide equipment, model sizes and copy pricing; official full Codex comparison pending" })
   })
 });
 

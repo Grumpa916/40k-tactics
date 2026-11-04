@@ -11,6 +11,47 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  'Incursor Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'8"',Toughness:'4',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Occulus Bolt Carbine','24"','2','3+','5','-1','1','Assault, Ignores Cover'),
+      melee('Paired Combat Blades','3','3+','5','-1','1','Sustained Hits 1')
+    ]),
+    abilities:Object.freeze([
+      ability('Scouts 6"','Use Scouts 6 inches during deployment, per the current deployment rules.'),
+      ability('Divinator-class Auspexes','Once per phase in your Shooting phase when a friendly Astartes unit is selected to shoot, scan one visible enemy within 18 inches; ranged attacks targeting that unit can reroll Hit rolls of 1. Confirm timing and target manually.'),
+      ability('Haywire Mine','Once per battle in your Shooting phase, choose a visible enemy within 6 inches and roll a D6; on 2+ it suffers D3 mortal wounds, or 2D3 if it is a Vehicle. Track use manually.')
+    ])
+  }),
+  'Infiltrator Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'8"',Toughness:'4',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Marksman Bolt Carbine','24"','2','3+','5','-1','1','Precision, Rapid Fire 1'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Infiltrators','This unit can deploy using Infiltrators, subject to deployment restrictions.'),
+      ability('Omni-scramblers','In your Shooting phase, select one visible enemy within 18 inches. The selected unit is detected and has +3 inches detection range. This is not the former 10e Reserves denial.'),
+      ability('Helix Gauntlet','If equipped, heal D3 Wounds in your Command phase; adjust actual Wounds manually.')
+    ])
+  }),
+  'Reiver Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'8"',Toughness:'4',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Bolt Carbine','18"','3','3+','5','-1','1','Assault, Precision'),
+      ranged('Special-issue Bolt Pistol','12"','1','3+','5','-2','1','Close-Quarters, Precision'),
+      melee('Monomolecular Combat Knife','4','3+','5','-1','1','Precision')
+    ]),
+    abilities:Object.freeze([
+      ability('Scouts 6"','Use Scouts 6 inches during deployment.'),
+      ability('Terror Troops (Aura)','Enemy models within 3 inches of this unit have -1 to Objective Control. Confirm control manually.'),
+      ability('Fearsome Assault','At the start of the Fight phase each engaged enemy unit must make a Battle-shock roll with -1 to the roll; toggle status manually.'),
+      ability('Grav-chutes','If equipped, the unit has Deep Strike.'),
+      ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
+    ])
+  }),
   'Sternguard Veteran Squad':Object.freeze({
     characteristics:Object.freeze({'Toughness':'5'}),
     weapons:Object.freeze([
