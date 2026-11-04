@@ -14,9 +14,16 @@ const factions=[...new Set(ARMY_UNIT_CATALOG.map(unit=>unit.faction))].sort((a,b
 const categories=['Character','Battleline','Infantry','Beast','Monster','Vehicle','Transport','Swarm'];
 export function filterCatalog({current,unitSearch='',category='',sort='name',fits=false,includeLegends=false}) {
  const remaining=summarizeRosterPoints(current).remainingPoints;
- return findArmyUnitCandidates({faction:current.faction}).filter(u=> {
+ const search=unitSearch.trim().toLowerCase();
+ const candidates=findArmyUnitCandidates({faction:current.faction});
+ // Prefer matching unit names and import aliases. Only fall back to ability
+ // and keyword search when no name anywhere matches the query. Otherwise an
+ // Epic Hero's ability referencing Calgar can crowd Calgar out of iPad results.
+ const nameMatch=u=>[u.name,...(u.importAliases??[])].some(name=>String(name).toLowerCase().includes(search));
+ const namesAvailable=search&&candidates.some(u=>(includeLegends||!u.legends)&&nameMatch(u));
+ return candidates.filter(u=> {
   const text=[u.name,...(u.importAliases??[]),...(u.datasheet?.keywords??u.keywords??[]),...(u.datasheet?.abilities??[]).map(a=>a.name)].join(' ').toLowerCase();
-  return (includeLegends || !u.legends) && text.includes(unitSearch.trim().toLowerCase()) && (!category||(u.datasheet?.keywords??[]).some(k=>String(k).toLowerCase()===category.toLowerCase())) && (!fits||(remaining!=null&&u.defaultPoints!=null&&u.defaultPoints<=remaining));
+  return (includeLegends || !u.legends) && (!search||(namesAvailable?nameMatch(u):text.includes(search))) && (!category||(u.datasheet?.keywords??[]).some(k=>String(k).toLowerCase()===category.toLowerCase())) && (!fits||(remaining!=null&&u.defaultPoints!=null&&u.defaultPoints<=remaining));
  }).sort((a,b)=>sort==='points'?(a.defaultPoints??Infinity)-(b.defaultPoints??Infinity)||a.name.localeCompare(b.name):sort==='alpha'?a.name.localeCompare(b.name):compareCatalogRoleOrder(a,b));
 }
 function renderCatalogUnit(u,state) {
