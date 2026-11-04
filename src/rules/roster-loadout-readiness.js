@@ -61,6 +61,14 @@ export function assessUnitLoadoutReadiness(unit) {
     });
   }
 
+  // A source-reviewed, truly weaponless datasheet (e.g. current 11e Drop Pod)
+  // must not require inventing a gun selection to enter battle.
+  if (ruleSet.noEquipment && !unit?.equippedWargear?.length &&
+      recordedStatus !== 'manual-selection-required') {
+    return Object.freeze({unitId:unit?.id??null,name:unit?.name??'Unit',
+      status:'complete',blocking:false,reviewedRules:true,
+      reason:'Reviewed datasheet has no equipped weapons or selectable wargear.'});
+  }
   if (recordedStatus === 'manual-selection-required' || !Array.isArray(unit?.equippedWargear) || !unit.equippedWargear.length) {
     return Object.freeze({
       unitId: unit?.id ?? null,

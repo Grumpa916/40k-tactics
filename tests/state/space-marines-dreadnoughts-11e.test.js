@@ -126,6 +126,6 @@ test('First-two/third Dreadnought pricing remains copy-sensitive and Redemptor p
    assert.equal(resolveBuilderUnitCost(c,roster,[{name:'Macro Plasma Incinerator',quantity:2}]).points,null);
   }
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:land-speeder'),null,
+ assert.equal(getTyranidWargearRuleSet('space-marines:captain'),null,
   'Unreviewed walkers must remain separate pending another scoped audit');
 });

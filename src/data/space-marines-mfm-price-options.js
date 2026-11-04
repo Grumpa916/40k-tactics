@@ -16,8 +16,8 @@ const option=(models,points,condition=null)=>Object.freeze({
 });
 const fixed=(...rows)=>Object.freeze(rows.map(([models,points])=>option(models,points)));
 const copies=(base,additional,from=3)=>Object.freeze([
-  ...base.map(([models,points])=>option(models,points,from===2?'1st unit':'1st–2nd units')),
-  ...additional.map(([models,points])=>option(models,points,from===2?'2nd+ units':'3rd+ units'))
+  ...base.map(([models,points])=>option(models,points,from===2?'1st unit':from===4?'1st–3rd units':'1st–2nd units')),
+  ...additional.map(([models,points])=>option(models,points,from===2?'2nd+ units':from===4?'4th+ units':'3rd+ units'))
 ]);
 
 export const SPACE_MARINES_MFM_PRICE_SOURCES=Object.freeze({
@@ -73,6 +73,15 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Land Raider Redeemer":copies([[1,245]],[[1,265]],2),
   "Redemptor Dreadnought":copies([[1,170]],[[1,190]]),
   // Confirmed October 2 first-copy change that the old import missed.
+  "Drop Pod":copies([[1,60]],[[1,70]],4),
+  "Impulsor":copies([[1,70]],[[1,80]],4),
+  "Rhino":copies([[1,70]],[[1,80]],4),
+  "Land Speeder":fixed([1,105]),
+  "Storm Speeder Hailstrike":copies([[1,110]],[[1,120]]),
+  "Storm Speeder Hammerstrike":copies([[1,140]],[[1,150]]),
+  "Storm Speeder Thunderstrike":copies([[1,140]],[[1,150]]),
+  "Astraeus":copies([[1,550]],[[1,650]],2),
+  "Thunderhawk Gunship":copies([[1,850]],[[1,950]],2),
   "Repulsor":copies([[1,190]],[[1,210]]),
   "Repulsor Executioner":copies([[1,260]],[[1,280]])
 });

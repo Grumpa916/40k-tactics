@@ -125,5 +125,5 @@ test('Scout and Outrider current reviewed size/points entries retain existing im
  assert.deepEqual([scout5,scout10,out3,out6].map(u=>resolveBuilderUnitCost(u,{units:[u]}).points),[65,120,80,160]);
  assert.equal(scout5.datasheetId,'space-marines:scout-squad');
  assert.equal(out3.datasheetId,'space-marines:outrider-squad');
- assert.equal(getTyranidWargearRuleSet('space-marines:land-speeder'),null);
+ assert.equal(getTyranidWargearRuleSet('space-marines:captain'),null);
 });

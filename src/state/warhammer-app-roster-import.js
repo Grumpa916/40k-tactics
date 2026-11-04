@@ -121,7 +121,9 @@ const AUTO_FIXED_REVIEWED_SPACE_MARINES=new Set([
  'space-marines:marneus-calgar','space-marines:cato-sicarius',
  'space-marines:wardens-of-ultramar','space-marines:incursor-squad',
  'space-marines:infernus-squad','space-marines:company-heroes','space-marines:ballistus-dreadnought',
- 'space-marines:gladiator-lancer','space-marines:gladiator-reaper','space-marines:gladiator-valiant'
+ 'space-marines:gladiator-lancer','space-marines:gladiator-reaper','space-marines:gladiator-valiant',
+ 'space-marines:storm-speeder-hailstrike','space-marines:storm-speeder-hammerstrike',
+ 'space-marines:storm-speeder-thunderstrike','space-marines:techmarine'
 ]);
 function hydrateReviewedFixedEquipment(unit) {
  if(!AUTO_FIXED_REVIEWED_SPACE_MARINES.has(unit?.datasheetId))return;
