@@ -17,7 +17,7 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('61 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('71 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
@@ -40,16 +40,17 @@ test('61 source-reviewed Space Marine rule sets match the 11e catalog source sco
  'space-marines:drop-pod','space-marines:impulsor','space-marines:rhino',
  'space-marines:land-speeder','space-marines:storm-speeder-hailstrike','space-marines:storm-speeder-hammerstrike','space-marines:storm-speeder-thunderstrike',
  'space-marines:astraeus','space-marines:thunderhawk-gunship','space-marines:techmarine',
- 'space-marines:captain','space-marines:captain-in-gravis-armour','space-marines:captain-in-phobos-armour','space-marines:captain-in-terminator-armour','space-marines:captain-on-bike','space-marines:captain-with-jump-pack','space-marines:chaplain','space-marines:chaplain-in-terminator-armour','space-marines:librarian','space-marines:librarian-in-phobos-armour'].sort());
+ 'space-marines:captain','space-marines:captain-in-gravis-armour','space-marines:captain-in-phobos-armour','space-marines:captain-in-terminator-armour','space-marines:captain-on-bike','space-marines:captain-with-jump-pack','space-marines:chaplain','space-marines:chaplain-in-terminator-armour','space-marines:librarian','space-marines:librarian-in-phobos-armour',
+ 'space-marines:ancient','space-marines:ancient-in-terminator-armour','space-marines:apothecary','space-marines:apothecary-biologis','space-marines:bladeguard-ancient','space-marines:chaplain-on-bike','space-marines:chaplain-with-jump-pack','space-marines:judiciar','space-marines:librarian-in-terminator-armour','space-marines:lieutenant'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
-  assert.equal(rules.reviewedAt,(id.startsWith('space-marines:gladiator-')||id.startsWith('space-marines:land-raider')||id.startsWith('space-marines:repulsor')||['drop-pod','impulsor','rhino','land-speeder','storm-speeder-hailstrike','storm-speeder-hammerstrike','storm-speeder-thunderstrike','astraeus','thunderhawk-gunship','techmarine','captain','captain-in-gravis-armour','captain-in-phobos-armour','captain-in-terminator-armour','captain-on-bike','captain-with-jump-pack','chaplain','chaplain-in-terminator-armour','librarian','librarian-in-phobos-armour'].includes(id.slice('space-marines:'.length)))?'2026-11-04':'2026-11-03');
+  assert.equal(rules.reviewedAt,(id.startsWith('space-marines:gladiator-')||id.startsWith('space-marines:land-raider')||id.startsWith('space-marines:repulsor')||['drop-pod','impulsor','rhino','land-speeder','storm-speeder-hailstrike','storm-speeder-hammerstrike','storm-speeder-thunderstrike','astraeus','thunderhawk-gunship','techmarine','captain','captain-in-gravis-armour','captain-in-phobos-armour','captain-in-terminator-armour','captain-on-bike','captain-with-jump-pack','chaplain','chaplain-in-terminator-armour','librarian','librarian-in-phobos-armour', 'ancient','ancient-in-terminator-armour','apothecary','apothecary-biologis','bladeguard-ancient','chaplain-on-bike','chaplain-with-jump-pack','judiciar','librarian-in-terminator-armour','lieutenant'].includes(id.slice('space-marines:'.length)))?'2026-11-04':'2026-11-03');
   assert.ok(getTyranidWargearSelections(id).length>0 || rules.noEquipment === true);
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:ancient'),null,
+ assert.equal(getTyranidWargearRuleSet('space-marines:lieutenant-in-phobos-armour'),null,
   'unreviewed units must not appear certified');
- assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,57);
+ assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,67);
 });
 
 test('Aggressors select a legal unit-wide flamestorm or bolter+grenade loadout',()=>{
@@ -145,7 +146,7 @@ test('Assault Terminator base price and 5-point per-shield upgrade work with 3rd
 });
 
 test('Unreviewed Space Marine vehicles remain flagged for further wargear review',()=>{
- for(const name of ['Ancient','Apothecary','Lieutenant']){
+ for(const name of ['Lieutenant in Phobos Armour','Lieutenant with Combi-Weapon','Adrax Agatone']){
   const unit=find(name);
   assert.equal(getTyranidWargearRuleSet(unit.datasheetId),null,name+' should remain awaiting wargear audit');
   assert.match(renderWargearEditor(unit),/wargear review pending/);
