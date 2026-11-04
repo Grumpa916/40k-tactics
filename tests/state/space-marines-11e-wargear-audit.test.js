@@ -17,7 +17,7 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('20 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('22 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
@@ -28,7 +28,8 @@ test('20 source-reviewed Space Marine rule sets match the 11e catalog source sco
  'space-marines:sternguard-veteran-squad','space-marines:inceptor-squad',
  'space-marines:eliminator-squad',
  'space-marines:incursor-squad','space-marines:infiltrator-squad',
- 'space-marines:reiver-squad','space-marines:scout-squad','space-marines:outrider-squad'].sort());
+ 'space-marines:reiver-squad','space-marines:scout-squad','space-marines:outrider-squad',
+ 'space-marines:assault-intercessors-with-jump-packs','space-marines:vanguard-veteran-squad-with-jump-packs'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
@@ -37,7 +38,7 @@ test('20 source-reviewed Space Marine rule sets match the 11e catalog source sco
  }
  assert.equal(getTyranidWargearRuleSet('space-marines:desolation-squad'),null,
   'unreviewed units must not appear certified');
- assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,16);
+ assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,18);
 });
 
 test('Aggressors select a legal unit-wide flamestorm or bolter+grenade loadout',()=>{

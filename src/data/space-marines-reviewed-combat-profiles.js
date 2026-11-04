@@ -52,6 +52,39 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  'Assault Intercessors with Jump Packs':Object.freeze({
+    characteristics:Object.freeze({Move:'12"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Hand Flamer','9"','3','N/A','4','0','1','Close-Quarters, Torrent'),
+      ranged('Heavy Bolt Pistol','18"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      melee('Chainsword','4','3+','5','-1','1',''),
+      melee('Power Fist','3','3+','8','-2','2',''),
+      melee('Power Weapon','4','3+','5','-2','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Deep Strike','Use normal Deep Strike setup and timing restrictions.'),
+      ability('Hammer of Wrath','After this unit ends a charge move, select one engaged enemy unit; for each model engaged with that enemy, roll one D6. Each 4+ inflicts one mortal wound. Record the result manually.')
+    ])
+  }),
+  'Vanguard Veteran Squad with Jump Packs':Object.freeze({
+    characteristics:Object.freeze({Move:'12"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Heavy Bolt Pistol','18"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      melee('Master-crafted Power Weapon','3','3+','5','-2','2',''),
+      melee('Relic Blade','3','3+','6','-2','2','Cleave 1, Lethal Hits: non-Monster/Vehicle'),
+      melee('Power Fist','3','3+','8','-2','2',''),
+      melee('Thunder Hammer','3','4+','8','-2','3','Devastating Wounds')
+    ]),
+    abilities:Object.freeze([
+      ability('Deep Strike','Use normal Deep Strike setup and timing restrictions.'),
+      ability('Vanguard Assault','If the unit made a charge move this turn, its melee attacks have +1 Attack; confirm charge history manually.'),
+      ability('Combat Shield','Only a model equipped with a Combat Shield has a 5+ invulnerable save. Track which models are shielded when allocating damage.')
+    ])
+  }),
   'Scout Squad':Object.freeze({
     characteristics:Object.freeze({Move:'6"',Toughness:'4',Save:'4+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
     weapons:Object.freeze([

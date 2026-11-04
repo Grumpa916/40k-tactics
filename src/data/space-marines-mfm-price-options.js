@@ -35,7 +35,7 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Assault Intercessor Squad":fixed([5,85],[10,170]),
   "Heavy Intercessor Squad":fixed([5,115],[10,230]),
   "Intercessor Squad":fixed([5,85],[10,170]),
-  "Assault Intercessors with Jump Packs":fixed([5,95],[10,190]),
+  "Assault Intercessors with Jump Packs":copies([[5,95],[10,190]],[[5,105],[10,200]]),
   "Hellblaster Squad":copies([[5,115],[10,230]],[[5,130],[10,245]]),
   "Incursor Squad":copies([[5,90],[10,170]],[[5,100],[10,180]]),
   "Infiltrator Squad":fixed([5,85],[10,150]),
