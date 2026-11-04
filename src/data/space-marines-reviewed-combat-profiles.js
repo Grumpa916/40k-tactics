@@ -52,6 +52,46 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  'Invictor Tactical Warsuit':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'9',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'4'}),
+    weapons:Object.freeze([
+      ranged('Fragstorm Grenade Launcher','18"','3','3+','4','-1','1','Blast 1'),
+      ranged('Heavy Bolter','36"','3','3+','5','-1','2','Sustained Hits 1, Rapid Fire 2'),
+      ranged('Incendium Cannon','12"','4','N/A','6','-1','2','Torrent, Blast 2'),
+      ranged('Ironhail Heavy Stubbers','36"','6','3+','4','-1','1','Rapid Fire 6'),
+      ranged('Twin Ironhail Autocannon','48"','4','3+','9','-1','3','Twin-linked'),
+      melee('Invictor Fist','5','3+','12','-2','3','')
+    ]),
+    abilities:Object.freeze([
+      ability('Scouts 8"','Use Scouts 8 inches during deployment where permitted; not an unrestricted extra normal move.'),
+      ability('Forward Assault Warsuit','Mark one enemy at the start of the first battle round. This unit can reroll wound rolls of 1 against its mark and select another when the mark is destroyed; track target manually.'),
+      ability('Damaged 4 and Deadly Demise D3','Apply damaged-vehicle core rules and resolve demise manually.')
+    ])
+  }),
+  'Firestrike Servo-turrets':Object.freeze({
+    characteristics:Object.freeze({Move:'5"',Toughness:'6',Save:'2+',Wounds:'6',Leadership:'6+','Objective Control':'2'}),
+    weapons:Object.freeze([
+      ranged('Twin Firestrike Autocannon','48"','4','2+','9','-1','3','Rapid Fire 2, Twin-linked'),
+      ranged('Twin Firestrike Las-talon','36"','2','2+','10','-3','D3+3','Twin-linked'),
+      melee('Hovering Bulk','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Sentinel Protocols','Once per phase, this unit can use Fire Overwatch despite another use; its snap shooting hits on unmodified 4+ until that stratagem resolves. Confirm target, visibility and timing manually.')
+    ])
+  }),
+  'Invader ATVs':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'6',Save:'3+',Wounds:'8',Leadership:'6+','Objective Control':'2'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Multi-melta','18"','2','3+','10','-3','D3+2','Melta 3'),
+      ranged('Onslaught Gatling Cannon','24"','8','3+','5','-1','1','Devastating Wounds: non-Monster/Vehicle'),
+      ranged('Twin Bolt Rifle','24"','2','2+','5','-1','1','Twin-linked, Assault, Rapid Fire 2'),
+      melee('Armoured Impact','4','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Aggressive Reconnaissance','In your Shooting phase, this unit gets +1 to wound rolls against a target not within 6 inches of any other enemy unit. Confirm isolation manually.')
+    ])
+  }),
   'Ballistus Dreadnought':Object.freeze({
     characteristics:Object.freeze({Move:'8"',Toughness:'10',Save:'2+',Wounds:'12',Leadership:'6+','Objective Control':'4'}),
     weapons:Object.freeze([

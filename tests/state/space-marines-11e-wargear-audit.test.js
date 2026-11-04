@@ -17,7 +17,7 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('30 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('33 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
@@ -32,16 +32,17 @@ test('30 source-reviewed Space Marine rule sets match the 11e catalog source sco
  'space-marines:assault-intercessors-with-jump-packs','space-marines:vanguard-veteran-squad-with-jump-packs',
  'space-marines:assault-intercessor-squad','space-marines:heavy-intercessor-squad',
  'space-marines:infernus-squad','space-marines:desolation-squad','space-marines:company-heroes',
- 'space-marines:ballistus-dreadnought','space-marines:brutalis-dreadnought','space-marines:redemptor-dreadnought'].sort());
+ 'space-marines:ballistus-dreadnought','space-marines:brutalis-dreadnought','space-marines:redemptor-dreadnought',
+ 'space-marines:invictor-tactical-warsuit','space-marines:firestrike-servo-turrets','space-marines:invader-atvs'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
   assert.equal(rules.reviewedAt,'2026-11-03');
   assert.ok(getTyranidWargearSelections(id).length>0);
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:invader-atvs'),null,
+ assert.equal(getTyranidWargearRuleSet('space-marines:land-speeder'),null,
   'unreviewed units must not appear certified');
- assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,26);
+ assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,29);
 });
 
 test('Aggressors select a legal unit-wide flamestorm or bolter+grenade loadout',()=>{
@@ -136,8 +137,8 @@ test('Assault Terminator base price and 5-point per-shield upgrade work with 3rd
  assert.equal(resolveBuilderUnitCost(large,{units:[large]},[{name:'Thunder Hammer and Storm Shield',quantity:11}]).points,null);
 });
 
-test('unverified Hellblaster, Bladeguard and other weapons remain flagged for review',()=>{
- for(const name of ['Invader ATVs','Land Speeder','Firestrike Servo-turrets']){
+test('Unreviewed Space Marine vehicles remain flagged for further wargear review',()=>{
+ for(const name of ['Land Speeder','Repulsor','Gladiator Lancer']){
   const unit=find(name);
   assert.equal(getTyranidWargearRuleSet(unit.datasheetId),null,name+' should remain awaiting wargear audit');
   assert.match(renderWargearEditor(unit),/wargear review pending/);

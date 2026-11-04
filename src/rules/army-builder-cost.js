@@ -76,6 +76,18 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
   return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
  }
+ // Each Invader ATV can swap its main Gatling Cannon to Multi-melta for +5 pts.
+ // The 1/2 model and 1st–2nd/3rd+ base points must be chosen first.
+ if(unit.datasheetId==='space-marines:invader-atvs'){
+  const melta=selections.filter(x=>x.name==='Multi-melta')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  if(!Number.isInteger(melta)||melta<0||melta>unit.modelCount)
+   return {points:null,reason:'At most one Multi-melta per Invader ATV.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Invader ATV size/copy base cost.'};
+  return {points:base.points+5*melta,
+    reason:(base.condition??'reviewed base')+'; '+melta+' Multi-melta at 5 pts each'};
+ }
  // The 11e Redemptor Macro Plasma Incinerator is a +10 point weapon upgrade.
  // Do not silently multiply alternative Standard/Supercharge attack profiles.
  if(unit.datasheetId==='space-marines:redemptor-dreadnought'){
