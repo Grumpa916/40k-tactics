@@ -83,7 +83,7 @@ test('official GW Codex characteristics correct 15 Tacticus, Terminator and Phob
 });
 
 test('Space Marines wargear remains flagged as unverified instead of displaying misleading choices',()=>{
- const unresolved=unit('Desolation Squad');
+ const unresolved=unit('Invader ATVs');
  const html=renderWargearEditor(unresolved);
  assert.match(html,/Space Marines wargear review pending/);
  assert.match(html,/possible weapon profiles, not a confirmed equipped loadout/);
@@ -93,7 +93,7 @@ test('Space Marines wargear remains flagged as unverified instead of displaying 
  assert.match(reviewed,/data-wargear-baseline/);
  assert.match(reviewed,/Flamestorm Gauntlets/);
  const rev=getRulesDataRevisionForFaction('Space Marines');
- assert.equal(rev.catalog.revision,'2026-11-03.9');
+ assert.equal(rev.catalog.revision,'2026-11-03.10');
  assert.equal(rev.officialRevisionCheck.status,'pending-current-official-profile-and-points-comparison');
  assert.equal(rev.points.revisionLabel,'export points; official MFM cross-check pending');
  const past={...rev,revisionId:'space-marines-11e-faction-pack-2026-06-catalog-2026-10-23',catalog:{...rev.catalog,revision:'2026-10-23.1'}};
