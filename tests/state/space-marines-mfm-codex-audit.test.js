@@ -83,7 +83,7 @@ test('official GW Codex characteristics correct 15 Tacticus, Terminator and Phob
 });
 
 test('Space Marines wargear remains flagged as unverified instead of displaying misleading choices',()=>{
- const unresolved=unit('Land Speeder');
+ const unresolved=unit('Captain');
  const html=renderWargearEditor(unresolved);
  assert.match(html,/Space Marines wargear review pending/);
  assert.match(html,/possible weapon profiles, not a confirmed equipped loadout/);
