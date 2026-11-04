@@ -986,13 +986,16 @@ const changes=Object.freeze({
     abilities:Object.freeze([ability('Overlapping Detonations','In your Shooting phase, select a visible enemy non-Monster/Vehicle unit; this unit’s heavy bolters have Blast 1 when targeting it.')])
   })
 });
+// Only fully source-reviewed current 11e named characters may fill a missing
+// older OpenHammer datasheet. Preserve null for every other unresolved entry.
+const REVIEWED_MISSING_PROFILE_NAMES=new Set(["Captain on Bike","Aethon Shaan","Caanok Var","Captain Titus","Chief Librarian Tigurius","Darnath Lysander","Iron Father Feirros","Kaius Konorius","Kayvaan Shrike","Kor'sarro Khan","Roboute Guilliman","Suboden Khan","Tor Garadon"]);
 export const SPACE_MARINES_REVIEWED_PROFILE_PATCHES=changes;
 export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
  if(!changes[name])return datasheet;
  // The imported OpenHammer projection omitted the current 11e Captain on Bike.
  // ONLY this explicitly source-reviewed, full-stat/current-weapon patch may
  // supply a missing datasheet. Keep all other missing entries unverified/null.
- if(!datasheet && name!=='Captain on Bike')return datasheet;
+ if(!datasheet && !REVIEWED_MISSING_PROFILE_NAMES.has(name))return datasheet;
  const patch=changes[name];
  const base=datasheet ?? Object.freeze({name,characteristics:Object.freeze({}),
    weapons:Object.freeze([]),abilities:Object.freeze([])});
@@ -1004,6 +1007,6 @@ export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
    sourceName:'November 2026 11e selected loadout/profile cross-check',
    sourceUrl:'https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html',
    officialOctoberCodexFullTextVerified:false,
-   profileReviewedAt:name==='Captain on Bike'?'2026-11-04':'2026-11-03'
+   profileReviewedAt:["Adrax Agatone","Vulkan He’stan","Lieutenant in Phobos Armour","Lieutenant with Combi-Weapon","Aethon Shaan","Caanok Var","Captain Titus","Chief Librarian Tigurius","Darnath Lysander","Iron Father Feirros","Kaius Konorius","Kayvaan Shrike","Kor'sarro Khan","Roboute Guilliman","Suboden Khan","Tor Garadon"].includes(name)||name==='Captain on Bike'?'2026-11-04':'2026-11-03'
  });
 }
