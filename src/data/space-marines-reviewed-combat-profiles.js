@@ -52,6 +52,46 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  'Gladiator Lancer':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'10',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'3'}),
+    weapons:Object.freeze([
+      ranged('Defensive Array','24"','6','3+','5','-1','1','Rapid Fire 6'),
+      ranged('Laser Destroyer','72"','2','3+','14','-3','D6+3','Heavy'),
+      melee('Armoured Hull','3','4+','6','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Aquilon Optics','Against MONSTER or VEHICLE units, this unit may re-roll one hit roll, one wound roll and one damage roll for its ranged attacks. Confirm targets and actual re-rolls manually.'),
+      ability('Damaged 4','Apply the current damaged-vehicle core rule when four or fewer wounds remain.'),
+      ability('Deadly Demise D3','Resolve Deadly Demise D3 on the tabletop.')
+    ])
+  }),
+  'Gladiator Reaper':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'10',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'3'}),
+    weapons:Object.freeze([
+      ranged('Defensive Array','24"','12','3+','5','-1','1','Rapid Fire 12'),
+      ranged('Twin Heavy Onslaught Gatling Cannon','24"','12','3+','6','-1','1','Twin-linked, Sustained Hits 2: non-MONSTER/VEHICLE, Devastating Wounds: non-MONSTER/VEHICLE'),
+      melee('Armoured Hull','3','4+','6','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Reaping Tally','The unit\'s ranged attacks targeting units other than MONSTER or VEHICLE have +1 AP. Check target keywords manually.'),
+      ability('Damaged 4','Apply current core damaged-vehicle rule at four or fewer wounds.'),
+      ability('Deadly Demise D3','Resolve Deadly Demise D3 manually.')
+    ])
+  }),
+  'Gladiator Valiant':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'10',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'3'}),
+    weapons:Object.freeze([
+      ranged('Defensive Array','24"','6','3+','5','-1','1','Rapid Fire 6'),
+      ranged('Multi-melta','18"','2','3+','10','-3','D3+2','Melta 3'),
+      ranged('Twin Las-talon','36"','2','3+','10','-3','D3+3','Twin-linked'),
+      melee('Armoured Hull','3','4+','6','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Priority Target Acquisition','Ranged attacks targeting a unit within 12 inches have +1 Strength. No older closest-MONSTER/VEHICLE hit bonus. Confirm exact distance manually.'),
+      ability('Damaged 4','Apply current core damaged-vehicle rule at four or fewer wounds.'),
+      ability('Deadly Demise D3','Resolve Deadly Demise D3 manually.')
+    ])
+  }),
   'Invictor Tactical Warsuit':Object.freeze({
     characteristics:Object.freeze({Move:'10"',Toughness:'9',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'4'}),
     weapons:Object.freeze([

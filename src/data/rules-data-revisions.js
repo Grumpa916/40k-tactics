@@ -66,8 +66,8 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.12",
-    reviewedAt: "2026-11-03", factionRules: SPACE_MARINES_RULES_DATA,
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-04.13",
+    reviewedAt: "2026-11-04", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
       status:"pending-current-official-profile-and-points-comparison",
@@ -79,7 +79,7 @@ const BY_FACTION = Object.freeze({
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-11-03.12", description: "Reviews 11e Invictor, Firestrike and Invader ATV wargear, models and per-ATV Multi-melta costs; official Codex and MFM direct comparison pending" })
+    catalog: Object.freeze({ revision: "2026-11-04.13", description: "Adds 11e Gladiator Lancer, Reaper and Valiant fixed weapon profiles and target-dependent abilities; official Codex/MFM direct comparison remains pending" })
   })
 });
 
