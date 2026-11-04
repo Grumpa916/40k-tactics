@@ -84,6 +84,19 @@ test('October 14 independent errata transcription conditions Lone Operative on t
  assert.match(tech,/Lone Operative while within 3 inches of friendly ADEPTUS ASTARTES VEHICLE/);
  assert.match(father,/Lone Operative only within 3 inches of friendly Astartes Vehicle/);
 });
+test('Cato Sicarius currently matches independently transcribed Oct-14 sword amendments without claiming direct GW certification',()=>{
+ const c=find('Cato Sicarius');
+ const blade=c.datasheet.weapons;
+ const strike=blade.find(w=>w.name==='Talassarian Tempest Blade - Strike');
+ const sweep=blade.find(w=>w.name==='Talassarian Tempest Blade - Sweep');
+ const coup=blade.find(w=>w.name==='Talassarian Tempest Blade - Coup de Grace');
+ assert.ok(strike);assert.ok(sweep);assert.ok(coup);
+ assert.equal(strike.attacks,'5');
+ assert.equal(coup.attacks,'7');
+ assert.equal(coup.strength,'6');
+ assert.match(sweep.abilities,/Sustained Hits 1: Infantry/i);
+ assert.equal(c.officialRulesCrossCheck,'pending','source comparison remains secondary-only');
+});
 test('source discrepancy gates: dated official GW release beats 4-month-old MFM web index, while October codex weapon conflict stays unresolved',()=>{
  const s=SPACE_MARINES_OFFICIAL_SOURCE_STATUS;
  assert.equal(s.staleMfmSearchIndexMustNeverOverrideLiveCosts,true);
