@@ -11,6 +11,162 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  "Adrax Agatone":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"2+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Drakkis","12\"","D6+3","N/A","5","-1","1","Torrent, Close-Quarters"),
+      melee("Malleus Noctum","5","2+","10","-2","3","Devastating Wounds")]),
+    abilities:Object.freeze([ability("Lord of the Pyroclasts","Enemy units engaged with this unit have -1 OC (per targeted unit). Confirm engagement and actual objective control manually."),
+      ability("Unto the Anvil","This unit's melee attacks re-roll wound rolls of 1, or ALL wound rolls while Assault doctrine is active for this unit."),
+      ability("Transhuman Strategist","If Warlord with this rule, gain 1 CP at start of battle round. Check faction rules and do not auto-adjust CP."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Vulkan He’stan":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"2+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Gauntlet of the Forge","12\"","D6+3","N/A","6","-1","1","Torrent, Close-Quarters"),
+      melee("Spear of Vulkan","6","2+","7","-2","2","Devastating Wounds")]),
+    abilities:Object.freeze([ability("Seeker of the Unfound","Choose an objective when first set up. ONLY while within range of that objective this model has OC10, Leadership 5+ and FNP4+; elsewhere OC1, Leadership6+ and FNP6+. Track manually."),
+      ability("Forgefather","In own Shooting phase, choose one visible enemy within 24 inches; friendly Astartes Melta/Torrent attacks targeting it get +2 Strength. Confirm target and window."),
+      ability("Feel No Pain 6+","Base FNP6+, increases to FNP4+ only within the preselected Seeker objective. 4+ invulnerable."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Lieutenant in Phobos Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"8\"","Toughness":"4","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Master-crafted Bolt Carbine","24\"","2","2+","4","0","2",""),
+      ranged("Special-issue Bolt Pistol","12\"","1","2+","5","-2","2","Precision, Close-Quarters"),
+      melee("Monomolecular Combat Blades","6","2+","5","-1","1","Sustained Hits 1, Precision")]),
+    abilities:Object.freeze([ability("Demi-company Commander","Once per turn per unit, when a friendly Captain uses Strategic Acumen, this unit can gain that doctrine until next Command phase."),
+      ability("Tactical Precision","This unit's attacks have Lethal Hits only against targets that are not Monster/Vehicle."),
+      ability("Phobos Deployment","Deep Strike, Infiltrators and Scouts 6 inches; eligible as Support for specified Phobos squads.")])
+  }),
+  "Lieutenant with Combi-Weapon":Object.freeze({
+    characteristics:Object.freeze({"Move":"8\"","Toughness":"4","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Combi-weapon - Bolter","24\"","2","2+","5","-1","2","Rapid Fire 1, Assault"),
+      ranged("Combi-weapon - Flamer","12\"","3","N/A","5","-1","1","Torrent, Assault, Blast 1"),
+      melee("Paired Combat Blades","6","2+","5","-1","1","Sustained Hits 1")]),
+    abilities:Object.freeze([ability("Priority Target Identified","Once per battle in own Command phase, choose visible terrain feature; enemies within it have +3 inches detection range until end of turn."),
+      ability("Evade and Survive","Once per phase in opponent Movement, if unengaged when enemy ends move within 8 inches, may make normal move D3+3 inches. Manually move marker."),
+      ability("Stealth and Lone Operative","Infiltrators, Lone Operative, Stealth, and innate Feel No Pain 5+. One Combi-weapon with two alternative shooting modes.")])
+  }),
+  "Aethon Shaan":Object.freeze({
+    characteristics:Object.freeze({"Move":"14\"","Toughness":"5","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      melee("Claws of Severax","7","2+","5","-2","2","Twin-linked, Sustained Hits 2: non-Monster/Vehicle")]),
+    abilities:Object.freeze([ability("Master of Shadows","In own Command phase choose one friendly Astartes Infantry unit. It can re-roll charge rolls until start of next Command phase."),
+      ability("Blackwing Mantle","Once per phase per army: Heroic Intervention can target Aethon even if used elsewhere this phase; cost -1 CP and does not prohibit other uses. Track CP/stratagem manually."),
+      ability("Deep Strike and Lone Operative","M14, Deep Strike, Lone Operative, Stealth, 4++ and chapter-specific Raven Guard rules."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Caanok Var":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"6","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Storm Bolter","24\"","2","2+","5","-1","1","Rapid Fire 2"),
+      melee("Axiom","5","2+","8","-3","2","Cleave 1")]),
+    abilities:Object.freeze([ability("Cold and Calculating","When selected to attack in Shooting/Fight, choose Lethal Hits vs Monster/Vehicle OR Sustained Hits 1 vs non-Monster/Vehicle. If Tactical doctrine active, both target-limited effects apply."),
+      ability("Cerebrex Logic Engine","In Declare Battle Formations, choose one friendly Astartes Infantry unit to gain Scouts 6 inches."),
+      ability("Terminator Resilience","Deep Strike, 4++ invulnerable and Feel No Pain 5+. Chapter-limited Terminator Leader."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Captain Titus":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"6","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Master-crafted Bolter","24\"","2","2+","5","-1","2","Assault, Rapid Fire 1, Heavy"),
+      melee("Master-crafted Chainsword","8","2+","5","-1","2","Anti-non-Monster/Vehicle 2+")]),
+    abilities:Object.freeze([ability("Press the Attack","Unit melee attacks gain Sustained Hits 1 vs non-Monster/Vehicle; while Assault doctrine active this becomes Sustained Hits 1 without target restriction."),
+      ability("Righteous Fury","Once per battle in Fight phase: +1 S to melee attacks, then heal D3 after fight or 2D3 if killed enemy model this phase. Manual wounds."),
+      ability("Honour of Ultramar","If destroyed in Fight before activation, roll D6; on 2+ remain on battlefield to fight once, then remove. Track actual activation and destroyed state."),
+      ability("Feel No Pain 5+","Innate 5+ FNP and 4+ invulnerable."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Chief Librarian Tigurius":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Storm of the Emperor’s Wrath","18\"","D3+6","2+","6","-2","2","Psychic, Blast 1"),
+      melee("Rod of Tigurius","5","2+","7","-2","2","Psychic")]),
+    abilities:Object.freeze([ability("Chief Librarian (psyker level 3)","Psychic level3 governs per-round ability budget; confirm one level-2 Prescience plus a level-1 Telepathic Assault budget when legal."),
+      ability("Prescience","Psychic level 2 in OWN Movement while not battle-shocked: roll D6, 1 battle-shocks unit; otherwise gain +1 Save until next turn. Manual state."),
+      ability("Telepathic Assault","Psychic level 1 in own Shooting while not battle-shocked: roll D6, 1 battle-shocks; otherwise choose visible enemy within 24 inches to suffer 2D3 mortal wounds. Manual damage."),
+      ability("Hood of Hellfire","FNP4+ against Psychic attacks AND mortal wounds, not against other attacks."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Darnath Lysander":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"7","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([melee("Fist of Dorn","5","2+","10","-3","3","Devastating Wounds, Cleave 1")]),
+    abilities:Object.freeze([ability("Rampart","Once per battle at start of ANY phase: this model gains 2+ invulnerable until end of phase, normally 4++. Manually mark use."),
+      ability("Icon of Obstinacy","Attacks targeting this unit have -1 to hit rolls."),
+      ability("Deep Strike and Terminator Leader","Fixed melee-only profile; no shooting weapon; Deep Strike and 4++."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Iron Father Feirros":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"6","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Gorgon’s Wrath","36\"","3","2+","6","-1","2","Rapid Fire 2, Sustained Hits 2"),
+      melee("Harrowhand","6","3+","7","-2","2",""),
+      melee("Medusan Manipuli","2","3+","10","-2","3","Extra Attacks")]),
+    abilities:Object.freeze([ability("Master of the Forge","In own Movement at start/end of this unit's move: select one friendly Astartes Vehicle model within 3 inches; heal 3 wounds and ignore weapon BS/hit/wound roll modifiers until next Movement phase."),
+      ability("Rites of Tempering","Incoming attacks with Strength greater than this unit's Toughness take -1 to wound rolls."),
+      ability("Iron Father","Lone Operative only within 3 inches of friendly Astartes Vehicle. Innate Feel No Pain 5+.")])
+  }),
+  "Kaius Konorius":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"2+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      melee("Severance and Rebuke - Strike","5","2+","10","-3","3","Precision"),
+      melee("Severance and Rebuke - Sweep","6","2+","6","-3","2","Cleave 2")]),
+    abilities:Object.freeze([ability("Veteran Bodyguard","While attached, OTHER Character models in this unit have Feel No Pain 4+. Not bodyguard models."),
+      ability("Calgar’s Champion","This model's attacks vs Character unit can re-roll hit rolls of 1 and wound rolls of 1."),
+      ability("Support","Support for eligible Astartes squads including Victrix Honour Guard. Strike/Sweep are ONE sword's alternative melee profiles."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Kayvaan Shrike":Object.freeze({
+    characteristics:Object.freeze({"Move":"12\"","Toughness":"4","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Blackout","18\"","1","2+","5","-1","2","Precision, Close-Quarters"),
+      melee("Raven’s Talons","7","2+","5","-2","2","Precision, Twin-linked")]),
+    abilities:Object.freeze([ability("Trifold Path of Shadow","This unit has Stealth and -3 inches detection range. Do not conflate detection range with weapon range."),
+      ability("Echo of the Ravenspire","At end of opponent's Fight phase, if unengaged, may place this unit in strategic reserves. Update reserve tray manually."),
+      ability("Deep Strike and Lone Operative","Deep Strike, Lone Operative and 4+ invulnerable. Leader of jump-pack infantry when eligible."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Kor'sarro Khan":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Anzuq","18\"","2","3+","4","-1","2","Anti-Infantry 4+, Devastating Wounds: Infantry, Close-Quarters"),
+      ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      melee("Moonfang","6","2+","6","-3","2","Anti-Character 5+, Precision, Devastating Wounds")]),
+    abilities:Object.freeze([ability("Trophy Taker","Attacks vs Character unit can re-roll hit rolls of 1 and wound rolls of 1."),
+      ability("For the Khan!","Ranged attacks have Assault; melee attacks have Lance."),
+      ability("Transhuman Strategist","When this model is Warlord, gain 1 CP at start of battle round, per faction rule. Manual CP."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Roboute Guilliman":Object.freeze({
+    characteristics:Object.freeze({"Move":"8\"","Toughness":"10","Save":"2+","Wounds":"16","Leadership":"5+","Objective Control":"4"}),
+    weapons:Object.freeze([ranged("Hand of Dominion - Ranged","36\"","4","2+","6","-2","2","Rapid Fire 2, Sustained Hits 1"),
+      melee("Emperor’s Sword","10","2+","10","-3","2","Devastating Wounds, Cleave 2"),
+      melee("Hand of Dominion - Melee","7","2+","14","-4","4","Lethal Hits")]),
+    abilities:Object.freeze([ability("Supreme Commander","If included, MUST be Warlord, regardless of other warlord candidates."),
+      ability("Codex Adept","Assault, Devastator and Tactical doctrines are all active for Guilliman's own unit."),
+      ability("Primarch of the XIII","Aura: friendly Astartes units within 6 inches can re-roll hit rolls of 1 and wound rolls of 1."),
+      ability("Author of the Codex","In own Movement phase choose visible friendly Astartes within 12 inches and one doctrine, active for that unit until next Command in ADDITION to other doctrines."),
+      ability("Leader of Astartes","This unit is Lone Operative only within 3 inches of friendly Astartes Infantry. 4++ invulnerable, FNP5+."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Suboden Khan":Object.freeze({
+    characteristics:Object.freeze({"Move":"12\"","Toughness":"6","Save":"3+","Wounds":"8","Leadership":"6+","Objective Control":"2"}),
+    weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Onslaught Gatling Cannon","24\"","8","2+","5","0","1","Devastating Wounds"),
+      melee("Power Sword","3","2+","5","-2","1","Sustained Hits 1: non-Monster/Vehicle, Extra Attacks"),
+      melee("Stormtooth","6","2+","7","-3","2","Anti-Monster/Vehicle 4+, Lance")]),
+    abilities:Object.freeze([ability("Spear of Chogoris","Ranged attacks gain Assault, this unit may charge in a turn it Advanced, and if Assault doctrine active gains +1 advance and charge rolls."),
+      ability("Skilled Riders","This unit has MOBILE. Mounted Leader of Outrider Squad; preserve vehicle/mounted distinctions."),
+      ability("Extra Attacks","Power Sword (Extra Attacks) can attack alongside Stormtooth. Conditional Sustained Hits vs non-Monster/Vehicle only."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
+  "Tor Garadon":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"3+","Wounds":"6","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Artificer Grav-gun","18\"","3","2+","5","-1","2","Anti-Vehicle 2+"),
+      melee("Hand of Defiance","5","2+","12","-2","2","")]),
+    abilities:Object.freeze([ability("Siege Captain","This model's attacks vs Fortification/Monster/Vehicle units have +2 Strength, AP and Damage. Does not apply to other models in attached unit."),
+      ability("Signum Array","In own Shooting phase choose one visible enemy within 18 inches; that enemy unit cannot benefit from Cover. Manual targeting."),
+      ability("Gravis Leader","May lead eligible Gravis squads. 4+ invulnerable."),
+      ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
+  }),
   "Ancient":Object.freeze({
     characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"2"}),
     weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","3+","5","-1","1","Close-Quarters"),
@@ -830,13 +986,16 @@ const changes=Object.freeze({
     abilities:Object.freeze([ability('Overlapping Detonations','In your Shooting phase, select a visible enemy non-Monster/Vehicle unit; this unit’s heavy bolters have Blast 1 when targeting it.')])
   })
 });
+// Only fully source-reviewed current 11e named characters may fill a missing
+// older OpenHammer datasheet. Preserve null for every other unresolved entry.
+const REVIEWED_MISSING_PROFILE_NAMES=new Set(["Captain on Bike","Aethon Shaan","Caanok Var","Captain Titus","Chief Librarian Tigurius","Darnath Lysander","Iron Father Feirros","Kaius Konorius","Kayvaan Shrike","Kor'sarro Khan","Roboute Guilliman","Suboden Khan","Tor Garadon"]);
 export const SPACE_MARINES_REVIEWED_PROFILE_PATCHES=changes;
 export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
  if(!changes[name])return datasheet;
  // The imported OpenHammer projection omitted the current 11e Captain on Bike.
  // ONLY this explicitly source-reviewed, full-stat/current-weapon patch may
  // supply a missing datasheet. Keep all other missing entries unverified/null.
- if(!datasheet && name!=='Captain on Bike')return datasheet;
+ if(!datasheet && !REVIEWED_MISSING_PROFILE_NAMES.has(name))return datasheet;
  const patch=changes[name];
  const base=datasheet ?? Object.freeze({name,characteristics:Object.freeze({}),
    weapons:Object.freeze([]),abilities:Object.freeze([])});
@@ -848,6 +1007,6 @@ export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
    sourceName:'November 2026 11e selected loadout/profile cross-check',
    sourceUrl:'https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html',
    officialOctoberCodexFullTextVerified:false,
-   profileReviewedAt:name==='Captain on Bike'?'2026-11-04':'2026-11-03'
+   profileReviewedAt:["Adrax Agatone","Vulkan He’stan","Lieutenant in Phobos Armour","Lieutenant with Combi-Weapon","Aethon Shaan","Caanok Var","Captain Titus","Chief Librarian Tigurius","Darnath Lysander","Iron Father Feirros","Kaius Konorius","Kayvaan Shrike","Kor'sarro Khan","Roboute Guilliman","Suboden Khan","Tor Garadon"].includes(name)||name==='Captain on Bike'?'2026-11-04':'2026-11-03'
  });
 }

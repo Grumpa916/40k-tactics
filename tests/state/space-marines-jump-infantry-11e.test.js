@@ -95,5 +95,5 @@ test('Both jump datasheets reject obsolete 10th edition Vanguard weapons and pre
  assert.equal(resolveBuilderUnitCost(vd,{units:[vd]}).points,220);
  const v3=get('Vanguard Veteran Squad with Jump Packs',5,'v3');
  assert.equal(resolveBuilderUnitCost(v3,{units:[get(v.name,5,'v1'),get(v.name,10,'v2'),v3]}).points,130);
- assert.equal(getTyranidWargearRuleSet('space-marines:lieutenant-in-phobos-armour'),null,'next batch still pending');
+ assert.equal(getTyranidWargearRuleSet('space-marines:tactical-squad'),null,'next batch still pending');
 });
