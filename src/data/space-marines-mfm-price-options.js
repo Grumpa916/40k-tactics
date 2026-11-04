@@ -37,7 +37,9 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Intercessor Squad":fixed([5,85],[10,170]),
   "Assault Intercessors with Jump Packs":fixed([5,95],[10,190]),
   "Hellblaster Squad":copies([[5,115],[10,230]],[[5,130],[10,245]]),
-  "Incursor Squad":fixed([5,90],[10,170]),
+  "Incursor Squad":copies([[5,90],[10,170]],[[5,100],[10,180]]),
+  "Infiltrator Squad":fixed([5,85],[10,150]),
+  "Reiver Squad":fixed([5,85],[10,165]),
   "Infernus Squad":fixed([5,95],[10,190]),
   // Current 11e datasheet also records a 3rd+ copy tier. A storm shield
   // costs an additional 5 points per equipped model (handled by cost resolver).
