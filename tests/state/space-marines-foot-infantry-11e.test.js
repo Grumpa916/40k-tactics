@@ -137,5 +137,5 @@ test('Infernus additional-copy points and Company Heroes copy points remain revi
  assert.deepEqual([a,b,c].map(x=>resolveBuilderUnitCost(x,{units:[a,b,c]}).points),[95,190,105]);
  const h1=get('Company Heroes',4,'h1'),h2=get('Company Heroes',4,'h2'),h3=get('Company Heroes',4,'h3');
  assert.deepEqual([h1,h2,h3].map(x=>resolveBuilderUnitCost(x,{units:[h1,h2,h3]}).points),[125,125,145]);
- assert.equal(getTyranidWargearRuleSet('space-marines:captain'),null);
+ assert.equal(getTyranidWargearRuleSet('space-marines:ancient'),null);
 });
