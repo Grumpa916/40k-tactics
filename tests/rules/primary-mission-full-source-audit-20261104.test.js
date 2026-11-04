@@ -12,6 +12,8 @@ import {
   PRIMARY_MISSION_EVIDENCE_SOURCES
 } from '../../src/data/primary-mission-evidence.js';
 import { primaryWindowDue } from '../../src/rules/checkpoint-mission-evidence.js';
+import { renderPersistentMissionSummary } from '../../src/ui/mission-summary-panel.js';
+import { renderScoringCheckpointDialog } from '../../src/ui/scoring-checkpoint-dialog.js';
 
 // Numeric cross-check independently transcribed from photographs of 25 official
 // launch cards by wn-mitch/40kdc-data (commit 709ecd9f, September 2026).
@@ -273,4 +275,23 @@ test('command-phase primary checks are not due before round 2; fifth-round end-t
       }
     }
   }
+});
+
+test('official FAQ clarifications appear in expanded mission and scoring checkpoint views', () => {
+  const state={phase:'end_turn',turn:3,activePlayer:'p1',battle:{round:2,activePlayerId:'p1'},
+    players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],units:[],objectives:[],history:[],
+    scoring:{secondaryMissions:[]},
+    battlefieldMap:{missionSetup:{myDisposition:'Disruption',opponentDisposition:'Take and Hold',layout:'A'}}};
+  const summary=renderPersistentMissionSummary(state,{perspectivePlayerId:'p1'});
+  assert.match(summary,/Official Event Companion FAQ/);
+  assert.match(summary,/does not have to be trapped/);
+  const definition=getPrimaryMissionDefinition('Disruption','Take and Hold');
+  const reminder={timing:'end-of-turn',activePlayerId:'p1',groups:[{
+    playerId:'p1',playerName:'You',checkpoint:'end-of-turn',
+    primaryReference:definition,primaryScoringWindows:definition.scoring.filter(w=>primaryWindowDue(w.when,'end-of-turn',2)),
+    review:{primary:[],secondary:[]}
+  }]};
+  const dialog=renderScoringCheckpointDialog(state,reminder);
+  assert.match(dialog,/Official Event Companion FAQ/);
+  assert.match(dialog,/does not have to be trapped/);
 });
