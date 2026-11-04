@@ -199,6 +199,46 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:invictor-tactical-warsuit":reviewed({
+    sourceName:"Current 11e Invictor Tactical Warsuit datasheet cross-check; official October Codex comparison pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Invictor-Tactical-Warsuit",
+    fixed:Object.freeze([
+      fixed("Fragstorm Grenade Launcher"),fixed("Heavy Bolter"),
+      fixed("Invictor Fist"),fixed("Ironhail Heavy Stubbers")
+    ]),
+    slots:Object.freeze([slot("invictor-primary-gun",["Incendium Cannon","Twin Ironhail Autocannon"])]),
+    manualWargearNotes:Object.freeze([
+      "The only 11e weapon swap is Incendium Cannon OR Twin Ironhail Autocannon. Fragstorm Grenade Launcher, Heavy Bolter, Ironhail Heavy Stubbers and Invictor Fist stay equipped.",
+      "Scouts 8 inches is a deployment ability, not an extra movement option in every phase. Damaged 4 and Deadly Demise D3 resolve manually.",
+      "At the start of the first battle round, Forward Assault Warsuit marks one enemy. Attacks at that mark can re-roll wound rolls of 1, and it can re-mark when the target is destroyed. Confirm target/timing manually."
+    ])
+  }),
+  "space-marines:firestrike-servo-turrets":reviewed({
+    sourceName:"Current 11e Firestrike Servo-turrets 11th Warhammer App transcription; full direct October Codex comparison pending",
+    sourceUrl:"https://www.40k.app/995/factions/space-marines/units/firestrike-servo-turrets",
+    fixed:Object.freeze([fixed("Hovering Bulk")]),
+    slots:Object.freeze([slot("firestrike-main-gun",["Twin Firestrike Las-talon","Twin Firestrike Autocannon"])]),
+    manualWargearNotes:Object.freeze([
+      "For each one or two Servo-turrets, select one Twin Firestrike Las-talon OR Twin Firestrike Autocannon; every model retains Hovering Bulk melee.",
+      "Firestrike Sentinel Protocols is once per phase and lets this unit use Fire Overwatch even if used elsewhere, with snap shooting hitting on unmodified 4+. Resolve the stratagem window and eligibility manually.",
+      "Do not use the old 10e 3-inch Move, 75/150 point totals, D6+1 las-talon or old Fire Overwatch rule."
+    ])
+  }),
+  "space-marines:invader-atvs":reviewed({
+    sourceName:"Current 11e Invader ATVs datasheet cross-check; direct official Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Invader-ATVs",
+    fixed:Object.freeze([fixed("Armoured Impact"),fixed("Bolt Pistol"),fixed("Twin Bolt Rifle")]),
+    slots:Object.freeze([slot("invader-main-gun",["Onslaught Gatling Cannon","Multi-melta"])]),
+    pointsAdjustment:Object.freeze({
+      selection:"Multi-melta",perModel:5,
+      sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Invader-ATVs"
+    }),
+    manualWargearNotes:Object.freeze([
+      "One or two ATVs in the unit. Every model has Armoured Impact, Bolt Pistol and Twin Bolt Rifle. Its Onslaught Gatling Cannon may independently be replaced with a Multi-melta (+5 points each).",
+      "Aggressive Reconnaissance adds +1 to wound rolls for this unit's ranged attacks only when the enemy target is not within 6 inches of ANY other enemy unit. Check actual opponent positions manually.",
+      "Twin Bolt Rifle is Ballistic Skill 2+ in the current 11e profile; the anti-vehicle Multi-melta uses Strength 10, AP -3, Damage D3+2 and Melta 3."
+    ])
+  }),
   "space-marines:ballistus-dreadnought":reviewed({
     sourceName:"Current 11e Ballistus Dreadnought datasheet cross-check; direct official Codex/MFM certification pending",
     sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Ballistus-Dreadnought",
