@@ -73,6 +73,9 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Land Raider Redeemer":copies([[1,245]],[[1,265]],2),
   "Redemptor Dreadnought":copies([[1,170]],[[1,190]]),
   // Confirmed October 2 first-copy change that the old import missed.
+  // Current 11e Chaplain with Jump Pack is 75; imported roster snapshot had stale 90.
+  // Only update reviewed price options, never silently overwrite saved army points.
+  "Chaplain with Jump Pack":fixed([1,75]),
   "Drop Pod":copies([[1,60]],[[1,70]],4),
   "Impulsor":copies([[1,70]],[[1,80]],4),
   "Rhino":copies([[1,70]],[[1,80]],4),

@@ -66,7 +66,7 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-04.17",
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-04.18",
     reviewedAt: "2026-11-04", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
@@ -79,7 +79,7 @@ const BY_FACTION = Object.freeze({
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-11-04.17", description: "Cross-checks 11e six Captain, two Chaplain and two Librarian unit equipment, combat profiles and special rules; direct current GW Codex/MFM confirmation pending" })
+    catalog: Object.freeze({ revision: "2026-11-04.18", description: "Cross-checks ten 11e Ancients, Apothecaries, Chaplains, Judiciar, Terminator Librarian and Lieutenant; official Codex/MFM direct certification pending" })
   })
 });
 

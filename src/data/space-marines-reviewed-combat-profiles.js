@@ -11,6 +11,100 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  "Ancient":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"2"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","3+","5","-1","1","Close-Quarters"),
+      ranged("Bolt Rifle - Focused Fire","24\"","1","3+","6","-1","2","Rapid Fire 1, Heavy"),
+      ranged("Bolt Rifle - Saturation","24\"","2","3+","5","-1","1","Rapid Fire 1, Assault"),
+      melee("Ceramite Fists","4","3+","5","0","1",""),
+      melee("Power Weapon","5","3+","5","-2","1","")]),
+    abilities:Object.freeze([ability("Raise the Banner","At END of own Movement phase, if controlling an objective, secure that objective. Resolve actual objective state manually."),
+      ability("Honour of the Company","+1 OC to this unit, not to every unit in the army; check combined OC and end-of-turn scoring manually."),
+      ability("Support","May attach as Support to eligible non-Terminator bodyguard infantry. Confirm attachment manually.")])
+  }),
+  "Ancient in Terminator Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"5","Leadership":"6+","Objective Control":"2"}),
+    weapons:Object.freeze([ranged("Storm Bolter","24\"","2","3+","5","-1","1","Rapid Fire 2"),
+      melee("Master-crafted Power Weapon","5","3+","5","-2","2","")]),
+    abilities:Object.freeze([ability("Raise the Banner","At END of own Movement phase, secure an objective controlled by this unit. Confirm objective control manually."),
+      ability("Never Shall the Standard Fall","While this unit is within range of an objective, attacks against this unit with Strength > its Toughness suffer -1 to wound. Check range and Strength."),
+      ability("Deep Strike and Invulnerable Save","Deep Strike and an innate 4+ invulnerable save; Support eligible Terminator bodyguard.")])
+  }),
+  "Apothecary":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Absolvor Bolt Pistol","18\"","1","3+","5","-2","2","Close-Quarters"),
+      melee("Reductor Pistol","1","3+","5","-4","2","Extra Attacks"),
+      melee("Servo-armature","4","3+","5","0","1","")]),
+    abilities:Object.freeze([ability("Narthecium","In your Command phase this unit heals D3+1 wounds. Only adjust actual Wounds after the tabletop healing result; do not revive destroyed models."),
+      ability("Support","Can join eligible non-Gravis infantry as Support. Can coexist with a Captain/Chapter Master/Lieutenant Leader when permitted.")])
+  }),
+  "Apothecary Biologis":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Absolvor Bolt Pistol","18\"","1","3+","5","-2","2","Close-Quarters"),
+      melee("Servo-armature","4","3+","5","0","1","")]),
+    abilities:Object.freeze([ability("Vivispectral Analysis Targeting","Attacks by this unit gain Lethal Hits only against non-VEHICLE targets. Do not apply to VEHICLE targets."),
+      ability("Support","Can support eligible Gravis infantry (Aggressors, Eradicators, Heavy Intercessors) where allowed. No Narthecium regeneration.")])
+  }),
+  "Bladeguard Ancient":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"3"}),
+    weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","3+","5","-1","1","Close-Quarters"),
+      melee("Relics of Battle","4","3+","5","-2","2","")]),
+    abilities:Object.freeze([ability("Raise the Banner","At END of own Movement phase, if controlling an objective, secure it. Confirm actual OC and control manually."),
+      ability("Deeds of Legend","While this unit is within range of an objective, its melee attacks gain +1 A. Do not apply this away from an objective."),
+      ability("Invulnerable Save","Innate 4+ invulnerable save. Support attachment to Bladeguard Veteran Squad.")])
+  }),
+  "Chaplain on Bike":Object.freeze({
+    characteristics:Object.freeze({"Move":"12\"","Toughness":"6","Save":"3+","Wounds":"5","Leadership":"5+","Objective Control":"2"}),
+    weapons:Object.freeze([ranged("Absolvor Bolt Pistol","18\"","1","3+","5","-2","2","Close-Quarters"),
+      ranged("Twin Bolt Rifle","24\"","2","3+","5","-1","1","Twin-linked, Rapid Fire 2"),
+      melee("Crozius Arcanum","5","2+","6","-1","2","Cleave 1")]),
+    abilities:Object.freeze([ability("Litany of Hate","This unit's melee attacks gain Lance."),
+      ability("Catechism of Fire","In your Shooting phase when selected to shoot, select one visible enemy target. This unit's ranged attacks against it gain Devastating Wounds; confirm selected enemy manually."),
+      ability("Invulnerable Save","4+ invulnerable. Leader can attach to Outrider Squad.")])
+  }),
+  "Chaplain with Jump Pack":Object.freeze({
+    characteristics:Object.freeze({"Move":"12\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"5+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Absolvor Bolt Pistol","18\"","1","3+","5","-2","2","Close-Quarters"),
+      melee("Crozius Arcanum","5","2+","6","-1","2","Cleave 1")]),
+    abilities:Object.freeze([ability("Litany of Hate","This unit's melee attacks gain Lance."),
+      ability("Exhortation of Rage","While this unit is AT OR BELOW HALF-STRENGTH, its melee wound rolls can be re-rolled. Do not apply above half-strength."),
+      ability("Deep Strike and Invulnerable Save","Deep Strike, Jump Pack and innate 4+ invulnerable.")])
+  }),
+  "Judiciar":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Absolvor Bolt Pistol","18\"","1","3+","5","-2","2","Close-Quarters"),
+      melee("Executioner Relic Blade","5","2+","7","-2","2","Precision, Devastating Wounds")]),
+    abilities:Object.freeze([ability("Tempormortis","This unit has Fights First. Apply correct opponent-turn Fight-phase sequencing."),
+      ability("Invulnerable Save","4+ invulnerable applies against MELEE attacks ONLY. Do not use against ranged attacks."),
+      ability("Support","Attach only to eligible infantry bodyguard units, following normal Support limit.")])
+  }),
+  "Librarian in Terminator Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Smite - Witchfire","24\"","D6","3+","6","-1","2","Psychic"),
+      ranged("Smite - Focused Witchfire","24\"","D3+3","3+","6","-2","2","Psychic, Devastating Wounds, Hazardous"),
+      ranged("Storm Bolter","24\"","2","3+","5","-1","1","Rapid Fire 2"),
+      melee("Force Weapon","4","3+","6","-2","2","Psychic")]),
+    abilities:Object.freeze([ability("Librarian (psyker level 1)","Can use level-1 psychic abilities under the battle-round limit; Smite Witchfire/Focused modes are one weapon, not two guns."),
+      ability("Might of Heroes","In Fight phase if not battleshocked, psychic roll D6: on a 1 become battleshocked; otherwise melee attacks get +2 Strength. Manual activation."),
+      ability("Thunderous Force","In own Shooting phase if not battleshocked, psychic roll D6: on a 1 become battleshocked; otherwise ranged attacks get +6 inches Range. Manual activation."),
+      ability("Psychic Hood","This unit has Feel No Pain 4+ against PSYCHIC attacks only; not all attacks."),
+      ability("Deep Strike and Invulnerable Save","Deep Strike and innate 4+ invulnerable save.")])
+  }),
+  "Lieutenant":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Master-crafted Bolter","24\"","2","2+","5","-1","2",""),
+      ranged("Neo-volkite Pistol","12\"","1","2+","5","0","2","Close-Quarters, Devastating Wounds"),
+      ranged("Plasma Pistol - Standard","12\"","1","2+","7","-2","1","Close-Quarters"),
+      ranged("Plasma Pistol - Supercharge","12\"","1","2+","8","-3","2","Close-Quarters, Hazardous"),
+      melee("Ceramite Fists","5","2+","5","0","1",""),
+      melee("Master-crafted Power Weapon","5","2+","6","-2","2",""),
+      melee("Power Fist","4","2+","8","-2","2","")]),
+    abilities:Object.freeze([ability("Demi-company Commander","Once per turn per unit, when a friendly Captain uses Strategic Acumen, this unit can have the selected combat doctrine until the next Command phase. Manual timing."),
+      ability("Tactical Precision","This unit's attacks gain Lethal Hits only against targets that are NOT MONSTER or VEHICLE."),
+      ability("Storm Shield","Only Neo-volkite + Master-crafted Power Weapon with optional shield has 4+ invulnerable; no other Lieutenant package has this save from its loadout.")])
+  }),
   "Captain":Object.freeze({
     characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
     weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
