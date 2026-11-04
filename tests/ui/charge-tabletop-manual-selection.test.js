@@ -8,6 +8,7 @@ import { getChargeViewModel } from '../../src/application/charge-workflow.js';
 import { createChargeScreen } from '../../src/ui/charge-screen.js';
 import { getLiveUnitPosition, getSpatialContext } from '../../src/rules/spatial-context.js';
 import { fakeDom } from '../helpers/combat-dom.js';
+import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 
 function state() {
   return createGameState({
@@ -63,6 +64,12 @@ test('an approximate map correction replaces stale deployment position in charge
     }}]
   };
   assert.deepEqual(getLiveUnitPosition(corrected,corrected.units[0]),{x:42,y:27});
+  const rendered = renderBattlefieldMap(corrected,{mode:'live'});
+  const marker = rendered.match(/data-map-unit-id="ac1"[^>]*style="left:([^;]+)%;top:([^%]+)%"/);
+  assert.ok(marker, 'the corrected unit remains visible in the same position used by tactical advice');
+  assert.equal(Number(marker[1]),70);
+  assert.ok(Math.abs((44 - Number(marker[2]) * 44 / 100) - 27) < 0.01,
+    'map marker Y coordinate must match corrected tactical Y coordinate');
   assert.equal(getSpatialContext(corrected,{playerId:'p1'}).unitProximity.find(item => item.unitId === 'ac1').distance,9);
   assert.equal(getChargeViewModel(corrected).candidates.find(item => item.unit.unitId === 'ac1')
     .targets[0].rangeStatus,'within');
