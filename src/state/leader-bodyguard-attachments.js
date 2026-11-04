@@ -1,3 +1,5 @@
+import { isReviewedVictrixLeaderPair } from '../data/space-marines-ultramarines-attachments.js';
+
 /**
  * Leader attachment helpers for reusable army rosters.
  *
@@ -22,6 +24,17 @@ export function getEligibleBodyguards(roster, leaderId) {
     const bodyguardReviewStatus = bodyguardMetadata?.compatibilityReview?.status;
     const attachedLeaderIds = unit.attachedLeaderIds ?? [];
     const maxAttachedLeaders = bodyguardMetadata?.maxAttachedLeaders ?? 1;
+    // Only a reviewed Support pairing can occupy the second attachment slot.
+    // Cato's conditional Support is explicitly permitted with Calgar on Victrix;
+    // two ordinary Leaders must not be attached by the generic capacity rule.
+    if (bodyguardId.startsWith('space-marines:') && attachedLeaderIds.length) {
+      const present = roster.units.find(candidate => candidate.id === attachedLeaderIds[0]);
+      const firstId=present?.datasheetId ?? present?.datasheet?.id;
+      const secondId=leader.datasheetId ?? leader.datasheet?.id;
+      if(bodyguardId==='space-marines:victrix-honour-guard'){
+        if(!isReviewedVictrixLeaderPair(firstId,secondId)) return false;
+      } else if(!leaderMetadata?.support && !present?.datasheet?.leader?.support) return false;
+    }
     return Boolean(bodyguardId && allowedIds.includes(bodyguardId) &&
       bodyguardMetadata?.canReceiveLeader === true &&
       ["accepted", "cross-checked", "source-reviewed"].includes(bodyguardReviewStatus) &&

@@ -66,7 +66,7 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.4",
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.5",
     reviewedAt: "2026-11-03", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
@@ -79,7 +79,7 @@ const BY_FACTION = Object.freeze({
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-11-03.4", description: "Adds 11e Terminator special weapons/Cyclone upgrades, Bladeguard Sergeant pistol and Hellblaster plasma loadouts; full Codex still pending" })
+    catalog: Object.freeze({ revision: "2026-11-03.5", description: "Adds source-reviewed Calgar and Cato fixed weapons, Victrix model roles, named Warden mixed statlines and scoped attachments; full Codex recheck pending" })
   })
 });
 

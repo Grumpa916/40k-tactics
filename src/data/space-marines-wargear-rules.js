@@ -25,6 +25,72 @@ const sergeantFixed=(name,profiles=[name])=>Object.freeze({...pick(name,profiles
 const addition=(name,perModels,profiles=[name])=>Object.freeze({...pick(name,profiles),perModels,maxEach:1});
 const reviewed=body=>Object.freeze({...source,...body});
 export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
+  "space-marines:marneus-calgar":reviewed({
+    sourceName:"Current 11e Calgar weapon profiles cross-checked with existing Terminator catalog",
+    sourceUrl:"https://praetorium.gg/factions/ultramarines/rules/mfm-1-6/datasheets/marneus-calgar-984d-c25",
+    fixed:Object.freeze([
+      Object.freeze({...pick("Gauntlets of Ultramar",[
+        "Gauntlets of Ultramar","Gauntlets of Ultramar - Overhead Smash"]),count:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "All three profile rows are attacks from the same equipped Gauntlets, not three separately equipped weapons.",
+      "October-era Calgar has multiple doctrine and deployment abilities. Confirm their timing and target conditions on the current Warhammer app."
+    ])
+  }),
+  "space-marines:cato-sicarius":reviewed({
+    sourceName:"Current 11e Sicarius profile vs official GW June 2026 Faction Pack",
+    sourceUrl:"https://wh-rules.ru/factions/space-marines/datasheets/cato-sicarius",
+    fixed:Object.freeze([
+      Object.freeze({...pick("Artisan Plasma Pistol"),count:1}),
+      Object.freeze({...pick("Talassarian Tempest Blade",[
+        "Talassarian Tempest Blade - Strike",
+        "Talassarian Tempest Blade - Sweep",
+        "Talassarian Tempest Blade - Coup de Grace"
+      ]),count:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Choose one Talassarian Tempest Blade attack profile before resolving its melee attacks.",
+      "When the army has Marneus Calgar, Sicarius uses Support instead of Leader. Check the actual attachment on the tabletop."
+    ])
+  }),
+  "space-marines:victrix-honour-guard":reviewed({
+    sourceName:"GW June 2026 Faction Pack and current 11e Victrix model compositions",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Victrix-Honour-Guard",
+    slots:Object.freeze([slot("model-role",[
+      {name:"Victrix Honour Guard",profiles:["Master-crafted Bolt Carbine","Master-crafted Power Weapon"]},
+      {name:"Chapter Ancient",profiles:["Master-crafted Bolt Carbine","Master-crafted Power Weapon"]},
+      {name:"Chapter Champion",profiles:["Blades of Honour"]}
+    ])]),
+    constraints:Object.freeze([
+      Object.freeze({type:"max",selection:"Chapter Ancient",max:1}),
+      Object.freeze({type:"max",selection:"Chapter Champion",max:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Choose three or six total models. At most one Chapter Ancient and one Chapter Champion can replace regular Guard.",
+      "A Chapter Ancient has the Banner of Macragge; its special bonus, objective effect and one-use timing must be tracked manually.",
+      "Victrix with a Chapter Ancient adds 15 army points in the reviewed 11e points table. No roster is changed automatically."
+    ])
+  }),
+  "space-marines:wardens-of-ultramar":reviewed({
+    sourceName:"GW June 2026 faction pack six-character composition; current 11e Warden profile comparison",
+    sourceUrl:"https://wh-rules.ru/factions/space-marines/datasheets/wardens-of-ultramar",
+    fixed:Object.freeze([
+      Object.freeze({...pick("Bolt Rifle",["Bolt Rifle - Focused Fire","Bolt Rifle - Saturation"]),count:1}),
+      Object.freeze({...pick("Ceramite Fists"),count:1}),
+      Object.freeze({...pick("Heavy Bolt Pistol"),count:1}),
+      Object.freeze({...pick("Master-crafted Power Weapon"),count:1}),
+      Object.freeze({...pick("Archeotech Laspistol"),count:3}),
+      Object.freeze({...pick("Power Weapon"),count:2}),
+      Object.freeze({...pick("Astropathic Blast"),count:1}),
+      Object.freeze({...pick("Force Stave"),count:1}),
+      Object.freeze({...pick("Ultramarian Combat Weapons"),count:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "Six named Wardens have different Toughness, Save, Wounds, OC and invulnerable saves. Use individual model stats and record allocated casualties on the tabletop.",
+      "Dainal Kornelius has Psychic attacks; Veteran Sergeant Metaurus has a Storm Shield, while Gaius Silva has a Refractor Field.",
+      "Wardens use Support with the eligible infantry named on their current datasheet; the live game must not infer a joined unit from this fixed weapon list."
+    ])
+  }),
   "space-marines:aggressor-squad": reviewed({
     fixed:Object.freeze([fixed("Twin Power Fists")]),
     slots:Object.freeze([slot("unit-ranged-loadout",[

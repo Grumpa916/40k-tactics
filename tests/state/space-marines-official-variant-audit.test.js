@@ -98,5 +98,5 @@ test('official 11th edition Victrix and Wardens unit-size notes retain missing p
  const wardens=catalog().find(item=>item.name==='Wardens of Ultramar');
  assert.deepEqual([...wardens.officialComposition.permittedModels],[6]);
  assert.equal(wardens.officialRulesCrossCheck,'pending');
- assert.equal(wardens.datasheet,undefined);
+ assert.ok(wardens.datasheet?.modelProfiles?.length===6,'Wardens now have source-scoped per-model profiles');
 });

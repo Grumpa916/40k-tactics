@@ -3,6 +3,7 @@ import { SPACE_MARINES_SUPPLEMENTAL_DATASHEETS } from './space-marines-supplemen
 import { SPACE_MARINES_MFM_PRICE_OPTIONS, SPACE_MARINES_MFM_PRICE_SOURCES } from './space-marines-mfm-price-options.js';
 import { applyReviewedSpaceMarineCharacteristics } from './space-marines-codex-characteristics.js';
 import { applyReviewedSpaceMarineWargearProfiles } from './space-marines-reviewed-combat-profiles.js';
+import { addReviewedUltramarinesAttachmentMetadata } from './space-marines-ultramarines-attachments.js';
 
 // Space Marines unit names and points captured from the supplied Warhammer App export.
 // Datasheet profiles are linked from the reviewed 11th-edition community reference projection;
@@ -39,7 +40,7 @@ export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, poin
    // post-Codex October weapon/points/abilities audit remains outstanding.
    completeOctoberCodexCrossCheck: false
  } : {}),
- datasheet: applyReviewedSpaceMarineWargearProfiles(name, applyReviewedSpaceMarineCharacteristics(name, SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null)),
+ datasheet: addReviewedUltramarinesAttachmentMetadata(name, applyReviewedSpaceMarineWargearProfiles(name, applyReviewedSpaceMarineCharacteristics(name, SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null))),
  sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
  sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
  verificationStatus: 'points-reviewed',
