@@ -88,13 +88,17 @@ test('Calgar appears in the visible Army Builder search and among Epic Heroes',(
 });
 
 test('missing current Epic Heroes and Victrix remain separate non-certified profile references',()=>{
- for(const name of ['Roboute Guilliman','Chief Librarian Tigurius','Cato Sicarius',
-   'Captain Titus','Victrix Honour Guard','Wardens of Ultramar']){
+ for(const name of ['Roboute Guilliman','Chief Librarian Tigurius','Captain Titus']){
   const candidate=current().find(x=>x.name===name);
   assert.ok(candidate,'must browse '+name);
   assert.equal(getCatalogRoleGroup(candidate),'epic-hero');
   assert.equal(candidate.officialRulesCrossCheck,'pending');
   assert.equal(candidate.datasheet,undefined,'never invent an unreviewed datasheet for '+name);
+ }
+ for(const name of ['Cato Sicarius','Victrix Honour Guard','Wardens of Ultramar']) {
+  const candidate=current().find(x=>x.name===name);
+  assert.ok(candidate.datasheet?.weapons?.length>0,name+' now has source-scoped reviewed profiles');
+  assert.equal(candidate.officialRulesCrossCheck,'pending');
  }
  const victrix=current().find(x=>x.name==='Victrix Honour Guard');
  assert.equal(victrix.defaultModelCount,3);
