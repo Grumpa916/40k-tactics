@@ -123,7 +123,9 @@ const AUTO_FIXED_REVIEWED_SPACE_MARINES=new Set([
  'space-marines:infernus-squad','space-marines:company-heroes','space-marines:ballistus-dreadnought',
  'space-marines:gladiator-lancer','space-marines:gladiator-reaper','space-marines:gladiator-valiant',
  'space-marines:storm-speeder-hailstrike','space-marines:storm-speeder-hammerstrike',
- 'space-marines:storm-speeder-thunderstrike','space-marines:techmarine'
+ 'space-marines:storm-speeder-thunderstrike','space-marines:techmarine',
+ 'space-marines:captain-in-phobos-armour','space-marines:chaplain',
+ 'space-marines:librarian','space-marines:librarian-in-phobos-armour'
 ]);
 function hydrateReviewedFixedEquipment(unit) {
  if(!AUTO_FIXED_REVIEWED_SPACE_MARINES.has(unit?.datasheetId))return;
