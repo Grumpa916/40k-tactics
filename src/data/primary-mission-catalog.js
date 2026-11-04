@@ -50,7 +50,7 @@ export const PRIMARY_MISSION_MATRIX = Object.freeze({
       s("R2+ Command phase / R5 end of turn", [{ vp: 3, condition: Object.freeze({"type":"count-objectives"}), summary: "Per objective controlled." }, { vp: 3, bonus: true, summary: "Additional VP for each such objective in enemy territory." }])
     ]),
     "Reconnaissance": m("purge-and-secure", "Purge and Secure", [
-      s("End of your turn", [{ vp: 3, summary: "Destroy an enemy unit with an objective-related positioning condition." }]),
+      s("End of your turn", [{ vp: 3, summary: "One 3 VP award if a friendly unit within range of an objective destroyed an enemy unit, OR an enemy unit that began the turn within range of an objective was destroyed. These are alternatives, not cumulative." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 4, condition: Object.freeze({"type":"count-non-home"}), summary: "Per controlled non-home objective." }]),
       s("R2+ end of your turn", [{ vp: 3, summary: "Control at least one non-home objective you did not control at the start of the turn." }])
     ]),
@@ -110,16 +110,16 @@ export const PRIMARY_MISSION_MATRIX = Object.freeze({
       s("End of battle", [{ vp: 10, summary: "Four or more objectives are decoys." }])
     ], { action: Object.freeze({ id: "decoy", name: "Decoy", phase: "shooting", reviewTiming: "end-of-turn", summary: "A qualifying unit marks a non-home objective as a decoy." }) }),
     "Priority Assets": m("locate-and-deny", "Locate and Deny", [
-      s("End of your turn", [{ vp: 4, summary: "Destroy an enemy that started the turn in range of an objective." }, { vp: 4, summary: "Meet the mission's last-marker positioning condition." }]),
+      s("End of your turn", [{ vp: 4, summary: "Destroy an enemy that started the turn in range of an objective." }, { vp: 4, summary: "Exactly one of your operation markers remains, at least one friendly unit is in the same terrain area, and no enemy unit is in that terrain area." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 4, condition: Object.freeze({"type":"control-non-home","minimum":1}), summary: "Control a non-home objective." }]),
-      s("End of battle", [{ vp: 5, summary: "Meet the mission's last-marker positioning condition." }])
+      s("End of battle", [{ vp: 5, summary: "Exactly one of your operation markers remains, at least one friendly unit is in the same terrain area, and no enemy unit is in that terrain area." }])
     ], { setup: "Place the mission markers in five eligible terrain areas before the battle and track them manually.",
       action: Object.freeze({ id: "sensor-sweep", name: "Sensor Sweep", phase: "shooting", reviewTiming: "end-of-turn",
         summary: "Once per turn, a unit at a central objective can complete Sensor Sweep at end of turn if it controls that objective, removing one operation marker. This Action cannot begin if only one operation marker remains." }) })
   }),
   "Reconnaissance": Object.freeze({
     "Take and Hold": m("reconnaissance-sweep", "Reconnaissance Sweep", [
-      s("End of your turn", [{ vp: 3, summary: "Have qualifying units wholly within three different table quarters and away from the centre." }, { vp: 6, summary: "Have qualifying units in all four table quarters." }, { vp: 1, condition: Object.freeze({"type":"count-destroyed"}), summary: "Per enemy unit destroyed this turn." }]),
+      s("End of your turn", [{ vp: 3, summary: "Have at least three qualifying friendly units wholly within three different table quarters, none within 6 inches of the battlefield centre. This is an alternative to the four-quarter tier." }, { vp: 6, summary: "Have at least four qualifying friendly units wholly within four different table quarters, none within 6 inches of the battlefield centre. Score this tier instead of the three-quarter tier." }, { vp: 1, condition: Object.freeze({"type":"count-destroyed"}), summary: "Per enemy unit destroyed this turn." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 3, condition: Object.freeze({"type":"control-non-home","minimum":1}), summary: "Control at least one non-home objective." }])
     ]),
     "Purge the Foe": m("triangulation", "Triangulation", [
@@ -128,7 +128,7 @@ export const PRIMARY_MISSION_MATRIX = Object.freeze({
       s("End of battle", [{ vp: 10, condition: Object.freeze({"type":"control-objectives","minimum":4}), summary: "Control four or more objectives." }])
     ], { action: Object.freeze({ id: "triangulate", name: "Triangulate", phase: "shooting", minRound: 2, reviewTiming: "end-of-turn", summary: "Once per turn, a qualifying unit begins triangulation at a non-home objective; complete it at end of turn if control is maintained." }) }),
     "Disruption": m("surveil-the-foe", "Surveil the Foe", [
-      s("End of your turn", [{ vp: 4, summary: "At least one qualifying enemy unit was surveilled this turn." }]),
+      s("End of your turn", [{ vp: 4, summary: "At least one enemy unit was surveilled this turn, unless every surveilled unit is within range of an objective that still has an operation marker within range of it." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 4, condition: Object.freeze({"type":"control-non-home","minimum":1}), summary: "Control a non-home objective." }, { vp: 4, condition: Object.freeze({"type":"control-more"}), summary: "Control more objectives than your opponent." }]),
       s("R2+ end of your turn", [{ vp: 5, summary: "No enemy mission markers remain on the battlefield." }])
     ], { setup: "Friendly units can remove enemy mission markers by ending a move in range of the relevant objective.", action: Object.freeze({ id: "surveil", name: "Surveil", phase: "shooting", reviewTiming: "end-of-turn", summary: "Select a visible enemy within 18 inches that has not already been surveilled this turn." }) }),
@@ -155,9 +155,9 @@ export const PRIMARY_MISSION_MATRIX = Object.freeze({
       s("End of battle", [{ vp: 10, summary: "Control the opponent's home objective." }])
     ], { action: Object.freeze({ id: "maintain-control", name: "Maintain Control", phase: "shooting", reviewTiming: "end-of-turn", summary: "Once per turn, a qualifying unit at a central objective places a mission marker." }) }),
     "Disruption": m("extract-relic", "Extract Relic", [
-      s("End of your turn", [{ vp: 4, summary: "A friendly unit completed Sensor Sweep this turn." }, { vp: 3, summary: "Destroy an enemy that started the turn in range of an objective." }, { vp: 4, summary: "Meet the mission's last-enemy-marker positioning condition." }]),
+      s("End of your turn", [{ vp: 4, summary: "A friendly unit completed Sensor Sweep this turn." }, { vp: 3, summary: "Destroy an enemy that started the turn in range of an objective." }, { vp: 4, summary: "Exactly one opponent operation marker remains, at least one friendly unit is in the same terrain area, and no enemy unit is in that terrain area." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 4, condition: Object.freeze({"type":"control-non-home","minimum":1}), summary: "Control a non-home objective." }]),
-      s("End of battle", [{ vp: 5, summary: "Meet the mission's last-enemy-marker positioning condition." }])
+      s("End of battle", [{ vp: 5, summary: "Exactly one opponent operation marker remains, at least one friendly unit is in the same terrain area, and no enemy unit is in that terrain area." }])
     ], { action: Object.freeze({ id: "sensor-sweep", name: "Sensor Sweep", phase: "shooting", reviewTiming: "end-of-turn", summary: "Once per turn, a qualifying unit at a central objective removes an enemy mission marker, subject to the mission's last-marker restriction." }) }),
     "Reconnaissance": m("vanguard-operation", "Vanguard Operation", [
       s("End of your turn", [{ vp: 4, summary: "A friendly unit completed Vanguard Operation this turn." }, { vp: 2, condition: Object.freeze({"type":"destroy-enemy","minimum":1}), summary: "Destroy at least one enemy unit this turn." }]),
