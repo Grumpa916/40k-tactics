@@ -1,5 +1,5 @@
 import { attachmentParent } from '../rules/event-preparation.js';
-import { mapUnitLabels } from './map-unit-labels.js';
+import { unitDisplayLabels } from './map-unit-labels.js';
 import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export function renderMapReserveTray(state,{selectedUnitId,playerId=null}={}) {
@@ -7,7 +7,7 @@ export function renderMapReserveTray(state,{selectedUnitId,playerId=null}={}) {
   const reserves=units.filter(unit=>unit.status==='reserves' && (state.battle?.status==='active'||state.battlefieldMap?.declaredReserves?.[unit.id]));
   const selected=units.find(unit=>unit.id===selectedUnitId);
   const canSend=selected && !reserves.includes(selected);
-  const labels=mapUnitLabels(state.units??[]);
+  const labels=unitDisplayLabels(state.units??[]);
   const labelFor=unit=>unit ? (labels.get(unit.id)??unit.name??unit.id) : '';
   return `<link rel="stylesheet" href="${new URL('./styles/map-reserve-tray.css',import.meta.url).href}"><div class="map-reserve-tray" data-map-reserve-area aria-label="Reserves tray">
     <button type="button" data-map-send-reserve ${canSend?'':'disabled'}>Reserves · ${reserves.length}${canSend?' · Move '+esc(labelFor(selected))+' here':''}</button>

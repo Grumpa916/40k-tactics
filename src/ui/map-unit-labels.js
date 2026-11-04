@@ -47,12 +47,16 @@ export function shortMapUnitName(unit) {
   const name = String(unit?.name || unit?.id || 'Unit').trim().replace(/\s+/g, ' ');
   const known = SHORT_NAMES[name.toLowerCase()];
   if (known) return known;
-  if (name.length <= 9) return name;
-  const words = name.split(' ');
-  const shorten = (word, length) => word.length <= length ? word : word.slice(0, length - 1) + '…';
-  if (words.length === 1) return shorten(name, 9);
-  // Keep both the beginning and distinguishing final word of unfamiliar names.
-  return shorten(words[0], 3) + ' ' + shorten(words.at(-1), 4);
+  if (name.length <= 15) return name;
+  // Generic roster words use map space without helping identify the unit.
+  const words = name.split(' ').filter(word => !/^(?:a|an|in|of|the|with|squad|armour|armor)$/i.test(word));
+  if (words.length === 1) return words[0].length <= 15 ? words[0] : words[0].slice(0, 14) + '…';
+  const first = words[0] ?? name;
+  const second = words[1] ?? '';
+  if (!second) return first.slice(0, 15);
+  if (first.length >= 14) return first.slice(0, 14) + '…';
+  const available = 15 - first.length - 1;
+  return first + ' ' + (second.length <= available ? second : second.slice(0, available - 1) + '.');
 }
 
 export function mapUnitLabels(units = []) {
