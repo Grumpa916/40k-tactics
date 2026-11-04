@@ -56,7 +56,9 @@ test('Legends remain available only by explicit request and cannot masquerade as
  const legends=all.filter(unit=>unit.legends);
  assert.equal(all.length,176,'name-only reference coverage against Nov 2 list');
  assert.equal(legends.length,89);
- assert.ok(legends.every(unit=>unit.verificationStatus==='legends-name-only-unverified'));
+ assert.equal(legends.filter(unit=>unit.legendaryProxy).length,5);
+ assert.equal(legends.filter(unit=>!unit.legendaryProxy).length,84);
+ assert.ok(legends.every(unit=>unit.legendaryProxy ? unit.verificationStatus==='legendary-proxy-reference-only' : unit.verificationStatus==='legends-name-only-unverified'));
  assert.ok(legends.every(unit=>unit.defaultPoints==null));
  assert.ok(legends.every(unit=>!unit.datasheet));
  assert.ok(getArmyUnitCandidateLabel(legends[0]).includes('Legends'));
