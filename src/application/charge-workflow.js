@@ -3,6 +3,9 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getTacticalCombatRecommendations } from "../rules/tactical-combat-recommendations.js";
 import { unitDisplayLabels } from "../ui/map-unit-labels.js";
+import { getSpatialContext } from "../rules/spatial-context.js";
+import { getFightEngagementState } from "../rules/fight-engagement-state.js";
+import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -30,22 +33,46 @@ function chargeHistory(state) {
 }
 
 function groupRecommendations(state, playerId, perspectivePlayerId) {
+  if (state?.phase !== "charge" || !playerId) return [];
   const recommendations = getTacticalCombatRecommendations(state, { playerId }).charge;
   const byUnit = new Map();
+  const nearby = new Map(getSpatialContext(state, { playerId }).unitProximity
+    .map(item => [item.unitId + ":" + item.otherUnitId, item.distance]));
+  const engaged = new Set(getFightEngagementState(state).engagedUnitIds);
+  const friendly = state.units.filter(unit =>
+    unit?.status === "deployed" && unit.ownerId === playerId &&
+    getCombatFormationRoot(state, unit)?.id === unit.id && !engaged.has(unit.id));
+  const enemies = state.units.filter(unit =>
+    unit?.status === "deployed" && unit.ownerId !== playerId &&
+    getCombatFormationRoot(state, unit)?.id === unit.id);
 
+  for (const unit of friendly) {
+    byUnit.set(unit.id, { unit: describeUnit(state, unit.id, perspectivePlayerId), targets: [] });
+  }
+  // Range estimates rank advice; they do not decide whether a tabletop-confirmed
+  // unit or target may be selected for Charge recording.
   for (const recommendation of recommendations) {
-    if (!byUnit.has(recommendation.unitId)) {
-      byUnit.set(recommendation.unitId, {
-        unit: describeUnit(state, recommendation.unitId, perspectivePlayerId),
-        targets: []
-      });
-    }
-    byUnit.get(recommendation.unitId).targets.push({
+    const candidate = byUnit.get(recommendation.unitId);
+    if (candidate) candidate.targets.push({
       ...recommendation,
       target: describeUnit(state, recommendation.targetUnitId, perspectivePlayerId)
     });
   }
-
+  for (const unit of friendly) {
+    const candidate = byUnit.get(unit.id);
+    const suggested = new Set(candidate.targets.map(item => item.targetUnitId));
+    for (const enemy of enemies) {
+      if (suggested.has(enemy.id)) continue;
+      const distance = nearby.get(unit.id + ":" + enemy.id) ?? null;
+      candidate.targets.push({
+        targetUnitId: enemy.id,
+        targetDistance: distance,
+        rangeStatus: "outside-map-envelope",
+        confidence: "low",
+        target: describeUnit(state, enemy.id, perspectivePlayerId)
+      });
+    }
+  }
   return [...byUnit.values()];
 }
 

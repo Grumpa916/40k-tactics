@@ -22,7 +22,7 @@ function centroid(unit) {
 
 function hasRecordedMovement(state, unitId) {
   return (Array.isArray(state?.history) ? state.history : []).some((event) =>
-    ["unit.normal_move_resolved", "unit.advanced"].includes(event?.type) &&
+    ["unit.normal_move_resolved", "unit.advanced", "battlefield_map.position_adjusted"].includes(event?.type) &&
     event.payload?.unitId === unitId &&
     Array.isArray(event.payload?.moves) && event.payload.moves.length > 0
   );
@@ -30,7 +30,7 @@ function hasRecordedMovement(state, unitId) {
 
 export function getLiveUnitPosition(state, unit) {
   // The battlefield map displays the recorded deployment position until a
-  // gameplay move replaces it. Tactical range/charge/territory advice must use
+  // gameplay move or approximate map correction replaces it. Tactical range/charge/territory advice must use
   // that same source or a unit can appear in one area on the map while being
   // evaluated from an older model position.
   const initialDeployment = state?.battlefieldMap?.actualDeployment?.[unit.id];
