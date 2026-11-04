@@ -11,6 +11,40 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  'Intercessor Squad':Object.freeze({
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Bolt Rifle - Focused Fire','24"','1','3+','6','-1','2','Heavy, Rapid Fire 1'),
+      ranged('Bolt Rifle - Saturation','24"','2','3+','5','-1','1','Assault, Rapid Fire 1'),
+      ranged('Grenade Launcher - Frag','24"','4','3+','4','-1','1','Blast 1'),
+      ranged('Grenade Launcher - Krak','24"','1','3+','10','-2','3','Rapid Fire 1'),
+      ranged('Hand Flamer','9"','3','N/A','4','0','1','Close-Quarters, Torrent'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      melee('Knives and Fists','3','3+','5','0','1',''),
+      melee('Chainsword','5','3+','5','-1','1',''),
+      melee('Power Fist','3','3+','8','-2','2',''),
+      melee('Power Weapon','4','3+','5','-2','1',''),
+      melee('Thunder Hammer','3','4+','8','-2','3','Devastating Wounds')
+    ]),
+    abilities:Object.freeze([
+      ability('Bolter Discipline','During the Shooting phase, ranged attacks gain +1 to Hit when the unit or target is within range of an objective marker.'),
+      ability('Tactical Mainstay','Being engaged or Battle-shocked does not prevent this unit starting a tabletop action, and starting an action does not stop it shooting.')
+    ])
+  }),
+  'Eradicator Squad with Melta Rifles':Object.freeze({
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Melta Rifle','18"','1','3+','10','-3','D3+2','Melta 2'),
+      ranged('Melta Rifle - Hunter','18"','1','2+','12','-3','D3+2','Melta 2, Hunter: Monster/Vehicle only'),
+      ranged('Multi-melta','18"','2','3+','10','-3','D3+2','Melta 3'),
+      ranged('Multi-melta - Hunter','18"','2','2+','12','-3','D3+2','Melta 3, Hunter: Monster/Vehicle only'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Total Obliteration','This unit’s ranged attacks can re-roll their Damage rolls. Confirm any roll changes at the tabletop.')
+    ])
+  }),
   'Aggressor Squad':Object.freeze({
     weapons:Object.freeze([
       ranged('Flamestorm Gauntlets - Close Quarters','12"','3','N/A','4','-1','1','Close-Quarters, Torrent, Twin-linked'),

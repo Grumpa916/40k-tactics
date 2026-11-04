@@ -1,5 +1,6 @@
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { validateWargearLoadout } from './wargear-loadout-validation.js';
+import { getOptionalWargearLimit } from './wargear-quantity-limits.js';
 
 export function getWargearSlots(unit) {
  const rules = getTyranidWargearRuleSet(unit?.datasheetId);
@@ -40,7 +41,7 @@ export function createWargearChoiceState(unit) {
  const restored=place(0);
  if (!restored) for(const slot of slots) assignments[slot.id]=slot.choices[0]?.name;
  const optional={};
- for(const item of rules.optional ?? []) optional[item.name]=Math.min(unit.modelCount*(item.perModel ?? 1), unit.equippedWargear?.filter(x=>x.name===item.name).reduce((sum,x)=>sum+x.quantity,0) ?? 0);
+ for(const item of rules.optional ?? []) optional[item.name]=Math.min(getOptionalWargearLimit(unit.modelCount,item), unit.equippedWargear?.filter(x=>x.name===item.name).reduce((sum,x)=>sum+x.quantity,0) ?? 0);
  const baselines={};
  for(const slot of rules.slots ?? []) {
   const baselineRule=(rules.constraints ?? []).find(rule=>rule.type==='same-baseline'&&rule.selections.some(name=>slot.choices.some(choice=>choice.name===name)));
@@ -83,7 +84,10 @@ export function resizeWargearChoices(previous, nextUnit, state) {
   const old=state.assignments[slot.id];
   if(old && !checkWargearChoice(nextUnit,next,slot.id,old)) next.assignments[slot.id]=old;
  }
- for(const [name,count] of Object.entries(state.optional)) next.optional[name]=Math.min(count,nextUnit.modelCount);
+ for(const [name,count] of Object.entries(state.optional)) {
+  const rule=getTyranidWargearRuleSet(nextUnit.datasheetId)?.optional?.find(item=>item.name===name);
+  next.optional[name]=Math.min(count,rule?getOptionalWargearLimit(nextUnit.modelCount,rule):nextUnit.modelCount);
+ }
  // An all-or-none option follows the new unit size when previously enabled.
  for(const item of getTyranidWargearRuleSet(nextUnit.datasheetId)?.optional ?? []) if(item.allOrNone&&state.optional[item.name]) next.optional[item.name]=nextUnit.modelCount*(item.perModel??1);
  return next;

@@ -1,6 +1,7 @@
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { createWargearChoiceState, getWargearSlots, readWargearChoiceState, checkWargearChoice, changeWargearQuantity } from '../rules/army-wargear-choices.js';
 import { escapeHtml as e } from './army-builder-html.js';
+import { getOptionalWargearLimit } from '../rules/wargear-quantity-limits.js';
 
 function profileCells(unit,name) {
  const choice=[...(getTyranidWargearRuleSet(unit.datasheetId)?.slots ?? []).flatMap(slot=>slot.choices),...(getTyranidWargearRuleSet(unit.datasheetId)?.optional ?? [])].find(choice=>choice.name===name);
@@ -34,6 +35,7 @@ export function renderWargearEditor(unit) {
   html+='<p class="ab-muted" role="note">Reviewed 11th-edition loadout subset; complete October Codex and weapon-effect verification remains outstanding.</p>';
   for(const detail of rules.modelSpecificWargear??[])
    html+=`<p role="note" class="ab-muted"><strong>${e(detail.selection)}:</strong> ${e(detail.effect)} The app does not automatically adjust mixed-model wounds.</p>`;
+  for(const note of rules.manualWargearNotes??[]) html+=`<p class="ab-muted" role="note">${e(note)}</p>`;
  }
  if(rules.fixed?.length) html+=`<p class="ab-fixed-wargear"><strong>Always equipped:</strong> ${rules.fixed.map(item=>`${(item.count??0)+(item.perModel??0)*unit.modelCount} × ${e(item.name)}`).join(' · ')}</p>`;
  const perModelCards=(rules.slots?.length??0)>1 && rules.slots.some(slot=>slot.perModel);
@@ -78,9 +80,9 @@ export function renderWargearEditor(unit) {
  if(rules.optional?.length) {
   html+='<fieldset class="ab-weapon-group"><legend>Additional equipment</legend><p>These choices add equipment; they do not replace a weapon.</p>';
   html+=table(rules.optional.map(item=>{
-   const max=unit.modelCount*(item.perModel??1),quantity=state.optional[item.name]??0;
+   const max=getOptionalWargearLimit(unit.modelCount,item),quantity=state.optional[item.name]??0;
    const control=item.allOrNone||max===1?`<input type="checkbox" data-wargear-toggle="${e(item.name)}" aria-label="${e(item.name)}" ${quantity?'checked':''}>`:quantityControl(item.name,quantity,quantity>0,quantity<max,`data-wargear-optional="${e(item.name)}"`);
-   return row(unit,item.name,control,item.allOrNone?`All ${unit.modelCount} models or none.`:`Up to ${max}; one per model.`);
+   return row(unit,item.name,control,item.allOrNone?`All ${unit.modelCount} models or none.`:item.perModels?`Up to ${max}; one per ${item.perModels} models.`:`Up to ${max}; one per model.`);
   }).join(''))+'</fieldset>';
  }
  return html+'</section>';

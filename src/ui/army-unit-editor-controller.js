@@ -2,6 +2,7 @@ import { resizeBuilderFixedEquipment } from '../rules/army-builder-fixed-equipme
 import { createWargearChoiceState, chooseWargear, chooseWargearBaseline, changeWargearQuantity, readWargearChoiceState, resizeWargearChoices } from '../rules/army-wargear-choices.js';
 import { getBuilderModelCounts, resolveBuilderUnitCost } from '../rules/army-builder-cost.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
+import { getOptionalWargearLimit } from '../rules/wargear-quantity-limits.js';
 
 /** Keep unsaved touch selections local to the unit editor; persistence stays in the panel. */
 export function createArmyUnitEditorController(container,{getUnit,getRoster,render}={}) {
@@ -34,7 +35,7 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
      unit.builderWargearState=resizeWargearChoices(previous,unit,unit.builderWargearState);
     }else{
      const delta=Number(button.getAttribute('data-wargear-step')),optional=button.getAttribute('data-wargear-optional');
-     if(optional){const item=getTyranidWargearRuleSet(unit.datasheetId)?.optional?.find(item=>item.name===optional);if(!item)return;const max=unit.modelCount*(item.perModel??1);unit.builderWargearState.optional[optional]=Math.max(0,Math.min(max,(unit.builderWargearState.optional[optional]??0)+delta));}
+     if(optional){const item=getTyranidWargearRuleSet(unit.datasheetId)?.optional?.find(item=>item.name===optional);if(!item)return;const max=getOptionalWargearLimit(unit.modelCount,item);unit.builderWargearState.optional[optional]=Math.max(0,Math.min(max,(unit.builderWargearState.optional[optional]??0)+delta));}
      else unit.builderWargearState=changeWargearQuantity(unit,unit.builderWargearState,button.getAttribute('data-wargear-slot'),button.getAttribute('data-wargear-name'),delta);
     }
    });return true;
@@ -46,7 +47,7 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
     if(input.matches('[data-wargear-choice]'))unit.builderWargearState=chooseWargear(unit,unit.builderWargearState,input.getAttribute('data-wargear-choice'),input.value);
     else if(input.matches('[data-wargear-baseline]'))unit.builderWargearState=chooseWargearBaseline(unit,unit.builderWargearState,input.getAttribute('data-wargear-baseline'),input.value);
     else if(input.matches('[data-wargear-special]'))unit.builderWargearState=changeWargearQuantity(unit,unit.builderWargearState,input.getAttribute('data-wargear-special'),input.getAttribute('data-wargear-name'),input.checked?1:-1);
-    else{const name=input.getAttribute('data-wargear-toggle'),rule=getTyranidWargearRuleSet(unit.datasheetId)?.optional?.find(item=>item.name===name);unit.builderWargearState.optional[name]=input.checked?unit.modelCount*(rule?.perModel??1):0;}
+    else{const name=input.getAttribute('data-wargear-toggle'),rule=getTyranidWargearRuleSet(unit.datasheetId)?.optional?.find(item=>item.name===name);unit.builderWargearState.optional[name]=input.checked?getOptionalWargearLimit(unit.modelCount,rule):0;}
    });return true;
   },
   prepareSave(existing) {

@@ -66,7 +66,7 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.2",
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.3",
     reviewedAt: "2026-11-03", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
@@ -79,7 +79,7 @@ const BY_FACTION = Object.freeze({
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-11-03.2", description: "Reviewed Aggressor, heavy-bolter Eradicator and Assault Terminator 11e wargear/profile subsets; other weapons remain unverified" })
+    catalog: Object.freeze({ revision: "2026-11-03.3", description: "Adds 11e Intercessor Sergeant/bolt-rifle/grenade choices and melta Eradicator Hunter/one-per-three multi-melta selections; remaining Codex entries pending" })
   })
 });
 
