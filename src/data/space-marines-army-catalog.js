@@ -1,5 +1,6 @@
 import { SPACE_MARINES_DATASHEET_DATA } from './space-marines-datasheet-data.js';
 import { SPACE_MARINES_SUPPLEMENTAL_DATASHEETS } from './space-marines-supplemental-datasheets.js';
+import { SPACE_MARINES_MFM_PRICE_OPTIONS, SPACE_MARINES_MFM_PRICE_SOURCES } from './space-marines-mfm-price-options.js';
 
 // Space Marines unit names and points captured from the supplied Warhammer App export.
 // Datasheet profiles are linked from the reviewed 11th-edition community reference projection;
@@ -12,11 +13,25 @@ const entries = [
  ['Drop Pod',60,1],['Impulsor',70,1],['Rhino',70,1]
 ];
 const slug = (name) => name.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-');
-export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, points, models]) => Object.freeze({
- id: `space-marines:${slug(name)}`, name, faction: 'Space Marines', defaultModelCount: models,
- defaultPoints: points, pointsOptions: [{ models, points }],
- datasheet: SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null,
- sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
- sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
- verificationStatus: 'points-reviewed', officialRulesCrossCheck: 'pending'
-})));
+export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, points, models]) => {
+ const reviewedOptions = SPACE_MARINES_MFM_PRICE_OPTIONS[name] ?? null;
+ const standard = reviewedOptions?.find(option => option.models === models &&
+   (!option.condition || option.condition.startsWith('1st')));
+ return Object.freeze({
+   id: `space-marines:${slug(name)}`, name, faction: 'Space Marines', defaultModelCount: models,
+   defaultPoints: standard?.points ?? points,
+   pointsOptions: reviewedOptions ?? Object.freeze([{ models, points }]),
+   datasheet: SPACE_MARINES_DATASHEET_DATA[name] ?? SPACE_MARINES_SUPPLEMENTAL_DATASHEETS[name] ?? null,
+   sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
+   sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
+   verificationStatus: 'points-reviewed',
+   ...(reviewedOptions ? {
+     pointsSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
+     pointsSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
+     pointsReviewedAt: SPACE_MARINES_MFM_PRICE_SOURCES.sourceReviewDate,
+     officialPointsCrossCheck: 'pending-direct-current-mfm-read'
+   } : {}),
+   officialRulesCrossCheck: 'pending',
+   selectableWargearCoverage: 'not-fully-reviewed'
+ });
+}));
