@@ -199,6 +199,77 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:drop-pod":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Drop-Pod",
+    noEquipment:true,
+    fixed:Object.freeze([]),,
+    manualWargearNotes:Object.freeze(["This 11e Drop Pod has NO ranged or melee weapons and no selectable wargear. No manual weapon confirmation is required.","Must start in Strategic Reserves; may ingress in your first Movement phase. On setup all passengers must disembark beyond 8 inches from enemies; cannot embark again afterward.","Transport 12 ADEPTUS ASTARTES INFANTRY, excludes GRAVIS, JUMP PACK and TERMINATOR. Deadly Demise 1 and first-three vs fourth-plus copy prices are manual."])
+  }),
+  "space-marines:impulsor":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Impulsor",
+    fixed:Object.freeze([fixed("Armoured Hull")]),
+    slots:Object.freeze([slot("impulsor-side-guns",["Storm Bolters","Fragstorm Grenade Launchers"])]),
+    optional:Object.freeze([Object.freeze({...pick("Bellicatus Missile Array",["Bellicatus Missile Array - Frag","Bellicatus Missile Array - Icarus","Bellicatus Missile Array - Krak"]),maxTotal:1}),Object.freeze({...pick("Orbital Comms Array",[]),maxTotal:1}),Object.freeze({...pick("Ironhail Skytalon Array",["Ironhail Skytalon Array"]),maxTotal:1}),Object.freeze({...pick("Shield Dome",[]),maxTotal:1}),Object.freeze({...pick("Ironhail Heavy Stubber",["Ironhail Heavy Stubber"]),maxTotal:1})]),,
+    constraints:Object.freeze([{"type":"max-combined-per-models","selections":["Bellicatus Missile Array","Orbital Comms Array","Ironhail Skytalon Array","Shield Dome"],"models":1,"maxEach":1}]),
+    manualWargearNotes:Object.freeze(["Select at most ONE Bellicatus Missile Array, Orbital Comms Array, Ironhail Skytalon Array or Shield Dome; no selection is also legal. Orbital Comms adds 10 points and grants Scouts 6 inches; Shield Dome grants 5+ invulnerable and is not an attack.","Storm Bolters can be replaced with Fragstorm Grenade Launchers; Ironhail Heavy Stubber is a separate optional addition. Bellicatus Frag/Icarus/Krak modes represent one array, not three equipped weapons.","Rapid Disembarkation permits shock disembark after an advance. Firing Deck 7; capacity 7 ADEPTUS ASTARTES INFANTRY excluding TERMINATOR/JUMP PACK, GRAVIS counts double. No automatic map/CP/scoring changes."])
+  }),
+  "space-marines:rhino":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Rhino",
+    fixed:Object.freeze([fixed("Armoured Tracks"),fixed("Storm Bolter")]),
+    optional:Object.freeze([Object.freeze({...pick("Hunter-killer Missile",["Hunter-killer Missile"]),maxTotal:1})]),,
+    manualWargearNotes:Object.freeze(["Hunter-killer Missile is optional (one maximum) and One Shot; fixed Storm Bolter and Armoured Tracks remain equipped.","Veiling Smoke: once per phase, this unit can use Smokescreen at -1 CP without blocking other uses; trigger manually.","Firing Deck 2 and transport 12 ADEPTUS ASTARTES INFANTRY excluding GRAVIS, JUMP PACK and TERMINATOR; Deadly Demise D3."])
+  }),
+  "space-marines:land-speeder":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Speeder",
+    fixed:Object.freeze([fixed("Armoured Impact"),fixed("Multi-melta"),fixed("Stormfury Missile Launcher")]),
+    slots:Object.freeze([slot("land-speeder-main",["Onslaught Gatling Cannon","Pyrecannon"])]),,
+    manualWargearNotes:Object.freeze(["Only 11e swap is Onslaught Gatling Cannon OR Pyrecannon. Multi-melta, Stormfury Missile Launcher and Armoured Impact remain fixed; do not use older 10e Typhoon/Tornado options.","Purgation Run: after shooting, the Speeder may make a normal move up to D6 inches but then cannot charge this turn. Resolve manually; Deep Strike applies at deployment."])
+  }),
+  "space-marines:storm-speeder-hailstrike":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Storm-Speeder-Hailstrike",
+    fixed:Object.freeze([fixed("Armoured Impact"),fixed("Fragstorm Grenade Launchers"),fixed("Ironhail Heavy Stubber Array"),fixed("Onslaught Gatling Cannon")]),,
+    manualWargearNotes:Object.freeze(["Four fixed 11e weapons, no optional swaps. Hailstrike: after shooting, select an enemy hit by this unit; friendly ADEPTUS ASTARTES ranged attacks targeting it gain Ignores Cover.","All three ranged weapons already have Ignores Cover; only Onslaught Gatling Cannon has conditional Devastating Wounds against non-MONSTER/VEHICLE. Deep Strike, Deadly Demise D3 manual."])
+  }),
+  "space-marines:storm-speeder-hammerstrike":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Storm-Speeder-Hammerstrike",
+    fixed:Object.freeze([fixed("Armoured Impact"),fixed("Hammerstrike Missile Launcher"),fixed("Krakstorm Grenade Launchers"),fixed("Melta Destroyer")]),,
+    manualWargearNotes:Object.freeze(["Four fixed 11e weapons, no optional swaps. Hammerstrike: this unit's ranged attacks against an enemy unit within a terrain area gain Sustained Hits 1.","Melta Destroyer is a three-shot S10 AP-3 D3+2 Melta 3 weapon, not a single-shot Multi-melta. Deep Strike and Deadly Demise D3 manual."])
+  }),
+  "space-marines:storm-speeder-thunderstrike":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Storm-Speeder-Thunderstrike",
+    fixed:Object.freeze([fixed("Armoured Impact"),fixed("Stormfury Missile Launcher"),fixed("Thunderstrike Icarus Rocket Pod"),fixed("Thunderstrike Las-talon")]),,
+    manualWargearNotes:Object.freeze(["Four fixed weapons. Thunderstrike: this unit's ranged attacks targeting MONSTER/VEHICLE get +1 to wound.","Shattered Defences: after shooting, select an enemy MONSTER/VEHICLE hit; friendly ADEPTUS ASTARTES ranged attacks targeting that unit gain +1 AP. Track selected target manually."])
+  }),
+  "space-marines:astraeus":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Astraeus",
+    fixed:Object.freeze([fixed("Armoured Hull"),fixed("Ironhail Heavy Stubber"),fixed("Storm Bolter"),fixed("Twin Macro-accelerator Cannon")]),
+    slots:Object.freeze([Object.freeze({id:"astraeus-paired-main",count:2,choices:Object.freeze([{"name":"Astareus Las-ripper","profiles":["Astareus Las-ripper"]},{"name":"Plasma Eradicator","profiles":["Plasma Eradicator - Standard","Plasma Eradicator - Supercharge"]}])}),slot("astraeus-twin-gun",["Twin Heavy Bolter","Twin Lascannon"])]),
+    optional:Object.freeze([Object.freeze({...pick("Additional Ironhail Heavy Stubber",["Ironhail Heavy Stubber"]),maxTotal:1})]),,
+    constraints:Object.freeze([{"type":"same-baseline","selections":["Astareus Las-ripper","Plasma Eradicator"]}]),
+    manualWargearNotes:Object.freeze(["Two Astareus Las-rippers must BOTH be exchanged for two Plasma Eradicators; a mixed pair is illegal. Plasma Standard/Supercharge are attack modes of each Plasma Eradicator.","Twin Heavy Bolter can be replaced by Twin Lascannon. Independent source lists one default Ironhail Heavy Stubber and an option to add one; the additional gun is shown separately to preserve both attacks, pending direct official Forge World comparison.","Suppression Fire: after firing Twin Macro-accelerator Cannon, select one enemy HIT by that weapon; suppressed enemy attacks get -1 to hit until next turn. 5+ invulnerable applies to ranged attacks only. Damaged 8, Deadly Demise D6+2 manual."])
+  }),
+  "space-marines:thunderhawk-gunship":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Thunderhawk-Gunship",
+    fixed:Object.freeze([fixed("Armoured Hull"),fixed("Hellstrike Missile Battery"),fixed("Lascannon",2),fixed("Twin Heavy Bolter",4)]),
+    slots:Object.freeze([slot("thunderhawk-main",["Thunderhawk Heavy Cannon","Turbo-laser Destructor"])]),
+    optional:Object.freeze([Object.freeze({...pick("Additional Hellstrike Missile Battery (replaces Cluster Bombs)",["Hellstrike Missile Battery"]),maxTotal:1})]),,
+    manualWargearNotes:Object.freeze(["Main Thunderhawk Heavy Cannon can be exchanged for Turbo-laser Destructor. Two Lascannons, four Twin Heavy Bolters and one Hellstrike Missile Battery stay equipped.","Independent 11e reference repeats the main-gun swap and ambiguously describes replacing Thunderhawk Cluster Bombs with an additional Hellstrike Missile Battery. Present this as explicit optional replacement, NOT a free second missile battery; direct GW Forge World confirmation remains necessary.","Aerial Assault disembark after normal move requires every embarked model to have Deep Strike. Cluster Bombs are not available if replaced; otherwise crossing an enemy on a normal/advance may deal mortal wounds after rolling six D6 (3+). Transport 30 infantry or mounted; JUMP PACK/GRAVIS/TERMINATOR take 2, MOUNTED 4. Damaged 10, Deadly Demise D6+2 manual."])
+  }),
+  "space-marines:techmarine":reviewed({
+    reviewedAt:"2026-11-04",sourceName:"Current 11e independent datasheet cross-check; official Codex/Forge World text verification pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Techmarine",
+    fixed:Object.freeze([fixed("Forge Bolter"),fixed("Grav-pistol"),fixed("Omnissian Power Axe and Servo-arm")]),,
+    manualWargearNotes:Object.freeze(["Fixed 11e wargear; no equipment swaps. Grav-pistol Anti-Vehicle 2+ and CLOSE-QUARTERS; axe and servo-arm form ONE combined melee weapon profile.","While within 3 inches of friendly ADEPTUS ASTARTES VEHICLE, the Techmarine has Lone Operative. Blessings of the Omnissiah at start/end of its Movement can heal D3 wounds on a friendly VEHICLE within 3 inches and grant hit/wound modifier immunity until next Movement. Apply manually.","Leader may join Assault Intercessors, Desolation Squad or Intercessor Squad (other chapter-specific options separately); no automatic vehicle attachment."])
+  }),
   "space-marines:repulsor":reviewed({
     reviewedAt:"2026-11-04",
     sourceName:"11e Space Marines Repulsor datasheet transcription review; official GW Codex/MFM direct verification pending",
