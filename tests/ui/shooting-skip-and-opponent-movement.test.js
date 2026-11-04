@@ -7,7 +7,7 @@ import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { getShootingCandidates } from '../../src/rules/shooting-candidates.js';
 import { recordShootingActivation, completeShootingPhase } from '../../src/engine/shooting-transitions.js';
 import { resolveAdvance } from '../../src/engine/movement-transitions.js';
-import { getShootingWeaponOptions, getShootingTargetOptions } from '../../src/application/shooting-workflow.js';
+import { getShootingWeaponOptions, getShootingTargetOptions, skipRemainingShootingUnits } from '../../src/application/shooting-workflow.js';
 import { summarizeGameEvent } from '../../src/ui/battle-context-panels.js';
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
 import { createMovementScreen } from '../../src/ui/movement-screen.js';
@@ -204,4 +204,35 @@ test('saved-roster shooter can record actual damage even when live combat profil
   assert.equal(event.type, 'combat.attack_resolved');
   assert.equal(event.payload.actualDamage, 3);
   assert.equal(event.payload.weaponId, weapon.id);
+});
+
+test('skip remaining Shooting choices advances atomically and preserves recorded attacks', () => {
+  const initial = state();
+  initial.units.push({ id: 'enemy-2', name: 'Enemy Two', ownerId: 'p2', status: 'deployed',
+    position: { x: 11, y: 11 }, profile: { characteristics: { movement: 6 } } });
+  const game = session(initial);
+  game.dispatch({ type: 'shooting.record_activation', payload: { unitId: 'enemy', actionType: 'shoot' } });
+  const attack = { type: 'combat.attack_resolved', payload: {
+    phase: 'shooting', round: 1, turn: 2, attackerId: 'enemy', targetId: 'friendly', actualDamage: 2
+  } };
+  game.replaceState({ ...game.getState(), history: [...game.getState().history, attack] });
+  skipRemainingShootingUnits(game);
+  const next = game.getState();
+  assert.equal(next.phase, 'charge');
+  assert.deepEqual(next.history.find(e => e.type === 'combat.attack_resolved')?.payload, attack.payload);
+  assert.deepEqual(next.history.filter(e => e.type === 'shooting.unit_activated')
+    .map(e => [e.payload.unitId, e.payload.actionType]), [['enemy', 'shoot'], ['enemy-2', 'not_shoot']]);
+  assert.equal(next.history.filter(e => e.type === 'combat.activation_finished').length, 1);
+  assert.equal(next.history.at(-1).type, 'turn.phase_changed');
+});
+
+test('Shooting skip button works before selecting a unit', () => {
+  const game = session(state()), root = shootingDom();
+  const screen = createShootingScreen(root, { session: game, perspectivePlayerId: 'p1', layoutMode: 'classic' });
+  try {
+    assert.match(root.innerHTML, /data-skip-shooting>Skip remaining &amp; end Shooting/);
+    root.click('[data-skip-shooting]');
+    assert.equal(game.getState().phase, 'charge');
+    assert.equal(game.getState().history.find(e => e.type === 'shooting.unit_activated')?.payload.actionType, 'not_shoot');
+  } finally { screen.destroy(); }
 });

@@ -14,7 +14,8 @@ import {
   getShootingTargetOptions,
   activateShootingUnit,
   resolveShootingAttack,
-  finishShootingPhase
+  finishShootingPhase,
+  skipRemainingShootingUnits
 } from "../application/shooting-workflow.js";
 import { createShootingComparisonCache } from "../rules/tactical-shooting-comparison.js";
 import { shootingTargetComparisonCards, shootingAdvisory, shootingDamageForecast } from './shooting-advisor-view.js';
@@ -241,7 +242,8 @@ export function createShootingScreen(container, {
           </div>
           <footer class="shoot-tabletop__footer">${renderActionReceipt(session)}${selectedAttackerId && activeActivation ? `              <div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
               <button class="shoot-tabletop__record" type="button" data-attack ${selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record shooting attack →</button>
-              <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>` : `<button class="complete" type="button" data-complete ${model.canComplete ? "" : "disabled"}>${model.canComplete ? "Next phase →" : "Finish remaining units"}</button>`}</footer>
+              <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>
+              <button class="shoot-tabletop__skip" type="button" data-skip-shooting>Skip remaining &amp; end Shooting →</button>` : model.canComplete ? `<button class="complete" type="button" data-complete>Next phase →</button>` : `<button class="shoot-tabletop__skip" type="button" data-skip-shooting>Skip remaining &amp; end Shooting →</button>`}</footer>
         </section>
       </main>`;
     } else {
@@ -299,7 +301,7 @@ export function createShootingScreen(container, {
           <ol class="history">${model.attacks.length ? model.attacks.map((item) => historyRow(item,state,gameData)).join("") : "<li>No attacks recorded yet.</li>"}</ol>
         </section>
       </div>
-      <footer><button class="complete" type="button" data-complete ${model.canComplete ? "" : "disabled"}>End Shooting Phase</button></footer>
+      <footer>${model.canComplete ? `<button class="complete" type="button" data-complete>End Shooting Phase</button>` : `<button class="complete" type="button" data-skip-shooting>Skip remaining &amp; end Shooting</button>`}</footer>
     </main>`;
     }
 
@@ -515,6 +517,10 @@ export function createShootingScreen(container, {
         attackError = error?.message ?? String(error);
       }
       render();
+    });
+    container.querySelector("[data-skip-shooting]")?.addEventListener("click", () => {
+      try { skipRemainingShootingUnits(session); }
+      catch (error) { attackError = error?.message ?? String(error); render(); }
     });
     container.querySelector("[data-complete]")?.addEventListener("click", () => {
       try { finishShootingPhase(session); }
