@@ -89,22 +89,29 @@ test('Calgar appears in the visible Army Builder search and among Epic Heroes',(
  assert.doesNotMatch(editor,/Razorback/, 'Legends do not crowd normal roster browser');
 });
 
-test('missing current Epic Heroes and Victrix remain separate non-certified profile references',()=>{
+test('all current named Epic Heroes have source-scoped profiles while official GW certification stays pending',()=>{
  for(const name of ['Roboute Guilliman','Chief Librarian Tigurius','Captain Titus']){
   const candidate=current().find(x=>x.name===name);
   assert.ok(candidate,'must browse '+name);
   assert.equal(getCatalogRoleGroup(candidate),'epic-hero');
-  assert.equal(candidate.officialRulesCrossCheck,'pending');
-  assert.equal(candidate.datasheet,undefined,'never invent an unreviewed datasheet for '+name);
+  assert.equal(candidate.officialRulesCrossCheck,'pending','independent source review is not direct Codex certification');
+  assert.ok(candidate.datasheet?.weapons?.length>0,'current individual 11e profile reviewed for '+name);
+  assert.equal(candidate.datasheet?.officialOctoberCodexFullTextVerified,false);
  }
  for(const name of ['Cato Sicarius','Victrix Honour Guard','Wardens of Ultramar']) {
   const candidate=current().find(x=>x.name===name);
-  assert.ok(candidate.datasheet?.weapons?.length>0,name+' now has source-scoped reviewed profiles');
+  assert.ok(candidate.datasheet?.weapons?.length>0,name+' already has source-scoped reviewed profiles');
   assert.equal(candidate.officialRulesCrossCheck,'pending');
  }
  const victrix=current().find(x=>x.name==='Victrix Honour Guard');
  assert.equal(victrix.defaultModelCount,3);
  assert.equal(victrix.defaultPoints,120);
+});
+test('touch name search prioritizes Calgar over other characters whose ability names mention him',()=>{
+ const results=filterCatalog({current:roster,unitSearch:'calgar'});
+ assert.deepEqual(results.map(u=>u.name),['Marneus Calgar']);
+ const abilityResults=filterCatalog({current:roster,unitSearch:'Veteran Bodyguard'});
+ assert.ok(abilityResults.some(u=>u.name==='Kaius Konorius'),'ability/keyword search is retained when no name matches');
 });
 
 test('Calgar survives text roster import and battle assignment, not just catalog lookups',()=>{
