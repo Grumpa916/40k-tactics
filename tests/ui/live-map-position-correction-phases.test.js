@@ -6,11 +6,13 @@ import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { bindLiveMapPositionCorrection } from '../../src/ui/live-map-position-correction.js';
+import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
+import { getLiveUnitPosition } from '../../src/rules/spatial-context.js';
 
-function setup(phase) {
+function setup(phase, { actualDeployment = false } = {}) {
   clearCommandHandlers();
   registerCoreCommandHandlers();
-  const game = createGameSession(createGameState({
+  const initial = createGameState({
     phase, turn:1, activePlayer:'p1',
     players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
     battle:{id:'b',status:'active',round:1,firstPlayerId:'p1',activePlayerId:'p1'},
@@ -18,7 +20,11 @@ function setup(phase) {
       {id:'ours',name:'Ours',ownerId:'p1',status:'deployed',position:{x:10,y:10}},
       {id:'theirs',name:'Theirs',ownerId:'p2',status:'deployed',position:{x:30,y:20}}
     ]
-  }));
+  });
+  if (actualDeployment) initial.battlefieldMap = {...initial.battlefieldMap, actualDeployment:{
+    ours:{position:{x:10,y:10}}, theirs:{position:{x:30,y:20}}
+  }};
+  const game = createGameSession(initial);
   const handlers = {};
   const container = {
     addEventListener(type, fn) { handlers[type] = fn; },
@@ -68,4 +74,31 @@ test('Command, Shooting, and Fight phase screens bind the correction handler', (
     assert.match(source,/bindLiveMapPositionCorrection\(container, session/);
     assert.match(source,/unbindMapCorrection\(\)/);
   }
+});
+
+function renderedPosition(state, id) {
+  const markup = renderBattlefieldMap(state, {mode:'live'});
+  const marker = markup.match(new RegExp('data-map-unit-id="' + id + '"[^>]*style="left:([^;]+)%;top:([^%]+)%"'));
+  assert.ok(marker, 'marker must render for ' + id);
+  return {
+    x:Math.round(Number(marker[1]) / 100 * 60 * 10) / 10,
+    y:Math.round((44 - Number(marker[2]) / 100 * 44) * 10) / 10
+  };
+}
+
+test('live marker and tactical coordinates both honor successive corrections before first Normal Move', () => {
+  const {game,drag,unbind} = setup('command', {actualDeployment:true});
+  try {
+    assert.deepEqual(renderedPosition(game.getState(),'ours'),{x:10,y:10});
+    drag('ours',{x:15,y:12});
+    assert.deepEqual(renderedPosition(game.getState(),'ours'),{x:15,y:12},
+      'first correction must be visible rather than snap back to initial deployment');
+    drag('ours',{x:20,y:14});
+    assert.deepEqual(renderedPosition(game.getState(),'ours'),{x:20,y:14},
+      'next drag must start at the corrected marker, not accumulate offsets');
+    const state = game.getState();
+    assert.deepEqual(getLiveUnitPosition(state,state.units[0]),{x:20,y:14});
+    assert.equal(state.history.filter(event => event.type === 'battlefield_map.position_adjusted').length,2);
+    assert.equal(state.history.some(event => ['unit.normal_move_resolved','unit.advanced'].includes(event.type)),false);
+  } finally { unbind(); }
 });
