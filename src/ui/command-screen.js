@@ -7,10 +7,10 @@ import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scorin
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getPendingSecondaryMissionCardChoice, getSecondaryMissionCardChoiceOptions, getActiveBurdenTrustAssignments, getSecondaryMissionReplacementOpportunity, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
-import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
 import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
-import { captureViewContinuity } from './view-continuity.js';
+import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-stratagem-opportunities.js";
+import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -38,9 +38,9 @@ function commandPointsFor(state, playerId) {
 
 function vpCapDescription(cap) {
   return ({
-    "primary-turn": "15 VP primary battle-round cap",
+    "primary-turn": "15 VP primary turn cap",
     "primary-game": "45 VP primary game cap",
-    "secondary-turn": "15 VP secondary battle-round cap",
+    "secondary-turn": "15 VP secondary turn cap",
     "secondary-game": "45 VP secondary game cap",
     "fixed-secondary-card": "20 VP Fixed Secondary card cap"
   })[cap] ?? "mission scoring cap";
@@ -476,7 +476,6 @@ export function createCommandScreen(container, {
   }
 
   function render() {
-    const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const playerId = scoringCheckpointPlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
     const players = Array.isArray(state.players) ? state.players : [];
@@ -567,7 +566,7 @@ export function createCommandScreen(container, {
             item.result.eligible ? 'Evidence supports eligibility' : 'Conditions not all satisfied') + '</span>' +
           (item.result.manualReviewRequired
             ? '<p>' + (item.result.rulesVerified
-              ? 'Scoring window reference comes from previously supplied card transcription, not an independently checked official card. Confirm the tabletop result; the app does not infer eligibility.'
+              ? 'Scoring window reference was transcribed from an official sample card. Check the physical card and battlefield state; the app does not infer eligibility.'
               : 'Card scoring conditions are not configured from a verified rules source. Check the printed mission rules; no eligibility is inferred.') + '</p>' +
               ((item.result.scoringWindows ?? []).length
                 ? '<ul class="command-scoring__tiers">' + item.result.scoringWindows.flatMap((window) =>
@@ -821,6 +820,8 @@ export function createCommandScreen(container, {
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>CP</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
+      (getUnleashTheLionsOpportunities(state,{playerId}).length
+        ? renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'unleash-the-lions'}) : '') +
       renderCustodesKatahCommandPanel(state, { playerId }) +
       '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
       secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm + '</details>' +
@@ -837,7 +838,6 @@ export function createCommandScreen(container, {
         footer: ''
       });
       mapView.bind(container);
-      restoreView();
       return;
     }
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
@@ -851,20 +851,15 @@ export function createCommandScreen(container, {
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
       '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +
       '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
-    restoreView();
   }
 
   container.addEventListener?.("click", handleClick);
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("submit", handleSubmit);
-  const unbindMapCorrection = layoutMode === "tabletop"
-    ? bindLiveMapPositionCorrection(container, session, { phase:"command", onError:message => { objectiveMessage = message; render(); } })
-    : () => {};
   const unsubscribe = session.subscribe(render);
   render();
   return { render, destroy() {
     unsubscribe();
-    unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
     container.removeEventListener?.("change", handleChange);
     container.removeEventListener?.("submit", handleSubmit);

@@ -49,6 +49,7 @@ function renderDetachmentStratagemReminders(state,playerId) {
     (entry.title==='Preternatural Rapidity'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'preternatural-rapidity'}):'')+
     (entry.title==='Lightning Wrath'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'lightning-wrath'}):'')+
     (entry.title==='Golden Light of the Moiraides'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'golden-light-of-the-moiraides'}):'')+
+    (entry.title==='Unleash the Lions'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'unleash-the-lions'}):'')+
     '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>'
   ).join('')+'</details>';
 }
@@ -163,7 +164,7 @@ export function createRulesReminderController(container,{session,perspectivePlay
       try {
         const payload=readCustodesDetachmentStratagemForm(event.target);
         session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE,payload});
-        message=payload.stratagemId==='lightning-wrath'?'Lightning Wrath recorded; 1 CP spent. Resolve this unit’s D3+3-inch pile-in at the table.':payload.stratagemId==='golden-light-of-the-moiraides'?'Golden Light recorded; 2 CP spent. Incoming attack estimates now apply -1 to Hit until your next turn.':'Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';
+        message=payload.stratagemId==='unleash-the-lions'?'Unleash the Lions recorded; 1 CP spent. Separate units are ready. Drag their markers to their tabletop positions.':payload.stratagemId==='lightning-wrath'?'Lightning Wrath recorded; 1 CP spent. Resolve this unit’s D3+3-inch pile-in at the table.':payload.stratagemId==='golden-light-of-the-moiraides'?'Golden Light recorded; 2 CP spent. Incoming attack estimates now apply -1 to Hit until your next turn.':'Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';
       }
       catch(error){message=error.message;open=true;}
       refresh();return;
