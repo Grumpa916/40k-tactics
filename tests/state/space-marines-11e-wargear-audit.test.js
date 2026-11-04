@@ -17,7 +17,7 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('36 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('39 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
@@ -34,16 +34,17 @@ test('36 source-reviewed Space Marine rule sets match the 11e catalog source sco
  'space-marines:infernus-squad','space-marines:desolation-squad','space-marines:company-heroes',
  'space-marines:ballistus-dreadnought','space-marines:brutalis-dreadnought','space-marines:redemptor-dreadnought',
  'space-marines:invictor-tactical-warsuit','space-marines:firestrike-servo-turrets','space-marines:invader-atvs',
- 'space-marines:gladiator-lancer','space-marines:gladiator-reaper','space-marines:gladiator-valiant'].sort());
+ 'space-marines:gladiator-lancer','space-marines:gladiator-reaper','space-marines:gladiator-valiant',
+ 'space-marines:land-raider','space-marines:land-raider-crusader','space-marines:land-raider-redeemer'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
-  assert.equal(rules.reviewedAt,id.startsWith('space-marines:gladiator-')?'2026-11-04':'2026-11-03');
+  assert.equal(rules.reviewedAt,(id.startsWith('space-marines:gladiator-')||id.startsWith('space-marines:land-raider'))?'2026-11-04':'2026-11-03');
   assert.ok(getTyranidWargearSelections(id).length>0);
  }
  assert.equal(getTyranidWargearRuleSet('space-marines:land-speeder'),null,
   'unreviewed units must not appear certified');
- assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,32);
+ assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,35);
 });
 
 test('Aggressors select a legal unit-wide flamestorm or bolter+grenade loadout',()=>{
