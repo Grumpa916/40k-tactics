@@ -66,19 +66,20 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-faction-pack-2026-06-catalog-2026-10-23",
-    reviewedAt: "2026-10-23", factionRules: SPACE_MARINES_RULES_DATA,
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-03.1",
+    reviewedAt: "2026-11-03", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-03",
       status:"pending-current-official-profile-and-points-comparison",
-      description:"October Space Marines rules and MFM are listed by GW, but this project's roster data still needs a detailed post-update comparison."
+      description:"October Space Marines rules and MFM are listed by GW. A limited MFM size/copy-cost and official baseline-characteristic check is complete; full per-datasheet and selectable-wargear comparison is outstanding.",
+      partialPricingAuditAt:"2026-11-03", baselineCharacteristicAuditAt:"2026-11-03"
     }),
     points: Object.freeze({
       name: "Warhammer App export supplied for 40K Tactics Space Marines expansion",
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-10-23.1", description: "Space Marines unit catalog and official detachment dispositions" })
+    catalog: Object.freeze({ revision: "2026-11-03.1", description: "Partial October MFM unit-size/copy-cost and GW-backed Tacticus/Terminator/Phobos baseline corrections; remaining wargear is not certified" })
   })
 });
 
