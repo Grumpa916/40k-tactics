@@ -32,7 +32,7 @@ export function assessSavedUnitCost(candidate, unit, roster) {
     if(priced.points==null)return {status:"unverified",reason:priced.reason};
     return Number(priced.points)===Number(unit.points)
       ? {status:"matched",reason:priced.reason}
-      : {status:"mismatch",reason:"Saved "+unit.points+" pts, expected "+priced.points+" pts for equipped shields/copy order."};
+      : {status:"mismatch",reason:"Saved "+unit.points+" pts, expected "+priced.points+" pts for selected wargear/copy order."};
   }
   if (!options.some((option) =>
     Number(option.models) === Number(unit.modelCount) && Number(option.points) === Number(unit.points))) {
