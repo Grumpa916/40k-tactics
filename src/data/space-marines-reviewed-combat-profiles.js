@@ -52,6 +52,74 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  'Assault Intercessor Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'6"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'2'}),
+    weapons:Object.freeze([
+      ranged('Heavy Bolt Pistol','18"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Hand Flamer','9"','3','N/A','4','0','1','Close-Quarters, Torrent'),
+      ranged('Plasma Pistol - Standard','12"','1','3+','7','-2','1','Close-Quarters'),
+      ranged('Plasma Pistol - Supercharge','12"','1','3+','8','-3','2','Close-Quarters, Hazardous'),
+      melee('Chainsword','4','3+','5','-1','1',''),
+      melee('Power Fist','3','3+','8','-2','2',''),
+      melee('Power Weapon','4','3+','5','-2','1',''),
+      melee('Thunder Hammer','3','4+','8','-2','3','Devastating Wounds')
+    ]),
+    abilities:Object.freeze([
+      ability('Targeted Intercession','If this unit made a charge move this turn, its melee attacks have +1 Strength and +1 AP. Confirm charge history manually.')
+    ])
+  }),
+  'Heavy Intercessor Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'5"',Toughness:'6',Save:'3+',Wounds:'3',Leadership:'6+','Objective Control':'2'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Heavy Bolt Rifle','30"','2','3+','5','-1','2','Heavy, Rapid Fire 1'),
+      ranged('Heavy Bolter','36"','3','3+','5','-1','2','Heavy, Rapid Fire 2, Sustained Hits 1'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Unyielding in the Face of the Foe','When this unit is controlling an objective, it gets +1 to armour save rolls; confirm objective control manually.')
+    ])
+  }),
+  'Infernus Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'6"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Pyreblaster','12"','3','N/A','5','-1','1','Blast 1, Torrent'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Driven from Cover','After this unit shoots, select one enemy unit hit by those attacks; friendly Astartes ranged attacks targeting that unit have Ignores Cover. Record manually.')
+    ])
+  }),
+  'Desolation Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'6"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Castellan Launcher','24"','2','3+','5','-1','1','Heavy'),
+      ranged('Superfrag Rocket Launcher','48"','4','3+','5','-1','1','Blast 1, Heavy'),
+      ranged('Superkrak Rocket Launcher','48"','1','3+','10','-2','D3+3','Heavy'),
+      ranged('Vengor Launcher','48"','4','3+','7','-1','2','Blast 1, Heavy, Indirect Fire'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Targeter Optics','Ranged attacks targeting a visible enemy unit have Ignores Cover. Confirm visibility and Indirect Fire manually.')
+    ])
+  }),
+  'Company Heroes':Object.freeze({
+    characteristics:Object.freeze({Move:'6"',Toughness:'5',Save:'3+',Wounds:'4',Leadership:'6+','Objective Control':'2'}),
+    weapons:Object.freeze([
+      ranged('Master-crafted Bolt Pistol','12"','1','3+','5','-1','2','Close-Quarters'),
+      ranged('Master-crafted Bolt Rifle','24"','2','3+','5','-1','2','Assault, Rapid Fire 1'),
+      ranged('Master-crafted Heavy Bolter','36"','4','3+','6','-1','2','Assault, Heavy, Rapid Fire 2, Sustained Hits 1'),
+      melee('Combat Knife','5','3+','5','-1','1',''),
+      melee('Master-crafted Power Weapon','6','2+','6','-2','2','Precision')
+    ]),
+    abilities:Object.freeze([
+      ability('Command Squad','Attacks targeting this unit have -1 to wound rolls. Resolve manually.'),
+      ability('Raise the Banner','At end of your Movement phase, if this unit controls an objective, that objective is secured. Confirm manually.'),
+      ability('Model-specific roles','Four fixed models: Ancient, Champion, Veteran with Bolt Rifle, Veteran with Heavy Bolter; Ancient is a Character and Champion has Champion keyword. Allocate losses individually on the tabletop.')
+    ])
+  }),
   'Assault Intercessors with Jump Packs':Object.freeze({
     characteristics:Object.freeze({Move:'12"',Toughness:'5',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
     weapons:Object.freeze([
