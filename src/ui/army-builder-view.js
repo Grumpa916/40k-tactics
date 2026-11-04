@@ -23,7 +23,7 @@ function renderCatalogUnit(u,state) {
  const size=Number.isInteger(u.defaultModelCount)?u.defaultModelCount+' models':'size unverified';
  const price=u.defaultPoints==null?'points unverified':u.defaultPoints+' pts';
  const caution=u.legendaryProxy?' · Legendary Proxy for '+u.proxyAs+'; check event permission':u.legends?' · Legends; check event permission':!u.datasheet?' · profile unverified':'';
- return `<article class="ab-candidate"><button data-preview-unit="${e(u.id)}"><strong>${e(u.name)}</strong><small>${e(size)} · ${e(price)}${e(caution)}</small></button><button aria-label="Add ${e(u.name)}" data-add-catalog-unit="${e(u.id)}" ${state.busy?'disabled':''}>+</button></article>`;
+ return `<article class="ab-candidate"><button data-preview-unit="${e(u.id)}"><strong>${e(u.name)}${u.officialDatasheetName ? ' · '+e(u.officialDatasheetName.replace(/^Marneus Calgar /,'')) : ''}</strong><small>${e(size)} · ${e(price)}${e(caution)}</small></button><button aria-label="Add ${e(u.name)}" data-add-catalog-unit="${e(u.id)}" ${state.busy?'disabled':''}>+</button></article>`;
 }
 export function renderCatalogResults(state) {
  const rows=filterCatalog(state);
