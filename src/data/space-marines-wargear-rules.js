@@ -156,6 +156,49 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Chameleoline Cloaks and Special-issue Optics and Ammunition choices are reminders; do not automatically adjust range or attacks."
     ])
   }),
+  "space-marines:incursor-squad":reviewed({
+    sourceName:"Current 11e Incursor Squad datasheet transcription; full current official Codex comparison pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Incursor-Squad",
+    fixed:Object.freeze([
+      fixed("Bolt Pistol"),fixed("Occulus Bolt Carbine"),fixed("Paired Combat Blades")
+    ]),
+    manualWargearNotes:Object.freeze([
+      "All models have fixed equipment. The Haywire Mine is a once-per-battle unit ability, not an optional mine purchased for one model.",
+      "Divinator-class Auspexes can scan one visible enemy within 18 inches when an Astartes unit is selected to shoot; confirm the once-per-phase window.",
+      "Scouts 6 inches applies during deployment. Neither Haywire Mine nor its effect is automatically resolved."
+    ])
+  }),
+  "space-marines:infiltrator-squad":reviewed({
+    sourceName:"Current 11e Infiltrator Squad datasheet transcription; full current official Codex comparison pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Infiltrator-Squad",
+    fixed:Object.freeze([
+      fixed("Bolt Pistol"),fixed("Marksman Bolt Carbine"),fixed("Ceramite Fists")
+    ]),
+    optional:Object.freeze([
+      Object.freeze({...pick("Helix Gauntlet"),maxTotal:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "At most one Helix Gauntlet per unit regardless of squad size. The current 11th-edition datasheet does not offer the older Infiltrator Comms Array.",
+      "The Helix Gauntlet can restore D3 wounds in the Command phase; apply the heal manually.",
+      "Omni-scramblers now mark one visible enemy within 18 inches as detected (+3-inch detection range); do not apply the old reserve-exclusion ability."
+    ])
+  }),
+  "space-marines:reiver-squad":reviewed({
+    sourceName:"Current 11e Reiver Squad datasheet transcription; full current official Codex comparison pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Reiver-Squad",
+    fixed:Object.freeze([
+      fixed("Bolt Carbine"),fixed("Special-issue Bolt Pistol"),fixed("Monomolecular Combat Knife")
+    ]),
+    optional:Object.freeze([
+      Object.freeze({...pick("Grav-chutes"),maxTotal:1}),
+      Object.freeze({...pick("Grapnel Launchers"),maxTotal:1})
+    ]),
+    manualWargearNotes:Object.freeze([
+      "All models keep their fixed Bolt Carbines, Special-issue Bolt Pistols and Monomolecular Combat Knives; no 10th-edition knife/carbine replacement is offered.",
+      "A squad can take one Grav-chutes selection and one Grapnel Launchers selection. They are unit-wide abilities, not extra weapons for every model.",
+      "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
+    ])
+  }),
   "space-marines:aggressor-squad": reviewed({
     fixed:Object.freeze([fixed("Twin Power Fists")]),
     slots:Object.freeze([slot("unit-ranged-loadout",[
