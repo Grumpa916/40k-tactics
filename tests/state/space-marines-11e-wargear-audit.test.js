@@ -94,8 +94,9 @@ test('Assault Terminators handle individual shield choices without inventing mix
  assert.deepEqual(readWargearChoiceState(squad,original),[{name:'Twin Lightning Claws',quantity:5}]);
  const mixed=changeWargearQuantity(squad,original,'model-melee-loadout','Thunder Hammer and Storm Shield',1);
  const equip=readWargearChoiceState(squad,mixed);
- assert.deepEqual(equip,[{name:'Twin Lightning Claws',quantity:4},
-  {name:'Thunder Hammer and Storm Shield',quantity:1}]);
+ assert.deepEqual(Object.fromEntries(equip.map(item=>[item.name,item.quantity])),{
+  'Twin Lightning Claws':4,'Thunder Hammer and Storm Shield':1
+ });
  const built=buildManualWargearLoadout(squad,equip);
  assert.equal(built.loadoutValidation.status,'rules-reviewed-valid');
  assert.equal(built.equippedWeapons.find(x=>x.name==='Thunder Hammer').quantity,1);
