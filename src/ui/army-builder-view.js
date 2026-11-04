@@ -15,7 +15,7 @@ const categories=['Character','Battleline','Infantry','Beast','Monster','Vehicle
 export function filterCatalog({current,unitSearch='',category='',sort='name',fits=false,includeLegends=false}) {
  const remaining=summarizeRosterPoints(current).remainingPoints;
  return findArmyUnitCandidates({faction:current.faction}).filter(u=> {
-  const text=[u.name,...(u.datasheet?.keywords??u.keywords??[]),...(u.datasheet?.abilities??[]).map(a=>a.name)].join(' ').toLowerCase();
+  const text=[u.name,...(u.importAliases??[]),...(u.datasheet?.keywords??u.keywords??[]),...(u.datasheet?.abilities??[]).map(a=>a.name)].join(' ').toLowerCase();
   return (includeLegends || !u.legends) && text.includes(unitSearch.trim().toLowerCase()) && (!category||(u.datasheet?.keywords??[]).some(k=>String(k).toLowerCase()===category.toLowerCase())) && (!fits||(remaining!=null&&u.defaultPoints!=null&&u.defaultPoints<=remaining));
  }).sort((a,b)=>sort==='points'?(a.defaultPoints??Infinity)-(b.defaultPoints??Infinity)||a.name.localeCompare(b.name):sort==='alpha'?a.name.localeCompare(b.name):compareCatalogRoleOrder(a,b));
 }
