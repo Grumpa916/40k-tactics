@@ -39,7 +39,7 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Hellblaster Squad":fixed([5,115],[10,230]),
   "Incursor Squad":fixed([5,90],[10,170]),
   "Infernus Squad":fixed([5,95],[10,190]),
-  "Terminator Assault Squad":fixed([5,170],[10,340]),
+  // Current 11e datasheet also records a 3rd+ copy tier. A storm shield\n  // costs an additional 5 points per equipped model (handled by cost resolver).\n  "Terminator Assault Squad":copies([[5,170],[10,340]],[[5,210],[10,380]]),
   "Terminator Squad":fixed([5,190],[10,380]),
   // Named unit groups with both size and additional-copy pricing.
   "Aggressor Squad":copies([[3,90],[6,180]],[[3,100],[6,190]]),
