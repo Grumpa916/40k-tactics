@@ -25,6 +25,86 @@ const sergeantFixed=(name,profiles=[name])=>Object.freeze({...pick(name,profiles
 const addition=(name,perModels,profiles=[name])=>Object.freeze({...pick(name,profiles),perModels,maxEach:1});
 const reviewed=body=>Object.freeze({...source,...body});
 export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
+  "space-marines:captain":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Captain",
+    
+    slots:Object.freeze([slot("captain-complete-loadout",[{"name":"Heavy Bolt Pistol + Master-crafted Bolter + Master-crafted Power Weapon","profiles":["Heavy Bolt Pistol","Master-crafted Bolter","Master-crafted Power Weapon"]},{"name":"Heavy Bolt Pistol + Master-crafted Bolter + Power Fist","profiles":["Heavy Bolt Pistol","Master-crafted Bolter","Power Fist"]},{"name":"Neo-volkite Pistol + Master-crafted Power Weapon","profiles":["Neo-volkite Pistol","Master-crafted Power Weapon"]},{"name":"Neo-volkite Pistol + Power Fist","profiles":["Neo-volkite Pistol","Power Fist"]},{"name":"Plasma Pistol + Master-crafted Power Weapon","profiles":["Plasma Pistol - Standard","Plasma Pistol - Supercharge","Master-crafted Power Weapon"]},{"name":"Plasma Pistol + Power Fist","profiles":["Plasma Pistol - Standard","Plasma Pistol - Supercharge","Power Fist"]},{"name":"Heavy Bolt Pistol + Relic Shield + Master-crafted Power Weapon","profiles":["Heavy Bolt Pistol","Master-crafted Power Weapon"]}])]),
+    manualWargearNotes:Object.freeze(["All seven combinations reflect the current 11e linked replacement rules. Plasma Standard/Supercharge are alternative modes of one pistol. A Relic Shield replaces the Bolter only and therefore requires the Master-crafted Power Weapon: Shield + Power Fist is illegal.","Relic Shield adds +1 W to the equipped model, not to every attached model. Finest Hour once per battle applies +3 melee attacks and Devastating Wounds on the chosen fight; record its use manually.","Strategic Acumen selects a doctrine for this unit in your Command phase, independent of the broader army doctrine. Confirm available doctrine/phase manually."])
+  }),
+  "space-marines:captain-in-gravis-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Captain-In-Gravis-Armour",
+    
+    slots:Object.freeze([slot("gravis-captain-pair",[{"name":"Master-crafted Heavy Bolt Rifle + Master-crafted Power Weapon","profiles":["Master-crafted Heavy Bolt Rifle","Master-crafted Power Weapon"]},{"name":"Boltstorm Gauntlet + Relic Blade","profiles":["Boltstorm Gauntlet - Ranged","Boltstorm Gauntlet - Melee","Relic Blade"]},{"name":"Boltstorm Gauntlet + Relic Chainsword","profiles":["Boltstorm Gauntlet - Ranged","Boltstorm Gauntlet - Melee","Relic Chainsword"]},{"name":"Boltstorm Gauntlet + Relic Power Fist","profiles":["Boltstorm Gauntlet - Ranged","Boltstorm Gauntlet - Melee","Relic Power Fist"]}])]),
+    manualWargearNotes:Object.freeze(["Choose either the combined Master-crafted Heavy Bolt Rifle plus Master-crafted Power Weapon OR the combined Boltstorm Gauntlet (ranged and melee profiles) plus one Extra Attacks Relic Blade, Relic Chainsword or Relic Power Fist.","The Relic Blade/Chainsword/Power Fist is an Extra Attacks weapon and can attack alongside the Boltstorm Gauntlet's melee profile; the alternative rifle loadout does not keep the Gauntlet.","Refuse to Yield reduces Damage of attacks allocated to this model by 1. Strategic Acumen doctrine reminder belongs in Command phase."])
+  }),
+  "space-marines:captain-in-phobos-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Captain-In-Phobos-Armour",
+    fixed:Object.freeze([fixed("Bolt Pistol"),fixed("Combat Knife"),fixed("Instigator Bolt Carbine")]),
+    
+    manualWargearNotes:Object.freeze(["No 11e selectable wargear: Bolt Pistol, Instigator Bolt Carbine (Precision) and Combat Knife (Precision/Sustained Hits 1) are all fixed.","Deep Strike, Infiltrators, Scouts 6 inches and Stealth are available; do not confuse the 8-inch normal Move with scout deployment.","Tactical Fluidity once per battle round: after shooting unengaged, make a normal D6-inch move OR at end of opponent Fight phase when engaged, fall back up to 6 inches. Confirm restrictions manually.","Strategic Acumen selects a unit-specific doctrine in Command phase."])
+  }),
+  "space-marines:captain-in-terminator-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Captain-In-Terminator-Armour",
+    
+    slots:Object.freeze([slot("terminator-captain-gun",["Storm Bolter",{"name":"Combi-weapon","profiles":["Combi-weapon - Infernus","Combi-weapon - Purgatus","Combi-weapon - Damnatus"]}]),slot("terminator-captain-melee",["Relic Weapon","Relic Fist"])]),
+    manualWargearNotes:Object.freeze(["Storm Bolter and Combi-weapon are mutually exclusive; Infernus/Purgatus/Damnatus are alternative firing modes of ONE Combi-weapon.","Relic Weapon may be replaced by Relic Fist separately. Deep Strike and 4+ invulnerable. Unstoppable Valour allows charge re-rolls for this unit; do not add unsupported charge bonuses.","Strategic Acumen Command-phase unit doctrine reminder."])
+  }),
+  "space-marines:captain-on-bike":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html",
+    fixed:Object.freeze([fixed("Twin Bolt Rifle")]),
+    slots:Object.freeze([slot("bike-captain-pistol",["Heavy Bolt Pistol",{"name":"Plasma Pistol","profiles":["Plasma Pistol - Standard","Plasma Pistol - Supercharge"]}]),slot("bike-captain-melee",["Master-crafted Power Weapon","Thunder Hammer"])]),
+    manualWargearNotes:Object.freeze(["Two independent 11e choices: Heavy Bolt Pistol OR Plasma Pistol (two firing modes); Master-crafted Power Weapon OR Thunder Hammer. Twin Bolt Rifle stays equipped.","Into the Fray grants Cleave 1 to this unit's melee attacks only on a turn it made a charge move.","Strategic Acumen selects a unit doctrine in Command phase. Current 11e mounted source is the Space Marines datasheet index, not the 10e Captain-on-Bike URL."])
+  }),
+  "space-marines:captain-with-jump-pack":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Captain-With-Jump-Pack",
+    
+    slots:Object.freeze([slot("jump-captain-complete-loadout",[{"name":"Heavy Bolt Pistol + Chainsword","profiles":["Heavy Bolt Pistol","Chainsword"]},{"name":"Heavy Bolt Pistol + Power Fist","profiles":["Heavy Bolt Pistol","Power Fist"]},{"name":"Heavy Bolt Pistol + Relic Weapon","profiles":["Heavy Bolt Pistol","Relic Weapon"]},{"name":"Hand Flamer + Chainsword","profiles":["Hand Flamer","Chainsword"]},{"name":"Hand Flamer + Power Fist","profiles":["Hand Flamer","Power Fist"]},{"name":"Hand Flamer + Relic Weapon","profiles":["Hand Flamer","Relic Weapon"]},{"name":"Plasma Pistol + Chainsword","profiles":["Plasma Pistol - Standard","Plasma Pistol - Supercharge","Chainsword"]},{"name":"Plasma Pistol + Power Fist","profiles":["Plasma Pistol - Standard","Plasma Pistol - Supercharge","Power Fist"]},{"name":"Plasma Pistol + Relic Weapon","profiles":["Plasma Pistol - Standard","Plasma Pistol - Supercharge","Relic Weapon"]},{"name":"Chainsword + Relic Shield","profiles":["Chainsword"]},{"name":"Thunder Hammer + Relic Shield","profiles":["Thunder Hammer"]}])]),
+    manualWargearNotes:Object.freeze(["Eleven complete legal choices: Heavy Bolt Pistol/Hand Flamer/Plasma Pistol paired with Chainsword/Power Fist/Relic Weapon, OR replace BOTH original weapons with Chainsword + Relic Shield or Thunder Hammer + Relic Shield.","Relic Shield replaces the pistol entirely; no pistol attacks with shield. Shield adds +1 W; record per model. Plasma Standard/Supercharge are one pistol's alternate fire modes.","Angel's Wrath grants +1 to advance and charge rolls. Deep Strike available. Strategic Acumen unit doctrine in Command phase."])
+  }),
+  "space-marines:chaplain":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Chaplain",
+    fixed:Object.freeze([fixed("Absolvor Bolt Pistol"),fixed("Crozius Arcanum")]),
+    
+    manualWargearNotes:Object.freeze(["Fixed 11e Absolvor Bolt Pistol and Crozius Arcanum (Cleave 1). No legal weapon swaps.","Litany of Hate grants Lance to this unit's melee attacks. Spiritual Leader once per battle round at start of any phase may clear battleshock on one friendly ADEPTUS ASTARTES unit within 6 inches; player confirms and adjusts manually."])
+  }),
+  "space-marines:chaplain-in-terminator-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Chaplain-In-Terminator-Armour",
+    fixed:Object.freeze([fixed("Crozius Arcanum")]),
+    slots:Object.freeze([slot("terminator-chaplain-gun-or-shield",["Storm Bolter",{"name":"Relic Shield","profiles":[]}])]),
+    manualWargearNotes:Object.freeze(["Storm Bolter can be replaced by Relic Shield; Relic Shield is not a shooting or melee weapon and adds +1 W only when equipped. Crozius Arcanum remains fixed.","Litany of Hate grants Lance; Zealous Fortitude grants this unit Feel No Pain 4+ against mortal wounds only. Deep Strike and innate 4+ invulnerable apply.","Do not infer wounds/heals or saving throws automatically from the presence of a Relic Shield."])
+  }),
+  "space-marines:librarian":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Librarian",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Force Weapon",1,["Force Weapon"]),fixed("Smite",1,["Smite - Witchfire","Smite - Focused Witchfire"])]),
+    
+    manualWargearNotes:Object.freeze(["Fixed Bolt Pistol, Force Weapon and ONE Smite with Witchfire/Focused Witchfire alternate attack modes; do not count both as two simultaneous psychic guns.","Veil of Time (psychic level 1) may set advance roll to 6, and Force Dome (level 1) may grant a 4+ invulnerable until next turn. Each uses a psychic roll: 1 battleshocks the unit.","Psychic Hood grants Feel No Pain 4+ against PSYCHIC attacks only. Level 1 means at most one level-1 psychic ability per battle round; honor battleshock restrictions and player choice."])
+  }),
+  "space-marines:librarian-in-phobos-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e Space Marines character datasheet cross-check; direct October GW Codex/MFM certification pending",
+    sourceUrl:"https://www.wahapedia.ru/wh40k11ed/factions/space-marines/Librarian-In-Phobos-Armour",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Force Weapon",1,["Force Weapon"]),fixed("Smite",1,["Smite - Witchfire","Smite - Focused Witchfire"])]),
+    
+    manualWargearNotes:Object.freeze(["Fixed Bolt Pistol, Force Weapon and ONE Smite (Witchfire or Focused Witchfire). No wargear swaps.","Shrouding (psychic level 1) when targeted: on psychic roll 1 become battleshocked; otherwise enemy hit rolls -1 until end of phase. Soul Sight (level 1) in Shooting may select visible enemy and grant Ignores Cover to ranged attacks targeting it; roll 1 battleshocks the unit.","Psychic Hood grants Feel No Pain 4+ vs PSYCHIC attacks; level-1 once per battle round budget. Deep Strike, Infiltrators, Scouts 6 inches and Stealth; confirm manual use."])
+  }),
   "space-marines:marneus-calgar":reviewed({
     sourceName:"Current 11e Calgar weapon profiles cross-checked with existing Terminator catalog",
     sourceUrl:"https://praetorium.gg/factions/ultramarines/rules/mfm-1-6/datasheets/marneus-calgar-984d-c25",
