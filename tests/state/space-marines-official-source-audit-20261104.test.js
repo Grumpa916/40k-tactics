@@ -46,7 +46,7 @@ test('GW primary-source status remains explicitly partial until current live MFM
   u.currentOfficialMfmPriceVerified===false &&
   u.currentOfficialErrataCompared===false));
  assert.equal(SPACE_MARINES_MFM_PRICE_SOURCES.officialPdfCurrentContentsIndependentlyChecked,false);
- assert.equal(getRulesDataRevisionForFaction('Space Marines').factionRules.officialRulesCrossCheck,'pending');
+ assert.equal(getRulesDataRevisionForFaction('Space Marines').officialRevisionCheck.status,'pending-current-official-profile-and-points-comparison');
 });
 test('all 48 published Oct-2 first-copy price-change rows match app pricing, without mislabeling them official direct MFM',()=>{
  assert.equal(SPACE_MARINES_OCT02_INDEPENDENT_FIRST_COPY.length,48);
