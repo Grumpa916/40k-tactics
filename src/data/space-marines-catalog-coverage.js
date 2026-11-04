@@ -1,5 +1,6 @@
 import { SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS } from './space-marines-named-ultramarines-datasheets.js';
 import { addReviewedUltramarinesAttachmentMetadata } from './space-marines-ultramarines-attachments.js';
+import { applyReviewedSpaceMarineWargearProfiles } from './space-marines-reviewed-combat-profiles.js';
 
 /**
  * November 2026 Space Marines catalog coverage.
@@ -114,8 +115,10 @@ const base={faction:'Space Marines',
   sourceUrl,reviewedAt:'2026-11-03',officialRulesCrossCheck:'pending',
   combatDataCoverage:'unverified-no-datasheet'};
 
-export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_MISSING.map(([name,points,models,role])=>
-  Object.freeze({...base,id:'space-marines:'+slug(name),name,
+export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_MISSING.map(([name,points,models,role])=>{
+  const original=SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name]??null;
+  const reviewed=applyReviewedSpaceMarineWargearProfiles(name,original);
+  return Object.freeze({...base,id:'space-marines:'+slug(name),name,
     keywords:Object.freeze(groups[role]),defaultModelCount:models,defaultPoints:points,
     pointsOptions:name==='Victrix Honour Guard'
       ? Object.freeze([
@@ -125,14 +128,14 @@ export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_M
         Object.freeze({models:6,points:280,condition:'3rd+ units'})
       ])
       :Object.freeze([Object.freeze({models,points})]),
-    ...(SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name]
-      ? {datasheet:addReviewedUltramarinesAttachmentMetadata(name,SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name]),
-         combatDataCoverage:SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name].modelSpecificStatline
+    ...(reviewed
+      ? {datasheet:addReviewedUltramarinesAttachmentMetadata(name,reviewed),
+         combatDataCoverage:original?.modelSpecificStatline
            ? 'per-model-reference-manual-allocation'
            : 'current-11e-profile-cross-checked',
          verificationStatus:'current-11e-profile-cross-checked',
-         sourceName:'Current 11e Ultramarines reference cross-checked against GW June faction pack',
-         sourceUrl:SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS[name].sourceUrl
+         sourceName:original?.sourceName??'Current 11e named-character datasheet cross-check (official October Codex pending)',
+         sourceUrl:reviewed.sourceUrl??sourceUrl
        } : {verificationStatus:'name-and-points-reference-only'}),
     pointsSourceName:'Independent Nov 2, 2026 list (direct MFM comparison pending)',
     pointsSourceUrl:sourceUrl,legends:false,
@@ -140,8 +143,8 @@ export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_M
       officialCompositionSourceUrl:GW_DATASHEET_SOURCE,
       officialComposition:GW_UNIT_COMPOSITIONS[name],
       completeOctoberCodexCrossCheck:false
-    } : {})})
-));
+    } : {})});
+}));
 
 export const SPACE_MARINES_LEGENDS_CANDIDATES=Object.freeze(Object.entries(LEGENDS).flatMap(([role,names])=>
   names.map(name=>{
