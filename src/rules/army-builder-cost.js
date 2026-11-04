@@ -76,6 +76,18 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
   return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
  }
+ // Desolation Sergeant's Vengor Launcher costs 5 points above the squad's
+ // reviewed first-two / third+ price. It is never available to a second model.
+ if(unit.datasheetId==='space-marines:desolation-squad'){
+  const vengor=selections.filter(x=>x.name==='Vengor Launcher')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  if(!Number.isInteger(vengor)||vengor<0||vengor>1)
+   return {points:null,reason:'Only the Desolation Sergeant can carry one Vengor Launcher.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Desolation Squad size/copy base price.'};
+  return {points:base.points+5*vengor,
+    reason:(base.condition??'reviewed base')+'; '+vengor+' Vengor Launcher at 5 pts'};
+ }
  // Victrix composition counts the Chapter Ancient within the 3/6 selected
  // models. The Banner of Macragge has a separate reviewed points surcharge.
  if(unit.datasheetId==='space-marines:victrix-honour-guard'){
