@@ -11,6 +11,121 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  "Captain":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Master-crafted Bolter","24\"","2","2+","5","-1","2","Rapid Fire 1, Assault"),
+      ranged("Neo-volkite Pistol","12\"","1","2+","5","0","2","Close-Quarters, Devastating Wounds"),
+      ranged("Plasma Pistol - Standard","12\"","1","2+","7","-2","1","Close-Quarters"),
+      ranged("Plasma Pistol - Supercharge","12\"","1","2+","8","-3","2","Close-Quarters, Hazardous"),
+      melee("Master-crafted Power Weapon","6","2+","6","-2","2",""),
+      melee("Power Fist","5","2+","8","-2","2","")]),
+    abilities:Object.freeze([ability("Strategic Acumen","In your Command phase select one combat doctrine to be active for this unit until your next Command phase. Confirm manually; separate from army-wide selection."),
+      ability("Finest Hour","Once per battle, when selected to fight: this model's melee weapon attacks have +3 A and Devastating Wounds for that fight. Confirm use manually."),
+      ability("Relic Shield","Equipped only with Heavy Bolt Pistol and Master-crafted Power Weapon: +1 W to this model, not attached unit. Do not permit shield with Power Fist."),
+      ability("Invulnerable Save","Innate 4+ invulnerable save; shield affects Wounds instead.")])
+  }),
+  "Captain in Gravis Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"3+","Wounds":"6","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Boltstorm Gauntlet - Ranged","12\"","3","2+","5","-1","1","Close-Quarters"),
+      ranged("Master-crafted Heavy Bolt Rifle","30\"","2","2+","6","-1","3","Heavy, Assault, Rapid Fire 1"),
+      melee("Boltstorm Gauntlet - Melee","5","2+","8","-2","2",""),
+      melee("Master-crafted Power Weapon","6","2+","6","-2","2",""),
+      melee("Relic Blade","2","2+","6","-2","2","Extra Attacks"),
+      melee("Relic Chainsword","3","2+","5","-1","2","Extra Attacks"),
+      melee("Relic Power Fist","1","2+","8","-2","2","Extra Attacks")]),
+    abilities:Object.freeze([ability("Strategic Acumen","In your Command phase select one combat doctrine to be active for this unit until your next Command phase. Confirm manually; separate from army-wide selection."),
+      ability("Refuse to Yield","Attacks allocated to this model have -1 Damage. Manual defensive evaluation; not a wound modifier."),
+      ability("Invulnerable Save","Innate 4+ invulnerable save. Relic extras may attack together with Boltstorm Gauntlet melee because they have Extra Attacks.")])
+  }),
+  "Captain in Phobos Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"8\"","Toughness":"4","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Instigator Bolt Carbine","24\"","1","2+","4","-2","2","Precision"),
+      melee("Combat Knife","6","2+","5","-1","1","Precision, Sustained Hits 1")]),
+    abilities:Object.freeze([ability("Strategic Acumen","In your Command phase select one combat doctrine to be active for this unit until your next Command phase. Confirm manually; separate from army-wide selection."),
+      ability("Tactical Fluidity","Once per battle round: after shooting while unengaged, this unit may make a normal move up to D6 inches; OR at end of opponent Fight phase, if engaged, fall back up to 6 inches. Confirm actual map move."),
+      ability("Deep Strike, Infiltrators, Scouts 6 and Stealth","Apply proper deployment/scout eligibility. M8 is normal movement, not another Scouts move."),
+      ability("Invulnerable Save","Innate 4+ invulnerable save.")])
+  }),
+  "Captain in Terminator Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"6","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Storm Bolter","24\"","2","2+","5","-1","1","Rapid Fire 2"),
+      ranged("Combi-weapon - Infernus","12\"","3","N/A","4","0","1","Torrent, Blast 1"),
+      ranged("Combi-weapon - Purgatus","24\"","2","2+","7","-2","2",""),
+      ranged("Combi-weapon - Damnatus","12\"","1","2+","9","-3","D3+2","Melta 2"),
+      melee("Relic Weapon","6","2+","6","-2","2",""),
+      melee("Relic Fist","5","2+","8","-2","2","")]),
+    abilities:Object.freeze([ability("Strategic Acumen","In your Command phase select one combat doctrine to be active for this unit until your next Command phase. Confirm manually; separate from army-wide selection."),
+      ability("Unstoppable Valour","You can re-roll charge rolls for this unit. Confirm measured charge distance and actual reroll."),
+      ability("Deep Strike and Invulnerable Save","Deep Strike and innate 4+ invulnerable save. Three Combi-weapon modes represent ONE selected gun.")])
+  }),
+  "Captain on Bike":Object.freeze({
+    characteristics:Object.freeze({"Move":"12\"","Toughness":"6","Save":"3+","Wounds":"6","Leadership":"6+","Objective Control":"2"}),
+    weapons:Object.freeze([ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Plasma Pistol - Standard","12\"","1","2+","7","-2","1","Close-Quarters"),
+      ranged("Plasma Pistol - Supercharge","12\"","1","2+","8","-3","2","Close-Quarters, Hazardous"),
+      ranged("Twin Bolt Rifle","24\"","2","2+","5","-1","1","Twin-linked, Assault, Rapid Fire 2"),
+      melee("Master-crafted Power Weapon","6","2+","6","-2","2",""),
+      melee("Thunder Hammer","5","3+","8","-2","3","Devastating Wounds")]),
+    abilities:Object.freeze([ability("Strategic Acumen","In your Command phase select one combat doctrine to be active for this unit until your next Command phase. Confirm manually; separate from army-wide selection."),
+      ability("Into the Fray","If this unit made a charge move this turn, its melee attacks gain Cleave 1. Not active on subsequent rounds without charge."),
+      ability("Invulnerable Save","Innate 4+ invulnerable save. Attach to Outrider Squad where allowed.")])
+  }),
+  "Captain with Jump Pack":Object.freeze({
+    characteristics:Object.freeze({"Move":"12\"","Toughness":"5","Save":"3+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Hand Flamer","9\"","3","N/A","4","0","1","Close-Quarters, Torrent"),
+      ranged("Heavy Bolt Pistol","18\"","1","2+","5","-1","1","Close-Quarters"),
+      ranged("Plasma Pistol - Standard","12\"","1","2+","7","-2","1","Close-Quarters"),
+      ranged("Plasma Pistol - Supercharge","12\"","1","2+","8","-3","2","Close-Quarters, Hazardous"),
+      melee("Chainsword","8","2+","5","-1","1","Sustained Hits 1"),
+      melee("Power Fist","5","2+","8","-2","2",""),
+      melee("Relic Weapon","6","2+","6","-2","2",""),
+      melee("Thunder Hammer","5","3+","8","-2","3","Devastating Wounds")]),
+    abilities:Object.freeze([ability("Strategic Acumen","In your Command phase select one combat doctrine to be active for this unit until your next Command phase. Confirm manually; separate from army-wide selection."),
+      ability("Angel's Wrath","This unit has +1 to advance rolls and +1 to charge rolls. Player tracks actual measured distance and modifiers."),
+      ability("Relic Shield","Available only in linked Chainsword + Relic Shield or Thunder Hammer + Relic Shield choices; grants +1 W to this model and REPLACES pistol. No ranged pistol with shield."),
+      ability("Deep Strike and Invulnerable Save","Deep Strike and innate 4+ invulnerable save.")])
+  }),
+  "Chaplain":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"5+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Absolvor Bolt Pistol","18\"","1","3+","5","-2","2","Close-Quarters"),
+      melee("Crozius Arcanum","5","2+","6","-1","2","Cleave 1")]),
+    abilities:Object.freeze([ability("Litany of Hate","This unit's melee attacks have Lance."),
+      ability("Spiritual Leader","Once per battle round at start of any phase, remove battle-shocked status from one friendly ADEPTUS ASTARTES unit within 6 inches. Player confirms/changes state manually."),
+      ability("Invulnerable Save","Innate 4+ invulnerable save.")])
+  }),
+  "Chaplain in Terminator Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"5\"","Toughness":"6","Save":"2+","Wounds":"5","Leadership":"5+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Storm Bolter","24\"","2","3+","5","-1","1","Rapid Fire 2"),
+      melee("Crozius Arcanum","5","2+","6","-1","2","Cleave 1")]),
+    abilities:Object.freeze([ability("Litany of Hate","This unit's melee attacks have Lance."),
+      ability("Zealous Fortitude","This unit has Feel No Pain 4+ against mortal wounds only."),
+      ability("Relic Shield","If selected instead of Storm Bolter, adds +1 W to this model and removes its ranged gun. Does not change innately 4+ invulnerable save."),
+      ability("Deep Strike and Invulnerable Save","Deep Strike and innate 4+ invulnerable save.")])
+  }),
+  "Librarian":Object.freeze({
+    characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","3+","5","-1","1","Close-Quarters"),
+      ranged("Smite - Witchfire","24\"","D6","3+","6","-1","2","Psychic"),
+      ranged("Smite - Focused Witchfire","24\"","D3+3","3+","6","-2","2","Devastating Wounds, Psychic, Hazardous"),
+      melee("Force Weapon","4","3+","6","-2","2","Psychic")]),
+    abilities:Object.freeze([ability("Librarian (psyker level 1)","May use total level-1 psychic abilities up to psyker level 1 each battle round. Smite focused/normal are alternative weapon modes, not simultaneous powers."),
+      ability("Veil of Time","When chosen to advance, not battle-shocked: psychic roll D6; on 1 unit becomes battle-shocked, otherwise can change advance roll to 6. Confirm manually."),
+      ability("Force Dome","In Movement phase, not battle-shocked: psychic roll D6; on 1 become battle-shocked; otherwise 4+ invulnerable until start of next turn. Not always-on invulnerable."),
+      ability("Psychic Hood","This unit has Feel No Pain 4+ against Psychic attacks only.")])
+  }),
+  "Librarian in Phobos Armour":Object.freeze({
+    characteristics:Object.freeze({"Move":"8\"","Toughness":"4","Save":"3+","Wounds":"4","Leadership":"6+","Objective Control":"1"}),
+    weapons:Object.freeze([ranged("Bolt Pistol","12\"","1","3+","5","-1","1","Close-Quarters"),
+      ranged("Smite - Witchfire","24\"","D6","3+","6","-1","2","Psychic"),
+      ranged("Smite - Focused Witchfire","24\"","D3+3","3+","6","-2","2","Devastating Wounds, Psychic, Hazardous"),
+      melee("Force Weapon","4","3+","6","-2","2","Psychic")]),
+    abilities:Object.freeze([ability("Librarian (psyker level 1)","Once per battle round psychic ability budget level 1; if used, use only one of Shrouding or Soul Sight. Smite focused/normal are alternative weapon modes."),
+      ability("Shrouding","When this un-battle-shocked unit is targeted, make psychic roll D6. On 1 becomes battle-shocked; otherwise attacks targeting it have -1 to hit until end of phase."),
+      ability("Soul Sight","In Shooting phase while not battle-shocked, make psychic roll D6. On 1 becomes battle-shocked; otherwise choose one visible enemy unit: ranged attacks targeting it gain Ignores Cover."),
+      ability("Psychic Hood","Feel No Pain 4+ against Psychic attacks only. Deep Strike, Infiltrators, Scouts 6 inches and Stealth apply as appropriate.")])
+  }),
   'Incursor Squad':Object.freeze({
     characteristics:Object.freeze({Move:'8"',Toughness:'4',Save:'3+',Wounds:'2',Leadership:'6+','Objective Control':'1'}),
     weapons:Object.freeze([
@@ -623,16 +738,22 @@ const changes=Object.freeze({
 });
 export const SPACE_MARINES_REVIEWED_PROFILE_PATCHES=changes;
 export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
- if(!datasheet || !changes[name])return datasheet;
+ if(!changes[name])return datasheet;
+ // The imported OpenHammer projection omitted the current 11e Captain on Bike.
+ // ONLY this explicitly source-reviewed, full-stat/current-weapon patch may
+ // supply a missing datasheet. Keep all other missing entries unverified/null.
+ if(!datasheet && name!=='Captain on Bike')return datasheet;
  const patch=changes[name];
+ const base=datasheet ?? Object.freeze({name,characteristics:Object.freeze({}),
+   weapons:Object.freeze([]),abilities:Object.freeze([])});
  return Object.freeze({
-   ...datasheet,
-   ...(patch.characteristics ? {characteristics:Object.freeze({...datasheet.characteristics,...patch.characteristics})}:{}),
+   ...base,
+   ...(patch.characteristics ? {characteristics:Object.freeze({...base.characteristics,...patch.characteristics})}:{}),
    weapons:patch.weapons,
    abilities:patch.abilities,
    sourceName:'November 2026 11e selected loadout/profile cross-check',
    sourceUrl:'https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html',
    officialOctoberCodexFullTextVerified:false,
-   profileReviewedAt:'2026-11-03'
+   profileReviewedAt:name==='Captain on Bike'?'2026-11-04':'2026-11-03'
  });
 }
