@@ -17,7 +17,7 @@ This is a **bounded first wave** of the October Codex-era Army Builder verificat
 | Eradicator Squad with Heavy Bolters | Fixed **per model**: bolt pistol + heavy bolter + close-combat weapon; no invented replacement option | Retained checked heavy bolter (36-inch Heavy/Sustained Hits 1) and Overlapping Detonations reference |
 | Terminator Assault Squad | Per-model choice of Twin Lightning Claws or Thunder Hammer **and** Storm Shield; mixed-model counts permitted | T6, 4+ invulnerable and Thunder Hammer Damage 3; individual shield +1 W **must be tracked manually** because current app only has unit-level wound state. Shield costs +5 points per model; 3rd+ copy uses its distinct reviewed price tier |
 
-**Pricing correction:** The 5 VP (!) wording is never used: the surcharge is **5 army points per Storm Shield**. The category is still **Army Builder points**, unrelated to manual Victory Points. The conditional pricing resolver now applies the selected shield quantity to the correct base copy tier. Saved roster review checks the full total rather than incorrectly comparing shield-inclusive prices to base options only.
+**Pricing correction:** The surcharge is **5 army points per Storm Shield**, not Victory Points. It is applied only when a model actually carries the shield. The conditional pricing resolver now applies the selected shield quantity to the correct base copy tier. Saved roster review checks the full total rather than incorrectly comparing shield-inclusive prices to base options only.
 
 ## Verification safeguards
 
