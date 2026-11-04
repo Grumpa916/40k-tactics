@@ -10,6 +10,8 @@ import { createLiveMapView } from "./live-map-view.js";
 import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
 import { renderCombatWorkspace } from "./combat-workspace.js";
 import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
+import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-stratagem-opportunities.js";
+import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 import { captureViewContinuity } from './view-continuity.js';
 
 function escapeHtml(value) {
@@ -821,6 +823,8 @@ export function createCommandScreen(container, {
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>CP</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
+      (getUnleashTheLionsOpportunities(state,{playerId}).length
+        ? renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'unleash-the-lions'}) : '') +
       renderCustodesKatahCommandPanel(state, { playerId }) +
       '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
       secondaryMissionManager + secondaryRedrawMarkup + secondaryVpForm + '</details>' +

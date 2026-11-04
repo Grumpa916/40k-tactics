@@ -86,3 +86,34 @@ export function getGoldenLightOpportunities(state,{playerId,unitId=null}={}) {
       available:!blockedReason,blockedReason,sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference};
   });
 }
+
+const LIONS_SHEETS=new Set([
+  'adeptus-custodes:allarus-custodians',
+  'adeptus-custodes:aquilon-terminators-with-solarite-power-gauntlets',
+  'adeptus-custodes:aquilon-terminators-with-solarite-power-talons'
+]);
+
+export function getUnleashTheLionsOpportunities(state,{playerId,unitId=null}={}) {
+  if(state?.battle?.status!=='active'||state.phase!=='command'||!playerId||
+    (state.activePlayer??state.battle?.activePlayerId)!==playerId) return [];
+  const roster=state.armyRosters?.[playerId];
+  if(!roster||!isAdeptusCustodesFaction(roster.faction)||!getRosterDetachmentNames(roster).includes('Lions of the Emperor')) return [];
+  return (state.units??[]).filter(unit=>unit.ownerId===playerId&&unit.status==='deployed'&&
+    (!unitId||unit.id===unitId)&&LIONS_SHEETS.has(unit.metadata?.datasheetId)).map(unit=>{
+    const count=Number.isInteger(unit.currentStrength)?unit.currentStrength:
+      Number.isInteger(unit.metadata?.currentModelCount)?unit.metadata.currentModelCount:Number(unit.metadata?.modelCount);
+    let blockedReason=null;
+    if(getCombatFormationRoot(state,unit)?.id!==unit.id||getCombatFormationMembers(state,unit).length!==1)
+      blockedReason='Resolve attached models at the table before splitting this unit.';
+    if(!blockedReason&&(!Number.isInteger(count)||count<2)) blockedReason='Needs at least two surviving models on the battlefield.';
+    if(!blockedReason&&isUnitBattleShocked(unit)) blockedReason='Battle-shocked units cannot receive Stratagems.';
+    if(!blockedReason&&unit.metadata?.splitOriginId) blockedReason='Already split into single-model units.';
+    blockedReason??=getStratagemUseBlock(state,{playerId,unitId:unit.id,stratagemId:'unleash-the-lions'});
+    if(!blockedReason&&getCommandPointBalance(state,playerId)<1) blockedReason='Needs 1 CP.';
+    return {stratagemId:'unleash-the-lions',title:'Unleash the Lions',playerId,unitId:unit.id,
+      unitName:unit.name,modelCount:count,cpCost:1,timing:'Your Command phase',
+      effect:'Split this unit into one-model units, each with Starting Strength 1.',
+      available:!blockedReason,blockedReason,
+      sourceUrl:'https://assets.warhammer-community.com/eng_may_2025_wh40k_adeptus_custodes_lions_of_the_emperor_detachment-5ej58wehjr-hin5cateh0.pdf'};
+  });
+}
