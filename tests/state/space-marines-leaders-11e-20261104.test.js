@@ -53,7 +53,7 @@ test('Exactly ten 11e Commander/Psyker units have complete one-model costs, prof
   check(u,createWargearChoiceState(u));
   assert.match(renderWargearEditor(u),/Reviewed 11th-edition loadout subset/);
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:lieutenant-in-phobos-armour'),null,'Phobos Lieutenant remains in next audit group');
+ assert.equal(getTyranidWargearRuleSet('space-marines:tactical-squad'),null,'Phobos Lieutenant remains in next audit group');
 });
 test('Standard Captain: all seven complete loadout packages are legal; shield with fist is never offered',()=>{
  const u=make('Captain'),rule=getTyranidWargearRuleSet(u.datasheetId),slots=getWargearSlots(u);
