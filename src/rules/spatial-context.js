@@ -30,7 +30,7 @@ function hasRecordedMovement(state, unitId) {
 
 export function getLiveUnitPosition(state, unit) {
   // The battlefield map displays the recorded deployment position until a
-  // gameplay move replaces it. Tactical range/charge/territory advice must use
+  // gameplay move or approximate map correction replaces it. Tactical range/charge/territory advice must use
   // that same source or a unit can appear in one area on the map while being
   // evaluated from an older model position.
   const initialDeployment = state?.battlefieldMap?.actualDeployment?.[unit.id];

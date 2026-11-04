@@ -71,10 +71,11 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     const valid = new Set((candidate?.targets ?? []).map(item => item.targetUnitId));
     for (const id of targetIds) if (!valid.has(id)) { targetIds.delete(id); distances.delete(id); }
     const targets = candidate?.targets ?? [];
+    const nearbyTargets = targets.filter(item => item.rangeStatus !== 'outside-map-envelope');
     const priorities = candidate && !defending ? getChargeTargetPriorities(state, {
       playerId:activePlayerId,
       attackerId:candidate.unit.unitId,
-      targets,
+      targets:nearbyTargets,
       measuredDistances:distances,
       limit:3
     }) : [];
@@ -83,7 +84,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
       <p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
-        <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No approximate charge opportunities. Check tabletop distances and map positions.</p>'}</div></details>
+        <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No deployed units available for a Charge decision.</p>'}</div></details>
       ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
         <h2>Incoming charge · Defensive review</h2>
         <p>Review the enemy charger and your threatened units. Confirm the declared targets and measured distance on the tabletop; map positions do not establish charge legality.</p>
@@ -103,7 +104,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
             <small>${Number.isFinite(distances.get(target.targetUnitId)) ? 'Tabletop distance entered' : 'Approximate map only'}</small></p>`;
         }).join('') || '<p>No nearby target established by the map. Check the tabletop for legal charge threats.</p>'}
         <small>Estimates are optional references, not permission, range or damage rulings. Check defensive abilities when the target is declared.</small>
-      </aside>` : `<aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor priorities"><h2>Charge Priorities · Top ${priorities.length} of ${targets.length}</h2>
+      </aside>` : `<aside class="combat-workspace__card combat-workspace__advisor" aria-label="Charge Tactical Advisor priorities"><h2>Charge Priorities · Top ${priorities.length} of ${nearbyTargets.length} nearby</h2>
         ${priorities.length ? priorities.map(({ rank, target, advice }) => {
           const summary = chargePrioritySummary(advice);
           return `<section class="combat-workspace__card">
@@ -113,7 +114,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
             <p><strong>${esc(summary.strategic)}</strong></p>
             <p>${esc(advice.recommendation)}</p>
           </section>`;
-        }).join('') : '<p>No ranked charge targets are available for this unit.</p>'}
+        }).join('') : '<p>No nearby map targets. Select an enemy below only after confirming the charge on the tabletop.</p>'}
       </aside>`}
       <h2>Record Charge</h2>
       <p><small>Select the target(s), enter the measured tabletop distance, and record the outcome. These targets remain history and Tactical Advisor context only; Fight confirms its legal targets fresh from the tabletop.</small></p>
@@ -133,7 +134,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
           }
           return `<section class="combat-workspace__card">
           <button type="button" data-charge-target-toggle="${esc(item.targetUnitId)}" aria-pressed="${targetIds.has(item.targetUnitId)}">${targetIds.has(item.targetUnitId) ? '✓ ' : '+ '}${esc(item.target.name)}</button>
-          <small>Map ≈ ${esc(item.targetDistance)}″ · ${esc(item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
+          <small>${Number.isFinite(item.targetDistance) ? `Map ≈ ${esc(item.targetDistance)}″ · ` : "Map distance unknown · "}${esc(item.rangeStatus === 'outside-map-envelope' ? 'outside approximate range · confirm on tabletop' : item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
           ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${Number.isFinite(measured) ? measured + '″ · ' + percent(exactChance) + ' success' : 'choose distance for exact 2D6 chance'}</small>` : ''}
         </section>`;
         }).join('')}
