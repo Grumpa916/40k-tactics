@@ -21,7 +21,7 @@ test("Army Builder completeness audit reports local evidence separately from off
     assert.ok(audit.incompleteUnits.every(item=>item.missing.length>0));
   }
   const sm=auditArmyCatalogCompleteness("Space Marines");
-  assert.equal(sm.counts.withReviewedSelectableWargear,0,"Space Marines selectable wargear still requires reviewed codex rules");
+  assert.equal(sm.counts.withReviewedSelectableWargear,3,"Three high-use Space Marines now have source-scoped selectable wargear; the remaining catalog stays unverified");
   assert.equal(sm.counts.withOfficialCrossCheckPending,sm.counts.units);
   const custodes=auditArmyCatalogCompleteness("Adeptus Custodes");
   assert.ok(custodes.counts.withReviewedSelectableWargear>0,"Custodes already has validated wargear subsets");
