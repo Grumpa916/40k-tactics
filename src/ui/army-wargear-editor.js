@@ -24,6 +24,7 @@ function quantityControl(name,quantity,decrease,increase,attributes) {
 }
 export function renderWargearEditor(unit) {
  const rules=getTyranidWargearRuleSet(unit?.datasheetId);
+ if(!rules && String(unit?.datasheetId ?? '').startsWith('space-marines:')) return '<p class="ab-muted" role="note"><strong>Space Marines wargear review pending:</strong> This catalog shows possible weapon profiles, not a confirmed equipped loadout. Confirm the selected weapons, replacements and quantities against the current Codex or Warhammer App. Loadout choice controls will be added only after the options are verified.</p>';
  if(!rules) return '<p class="ab-muted">Use the weapon reference below. Selectable loadout rules are not available for this unit yet.</p>';
  const state=unit.builderWargearState ?? createWargearChoiceState(unit), slots=getWargearSlots(unit);
  const selections=readWargearChoiceState(unit,state);
