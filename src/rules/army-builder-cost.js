@@ -76,6 +76,17 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   if(!base)return {points:null,reason:'No reviewed Terminator Squad size/copy base price.'};
   return {points:base.points+10*launchers,reason:base.condition+'; '+launchers+' Cyclone Launcher(s) at 10 pts each'};
  }
+ // The Impulsor's Orbital Comms Array is the only reviewed +10 equipment
+ // upgrade among its four mutually exclusive roof-array choices.
+ if(unit.datasheetId==='space-marines:impulsor'){
+  const comms=selections.filter(x=>x.name==='Orbital Comms Array')
+    .reduce((sum,x)=>sum+Number(x.quantity??0),0);
+  if(!Number.isInteger(comms)||comms<0||comms>1)
+   return {points:null,reason:'At most one Orbital Comms Array is allowed.'};
+  const base=resolveReviewedOrdinalOption(options,ordinal);
+  if(!base)return {points:null,reason:'No reviewed Impulsor copy-price tier.'};
+  return {points:base.points+10*comms,reason:(base.condition??'reviewed base')+'; '+comms+' Orbital Comms Array at 10 pts'};
+ }
  // Executioner Heavy Laser Destroyer costs 10 points above the size/copy-tier base,
  // not its alternative Macro Plasma Incinerator (whose two modes are one gun).
  if(unit.datasheetId==='space-marines:repulsor-executioner'){
