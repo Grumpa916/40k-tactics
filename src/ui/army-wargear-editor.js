@@ -86,7 +86,7 @@ export function renderWargearEditor(unit) {
   html+=table(rules.optional.map(item=>{
    const max=getOptionalWargearLimit(unit.modelCount,item),quantity=state.optional[item.name]??0;
    const control=item.allOrNone||max===1?`<input type="checkbox" data-wargear-toggle="${e(item.name)}" aria-label="${e(item.name)}" ${quantity?'checked':''}>`:quantityControl(item.name,quantity,quantity>0,quantity<max,`data-wargear-optional="${e(item.name)}"`);
-   return row(unit,item.name,control,item.allOrNone?`All ${unit.modelCount} models or none.`:item.perModels?`Up to ${max}; one per ${item.perModels} models.`:`Up to ${max}; one per model.`);
+   return row(unit,item.name,control,item.allOrNone?`All ${unit.modelCount} models or none.`:item.maxTotal!=null?`Up to ${max} per unit.`:item.perModels?`Up to ${max}; one per ${item.perModels} models.`:`Up to ${max}; one per model.`);
   }).join(''))+'</fieldset>';
  }
  return html+'</section>';
