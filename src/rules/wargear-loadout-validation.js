@@ -143,6 +143,11 @@ export function validateWargearLoadout(unit) {
       const actual = quantity(counts, constraint.selection);
       const max = Math.floor(modelCount / constraint.models) * (constraint.maxEach ?? 1);
       if (actual > max) addError(errors, `${constraint.selection}: selected ${actual}, maximum ${max} for ${modelCount} models.`);
+    } else if (constraint.type === "max-combined-per-models") {
+      const actual = constraint.selections.reduce((total,name)=>total+quantity(counts,name),0);
+      const maximum = Math.floor(modelCount/constraint.models)*(constraint.maxEach??1);
+      if (actual > maximum) addError(errors,
+        `${constraint.selections.join(" / ")}: selected ${actual} combined, maximum ${maximum} for ${modelCount} models.`);
     } else if (constraint.type === "same-baseline") {
       const used = constraint.selections.filter((name) => quantity(counts, name) > 0);
       if (used.length > 1) addError(errors, `Baseline ranged weapons must use one unit-wide choice; found ${used.join(", ")}.`);

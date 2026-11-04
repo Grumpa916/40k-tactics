@@ -39,9 +39,13 @@ export function renderWargearEditor(unit) {
  }
  if(rules.fixed?.length) html+=`<p class="ab-fixed-wargear"><strong>Always equipped:</strong> ${rules.fixed.map(item=>`${(item.count??0)+(item.perModel??0)*unit.modelCount} × ${e(item.name)}`).join(' · ')}</p>`;
  const perModelCards=(rules.slots?.length??0)>1 && rules.slots.some(slot=>slot.perModel);
- const models=perModelCards?Array.from({length:unit.modelCount},(_,i)=>i+1):[null];
+ // Mixed Sergeant-only and individual trooper slots must both be visible.
+ // A count:-1,perModel:1 trooper slot has one fewer slot than the unit size.
+ const individualModels=[...new Set(slots.filter(slot=>slot.model!=null).map(slot=>slot.model))].sort((a,b)=>a-b);
+ const hasSergeantSlots=slots.some(slot=>slot.model==null);
+ const models=perModelCards?[...(hasSergeantSlots?[null]:[]),...individualModels]:[null];
  for(const model of models) {
-  if(model) html+=`<section class="ab-model-wargear"><h4>${e(unit.name==='Carnifexes'?'Carnifex':unit.name)} ${model}</h4>`;
+  if(perModelCards) html+=`<section class="ab-model-wargear"><h4>${model===null?'Sergeant':e(unit.name==='Carnifexes'?'Carnifex':unit.name)+' '+model}</h4>`;
   for(const spec of rules.slots ?? []) {
    const groupSlots=slots.filter(slot=>slot.slotId===spec.id && (!perModelCards||slot.model===model));
    if(!groupSlots.length) continue;
@@ -75,7 +79,7 @@ export function renderWargearEditor(unit) {
    }
    html+='</fieldset>';
   }
-  if(model) html+='</section>';
+  if(perModelCards) html+='</section>';
  }
  if(rules.optional?.length) {
   html+='<fieldset class="ab-weapon-group"><legend>Additional equipment</legend><p>These choices add equipment; they do not replace a weapon.</p>';
