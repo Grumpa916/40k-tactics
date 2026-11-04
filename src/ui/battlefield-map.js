@@ -140,7 +140,7 @@ export function renderBattlefieldMap(state, {
     const key = mode === "planning" ? "friendly" : (friendly ? "friendly" : "opponent");
     const index = visibleIndex.get(key) ?? 0; visibleIndex.set(key, index + 1);
     let position = null; let unplaced = false;
-    if (mode === "live") position = unitPosition(unit, safeState);
+    if (mode === "live") position = getLiveUnitPosition(safeState, unit);
     else {
       const record = plannedOrDeployed?.[unit.id]; position = record?.position ?? record ?? null;
       if (!isValidBattlefieldPosition(position)) {
