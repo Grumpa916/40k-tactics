@@ -17,12 +17,14 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('8 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('12 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
  'space-marines:eradicator-squad-with-melta-rifles',
- 'space-marines:terminator-squad','space-marines:bladeguard-veteran-squad','space-marines:hellblaster-squad'].sort());
+ 'space-marines:terminator-squad','space-marines:bladeguard-veteran-squad','space-marines:hellblaster-squad',
+ 'space-marines:marneus-calgar','space-marines:cato-sicarius',
+ 'space-marines:victrix-honour-guard','space-marines:wardens-of-ultramar'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
