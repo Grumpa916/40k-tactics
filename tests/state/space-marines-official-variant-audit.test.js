@@ -76,7 +76,9 @@ test('five officially designated Legendary Proxies are not presented as Legends 
   assert.equal(unit.defaultPoints,undefined);
   assert.match(getArmyUnitCandidateLabel(unit),/Legendary Proxy/);
   assert.equal(filterCatalog({current:{faction:'Space Marines',units:[]},unitSearch:name}).length,0);
-  assert.equal(filterCatalog({current:{faction:'Space Marines',units:[]},unitSearch:name,includeLegends:true}).length,1);
+  assert.ok(filterCatalog({current:{faction:'Space Marines',units:[]},unitSearch:name,includeLegends:true})
+    .some(candidate=>candidate.name===name&&candidate.legendaryProxy),
+    name+' must be discoverable among reference and ability matches');
  }
 });
 
