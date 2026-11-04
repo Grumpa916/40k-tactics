@@ -113,7 +113,9 @@ export const PRIMARY_MISSION_MATRIX = Object.freeze({
       s("End of your turn", [{ vp: 4, summary: "Destroy an enemy that started the turn in range of an objective." }, { vp: 4, summary: "Meet the mission's last-marker positioning condition." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 4, condition: Object.freeze({"type":"control-non-home","minimum":1}), summary: "Control a non-home objective." }]),
       s("End of battle", [{ vp: 5, summary: "Meet the mission's last-marker positioning condition." }])
-    ], { setup: "Place the mission markers in five eligible terrain areas before the battle and track them manually." })
+    ], { setup: "Place the mission markers in five eligible terrain areas before the battle and track them manually.",
+      action: Object.freeze({ id: "sensor-sweep", name: "Sensor Sweep", phase: "shooting", reviewTiming: "end-of-turn",
+        summary: "Once per turn, a unit at a central objective can complete Sensor Sweep at end of turn if it controls that objective, removing one operation marker. This Action cannot begin if only one operation marker remains." }) })
   }),
   "Reconnaissance": Object.freeze({
     "Take and Hold": m("reconnaissance-sweep", "Reconnaissance Sweep", [
