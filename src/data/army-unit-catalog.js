@@ -125,6 +125,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
 export function getArmyUnitCandidateLabel(unit) {
   if (!unit || typeof unit !== "object") return "Unit · verify";
   if (!unit.datasheet) {
+    if (unit.legendaryProxy) return unit.name + " · Legendary Proxy for " + unit.proxyAs + "; event permission required";
     if (unit.legends) return unit.name + " · Legends; full rules and legality unverified";
     if (unit.verificationStatus === "name-and-points-reference-only") return unit.name + " · reference price only; datasheet review pending";
     return unit.verificationStatus === "points-reviewed"
