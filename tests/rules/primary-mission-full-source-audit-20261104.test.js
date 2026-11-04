@@ -295,3 +295,14 @@ test('official FAQ clarifications appear in expanded mission and scoring checkpo
   assert.match(dialog,/Official Event Companion FAQ/);
   assert.match(dialog,/does not have to be trapped/);
 });
+
+test('primary scoring reminders describe alternative kills, last-marker requirements, and protected Surveil targets', () => {
+  const details=(id)=>bySlug[id].scoring.flatMap(window=>window.items.map(item=>item.summary));
+  assert.match(details('purge-and-secure').join(' '),/OR an enemy unit that began the turn/);
+  assert.match(details('purge-and-secure').join(' '),/not cumulative/);
+  assert.equal(details('extract-relic').filter(text=>/Exactly one opponent operation marker/.test(text)).length,2);
+  assert.equal(details('locate-and-deny').filter(text=>/Exactly one of your operation markers/.test(text)).length,2);
+  assert.match(details('surveil-the-foe').join(' '),/still has an operation marker/);
+  assert.match(details('reconnaissance-sweep').join(' '),/6 inches of the battlefield centre/);
+  assert.match(details('reconnaissance-sweep').join(' '),/instead of the three-quarter tier/);
+});
