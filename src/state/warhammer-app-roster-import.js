@@ -153,7 +153,9 @@ function finalizeLoadoutValidation(unit) {
   };
   return;
  }
- unit.loadoutValidation = reviewed;
+ unit.loadoutValidation = unit.loadoutValidation?.source==='reviewed-fixed-equipment-import'
+  ? {...reviewed,source:'reviewed-fixed-equipment-import'}
+  : reviewed;
 }
 
 /** Read unit blocks so model, weapon and attachment lines never become extra units. */
