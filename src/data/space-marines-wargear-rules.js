@@ -25,6 +25,134 @@ const sergeantFixed=(name,profiles=[name])=>Object.freeze({...pick(name,profiles
 const addition=(name,perModels,profiles=[name])=>Object.freeze({...pick(name,profiles),perModels,maxEach:1});
 const reviewed=body=>Object.freeze({...source,...body});
 export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
+  "space-marines:adrax-agatone":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Adrax-Agatone",
+    fixed:Object.freeze([fixed("Drakkis",1,["Drakkis"]),fixed("Malleus Noctum",1,["Malleus Noctum"])]),
+    
+    manualWargearNotes:Object.freeze(["Drakkis is a 12-inch Torrent weapon (D6+3 attacks), while Malleus Noctum is the single S10 damage-3 melee hammer with Devastating Wounds. No selectable wargear.","Lord of the Pyroclasts reduces OC of an enemy unit engaged with this unit by 1; Unto the Anvil re-rolls melee wound rolls of 1, or all melee wound rolls if Assault doctrine is active. Confirm actual engagement and doctrine manually.","Salamanders Epic Hero: chapter restrictions and attachment eligibility must be checked before deployment."])
+  }),
+  "space-marines:vulkan-hestan":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Vulkan-He-stan",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Gauntlet of the Forge",1,["Gauntlet of the Forge"]),fixed("Spear of Vulkan",1,["Spear of Vulkan"])]),
+    
+    manualWargearNotes:Object.freeze(["The Gauntlet of the Forge has Torrent and Close-Quarters; Spear of Vulkan has Devastating Wounds. All three weapons are fixed.","Seeker of the Unfound: designate ONE objective at first deployment; only near that objective this model has OC10, Leadership 5+, FNP 4+ (otherwise OC1 and FNP 6+). Do not auto-score.","Forgefather in your Shooting phase targets one visible enemy within 24 inches; friendly Melta and Torrent attacks targeting it gain +2 Strength. Manually confirm target/distance."])
+  }),
+  "space-marines:lieutenant-in-phobos-armour":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Lieutenant-In-Phobos-Armour",
+    fixed:Object.freeze([fixed("Monomolecular Combat Blades",1,["Monomolecular Combat Blades"])]),
+    slots:Object.freeze([slot("phobos-lieutenant-pistol-or-carbine",["Special-issue Bolt Pistol","Master-crafted Bolt Carbine"])]),
+    manualWargearNotes:Object.freeze(["The Special-issue Bolt Pistol can be replaced by one Master-crafted Bolt Carbine. This is one legal replacement slot, not two simultaneously equipped ranged weapons.","Tactical Precision gives Lethal Hits only against NON-MONSTER/VEHICLE units; Demi-company Commander can mirror a nearby Captain's Strategic Acumen doctrine when triggered once per turn per unit.","Deep Strike, Infiltrators and Scouts 6; this datasheet is SUPPORT, not automatically a Leader attached to any unit."])
+  }),
+  "space-marines:lieutenant-with-combi-weapon":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Lieutenant-with-Combi-weapon",
+    fixed:Object.freeze([fixed("Combi-weapon",1,["Combi-weapon - Bolter","Combi-weapon - Flamer"]),fixed("Paired Combat Blades",1,["Paired Combat Blades"])]),
+    
+    manualWargearNotes:Object.freeze(["The ONE Combi-weapon has Bolter and Flamer alternative firing modes; Paired Combat Blades have Sustained Hits 1.","Priority Target Identified once per battle in your Command phase targets one visible terrain feature and increases enemy detection range by 3 inches while enemies are within it, until end of turn.","Evade and Survive once per phase in opponent Movement: if unengaged and enemy ends move within 8 inches, make a normal D3+3 inch move; player must adjust the map manually."])
+  }),
+  "space-marines:aethon-shaan":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Aethon-Shaan",
+    fixed:Object.freeze([fixed("Heavy Bolt Pistol",1,["Heavy Bolt Pistol"]),fixed("Claws of Severax",1,["Claws of Severax"])]),
+    
+    manualWargearNotes:Object.freeze(["Claws of Severax: Twin-linked and Sustained Hits 2 only against non-Monster/Vehicle, not against Monster/Vehicle. Lone Operative, Stealth and Deep Strike.","Master of Shadows in your Command phase picks a friendly Adeptus Astartes Infantry unit to re-roll charge rolls until next Command phase.","Blackwing Mantle once per phase per army allows extra Heroic Intervention use with -1 CP cost; CP and stratagem eligibility remain manual."])
+  }),
+  "space-marines:caanok-var":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Caanok-Var",
+    fixed:Object.freeze([fixed("Axiom",1,["Axiom"]),fixed("Storm Bolter",1,["Storm Bolter"])]),
+    
+    manualWargearNotes:Object.freeze(["Axiom melee profile has Cleave 1; fixed Storm Bolter has Rapid Fire 2. Terminator Leader with Deep Strike, 4+ invulnerable and Feel No Pain 5+.","Cold and Calculating when selected to shoot/fight: Lethal Hits vs Monster/Vehicle OR Sustained Hits 1 vs other targets; while Tactical doctrine active, both keyword-limited effects apply.","Cerebrex Logic Engine in Declare Battle Formations grants Scouts 6 inches to one friendly Adeptus Astartes Infantry unit."])
+  }),
+  "space-marines:captain-titus":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Captain-Titus",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Master-crafted Bolter",1,["Master-crafted Bolter"]),fixed("Master-crafted Chainsword",1,["Master-crafted Chainsword"])]),
+    
+    manualWargearNotes:Object.freeze(["Master-crafted Chainsword is Anti-non-Monster/Vehicle 2+. Titus has innate 5+ Feel No Pain and 4+ invulnerable.","Press the Attack: melee Sustained Hits 1 vs non-Monster/Vehicle, or universally when Assault doctrine active.","Righteous Fury once per battle in Fight phase: +1 melee Strength and heal D3 wounds after fighting, or 2D3 if he destroyed a model; Honour of Ultramar allows Fight-on-Death on 2+ if not yet activated. Record both manually."])
+  }),
+  "space-marines:chief-librarian-tigurius":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Chief-Librarian-Tigurius",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Rod of Tigurius",1,["Rod of Tigurius"]),fixed("Storm of the Emperor’s Wrath",1,["Storm of the Emperor’s Wrath"])]),
+    
+    manualWargearNotes:Object.freeze(["Storm of the Emperor's Wrath is a single Psychic ranged weapon with Blast 1; not Smite, and the Rod is a Psychic melee weapon.","Chief Librarian psychic level 3: Prescience (level 2, own Movement) adds +1 Save until next turn; Telepathic Assault (level 1, own Shooting) selects visible enemy within 24 inches for 2D3 mortal wounds. Roll 1 battleshocks the caster. Check level budgeting and timing manually.","Hood of Hellfire gives FNP 4+ against Psychic attacks AND mortal wounds (unlike generic Librarian's Psychic-only Hood)."])
+  }),
+  "space-marines:darnath-lysander":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Darnath-Lysander",
+    fixed:Object.freeze([fixed("Fist of Dorn",1,["Fist of Dorn"])]),
+    
+    manualWargearNotes:Object.freeze(["Fist of Dorn is the ONE melee weapon: S10 AP-3 D3, Devastating Wounds and Cleave 1. Lysander has no ranged weapon; Army Builder must not invent one.","Rampart once per battle at start of any phase grants 2+ invulnerable save to THIS model until the end of that phase (normally 4++).","Icon of Obstinacy grants enemies -1 to hit this unit; Deep Strike and Terminator attachment eligibility remain manual."])
+  }),
+  "space-marines:iron-father-feirros":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Iron-Father-Feirros",
+    fixed:Object.freeze([fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Gorgon’s Wrath",1,["Gorgon’s Wrath"]),fixed("Harrowhand",1,["Harrowhand"]),fixed("Medusan Manipuli",1,["Medusan Manipuli"])]),
+    
+    manualWargearNotes:Object.freeze(["Medusan Manipuli are Extra Attacks with S10 and D3; the standard Harrowhand melee attacks remain eligible alongside Extra Attacks.","Master of the Forge: in your Movement phase at start/end of this model's move, select a friendly Astartes Vehicle model within 3 inches; heal 3 wounds and ignore weapon BS, hit and wound roll modifiers until next Movement.","Rites of Tempering: attackers with Strength greater than this unit's Toughness suffer -1 to wound. Iron Father Lone Operative only within 3 inches of a friendly Astartes Vehicle."])
+  }),
+  "space-marines:kaius-konorius":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Kaius-Konorius",
+    fixed:Object.freeze([fixed("Heavy Bolt Pistol",1,["Heavy Bolt Pistol"]),fixed("Severance and Rebuke",1,["Severance and Rebuke - Strike","Severance and Rebuke - Sweep"])]),
+    
+    manualWargearNotes:Object.freeze(["Severance and Rebuke has two alternative melee profiles from ONE sword: Strike is Precision; Sweep is Cleave 2. Do not activate both profiles simultaneously.","Veteran Bodyguard gives OTHER Character models in his attached unit Feel No Pain 4+, not all models.","Calgar's Champion allows this model to reroll hit and wound rolls of 1 against enemy CHARACTER unit. Victrix attachment eligibility manual."])
+  }),
+  "space-marines:kayvaan-shrike":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Kayvaan-Shrike",
+    fixed:Object.freeze([fixed("Blackout",1,["Blackout"]),fixed("Raven’s Talons",1,["Raven’s Talons"])]),
+    
+    manualWargearNotes:Object.freeze(["Blackout is a Precision Close-Quarters gun; Raven's Talons melee have Precision and Twin-linked. 4+ invulnerable.","Trifold Path of Shadow gives Stealth and -3 inches detection range; Deep Strike and conditional Lone Operative apply.","Echo of the Ravenspire: at end of opponent Fight phase, if unengaged, optionally place the unit in strategic reserves. Adjust battlefield/reserve tray manually."])
+  }),
+  "space-marines:korsarro-khan":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Kor-sarro-Khan",
+    fixed:Object.freeze([fixed("Anzuq",1,["Anzuq"]),fixed("Bolt Pistol",1,["Bolt Pistol"]),fixed("Moonfang",1,["Moonfang"])]),
+    
+    manualWargearNotes:Object.freeze(["Anzuq is Anti-Infantry 4+ with Devastating Wounds versus Infantry; Moonfang is Precision Anti-Character 5+ with Devastating Wounds.","For the Khan! grants Assault on ranged attacks and Lance on melee attacks; Trophy Taker rerolls hit and wound rolls of 1 vs Character targets.","White Scars chapter restrictions and eligible Leader attachments remain manual."])
+  }),
+  "space-marines:roboute-guilliman":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Roboute-Guilliman",
+    fixed:Object.freeze([fixed("Emperor’s Sword",1,["Emperor’s Sword"]),fixed("Hand of Dominion",1,["Hand of Dominion - Ranged","Hand of Dominion - Melee"])]),
+    
+    manualWargearNotes:Object.freeze(["Guilliman MUST be your Warlord. Hand of Dominion is ONE equipped weapon with ranged and melee profiles; Emperor's Sword is an alternative melee attack weapon. Do not automatically attack with both selected melee profiles.","Codex Adept: Assault/Devastator/Tactical doctrines active for Guilliman. Primarch of the XIII 6-inch friendly Astartes aura rerolls hit and wound rolls of 1. Author of the Codex in own Movement selects a visible friendly unit within 12 inches for one additional doctrine until next Command phase.","Leader of Astartes grants Lone Operative only within 3 inches of a friendly Astartes Infantry unit. 4++ FNP5+, M8 T10 W16 OC4."])
+  }),
+  "space-marines:suboden-khan":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Suboden-Khan",
+    fixed:Object.freeze([fixed("Heavy Bolt Pistol",1,["Heavy Bolt Pistol"]),fixed("Onslaught Gatling Cannon",1,["Onslaught Gatling Cannon"]),fixed("Power Sword",1,["Power Sword"]),fixed("Stormtooth",1,["Stormtooth"])]),
+    
+    manualWargearNotes:Object.freeze(["Power Sword is EXTRA ATTACKS with Sustained Hits 1 only vs non-Monster/Vehicle; Stormtooth has Anti-Monster/Vehicle 4+ and Lance. Two melee profiles can attack together only under Extra Attacks rule.","Spear of Chogoris: ranged attacks have Assault, unit may Charge after Advancing, and gains +1 to Advance/Charge only when Assault doctrine is active.","Skilled Riders grants MOBILE; mounted White Scars Leader may attach to Outrider Squad."])
+  }),
+  "space-marines:tor-garadon":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"Current 11e individual datasheet cross-check (independent transcription; official October GW Codex/MFM certification pending)",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Tor-Garadon",
+    fixed:Object.freeze([fixed("Artificer Grav-gun",1,["Artificer Grav-gun"]),fixed("Hand of Defiance",1,["Hand of Defiance"])]),
+    
+    manualWargearNotes:Object.freeze(["Artificer Grav-gun Anti-Vehicle 2+; Hand of Defiance melee S12 and D2. No selectable wargear.","Siege Captain grants +2 Strength, AP and Damage when this MODEL attacks enemy Fortification/Monster/Vehicle unit; do not apply universally.","Signum Array in own Shooting selects visible enemy within 18 inches; that unit cannot benefit from Cover."])
+  }),
   "space-marines:ancient":reviewed({
     reviewedAt:"2026-11-04",
     sourceName:"Current 11e Space Marines character datasheet cross-check; direct GW October Codex/MFM certification pending",
