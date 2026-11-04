@@ -199,6 +199,30 @@ export const SPACE_MARINES_WARGEAR_RULES=Object.freeze({
       "Grav-chutes grant Deep Strike. Grapnel Launchers affect movement; Terror Troops modifies nearby enemy OC and Fearsome Assault requires a Battle-shock roll. Resolve them manually."
     ])
   }),
+  "space-marines:land-raider":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"11e Space Marines Land-Raider datasheet cross-check; direct official October Codex/MFM pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Raider",
+    fixed:Object.freeze([fixed("Armoured Tracks"),fixed("Godhammer Lascannon",2),fixed("Twin Heavy Bolter")]),
+    optional:Object.freeze(["Hunter-killer Missile","Multi-melta","Storm Bolter"].map(name=>Object.freeze({...pick(name),maxTotal:1}))),
+    manualWargearNotes:Object.freeze(["Two Godhammer Lascannons and Twin Heavy Bolter remain mandatory; Hunter-killer Missile, Multi-melta and Storm Bolter are separately optional.","Power of the Machine Spirit: re-roll one ranged hit and one ranged wound roll; do not auto-record rerolls.","Assault Ramp: after this model finishes a normal move, embarked infantry can assault disembark. Transport capacity 14, no JUMP PACK models, GRAVIS/TERMINATOR models count double.","Hunter-killer Missile is One Shot; Damaged 6 and Deadly Demise D6 remain manually resolved."])
+  }),
+  "space-marines:land-raider-crusader":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"11e Space Marines Land-Raider-Crusader datasheet cross-check; direct official October Codex/MFM pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Raider-Crusader",
+    fixed:Object.freeze([fixed("Armoured Tracks"),fixed("Hurricane Bolter",2),fixed("Twin Assault Cannon")]),
+    optional:Object.freeze(["Hunter-killer Missile","Multi-melta","Storm Bolter"].map(name=>Object.freeze({...pick(name),maxTotal:1}))),
+    manualWargearNotes:Object.freeze(["Two Hurricane Bolters and Twin Assault Cannon are fixed, with optional Hunter-killer Missile, Multi-melta and Storm Bolter.","Fury of the Machine Spirit grants ranged Lethal Hits only against a target within 12 inches.","Assault Ramp and transport 16 infantry, excluding JUMP PACK, double space for GRAVIS/TERMINATOR. Cross-check anomalous Crusader Multi-melta D3+3 against printed Codex before certification.","Hunter-killer Missile is One Shot; Damaged 6 and Deadly Demise D6 remain manually resolved."])
+  }),
+  "space-marines:land-raider-redeemer":reviewed({
+    reviewedAt:"2026-11-04",
+    sourceName:"11e Space Marines Land-Raider-Redeemer datasheet cross-check; direct official October Codex/MFM pending",
+    sourceUrl:"https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Raider-Redeemer",
+    fixed:Object.freeze([fixed("Armoured Tracks"),fixed("Flamestorm Cannon",2),fixed("Twin Assault Cannon")]),
+    optional:Object.freeze(["Hunter-killer Missile","Multi-melta","Storm Bolter"].map(name=>Object.freeze({...pick(name),maxTotal:1}))),
+    manualWargearNotes:Object.freeze(["Two Flamestorm Cannons and Twin Assault Cannon are fixed; Hunter-killer Missile, Multi-melta and Storm Bolter are each independently optional.","Wrath of the Machine Spirit grants ranged Devastating Wounds against non-MONSTER/VEHICLE units only if they are within 12 inches.","Assault Ramp and capacity 14 infantry, excluding JUMP PACK, double space for GRAVIS/TERMINATOR.","Hunter-killer Missile is One Shot; Damaged 6 and Deadly Demise D6 remain manually resolved."])
+  }),
   "space-marines:gladiator-lancer":reviewed({
     reviewedAt:"2026-11-04",
     sourceName:"Current 11e Space Marines Gladiator Lancer datasheet cross-check; official Codex/MFM direct certification pending",

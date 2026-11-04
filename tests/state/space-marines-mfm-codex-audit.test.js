@@ -93,7 +93,7 @@ test('Space Marines wargear remains flagged as unverified instead of displaying 
  assert.match(reviewed,/data-wargear-baseline/);
  assert.match(reviewed,/Flamestorm Gauntlets/);
  const rev=getRulesDataRevisionForFaction('Space Marines');
- assert.equal(rev.catalog.revision,'2026-11-04.13');
+ assert.equal(rev.catalog.revision,'2026-11-04.14');
  assert.equal(rev.officialRevisionCheck.status,'pending-current-official-profile-and-points-comparison');
  assert.equal(rev.points.revisionLabel,'export points; official MFM cross-check pending');
  const past={...rev,revisionId:'space-marines-11e-faction-pack-2026-06-catalog-2026-10-23',catalog:{...rev.catalog,revision:'2026-10-23.1'}};

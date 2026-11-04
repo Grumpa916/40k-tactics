@@ -52,6 +52,42 @@ const changes=Object.freeze({
       ability('Grapnel Launchers','If equipped, the unit can move through models and ignore vertical movement distance.')
     ])
   }),
+  "Land Raider":Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'12',Save:'2+',Wounds:'16',Leadership:'6+','Objective Control':'5'}),
+    weapons:Object.freeze([ranged("Godhammer Lascannon","48\"","2","3+","12","-3","D3+3",""),
+      ranged("Twin Heavy Bolter","36\"","3","3+","5","-1","2","Twin-linked, Sustained Hits 1, Rapid Fire 2"),
+      ranged("Hunter-killer Missile","48\"","1","2+","14","-3","D3+3","One Shot"),
+      ranged("Multi-melta","18\"","2","3+","10","-3","D3+2","Melta 3"),
+      ranged("Storm Bolter","24\"","2","3+","5","-1","1","Rapid Fire 2"),
+      melee("Armoured Tracks","6","4+","8","0","1","")]),
+    abilities:Object.freeze([ability("Power of the Machine Spirit","The unit may re-roll one hit roll and one wound roll for its ranged attacks. Confirm manually."),
+      ability("Assault Ramp","When ending a normal move, embarked infantry can assault disembark. Capacity 14 infantry, no JUMP PACK; GRAVIS/TERMINATOR occupy two spaces."),
+      ability("Damaged 6 and Deadly Demise D6","Apply at the correct wounds threshold and resolve demise on tabletop; do not automate.")])
+  }),
+  "Land Raider Crusader":Object.freeze({
+    characteristics:Object.freeze({Move:'12"',Toughness:'12',Save:'2+',Wounds:'16',Leadership:'6+','Objective Control':'5'}),
+    weapons:Object.freeze([ranged("Hurricane Bolter","24\"","6","3+","5","-1","1","Twin-linked, Rapid Fire 6"),
+      ranged("Twin Assault Cannon","24\"","6","3+","6","-2","1","Sustained Hits 1, Twin-linked"),
+      ranged("Hunter-killer Missile","48\"","1","2+","14","-3","D3+3","One Shot"),
+      ranged("Multi-melta","18\"","2","3+","10","-3","D3+3","Melta 3"),
+      ranged("Storm Bolter","24\"","2","3+","5","-1","1","Rapid Fire 2"),
+      melee("Armoured Tracks","6","4+","8","0","1","")]),
+    abilities:Object.freeze([ability("Fury of the Machine Spirit","Ranged attacks against an enemy unit within 12 inches have Lethal Hits; confirm range."),
+      ability("Assault Ramp","When ending a normal move, embarked infantry can assault disembark. Capacity 16 infantry, no JUMP PACK; GRAVIS/TERMINATOR occupy two spaces."),
+      ability("Damaged 6 and Deadly Demise D6","Apply at the correct wounds threshold and resolve demise on tabletop; do not automate.")])
+  }),
+  "Land Raider Redeemer":Object.freeze({
+    characteristics:Object.freeze({Move:'12"',Toughness:'12',Save:'2+',Wounds:'16',Leadership:'6+','Objective Control':'5'}),
+    weapons:Object.freeze([ranged("Flamestorm Cannon","12\"","4","N/A","6","-2","2","Torrent, Blast 2"),
+      ranged("Twin Assault Cannon","24\"","6","3+","6","-2","1","Sustained Hits 1, Twin-linked"),
+      ranged("Hunter-killer Missile","48\"","1","2+","14","-3","D3+3","One Shot"),
+      ranged("Multi-melta","18\"","2","3+","10","-3","D3+2","Melta 3"),
+      ranged("Storm Bolter","24\"","2","3+","5","-1","1","Rapid Fire 2"),
+      melee("Armoured Tracks","6","4+","8","0","1","")]),
+    abilities:Object.freeze([ability("Wrath of the Machine Spirit","Ranged attacks against units within 12 inches gain Devastating Wounds only if targets are non-MONSTER/VEHICLE."),
+      ability("Assault Ramp","When ending a normal move, embarked infantry can assault disembark. Capacity 14 infantry, no JUMP PACK; GRAVIS/TERMINATOR occupy two spaces."),
+      ability("Damaged 6 and Deadly Demise D6","Apply at the correct wounds threshold and resolve demise on tabletop; do not automate.")])
+  }),
   'Gladiator Lancer':Object.freeze({
     characteristics:Object.freeze({Move:'10"',Toughness:'10',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'3'}),
     weapons:Object.freeze([
