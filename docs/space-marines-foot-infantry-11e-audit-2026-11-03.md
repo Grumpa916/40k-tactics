@@ -1,5 +1,5 @@
 # Space Marines remaining foot infantry — 11th edition source-scoped audit
-Review date: November 3, 2026 (US Pacific). This branch is based on the reviewed Jump Pack PR #516. It is a current 11e datasheet transcription cross-check, **not direct certification** of each October printed Codex page or the GW live Munitorum Field Manual.
+Review date: November 3, 2026 (US Pacific). This branch has been reconciled onto `main` after Jump Pack PR #516 was squash-merged. It is a current 11e datasheet transcription cross-check, **not direct certification** of each October printed Codex page or the GW live Munitorum Field Manual.
 
 ## Current 11e evidence
 - [Assault Intercessors](https://www.40k.app/995/factions/space-marines/units/assault-intercessor-squad)
@@ -21,4 +21,4 @@ Review date: November 3, 2026 (US Pacific). This branch is based on the reviewed
 ## Safeguards
 No saved roster, active game, manually agreed VP/CP, objective positions, approved Event Companion terrain or V1 files are overwritten. Equipment selections with unresolvable import source remain player-confirmed. Source-corrected 11e profiles are in a scoped overlay rather than changing the generated historical catalog. Recheck deployment/action, per-model allocation and shooting on iPad Safari. Do not restore 10e profiles (for example old D6 Pyreblaster or model-uniform Company Heroes).
 
-**Outstanding:** Direct complete official October Codex and current GW MFM comparison, plus iPad live tests. This PR depends on #516 and should be retargeted to main after #516 merges; do not merge out of order.
+**Outstanding:** Direct complete official October Codex and current GW MFM comparison, plus iPad live tests. PR #516 has merged, and PR #517 is now based on `main` with only its foot-infantry delta; verify CI on the updated head before merging.
