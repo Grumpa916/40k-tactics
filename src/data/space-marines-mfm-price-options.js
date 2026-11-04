@@ -50,7 +50,7 @@ export const SPACE_MARINES_MFM_PRICE_OPTIONS=Object.freeze({
   "Eradicator Squad with Heavy Bolters":copies([[3,100],[6,215]],[[3,130],[6,245]]),
   "Inceptor Squad":copies([[3,130],[6,260]],[[3,150],[6,280]]),
   "Vanguard Veteran Squad with Jump Packs":copies([[5,110],[10,220]],[[5,130],[10,240]]),
-  "Sternguard Veteran Squad":copies([[5,105]],[[5,120]]),
+  "Sternguard Veteran Squad":copies([[5,105],[10,210]],[[5,120],[10,225]]),
   // Vehicles and fixed-size units with copy-order cost bands.
   "Ballistus Dreadnought":copies([[1,150]],[[1,170]]),
   "Brutalis Dreadnought":copies([[1,160]],[[1,180]]),

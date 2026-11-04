@@ -17,23 +17,25 @@ const find=(name,id=name,modelCount)=>{
  return {...entry,id,datasheetId:entry.id,modelCount:modelCount??entry.defaultModelCount};
 };
 
-test('12 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
+test('15 source-reviewed Space Marine rule sets match the 11e catalog source scope',()=>{
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).sort(),[
  'space-marines:aggressor-squad','space-marines:eradicator-squad-with-heavy-bolters',
  'space-marines:terminator-assault-squad','space-marines:intercessor-squad',
  'space-marines:eradicator-squad-with-melta-rifles',
  'space-marines:terminator-squad','space-marines:bladeguard-veteran-squad','space-marines:hellblaster-squad',
  'space-marines:marneus-calgar','space-marines:cato-sicarius',
- 'space-marines:victrix-honour-guard','space-marines:wardens-of-ultramar'].sort());
+ 'space-marines:victrix-honour-guard','space-marines:wardens-of-ultramar',
+ 'space-marines:sternguard-veteran-squad','space-marines:inceptor-squad',
+ 'space-marines:eliminator-squad'].sort());
  for(const id of Object.keys(SPACE_MARINES_WARGEAR_RULES)){
   const rules=getTyranidWargearRuleSet(id);
   assert.ok(rules.sourceUrl.startsWith('https://'));
   assert.equal(rules.reviewedAt,'2026-11-03');
   assert.ok(getTyranidWargearSelections(id).length>0);
  }
- assert.equal(getTyranidWargearRuleSet('space-marines:inceptor-squad'),null,
+ assert.equal(getTyranidWargearRuleSet('space-marines:incursor-squad'),null,
   'unreviewed units must not appear certified');
- assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,8);
+ assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,11);
 });
 
 test('Aggressors select a legal unit-wide flamestorm or bolter+grenade loadout',()=>{
@@ -129,7 +131,7 @@ test('Assault Terminator base price and 5-point per-shield upgrade work with 3rd
 });
 
 test('unverified Hellblaster, Bladeguard and other weapons remain flagged for review',()=>{
- for(const name of ['Inceptor Squad','Sternguard Veteran Squad','Eliminator Squad']){
+ for(const name of ['Incursor Squad','Infiltrator Squad','Reiver Squad']){
   const unit=find(name);
   assert.equal(getTyranidWargearRuleSet(unit.datasheetId),null,name+' should remain awaiting wargear audit');
   assert.match(renderWargearEditor(unit),/wargear review pending/);

@@ -145,7 +145,7 @@ test('Terminator copy-order and Cyclone army points are checked using the equipp
 });
 
 test('Unreviewed Space Marine datasheets still display an explicit wargear warning',()=>{
- const unit=make('Inceptor Squad','inceptor');
+ const unit=make('Incursor Squad','incursor');
  assert.equal(getTyranidWargearRuleSet(unit.datasheetId),null);
  assert.match(renderWargearEditor(unit),/wargear review pending/);
 });

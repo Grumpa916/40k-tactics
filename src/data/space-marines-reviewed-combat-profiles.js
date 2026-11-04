@@ -11,6 +11,54 @@ const ranged=(name,range,attacks,skill,strength,ap,damage,abilities)=>Object.fre
 const melee=(name,attacks,skill,strength,ap,damage,abilities)=>ranged(name,'Melee',attacks,skill,strength,ap,damage,abilities);
 const ability=(name,description)=>Object.freeze({name,description});
 const changes=Object.freeze({
+  'Sternguard Veteran Squad':Object.freeze({
+    characteristics:Object.freeze({'Toughness':'5'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Artificer Firearm - Infernus','24"','2','3+','5','-1','1','Assault, Rapid Fire 2'),
+      ranged('Artificer Firearm - Purgatus','24"','1','3+','7','-2','2','Assault, Rapid Fire 1'),
+      ranged('Artificer Firearm - Damnatus','12"','1','3+','9','-3','D3+2','Assault, Melta 2'),
+      ranged('Heavy Bolter','36"','3','3+','5','-1','2','Heavy, Rapid Fire 2, Sustained Hits 1'),
+      ranged('Pyrecannon','12"','4','N/A','6','-1','1','Blast 2, Torrent'),
+      melee('Ceramite Fists','4','3+','5','0','1',''),
+      melee('Chainsword','6','3+','5','-1','1',''),
+      melee('Power Fist','4','3+','8','-2','2',''),
+      melee('Power Weapon','5','3+','5','-2','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Veteran Marksmen','This unit’s ranged attacks can reroll Hit rolls of 1. Resolve rerolls on the tabletop.')
+    ])
+  }),
+  'Inceptor Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'10"',Toughness:'6',Wounds:'3'}),
+    weapons:Object.freeze([
+      ranged('Assault Bolters','18"','3','3+','5','-1','2','Assault, Close-Quarters, Sustained Hits 2, Twin-linked'),
+      ranged('Plasma Exterminators - Standard','18"','2','3+','7','-2','2','Assault, Close-Quarters, Twin-linked'),
+      ranged('Plasma Exterminators - Supercharge','18"','2','3+','8','-3','3','Assault, Close-Quarters, Hazardous, Twin-linked'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Deep Strike','This unit can use the Deep Strike deployment rule.'),
+      ability('Meteoric Descent','If this unit made an ingress move this turn, its ranged attacks have +1 to Hit. Confirm the movement history.'),
+      ability('Parabolic Jetleap','At the end of the opponent Fight phase, if unengaged, this unit may enter Strategic Reserves. Track manually.')
+    ])
+  }),
+  'Eliminator Squad':Object.freeze({
+    characteristics:Object.freeze({Move:'8"',Toughness:'4'}),
+    weapons:Object.freeze([
+      ranged('Bolt Pistol','12"','1','3+','5','-1','1','Close-Quarters'),
+      ranged('Bolt Sniper Rifle','36"','1','3+','6','-2','3','Heavy, Precision'),
+      ranged('Instigator Bolt Carbine','24"','2','2+','5','-2','2','Lethal Hits: non-Monster/Vehicle, Rapid Fire 2, Precision'),
+      ranged('Las Fusil','36"','1','3+','10','-3','D3+3','Heavy'),
+      melee('Ceramite Fists','3','3+','5','0','1','')
+    ]),
+    abilities:Object.freeze([
+      ability('Infiltrators','Use the Infiltrators deployment rule.'),
+      ability('Stealth','Use the Stealth defensive rule.'),
+      ability('Chameleoline Cloaks','This unit has -3-inch detection range. Apply manually.'),
+      ability('Special-issue Optics and Ammunition','When selected to shoot, choose Ignores Cover for its ranged attacks or increase one enemy unit’s detection range by 6 inches if within 24 inches; confirm manually.')
+    ])
+  }),
   'Bladeguard Veteran Squad':Object.freeze({
     characteristics:Object.freeze({'Toughness':'5','Invulnerable save':'4+'}),
     weapons:Object.freeze([
