@@ -88,6 +88,32 @@ const changes=Object.freeze({
       ability("Assault Ramp","When ending a normal move, embarked infantry can assault disembark. Capacity 14 infantry, no JUMP PACK; GRAVIS/TERMINATOR occupy two spaces."),
       ability("Damaged 6 and Deadly Demise D6","Apply at the correct wounds threshold and resolve demise on tabletop; do not automate.")])
   }),
+  "Repulsor":Object.freeze({
+    characteristics:Object.freeze({"Move":"10\"","Toughness":"12","Save":"3+","Wounds":"16","Leadership":"6+","Objective Control":"5"}),
+    weapons:Object.freeze([ranged("Defensive Array","24\"","18","3+","5","-1","1",""),
+      ranged("Heavy Onslaught Gatling Cannon","24\"","12","3+","6","-1","1","Devastating Wounds: non-MONSTER/VEHICLE, Sustained Hits 2: non-MONSTER/VEHICLE"),
+      ranged("Hunter-slayer Missile","48\"","1","2+","14","-3","D3+3","Indirect Fire, One Shot"),
+      ranged("Las-talon","36\"","2","3+","10","-3","D3+3",""),
+      ranged("Twin Heavy Bolter","36\"","3","3+","5","-1","2","Rapid Fire 2, Sustained Hits 1, Twin-linked"),
+      ranged("Twin Lascannon","48\"","1","3+","12","-3","D3+3","Twin-linked"),
+      melee("Armoured Hull","6","4+","8","0","1","")]),
+    abilities:Object.freeze([ability("Combat Embarkation","Opponent Charge phase: one unengaged eligible infantry target unit entirely within 3 inches may embark; enemy can then select new charge targets. Resolve manually."),
+      ability("Transport Capacity","14 ADEPTUS ASTARTES INFANTRY spaces; no JUMP PACK; GRAVIS/TERMINATOR count double."),
+      ability("Damaged 6 and Deadly Demise D6","Resolve damaged threshold and demise manually.")])
+  }),
+  "Repulsor Executioner":Object.freeze({
+    characteristics:Object.freeze({"Move":"10\"","Toughness":"12","Save":"3+","Wounds":"16","Leadership":"6+","Objective Control":"5"}),
+    weapons:Object.freeze([ranged("Defensive Array","24\"","18","3+","5","-1","1",""),
+      ranged("Heavy Laser Destroyer","72\"","2","3+","16","-4","D6+4","Devastating Wounds, Heavy"),
+      ranged("Heavy Onslaught Gatling Cannon","24\"","12","3+","6","-1","1","Sustained Hits 2: non-MONSTER/VEHICLE, Devastating Wounds: non-MONSTER/VEHICLE"),
+      ranged("Macro Plasma Incinerator - Standard","36\"","D3+3","3+","9","-3","2","Blast 1"),
+      ranged("Macro Plasma Incinerator - Supercharge","36\"","D3+3","3+","10","-4","3","Hazardous, Blast 1"),
+      ranged("Twin Heavy Bolter","36\"","3","3+","5","-1","2","Sustained Hits 1, Rapid Fire 2, Twin-linked"),
+      melee("Armoured Hull","6","4+","8","0","1","")]),
+    abilities:Object.freeze([ability("Executioner","Ranged attacks targeting units NOT below half-strength gain +1 to hit rolls. Confirm target strength manually."),
+      ability("Transport Capacity","7 ADEPTUS ASTARTES INFANTRY spaces; no JUMP PACK; GRAVIS/TERMINATOR count double."),
+      ability("Damaged 6 and Deadly Demise D6","Resolve damaged threshold and demise manually.")])
+  }),
   'Gladiator Lancer':Object.freeze({
     characteristics:Object.freeze({Move:'10"',Toughness:'10',Save:'3+',Wounds:'12',Leadership:'6+','Objective Control':'3'}),
     weapons:Object.freeze([
