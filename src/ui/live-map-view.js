@@ -47,7 +47,7 @@ export function createLiveMapView() {
         const note = container.querySelector('[data-map-threat-note]');
         const enabled = button.getAttribute('aria-pressed') !== 'true';
         button.setAttribute('aria-pressed', String(enabled));
-        if (overlay) overlay.hidden = !enabled;
+        if (overlay) overlay.style.visibility = enabled ? 'visible' : 'hidden';
         if (note) note.hidden = !enabled;
       });
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
