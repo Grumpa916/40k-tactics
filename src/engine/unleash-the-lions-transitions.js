@@ -1,6 +1,6 @@
 import { createEvent } from '../events/event.js';
 import { appendHistoryEntry } from '../state/history.js';
-import { getBattleRosterUnit, getBattleUnitDatasheet } from '../rules/battle-unit-reference.js';
+import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers } from '../rules/battle-unit-reference.js';
 import { getCasualtyLoadoutState, normalizeCasualtySelectionName } from '../rules/live-casualty-loadout.js';
 
 // The battle roster is a snapshot. Preserve the paid unit's points on its first
@@ -11,13 +11,32 @@ export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel}={
   const rosterUnit=getBattleRosterUnit(state,unit);
   if(!unit||!rosterUnit) throw new Error('A saved battle roster is needed to split this unit.');
   const models=Number(unit.currentStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
-  if(!Number.isInteger(models)||models<2) throw new Error('The unit needs at least two surviving models.');
+  const formation=getCombatFormationMembers(state,unit);
+  const attached=formation.filter(member=>member.id!==unitId);
+  // Allarus and Aquilon currently allow one attached Leader. Never duplicate
+  // mixed-datasheet models by treating the Leader as another Terminator.
+  if(attached.length>1) throw new Error('Review multiple attached Leaders before splitting this unit.');
+  const leader=attached[0]??null;
+  const leaderRoster=leader?getBattleRosterUnit(state,leader):null;
+  if(leader&&(!leaderRoster||leaderRoster.attachedToBodyguardId!==rosterUnit.id))
+    throw new Error('The attached Leader must have a matching saved bodyguard link.');
+  if(leader&&Number(leader.currentStrength??leader.metadata?.currentModelCount??leader.metadata?.modelCount??1)!==1)
+    throw new Error('The attached Leader must contain exactly one surviving model.');
+  const totalModels=models+(leader?1:0);
+  if(!Number.isInteger(models)||models<1||totalModels<2)
+    throw new Error('The attached unit needs at least two surviving models.');
   const profile=getBattleUnitDatasheet(state,unit);
   const perModel=Number(profile?.characteristics?.Wounds??profile?.characteristics?.wounds);
-  if(!Number.isInteger(perModel)||perModel<1) throw new Error('Confirm the model wound characteristic before splitting.');
-  if(!Array.isArray(woundsByModel)||woundsByModel.length!==models||
-    woundsByModel.some(value=>!Number.isInteger(value)||value<1||value>perModel))
-    throw new Error('Enter current wounds for each surviving model, from 1 to '+perModel+'.');
+  const leaderProfile=leader?getBattleUnitDatasheet(state,leader):null;
+  const leaderWounds=leader?Number(leaderProfile?.characteristics?.Wounds??leaderProfile?.characteristics?.wounds):null;
+  if(!Number.isInteger(perModel)||perModel<1||(leader&&(!Number.isInteger(leaderWounds)||leaderWounds<1)))
+    throw new Error('Confirm every model wound characteristic before splitting.');
+  // Input order: bodyguard models first, then the attached Leader. Each has
+  // its own wound ceiling; Trajann does not inherit the Allarus profile.
+  const woundLimits=[...Array(models).fill(perModel),...(leader?[leaderWounds]:[])];
+  if(!Array.isArray(woundsByModel)||woundsByModel.length!==totalModels||
+    woundsByModel.some((value,index)=>!Number.isInteger(value)||value<1||value>woundLimits[index]))
+    throw new Error('Enter valid current wounds for every surviving model, including the attached Leader last.');
 
   const active=getCasualtyLoadoutState(state,unit)?.activeSelections??{};
   const splitItems=items=>(items??[]).map(item=>{
@@ -58,11 +77,27 @@ export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel}={
       ...(index>0?{points:0,totalPoints:0}:{}),
       splitOriginId:originalRosterId});
   }
-  const next={...state,units:state.units.flatMap(item=>item.id===unitId?children:[item]),
+  // The Leader is already its own live record and roster snapshot. Keep both
+  // intact, remove the attachment link and give it a separate map position.
+  const leaderPosition=unit.position&&Number.isFinite(unit.position.x)&&Number.isFinite(unit.position.y)
+    ? {x:Math.max(0,Math.min(60,Math.round((unit.position.x+1.2)*10)/10)),
+      y:Math.max(0,Math.min(44,Math.round((unit.position.y+.8)*10)/10))}
+    : leader?.position;
+  const next={...state,units:state.units.flatMap(item=>{
+    if(item.id===unitId) return children;
+    if(leader&&item.id===leader.id) return [{...item,position:leaderPosition,
+      attachedToUnitId:null,wounds:woundsByModel[models],startingWounds:leaderWounds,
+      startingStrength:1,currentStrength:1,
+      metadata:{...item.metadata,modelCount:1,currentModelCount:1,
+        splitOriginId:origin,splitModelNumber:models+1}}];
+    return [item];
+  }),
     armyRosters:{...state.armyRosters,[playerId]:{...roster,
-      units:roster.units.flatMap(item=>item.id===originalRosterId?snapshots:[item])}}};
+      units:roster.units.flatMap(item=>item.id===originalRosterId?snapshots:
+        leader&&item.id===leaderRoster.id?[{...item,attachedToBodyguardId:null}]:[item])}}};
   return appendHistoryEntry(next,createEvent('custodes.terminators_split',{
-    playerId,unitId,unitIds:children.map(child=>child.id),woundsByModel:[...woundsByModel],
-    originalModels:models,cpSpent:1,round:state.battle.round,turn:state.turn,phase:state.phase
+    playerId,unitId,unitIds:[...children.map(child=>child.id),...(leader?[leader.id]:[])],
+    leaderUnitIds:leader?[leader.id]:[],woundsByModel:[...woundsByModel],
+    originalModels:totalModels,cpSpent:1,round:state.battle.round,turn:state.turn,phase:state.phase
   }));
 }
