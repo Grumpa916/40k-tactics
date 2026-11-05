@@ -33,6 +33,10 @@
 .combat-workspace__choices { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
 .combat-workspace__choices button { flex:1 1 90px; text-align:left; }
 .combat-workspace__card { padding:10px; border:1px solid #40545c; border-radius:9px; margin:10px 0; }
+.fight-target-rule-status { display:grid; gap:3px; padding:8px 10px; border:1px solid #786c4b; border-radius:8px; background:#28271e; color:#f2e4bd; font-size:13px; line-height:1.35; margin:7px 0; }
+.fight-target-rule-status.is-applies { border-color:#97c979; background:#233528; color:#daf5c8; }
+.fight-target-rule-status.is-ineligible { border-color:#647078; background:#252e32; color:#d2dbdd; }
+.fight-target-rule-status span { overflow-wrap:anywhere; }
 .combat-workspace__card > button { width:100%; text-align:left; }
 .combat-workspace__card small { display:block; margin:5px 0; color:#bdc9c8; }
 .combat-workspace__presets { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; margin:8px 0; }
