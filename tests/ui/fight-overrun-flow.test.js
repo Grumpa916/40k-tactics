@@ -10,8 +10,9 @@ test('Fight tabletop makes Overrun explicit and treats Charge targets as context
   assert.match(source, /Overrun Fight available/);
   assert.match(source, /choose an enemy within 5″/);
   assert.match(source, /Pile In move of up to 3″/);
-  assert.match(source, /Charge targets, Fights First ordering and approximate map position are guidance\/context/);
-  assert.match(source, /they do not block recording the physical result/);
+  assert.doesNotMatch(source, /Other deployed formations: tap their map marker/);
+  assert.doesNotMatch(source, /Choose weapon and target\. The first recorded attack/);
+  assert.doesNotMatch(source, /Confirm Fight legality from the tabletop now/);
   assert.match(workflow, /targetSelectionPolicy: "tabletop-confirmed"/);
   assert.doesNotMatch(source, /No eligible targets remain in the recorded engagement context/);
 });
