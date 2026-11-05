@@ -189,8 +189,11 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
 export function getEquippedWeaponReferences(state, unit, profiles = getBattleUnitDatasheet(state, unit)?.weapons) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit) || isPendingManualLoadout(rosterUnit) || !Array.isArray(profiles)) return [];
-  const loadout = explicitWeaponLoadout(state, unit);
-  if (!loadout) return [];
+  const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
+  const loadout = explicitWeaponLoadout(state, unit) ??
+    (ruleSet?.coverageSource === 'local-datasheet-default-weapons'
+      ? reviewedFixedWeaponLoadout(rosterUnit, unit) : null);
+  if (!loadout || !loadout.size) return [];
   return profiles.flatMap(weapon => {
     const selection = loadout.get(normalizeWeaponName(weapon?.name));
     if (!selection) return [];
@@ -210,9 +213,12 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
+  const reviewedRule = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
+  const derivedFixedOnly = reviewedRule?.coverageSource === 'local-datasheet-default-weapons';
   const loadout = isPendingManualLoadout(rosterUnit)
     ? reviewedFixedWeaponLoadout(rosterUnit, unit)
-    : explicitWeaponLoadout(state, unit);
+    : explicitWeaponLoadout(state, unit) ??
+      (derivedFixedOnly ? reviewedFixedWeaponLoadout(rosterUnit, unit) : null);
 
   return weapons.flatMap((weapon, index) => {
     const loadoutEntry = loadout?.get(normalizeWeaponName(weapon?.name)) ?? null;
