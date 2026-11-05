@@ -1,5 +1,5 @@
 import { getCombatFormationMembers, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
-import { getEquippedWeaponReferences } from '../rules/saved-roster-combat-profile.js';
+import { getEquippedWeaponReferences, parseCombatCharacteristic } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitPosition } from '../rules/spatial-context.js';
 
 const WIDTH = 60;
@@ -69,13 +69,13 @@ function confirmedRange(state, unit) {
   const members = getCombatFormationMembers(state, unit);
   const ranges = members.flatMap((member) => getEquippedWeaponReferences(state, member)
     .filter((item) => item.activeQuantity == null || item.activeQuantity > 0)
-    .map((item) => Number(item.weapon?.range ?? item.weapon?.characteristics?.range)))
+    .map((item) => parseCombatCharacteristic(item.weapon?.range ?? item.weapon?.characteristics?.range)))
     .filter((range) => Number.isFinite(range) && range > 0);
   return ranges.length ? Math.max(...ranges) : null;
 }
 
 export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerId) {
-  if (perspectivePlayerId == null) return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay hidden viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Active player perspective is not recorded"><text class="live-map__threat-empty" x="30" y="22" text-anchor="middle">Active player perspective not recorded</text></svg>';
+  if (perspectivePlayerId == null) return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay style="visibility:hidden" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Active player perspective is not recorded"><text class="live-map__threat-empty" x="30" y="22" text-anchor="middle">Active player perspective not recorded</text></svg>';
   const units = Array.isArray(state?.units) ? state.units : [];
   const seen = new Set();
   const sources = [];
@@ -91,7 +91,7 @@ export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerI
     if (!position || range == null) continue;
     sources.push({ unit: root, position: { x: position.x, y: HEIGHT - position.y }, range });
   }
-  if (!sources.length) return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay hidden viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="No confirmed enemy ranged profiles"><text class="live-map__threat-empty" x="30" y="22" text-anchor="middle">No confirmed enemy ranged profiles</text></svg>';
+  if (!sources.length) return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay style="visibility:hidden" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="No confirmed enemy ranged profiles"><text class="live-map__threat-empty" x="30" y="22" text-anchor="middle">No confirmed enemy ranged profiles</text></svg>';
 
   const terrains = terrainShapes(mapHtml);
   const coverage = sources.map(({ unit, position, range }) =>
@@ -116,6 +116,6 @@ export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerI
     }
   }
   const shadowPolygons = shadows.join('');
-  return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay hidden viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Approximate current-position shooting ranges and terrain shadows">' +
+  return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay style="visibility:hidden" viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Approximate current-position shooting ranges and terrain shadows">' +
     shadowPolygons + coverage + '</svg>';
 }
