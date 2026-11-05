@@ -32,6 +32,8 @@ export function renderMissionReviewPanel(summary, { open = false, openStates = {
     '[data-mission-review-overlay] .battle-mission-summary__section>summary{min-height:48px;padding:10px 12px;}' +
     '[data-mission-review-overlay] .battle-mission-summary__player>summary{min-height:44px;padding:9px 12px;}' +
     '[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:12px;padding-right:12px;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__scoring>li>strong{color:#ffdb88;}' +
+    '[data-mission-review-overlay] .battle-mission-summary__scoring>li>ul>li>strong{color:#c5ef9f;}' +
     '@media (max-width:760px),(orientation:portrait){[data-mission-review-overlay]{padding:8px;}[data-mission-review-overlay] .battle-shell__mission-review-dialog{width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:12px;}[data-mission-review-overlay] .battle-shell__mission-review-body{overflow-y:auto;-webkit-overflow-scrolling:touch;}[data-mission-review-overlay] .battle-mission-summary{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto;height:auto;}[data-mission-review-overlay] .battle-mission-summary__section{max-height:none;overflow:visible;}[data-mission-review-overlay] .battle-mission-summary__detail{padding-left:8px;padding-right:8px;}}' +
     '</style>';
   return '<div class="battle-shell__mission-review"' + (open ? "" : " hidden") + ' data-mission-review-overlay>' +
