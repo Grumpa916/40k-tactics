@@ -9,9 +9,9 @@ Examined all **57** Tyranid catalog entries and the structured equipment rules o
 | Class | Entries | Treatment |
 | --- | ---: | --- |
 | Existing structured selectable wargear | 11 | Preserved, no changes to legal combinations |
-| Source-listed fixed weapons added | 38 | Declared fixed quantity: one per single model or per model in uniform squads; authoritative option detail still to cross-check |
+| Source-listed fixed weapons added | 34 | Declared fixed quantity: one per single model or per model in uniform squads; authoritative option detail still to cross-check |
 | Explicitly no conventional weapon profiles | 2 | Mucolid Spores, Spore Mines: `noEquipment: true` (special abilities remain separate) |
-| Complex unresolved alternative/composition profiles | 6 | No automatic loadout inference until source verification |
+| Complex unresolved alternative/composition profiles | 10 | No automatic loadout inference until source verification |
 | **Total** | **57** | Entire catalog classified |
 
 The newly added fixed-only entries are explicitly tagged `officialWargearCertification: pending`; having structured coverage does not certify a newer official update. Existing saved rosters are unchanged.
@@ -19,12 +19,12 @@ The newly added fixed-only entries are explicitly tagged `officialWargearCertifi
 ### Priority units
 
 - **Exocrine:** Bio-plasmic cannon and Powerful limbs are listed as fixed on the local datasheet; now modeled as separate shooting/melee selections.
-- **Norn Assimilator:** The local datasheet lists Toxinjector Harpoon ranged, Monstrous scything talons, and Toxinjector Harpoon melee as fixed. Keep ranged/melee contexts separate.
+- **Norn Assimilator:** The local datasheet lists Toxinjector Harpoon ranged, Monstrous scything talons, and Toxinjector Harpoon melee, but imported selection quantities conflict with one-per-profile assumptions. Hold pending model-specific reconciliation.
 - **Hormagaunts:** Hormagaunt talons modeled per model.
 - **Zoanthropes:** Two Warp Blast variants (witchfire and focused witchfire) are grouped modes; require exact selection semantics before fixed-weapon automation.
 - **Norn Emissary:** Three Psychic Tendril profiles and two melee profiles require grouped/alternative mode verification before automated equipment quantities.
 
-### Other unresolved entries (exactly 6)
+### Other unresolved entries (exactly 10)
 
 1. Old One Eye — separate strike/sweep claws profiles.
 2. Zoanthropes — alternate Warp Blast modes.
@@ -32,8 +32,12 @@ The newly added fixed-only entries are explicitly tagged `officialWargearCertifi
 4. Norn Emissary — multi-mode psychic tendrils and melee profile interaction.
 5. Harpy — twin heavy venom cannon vs twin stranglethorn cannon may be alternatives, despite both appearing as Default in the local catalog.
 6. Hyperadapted Raveners — mixed Prime/Ravener model equipment; do not multiply all weapons by model count.
+7. Norn Assimilator — imported loadout does not support unconditional one-copy-per-profile assumptions.
+8. Toxicrene — ranged/melee lashes may represent shared equipment profiles; importer conflicts with automatic rule.
+9. Hierophant — imported equipment quantities contradict simple per-profile inference.
+10. Harridan — imported equipment quantities contradict simple per-profile inference.
 
-These six have valid reference data but no complete modeled selection rules; hold as `loadout rules coverage pending` rather than adding invented options.
+These ten have valid reference data but no complete modeled selection rules; hold as `loadout rules coverage pending` rather than adding invented options.
 
 ### Exclusions and follow-up
 
@@ -45,4 +49,4 @@ These six have valid reference data but no complete modeled selection rules; hol
 
 ## Implementation
 
-`src/data/tyranid-fixed-wargear-coverage.js` contains the explicit fixed-only allowlist, weaponless exception, and six-item exclusion list. The existing Tyranid data router incorporates the fixed-only rules. Tests enforce 57-entry partitioning, profile identities, quantities, and no-weapon handling.
+`src/data/tyranid-fixed-wargear-coverage.js` contains the explicit fixed-only allowlist, weaponless exception, and ten-item exclusion list. The existing Tyranid data router incorporates the fixed-only rules. Tests enforce 57-entry partitioning, profile identities, quantities, and no-weapon handling.
