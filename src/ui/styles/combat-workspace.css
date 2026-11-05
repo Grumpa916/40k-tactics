@@ -61,3 +61,11 @@
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more { margin-top:5px; border-top:1px solid #52664b; }
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more summary { min-height:44px; display:flex; align-items:center; }
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more > .fight-advisory__grid { padding:8px 0; }
+
+/* Charge: result actions stay at the top while the unit/target list scrolls. */
+.combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls { flex:none; padding:10px 12px; border-bottom:1px solid #40545c; background:#1d2927; }
+.combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls h1 { font-size:17px; margin:0 0 6px; overflow-wrap:anywhere; }
+.combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls > small { color:#bdc9c8; font-size:12px; }
+.combat-workspace[data-combat-phase="charge"] .combat-workspace__charge-results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
+.combat-workspace[data-combat-phase="charge"] .combat-workspace__charge-results button { width:100%; min-width:0; min-height:44px; padding:8px 5px; font-size:12px; line-height:1.2; font-weight:700; text-align:center; }
+.combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls .combat-workspace__error { margin:4px 0 8px; }
