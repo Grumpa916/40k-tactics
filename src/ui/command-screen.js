@@ -773,7 +773,6 @@ export function createCommandScreen(container, {
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       (getUnleashTheLionsOpportunities(state,{playerId}).length
         ? renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'unleash-the-lions'}) : '') +
-      renderCustodesKatahCommandPanel(state, { playerId }) +
       '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
       secondaryMissionManager + secondaryRedrawMarkup + '</details>' +
       '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details></div>';
@@ -786,6 +785,7 @@ export function createCommandScreen(container, {
         interactivePlayerId: null,
         mapView,
         controls: commandControls,
+        afterRuleReminders: renderCustodesKatahCommandPanel(state, { playerId }),
         footer: ''
       });
       mapView.bind(container);
