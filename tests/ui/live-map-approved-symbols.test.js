@@ -47,7 +47,8 @@ test('live map loads the approved symbol stylesheet after the base live-map styl
   const symbols = html.indexOf('live-map-symbols.css');
   assert.ok(base >= 0);
   assert.ok(symbols > base);
-  assert.match(html, /approved-symbols-1/);
+  assert.match(html, /live-map\.css\?v=shooting-coverage-1/);
+  assert.match(html, /live-map-symbols\.css\?v=approved-symbols-2/);
 });
 
 test('live map replaces the old legend with a key for visible friendly designators', () => {
