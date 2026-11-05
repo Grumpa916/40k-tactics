@@ -4,6 +4,7 @@ import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../../src/data/adeptus-custo
 import { recordCustodesDetachmentStratagemUse } from '../../src/engine/custodes-detachment-stratagem-transitions.js';
 import { getUnleashTheLionsOpportunities } from '../../src/rules/custodes-detachment-stratagem-opportunities.js';
 import { getLiveUnitVitals } from '../../src/rules/live-unit-vitals.js';
+import { getCombatFormationMembers, getCombatFormationRoot } from '../../src/rules/battle-unit-reference.js';
 import { getDatasheetWeaponOptions } from '../../src/rules/saved-roster-combat-profile.js';
 import { renderCustodesDetachmentStratagemControls } from '../../src/ui/custodes-detachment-stratagem-controls.js';
 import { renderPhaseArmyRoster } from '../../src/ui/phase-army-roster.js';
@@ -77,4 +78,95 @@ test('Command phase shows the split form and wound allocation field',()=>{
   assert.match(html,/Remaining wounds per model/);
   assert.match(html,/data-custodes-detachment-stratagem-form/);
   assert.match(html,/Spend 1 CP/);
+});
+
+function withTrajannAttached(state=battle()) {
+  const sheet='adeptus-custodes:trajann-valoris';
+  const bodyguard=state.armyRosters.p1.units[0];
+  bodyguard.attachedLeaderIds=['r-trajann'];
+  state.armyRosters.p1.units.push({
+    id:'r-trajann',name:'Trajann Valoris',datasheetId:sheet,modelCount:1,
+    attachedToBodyguardId:bodyguard.id,points:265,isWarlord:true,
+    datasheet:ADEPTUS_CUSTODES_DATASHEET_DETAILS[sheet],
+    equippedWeapons:[{name:'Eagle’s Scream',quantity:1},{name:'Watcher’s Axe',quantity:1}],
+    equippedWargear:[],loadoutValidation:{status:'source-reviewed'}
+  });
+  state.units.push({
+    id:'p1:trajann',ownerId:'p1',name:'Trajann Valoris',status:'deployed',
+    position:{x:20,y:20},metadata:{rosterUnitId:'r-trajann',datasheetId:sheet,modelCount:1},
+    wounds:9,startingWounds:10
+  });
+  return state;
+}
+
+test('attached Trajann plus three Allarus becomes four separate model-accurate units',()=>{
+  const start=withTrajannAttached();
+  const before=JSON.stringify(start);
+  const entry=getUnleashTheLionsOpportunities(start,{playerId:'p1'})[0];
+  assert.equal(entry.available,true);
+  assert.equal(entry.modelCount,4);
+  const form=renderCustodesDetachmentStratagemControls(start,{playerId:'p1',stratagemId:'unleash-the-lions'});
+  assert.match(form,/6, 6, 6, 10/);
+  assert.match(form,/Trajann Valoris/);
+  const next=recordCustodesDetachmentStratagemUse(start,{
+    ...command,woundsByModel:[6,4,6,9]
+  });
+  assert.equal(JSON.stringify(start),before,'never change the original state');
+  assert.equal(next.commandPoints.p1,1);
+  assert.equal(next.units.length,4);
+  assert.equal(new Set(next.units.map(unit=>unit.id)).size,4);
+  assert.deepEqual(next.units.map(unit=>unit.wounds),[6,4,6,9]);
+  assert.ok(next.units.every(unit=>unit.startingStrength===1&&unit.currentStrength===1));
+  assert.deepEqual(next.units.map(unit=>unit.startingWounds),[6,6,6,10]);
+  const trajann=next.units.find(unit=>unit.id==='p1:trajann');
+  assert.equal(trajann.metadata.datasheetId,'adeptus-custodes:trajann-valoris');
+  assert.notDeepEqual(trajann.position,next.units[0].position);
+  assert.equal(getCombatFormationRoot(next,trajann).id,trajann.id);
+  assert.equal(getCombatFormationMembers(next,next.units[0]).length,1);
+  assert.equal(getCombatFormationMembers(next,trajann).length,1);
+  assert.equal(next.armyRosters.p1.units.length,4);
+  assert.equal(next.armyRosters.p1.units.reduce((sum,unit)=>sum+unit.points,0),535);
+  assert.equal(next.armyRosters.p1.units[3].attachedToBodyguardId,null);
+  assert.equal(next.armyRosters.p1.units[3].isWarlord,true);
+  assert.equal(next.armyRosters.p1.units[3].equippedWeapons[1].name,'Watcher’s Axe');
+  assert.ok(next.armyRosters.p1.units.slice(0,3).every(unit=>unit.attachedLeaderIds.length===0));
+  const roster=renderPhaseArmyRoster(next,'p1');
+  assert.match(roster,/Trajann Valoris/);
+  assert.doesNotMatch(roster,/Attached unit/);
+  const map=renderBattlefieldMap(next,{mode:'live',perspectivePlayerId:'p1'});
+  assert.equal((map.match(/data-map-unit-id="p1:u1(?::lions:[^"]*)?"/g)??[]).length,3);
+  assert.match(map,/data-map-unit-id="p1:trajann"/);
+  assert.deepEqual(next.history.at(-1).payload.unitIds,next.units.map(unit=>unit.id));
+  assert.deepEqual(next.history.at(-1).payload.leaderUnitIds,['p1:trajann']);
+  assert.equal(next.history.at(-1).payload.originalModels,4);
+});
+
+test('attached Leader wound maximum is independent, with no CP spent for invalid input',()=>{
+  const start=withTrajannAttached();
+  assert.throws(()=>recordCustodesDetachmentStratagemUse(start,{
+    ...command,woundsByModel:[6,6,6,11]
+  }),/current wounds/);
+  assert.throws(()=>recordCustodesDetachmentStratagemUse(start,{
+    ...command,woundsByModel:[6,6,6]
+  }),/current wounds/);
+  assert.equal(start.commandPoints.p1,2);
+  assert.equal(start.units.length,2);
+  assert.deepEqual(start.armyRosters.p1.units[0].attachedLeaderIds,['r-trajann']);
+  assert.equal(start.armyRosters.p1.units[1].attachedToBodyguardId,'r1');
+});
+
+test('two surviving models including the attached Leader are sufficient to split',()=>{
+  const start=withTrajannAttached(battle({weapons:[
+    {name:'Balistus Grenade Launcher',quantity:1},{name:'Guardian Spear',quantity:1}
+  ]}));
+  start.units[0].currentStrength=1;
+  start.units[0].metadata.currentModelCount=1;
+  start.armyRosters.p1.units[0].modelCount=1;
+  const opportunity=getUnleashTheLionsOpportunities(start,{playerId:'p1'})[0];
+  assert.equal(opportunity.modelCount,2);
+  assert.equal(opportunity.available,true);
+  const next=recordCustodesDetachmentStratagemUse(start,{...command,woundsByModel:[5,9]});
+  assert.equal(next.units.length,2);
+  assert.equal(next.commandPoints.p1,1);
+  assert.deepEqual(next.units.map(unit=>unit.wounds),[5,9]);
 });
