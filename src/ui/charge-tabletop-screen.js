@@ -79,10 +79,17 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       measuredDistances:distances,
       limit:3
     }) : [];
-    const controls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
+    // Keep the outcome buttons visible while scrolling through chargers, targets
+    // and measurements. This is the fixed top strip of the Charge controls panel.
+    const topControls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
       ${state.phase !== 'charge' ? '<p class="combat-workspace__error" role="status">Viewing Charge. Return to the current game phase and advance to Charge to record an outcome.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
-      <p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
+      ${candidate ? `<div class="combat-workspace__charge-results" role="group" aria-label="Record charge result">
+        <button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button>
+        <button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button>
+        <button type="button" data-charge-decline>Do not charge</button>
+      </div>` : '<small>Choose a charger on the map or from the list below.</small>'}`;
+    const controls = `<p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No deployed units available for a Charge decision.</p>'}</div></details>
       ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
@@ -137,10 +144,9 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
           <small>${Number.isFinite(item.targetDistance) ? `Map ≈ ${esc(item.targetDistance)}″ · ` : "Map distance unknown · "}${esc(item.rangeStatus === 'outside-map-envelope' ? 'outside approximate range · confirm on tabletop' : item.rangeStatus === 'borderline' ? 'borderline · measure on table' : item.confidence + ' confidence')}</small>
           ${targetIds.has(item.targetUnitId) ? `<div class="combat-workspace__presets">${Array.from({ length:11 }, (_, i) => i + 2).map(n => `<button type="button" data-charge-distance="${esc(item.targetUnitId)}" data-charge-distance-value="${n}" aria-label="${esc(item.target.name)} measured distance ${n} inches" aria-pressed="${distances.get(item.targetUnitId) === n}">${n}″</button>`).join('')}</div><small>Measured: ${Number.isFinite(measured) ? measured + '″ · ' + percent(exactChance) + ' success' : 'choose distance for exact 2D6 chance'}</small>` : ''}
         </section>`;
-        }).join('')}
-        <div class="combat-workspace__choices"><button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button><button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button><button type="button" data-charge-decline>Do not charge</button></div>` : ''}
+        }).join('')}` : ''}
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, topControls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
 
     restoreView();
     mapView.bind(container);

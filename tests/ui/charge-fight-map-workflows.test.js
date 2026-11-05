@@ -56,6 +56,31 @@ test('Charge map selects multiple declared targets and records fresh preset dist
   } finally { x.screen.destroy(); }
 });
 
+test('Charge outcomes remain at top of panel while targets and unit list scroll', () => {
+  const x=setup();
+  try {
+    click(x,'data-map-unit-id','fighter');
+    const html=x.root.innerHTML;
+    const fixedStart=html.indexOf('class="combat-workspace__top-controls"');
+    const scrollStart=html.indexOf('class="combat-workspace__scroll"');
+    assert.ok(fixedStart>=0&&scrollStart>fixedStart,'Charge results are above the scrollable controls');
+    const header=html.slice(fixedStart,scrollStart);
+    const scroll=html.slice(scrollStart);
+    assert.match(header,/data-charge-success/);
+    assert.match(header,/data-charge-failed/);
+    assert.match(header,/data-charge-decline/);
+    assert.doesNotMatch(scroll,/data-charge-success|data-charge-failed|data-charge-decline/,
+      'outcomes are not duplicated at the bottom after target rows');
+    assert.ok(header.indexOf('data-charge-success')<scrollStart);
+    assert.equal(x.root.node('[data-charge-success]').disabled,true);
+    click(x,'data-map-unit-id','enemy');
+    measured(x,'enemy',6);
+    assert.equal(x.root.node('[data-charge-success]').disabled,false);
+    click(x,'data-charge-success');
+    assert.equal(x.session.getState().history.filter(event=>event.type==='charge.outcome_recorded').length,1);
+  } finally { x.screen.destroy(); }
+});
+
 test('Charge target removal clears its measurement; failed opponent charge uses active army', () => {
   const x = setup('charge',state('charge','p2'));
   try {
