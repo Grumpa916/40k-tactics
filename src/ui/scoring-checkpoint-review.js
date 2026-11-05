@@ -26,9 +26,12 @@ function primaryOpportunityMarkup(state, group) {
   const definitionId=typeof group.primaryReference==='string'
     ? group.primaryReference
     : group.primaryReference?.id??primaryName;
+  const officialFaqText=(group.primaryReference?.officialCompanionFaqNotes??[])
+    .map(note => `<p><strong>Official Event Companion FAQ:</strong> ${esc(note)}</p>`).join('');
   return `<details open class="checkpoint-mission checkpoint-mission--primary"><summary>Primary · ${esc(primaryName)} · manual scoring</summary>
     ${scoringRequirementMarkup(primaryWindows)}
     ${renderCheckpointScore(state,group,{category:'primary',definitionId,definitionName:primaryName,scoringWindows:primaryWindows,victoryPoints:group.primaryReference?.victoryPoints})}
+    ${officialFaqText}
   </details>`;
 }
 

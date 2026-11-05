@@ -18,7 +18,7 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 4. **Army Builder and combat-data completeness audit**
    - **First coverage and conditional-pricing audit in progress:** see [2026-11-03 findings](army-builder-wargear-completeness-audit-2026-11-03.md). Preserve saved points and equipment; detect known invalid unit-copy pricing and report unresolved source coverage.
    - Follow-on: **Space Marines official MFM/Codex vs exported points and missing wargear**, then Custodes and Tyranids datasheet/points/wargear/Leader reconciliation. Include enhancements, invulnerable saves/FNP, and detachment data.
-   - 14 photographed Primary card front-side scoring tiers recovered and cross-checked; remaining Primary card reverse sides and missing images still await source review.
+   - Primary source pass 2026-11-04: all 25 mission pairings and VP sets independently corroborated; 14 physical scoring faces and all 11 printed mission-Action faces inspected, official Event Companion v1.2 FAQ clarifications added. Eleven scoring faces remain absent from user photos, so complete official-card certification is still pending; see [dated audit](primary-missions-source-audit-2026-11-04.md).
 
 5. **Combat and Tactical Advisor validation**
    - Validate expected-vs-actual damage, split fire, focus fire, range filtering, charge distance/rerolls, fight-back estimates, Fights First, engaged Vehicle/Monster shooting, Battle-shock/OC effects, and opponent-turn history.
