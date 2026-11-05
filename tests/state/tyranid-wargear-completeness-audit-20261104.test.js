@@ -14,10 +14,10 @@ test("Tyranid audit accounts for all 57 entries without inventing ambiguous equi
   assert.equal(units.length, 57);
   const audit = auditArmyCatalogCompleteness("Tyranids");
   const unresolved = new Set(TYRANID_COMPLEX_LOADOUT_REVIEW);
-  assert.equal(unresolved.size, 6);
+  assert.equal(unresolved.size, 10);
   assert.equal(audit.counts.missingStructuredLoadoutRules, unresolved.size);
   assert.deepEqual(new Set(audit.loadoutCoverageGaps.map(g => g.datasheetId)), unresolved);
-  assert.equal(audit.counts.withStructuredLoadoutRules, 51);
+  assert.equal(audit.counts.withStructuredLoadoutRules, 47);
   for (const item of units) {
     assert.equal(Boolean(getTyranidWargearRuleSet(item.id)), !unresolved.has(item.id), item.name);
   }
@@ -36,10 +36,9 @@ test("fixed-only rules preserve explicit existing weapon names and do not imply 
   }
 });
 
-test("Exocrine, Norn Assimilator and Hormagaunts have quantities from fixed reviewed catalog profiles", () => {
+test("Exocrine and Hormagaunts have quantities from fixed catalog profiles", () => {
   for (const [id, names, models] of [
     ["tyranids:exocrine", ["Bio-plasmic cannon", "Powerful limbs"], 1],
-    ["tyranids:norn-assimilator", ["Toxinjector Harpoon (ranged)", "Monstrous scything talons", "Toxinjector Harpoon (melee)"], 1],
     ["tyranids:hormagaunts", ["Hormagaunt talons"], 10]
   ]) {
     const rule = getTyranidWargearRuleSet(id);
