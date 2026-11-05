@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { custodesReminderState } from '../helpers/custodes-reminder-state.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, isRulesPhaseOpening } from '../../src/rules/battle-rules-reminders.js';
 import { recordRulesReminderUse, setUnitBattleNote } from '../../src/engine/rules-reminder-transitions.js';
+import { renderRulesReminderDialog, renderUnitRulesReminders } from '../../src/ui/rules-reminder-panel.js';
 import { recordVenatariAbilityUse } from '../../src/engine/venatari-ability-transitions.js';
 import { recordGuardiansStratagemUse } from '../../src/engine/guardians-stratagem-transitions.js';
 import { getCustodesKatahState } from '../../src/rules/custodes-tactical-advisor.js';
@@ -138,6 +139,22 @@ test('optional Telemon weapons only receive reminders after the saved loadout se
   assert.equal(selected(),undefined);
   state.armyRosters.p1.units.find(unit=>unit.id==='r-telemon').equippedWeapons=[{name:'Dual Caestus Fists',quantity:1}];
   assert.match(selected().effect,/Twin-linked/);
+});
+
+test('Martial Ka’tah reminder puts Dacatarai, Kaptaris and Rendax on distinct lines',()=>{
+  const state=custodesReminderState({phase:'fight',activePlayer:'p1'});
+  const entry=getBattleRulesReminders(state,{playerId:'p1',unitId:'wardens'}).find(item=>item.ruleId==='katah-fight-window');
+  assert.deepEqual(entry.katahEffectLines.map(item=>item.name),['Dacatarai','Kaptaris','Rendax']);
+  const dialog=renderRulesReminderDialog(state,{playerId:'p1'});
+  const labels=['Dacatarai','Kaptaris','Rendax'].map(name=>
+    '<p data-katah-effect="'+name+'"><strong>'+name+':</strong>');
+  assert.ok(labels.every(label=>dialog.includes(label)));
+  assert.ok(labels[0].length&&dialog.indexOf(labels[0])<dialog.indexOf(labels[1])&&dialog.indexOf(labels[1])<dialog.indexOf(labels[2]));
+  assert.doesNotMatch(dialog, /<p>Dacatarai: .*Kaptaris: .*Rendax: /);
+  for(const name of ['Dacatarai','Kaptaris','Rendax'])assert.match(dialog,new RegExp('data-katah-name="'+name+'"'));
+  const inline=renderUnitRulesReminders(state,{perspectivePlayerId:'p1',selectedUnitId:'wardens'});
+  for(const label of labels) assert.ok(inline.includes(label),'inline reminder should match dialog line layout');
+  assert.match(inline,/data-record-katah-reminder/);
 });
 
 test('defensive Ka’tah choices remain accessible for the user at the start of opponent Fight',()=>{

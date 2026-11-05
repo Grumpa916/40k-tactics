@@ -25,13 +25,18 @@ function groupEntries(entries) {
 function renderEntry(entry, state) {
   const active = isActiveEffect(entry);
   const chosenEffect = entry.choices?.find(choice => choice.id === entry.used?.choice)?.effect;
+  const effectMarkup = !entry.used && entry.katahEffectLines?.length
+    ? '<div class="rules-reminder-katah-effects">'+entry.katahEffectLines.map(line=>
+        '<p data-katah-effect="'+esc(line.name)+'"><strong>'+esc(line.name)+':</strong> '+esc(line.effect)+'</p>'
+      ).join('')+'</div>'
+    : '<p>'+esc(active?chosenEffect??entry.effect:entry.used?'This limited ability has already been used.':entry.effect)+'</p>';
   const context=' data-rule-id="'+esc(entry.ruleId)+'" data-rule-unit="'+esc(entry.unitId??'')+'" data-rule-player="'+esc(entry.playerId)+'"';
   const actions=entry.used?'':entry.katahChoices?entry.katahChoices.map(choice=>'<button type="button" data-record-katah-reminder'+context+' data-katah-name="'+esc(choice.id)+'">'+esc(choice.label)+'</button>').join(''):entry.choices?entry.choices.map(choice=>'<button type="button" data-record-rule-use'+context+' data-rule-choice="'+esc(choice.id)+'">Mark used · '+esc(choice.label)+'</button>').join(''):
     entry.action?'<button type="button" data-record-rule-use'+context+'>'+esc(entry.action)+'</button>':'';
   return '<article class="rules-reminder-card'+(active?' is-active':entry.used?' is-used':'')+'"><header><strong>'+esc(entry.title)+'</strong>'+
     (entry.limit?'<span>'+(active?'Active this phase':entry.used?'Used':'Available')+'</span>':'')+'</header>'+
     (entry.unitName?'<small>'+esc(entry.unitName)+'</small>':'')+'<small>'+esc(entry.timing??'')+(entry.cpCost?' · '+entry.cpCost+' CP':'')+'</small>'+
-    '<p>'+esc(active?chosenEffect??entry.effect:entry.used?'This limited ability has already been used.':entry.effect)+'</p>'+(entry.used?'<p class="rules-reminder-used">Recorded in round '+esc(entry.used.round)+' · '+esc(entry.used.phase)+(entry.used.choice?' · '+esc(entry.choices?.find(choice=>choice.id===entry.used.choice)?.label??entry.used.choice):'')+'</p>':'')+
+    effectMarkup+(entry.used?'<p class="rules-reminder-used">Recorded in round '+esc(entry.used.round)+' · '+esc(entry.used.phase)+(entry.used.choice?' · '+esc(entry.choices?.find(choice=>choice.id===entry.used.choice)?.label??entry.used.choice):'')+'</p>':'')+
     (entry.used?.actualWounds !== undefined?'<p>'+esc(state.units?.find(unit=>unit.id===entry.used.targetId)?.name??entry.used.targetId)+' · '+esc(entry.used.actualWounds)+' wounds lost recorded</p>':'')+
     (entry.used?.cpSpent !== undefined?'<p>'+esc(entry.used.cpSpent)+' CP spent</p>':'')+
     (actions?'<div class="rules-reminder-actions">'+actions+'</div>':'')+renderVenatariAbilityControls(state, entry)+

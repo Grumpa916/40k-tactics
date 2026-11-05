@@ -85,6 +85,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
         if (readiness.readied) entries.push(decorate(state, { ruleId: 'katah-fight-window', playerId, unitId: unit.id, unitName: unit.name,
           title: 'Martial Ka’tah', kind: 'decision', timing: isRulesPhaseOpening(state) ? 'Start of Fight phase' : 'When selected to fight',
           effect: ADEPTUS_CUSTODES_KATAH.filter(item => names.includes(item.name)).map(item => item.name + ': ' + item.effect).join(' '),
+          katahEffectLines: ADEPTUS_CUSTODES_KATAH.filter(item => names.includes(item.name)).map(item=>({name:item.name,effect:item.effect})),
           katahChoices: names.map(name=>({id:name,label:'Use '+name})),sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.officialArmyRulesPreview }));
       }
     }

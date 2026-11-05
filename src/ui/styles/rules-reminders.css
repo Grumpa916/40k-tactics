@@ -45,3 +45,7 @@
 [data-toggle-rules-reminders]{min-height:44px;padding:6px 10px;border:1px solid #9ac475;border-radius:8px;background:#26392c;color:#d5eeba;font:inherit;font-weight:750;white-space:nowrap;cursor:pointer}
 .rules-reminder-dialog :focus-visible,.rules-reminder-actions button:focus-visible,[data-toggle-rules-reminders]:focus-visible{outline:3px solid #83c7ff;outline-offset:2px}
 @media(max-width:760px){.rules-reminder-backdrop{padding:6px}.rules-reminder-dialog{padding:12px;max-height:96dvh}.rules-reminder-heading{top:-12px}}
+
+/* Martial Ka'tah choices: each named effect starts on its own readable line. */
+.rules-reminder-katah-effects p{margin:6px 0;line-height:1.45}
+.rules-reminder-katah-effects p strong{font-weight:750}
