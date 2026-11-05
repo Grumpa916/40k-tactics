@@ -94,6 +94,22 @@ test('Charge target removal clears its measurement; failed opponent charge uses 
   } finally { x.screen.destroy(); }
 });
 
+test('Fight panel omits routine copy while retaining active combat controls', () => {
+  const x=setup('fight',engage(state('fight'),['enemy']));
+  try {
+    click(x,'data-map-unit-id','fighter');
+    const html=x.root.innerHTML;
+    assert.doesNotMatch(html,/Other deployed formations: tap their map marker/);
+    assert.doesNotMatch(html,/Choose weapon and target\. The first recorded attack/);
+    assert.doesNotMatch(html,/Confirm Fight legality from the tabletop now/);
+    assert.match(html,/Melee weapon/);
+    assert.ok(x.root.querySelector('[data-fight-weapon]'));
+    assert.ok(x.root.querySelector('[data-fight-target]'));
+    assert.ok(x.root.querySelector('[data-fight-attack]'));
+    assert.ok(x.root.querySelector('[data-fight-complete]'));
+  } finally { x.screen.destroy(); }
+});
+
 test('Fight map preview does not activate; first attack and second weapon share one activation', () => {
   const x = setup('fight',engage(state('fight')));
   try {
