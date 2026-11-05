@@ -61,6 +61,19 @@ export function assessUnitLoadoutReadiness(unit) {
     });
   }
 
+  // An existing roster with an unequivocal fixed-only Tyranid loadout can
+  // derive that equipment from the catalog without asking the player to
+  // reselect weapons. This is not allowed for ambiguous slots or optional gear.
+  if (ruleSet.coverageSource === 'local-datasheet-default-weapons' &&
+      !unit?.equippedWargear?.length &&
+      !INVALID_STATUSES.has(recordedStatus)) {
+    return Object.freeze({
+      unitId: unit?.id ?? null, name: unit?.name ?? 'Unit',
+      status: 'complete', blocking: false, reviewedRules: true,
+      reason: 'Fixed equipment is determined by the existing datasheet; latest official rules cross-check remains pending.'
+    });
+  }
+
   // A source-reviewed, truly weaponless datasheet (e.g. current 11e Drop Pod)
   // must not require inventing a gun selection to enter battle.
   if (ruleSet.noEquipment && !unit?.equippedWargear?.length &&
