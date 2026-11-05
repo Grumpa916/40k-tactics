@@ -1,5 +1,5 @@
 import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
-import { getBattleUnitDatasheet } from '../rules/battle-unit-reference.js';
+import { getBattleUnitDatasheet, getCombatFormationMembers } from '../rules/battle-unit-reference.js';
 import { getRecordedStratagemUses, isGoldenLightActive } from '../rules/stratagem-use-state.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -11,12 +11,18 @@ export function renderCustodesDetachmentStratagemControls(state,{playerId,strata
     if(!entries.length) return '<p>No deployed Allarus or Aquilon unit is eligible for this Command phase Stratagem.</p>';
     const available=entries.filter(entry=>entry.available);
     const chosen=available[0]??entries[0];
-    const perModel=Number(getBattleUnitDatasheet(state,state.units.find(unit=>unit.id===chosen.unitId))?.characteristics?.Wounds??6);
+    const bodyguard=state.units.find(unit=>unit.id===chosen.unitId);
+    const members=getCombatFormationMembers(state,bodyguard);
+    const leaders=members.filter(member=>member.id!==chosen.unitId);
+    const perModel=Number(getBattleUnitDatasheet(state,bodyguard)?.characteristics?.Wounds??6);
+    const limits=[...Array(chosen.modelCount-leaders.length).fill(perModel),
+      ...leaders.map(member=>Number(getBattleUnitDatasheet(state,member)?.characteristics?.Wounds??0))];
+    const leaderNote=leaders.length?' Enter Terminator models first, then '+leaders.map(member=>member.name).join(', ')+'.':'';
     return `<details class="venatari-ability-controls"><summary>${available.length?'Split terminators · 1 CP':'Review eligibility'}</summary>`+
       `<form data-custodes-detachment-stratagem-form data-detachment-stratagem-id="unleash-the-lions" data-detachment-stratagem-player="${esc(playerId)}">`+
       `<label>Terminator unit<select name="unitId" required>${entries.map(entry=>`<option value="${esc(entry.unitId)}" ${entry===chosen?'selected ':''}${entry.available?'':'disabled'}>${esc(entry.unitName)} · ${entry.modelCount} models${entry.blockedReason?' · '+esc(entry.blockedReason):''}</option>`).join('')}</select></label>`+
-      `<label>Remaining wounds per model, comma separated<input name="woundsByModel" type="text" required placeholder="e.g. ${Array(chosen.modelCount).fill(perModel).join(', ')}" autocomplete="off"></label>`+
-      '<small>Enter current wounds for every surviving model at the table. Mixed wargear needs model-level assignment and cannot be split automatically. After splitting, drag each marker to its tabletop position.</small>'+
+      `<label>Remaining wounds per model, comma separated<input name="woundsByModel" type="text" required placeholder="e.g. ${limits.join(', ')}" autocomplete="off"></label>`+
+      `<small>Enter current wounds for each surviving model.${esc(leaderNote)} Mixed wargear needs model-level assignment and cannot be split automatically. After splitting, drag each marker to its tabletop position.</small>`+
       check('timingConfirmed','I am using this Stratagem in my Command phase on a battlefield unit')+
       check('unitLimitConfirmed','No other Stratagem targeted this unit this phase, including one resolved at the table')+
       `<button type="submit" ${available.length?'':'disabled'}>Spend 1 CP · split into individual units</button></form></details>`;

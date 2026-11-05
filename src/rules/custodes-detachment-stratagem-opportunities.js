@@ -100,13 +100,20 @@ export function getUnleashTheLionsOpportunities(state,{playerId,unitId=null}={})
   if(!roster||!isAdeptusCustodesFaction(roster.faction)||!getRosterDetachmentNames(roster).includes('Lions of the Emperor')) return [];
   return (state.units??[]).filter(unit=>unit.ownerId===playerId&&unit.status==='deployed'&&
     (!unitId||unit.id===unitId)&&LIONS_SHEETS.has(unit.metadata?.datasheetId)).map(unit=>{
-    const count=Number.isInteger(unit.currentStrength)?unit.currentStrength:
+    const bodyguardCount=Number.isInteger(unit.currentStrength)?unit.currentStrength:
       Number.isInteger(unit.metadata?.currentModelCount)?unit.metadata.currentModelCount:Number(unit.metadata?.modelCount);
+    const formation=getCombatFormationMembers(state,unit);
+    const leaders=formation.filter(member=>member.id!==unit.id);
+    const count=bodyguardCount+leaders.length;
     let blockedReason=null;
-    if(getCombatFormationRoot(state,unit)?.id!==unit.id||getCombatFormationMembers(state,unit).length!==1)
-      blockedReason='Resolve attached models at the table before splitting this unit.';
-    if(!blockedReason&&(!Number.isInteger(count)||count<2)) blockedReason='Needs at least two surviving models on the battlefield.';
-    if(!blockedReason&&isUnitBattleShocked(unit)) blockedReason='Battle-shocked units cannot receive Stratagems.';
+    if(getCombatFormationRoot(state,unit)?.id!==unit.id)
+      blockedReason='Select the Terminator bodyguard unit.';
+    if(!blockedReason&&(leaders.length>1||leaders.some(member=>
+      Number(member.currentStrength??member.metadata?.currentModelCount??member.metadata?.modelCount??1)!==1)))
+      blockedReason='Review the attached Leader models before splitting.';
+    if(!blockedReason&&(!Number.isInteger(bodyguardCount)||bodyguardCount<1||count<2))
+      blockedReason='Needs at least two surviving models in the attached unit.';
+    if(!blockedReason&&formation.some(isUnitBattleShocked)) blockedReason='Battle-shocked units cannot receive Stratagems.';
     if(!blockedReason&&unit.metadata?.splitOriginId) blockedReason='Already split into single-model units.';
     blockedReason??=getStratagemUseBlock(state,{playerId,unitId:unit.id,stratagemId:'unleash-the-lions'});
     if(!blockedReason&&getCommandPointBalance(state,playerId)<1) blockedReason='Needs 1 CP.';
