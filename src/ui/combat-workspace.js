@@ -48,13 +48,14 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
 
 // Each phase owns its selection and command handling. Use the shared reference
 // roster unless the phase supplies its own selection rail.
-export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, footer = '', mapExtra = '', leftRail = '', mapView = createLiveMapView() }) {
+export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', mapView = createLiveMapView() }) {
   leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId);
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
   return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
     ${hasLeftRail ? `<aside class="combat-workspace__rail" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
+      ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
       <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId, includeStratagems:false}) : ''}</div>${footer ? `<footer>${footer}</footer>` : ''}
     </section></main>`;
 }
