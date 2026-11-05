@@ -13,8 +13,8 @@ const SINGLE_MODEL_FIXED = Object.freeze([
   "tyranid-prime-with-lash-whip", "neurotyrant", "broodlord", "the-swarmlord",
   "lictor", "deathleaper", "neurolictor", "parasite-of-mortrex",
   "exocrine", "haruspex", "psychophage", "the-red-terror", "mawloc",
-  "norn-assimilator", "toxicrene", "trygon", "winged-tyranid-prime",
-  "hive-crone", "tyrannocyte", "hierophant", "harridan",
+  "trygon", "winged-tyranid-prime",
+  "hive-crone", "tyrannocyte",
   "screamer-killer", "sporocyst", "malanthrope", "barbed-hierodule",
   "dimachaeron", "scythed-hierodule"
 ]);
@@ -65,5 +65,9 @@ export const TYRANID_COMPLEX_LOADOUT_REVIEW = Object.freeze([
   "tyranids:maleceptor",
   "tyranids:norn-emissary",
   "tyranids:harpy",
-  "tyranids:hyperadapted-raveners"
+  "tyranids:hyperadapted-raveners",
+  "tyranids:norn-assimilator",
+  "tyranids:toxicrene",
+  "tyranids:hierophant",
+  "tyranids:harridan"
 ]);
