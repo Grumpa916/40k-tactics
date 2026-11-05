@@ -23,6 +23,27 @@ export function validateArmyRoster(roster = {}) {
   const summary = summarizeRosterPoints(roster);
   if (summary.overLimit) issues.push(`Army is ${Math.abs(summary.remainingPoints)} points over its ${roster.pointsLimit}-point limit.`);
   if (summary.unitsWithoutPoints) warnings.push(`${summary.unitsWithoutPoints} unit${summary.unitsWithoutPoints === 1 ? " has" : "s have"} no resolved points cost.`);
+  // Imported and older saved rosters can bypass the interactive attachment picker.
+  // Require both sides of each saved link to agree; never repair them implicitly.
+  const byId = new Map(units.filter(unit => unit?.id).map(unit => [unit.id, unit]));
+  for (const unit of units) {
+    if (unit?.attachedToBodyguardId) {
+      const bodyguard = byId.get(unit.attachedToBodyguardId);
+      if (bodyguard && !(bodyguard.attachedLeaderIds ?? []).includes(unit.id)) {
+        issues.push(`${unit.name}: attached Bodyguard does not reference this Leader.`);
+      }
+    }
+    const leaders = unit?.attachedLeaderIds ?? [];
+    if (new Set(leaders).size !== leaders.length) {
+      issues.push(`${unit.name}: the same Leader is attached more than once.`);
+    }
+    for (const leaderId of leaders) {
+      const leader = byId.get(leaderId);
+      if (leader && leader.attachedToBodyguardId !== unit.id) {
+        issues.push(`${unit.name}: attached Leader ${leader.name} does not reference this Bodyguard.`);
+      }
+    }
+  }
   const counts = new Map();
   for (const unit of units) {
     const key = unit?.datasheetId || `manual:${text(unit?.name)}`;
