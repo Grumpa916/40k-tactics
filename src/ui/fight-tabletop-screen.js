@@ -1,4 +1,5 @@
 import { renderTargetDefenseReminders } from './rules-reminder-panel.js';
+import { renderFightTargetRuleStatus } from './fight-target-rule-status.js';
 import { createLiveMapView } from './live-map-view.js';
 import { bindLiveMapPositionCorrection } from './live-map-position-correction.js';
 import { captureViewContinuity } from './view-continuity.js';
@@ -82,6 +83,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         ${weaponNotice ? `<p class="combat-workspace__error" role="status">${esc(weaponNotice)}</p>` : ''}
         ${selectedWeapon?.characteristics?.extraAttacks ? '<p><strong>Extra Attacks:</strong> record this weapon in addition to the model’s main melee weapon during the same activation.</p>' : ''}
         <label>${options.overrunAvailable ? 'Overrun target · confirm within 5″ on tabletop' : 'Target · confirm legal after Pile In'}<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
+        ${renderFightTargetRuleStatus(state, { attackerId, targetId })}
         ${precisionOptions.length ? `<label>Precision allocation · optional<select data-fight-precision><option value="">Normal allocation</option>${precisionOptions.map(option => `<option value="${esc(option.unitId)}" ${option.unitId === precisionAllocationId ? 'selected' : ''}>${esc(option.name)}</option>`).join('')}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ''}
         ${!options.targets.length ? '<p>No deployed enemy formations remain.</p>' : ''}
         ${!active ? '<div class="combat-workspace__choices"><button type="button" data-fight-skip>Do not fight</button></div>' : ''}` : ''}
