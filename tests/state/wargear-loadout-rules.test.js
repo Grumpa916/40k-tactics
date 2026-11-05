@@ -96,7 +96,7 @@ test('Warhammer App plural Genestealers weapon name maps to canonical profile', 
   });
   assert.equal(matched.name, 'Genestealer claws and talons');
   assert.deepEqual(matched.profileNames, ['Genestealer claws and talons']);
-  assert.equal(matched.match, 'singular-plural-profile');
+  assert.equal(matched.match, 'reviewed-rule');
 });
 
 test('large Warhammer App fixture produces a persistent wargear audit and reviewed valid loadouts', async () => {
