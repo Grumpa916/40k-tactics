@@ -25,6 +25,34 @@ function convexHull(points) {
   return lower.concat(upper);
 }
 
+function clipToBoard(polygon) {
+  let points = polygon;
+  const edges = [
+    { inside: point => point.x >= 0, intersect: (a, b) => ({ x: 0, y: a.y + (b.y - a.y) * (0 - a.x) / (b.x - a.x) }) },
+    { inside: point => point.x <= WIDTH, intersect: (a, b) => ({ x: WIDTH, y: a.y + (b.y - a.y) * (WIDTH - a.x) / (b.x - a.x) }) },
+    { inside: point => point.y >= 0, intersect: (a, b) => ({ x: a.x + (b.x - a.x) * (0 - a.y) / (b.y - a.y), y: 0 }) },
+    { inside: point => point.y <= HEIGHT, intersect: (a, b) => ({ x: a.x + (b.x - a.x) * (HEIGHT - a.y) / (b.y - a.y), y: HEIGHT }) }
+  ];
+  for (const edge of edges) {
+    const input = points;
+    points = [];
+    if (!input.length) break;
+    let previous = input.at(-1);
+    for (const current of input) {
+      const previousInside = edge.inside(previous);
+      const currentInside = edge.inside(current);
+      if (currentInside) {
+        if (!previousInside) points.push(edge.intersect(previous, current));
+        points.push(current);
+      } else if (previousInside) {
+        points.push(edge.intersect(previous, current));
+      }
+      previous = current;
+    }
+  }
+  return points;
+}
+
 function terrainShapes(mapHtml) {
   return [...mapHtml.matchAll(/<polygon class="battlefield-map__terrain"[^>]*data-terrain="([^"]+)"[^>]*points="([^"]+)"/g)]
     .map((match) => ({
@@ -62,7 +90,7 @@ export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerI
     if (!position || range == null) continue;
     sources.push({ unit: root, position: { x: position.x, y: HEIGHT - position.y }, range });
   }
-  if (!sources.length) return '';
+  if (!sources.length) return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay hidden viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="No confirmed enemy ranged profiles"><text class="live-map__threat-empty" x="30" y="22" text-anchor="middle">No confirmed enemy ranged profiles</text></svg>';
 
   const terrains = terrainShapes(mapHtml);
   const coverage = sources.map(({ unit, position, range }) =>
@@ -80,8 +108,8 @@ export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerI
       if (!distance || distance > source.range) continue;
       const extension = 72;
       const projected = terrain.points.map((point) => ({ x: point.x + dx / distance * extension, y: point.y + dy / distance * extension }));
-      const hull = convexHull([...terrain.points, ...projected])
-        .map((point) => Math.max(0, Math.min(WIDTH, point.x)) + ',' + Math.max(0, Math.min(HEIGHT, point.y)).toFixed(3))
+      const hull = clipToBoard(convexHull([...terrain.points, ...projected]))
+        .map((point) => point.x.toFixed(3) + ',' + point.y.toFixed(3))
         .join(' ');
       if (hull) shadows.push('<polygon class="live-map__terrain-shadow"><title>' + esc('Approximate shadow behind ' + terrain.name + ' from ' + (source.unit.name ?? 'opponent unit')) + '</title><polygon points="' + hull + '"/></polygon>');
     }
