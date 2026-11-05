@@ -1,3 +1,4 @@
+import { TYRANID_FIXED_WARGEAR_COVERAGE } from "./tyranid-fixed-wargear-coverage.js";
 import { getAdeptusCustodesWargearRuleSet, getAdeptusCustodesWargearSelections } from './adeptus-custodes-wargear-rules.js';
 import { getSpaceMarinesWargearRuleSet, getSpaceMarinesWargearSelections } from './space-marines-wargear-rules.js';
 
@@ -144,12 +145,16 @@ export const TYRANID_WARGEAR_RULES = Object.freeze({
  * Army Builder / import / casualty pipeline can safely consume Custodes data.
  */
 export function getTyranidWargearRuleSet(datasheetId) {
-  return TYRANID_WARGEAR_RULES[datasheetId] ?? getAdeptusCustodesWargearRuleSet(datasheetId) ?? getSpaceMarinesWargearRuleSet(datasheetId) ?? null;
+  return TYRANID_WARGEAR_RULES[datasheetId] ?? TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId] ?? getAdeptusCustodesWargearRuleSet(datasheetId) ?? getSpaceMarinesWargearRuleSet(datasheetId) ?? null;
 }
 
 export function getTyranidWargearSelections(datasheetId) {
-  if (!TYRANID_WARGEAR_RULES[datasheetId]) return getAdeptusCustodesWargearRuleSet(datasheetId) ? getAdeptusCustodesWargearSelections(datasheetId) : getSpaceMarinesWargearSelections(datasheetId);
-  const ruleSet = TYRANID_WARGEAR_RULES[datasheetId];
+  if (!TYRANID_WARGEAR_RULES[datasheetId] && !TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId]) {
+    return getAdeptusCustodesWargearRuleSet(datasheetId)
+      ? getAdeptusCustodesWargearSelections(datasheetId)
+      : getSpaceMarinesWargearSelections(datasheetId);
+  }
+  const ruleSet = TYRANID_WARGEAR_RULES[datasheetId] ?? TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId];
   const values = [
     ...(ruleSet.fixed ?? []),
     ...(ruleSet.optional ?? []),
