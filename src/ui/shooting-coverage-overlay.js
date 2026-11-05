@@ -75,6 +75,7 @@ function confirmedRange(state, unit) {
 }
 
 export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerId) {
+  if (perspectivePlayerId == null) return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay hidden viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Active player perspective is not recorded"><text class="live-map__threat-empty" x="30" y="22" text-anchor="middle">Active player perspective not recorded</text></svg>';
   const units = Array.isArray(state?.units) ? state.units : [];
   const seen = new Set();
   const sources = [];
@@ -111,10 +112,10 @@ export function renderShootingCoverageOverlay(mapHtml, state, perspectivePlayerI
       const hull = clipToBoard(convexHull([...terrain.points, ...projected]))
         .map((point) => point.x.toFixed(3) + ',' + point.y.toFixed(3))
         .join(' ');
-      if (hull) shadows.push('<polygon class="live-map__terrain-shadow"><title>' + esc('Approximate shadow behind ' + terrain.name + ' from ' + (source.unit.name ?? 'opponent unit')) + '</title><polygon points="' + hull + '"/></polygon>');
+      if (hull) shadows.push('<g class="live-map__terrain-shadow"><title>' + esc('Approximate shadow behind ' + terrain.name + ' from ' + (source.unit.name ?? 'opponent unit')) + '</title><polygon points="' + hull + '"/></g>');
     }
   }
-  const shadowPolygons = shadows.map((item) => item.replace('<polygon class="live-map__terrain-shadow"><title>', '<g class="live-map__terrain-shadow"><title>').replace('</title><polygon points="', '</title><polygon points="').replace('"/></polygon>', '"/></g>')).join('');
+  const shadowPolygons = shadows.join('');
   return '<svg class="live-map__threat-overlay" data-live-map-threat-overlay hidden viewBox="0 0 60 44" preserveAspectRatio="none" aria-label="Approximate current-position shooting ranges and terrain shadows">' +
     shadowPolygons + coverage + '</svg>';
 }
