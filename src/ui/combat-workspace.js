@@ -56,7 +56,7 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
-      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId, includeStratagems:false}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
+      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId, livePanel:true}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId, includeStratagems:false, livePanel:true}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
     </section></main>`;
 }
 
