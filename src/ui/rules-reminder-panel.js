@@ -1,4 +1,6 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
+import { getLivePhaseReminderEntries } from './live-phase-reminder-filter.js';
+import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote } from '../rules/battle-rules-reminders.js';
 import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
@@ -45,8 +47,19 @@ function renderEntry(entry, state) {
 
 const isActiveEffect = entry => Boolean(entry.used && entry.duration === 'phase' && entry.activeThisPhase);
 
-function renderDetachmentStratagemReminders(state,playerId) {
-  const entries=getCustodesDetachmentStratagemReminders(state,{playerId});
+function renderDetachmentStratagemReminders(state,playerId,{livePanel=false}={}) {
+  const all=getCustodesDetachmentStratagemReminders(state,{playerId});
+  const controlled = {
+    'Preternatural Rapidity':getPreternaturalRapidityOpportunities,
+    'Lightning Wrath':getLightningWrathOpportunities,
+    'Golden Light of the Moiraides':getGoldenLightOpportunities,
+    'Unleash the Lions':getUnleashTheLionsOpportunities
+  };
+  const entries=livePanel ? all.filter(entry => {
+    if (!entry.affordable) return false;
+    const opportunities=controlled[entry.title]?.(state,{playerId});
+    return !opportunities || opportunities.some(option => option.available);
+  }) : all;
   if(!entries.length)return '';
   return '<details class="unit-rules-reminders" data-view-key="detachment-stratagem-windows"><summary>Detachment Stratagems · current phase · '+entries.length+'</summary>'+entries.map(entry=>
     '<article class="rules-reminder-card"><header><strong>'+esc(entry.detachmentName)+' · '+esc(entry.title)+' · '+esc(entry.cpCost)+' CP</strong><span>'+(entry.affordable?'Check trigger':'Needs more CP')+'</span></header>'+
@@ -59,19 +72,21 @@ function renderDetachmentStratagemReminders(state,playerId) {
   ).join('')+'</details>';
 }
 
-export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=null,selectedUnitId=null}={}) {
+export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=null,selectedUnitId=null,livePanel=false}={}) {
   const playerId=perspective(state,perspectivePlayerId);
-  const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId});
-  const detachment=renderDetachmentStratagemReminders(state,playerId);
+  const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId,onlyActionable:livePanel});
+  const detachment=renderDetachmentStratagemReminders(state,playerId,{livePanel});
   return guardians||detachment?style()+guardians+detachment:'';
 }
 
-export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true}={}) {
+export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true,livePanel=false}={}) {
   const playerId=perspective(state,perspectivePlayerId);
-  const entries=groupEntries(getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry)));
+  const sourceEntries=getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry));
+  const entries=groupEntries(livePanel ? getLivePhaseReminderEntries(state,{playerId,selectedUnitId,entries:sourceEntries}) : sourceEntries);
   entries.sort((a,b)=>Number(b.ruleId==='aquila-commander')-Number(a.ruleId==='aquila-commander'));
-  const detachmentEntries=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});
-  const stratagemHtml=includeStratagems?renderStratagemOpportunityReminders(state,{perspectivePlayerId,selectedUnitId}):'';
+  const sourceDetachment=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});
+  const detachmentEntries=livePanel?getLivePhaseReminderEntries(state,{playerId,selectedUnitId,entries:sourceDetachment}):sourceDetachment;
+  const stratagemHtml=includeStratagems?renderStratagemOpportunityReminders(state,{perspectivePlayerId,selectedUnitId,livePanel}):'';
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
   if(!entries.length&&!detachmentEntries.length&&!note)return stratagemHtml;
   const opening=entries.some(entry=>entry.kind==='decision');
@@ -85,7 +100,11 @@ export function renderTargetDefenseReminders(state,options={}) {
   const target=state.units?.find(unit=>unit.id===(options.allocationTargetId??options.targetUnitId));
   const note=target?getUnitBattleNote(state,target.id):'';
   const detachmentEntries=target?getCustodesDetachmentRuleReminders(state,{playerId:target.ownerId,unitId:target.id}):[];
-  const guardians=target?renderGuardiansStratagemOpportunities(state,{playerId:target.ownerId,unitId:target.id,stratagemId:'in-auramite-clad',enemyUnitId:options.attackerId}):'';
+  // Target defenses may describe an enemy, but only the viewing player may
+  // operate a defensive Stratagem in the live sidebar.
+  const ownDefense=options.viewingPlayerId==null || (target?.ownerId===options.viewingPlayerId &&
+    (state.activePlayer??state.battle?.activePlayerId)!==options.viewingPlayerId);
+  const guardians=target&&ownDefense?renderGuardiansStratagemOpportunities(state,{playerId:target.ownerId,unitId:target.id,stratagemId:'in-auramite-clad',enemyUnitId:options.attackerId,onlyActionable:options.viewingPlayerId!=null}):'';
   if(!entries.length&&!detachmentEntries.length&&!note)return guardians?style()+guardians:'';
   return style()+'<section class="rules-target-defense" aria-label="Target defensive rules" data-target-defense-reminders><h2>Target defenses · '+esc(target?.name??'Selected unit')+'</h2><ul>'+
     entries.map(entry=>'<li'+(entry.conditional?' class="is-conditional"':'')+'><strong>'+esc(entry.title)+'</strong><span>'+esc(entry.effect)+'</span></li>').join('')+

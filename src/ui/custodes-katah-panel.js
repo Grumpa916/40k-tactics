@@ -64,12 +64,18 @@ export function renderCustodesKatahCommandPanel(state, { playerId = state?.activ
     '<div class="custodes-katah-panel__options">' + cards + '</div></details>';
 }
 
-export function renderCustodesKatahPhasePanel(state, { phase, unitId = null } = {}) {
+export function renderCustodesKatahPhasePanel(state, { phase, unitId = null, playerId = state?.activePlayer ?? state?.battle?.activePlayerId } = {}) {
   if (isRulesPhaseEndConfirmed(state)) return '';
-  const playerId = state?.activePlayer ?? state?.battle?.activePlayerId;
-  const names = PHASE_KATAH[phase];
-  if (!names || state?.phase !== phase || !playerId) return '';
+  const ownTurn = (state?.activePlayer ?? state?.battle?.activePlayerId) === playerId;
+  if (!ownTurn && phase !== 'fight') return '';
   const selected = (state?.units ?? []).find(unit => unit?.id === unitId);
+  const selectedFriendly = selected?.ownerId === playerId;
+  // Fight is a shared phase: our readied units may still fight on the enemy
+  // turn. Defensive Kaptaris is shown at phase start even before selection.
+  const names = ownTurn ? PHASE_KATAH[phase]
+    : isRulesPhaseOpening(state) ? ['Kaptaris']
+      : selectedFriendly ? ['Rendax'] : [];
+  if (!names?.length || state?.phase !== phase || !playerId) return '';
   const roots = eligibleRoots(state, playerId);
   if (!roots.length) return '';
   if (!selected || selected.ownerId !== playerId || !isMartialKatahEligible(state, selected.id)) {

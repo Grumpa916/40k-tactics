@@ -69,8 +69,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
 
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
-      ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,attackerId,weapon:selectedWeapon,phase:'fight'})}
-      ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId })}
+      ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,attackerId,weapon:selectedWeapon,phase:'fight',viewingPlayerId})}
+      ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId, playerId: viewingPlayerId })}
       <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} inferred</summary>
         <h3>Fights First · recommended priority</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
         <h3>Other inferred combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal) || '<small>None remaining</small>'}</div>
@@ -96,7 +96,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining inferred combats as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     const finishUnitControl = active && unit ? '<button type="button" data-fight-finish-entry>Finish unit</button>' : '';
     const endFightControl = active && unit || endReview ? '' : `<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, controls, footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}` });
+    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, reminderUnitId:incomingAttackMode?targetId:attackerId, controls, footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}` });
 
     restoreView();
     mapView.bind(container);

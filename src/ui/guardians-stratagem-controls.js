@@ -3,8 +3,19 @@ import { getActiveGuardiansEffects } from '../rules/stratagem-use-state.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const check=(name,label)=>`<label class="venatari-confirm"><input type="checkbox" name="${name}" required><span>${label}</span></label>`;
 
-export function renderGuardiansStratagemOpportunities(state,{playerId,unitId=null,stratagemId=null,enemyUnitId=null}={}) {
-  const entries=getGuardiansStratagemOpportunities(state,{playerId,unitId,stratagemId});
+export function renderGuardiansStratagemOpportunities(state,{playerId,unitId=null,stratagemId=null,enemyUnitId=null,onlyActionable=false}={}) {
+  const raw=getGuardiansStratagemOpportunities(state,{playerId,unitId,stratagemId});
+  const entries=onlyActionable ? raw.filter(entry => {
+    if (entry.active) return true;
+    if (!entry.available) return false;
+    const current=(event) => event.payload?.round===state.battle?.round && event.payload?.turn===state.turn;
+    if (entry.stratagemId==='prime-target') return (state.history??[]).some(event=>current(event) &&
+      event.type==='shooting.unit_activated' && event.payload?.unitId===entry.unitId && event.payload?.actionType==='shoot');
+    if (entry.stratagemId==='in-auramite-clad') return (state.history??[]).some(event=>current(event) &&
+      event.type===(state.phase==='shooting'?'shooting.unit_activated':'fight.unit_activated') &&
+      entry.enemies.some(enemy=>enemy.id===event.payload?.unitId));
+    return true;
+  }) : raw;
   const ongoing=!stratagemId && ['shooting','charge'].includes(state.phase)?(state.units??[]).filter(unit=>unit.ownerId===playerId && unit.status==='deployed' && (!unitId||unit.id===unitId)).flatMap(unit=>
     getActiveGuardiansEffects(state,unit.id).filter(use=>use.stratagemId==='unlimited-endurance' && use.unitId===unit.id).map(()=>`<article class="rules-reminder-card is-active"><strong>Unlimited Endurance · ${esc(unit.name)}</strong><p>${state.phase==='shooting'?'Ranged attacks have Assault.':'The recorded Advance does not prevent declaring a charge.'} Active until the end of this turn.</p></article>`)).join(''):'';
   if (!entries.length) return ongoing;
