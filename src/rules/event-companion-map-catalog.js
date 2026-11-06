@@ -1,4 +1,5 @@
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
+import { orientEventCompanionLayoutForLandscape } from "./event-companion-landscape-orientation.js";
 
 const LAYOUTS = Object.freeze(["A", "B", "C"]);
 
@@ -60,7 +61,7 @@ export function getEventCompanionMapLayout(missionA, missionB, layout) {
       item.layout === layout;
   });
   if (!geometry?.verified || Number(geometry.page) !== Number(selected.page)) return null;
-  return geometry;
+  return orientEventCompanionLayoutForLandscape(geometry);
 }
 
 // Single public resolver for the complete app selection path. Force Disposition
