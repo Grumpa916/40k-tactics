@@ -90,16 +90,15 @@ test('page 22 Layout B planning labels match six distinct terrain-grounded objec
     players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
     objectives:[],units:[]
   };
-  // Page 22 source IDs do not equal display roles. Horizontal mirroring
-  // preserves the two nearest center markers but reverses their left-to-right
-  // display numbers; the two expansion labels reverse for the same reason.
+  // Source IDs are not their visual roles. The PDF-aligned vertical reflection
+  // keeps both true central markers and numbers expansions from left to right.
   const expected={
     'Defender Home':'Defender Home',
     'Attacker Home':'Attacker Home',
-    'Central 1':'Center 2',
-    'Expansion 2':'Center 1',
-    'Expansion 1':'Expansion 2',
-    'Central 2':'Expansion 1'
+    'Central 1':'Center 1',
+    'Expansion 2':'Center 2',
+    'Expansion 1':'Expansion 1',
+    'Central 2':'Expansion 2'
   };
   for(const [name,label] of Object.entries(expected)){
     assert.equal(perspectiveObjectiveName(name,state,'p1'),label,name);
