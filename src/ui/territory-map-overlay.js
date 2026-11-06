@@ -10,9 +10,6 @@ function ensureStyles(root) {
   style.id = STYLE_ID;
   style.textContent = `
     .battlefield-map__territory-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
-    .battlefield-map__territory-boundary{position:absolute;box-sizing:border-box;opacity:.95;filter:drop-shadow(0 0 2px #101820)}
-    .battlefield-map__territory-boundary.is-vertical{top:0;bottom:0;width:0;border-left:2px dashed #f6d783}
-    .battlefield-map__territory-boundary.is-horizontal{left:0;right:0;height:0;border-top:2px dashed #f6d783}
     .battlefield-map__territory-label{position:absolute;transform:translate(-50%,-50%);max-width:34%;padding:2px 5px;border:1px solid rgba(246,215,131,.52);border-radius:999px;background:rgba(12,20,25,.72);color:#f6e5af;font-size:8px;font-weight:850;line-height:1.1;letter-spacing:.02em;text-align:center;text-transform:uppercase;text-shadow:0 1px 2px #000;white-space:nowrap}
     .battlefield-map__territory-label[data-territory-perspective="mine"]{border-color:rgba(126,200,255,.72);color:#dff3ff}
     .battlefield-map__territory-label[data-territory-perspective="opponent"]{border-color:rgba(255,156,147,.72);color:#ffe5e1}
@@ -84,20 +81,11 @@ function applyToBoard(board, context, perspectivePlayerId) {
     board.append(overlay);
   }
 
-  const boundary = ensureChild(
-    overlay,
-    "[data-territory-boundary]",
-    "battlefield-map__territory-boundary"
-  );
-  boundary.dataset.territoryBoundary = context.divider.orientation;
-  boundary.className = `battlefield-map__territory-boundary is-${context.divider.orientation}`;
-  boundary.style.left = "";
-  boundary.style.top = "";
-  if (context.divider.orientation === "vertical") {
-    boundary.style.left = `${percentX(context.divider.coordinate)}%`;
-  } else {
-    boundary.style.top = `${percentY(context.divider.coordinate)}%`;
-  }
+  // The single territory boundary is already rendered by battlefield-map.js
+  // using the same shared geometry as the Tactical Advisor. This overlay only
+  // supplies perspective labels, preventing a duplicate axis-aligned line
+  // from appearing over diagonal deployments.
+  overlay.querySelector?.("[data-territory-boundary]")?.remove?.();
 
   const labels = perspectiveLabels(context, perspectivePlayerId);
   const attackerLabel = ensureChild(
