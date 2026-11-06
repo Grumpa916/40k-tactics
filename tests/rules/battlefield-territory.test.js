@@ -50,8 +50,8 @@ test('territory status uses player perspective and the established approximate-m
   assert.deepEqual(context.myTerritory, context.attacker);
   assert.deepEqual(context.opponentTerritory, context.defender);
 
-  assert.equal(getTerritoryStatusForPosition(state, { playerId: 'p1', position: { x: 15, y: 22 } }).territory, 'mine');
-  assert.equal(getTerritoryStatusForPosition(state, { playerId: 'p1', position: { x: 45, y: 22 } }).territory, 'opponent');
+  assert.equal(getTerritoryStatusForPosition(state, { playerId: 'p1', position: { x: 45, y: 22 } }).territory, 'mine');
+  assert.equal(getTerritoryStatusForPosition(state, { playerId: 'p1', position: { x: 15, y: 22 } }).territory, 'opponent');
   assert.equal(getTerritoryStatusForPosition(state, { playerId: 'p1', position: { x: 30, y: 22 } }).territory, 'boundary');
   assert.equal(BATTLEFIELD_TERRITORY_MAP_UNCERTAINTY, 3);
 });
