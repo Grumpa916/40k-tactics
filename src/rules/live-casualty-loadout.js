@@ -14,7 +14,7 @@ function startingSelectionQuantities(rosterUnit) {
   const values = {};
   const names = {};
   for (const item of source) {
-    const name = item?.selectionName ?? item?.sourceName ?? item?.name;
+    const name = item?.selectionName ?? item?.name ?? item?.sourceName;
     const key = normalizeCasualtySelectionName(name);
     if (!key) continue;
     const quantity = Number.isInteger(item?.quantity) && item.quantity > 0 ? item.quantity : 1;

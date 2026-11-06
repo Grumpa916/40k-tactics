@@ -95,6 +95,14 @@ function verificationLoadout(unit) {
   const reviewedRuleSet = getTyranidWargearRuleSet(unit.datasheetId);
   if (!reviewedRuleSet) return fixedProfileLoadout(unit);
 
+  // Source-listed fixed-only profiles have exactly one quantity-aware loadout.
+  // Build that selection explicitly so verification fixtures remain meaningful.
+  if (reviewedRuleSet.coverageSource === 'local-datasheet-default-weapons') {
+    return buildManualWargearLoadout(unit, (reviewedRuleSet.fixed ?? []).map(item => ({
+      name: item.name,
+      quantity: (item.count ?? 0) + (item.perModel ?? 0) * unit.modelCount
+    })));
+  }
   const selectionFactory = REVIEWED_VERIFICATION_LOADOUTS[unit.datasheetId];
   if (!selectionFactory) {
     throw new Error(`Full-game verification preset needs a reviewed loadout selection for ${unit.datasheetId}.`);

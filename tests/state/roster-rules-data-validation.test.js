@@ -76,7 +76,7 @@ test('large current Warhammer App Tyranid import is stamped as current and can b
   assert.equal(assessRosterRulesData(imported.roster).status, 'current');
   assert.equal(imported.roster.rulesDataRevision.points.revision, '2026-10-14');
   const revalidated = revalidateRosterRulesData(imported.roster);
-  assert.equal(revalidated.status, 'current');
+  assert.equal(revalidated.status, 'current', JSON.stringify({ issues: revalidated.issues, warnings: revalidated.warnings }));
   assert.deepEqual(revalidated.issues, []);
 });
 
