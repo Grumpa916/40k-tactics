@@ -1,5 +1,6 @@
 import { isUnitBattleShocked } from "./unit-status-summary.js";
 import { opponentPlayerIds, unitById } from "./tactical-context-utils.js";
+import { isStratagemTimingRelevant } from "./stratagem-timing.js";
 
 function normalize(value) {
   return String(value ?? "").trim().toLowerCase();
@@ -24,17 +25,6 @@ function selectedDetachmentRecords(state, playerId) {
   const catalog = roster?.rulesDataRevision?.factionRules?.detachments;
   if (!Array.isArray(catalog)) return [];
   return selected.map((name) => catalog.find((entry) => entry?.name === name)).filter(Boolean);
-}
-
-function phaseRelevant(stratagem, phase) {
-  if (!stratagem) return false;
-  if (Array.isArray(stratagem.phases) && stratagem.phases.length) {
-    return stratagem.phases.includes(phase);
-  }
-  const timing = normalize(stratagem.timing);
-  if (!timing) return true;
-  if (timing.includes("any phase") || timing.includes("either turn")) return true;
-  return timing.includes(normalize(phase));
 }
 
 function roleFor(stratagem) {
@@ -85,11 +75,13 @@ function armyRuleReferences(state, playerId) {
 
 function playerContext(state, playerId) {
   const cp = cpBalance(state, playerId);
+  const activePlayer = state?.activePlayer ?? state?.battle?.activePlayerId ?? null;
+  const isYourTurn = activePlayer == null ? undefined : activePlayer === playerId;
   const detachments = selectedDetachmentRecords(state, playerId);
   const phase = state?.phase ?? null;
   const relevant = detachments.flatMap((detachment) =>
     (Array.isArray(detachment?.stratagems) ? detachment.stratagems : [])
-      .filter((item) => phaseRelevant(item, phase))
+      .filter((item) => isStratagemTimingRelevant(item, phase, { isYourTurn }))
       .map((item) => {
         const cost = Number.isFinite(item?.cpCost) ? Number(item.cpCost) : 1;
         return Object.freeze({
