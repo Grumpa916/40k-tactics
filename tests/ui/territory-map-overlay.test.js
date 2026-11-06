@@ -9,7 +9,8 @@ test('battle app installs an advisory territory overlay on planning, deployment,
   assert.match(entry, /installTerritoryMapOverlay/);
   assert.match(overlay, /new Set\(\["planning", "deployment", "live"\]\)/);
   assert.match(overlay, /data-territory-overlay/);
-  assert.match(overlay, /battlefield-map__territory-boundary/);
+  assert.match(overlay, /The single territory boundary is already rendered by battlefield-map/);
+  assert.doesNotMatch(overlay, /is-vertical|is-horizontal/, 'overlay must not draw a second conflicting divider');
   assert.match(overlay, /My Territory/);
   assert.match(overlay, /Opponent Territory/);
   assert.match(overlay, /Attacker Territory/);

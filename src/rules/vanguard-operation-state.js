@@ -1,6 +1,6 @@
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import { getEventCompanionMapForForceDispositions } from "./event-companion-map-catalog.js";
-import { getBattlefieldTerritoryContext } from "./battlefield-territory.js";
+import { getBattlefieldTerritoryContext, getTerritoryStatusForPosition } from "./battlefield-territory.js";
 import { pointInTerrainPolygon } from "./death-trap-state.js";
 import { getLiveUnitPosition } from "./spatial-context.js";
 import { getEnemyUnitDestructionsForTurn } from "./scoring-evidence-state.js";
@@ -53,8 +53,16 @@ function terrainTerritoryStatus(state, playerId, entry) {
   if (!context?.perspectiveRole || !entry?.points?.length) {
     return Object.freeze({ enemyTerritoryByMap: null, territoryConfidence: "low" });
   }
-  const allOpponent = entry.points.every((point) => pointInRect(point, context.opponentTerritory));
-  const allMine = entry.points.every((point) => pointInRect(point, context.myTerritory));
+  // Diagonal deployments have no truthful axis-aligned territory rectangle.
+  // Evaluate every terrain corner against the shared midpoint instead of the
+  // historical x=30 bounding rectangles; do not claim a wholly enemy-territory
+  // footprint when it straddles the diagonal.
+  const allOpponent = context.divider.orientation==="diagonal"
+    ? entry.points.every(point=>getTerritoryStatusForPosition(state,{playerId,position:point,uncertainty:0}).territory==="opponent")
+    : entry.points.every(point=>pointInRect(point,context.opponentTerritory));
+  const allMine = context.divider.orientation==="diagonal"
+    ? entry.points.every(point=>getTerritoryStatusForPosition(state,{playerId,position:point,uncertainty:0}).territory==="mine")
+    : entry.points.every(point=>pointInRect(point,context.myTerritory));
   if (allOpponent) return Object.freeze({ enemyTerritoryByMap: true, territoryConfidence: "moderate" });
   if (allMine) return Object.freeze({ enemyTerritoryByMap: false, territoryConfidence: "moderate" });
   return Object.freeze({ enemyTerritoryByMap: null, territoryConfidence: "low" });
