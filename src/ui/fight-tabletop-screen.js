@@ -69,8 +69,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
 
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
-      ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,attackerId,weapon:selectedWeapon,phase:'fight'})}
-      ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId })}
+      ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,attackerId,weapon:selectedWeapon,phase:'fight',viewingPlayerId})}
+      ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId, playerId: viewingPlayerId })}
       <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} inferred</summary>
         <h3>Fights First · recommended priority</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
         <h3>Other inferred combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal) || '<small>None remaining</small>'}</div>
