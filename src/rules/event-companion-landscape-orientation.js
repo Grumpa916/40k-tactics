@@ -14,6 +14,7 @@ export const EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES = Object.freeze([
 ]);
 
 const MIRROR_PAGES = new Set(EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES);
+const RESOLVED_LAYOUTS = new WeakMap();
 export const isEventCompanionLandscapeMirrored = page => MIRROR_PAGES.has(Number(page));
 export const mirrorEventCompanionPoint = point =>
   ({ ...point, x: Number((60 - point.x).toFixed(6)) });
@@ -24,13 +25,14 @@ const reflectPoints = area => area?.points
 
 export function orientEventCompanionLayoutForLandscape(geometry) {
   if (!geometry || !isEventCompanionLandscapeMirrored(geometry.page)) return geometry;
+  if (RESOLVED_LAYOUTS.has(geometry)) return RESOLVED_LAYOUTS.get(geometry);
   const reflectAreas = areas => Object.fromEntries(Object.entries(areas ?? {})
     .map(([name,area])=>[name,reflectPoints(area)]));
   const deploymentZones = Object.fromEntries(Object.entries(geometry.deploymentZones ?? {})
     .map(([name,area])=>[name,area?.points
       ? reflectPoints(area)
       : { ...area, x: Number((60 - area.x - area.width).toFixed(6)) }]));
-  return Object.freeze({
+  const result = Object.freeze({
     ...geometry,
     objectivePositions: Object.fromEntries(Object.entries(geometry.objectivePositions ?? {})
       .map(([name,point])=>[name,mirrorEventCompanionPoint(point)])),
@@ -41,4 +43,6 @@ export function orientEventCompanionLayoutForLandscape(geometry) {
     unmirroredSourceGeometry: geometry,
     landscapeMirrorX: true
   });
+  RESOLVED_LAYOUTS.set(geometry,result);
+  return result;
 }
