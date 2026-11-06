@@ -82,7 +82,7 @@ function renderPrimaryPlayer(state, player, playerId, missionName, definition, s
     escapeHtml(name) + '</strong></summary><div class="battle-mission-summary__detail">' +
     (detail.length ? '<p>' + detail.map(escapeHtml).join(" · ") + '</p>' : '') +
     setupText + actionText + officialFaqText +
-    (scoring ? '<p><strong>Primary scoring reference</strong></p><ul>' + scoring + '</ul>' : '<p>Check the selected mission card for its exact scoring timing and conditions.</p>') +
+    (scoring ? '<p><strong>Primary scoring reference</strong></p><ul class="battle-mission-summary__scoring">' + scoring + '</ul>' : '<p>Check the selected mission card for its exact scoring timing and conditions.</p>') +
     '<p><small>' + escapeHtml(missionSourceNotice(definition, 'primary')) + '</small></p>' +
     '<p>Primary scoring remains player-confirmed; this reference never awards VP automatically.</p>' +
     '</div></details>';
@@ -163,7 +163,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       '<div class="battle-mission-summary__detail"><p>' + escapeHtml(timing) + '</p>' +
       (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
       whenDrawn + cardChoiceSummary + actionText + missionText +
-      (scoring ? '<p><strong>Scoring windows</strong></p><ul>' + scoring + '</ul>' : '') +
+      (scoring ? '<p><strong>Scoring windows</strong></p><ul class="battle-mission-summary__scoring">' + scoring + '</ul>' : '') +
       '<p><small>' + escapeHtml(missionSourceNotice(definition, 'secondary')) + '</small></p>' +
       '<p>Secondary scoring is manual and player-confirmed; the app reminds you at the configured checkpoint and records the agreed VP.</p>' +
       '</div></details>';
