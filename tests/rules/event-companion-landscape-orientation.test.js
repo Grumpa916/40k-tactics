@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { EVENT_COMPANION_MAP_CATALOG } from '../../src/data/event-companion-map-catalog.js';
 import {
   EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES,
+  EVENT_COMPANION_LANDSCAPE_MIRROR_Y_PAGES,
   isEventCompanionLandscapeMirrored,
+  isEventCompanionLandscapeVerticallyMirrored,
   mirrorEventCompanionPoint
 } from '../../src/rules/event-companion-landscape-orientation.js';
 import { getEventCompanionMapLayout } from '../../src/rules/event-companion-map-catalog.js';
@@ -19,11 +21,14 @@ const near = (actual,expected,message='') => assert.ok(Math.abs(actual-expected)
   message + ': ' + actual + ' should be ' + expected);
 const opposite=edge=>edge==='left'?'right':edge==='right'?'left':edge;
 
-test('45 verified source pages are audited: 30 need clockwise landscape X correction, 15 must not be flipped',()=>{
+test('45 verified source pages use 30 horizontal, 1 vertical, and 14 unchanged presentations',()=>{
   const pages=EVENT_COMPANION_MAP_CATALOG.layouts;
   assert.equal(pages.length,45);
   assert.equal(EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES.length,30);
+  assert.deepEqual(EVENT_COMPANION_LANDSCAPE_MIRROR_Y_PAGES,[23]);
   assert.ok([21,22].every(isEventCompanionLandscapeMirrored));
+  assert.equal(isEventCompanionLandscapeVerticallyMirrored(23),true);
+  assert.equal(isEventCompanionLandscapeMirrored(23),false);
   const seen=new Set();
   for(const source of pages){
     assert.ok(!seen.has(source.page),'duplicate page '+source.page);
@@ -40,12 +45,14 @@ test('resolved map geometry mirrors complete 60 × 44 source landmarks without c
   for(const source of EVENT_COMPANION_MAP_CATALOG.layouts){
     const actual=resolved(source);
     const mirrored=isEventCompanionLandscapeMirrored(source.page);
+    const mirroredY=isEventCompanionLandscapeVerticallyMirrored(source.page);
     assert.equal(Boolean(actual.landscapeMirrorX),mirrored,'page '+source.page);
+    assert.equal(Boolean(actual.landscapeMirrorY),mirroredY,'page '+source.page);
     assert.deepEqual(Object.keys(actual.objectivePositions),Object.keys(source.objectivePositions));
     assert.deepEqual(Object.keys(actual.terrainGeometry),Object.keys(source.terrainGeometry));
     for(const [name,point] of Object.entries(source.objectivePositions)){
       near(actual.objectivePositions[name].x,mirrored?60-point.x:point.x,name+' p.'+source.page);
-      near(actual.objectivePositions[name].y,point.y);
+      near(actual.objectivePositions[name].y,mirroredY?44-point.y:point.y);
     }
     for(const group of ['terrainGeometry','deploymentZones']){
       for(const [name,shape] of Object.entries(source[group])){
@@ -54,17 +61,17 @@ test('resolved map geometry mirrors complete 60 × 44 source landmarks without c
           assert.equal(next.points.length,shape.points.length,name);
           shape.points.forEach((point,index)=>{
             near(next.points[index].x,mirrored?60-point.x:point.x);
-            near(next.points[index].y,point.y);
+            near(next.points[index].y,mirroredY?44-point.y:point.y);
           });
         }else{
           near(next.x,mirrored?60-shape.x-shape.width:shape.x);
-          near(next.y,shape.y);
+          near(next.y,mirroredY?44-shape.y-shape.height:shape.y);
           near(next.width,shape.width);
           near(next.height,shape.height);
         }
       }
     }
-    if(mirrored){
+    if(mirrored || mirroredY){
       assert.equal(actual.unmirroredSourceGeometry,source);
       assert.notEqual(actual,source);
     }else{

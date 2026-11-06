@@ -21,36 +21,58 @@ export const TERRAIN_BOARD_HEIGHT = 44;
 // then reflect the complete overlay into the corrected landscape frame. This
 // preserves every official distance and the terrain ID it belongs to.
 const sourceLayout = layout => layout?.unmirroredSourceGeometry ?? layout;
-const oppositeHorizontalEdge = edge => edge==='left'?'right':edge==='right'?'left':edge;
 const reflectX = value => Number((TERRAIN_BOARD_WIDTH - Number(value)).toFixed(6));
+const reflectY = value => Number((TERRAIN_BOARD_HEIGHT - Number(value)).toFixed(6));
+const orientEdge = (edge,layout) => {
+  if (layout?.landscapeMirrorX && edge==='left') return 'right';
+  if (layout?.landscapeMirrorX && edge==='right') return 'left';
+  if (layout?.landscapeMirrorY && edge==='top') return 'bottom';
+  if (layout?.landscapeMirrorY && edge==='bottom') return 'top';
+  return edge;
+};
+const orientPair = (point,layout) => [
+  layout?.landscapeMirrorX ? reflectX(point[0]) : point[0],
+  layout?.landscapeMirrorY ? reflectY(point[1]) : point[1]
+];
+const orientObjectPoint = (point,layout) => ({
+  ...point,
+  x: layout?.landscapeMirrorX ? reflectX(point.x) : point.x,
+  y: layout?.landscapeMirrorY ? reflectY(point.y) : point.y
+});
 
 function landscapeOverlay(layout, overlay) {
-  if (!layout?.landscapeMirrorX) return overlay;
+  if (!layout?.landscapeMirrorX && !layout?.landscapeMirrorY) return overlay;
   return {
     ...overlay,
     guides: overlay.guides.map(guide=>({
       ...guide,
-      anchor:[reflectX(guide.anchor[0]),guide.anchor[1]],
-      edge:oppositeHorizontalEdge(guide.edge),
-      ...(guide.mirroredFromAnchor ? {mirroredFromAnchor:[reflectX(guide.mirroredFromAnchor[0]),guide.mirroredFromAnchor[1]]} : {})
+      anchor:orientPair(guide.anchor,layout),
+      edge:orientEdge(guide.edge,layout),
+      ...(guide.mirroredFromAnchor ? {mirroredFromAnchor:orientPair(guide.mirroredFromAnchor,layout)} : {})
     })),
-    lines:overlay.lines.map(line=>[reflectX(line[0]),line[1],reflectX(line[2]),line[3]]),
-    measurements:overlay.measurements.map(item=>({...item,x:reflectX(item.x)})),
-    anchors:overlay.anchors.map(item=>({...item,x:reflectX(item.x)})),
+    lines:overlay.lines.map(line=>{
+      const start=orientPair([line[0],line[1]],layout);
+      const end=orientPair([line[2],line[3]],layout);
+      return [...start,...end];
+    }),
+    measurements:overlay.measurements.map(item=>orientObjectPoint(item,layout)),
+    anchors:overlay.anchors.map(item=>orientObjectPoint(item,layout)),
     callouts:overlay.callouts.map(item=>{
-      const edges=item.edges?.map(oppositeHorizontalEdge);
-      return {...item,x:reflectX(item.x),anchorX:reflectX(item.anchorX),
+      const edges=item.edges?.map(edge=>orientEdge(edge,layout));
+      const anchor=orientPair([item.anchorX,item.anchorY],layout);
+      const target=orientPair([item.x,item.y],layout);
+      return {...item,x:target[0],y:target[1],anchorX:anchor[0],anchorY:anchor[1],
         edges,lines:edges?.map((edge,i)=>calloutArrow(edge,item.values[i])) ?? item.lines};
     })
   };
 }
 
 function landscapeGuideGroup(layout, group) {
-  if (!layout?.landscapeMirrorX) return group;
+  if (!layout?.landscapeMirrorX && !layout?.landscapeMirrorY) return group;
   return {
     ...group,
-    anchor:[reflectX(group.anchor[0]),group.anchor[1]],
-    edges:group.edges.map(oppositeHorizontalEdge)
+    anchor:orientPair(group.anchor,layout),
+    edges:group.edges.map(edge=>orientEdge(edge,layout))
   };
 }
 
