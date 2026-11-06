@@ -180,7 +180,7 @@ export const ADEPTUS_CUSTODES_DETACHMENTS = Object.freeze([
     stratagems:[
       S('Honoured Interred',1,'Shooting or Fight phase','The selected unit gains an aura allowing nearby friendly Dreadnoughts to re-roll Hit rolls of 1.'),
       S('Unceasing Onslaught',1,'Your Movement phase','After an Advance move, ranged attacks gain Assault and the Advance does not prevent declaring a charge.'),
-      S('Unstoppable Momentum',1,'Movement or Charge phase','The selected Dreadnought gains Mobile.')
+      S('Unstoppable Momentum',1,'Your Movement or Charge phase','The selected Dreadnought gains Mobile.')
     ]
   }),
   D({
