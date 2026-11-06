@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { liveMapObjectiveLabel } from '../../src/rules/objective-display-labels.js';
+import { liveMapObjectiveLabel, perspectiveObjectiveName } from '../../src/rules/objective-display-labels.js';
+import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from '../../src/rules/event-companion-map-catalog.js';
 
 const DISPOSITIONS = [
@@ -72,5 +73,74 @@ test('objective display roles follow verified battlefield geometry across every 
         }
       }
     }
+  }
+});
+
+
+test('page 22 Layout B planning labels match six distinct terrain-grounded objectives before attacker selection',()=>{
+  const missionSetup={myDisposition:'Take and Hold',opponentDisposition:'Priority Assets',layout:'B'};
+  const {myMission,opponentMission}=getBattlePrimaryMissions(missionSetup.myDisposition,missionSetup.opponentDisposition);
+  const geometry=getEventCompanionMapLayout(myMission,opponentMission,'B');
+  assert.equal(geometry.page,22);
+  assert.equal(Object.keys(geometry.terrainGeometry).length,16);
+  assert.equal(Object.keys(geometry.objectivePositions).length,6);
+  const state={
+    battlefieldMap:{missionSetup},
+    preGameSetup:{},
+    players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
+    objectives:[],units:[]
+  };
+  // Source IDs are not visual objective roles: the source "Expansion 2" is
+  // actually one of two closest center objectives in this verified geometry.
+  const expected={
+    'Defender Home':'Defender Home',
+    'Attacker Home':'Attacker Home',
+    'Central 1':'Center 1',
+    'Expansion 2':'Center 2',
+    'Expansion 1':'Expansion 1',
+    'Central 2':'Expansion 2'
+  };
+  for(const [name,label] of Object.entries(expected)){
+    assert.equal(perspectiveObjectiveName(name,state,'p1'),label,name);
+  }
+  assert.equal(new Set(Object.values(expected)).size,6);
+
+  const planning=renderBattlefieldMap(state,{mode:'planning',perspectivePlayerId:'p1',showUnits:false});
+  const markers=[...planning.matchAll(/<button\b[^>]*data-layout-objective="([^"]+)"[^>]*>([^<]*)<\/button>/g)]
+    .map(match=>({sourceId:match[1],label:match[2]}));
+  assert.equal(markers.length,6);
+  assert.equal(new Set(markers.map(item=>item.label)).size,6,'do not draw two Center 2 markers');
+  for(const item of markers)assert.equal(item.label,expected[item.sourceId]);
+  assert.equal((planning.match(/data-terrain="T\d+"/g)??[]).length,16,
+    'label fix must not remove or redraw any of the verified terrain footprints');
+  assert.match(planning,/data-zone="attackerDeployment"/);
+  assert.match(planning,/data-zone="defenderDeployment"/);
+});
+
+test('page 22 objective labels switch to player-owned expansion names after assigning attacker and defender',()=>{
+  const missionSetup={myDisposition:'Take and Hold',opponentDisposition:'Priority Assets',layout:'B'};
+  const state={battlefieldMap:{missionSetup},
+    preGameSetup:{attackerPlayerId:'p1',defenderPlayerId:'p2'}};
+  const labels=Object.keys(getEventCompanionMapLayout('Inescapable Dominion','Secure Asset','B').objectivePositions);
+  const playerOne=labels.map(name=>perspectiveObjectiveName(name,state,'p1'));
+  const playerTwo=labels.map(name=>perspectiveObjectiveName(name,state,'p2'));
+  assert.deepEqual(playerOne.slice().sort(),[
+    'My Home','Opponent Home','Center 1','Center 2','My Expansion','Opponent Expansion'
+  ].sort());
+  assert.deepEqual(playerTwo.slice().sort(),playerOne.slice().sort());
+  assert.equal(perspectiveObjectiveName('Central 2',state,'p1'),'Opponent Expansion');
+  assert.equal(perspectiveObjectiveName('Expansion 1',state,'p1'),'My Expansion');
+  assert.equal(perspectiveObjectiveName('Central 2',state,'p2'),'My Expansion');
+  assert.equal(perspectiveObjectiveName('Expansion 1',state,'p2'),'Opponent Expansion');
+});
+
+test('all Event Companion maps have distinct planning objective labels before player roles are assigned',()=>{
+  for(const myDisposition of DISPOSITIONS)for(const opponentDisposition of DISPOSITIONS)for(const layout of ['A','B','C']){
+    const missions=getBattlePrimaryMissions(myDisposition,opponentDisposition);
+    const geometry=getEventCompanionMapLayout(missions.myMission,missions.opponentMission,layout);
+    const state={battlefieldMap:{missionSetup:{myDisposition,opponentDisposition,layout}},preGameSetup:{}};
+    const names=Object.keys(geometry.objectivePositions);
+    const labels=names.map(name=>perspectiveObjectiveName(name,state,'p1'));
+    assert.equal(new Set(labels).size,labels.length,`page ${geometry.page}: ${labels.join(', ')}`);
   }
 });
