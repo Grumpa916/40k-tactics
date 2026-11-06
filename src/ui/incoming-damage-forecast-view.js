@@ -1,6 +1,7 @@
 import { getIncomingDamageComparison } from '../rules/incoming-damage-comparison.js';
 import { escapeHtml } from './combat-workspace.js';
 import { renderAdvisorDamageReduction } from './advisor-damage-reduction.js';
+import { renderAdvisorOptionImpact } from './advisor-option-impact.js';
 
 const damage = value => Number.isFinite(value) ? value.toFixed(1) : '—';
 
@@ -12,17 +13,31 @@ export function renderIncomingDamageForecast(state, { attackerId = null, targetI
   if (!comparison) return '<p>Incoming damage estimate is unavailable because a saved combat profile is incomplete.</p>';
 
   const currentChance = Math.round(comparison.forecast.probabilityAnyDamage * 100);
-  const result = comparison.mode === 'active'
-    ? `<div class="shoot-advisory__grid"><div><strong>${damage(comparison.before)}</strong><span>without temporary effects</span></div><div><strong>${damage(comparison.after)}</strong><span>with active effects</span></div></div>
-       <p>Active: ${comparison.effects.map(escapeHtml).join(' · ')}.</p>`
-    : comparison.mode === 'preview'
-      ? `<div class="shoot-advisory__grid"><div><strong>${damage(comparison.before)}</strong><span>current estimate</span></div><div><strong>${damage(comparison.after)}</strong><span>if In Auramite Clad is used</span></div></div>
-         <p>Preview only. The stratagem has not been recorded and no CP has been spent.</p>`
-      : `<div class="shoot-advisory__grid"><div><strong>${damage(comparison.after)}</strong><span>estimated damage</span></div><div><strong>${currentChance}%</strong><span>chance of any damage</span></div></div>`;
+  const active = comparison.mode === 'active';
+  const expected = active ? comparison.after : comparison.forecast.expectedDamage;
+  const result = `<div class="shoot-advisory__grid"><div><strong>${damage(expected)}</strong><span>${active?'with recorded protection':'current estimated damage'}</span></div><div><strong>${currentChance}%</strong><span>chance of any damage with current defenses</span></div></div>`;
+  const activeImpact = active ? renderAdvisorOptionImpact({
+    title:'Recorded defensive effects',
+    baseline:comparison.before,
+    options:[{id:'active-defences',label:'Recorded protection',expectedDamage:comparison.after,cost:comparison.effects.join(' · ')}],
+    metric:'incoming damage',lowerIsBetter:true,
+    note:'Already active. This comparison removes known temporary effects for the baseline; it does not change the recorded game.'
+  }) : '';
+  const previewImpact = !active && comparison.previews?.length ? renderAdvisorOptionImpact({
+    title:'Defensive options · what changes?',
+    baseline:comparison.forecast.expectedDamage,
+    options:comparison.previews.map(item=>({
+      id:item.id,label:item.label,expectedDamage:item.after,cost:item.cost
+    })),
+    metric:'incoming damage',lowerIsBetter:true,
+    note:'Each option is an independent preview from current defenses. No CP or Ka’tah readiness has been spent. Confirm the tabletop trigger.'
+  }) : '';
 
   return `<div class="shoot-advisory incoming-damage-forecast" data-incoming-damage-forecast>
     <div class="shoot-advisory__heading"><h3>Incoming damage estimate</h3><span>optional reference</span></div>
     ${result}
+    ${activeImpact}
+    ${previewImpact}
     ${renderAdvisorDamageReduction({
       damageCharacteristic: comparison.forecast.damageCharacteristic,
       damageReduction: comparison.forecast.damageReduction,
