@@ -38,7 +38,13 @@ export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
   optional:Object.freeze([optional('Vexilla',{profiles:[]})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Vexilla',max:1})])
  }),
  'adeptus-custodes:sentinel-guard-sodality':rule({
-  fixed:Object.freeze([fixed('Sentinel Blade',{perModel:1,profiles:['Sentinel Blade (ranged)','Sentinel Blade']})]),
+  reviewedAt:'2026-11-06',
+  sourceName:'Warhammer App export v2.8.1 / data v995; Games Workshop Sentinel Guard preview',
+  sourceUrl:'https://www.warhammer-community.com/en-gb/articles/vnmssr1i/saturday-pre-orders-defend-the-emperor-with-new-legio-custodes/',
+  fixed:Object.freeze([
+   fixed('Sentinel Blade',{perModel:1,profiles:['Sentinel Blade (ranged)','Sentinel Blade']}),
+   fixed('Praesidium Shield',{perModel:1,profiles:[]})
+  ]),
   optional:Object.freeze([optional('Vexilla',{profiles:[]})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Vexilla',max:1})])
  }),
  'adeptus-custodes:custodian-wardens':rule({
@@ -51,6 +57,12 @@ export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
   fixed:Object.freeze([fixed('Balistus Grenade Launcher',{perModel:1})]),
   slots:Object.freeze([slot('main-weapon',{perModel:1,choices:[pair('Guardian Spear','Guardian Spear (ranged)','Guardian Spear'),pair('Castellan Axe','Castellan Axe (ranged)','Castellan Axe')]})]),
   optional:Object.freeze([optional('Vexilla',{profiles:[]})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Vexilla',max:1})])
+ }),
+ 'adeptus-custodes:venatari-with-verutum-lances':rule({
+  reviewedAt:'2026-11-06',
+  sourceName:'Warhammer App export v2.8.1 / data v995; Games Workshop Venatari preview',
+  sourceUrl:'https://www.warhammer-community.com/en-gb/articles/vnmssr1i/saturday-pre-orders-defend-the-emperor-with-new-legio-custodes/',
+  fixed:Object.freeze([fixed('Verutum Lance',{perModel:1,profiles:['Verutum Lance (ranged)','Verutum Lance']})])
  }),
  'adeptus-custodes:aquilon-terminators-with-solarite-power-talons':rule({
   fixed:Object.freeze([fixed('Solarite Power Talon',{perModel:1})]),

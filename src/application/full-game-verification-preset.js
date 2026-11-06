@@ -26,6 +26,9 @@ const REVIEWED_VERIFICATION_LOADOUTS = Object.freeze({
     { name: 'Balistus Grenade Launcher', quantity: modelCount },
     { name: 'Castellan Axe', quantity: modelCount }
   ],
+  'adeptus-custodes:venatari-with-verutum-lances': (modelCount) => [
+    { name: 'Verutum Lance', quantity: modelCount }
+  ],
   'adeptus-custodes:telemon-heavy-dreadnought': () => [
     { name: 'Spiculus Bolt Launcher', quantity: 1 },
     { name: 'Caestus Fist', quantity: 1 },
