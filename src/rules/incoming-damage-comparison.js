@@ -3,6 +3,8 @@ import { getCombatFormationRoot } from './battle-unit-reference.js';
 import { getGuardiansStratagemOpportunities } from './guardians-stratagem-opportunities.js';
 import { rulesContextKey } from './rules-phase-window.js';
 import { isGoldenLightActive } from './stratagem-use-state.js';
+import { getCustodesKatahState } from './custodes-tactical-advisor.js';
+import { isRulesPhaseOpening } from './rules-phase-window.js';
 
 const isTemporaryDefence = (event, state, target, attacker) => {
   const payload = event?.payload ?? {};
@@ -54,6 +56,24 @@ function withPreviewAuramite(state, target, attacker) {
   };
 }
 
+function withPreviewKaptaris(state, target) {
+  if (state?.phase !== 'fight' || !isRulesPhaseOpening(state)) return null;
+  const targetRoot = getCombatFormationRoot(state, target) ?? target;
+  const readiness = getCustodesKatahState(state, {playerId:target.ownerId,unitId:targetRoot.id});
+  if (!readiness.readied) return null;
+  return {
+    ...state,
+    history: [...(state.history ?? []), {
+      type:'custodes.katah_expended',
+      payload:{
+        playerId:target.ownerId,unitId:targetRoot.id,katahName:'Kaptaris',
+        cycleRound:readiness.cycleRound,round:state.battle?.round,
+        turn:state.turn,phase:'fight'
+      }
+    }]
+  };
+}
+
 /** Compare an incoming attack with its recorded, temporary defensive effects. */
 export function getIncomingDamageComparison(state, { attackerId, targetId, weapon } = {}) {
   const attacker = state?.units?.find(unit => unit?.id === attackerId);
@@ -79,20 +99,27 @@ export function getIncomingDamageComparison(state, { attackerId, targetId, weapo
     });
   }
 
-  const previewState = withPreviewAuramite(state, target, attacker);
-  if (previewState) {
-    const preview = getAttackDamageForecast(previewState, { attackerId, targetId, weapon });
-    const previewRules = (preview?.appliedRules ?? []).filter(rule => !(current.appliedRules ?? []).includes(rule));
-    if (preview && previewRules.length) {
-      return Object.freeze({
-        before: current.expectedDamage,
-        after: preview.expectedDamage,
-        effects: Object.freeze(previewRules),
-        mode: 'preview',
-        forecast: current
-      });
-    }
+  const previews = [];
+  for (const [id,label,nextState,cost] of [
+    ['in-auramite-clad','In Auramite Clad',withPreviewAuramite(state,target,attacker),'1 CP · confirm attack trigger'],
+    ['kaptaris','Kaptaris',withPreviewKaptaris(state,target),'Spend Ka’tah readiness · start of Fight']
+  ]) {
+    if (!nextState) continue;
+    const preview = getAttackDamageForecast(nextState, { attackerId, targetId, weapon });
+    const newRules = (preview?.appliedRules ?? []).filter(rule => !(current.appliedRules ?? []).includes(rule));
+    if (!preview || !newRules.length || !Number.isFinite(preview.expectedDamage)) continue;
+    previews.push(Object.freeze({
+      id,label,cost,before:current.expectedDamage,after:preview.expectedDamage,
+      effects:Object.freeze(newRules)
+    }));
   }
-
-  return Object.freeze({ before: null, after: current.expectedDamage, effects: Object.freeze([]), mode: 'current', forecast: current });
+  const first = previews[0] ?? null;
+  return Object.freeze({
+    before: first ? current.expectedDamage : null,
+    after: first?.after ?? current.expectedDamage,
+    effects: first?.effects ?? Object.freeze([]),
+    mode: first ? 'preview' : 'current',
+    previews: Object.freeze(previews),
+    forecast: current
+  });
 }
