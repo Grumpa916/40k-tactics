@@ -25,12 +25,12 @@ This replaces the incorrect 30-page X mirror and one-page Y mirror with a **cons
 
 All original objective IDs, 16 terrain polygons per page and printed terrain placement dimensions are retained. Planning, deployment, terrain setup and live maps use the same resolved positions. The Tactical Advisor's territory mapping also resolves the corrected geometry.
 
-Both neutral **30″ vertical** and **22″ horizontal** halfway guide lines remain present in planning, deployment, and live views, distinct from the current gold territory divider.
+**Territory midpoint correction (PR #559):** Planning, deployment and live maps show **exactly one** gold territory divider instead of both unrelated halfway crosshairs. The middle of the gap between diagonal deployment polygons is determined from their two parallel sloped edges (pages 16, 21, 32, 36, 46, 48 and 52). In particular, page 21 uses a diagonal from the top at x=15″ to the bottom at x=45″, crossing the battlefield center (30″, 22″). Page 22 retains its vertical x=30″ split and page 23 its horizontal y=22″ split. The Tactical Advisor and territory-sensitive scoring use the same line, including the existing ±3″ uncertainty band. The player-specific labels still appear, but a separate CSS overlay no longer draws a conflicting duplicate line.
 
 ## Validation and acceptance
 
 - Automated tests inspect the actual rendered objective-marker styles and SVG terrain/zone elements for pages 21–23, rather than relying only on coordinate values.
-- Tests compare all 45 red/blue deployment centroids with the official PDF, test terrain and objective geometry, and check original printed placement labels, anchor associations, and halfway guides.
+- Tests compare all 45 red/blue deployment centroids with the official PDF, test terrain and objective geometry, and check original printed placement labels, anchor associations, and the single territory midpoint for every layout.
 - Actual **Safari iPad visual comparison after GitHub Pages deployment** is still required.
 - Old saved game positions are *not* silently transformed. Recheck placements and objective control for saved sessions created before this fix; the map is explicitly non-authoritative.
 - This audit does **not** authorize adding terrain artwork or redrawing source footprints; the V2 map intentionally uses the existing minimalist polygons.
