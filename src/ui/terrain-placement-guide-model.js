@@ -16,6 +16,44 @@ import { terrainGuideViolatesMeasuredTerrain } from "./terrain-placement-path-sa
 export const TERRAIN_BOARD_WIDTH = 60;
 export const TERRAIN_BOARD_HEIGHT = 44;
 
+// Audited source guide data and corner-snapping were authored in the original
+// V1 coordinate frame. Perform those calculations against the original layout,
+// then reflect the complete overlay into the corrected landscape frame. This
+// preserves every official distance and the terrain ID it belongs to.
+const sourceLayout = layout => layout?.unmirroredSourceGeometry ?? layout;
+const oppositeHorizontalEdge = edge => edge==='left'?'right':edge==='right'?'left':edge;
+const reflectX = value => Number((TERRAIN_BOARD_WIDTH - Number(value)).toFixed(6));
+
+function landscapeOverlay(layout, overlay) {
+  if (!layout?.landscapeMirrorX) return overlay;
+  return {
+    ...overlay,
+    guides: overlay.guides.map(guide=>({
+      ...guide,
+      anchor:[reflectX(guide.anchor[0]),guide.anchor[1]],
+      edge:oppositeHorizontalEdge(guide.edge),
+      ...(guide.mirroredFromAnchor ? {mirroredFromAnchor:[reflectX(guide.mirroredFromAnchor[0]),guide.mirroredFromAnchor[1]]} : {})
+    })),
+    lines:overlay.lines.map(line=>[reflectX(line[0]),line[1],reflectX(line[2]),line[3]]),
+    measurements:overlay.measurements.map(item=>({...item,x:reflectX(item.x)})),
+    anchors:overlay.anchors.map(item=>({...item,x:reflectX(item.x)})),
+    callouts:overlay.callouts.map(item=>{
+      const edges=item.edges?.map(oppositeHorizontalEdge);
+      return {...item,x:reflectX(item.x),anchorX:reflectX(item.anchorX),
+        edges,lines:edges?.map((edge,i)=>calloutArrow(edge,item.values[i])) ?? item.lines};
+    })
+  };
+}
+
+function landscapeGuideGroup(layout, group) {
+  if (!layout?.landscapeMirrorX) return group;
+  return {
+    ...group,
+    anchor:[reflectX(group.anchor[0]),group.anchor[1]],
+    edges:group.edges.map(oppositeHorizontalEdge)
+  };
+}
+
 function emptyOverlay() {
   return { guides: [], lines: [], measurements: [], anchors: [], callouts: [] };
 }
@@ -282,8 +320,8 @@ function calloutPosition(anchor, shapeCenter, point) {
 }
 
 export function buildCompleteTerrainPlacementGuides(layout) {
-  const guides = guidesForPage(Number(layout?.page), layout, { includeMirrors: true });
-  return groupedSourcePoints(guides).map((group) => ({
+  const guides = guidesForPage(Number(layout?.page), sourceLayout(layout), { includeMirrors: true });
+  return groupedSourcePoints(guides).map((group) => landscapeGuideGroup(layout, {
     terrain: group.terrain,
     point: group.point,
     anchor: [...group.anchor],
@@ -377,7 +415,8 @@ export function buildCandidateTerrainPlacementOverlay(layout, { includeMirrors =
   const page = Number(layout?.page);
   const candidate = candidateSourceOverlayForPage(page);
   if (!candidate) return emptyOverlay();
-  return generatedOverlay(layout, candidateGuidesForPage(page, layout, { includeMirrors }));
+  const original=sourceLayout(layout);
+  return landscapeOverlay(layout,generatedOverlay(original, candidateGuidesForPage(page, original, { includeMirrors })));
 }
 
 export function buildCanonicalTerrainPlacementOverlay(layout) {
@@ -387,7 +426,8 @@ export function buildCanonicalTerrainPlacementOverlay(layout) {
 
   // Pages 9-53 share the source-aligned presentation.
   // Every terrain page now uses the shared source-aligned boxed-callout layer.
-  return generatedOverlay(layout, guidesForPage(page, layout, { includeMirrors: false }));
+  const original=sourceLayout(layout);
+  return landscapeOverlay(layout,generatedOverlay(original, guidesForPage(page, original, { includeMirrors: false })));
 }
 
 export function buildCompleteTerrainPlacementOverlay(layout) {
@@ -399,7 +439,8 @@ export function buildCompleteTerrainPlacementOverlay(layout) {
   if (page < 9 && !getEventCompanionTerrainMirrorPolicy(page).enabled) {
     return canonicalOverlayWithPointNames(canonical);
   }
-  return generatedOverlay(layout, guidesForPage(page, layout, { includeMirrors: true }));
+  const original=sourceLayout(layout);
+  return landscapeOverlay(layout,generatedOverlay(original, guidesForPage(page, original, { includeMirrors: true })));
 }
 
 export function terrainGuideViolatesOwnTerrain(layout, guide) {
