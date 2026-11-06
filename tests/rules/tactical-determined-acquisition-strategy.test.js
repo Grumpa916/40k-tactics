@@ -52,14 +52,16 @@ function snapshotObjective(id, controllerId) {
 
 function state({ round = 2, phase = "movement", expansionTwo = "p1", includeSnapshot = true, runnerBattleShocked = false } = {}) {
   const turn = round;
-  // Event Companion page 15 / layout A: attacker territory is y=0–22,
-  // defender territory is y=22–44. Use the verified objective positions.
+  // Event Companion page 15 / layout A: the official CCW landscape
+  // orientation reflects the old positions over y=22. Attacker territory is
+  // now y=22–44 and defender territory is y=0–22. Keep the exact same
+  // tactical situations while testing the corrected reference frame.
   const objectives = [
-    objective("event-companion:Attacker Home", "Attacker Home", "p1", 50.3, 7),
-    objective("event-companion:Expansion 1", "Expansion 1", "p1", 11, 13.6),
-    objective("event-companion:Central 1", "Central 1", "p2", 31.8, 21.4),
-    objective("event-companion:Expansion 2", "Expansion 2", expansionTwo, 48.8, 30.4),
-    objective("event-companion:Defender Home", "Defender Home", "p2", 9.6, 37)
+    objective("event-companion:Attacker Home", "Attacker Home", "p1", 50.3, 37),
+    objective("event-companion:Expansion 1", "Expansion 1", "p1", 11, 30.4),
+    objective("event-companion:Central 1", "Central 1", "p2", 31.8, 22.6),
+    objective("event-companion:Expansion 2", "Expansion 2", expansionTwo, 48.8, 13.6),
+    objective("event-companion:Defender Home", "Defender Home", "p2", 9.6, 7)
   ];
   const startObjectives = [
     snapshotObjective("event-companion:Attacker Home", "p1"),
@@ -87,9 +89,9 @@ function state({ round = 2, phase = "movement", expansionTwo = "p1", includeSnap
     commandPoints: { p1: 2, p2: 2 },
     objectives,
     units: [
-      unit("runner", "p1", 45, 27, { move: 8, oc: 3, rosterUnitId: "r-runner", battleShocked: runnerBattleShocked }),
-      unit("holder", "p1", 11, 13, { move: 6, oc: 3, rosterUnitId: "r-holder" }),
-      unit("target", "p2", 48, 31, { move: 6, oc: 2, rosterUnitId: "r-target" })
+      unit("runner", "p1", 45, 17, { move: 8, oc: 3, rosterUnitId: "r-runner", battleShocked: runnerBattleShocked }),
+      unit("holder", "p1", 11, 31, { move: 6, oc: 3, rosterUnitId: "r-holder" }),
+      unit("target", "p2", 48, 13, { move: 6, oc: 2, rosterUnitId: "r-target" })
     ],
     history: [],
     scoring: {
