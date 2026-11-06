@@ -10,6 +10,7 @@ const DEFENCE_RULES = new Set([
   'guardian-eternal', 'daughters-of-the-abyss', 'aegis-of-the-emperor'
 ]);
 const REFERENCE_ONLY = new Set(['opponent-doctrine','katah-readiness']);
+import { isRulesPhaseOpening } from '../rules/rules-phase-window.js';
 
 export function getLivePhaseReminderEntries(state, { playerId, selectedUnitId = null, entries = [] } = {}) {
   if (state?.battle?.status !== 'active' || !playerId) return [];
@@ -21,14 +22,15 @@ export function getLivePhaseReminderEntries(state, { playerId, selectedUnitId = 
   return entries.flatMap(entry => {
     if (!entry || REFERENCE_ONLY.has(entry.ruleId)) return [];
     if (ATTACK_RULES.has(entry.ruleId) && !attackingNow) return [];
-    if (DEFENCE_RULES.has(entry.ruleId) && ownTurn) return [];
+    if (DEFENCE_RULES.has(entry.ruleId) && (ownTurn || !selectedFriendly)) return [];
     if (entry.ruleId === 'moment-shackle' && !entry.used) {
       const choices = (entry.choices ?? []).filter(choice => choice.id === (attackingNow ? 'attacks' : 'save'));
       return choices.length ? [{...entry, choices, effect: choices[0].effect}] : [];
     }
     if (entry.ruleId === 'katah-fight-window') {
-      const allowOffence = attackingNow;
-      const names = allowOffence ? ['Dacatarai', 'Rendax', 'Kaptaris'] : ['Kaptaris'];
+      const names = ownTurn ? ['Dacatarai', 'Rendax', 'Kaptaris']
+        : isRulesPhaseOpening(state) ? ['Kaptaris']
+          : selectedFriendly ? ['Rendax'] : [];
       const katahChoices = (entry.katahChoices ?? []).filter(choice => names.includes(choice.id));
       if (!katahChoices.length) return [];
       const katahEffectLines = (entry.katahEffectLines ?? []).filter(line => names.includes(line.name));
