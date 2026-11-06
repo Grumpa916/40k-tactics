@@ -261,6 +261,11 @@ export function getFightOpportunityRecommendations(
         targetUnitId: target.id,
         weaponId: option?.weapon?.id ?? option?.weaponId ?? null,
         appliedRules: calculation?.contextualAbilities?.appliedRules ?? [],
+        damageMitigation: Object.freeze({
+          damageCharacteristic: calculation?.contextualAbilities?.damageCharacteristic ?? null,
+          damageReduction: calculation?.contextualAbilities?.damageReduction ?? 0,
+          appliedRules: calculation?.contextualAbilities?.appliedRules ?? []
+        }),
         baselineExpectedDamage,
         expectedDamage: evaluation.expectedDamage,
         custodesFight,

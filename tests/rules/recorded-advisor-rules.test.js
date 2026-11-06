@@ -10,6 +10,9 @@ import { getFightOpportunityRecommendations } from '../../src/rules/tactical-fig
 import { getCustodesChargeAdvisorContext } from '../../src/rules/custodes-tactical-advisor.js';
 import { getChargeOpportunity } from '../../src/rules/tactical-charge-opportunity.js';
 import { renderAdvisorAppliedRules } from '../../src/ui/advisor-applied-rules.js';
+import { shootingAdvisory, shootingDamageForecast } from '../../src/ui/shooting-advisor-view.js';
+import { fightAdvisory } from '../../src/ui/fight-advisor.js';
+import { renderIncomingDamageForecast } from '../../src/ui/incoming-damage-forecast-view.js';
 
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 const weapon = (changes = {}, type = 'melee') => ({ id:'test', name:'Test weapon', type,
@@ -126,6 +129,34 @@ test('Captain shield requires known equipped wargear and Guardian Eternal is ran
   const telemon = battle('telemon-heavy-dreadnought');
   assert.equal(calculation(telemon,weapon(),true).contextualAbilities.damageReduction,0);
   assert.equal(calculation(telemon,weapon({},'ranged'),true).contextualAbilities.damageReduction,1);
+});
+
+
+test('Tactical Advisor shows known per-attack Damage reduction in shooting, incoming and Fight',()=>{
+  const telemon=battle('telemon-heavy-dreadnought');
+  telemon.phase='shooting';
+  const ranged=weapon({damage:4},'ranged');
+  const forecast=getAttackDamageForecast(telemon,{attackerId:'enemy',targetId:'custodes',weapon:ranged});
+  assert.equal(forecast.damageCharacteristic,4);
+  assert.equal(forecast.damageReduction,1);
+  assert.match(renderIncomingDamageForecast(telemon,{attackerId:'enemy',targetId:'custodes',weapon:ranged}),/Guardian Eternal.*4 → 3 Damage per unsaved attack/);
+  assert.match(shootingDamageForecast('enemy','test','custodes',telemon,[ranged]),/data-advisor-damage-reduction/);
+  const shot=shootingAdvisory('enemy','test','custodes',telemon,[ranged],'p2');
+  assert.match(shot,/Guardian Eternal.*4 → 3 Damage per unsaved attack/);
+
+  const melee=weapon({damage:4},'melee');
+  const noReduction=getAttackDamageForecast(telemon,{attackerId:'enemy',targetId:'custodes',weapon:melee});
+  assert.equal(noReduction.damageReduction,0);
+  assert.doesNotMatch(renderIncomingDamageForecast(telemon,{attackerId:'enemy',targetId:'custodes',weapon:melee}),/data-advisor-damage-reduction/);
+
+  const captain=battle('shield-captain');
+  captain.armyRosters.p1.units[0].equippedWargear=[{name:'Praesidium Shield',quantity:1}];
+  const fight=getFightOpportunityRecommendations(captain,{playerId:'p2',options:[{
+    unitId:'enemy',targetUnitId:'custodes',weapon:melee
+  }]})[0];
+  assert.equal(fight.damageMitigation.damageReduction,1);
+  assert.equal(fight.damageMitigation.damageCharacteristic,4);
+  assert.match(fightAdvisory('enemy','test','custodes',captain,[melee],'p2',{compact:true}),/Praesidium Shield.*4 → 3 Damage per unsaved attack/);
 });
 
 test('model-specific protection does not spread to an attached bodyguard', () => {

@@ -1,5 +1,6 @@
 import { getIncomingDamageComparison } from '../rules/incoming-damage-comparison.js';
 import { escapeHtml } from './combat-workspace.js';
+import { renderAdvisorDamageReduction } from './advisor-damage-reduction.js';
 
 const damage = value => Number.isFinite(value) ? value.toFixed(1) : '—';
 
@@ -22,6 +23,11 @@ export function renderIncomingDamageForecast(state, { attackerId = null, targetI
   return `<div class="shoot-advisory incoming-damage-forecast" data-incoming-damage-forecast>
     <div class="shoot-advisory__heading"><h3>Incoming damage estimate</h3><span>optional reference</span></div>
     ${result}
+    ${renderAdvisorDamageReduction({
+      damageCharacteristic: comparison.forecast.damageCharacteristic,
+      damageReduction: comparison.forecast.damageReduction,
+      appliedRules: comparison.forecast.appliedRules
+    })}
     <small>Uses saved profiles and current recorded defenses. Tabletop rolls determine the result; record actual damage once after resolving the attack.</small>
   </div>`;
 }

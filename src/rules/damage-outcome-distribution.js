@@ -185,6 +185,7 @@ export function getDamageOutcomeDistribution({ attacker, target, weapon, attacke
     contextualAbilities: Object.freeze({
       appliedRules: profile.appliedRules,
       damageReduction: profile.damageReduction,
+      damageCharacteristic: profile.damage,
       damagePrevention: profile.damagePrevention,
       mortalDamagePrevention: profile.mortalDamagePrevention,
       blastBonus: profile.blastBonus,

@@ -140,6 +140,7 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     contextualAbilities: Object.freeze({
       appliedRules: profile.appliedRules,
       damageReduction: profile.damageReduction,
+      damageCharacteristic: profile.damage,
       damagePrevention: profile.damagePrevention,
       mortalDamagePrevention: profile.mortalDamagePrevention,
       blastBonus: profile.blastBonus,
