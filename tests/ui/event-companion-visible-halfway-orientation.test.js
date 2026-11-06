@@ -6,88 +6,77 @@ import { getTerritoryRegionsFromGeometry } from '../../src/rules/battlefield-ter
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 import { buildCompleteTerrainPlacementOverlay } from '../../src/ui/terrain-placement-guide-model.js';
 
-function pageCase(page) {
+function example(page) {
   const source=EVENT_COMPANION_MAP_CATALOG.layouts.find(layout=>layout.page===page);
-  assert.ok(source);
-  const resolved=getEventCompanionMapLayout(source.missionA,source.missionB,source.layout);
+  assert.ok(source,'missing page '+page);
+  const geometry=getEventCompanionMapLayout(source.missionA,source.missionB,source.layout);
   const state={battlefieldMap:{missionSetup:{
     myDisposition:'Take and Hold',opponentDisposition:'Priority Assets',layout:source.layout
   }},preGameSetup:{},players:[{id:'p1',name:'Player'}],units:[],objectives:[]};
-  return {source,resolved,state,html:renderBattlefieldMap(state,{mode:'planning',showUnits:false,perspectivePlayerId:'p1'})};
+  return {source,geometry,state,html:renderBattlefieldMap(state,{mode:'planning',showUnits:false,perspectivePlayerId:'p1'})};
 }
 
-function markerPercent(html,name){
+function marker(html,name) {
   const match=html.match(new RegExp('data-layout-objective="'+name+'"[^>]*style="left:([0-9.]+)%;top:([0-9.]+)%"'));
-  assert.ok(match,'HTML marker missing: '+name);
+  assert.ok(match,'rendered objective missing: '+name);
   return {left:Number(match[1]),top:Number(match[2])};
 }
-function checkAxes(html) {
+
+function halfwayAxes(html) {
   assert.match(html,/data-halfway-axis="x-30" x1="30" y1="0" x2="30" y2="44"/);
   assert.match(html,/data-halfway-axis="y-22" x1="0" y1="22" x2="60" y2="22"/);
   assert.equal((html.match(/data-halfway-axis=/g)||[]).length,2);
 }
 
-test('page 21 and 22 rendered markers actually flip horizontally to match official source',()=>{
-  for(const page of [21,22]){
-    const {source,resolved,html}=pageCase(page);
-    assert.equal(resolved.landscapeMirrorX,true);
-    assert.match(html,/data-map-orientation="mirror-x"/);
-    const defender=markerPercent(html,'Defender Home');
-    const attacker=markerPercent(html,'Attacker Home');
-    assert.ok(defender.left>50,'defender must be on right of page '+page);
-    assert.ok(attacker.left<50,'attacker must be on left of page '+page);
-    assert.ok(Math.abs(defender.left-(100-source.objectivePositions['Defender Home'].x/60*100))<.01);
-    assert.ok(Math.abs(attacker.left-(100-source.objectivePositions['Attacker Home'].x/60*100))<.01);
+test('actual HTML on pages 21–23 matches official CCW landscape orientation, not previous X flips',()=>{
+  const expected={
+    21:{red:[8.1,11.1],blue:[51.6,33],territory:'vertical'},
+    22:{red:[10.5,12.7],blue:[49.3,32.1],territory:'vertical'},
+    23:{red:[22.2,6.3],blue:[37.9,37.9],territory:'horizontal'}
+  };
+  for(const [page,result] of Object.entries(expected)){
+    const {source,geometry,html}=example(Number(page));
+    assert.equal(geometry.landscapeMirrorY,true);
+    assert.equal(geometry.landscapeMirrorX,false);
+    assert.match(html,/data-map-orientation="mirror-y"/);
+    for(const [name,position] of [['Defender Home',result.red],['Attacker Home',result.blue]]){
+      const actual=marker(html,name);
+      assert.ok(Math.abs(actual.left-position[0]/60*100)<0.02,name+' x on page '+page);
+      assert.ok(Math.abs(actual.top-(44-position[1])/44*100)<0.02,name+' y on page '+page);
+    }
+    const red=marker(html,'Defender Home'),blue=marker(html,'Attacker Home');
+    if(page==='23') {
+      assert.ok(red.top>50 && blue.top<50,'page 23 defender below attacker');
+    } else {
+      assert.ok(red.left<50 && blue.left>50,'pages 21–22 defender left of attacker');
+      assert.ok(red.top>50 && blue.top<50,'pages 21–22 red home lower, blue home upper');
+    }
+    assert.equal(getTerritoryRegionsFromGeometry(geometry).divider.orientation,result.territory);
     assert.equal((html.match(/data-terrain="T\d+"/g)||[]).length,16);
     assert.equal((html.match(/data-layout-objective="/g)||[]).length,6);
-    assert.equal(getTerritoryRegionsFromGeometry(resolved).divider.orientation,'vertical');
-    checkAxes(html);
+    assert.equal(Object.keys(geometry.terrainGeometry).length,Object.keys(source.terrainGeometry).length);
+    halfwayAxes(html);
   }
 });
 
-test('page 23 rendered markers flip vertically but preserve horizontal positions',()=>{
-  const {source,resolved,html}=pageCase(23);
-  assert.equal(resolved.landscapeMirrorX,false);
-  assert.equal(resolved.landscapeMirrorY,true);
-  assert.match(html,/data-map-orientation="mirror-y"/);
-  assert.ok(markerPercent(html,'Defender Home').top>50);
-  assert.ok(markerPercent(html,'Attacker Home').top<50);
-  for(const name of ['Defender Home','Attacker Home']){
-    const visible=markerPercent(html,name);
-    const original=source.objectivePositions[name];
-    assert.ok(Math.abs(visible.left-original.x/60*100)<.01);
-    assert.ok(Math.abs(visible.top-original.y/44*100)<.01);
+test('every PDF page retains source terrain guide values after the correct vertical reflection',()=>{
+  for(const page of [21,22,23]){
+    const {source,geometry}=example(page);
+    const original=buildCompleteTerrainPlacementOverlay(source);
+    const rendered=buildCompleteTerrainPlacementOverlay(geometry);
+    assert.equal(rendered.guides.length,original.guides.length);
+    rendered.guides.forEach((guide,index)=>{
+      const old=original.guides[index];
+      assert.equal(guide.value,old.value);
+      assert.equal(guide.terrain,old.terrain);
+      assert.ok(Math.abs(guide.anchor[0]-old.anchor[0])<1e-5);
+      assert.ok(Math.abs(guide.anchor[1]-(44-old.anchor[1]))<1e-5);
+      assert.equal(guide.edge,old.edge==='top'?'bottom':old.edge==='bottom'?'top':old.edge);
+    });
   }
-  assert.equal(getTerritoryRegionsFromGeometry(resolved).divider.orientation,'horizontal');
-  assert.equal((html.match(/data-terrain="T\d+"/g)||[]).length,16);
-  checkAxes(html);
 });
 
-test('page 23 placement measurements follow vertical flip with unchanged printed values and terrain IDs',()=>{
-  const {source,resolved}=pageCase(23);
-  const before=buildCompleteTerrainPlacementOverlay(source);
-  const after=buildCompleteTerrainPlacementOverlay(resolved);
-  assert.ok(before.guides.length>0);
-  assert.equal(after.guides.length,before.guides.length);
-  const opposite=edge=>edge==='top'?'bottom':edge==='bottom'?'top':edge;
-  after.guides.forEach((guide,index)=>{
-    const old=before.guides[index];
-    assert.equal(guide.terrain,old.terrain);
-    assert.equal(guide.value,old.value);
-    assert.ok(Math.abs(guide.anchor[0]-old.anchor[0])<1e-5);
-    assert.ok(Math.abs(guide.anchor[1]-(44-old.anchor[1]))<1e-5);
-    assert.equal(guide.edge,opposite(old.edge));
-  });
-  after.lines.forEach((line,index)=>{
-    const old=before.lines[index];
-    assert.ok(Math.abs(line[0]-old[0])<1e-5);
-    assert.ok(Math.abs(line[1]-(44-old[1]))<1e-5);
-    assert.ok(Math.abs(line[2]-old[2])<1e-5);
-    assert.ok(Math.abs(line[3]-(44-old[3]))<1e-5);
-  });
-});
-
-test('all 45 layouts show both halfway reference lines in planning, deployment and live maps',()=>{
+test('all 45 layouts expose both halfway reference axes in planning, deployment and live HTML',()=>{
   const catalog=EVENT_COMPANION_MAP_CATALOG;
   const matches=[];
   for(const a of catalog.forceDispositions)for(const b of catalog.forceDispositions){
@@ -95,11 +84,12 @@ test('all 45 layouts show both halfway reference lines in planning, deployment a
   }
   for(const source of catalog.layouts){
     const pair=matches.find(item=>item.missions===[source.missionA,source.missionB].sort().join('|'));
-    assert.ok(pair,'resolve page '+source.page);
+    assert.ok(pair,'missing force disposition combination for page '+source.page);
     const state={battlefieldMap:{missionSetup:{myDisposition:pair.a,opponentDisposition:pair.b,layout:source.layout}},units:[],objectives:[]};
     for(const mode of ['planning','deployment','live']){
       const html=renderBattlefieldMap(state,{mode,showUnits:false});
-      checkAxes(html);
+      halfwayAxes(html);
+      assert.match(html,/data-map-orientation="mirror-y"/);
       assert.equal((html.match(/data-terrain="T\d+"/g)||[]).length,16);
       assert.match(html,/data-zone="attackerDeployment"/);
       assert.match(html,/data-zone="defenderDeployment"/);
