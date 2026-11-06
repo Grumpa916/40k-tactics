@@ -93,6 +93,24 @@ export function resizeWargearChoices(previous, nextUnit, state) {
  return next;
 }
 
+export function chooseWargearCombination(unit,state,constraintIndex,combinationIndex) {
+ const rules=getTyranidWargearRuleSet(unit?.datasheetId);
+ const constraints=(rules?.constraints??[]).filter(rule=>rule.type==='allowed-combinations');
+ const constraint=constraints[Number(constraintIndex)];
+ const combination=constraint?.combinations?.[Number(combinationIndex)];
+ if(!combination)throw new Error('Unknown complete wargear combination.');
+ const names=new Set([
+  ...(rules.optional??[]).map(item=>item.name),
+  ...constraint.combinations.flatMap(item=>Object.keys(item??{}))
+ ]);
+ const optional={...state.optional};
+ for(const name of names)optional[name]=Number(combination[name]??0);
+ const next={...state,needsReview:false,optional};
+ const validation=validateWargearLoadout({...unit,equippedWargear:readWargearChoiceState(unit,next)});
+ if(validation.status==='rules-invalid')throw new Error(validation.errors.join(' '));
+ return next;
+}
+
 export function chooseWargearBaseline(unit,state,slotId,name) {
  const rules=getTyranidWargearRuleSet(unit.datasheetId);
  const constraint=(rules.constraints ?? []).find(rule=>rule.type==='same-baseline'&&rule.selections.includes(name));
