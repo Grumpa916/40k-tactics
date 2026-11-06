@@ -7,7 +7,7 @@ import { renderBattlefieldMap } from "./battlefield-map.js";
 import { renderApprovedTerrainPlacementMap, enhanceTerrainPlacementMap } from "./terrain-placement-map.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
 import { SECONDARY_MISSION_CATALOG } from "../data/secondary-mission-catalog.js";
-import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-map-catalog.js";
+import { getLayoutOptionsForForceDispositions, getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -447,7 +447,9 @@ export function createBattleSetupScreen(container, {
         modeGuidance + fixedMarkup + '</section>';
     }).join("");
     const selectedLayoutOption = layoutOptions?.layouts.find((item) => item.layout === missionSetup.layout);
-    const selectedTerrainLayout = EVENT_COMPANION_MAP_CATALOG.layouts.find((layout) => Number(layout.page) === Number(selectedLayoutOption?.page));
+    const selectedTerrainLayout = selectedLayoutOption
+      ? getEventCompanionMapLayout(selectedLayoutOption.missionA,selectedLayoutOption.missionB,selectedLayoutOption.layout)
+      : null;
     const terrainReferenceMarkup = renderApprovedTerrainPlacementMap(state, selectedTerrainLayout);
     const battlefieldMarkup = '<style>.battlefield-map-section{min-width:0}.battlefield-map-section.is-fullscreen{position:fixed;inset:0;z-index:9999;overflow:auto;box-sizing:border-box;padding:12px;background:#101820}.battlefield-map-section [data-battlefield-map]{width:100%}.battlefield-map-section .battlefield-map__board{max-height:72vh}.battlefield-map-section.is-fullscreen [data-terrain-placement-map] .battlefield-map__board{height:auto;min-height:0;max-height:none;aspect-ratio:11/15}.terrain-reference-missing{padding:24px;border:1px solid #596879;border-radius:8px}</style>' +
       '<section class="battlefield-map-section' + (battlefieldMapFullscreen ? ' is-fullscreen' : '') + '" data-battlefield-map-section>' +

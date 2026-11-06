@@ -1,6 +1,7 @@
 import { enhanceTerrainPlacementMap } from "./terrain-placement-map.js";
 import { TERRAIN_PLACEMENT_MAP_STYLES } from "./terrain-placement-map-styles.js";
 import { EVENT_COMPANION_MAP_CATALOG } from "../data/event-companion-map-catalog.js";
+import { getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
 import { eventCompanionTerrainPlacementReviewLabel } from "../data/event-companion-placement-review-status.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
 
@@ -27,7 +28,8 @@ function dispositionSetupForLayout(target) {
 }
 
 function renderPage(page, mount, status) {
-  const layout = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === Number(page));
+  const source = (EVENT_COMPANION_MAP_CATALOG.layouts ?? []).find((item) => Number(item.page) === Number(page));
+  const layout = source ? getEventCompanionMapLayout(source.missionA, source.missionB, source.layout) : null;
   if (!layout) {
     mount.innerHTML = "<p>No verified layout exists for this page.</p>";
     status.textContent = "Page " + page + " unavailable";

@@ -69,7 +69,7 @@ function stateAt(x, secondary = activeSecondary()) {
 }
 
 test("verified outside-own-territory secondary can elevate crossing the territory line", () => {
-  const result = getMovementStrategicRecommendations(stateAt(36), { playerId: "p1" });
+  const result = getMovementStrategicRecommendations(stateAt(24), { playerId: "p1" });
   const mover = result.recommendations[0];
 
   assert.equal(mover.purpose, "enter-opponent-territory");
@@ -96,7 +96,7 @@ test("review-only territory mission stays visible but contributes no ranking bon
 });
 
 test("unit already beyond the dotted line can be advised to preserve opponent territory", () => {
-  const result = getMovementStrategicRecommendations(stateAt(24), { playerId: "p1" });
+  const result = getMovementStrategicRecommendations(stateAt(36), { playerId: "p1" });
   const mover = result.recommendations[0];
 
   assert.equal(mover.purpose, "hold-opponent-territory");
@@ -128,7 +128,7 @@ test("opponent deployment-zone text is forward staging, not equivalent to oppone
 });
 
 test("Movement Advisor renders territory destinations and the dotted-line guardrail", () => {
-  const current = stateAt(36);
+  const current = stateAt(24);
   const html = renderMovementAdvisor(current, { playerId: "p1", selectedUnitId: "mover" });
 
   assert.match(html, /Territory · Opponent/);
