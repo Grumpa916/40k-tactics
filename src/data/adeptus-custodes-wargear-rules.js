@@ -58,6 +58,12 @@ export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
   slots:Object.freeze([slot('main-weapon',{perModel:1,choices:[pair('Guardian Spear','Guardian Spear (ranged)','Guardian Spear'),pair('Castellan Axe','Castellan Axe (ranged)','Castellan Axe')]})]),
   optional:Object.freeze([optional('Vexilla',{profiles:[]})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Vexilla',max:1})])
  }),
+ 'adeptus-custodes:venatari-with-verutum-lances':rule({
+  reviewedAt:'2026-11-06',
+  sourceName:'Warhammer App export v2.8.1 / data v995; Games Workshop Venatari preview',
+  sourceUrl:'https://www.warhammer-community.com/en-gb/articles/vnmssr1i/saturday-pre-orders-defend-the-emperor-with-new-legio-custodes/',
+  fixed:Object.freeze([fixed('Verutum Lance',{perModel:1,profiles:['Verutum Lance (ranged)','Verutum Lance']})])
+ }),
  'adeptus-custodes:aquilon-terminators-with-solarite-power-talons':rule({
   fixed:Object.freeze([fixed('Solarite Power Talon',{perModel:1})]),
   slots:Object.freeze([slot('ranged-weapon',{perModel:1,choices:['Lastrum Storm Bolter','Infernus Firepike']})])
