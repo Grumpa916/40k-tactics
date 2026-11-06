@@ -1,5 +1,5 @@
 import { resizeBuilderFixedEquipment } from '../rules/army-builder-fixed-equipment.js';
-import { createWargearChoiceState, chooseWargear, chooseWargearBaseline, changeWargearQuantity, readWargearChoiceState, resizeWargearChoices } from '../rules/army-wargear-choices.js';
+import { createWargearChoiceState, chooseWargear, chooseWargearBaseline, chooseWargearCombination, changeWargearQuantity, readWargearChoiceState, resizeWargearChoices } from '../rules/army-wargear-choices.js';
 import { getBuilderModelCounts, resolveBuilderUnitCost } from '../rules/army-builder-cost.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getOptionalWargearLimit } from '../rules/wargear-quantity-limits.js';
@@ -42,9 +42,10 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
   },
   handleChange(event) {
    const input=event.target;
-   if(!input?.matches?.('[data-wargear-choice], [data-wargear-baseline], [data-wargear-special], [data-wargear-toggle]'))return false;
+   if(!input?.matches?.('[data-wargear-choice], [data-wargear-baseline], [data-wargear-special], [data-wargear-toggle], [data-wargear-combination]'))return false;
    update(unit=>{
-    if(input.matches('[data-wargear-choice]'))unit.builderWargearState=chooseWargear(unit,unit.builderWargearState,input.getAttribute('data-wargear-choice'),input.value);
+    if(input.matches('[data-wargear-combination]'))unit.builderWargearState=chooseWargearCombination(unit,unit.builderWargearState,input.getAttribute('data-wargear-combination-constraint'),input.getAttribute('data-wargear-combination'));
+    else if(input.matches('[data-wargear-choice]'))unit.builderWargearState=chooseWargear(unit,unit.builderWargearState,input.getAttribute('data-wargear-choice'),input.value);
     else if(input.matches('[data-wargear-baseline]'))unit.builderWargearState=chooseWargearBaseline(unit,unit.builderWargearState,input.getAttribute('data-wargear-baseline'),input.value);
     else if(input.matches('[data-wargear-special]'))unit.builderWargearState=changeWargearQuantity(unit,unit.builderWargearState,input.getAttribute('data-wargear-special'),input.getAttribute('data-wargear-name'),input.checked?1:-1);
     else{const name=input.getAttribute('data-wargear-toggle'),rule=getTyranidWargearRuleSet(unit.datasheetId)?.optional?.find(item=>item.name===name);unit.builderWargearState.optional[name]=input.checked?getOptionalWargearLimit(unit.modelCount,rule):0;}
