@@ -1,32 +1,36 @@
-# Event Companion landscape orientation audit — 2026-11-06
+# Event Companion map orientation — corrected reference audit (2026-11-06)
 
-## Scope and official reference
+## Why the previous audit was wrong
 
-Checked the **orientation** of all 45 terrain/battlefield layouts on pages **9–53** of the official Games Workshop Warhammer 40,000 Event Companion v1.2 PDF (`eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf`). This is not a new vector terrain extraction or independent certification of every printed terrain dimension.
+The earlier PR #556 inferred **30 horizontal mirrors** from which side the red deployment occupied after a clockwise landscape conversion. That inference was invalid: it compared only deployment colors, not the official PDF's terrain and objective landmarks. PR #557 preserved that error while separately mirroring page 23 vertically. The latest screenshot reference for pages 21–23 resolves the ambiguity.
 
-The source PDF presents 44″ × 60″ portrait tables; our planning/deployment/live map presents a 60″ × 44″ landscape table. The intended consistent visual comparison is a **90° clockwise** rotation of the source page. The verified historical V1 catalog was drawn into V2 with mixed clockwise/counter-clockwise handedness. The mismatch was reported from live play on pages 21 and 22, followed by the user's iPad screenshot after PR #555.
+## Authoritative comparison method
 
-## Results
+Games Workshop *Warhammer 40,000 Event Companion* v1.2, printed pages **9–53** (45 layouts), was inspected as a **90° counterclockwise** conversion from the original portrait image to a 60″ × 44″ landscape map. A separate pixel-color inspection of all 45 PDF deployment diagrams established approximate red and blue deployment centroids. These independent reference centroids are in `tests/rules/event-companion-landscape-orientation.test.js`, with a 2.7″ allowance for small masks/terrain occlusion. This is a check of **orientation**, not a source of new terrain corner measurements.
 
-**30 layouts require a left-to-right reflection of their existing digital landscape geometry:**
+The source terrain/catalog coordinates already have correct horizontal handedness. They have **reversed vertical handedness** relative to this PDF/reference presentation. The correct map-wide transform for all pages 9–53 is:
 
-9, 11, 13, 14, 16, 17, 18, 20, 21, 22, 24, 25, 27, 28, 30, 32, 34, 35, 36, 37, 39, 41, 43, 44, 46, 47, 48, 49, 52, 53.
+- **x′ = x**
+- **y′ = 44 − y**
 
-**15 already have the matching landscape handedness and are unchanged:**
+This replaces the incorrect 30-page X mirror and one-page Y mirror with a **consistent Y mirror across all 45 pages**. Pages 21 and 22 are not horizontally reflected.
 
-10, 12, 15, 19, 23, 26, 29, 31, 33, 38, 40, 42, 45, 50, 51.
+### Verified landmarks from the supplied comparison screenshots
 
-The affected layouts are exactly the ones whose stored defender (red) deployment is on the **left** after the original landscape conversion; the red-top layouts already match the official clockwise conversion. This page-scoped distinction is checked against the catalog's geometry in automated tests.
+| Page | Defender Home (x,y) | Attacker Home (x,y) | Orientation |
+|---|---|---|---|
+| 21 · Layout A | (8.1, 11.1) | (51.6, 33.0) | Red lower-left, blue upper-right |
+| 22 · Layout B | (10.5, 12.7) | (49.3, 32.1) | Red left, blue right |
+| 23 · Layout C | (22.2, 6.3) | (37.9, 37.9) | Red bottom, blue top |
 
-## Implementation and preservation
+All original objective IDs, 16 terrain polygons per page and printed terrain placement dimensions are retained. Planning, deployment, terrain setup and live maps use the same resolved positions. The Tactical Advisor's territory mapping also resolves the corrected geometry.
 
-- The archived 45-layout source catalog is **not edited**. The resolver mirrors only audited pages, with a cached, non-mutating geometry view.
-- Reflect every x coordinate using `x' = 60 - x` for polygons/points and `x' = 60 - x - width` for rectangles. Retain y, dimensions and terrain/objective names and IDs.
-- Both pre-game map and interactive play maps use the **same resolved** geometry. This also corrects map-based Tactical Advisor contexts and attacker/defender territories.
-- Build printed terrain-placement guide geometry against the **original** source frame. Reflect its output x coordinates, reverse left/right edge directions and preserve every printed source dimension and terrain association. The official source remains authoritative.
-- Page 22's six-objective naming fix from PR #555 remains in place; the horizontal reflection changes the left-to-right numbering of the two central markers without making a duplicate.
-- Existing saves keep their recorded units and positions unchanged by this patch. When resuming a game created before this orientation correction, **visually recheck and adjust map placements and objectives** before relying on position-dependent Advisor recommendations. Do not assume previously placed models automatically migrated.
+Both neutral **30″ vertical** and **22″ horizontal** halfway guide lines remain present in planning, deployment, and live views, distinct from the current gold territory divider.
 
-## Verification
+## Validation and acceptance
 
-Automated tests audit all 45 pages, the 30/15 orientation division, the immutable source catalog, pages 21/22 six objective markers and 16 terrain footprints, zone/territory reflection, and preservation of printed terrain placement values and anchor-to-terrain associations. Movement/territory fixtures were updated by reflecting their position inputs; their gameplay expectations remain unchanged. **An actual iPad screenshot comparison after deployment remains required** before marking the reported live-event visual issue closed.
+- Automated tests inspect the actual rendered objective-marker styles and SVG terrain/zone elements for pages 21–23, rather than relying only on coordinate values.
+- Tests compare all 45 red/blue deployment centroids with the official PDF, test terrain and objective geometry, and check original printed placement labels, anchor associations, and halfway guides.
+- Actual **Safari iPad visual comparison after GitHub Pages deployment** is still required.
+- Old saved game positions are *not* silently transformed. Recheck placements and objective control for saved sessions created before this fix; the map is explicitly non-authoritative.
+- This audit does **not** authorize adding terrain artwork or redrawing source footprints; the V2 map intentionally uses the existing minimalist polygons.
