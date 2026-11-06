@@ -1,0 +1,12 @@
+/* Compact, read-only ability impact previews for the tablet right rail. */
+.advisor-option-impact{margin:8px 0;padding:9px 10px;border:1px solid var(--border,#526176);border-radius:9px}
+.advisor-option-impact header{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px}
+.advisor-option-impact header>small,.advisor-option-impact__note{color:var(--text-muted,#a9b8c8);font-size:.76rem}
+.advisor-option-impact__row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid color-mix(in srgb,currentColor 18%,transparent)}
+.advisor-option-impact__row>span:first-child{min-width:0;flex:1}
+.advisor-option-impact__row>span:first-child strong{display:block;font-size:.83rem}
+.advisor-option-impact__row small{display:block;font-size:.75rem;color:var(--text-muted,#a9b8c8)}
+.advisor-option-impact__numbers{min-width:100px;text-align:right;white-space:nowrap}
+.advisor-option-impact__numbers strong{display:block;font-variant-numeric:tabular-nums;font-size:.91rem}
+.advisor-option-impact__more summary{cursor:pointer;padding:6px 0}
+.advisor-option-impact__note{display:block;margin-top:6px}
