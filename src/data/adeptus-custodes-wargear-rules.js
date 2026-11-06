@@ -38,7 +38,13 @@ export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
   optional:Object.freeze([optional('Vexilla',{profiles:[]})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Vexilla',max:1})])
  }),
  'adeptus-custodes:sentinel-guard-sodality':rule({
-  fixed:Object.freeze([fixed('Sentinel Blade',{perModel:1,profiles:['Sentinel Blade (ranged)','Sentinel Blade']})]),
+  reviewedAt:'2026-11-06',
+  sourceName:'Warhammer App export v2.8.1 / data v995; Games Workshop Sentinel Guard preview',
+  sourceUrl:'https://www.warhammer-community.com/en-gb/articles/vnmssr1i/saturday-pre-orders-defend-the-emperor-with-new-legio-custodes/',
+  fixed:Object.freeze([
+   fixed('Sentinel Blade',{perModel:1,profiles:['Sentinel Blade (ranged)','Sentinel Blade']}),
+   fixed('Praesidium Shield',{perModel:1,profiles:[]})
+  ]),
   optional:Object.freeze([optional('Vexilla',{profiles:[]})]),constraints:Object.freeze([Object.freeze({type:'max',selection:'Vexilla',max:1})])
  }),
  'adeptus-custodes:custodian-wardens':rule({
