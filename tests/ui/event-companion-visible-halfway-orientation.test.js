@@ -22,15 +22,18 @@ function marker(html,name) {
   return {left:Number(match[1]),top:Number(match[2])};
 }
 
-function halfwayAxes(html) {
-  assert.match(html,/data-halfway-axis="x-30" x1="30" y1="0" x2="30" y2="44"/);
-  assert.match(html,/data-halfway-axis="y-22" x1="0" y1="22" x2="60" y2="22"/);
-  assert.equal((html.match(/data-halfway-axis=/g)||[]).length,2);
+function territoryMidline(html,orientation=null) {
+  const lines=[...html.matchAll(/<line class="battlefield-map__territory-divider" data-territory-divider="([^"]+)" x1="([^"]+)" y1="([^"]+)" x2="([^"]+)" y2="([^"]+)"><\/line>/g)];
+  assert.equal(lines.length,1,'render exactly one real territory divider');
+  assert.doesNotMatch(html,/data-halfway-axis=/,'do not draw unrelated crosshairs');
+  const [,type,...coords]=lines[0];
+  if(orientation)assert.equal(type,orientation);
+  return coords.map(Number);
 }
 
 test('actual HTML on pages 21–23 matches official CCW landscape orientation, not previous X flips',()=>{
   const expected={
-    21:{red:[8.1,11.1],blue:[51.6,33],territory:'vertical'},
+    21:{red:[8.1,11.1],blue:[51.6,33],territory:'diagonal'},
     22:{red:[10.5,12.7],blue:[49.3,32.1],territory:'vertical'},
     23:{red:[22.2,6.3],blue:[37.9,37.9],territory:'horizontal'}
   };
@@ -55,7 +58,7 @@ test('actual HTML on pages 21–23 matches official CCW landscape orientation, n
     assert.equal((html.match(/data-terrain="T\d+"/g)||[]).length,16);
     assert.equal((html.match(/data-layout-objective="/g)||[]).length,6);
     assert.equal(Object.keys(geometry.terrainGeometry).length,Object.keys(source.terrainGeometry).length);
-    halfwayAxes(html);
+    territoryMidline(html,result.territory);
   }
 });
 
@@ -76,7 +79,7 @@ test('every PDF page retains source terrain guide values after the correct verti
   }
 });
 
-test('all 45 layouts expose both halfway reference axes in planning, deployment and live HTML',()=>{
+test('all 45 layouts expose exactly one correct territory midpoint in planning, deployment and live HTML',()=>{
   const catalog=EVENT_COMPANION_MAP_CATALOG;
   const matches=[];
   for(const a of catalog.forceDispositions)for(const b of catalog.forceDispositions){
@@ -88,7 +91,7 @@ test('all 45 layouts expose both halfway reference axes in planning, deployment 
     const state={battlefieldMap:{missionSetup:{myDisposition:pair.a,opponentDisposition:pair.b,layout:source.layout}},units:[],objectives:[]};
     for(const mode of ['planning','deployment','live']){
       const html=renderBattlefieldMap(state,{mode,showUnits:false});
-      halfwayAxes(html);
+      territoryMidline(html);
       assert.match(html,/data-map-orientation="mirror-y"/);
       assert.equal((html.match(/data-terrain="T\d+"/g)||[]).length,16);
       assert.match(html,/data-zone="attackerDeployment"/);
