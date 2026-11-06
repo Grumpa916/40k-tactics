@@ -1,18 +1,19 @@
-// Source: official Event Companion v1.2, battlefield layouts pp. 9–53.
+// Source: Games Workshop Event Companion v1.2, layouts pp. 9–53.
 //
-// The source catalogue stores stable 60 × 44 game coordinates. Page-specific
-// presentation corrections must transform all geometry together: terrain,
-// objectives, deployment zones and territory regions. Never rewrite the
-// catalogue or flip only the visible terrain layer.
+// The immutable V1 catalog is encoded with the same X coordinates but opposite
+// vertical handedness from the official PDF when the portrait pages are viewed
+// 90° counterclockwise in landscape. The source-confirmed interpretation is
+// a Y reflection on *every* 60 × 44 layout, not the mixed X/Y reflection
+// previously inferred from deployment-side labels. In particular, the user's
+// comparison screenshots show p.21 red lower-left / blue upper-right,
+// p.22 red left / blue right, and p.23 red bottom / blue top.
 //
-// The user's 2026-11-06 iPad comparison identified page 23 as vertically
-// inverted. Pages 21 and 22 already have the horizontal correction from PR 556;
-// reapplying that reflection would undo the prior fix.
-export const EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES = Object.freeze([
-  9,11,13,14,16,17,18,20,21,22,24,25,27,28,30,
-  32,34,35,36,37,39,41,43,44,46,47,48,49,52,53
-]);
-export const EVENT_COMPANION_LANDSCAPE_MIRROR_Y_PAGES = Object.freeze([23]);
+// Keep both exported policy accessors for compatibility, but use zero X
+// mirrors and a consistent Y mirror across the complete 45-layout pack.
+export const EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES = Object.freeze([]);
+export const EVENT_COMPANION_LANDSCAPE_MIRROR_Y_PAGES = Object.freeze(
+  Array.from({length:45},(_,index)=>index+9)
+);
 
 const MIRROR_X_PAGES = new Set(EVENT_COMPANION_LANDSCAPE_MIRROR_X_PAGES);
 const MIRROR_Y_PAGES = new Set(EVENT_COMPANION_LANDSCAPE_MIRROR_Y_PAGES);
