@@ -46,6 +46,12 @@ function geometryDisplayRoles(state, perspectivePlayerId) {
  centerEntries.forEach(([name],index)=>roles.set(name,`Center ${index+1}`));
 
  const expansionEntries=nonHome.filter(([name])=>!centerNames.has(name));
+ // Before attacker/defender are assigned in pre-game planning, the source
+ // Central/Expansion IDs can disagree with their actual geometric roles.
+ // Label every expansion from geometry first so a source "Central 2" cannot
+ // duplicate the true Center 2 or hide the second expansion (e.g. page 22).
+ expansionEntries.slice().sort(comparePositionEntries)
+  .forEach(([name],index)=>roles.set(name,`Expansion ${index+1}`));
  const myHomeName=perspectivePlayerId===attacker?'Attacker Home':
   perspectivePlayerId===defender?'Defender Home':null;
  const myHome=myHomeName?positions[myHomeName]:null;
