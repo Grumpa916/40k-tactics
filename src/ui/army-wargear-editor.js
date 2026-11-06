@@ -23,6 +23,29 @@ function choiceControl(slot,name,selected,reason,extra='') {
 function quantityControl(name,quantity,decrease,increase,attributes) {
  return `<span class="ab-weapon-stepper"><button type="button" data-wargear-step="-1" ${attributes} aria-label="Remove one ${e(name)}" ${decrease?'':'disabled'}>−</button><output aria-label="${e(name)} quantity">${quantity}</output><button type="button" data-wargear-step="1" ${attributes} aria-label="Add one ${e(name)}" ${increase?'':'disabled'}>+</button></span>`;
 }
+const TELEMON_DATASHEET_ID='adeptus-custodes:telemon-heavy-dreadnought';
+function telemonArmCombinationEditor(unit,state,rules) {
+ if(unit?.datasheetId!==TELEMON_DATASHEET_ID)return '';
+ const combinations=(rules.constraints??[]).filter(rule=>rule.type==='allowed-combinations');
+ const constraintIndex=combinations.findIndex(()=>true),constraint=combinations[constraintIndex];
+ if(!constraint)return '';
+ const options=constraint.combinations??[];
+ const names=[...new Set(options.flatMap(combo=>Object.keys(combo??{})))];
+ const selectedIndex=options.findIndex(combo=>names.every(name=>
+  Number(state.optional[name]??0)===Number(combo?.[name]??0)));
+ const weapons=unit.datasheet?.weapons??[];
+ const cards=options.map((combo,index)=>{
+  const title=Object.entries(combo).map(([name,count])=>`${count>1?`${count} × `:''}${name}`).join(' + ');
+  const profiles=Object.entries(combo).map(([name,count])=>{
+   const weapon=weapons.find(item=>item.name===name);
+   if(!weapon)return `<section class="ab-telemon-weapon"><strong>${e(name)}</strong><p class="ab-muted">Weapon profile unavailable.</p></section>`;
+   const metrics=[['Range',weapon.range??'Melee'],['A',weapon.attacks],['WS/BS',weapon.skill],['S',weapon.strength],['AP',weapon.ap],['D',weapon.damage]];
+   return `<section class="ab-telemon-weapon"><div class="ab-telemon-weapon__title"><strong>${e(name)}</strong>${count>1?`<span>×${count}</span>`:''}</div><div class="ab-telemon-metrics">${metrics.map(([label,value])=>`<span><small>${e(label)}</small><b>${e(value??'—')}</b></span>`).join('')}</div>${weapon.abilities?`<p class="ab-telemon-traits">${e(weapon.abilities)}</p>`:''}</section>`;
+  }).join('');
+  return `<label class="ab-telemon-combo ${index===selectedIndex?'is-selected':''}"><span class="ab-telemon-combo__heading"><input type="radio" name="telemon-arm-loadout" data-wargear-combination="${index}" data-wargear-combination-constraint="${constraintIndex}" aria-label="Select Telemon arm loadout: ${e(title)}" ${index===selectedIndex?'checked':''}><strong>${e(title)}</strong></span><span class="ab-telemon-combo__profiles">${profiles}</span></label>`;
+ }).join('');
+ return `<fieldset class="ab-weapon-group ab-telemon-combinations"><legend>Arm weapons · choose one complete loadout</legend><p>Each card shows every weapon in that legal arm combination. The Spiculus Bolt Launcher is equipped in every loadout.</p><div class="ab-telemon-combo-list">${cards}</div></fieldset>`;
+}
 export function renderWargearEditor(unit) {
  const rules=getTyranidWargearRuleSet(unit?.datasheetId);
  if(!rules && String(unit?.datasheetId ?? '').startsWith('space-marines:')) return '<p class="ab-muted" role="note"><strong>Space Marines wargear review pending:</strong> This catalog shows possible weapon profiles, not a confirmed equipped loadout. Confirm the selected weapons, replacements and quantities against the current Codex or Warhammer App. Loadout choice controls will be added only after the options are verified.</p>';
@@ -30,7 +53,8 @@ export function renderWargearEditor(unit) {
  const state=unit.builderWargearState ?? createWargearChoiceState(unit), slots=getWargearSlots(unit);
  const selections=readWargearChoiceState(unit,state);
  const count=name=>selections.find(item=>item.name===name)?.quantity??0;
- let html=`<section class="ab-wargear" data-wargear-editor="${e(unit.id)}"><h4>Selected wargear</h4><p>Choose one weapon in each replacement group. Switching a choice replaces the previous weapon. Save unit changes to apply this loadout in battle.</p>${state.needsReview?'<p role="alert">Saved equipment needs review. Check the choices below before saving.</p>':''}`;
+ const telemon=unit.datasheetId===TELEMON_DATASHEET_ID;
+ let html=`<section class="ab-wargear ${unit.datasheetId===TELEMON_DATASHEET_ID?'ab-wargear--telemon':''}" data-wargear-editor="${e(unit.id)}"><h4>Selected wargear</h4><p>${unit.datasheetId===TELEMON_DATASHEET_ID?'Choose one complete arm loadout below. Switching cards replaces the entire arm combination.':'Choose one weapon in each replacement group. Switching a choice replaces the previous weapon.'} Save unit changes to apply this loadout in battle.</p>${state.needsReview?'<p role="alert">Saved equipment needs review. Check the choices below before saving.</p>':''}`;
  if(String(unit?.datasheetId??'').startsWith('space-marines:')){
   html+='<p class="ab-muted" role="note">Reviewed 11th-edition loadout subset; complete October Codex and weapon-effect verification remains outstanding.</p>';
   for(const detail of rules.modelSpecificWargear??[])
@@ -44,6 +68,7 @@ export function renderWargearEditor(unit) {
  const individualModels=[...new Set(slots.filter(slot=>slot.model!=null).map(slot=>slot.model))].sort((a,b)=>a-b);
  const hasSergeantSlots=slots.some(slot=>slot.model==null);
  const models=perModelCards?[...(hasSergeantSlots?[null]:[]),...individualModels]:[null];
+ if(telemon) html+=telemonArmCombinationEditor(unit,state,rules);
  for(const model of models) {
   if(perModelCards) html+=`<section class="ab-model-wargear"><h4>${model===null?'Sergeant':e(unit.name==='Carnifexes'?'Carnifex':unit.name)+' '+model}</h4>`;
   for(const spec of rules.slots ?? []) {
@@ -81,7 +106,7 @@ export function renderWargearEditor(unit) {
   }
   if(perModelCards) html+='</section>';
  }
- if(rules.optional?.length) {
+ if(rules.optional?.length && !telemon) {
   html+='<fieldset class="ab-weapon-group"><legend>Additional equipment</legend><p>These choices add equipment; they do not replace a weapon.</p>';
   html+=table(rules.optional.map(item=>{
    const max=getOptionalWargearLimit(unit.modelCount,item),quantity=state.optional[item.name]??0;
