@@ -27,6 +27,13 @@ test('official publication index is dated and does not imply full document compa
   assert.equal(sources.publications.eventCompanion.inspectedDocumentVersion,'1.2');
   assert.equal(sources.publications.eventCompanion.fullCurrentPdfInspected,false);
   assert.equal(sources.publications.eventCompanion.currentVersionGeometryRechecked,false);
+  const revision=sources.publications.eventCompanion.layoutRevisionCorroboration;
+  assert.equal(revision.status,'third-party-report-no-layout-changes-v1.3');
+  assert.equal(revision.reportedLayoutsUpdated,'None');
+  assert.match(revision.sourceUrl,/40-carrot\.app\/guides\/40k-terrain-layouts/);
+  assert.equal(revision.fullOfficialVisualRecheckComplete,false);
+  assert.equal(EVENT_COMPANION_MAP_CATALOG.layouts.length,45);
+  assert.equal(EVENT_COMPANION_MAP_CATALOG.source.version,'1.2','do not falsely relabel extracted geometry as v1.3');
   assert.match(sources.publications.eventCompanion.url,/eng_14-10_wh40k_event_companion/);
   assert.match(sources.publications.eventCompanion.currentFaqCrossCheck,/v1.3.*v1.2/);
   assert.equal(sources.publications.worldChampionships2026.applicability,'world-championships-2026-only');
