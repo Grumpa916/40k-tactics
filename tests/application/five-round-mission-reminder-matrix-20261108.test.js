@@ -52,7 +52,7 @@ test('all 25 disposition pairings show due manual Primary scoring at both player
             assert.equal(group.primaryReference.name,expectedMission.name);
             assert.equal(group.checkpoint,'end-of-turn');
             assert.equal(reminder.requiresObjectiveConfirmation,false);
-            assert.ok(renderScoringCheckpointDialog(endTurn,reminder).includes('manual scoring'),
+            assert.ok(renderScoringCheckpointDialog(endTurn,reminder).match(/manual scoring/i),
               'live popup remains a manual scoring review');
           }
           // A player must never be shown their own Primary scores during
