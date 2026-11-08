@@ -237,7 +237,7 @@ test('25 complete primary scoring VP sets agree with independent transcription',
 });
 
 test('previously photographed primary faces distinguish scoring from action verification', () => {
-  assert.equal(Object.keys(PRIMARY_PHOTOGRAPHED_SCORING_FACES).length,14);
+  assert.equal(Object.keys(PRIMARY_PHOTOGRAPHED_SCORING_FACES).length,20);
   assert.equal(Object.keys(PRIMARY_PHOTOGRAPHED_ACTION_FACES).length,11);
   for (const card of actualCards) {
     const slug=card.id.replace(/^primary-/,'');
