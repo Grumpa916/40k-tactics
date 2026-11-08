@@ -17,7 +17,6 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   const sustained = value => { result.sustainedHits = Math.max(result.sustainedHits ?? 0, value); };
 
   apply(profile.lance && charged, 'Lance: +1 to Wound after recorded charge', woundBonus);
-  apply(melee && own.has('quicksilver-execution') && charged, 'Quicksilver Execution: Sustained Hits 1', () => sustained(1));
   apply(melee && own.has('death-blow') && charged, 'Death Blow: improve AP by 1', improveAp);
   apply(melee && own.has('slayer-of-tyrants') && Number.isFinite(attacker?.combatRules?.unitToughness) &&
     profile.toughness > attacker.combatRules.unitToughness, 'Slayer of Tyrants: +1 to Wound', woundBonus);
