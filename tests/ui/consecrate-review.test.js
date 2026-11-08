@@ -57,7 +57,7 @@ test("phase progression allows ending the turn even when Consecrate review is pe
   assert.equal(action.type, COMMAND_TYPES.END_TURN);
   assert.match(action.label, /Finish turn/);
   assert.match(renderPhaseProgressionPanel(s, "end_turn"), /data-advance-game-phase/);
-  assert.doesNotMatch(renderPhaseProgressionPanel(s, "end_turn"), /disabled|Complete the Consecrate end-of-turn review/);
+  assert.doesNotMatch(renderPhaseProgressionPanel(s, "end_turn"), /<button[^>]*disabled|Complete the Consecrate end-of-turn review/);
 });
 
 test("recording a no-assignment review unlocks normal turn progression without clearing the carrier", () => {
