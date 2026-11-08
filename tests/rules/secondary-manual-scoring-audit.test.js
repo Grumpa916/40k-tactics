@@ -170,7 +170,7 @@ test('fifth-round alternative Secondary award respects remaining battle-round al
 });
 
 
-test('twelve physical Chapter Approved Secondary card faces are individually verified', () => {
+test('all eighteen physical Chapter Approved Secondary card faces are individually verified', () => {
   const checked = new Map([
     ['assassination','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
     ['bring-it-down','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
@@ -183,10 +183,17 @@ test('twelve physical Chapter Approved Secondary card faces are individually ver
     ['behind-enemy-lines','IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg'],
     ['centre-ground','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg'],
     ['display-of-might','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg'],
-    ['engage-on-all-fronts','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg']
+    ['engage-on-all-fronts','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg'],
+    ['forward-position','IMG_5E07372E-20A8-40F8-8B75-7D84CC740172.jpeg'],
+    ['no-prisoners','IMG_5E07372E-20A8-40F8-8B75-7D84CC740172.jpeg'],
+    ['outflank','IMG_5E07372E-20A8-40F8-8B75-7D84CC740172.jpeg'],
+    ['overwhelming-force','IMG_D4E1074B-C2FC-4FFD-AAA9-565A8235F6E3.jpeg'],
+    ['plunder','IMG_D4E1074B-C2FC-4FFD-AAA9-565A8235F6E3.jpeg'],
+    ['secure-no-mans-land','IMG_D4E1074B-C2FC-4FFD-AAA9-565A8235F6E3.jpeg']
   ]);
-  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerifiedCount,12);
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerifiedCount,18);
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerificationDate,'2026-11-08');
+  assert.equal(checked.size,18,'every individual card must have photographic evidence');
   for(const [slug,card] of MATRIX.map(([id])=>[id,byId.get('secondary-'+id)])){
     const photo=checked.get(slug);
     assert.equal(card.officialCardVerified,Boolean(photo),slug);
@@ -237,4 +244,47 @@ test('physical A Grievous Blow awards Fixed 4 VP per qualifying unit without Tac
   const scored=recordSecondaryMissionScore(game,{playerId:'p1',instanceId:'reviewed-card',amount:8,scoringTiming:'end-of-turn'});
   assert.equal(scored.victoryPoints.p1,8);
   assert.equal(scored.scoring.secondaryMissions[0].status,'active','Fixed card persists after scoring');
+});
+
+test('final six physical Secondary cards preserve printed timing, alternative VP tiers, and Plunder action',()=>{
+  const subset = (slug,mode,timing) => {
+    const card=byId.get('secondary-'+slug);
+    assert.equal(card.officialCardVerified,true,slug);
+    return card.scoringWindows.filter(w=>w.timing===timing && w.modes.includes(mode));
+  };
+  const options = (slug,mode,timing) => getMissionVpOptions({
+    category:'secondary',instanceId:'photo-review',result:{scoringWindows:subset(slug,mode,timing)}
+  });
+  for(const [slug,mode,timing,points] of [
+    ['forward-position','tactical','end-of-turn',[5]],
+    ['no-prisoners','tactical','end-of-turn',[2,4,5]],
+    ['no-prisoners','tactical','end-of-opponent-turn',[2,4,5]],
+    ['outflank','tactical','end-of-turn',[3,5]],
+    ['overwhelming-force','tactical','end-of-turn',[3,5]],
+    ['overwhelming-force','tactical','end-of-opponent-turn',[3,5]],
+    ['plunder','tactical','end-of-turn',[5]],
+    ['secure-no-mans-land','tactical','end-of-turn',[5]]
+  ]) {
+    assert.deepEqual(options(slug,mode,timing),points,slug+' '+timing);
+  }
+  for(const slug of ['forward-position','no-prisoners','outflank','overwhelming-force','plunder','secure-no-mans-land']) {
+    const card=byId.get('secondary-'+slug);
+    assert.deepEqual([...card.availableModes],['tactical'],slug+' printed card has no Fixed mode');
+  }
+  const noPrisoners=subset('no-prisoners','tactical','end-of-turn');
+  assert.equal(noPrisoners[0].tiers[0].maxVP,5);
+  const overwhelming=subset('overwhelming-force','tactical','end-of-turn');
+  assert.equal(overwhelming[0].tiers[0].maxVP,5);
+  const outflank=subset('outflank','tactical','end-of-turn');
+  assert.equal(outflank[0].tiers[0].relationship,'or');
+  assert.equal(outflank[0].tiers[1].relationship,'or');
+  assert.match(outflank[0].tiers[1].summary,/opposite battlefield edges/i);
+  const plunder=byId.get('secondary-plunder');
+  assert.equal(plunder.missionAction.phase,'shooting');
+  assert.equal(plunder.missionAction.completion,'immediate');
+  assert.match(plunder.missionAction.summary,/Once per turn/i);
+  assert.match(plunder.missionAction.summary,/terrain area outside your territory/i);
+  assert.match(plunder.whenDrawn,/Cleanse/i);
+  const forward=byId.get('secondary-forward-position');
+  assert.match(forward.whenDrawn,/battle round 1/i);
 });

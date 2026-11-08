@@ -11,7 +11,7 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   catalogScope: "all-18-user-supplied-card-texts",
   rulesVerified: true,
   userSuppliedCardTextCount: 18,
-  physicalCardVerifiedCount: 12,
+  physicalCardVerifiedCount: 18,
   physicalCardVerificationDate: "2026-11-08",
   candidateDatasetVersion: "2026.10.02-triangulation-action",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
@@ -21,9 +21,9 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
     "https://www.11th.help/secondary_missions.html",
     "https://wahapedia.ru/wh40k11ed/the-rules/warhammer-event-companion/"
   ]),
-  crossCheckStatus: "all-18-card-texts-reviewed-from-user-supplied-transcription",
-  verificationLevel: "user-supplied-card-transcription",
-  officialCardVerified: false,
+  crossCheckStatus: "all-18-card-faces-directly-compared-with-user-photographs-of-physical-official-cards",
+  verificationLevel: "physical-official-card-photo-2026-11-08",
+  officialCardVerified: true,
   sourceIndexCheckedAt: "2026-11-03",
   officialSampleCardImages: Object.freeze([
     "https://assets.warhammer-community.com/40k_chapterapproved-may28_secondcards1-s8wf8ybsuf.jpg",
@@ -358,7 +358,13 @@ const PHYSICAL_CARD_EVIDENCE = Object.freeze({
   'behind-enemy-lines': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg' }),
   'centre-ground': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' }),
   'display-of-might': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' }),
-  'engage-on-all-fronts': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' })
+  'engage-on-all-fronts': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' }),
+  'forward-position': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5E07372E-20A8-40F8-8B75-7D84CC740172.jpeg' }),
+  'no-prisoners': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5E07372E-20A8-40F8-8B75-7D84CC740172.jpeg' }),
+  'outflank': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5E07372E-20A8-40F8-8B75-7D84CC740172.jpeg' }),
+  'overwhelming-force': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_D4E1074B-C2FC-4FFD-AAA9-565A8235F6E3.jpeg' }),
+  plunder: Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_D4E1074B-C2FC-4FFD-AAA9-565A8235F6E3.jpeg' }),
+  'secure-no-mans-land': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_D4E1074B-C2FC-4FFD-AAA9-565A8235F6E3.jpeg' })
 });
 
 const cardNames = [

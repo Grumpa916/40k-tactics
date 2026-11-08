@@ -38,11 +38,12 @@ test('all 25 primary and 18 secondary card records expose honest provenance', ()
   }
   assert.equal(n,25);
   assert.equal(COMPLETE_SECONDARY_MISSION_CATALOG.length,18);
-  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.verificationLevel,'user-supplied-card-transcription');
-  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.officialCardVerified,false);
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.verificationLevel,'physical-official-card-photo-2026-11-08');
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.officialCardVerified,true);
   assert.equal(SECONDARY_MISSION_IMPORT_SOURCE.officialCardVerified,false);
   const photographed = new Set(['Assassination','Bring it Down','Beacon','Defend Stronghold','Cleanse','Burden of Trust',
-    'A Grievous Blow','A Tempting Target','Behind Enemy Lines','Centre Ground','Display of Might','Engage on All Fronts']);
+    'A Grievous Blow','A Tempting Target','Behind Enemy Lines','Centre Ground','Display of Might','Engage on All Fronts',
+    'Forward Position','No Prisoners','Outflank','Overwhelming Force','Plunder',"Secure No Man's Land"]);
   let physicalCount = 0;
   for(const card of COMPLETE_SECONDARY_MISSION_CATALOG){
     assert.equal(card.rulesVerified,true,'reviewed against supplied card transcription: '+card.name);
@@ -53,14 +54,14 @@ test('all 25 primary and 18 secondary card records expose honest provenance', ()
     if(verified)physicalCount++;
     assert.equal(card.scoringAuthority,'manual-player-confirmation');
   }
-  assert.equal(physicalCount,12);
+  assert.equal(physicalCount,18);
 });
 
 test('reference wording separates physical official checking from user transcription', () => {
   assert.equal(MISSION_SOURCE_VERIFICATION.primary.officialCardChecked,false);
-  assert.equal(MISSION_SOURCE_VERIFICATION.secondary.officialCardChecked,false);
+  assert.equal(MISSION_SOURCE_VERIFICATION.secondary.officialCardChecked,true);
   assert.match(missionSourceNotice({name:'Primary'},'primary'),/community-structured/);
-  assert.match(missionSourceNotice({name:'Secondary'},'secondary'),/not yet photo-verified/);
+  assert.match(missionSourceNotice({name:'Secondary'},'secondary'),/no verified physical-photo record/);
   assert.match(missionSourceNotice({name:'Official',officialCardVerified:true},'secondary'),/official printed source/);
   assert.equal(missionSourceNotice(null,'primary'),'');
 });
