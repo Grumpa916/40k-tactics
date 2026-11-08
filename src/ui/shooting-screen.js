@@ -85,7 +85,8 @@ export function createShootingScreen(container, {
   perspectivePlayerId = null,
   gameData = null,
   missionActions = [],
-  layoutMode = "tabletop"
+  layoutMode = "tabletop",
+  unitSelection = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function") throw new TypeError("A game session is required.");
@@ -103,6 +104,7 @@ export function createShootingScreen(container, {
   let actionPickerOpen = false;
   let endReview = false;
   let lastRenderedActiveUnitId = null;
+  let restoreInheritedUnit = Boolean(unitSelection);
 
   function clearPending() {
     pendingUnitId = null;
@@ -122,6 +124,7 @@ export function createShootingScreen(container, {
   function beginShoot(unitId) {
     if (!unitId) return false;
     const previousPendingUnitId = pendingUnitId;
+    unitSelection?.select(session.getState(), unitId);
     const previewWeaponId = selectedWeaponId;
     const previewTargetId = selectedTargetId;
     selectedAttackerId = unitId;
@@ -166,6 +169,19 @@ export function createShootingScreen(container, {
     const actionOnly = hasPrimaryMissionAction ? (model.actionOnly ?? []) : [];
     const readyUnits = [...model.candidates, ...actionOnly];
     const openUnits = model.activations.filter(item => item.actionType === 'shoot' && !isCombatActivationFinished(state, item.unitId, 'shooting'));
+
+    // Restoring a prior phase's selection only opens the preview. It never
+    // dispatches a Shoot action or silently chooses shooting over an Action.
+    if (restoreInheritedUnit) {
+      restoreInheritedUnit = false;
+      const inheritedId = unitSelection?.get(state, {
+        eligibleIds: [...readyUnits, ...openUnits].map(item => item.unitId)
+      });
+      if (inheritedId) {
+        if (openUnits.some(item => item.unitId === inheritedId)) selectedAttackerId = inheritedId;
+        else pendingUnitId = inheritedId;
+      }
+    }
 
     if (selectedAttackerId && (isCombatActivationFinished(state, selectedAttackerId, "shooting") || !model.activations.some((activation) =>
       activation.unitId === selectedAttackerId && activation.actionType === "shoot"
@@ -356,6 +372,7 @@ export function createShootingScreen(container, {
 
     container.querySelectorAll("[data-shoot-unit]").forEach((button) => button.addEventListener("click", () => {
       pendingUnitId = button.getAttribute("data-shoot-unit");
+      unitSelection?.select(session.getState(), pendingUnitId);
       selectedAttackerId = null;
       selectedWeaponId = null;
       selectedTargetId = null;
@@ -379,6 +396,7 @@ export function createShootingScreen(container, {
         }
         if (unitId === pendingUnitId || unitId === selectedAttackerId) return;
         if (readyUnits.some((unit) => unit.unitId === unitId)) {
+          unitSelection?.select(state, unitId);
           pendingUnitId = unitId;
           selectedAttackerId = null;
           selectedWeaponId = null;
@@ -391,6 +409,7 @@ export function createShootingScreen(container, {
           return;
         }
         if (openUnits.some(activation => activation.unitId === unitId)) {
+          unitSelection?.select(state, unitId);
           selectedAttackerId = unitId;
           pendingUnitId = null;
           const availableWeapons = getShootingWeaponOptions(state, { attackerId: unitId, gameData });
