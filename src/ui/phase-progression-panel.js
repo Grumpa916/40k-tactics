@@ -1,6 +1,5 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { isPunishmentCondemnationRequired } from '../rules/punishment-condemnation.js';
-import { isConsecrateReviewRequired } from '../rules/consecrate-state.js';
 import { TURN_STEPS } from '../state/turn.js';
 
 const LABELS = { start_turn: 'Start of turn', command: 'Command', movement: 'Movement', shooting: 'Shooting', charge: 'Charge', fight: 'Fight', end_turn: 'End of turn', end_battle_round: 'End of battle round' };
@@ -11,9 +10,6 @@ export function getPhaseProgressionAction(state) {
   const phase = state.phase;
   if (phase === 'start_turn' && isPunishmentCondemnationRequired(state)) {
     return { type: null, payload: {}, label: 'Select condemned units before Command phase', disabled: true, blockedReason: 'Complete the Punishment start-of-turn selection before continuing.' };
-  }
-  if (phase === 'end_turn' && isConsecrateReviewRequired(state)) {
-    return { type: null, payload: {}, label: 'Review Consecrate before finishing turn', disabled: true, blockedReason: 'Complete the Consecrate end-of-turn review before continuing.' };
   }
   if (phase === 'end_turn') {
     const next = state.players?.find(player => player.id !== state.activePlayer);
