@@ -39,7 +39,15 @@ function charge(state, turn = state.turn, round = state.battle.round) {
   state.history.push({type:'charge.outcome_recorded',payload:{unitId:'custodes',targetIds:['enemy'],outcome:'successful',turn,round}});
 }
 
-test('Lance and Quicksilver Execution require a successful current-turn charge', () => {
+test('FAQ updates both Salvo Launcher profiles and the Quicksilver move-over rule',()=>{
+  for(const slug of ['shield-captain-on-dawneagle-jetbike','vertus-praetors']){
+    const salvo=catalog['adeptus-custodes:'+slug].weapons.find(item=>item.name==='Salvo Launcher');
+    assert.deepEqual({range:salvo.range,attacks:salvo.attacks,skill:salvo.skill,strength:salvo.strength,ap:salvo.ap,damage:salvo.damage,abilities:salvo.abilities},
+      {range:'24"',attacks:1,skill:'2+',strength:10,ap:-3,damage:'D6+1',abilities:'Twin-linked'});
+  }
+});
+
+test('Lance requires a successful current-turn charge; Quicksilver Execution is movement-only', () => {
   const state = battle('vertus-praetors');
   const lance = getDatasheetWeaponOptions(state,state.units[0],{type:'melee'})[0];
   assert.equal(lance.characteristics.lance,true);
@@ -49,7 +57,12 @@ test('Lance and Quicksilver Execution require a successful current-turn charge',
   charge(state);
   const before = JSON.stringify(state), boosted = calculation(state,lance);
   assert.ok(boosted.expectedDamage > baseline.expectedDamage);
-  assert.equal(boosted.contextualAbilities.appliedRules.length,2);
+  assert.equal(boosted.contextualAbilities.appliedRules.length,1);
+  assert.match(boosted.contextualAbilities.appliedRules[0],/^Lance:/);
+  assert.equal(boosted.contextualAbilities.sustainedHits,undefined);
+  const quicksilver=catalog['adeptus-custodes:vertus-praetors'].abilities.find(item=>item.name==='Quicksilver Execution');
+  assert.match(quicksilver.description,/Normal or Advance move/);
+  assert.match(quicksilver.description,/moved over/);
   assert.equal(JSON.stringify(state),before);
 });
 

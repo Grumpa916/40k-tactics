@@ -5,7 +5,7 @@ This change builds on the Custodes Phase One and Phase Two work. It connects add
 ## Added calculations
 
 - Lance uses a successful charge recorded for this turn. The Charge Advisor's projected melee explicitly assumes success; the defender receives no hypothetical charge bonus.
-- Vertus Praetors' Quicksilver Execution and Gyrfalcons' Death Blow use the same charge evidence.
+- Gyrfalcons' Death Blow uses the same successful-charge evidence. Vertus Praetors' Quicksilver Execution is a once-per-battle move-over ability and does not modify melee attacks.
 - Slayer of Tyrants compares the target's Toughness with the attacking formation's Toughness.
 - Dread Foe and Destructor Optics check attack type and known non-Monster/Vehicle target keywords.
 - Reap a Terrible Tally supplies Hit/Wound re-rolls of 1 against Infantry, preserving stronger re-rolls.
