@@ -11,7 +11,7 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   catalogScope: "all-18-user-supplied-card-texts",
   rulesVerified: true,
   userSuppliedCardTextCount: 18,
-  physicalCardVerifiedCount: 6,
+  physicalCardVerifiedCount: 12,
   physicalCardVerificationDate: "2026-11-08",
   candidateDatasetVersion: "2026.10.02-triangulation-action",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
@@ -78,11 +78,11 @@ const verifiedRules = Object.freeze({
     rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: if no enemy units with Starting Strength 13+ are on the battlefield, the card may be discarded and replaced.",
-      "The supplied card text confirms Fixed scores 4 VP per qualifying unit (up to 5 VP) and Tactical scores 5 VP (up to 5 VP)."
+      "The printed card awards 4 VP per qualifying destroyed unit in Fixed mode, without a 5 VP Fixed cap. Tactical awards 5 VP total (up to 5 VP). Normal battle-round and per-card limits still apply."
     ],
     scoringWindows: [
       ...eitherTurnWindows("fixed", ["fixed"], [
-        { vp: 4, maxVP: 5, summary: "For each enemy unit with Starting Strength 13+ destroyed this turn." }
+        { vp: 4, summary: "For each enemy unit with Starting Strength 13+ destroyed this turn." }
       ]),
       ...eitherTurnWindows("tactical", ["tactical"], [
         { vp: 5, summary: "One or more enemy units with Starting Strength 13+ were destroyed this turn." }
@@ -352,7 +352,13 @@ const PHYSICAL_CARD_EVIDENCE = Object.freeze({
   beacon: Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg' }),
   'defend-stronghold': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' }),
   cleanse: Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' }),
-  'burden-of-trust': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' })
+  'burden-of-trust': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' }),
+  'a-grievous-blow': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg' }),
+  'a-tempting-target': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg' }),
+  'behind-enemy-lines': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg' }),
+  'centre-ground': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' }),
+  'display-of-might': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' }),
+  'engage-on-all-fronts': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg' })
 });
 
 const cardNames = [
