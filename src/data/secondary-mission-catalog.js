@@ -11,6 +11,8 @@ export const SECONDARY_MISSION_CATALOG_SOURCE = Object.freeze({
   catalogScope: "all-18-user-supplied-card-texts",
   rulesVerified: true,
   userSuppliedCardTextCount: 18,
+  physicalCardVerifiedCount: 6,
+  physicalCardVerificationDate: "2026-11-08",
   candidateDatasetVersion: "2026.10.02-triangulation-action",
   candidateDatasetUrl: "https://github.com/IRONBUILT-LLC/ironbuilt-data/blob/6f61cb3796f79348b81389ec0eb32d461b675d02/datasets/wh40k-11e-missions.json",
   crossCheckSources: Object.freeze([
@@ -141,11 +143,11 @@ const verifiedRules = Object.freeze({
     rulesVerified: true,
     referenceNotes: [
       "When drawn in Tactical mode: if no enemy models with 10+ Wounds are on the battlefield, the card may be discarded and replaced.",
-      "The supplied card text confirms Fixed scores 4 VP per qualifying model (up to 5 VP) and Tactical scores 5 VP (up to 5 VP)."
+      "The printed card awards 4 VP per qualifying destroyed model in Fixed mode, without the Tactical 5 VP cap. Tactical awards 5 VP total (up to 5 VP). Normal game and battle-round caps still apply."
     ],
     scoringWindows: [
       ...eitherTurnWindows("fixed", ["fixed"], [
-        { vp: 4, maxVP: 5, summary: "For each enemy model with 10+ Wounds destroyed this turn." }
+        { vp: 4, summary: "For each enemy model with 10+ Wounds destroyed this turn." }
       ]),
       ...eitherTurnWindows("tactical", ["tactical"], [
         { vp: 5, summary: "One or more enemy models with 10+ Wounds were destroyed this turn." }
@@ -342,6 +344,17 @@ const verifiedRules = Object.freeze({
   }
 });
 
+// Directly compared with the supplied photograph of the physical Chapter Approved
+// 2026–27 card face. Unlisted cards remain transcription-reviewed, NOT photo-verified.
+const PHYSICAL_CARD_EVIDENCE = Object.freeze({
+  assassination: Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg' }),
+  'bring-it-down': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg' }),
+  beacon: Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg' }),
+  'defend-stronghold': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' }),
+  cleanse: Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' }),
+  'burden-of-trust': Object.freeze({ verifiedAt:'2026-11-08', face:'scoring-and-rules', photo:'IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg' })
+});
+
 const cardNames = [
   ["a-grievous-blow", "A Grievous Blow", true],
   ["a-tempting-target", "A Tempting Target", false],
@@ -433,10 +446,11 @@ export const SECONDARY_MISSION_CATALOG = Object.freeze(cardNames.map(([slug, nam
     fixedAvailable,
     availableModes: Object.freeze(fixedAvailable ? ["fixed", "tactical"] : ["tactical"]),
     rulesVerified: resolvedRules.rulesVerified,
-    // Existing rulesVerified means checked against the user's supplied
-    // transcription, not an independently checked physical official card.
-    officialCardVerified: false,
-    sourceVerification: "user-supplied-card-transcription",
+    // Transcription review is separate from direct physical-card comparison.
+    officialCardVerified: Boolean(PHYSICAL_CARD_EVIDENCE[slug]),
+    sourceVerification: PHYSICAL_CARD_EVIDENCE[slug]
+      ? "physical-official-card-photo-2026-11-08" : "user-supplied-card-transcription",
+    physicalCardEvidence: PHYSICAL_CARD_EVIDENCE[slug] ?? null,
     referenceNotes: Object.freeze([...(resolvedRules.referenceNotes ?? [])]),
     scoringWindows: Object.freeze(resolvedRules.scoringWindows.map((window) =>
       Object.freeze({

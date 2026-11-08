@@ -45,7 +45,7 @@ export const MISSION_SOURCE_VERIFICATION = Object.freeze({
   secondary: Object.freeze({
     level:"user-supplied-card-transcription",
     officialCardChecked:false,
-    description:"Secondary rules are transcribed from supplied card text; independent official-card comparison is on hold."
+    description:"Secondary rules were transcribed from supplied card text; this individual card is not yet photo-verified against its official physical printing."
   }),
   eventCompanion: Object.freeze({
     level:"previous-user-reviewed-geometry",

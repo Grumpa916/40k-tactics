@@ -41,19 +41,25 @@ test('all 25 primary and 18 secondary card records expose honest provenance', ()
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.verificationLevel,'user-supplied-card-transcription');
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.officialCardVerified,false);
   assert.equal(SECONDARY_MISSION_IMPORT_SOURCE.officialCardVerified,false);
+  const photographed = new Set(['Assassination','Bring it Down','Beacon','Defend Stronghold','Cleanse','Burden of Trust']);
+  let physicalCount = 0;
   for(const card of COMPLETE_SECONDARY_MISSION_CATALOG){
     assert.equal(card.rulesVerified,true,'reviewed against supplied card transcription: '+card.name);
-    assert.equal(card.officialCardVerified,false,'not independently compared with official printed card: '+card.name);
-    assert.equal(card.sourceVerification,'user-supplied-card-transcription');
+    const verified = photographed.has(card.name);
+    assert.equal(card.officialCardVerified,verified,'physical photo status: '+card.name);
+    assert.equal(card.sourceVerification,
+      verified?'physical-official-card-photo-2026-11-08':'user-supplied-card-transcription');
+    if(verified)physicalCount++;
     assert.equal(card.scoringAuthority,'manual-player-confirmation');
   }
+  assert.equal(physicalCount,6);
 });
 
 test('reference wording separates physical official checking from user transcription', () => {
   assert.equal(MISSION_SOURCE_VERIFICATION.primary.officialCardChecked,false);
   assert.equal(MISSION_SOURCE_VERIFICATION.secondary.officialCardChecked,false);
   assert.match(missionSourceNotice({name:'Primary'},'primary'),/community-structured/);
-  assert.match(missionSourceNotice({name:'Secondary'},'secondary'),/on hold/);
+  assert.match(missionSourceNotice({name:'Secondary'},'secondary'),/not yet photo-verified/);
   assert.match(missionSourceNotice({name:'Official',officialCardVerified:true},'secondary'),/official printed source/);
   assert.equal(missionSourceNotice(null,'primary'),'');
 });
