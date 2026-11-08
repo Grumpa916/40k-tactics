@@ -43,9 +43,9 @@ export const MISSION_SOURCE_VERIFICATION = Object.freeze({
     description:"Primary scoring reference is community-structured; official printed-card comparison remains outstanding."
   }),
   secondary: Object.freeze({
-    level:"user-supplied-card-transcription",
-    officialCardChecked:false,
-    description:"Secondary rules were transcribed from supplied card text; this individual card is not yet photo-verified against its official physical printing."
+    level:"physical-official-card-photo-2026-11-08",
+    officialCardChecked:true,
+    description:"This individual Secondary card has no verified physical-photo record; review the printed card. All 18 catalog entries were directly photo-compared on 2026-11-08, subject to later FAQ/errata."
   }),
   eventCompanion: Object.freeze({
     level:"previous-user-reviewed-geometry",
