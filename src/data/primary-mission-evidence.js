@@ -21,6 +21,8 @@ export const PRIMARY_PHOTOGRAPHED_SCORING_FACES = Object.freeze({
   'smoke-and-mirrors':'IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg',
   'death-trap':'IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg',
   'inescapable-dominion':'IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg',
+  'reconnaissance-sweep':'IMG_036DC38C-9A7B-42B0-8253-F2849AECE7F7.jpeg',
+  'secure-asset':'IMG_9AABC8D9-D31D-4874-8521-07E4C8F38BA3.jpeg',
   'meatgrinder':'IMG_0178.jpeg',
   'search-and-scour':'IMG_0178.jpeg',
   'immovable-object':'IMG_0178.jpeg',
@@ -37,12 +39,15 @@ export const PRIMARY_PHOTOGRAPHED_SCORING_FACES = Object.freeze({
   'vanguard-operation':'IMG_0179.jpeg'
 });
 
+// Nov 8 additional direct card photos: Triangulation and Surveil the Foe
+// Action faces were rephotographed and matched; original Oct evidence is
+// retained in docs/primary-missions-source-audit-2026-11-04.md.
 export const PRIMARY_PHOTOGRAPHED_ACTION_FACES = Object.freeze({
   'death-trap':'IMG_0188.jpeg',
   'smoke-and-mirrors':'IMG_0180.jpeg',
   'locate-and-deny':'IMG_0181.jpeg',
-  'surveil-the-foe':'IMG_0181.jpeg',
-  'triangulation':'IMG_0180.jpeg',
+  'surveil-the-foe':'IMG_9AABC8D9-D31D-4874-8521-07E4C8F38BA3.jpeg',
+  'triangulation':'IMG_036DC38C-9A7B-42B0-8253-F2849AECE7F7.jpeg',
   'secure-asset':'IMG_0188.jpeg',
   'sabotage':'IMG_0188.jpeg',
   'vital-link':'IMG_0189.jpeg',
