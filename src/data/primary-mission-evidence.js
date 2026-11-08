@@ -10,7 +10,17 @@
  * checked for mission FAQs. Neither the photos nor the Event Companion alone
  * prove that each entire printed mission card has been reviewed.
  */
+// Batch 1 direct user photographs received 2026-11-08:
+// IMG_6700A944-0A87-4143-80AE-D186E14863F9.jpeg (Battlefield Dominance,
+// Purge and Secure, Determined Acquisition); IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg
+// (Smoke and Mirrors, Death Trap, Inescapable Dominion).
 export const PRIMARY_PHOTOGRAPHED_SCORING_FACES = Object.freeze({
+  'battlefield-dominance':'IMG_6700A944-0A87-4143-80AE-D186E14863F9.jpeg',
+  'purge-and-secure':'IMG_6700A944-0A87-4143-80AE-D186E14863F9.jpeg',
+  'determined-acquisition':'IMG_6700A944-0A87-4143-80AE-D186E14863F9.jpeg',
+  'smoke-and-mirrors':'IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg',
+  'death-trap':'IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg',
+  'inescapable-dominion':'IMG_CBC6160D-BB92-46BA-B6D5-5B09859CC60C.jpeg',
   'meatgrinder':'IMG_0178.jpeg',
   'search-and-scour':'IMG_0178.jpeg',
   'immovable-object':'IMG_0178.jpeg',

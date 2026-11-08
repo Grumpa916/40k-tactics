@@ -90,7 +90,7 @@ export const PRIMARY_MISSION_MATRIX = Object.freeze({
   }),
   "Disruption": Object.freeze({
     "Take and Hold": m("death-trap", "Death Trap", [
-      s("End of your turn", [{ vp: 2, summary: "Per terrain area trapped this turn." }, { vp: 3, bonus: true, summary: "Additional VP when a trapped terrain area contains an objective." }, { vp: 3, summary: "Destroy an enemy that began the turn in a trapped terrain area." }]),
+      s("End of your turn", [{ vp: 2, summary: "Per terrain area trapped this turn." }, { vp: 3, bonus: true, summary: "Additional VP for each terrain area trapped this turn that is an objective." }, { vp: 3, summary: "One or more enemy units that started this turn within a terrain area were destroyed this turn, if that terrain area is trapped at scoring. The terrain need not have been trapped when the unit was destroyed (Event Companion FAQ)." }]),
       s("R2+ Command phase / R5 end of turn", [{ vp: 4, condition: Object.freeze({"type":"control-non-home","minimum":1}), summary: "Control at least one non-home objective." }])
     ], { action: Object.freeze({ id: "booby-trap", name: "Booby Trap", phase: "shooting", reviewTiming: "end-of-turn", summary: "A qualifying unit traps an objective area or eligible terrain area; place a marker." }) }),
     "Purge the Foe": m("delaying-action", "Delaying Action", [
