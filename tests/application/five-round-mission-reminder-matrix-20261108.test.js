@@ -20,6 +20,7 @@ const stateFor=(myDisposition,opponentDisposition,round,activePlayer,phase)=>({
 });
 const groupFor=(reminder,playerId)=>reminder?.groups?.find(group=>group.playerId===playerId);
 const list=(windows)=>windows.map(window=>[window.when,window.items.map(item=>item.vp)]);
+const inactivate=(mission,round)=>mission.scoring.filter(w=>primaryWindowDue(w.when,'end-of-opponent-turn',round));
 
 test('all 25 disposition pairings show due manual Primary scoring at both players\' five-round checkpoints',()=>{
   let checks=0;
@@ -55,11 +56,14 @@ test('all 25 disposition pairings show due manual Primary scoring at both player
             assert.ok(renderScoringCheckpointDialog(endTurn,reminder).match(/manual scoring/i),
               'live popup remains a manual scoring review');
           }
-          // A player must never be shown their own Primary scores during
-          // their opponent's end-of-turn checkpoint (Secondary timing differs).
+          // Some Primary Missions (e.g. Punishment) explicitly score at
+          // the end of either player's turn. Keep those opponent-turn
+          // opportunities while suppressing ordinary own-turn windows.
           const inactive=activePlayer==='p1'?'p2':'p1';
-          assert.equal((groupFor(reminder,inactive)?.primaryScoringWindows??[]).length,0,
-            'inactive player Primary must not be offered on opponent turn');
+          const inactiveMission=activePlayer==='p1'?definitions.opponentMission:definitions.myMission;
+          const expectedOpponent=inactivate(inactiveMission,round);
+          assert.deepEqual(list(groupFor(reminder,inactive)?.primaryScoringWindows??[]),list(expectedOpponent),
+            inactiveMission.name+' R'+round+' '+inactive+' opponent-turn Primary eligibility');
           checks++;
         }
       }
