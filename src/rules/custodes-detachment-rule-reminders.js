@@ -1,7 +1,8 @@
 import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_RULE_SOURCES } from '../data/adeptus-custodes-faction-rules.js';
-import { getBattleUnitDatasheet } from './battle-unit-reference.js';
+import { getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getCustodesKatahState } from './custodes-tactical-advisor.js';
 import { isRulesPhaseOpening } from './rules-phase-window.js';
+import { getFightEngagementState } from './fight-engagement-state.js';
 import { getCommandPointBalance } from '../engine/command-points-ledger.js';
 import { getActiveCustodesDetachmentStratagemUse } from './stratagem-use-state.js';
 import { isStratagemTimingRelevant } from './stratagem-timing.js';
@@ -32,7 +33,60 @@ function selectedDetachments(state, playerId) {
   return names.map(name => ADEPTUS_CUSTODES_DETACHMENTS.find(item => item.name === name)).filter(Boolean);
 }
 
-export function getCustodesDetachmentStratagemReminders(state, { playerId } = {}) {
+const formationKeywords = (state, unit) => {
+  const root = getCombatFormationRoot(state, unit) ?? unit;
+  return getCombatFormationMembers(state, root).flatMap(member =>
+    getBattleUnitDatasheet(state, member)?.keywords ?? []
+  ).map(value => String(value ?? '').trim().toLowerCase());
+};
+const isAnathemaDetachment = name => ['Null Maiden Vigil', 'Silent Hunters'].includes(name);
+function liveStratagemTargetEligible(state, playerId, detachmentName, stratagemName, unit) {
+  if (!unit || unit.ownerId !== playerId || unit.status !== 'deployed') return false;
+  const root = getCombatFormationRoot(state, unit) ?? unit;
+  if (root.id !== unit.id) return false;
+  const keywords = formationKeywords(state, root);
+  const has = keyword => keywords.some(value => value.includes(keyword));
+  if (!has('adeptus custodes')) return false;
+  if (has('anathema psykana') && !isAnathemaDetachment(detachmentName)) return false;
+  const anathemaTarget = {
+    'Anathema Blademastery': 'vigilator',
+    'Psy-Chaff Volley': 'prosecutor',
+    'Purgation Sweep': 'witchseeker'
+  }[stratagemName];
+  if (isAnathemaDetachment(detachmentName) && anathemaTarget && !has(anathemaTarget)) return false;
+  const required = {
+    'Vigil Unending': 'terminator',
+    'Fury of the Emperor': 'terminator',
+    'Unleash the Lions': 'terminator',
+    'Honoured Interred': 'dreadnought',
+    'Unstoppable Momentum': 'dreadnought'
+  }[stratagemName];
+  if (required && !has(required)) return false;
+  if (stratagemName === 'In Auramite Clad' && has('custodian wardens')) return false;
+  if (stratagemName === 'Fury of the Emperor' && !(state.history ?? []).some(event =>
+    event.type === 'unit.arrived_from_reserves' && event.payload?.unitId === root.id &&
+    event.payload?.round === state.battle?.round && event.payload?.turn === state.turn
+  )) return false;
+  if (stratagemName === 'Unceasing Onslaught') {
+    const move = (state.history ?? []).findLast(event =>
+      ['unit.normal_move_resolved', 'unit.advanced', 'unit.fell_back', 'unit.stationary_recorded'].includes(event.type) &&
+      event.payload?.round === state.battle?.round && event.payload?.turn === state.turn &&
+      !event.payload?.movementRefinement
+    );
+    if (move?.type !== 'unit.advanced' || move.payload?.unitId !== root.id) return false;
+  }
+  if (stratagemName === 'Impenetrable Bastion' && (has('monster') || has('vehicle'))) return false;
+  return true;
+}
+function hasLiveStratagemTarget(state, playerId, detachmentName, stratagemName, unitId = null) {
+  const selected = unitId ? state.units?.find(unit => unit.id === unitId) : null;
+  const selectedRoot = selected ? getCombatFormationRoot(state, selected) ?? selected : null;
+  const roots = (state.units ?? []).filter(unit => unit.ownerId === playerId && unit.status === 'deployed' &&
+    (getCombatFormationRoot(state, unit)?.id ?? unit.id) === unit.id);
+  const candidates = roots.filter(unit => liveStratagemTargetEligible(state, playerId, detachmentName, stratagemName, unit));
+  return selectedRoot ? candidates.some(unit => unit.id === selectedRoot.id) : candidates.length > 0;
+}
+export function getCustodesDetachmentStratagemReminders(state, { playerId, unitId = null, livePanel = false } = {}) {
   if (state?.battle?.status !== 'active' || !playerId || String(state?.armyRosters?.[playerId]?.faction ?? '').toLowerCase() !== 'adeptus custodes') return [];
   const activePlayer = state.activePlayer ?? state.battle?.activePlayerId;
   const ownTurn = activePlayer === playerId;
@@ -40,7 +94,8 @@ export function getCustodesDetachmentStratagemReminders(state, { playerId } = {}
   const cp = getCommandPointBalance(state, playerId);
   return selectedDetachments(state, playerId).filter(detachment => detachment.name !== 'Guardians of the Throne')
     .flatMap(detachment => (detachment.stratagems ?? []).filter(stratagem =>
-      isStratagemTimingRelevant(stratagem, phase, { isYourTurn: ownTurn })
+      isStratagemTimingRelevant(stratagem, phase, { isYourTurn: ownTurn }) &&
+      (!livePanel || hasLiveStratagemTarget(state, playerId, detachment.name, stratagem.name, unitId))
     ).map(stratagem => ({
       detachmentName: detachment.name,
       title: stratagem.name,
@@ -74,10 +129,17 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
           event.payload?.round === state.battle?.round && event.payload?.turn === state.turn &&
           (!unit || event.payload?.unitId === unit.id) && state.units?.some(item => item.id === event.payload?.unitId && item.ownerId === playerId));
       }
-      if (include && unit && ['Lions of the Emperor', 'Grav-Assault Force'].includes(detachment.name)) {
-        const keywords = (getBattleUnitDatasheet(state, unit)?.keywords ?? []).map(keyword => String(keyword).toLowerCase());
-        const required = detachment.name === 'Lions of the Emperor' ? 'terminator' : 'grav-assault';
-        include = keywords.some(keyword => keyword.includes(required));
+      if (include && unit) {
+        const keywords = formationKeywords(state, unit);
+        const has = keyword => keywords.some(value => value.includes(keyword));
+        if (detachment.name === "Emperor's Chosen") include = has('adeptus custodes') && !has('anathema psykana');
+        if (detachment.name === 'Might of the Moritoi') include = has('dreadnought');
+        if (['Lions of the Emperor', 'Grav-Assault Force'].includes(detachment.name)) {
+          const required = detachment.name === 'Lions of the Emperor' ? 'terminator' : 'grav-assault';
+          include = keywords.some(keyword => keyword.includes(required));
+        }
+        if (detachment.name === 'Lions of the Emperor' &&
+            getFightEngagementState(state).engagedUnitIds.includes((getCombatFormationRoot(state, unit) ?? unit).id)) include = false;
       }
       if (include) entries.push({
         ruleId: `detachment-rule:${detachment.name}`,

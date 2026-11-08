@@ -31,6 +31,9 @@ function turnMatchesTiming(timing, phase, isYourTurn) {
 export function isStratagemTimingRelevant(stratagem, phase, { isYourTurn } = {}) {
   const timing = normalize(stratagem?.timing);
   const phaseName = normalize(phase);
+  // start_turn/end_turn are app workflow steps, not rules phases. A stratagem
+  // timed for "any phase" is only relevant during a real battle phase.
+  if (!PHASE_NAMES[phaseName]) return false;
   const explicitPhases = Array.isArray(stratagem?.phases) ? stratagem.phases.map(normalize) : [];
   const phaseMatches = explicitPhases.length
     ? explicitPhases.includes(phaseName)

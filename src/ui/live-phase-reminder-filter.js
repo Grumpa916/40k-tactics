@@ -29,7 +29,7 @@ export function getLivePhaseReminderEntries(state, { playerId, selectedUnitId = 
     }
     if (entry.ruleId === 'katah-fight-window') {
       const names = ownTurn ? ['Dacatarai', 'Rendax', 'Kaptaris']
-        : isRulesPhaseOpening(state) ? ['Kaptaris']
+        : isRulesPhaseOpening(state) ? ['Dacatarai', 'Kaptaris']
           : selectedFriendly ? ['Rendax'] : [];
       const katahChoices = (entry.katahChoices ?? []).filter(choice => names.includes(choice.id));
       if (!katahChoices.length) return [];

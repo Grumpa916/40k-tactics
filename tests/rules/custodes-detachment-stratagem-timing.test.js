@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ADEPTUS_CUSTODES_DETACHMENTS } from "../../src/data/adeptus-custodes-faction-rules.js";
 import { getCustodesDetachmentStratagemReminders } from "../../src/rules/custodes-detachment-rule-reminders.js";
+import { isStratagemTimingRelevant } from "../../src/rules/stratagem-timing.js";
+import { custodesReminderState } from "../helpers/custodes-reminder-state.js";
 import { getStratagemResourceContext } from "../../src/rules/tactical-stratagem-context.js";
 
 function battleState({ phase, activePlayer = "you", detachments }) {
@@ -90,3 +92,25 @@ test("opponent Shooting or either Fight phase timing keeps its mixed-turn window
   }
 });
 
+
+test("workflow states do not create a fictional any-phase Stratagem window",()=>{
+  for (const phase of ["start_turn","end_turn","end_battle_round","deployment","review"]) {
+    assert.equal(isStratagemTimingRelevant({timing:"End of any phase"},phase,{isYourTurn:true}),false,phase);
+  }
+});
+
+test("live detachment reminders honor selected-unit eligibility", () => {
+  const state=custodesReminderState({phase:"shooting",activePlayer:"p2"});
+  const roster=state.armyRosters.p1;
+  roster.detachments=["Emperor's Chosen","Lions of the Emperor","Might of the Moritoi"];
+  delete roster.detachment;
+  const allarus=getCustodesDetachmentStratagemReminders(state,{playerId:"p1",unitId:"allarus",livePanel:true});
+  assert.ok(allarus.some(entry=>entry.title==="Vigil Unending"));
+  assert.ok(!allarus.some(entry=>entry.title==="Honoured Interred"));
+  const sisters=getCustodesDetachmentStratagemReminders(state,{playerId:"p1",unitId:"prosecutors",livePanel:true});
+  assert.deepEqual(sisters,[]);
+  const dreadnought=getCustodesDetachmentStratagemReminders(state,{playerId:"p1",unitId:"galatus",livePanel:true});
+  const honoured=dreadnought.find(entry=>entry.title==="Honoured Interred");
+  assert.ok(honoured);
+  assert.match(honoured.effect,/friendly Adeptus Custodes units/);
+});
