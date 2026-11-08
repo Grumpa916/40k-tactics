@@ -16,13 +16,16 @@ export const OFFICIAL_RULES_SOURCE_INDEX = Object.freeze({
     eventCompanion: Object.freeze({
       name:"Warhammer Event Companion", version:"1.3", updatedAt:"2026-10-14",
       url:"https://assets.warhammer-community.com/eng_14-10_wh40k_event_companion-rdwnqprl4c-nj8oqogadv.pdf",
-      officialSourceAuthority:"verified-games-workshop-publication-link",
+      officialSourceAuthority:"verified-games-workshop-publication",
+      inspectedPdfUrl:"https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf",
       inspectedDocumentVersion:"1.2",
       inspectedPages:Object.freeze([1,2,8,9]),
       verifiedProcedures:Object.freeze(["event mission sequence","40K 44x60 battlefield","Fixed/Tactical timing","VP caps","layout legend"]),
       currentFaqCrossCheck:"v1.3 reproduced mission FAQ compared with earlier official v1.2; v1.3 full PDF not retrieved",
-      status:"official-version-1.3-identified-faq-content-crosschecked-full-pdf-pending",
-      geometryStatus:"v1.2-previously-reviewed-by-user-v1.3-geometry-not-rechecked"
+      status:"official-source-authenticated-content-partially-checked",
+      geometryStatus:"previously-reviewed-by-user",
+      currentVersionGeometryRechecked:false,
+      fullCurrentPdfInspected:false
     }),
     munitorumFieldManual: Object.freeze({
       name:"Munitorum Field Manual", updatedAt:"2026-10-14",
