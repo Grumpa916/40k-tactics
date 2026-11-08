@@ -89,14 +89,14 @@ function renderCalistus(state, unit, action) {
   </section>`;
 }
 
-export function createMovementScreen(container, { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}) {
+export function createMovementScreen(container, { session, perspectivePlayerId = null, layoutMode = "tabletop", unitSelection = null } = {}) {
   if (!container || typeof container.replaceChildren !== "function") throw new TypeError("A browser container element is required.");
   if (!session || typeof session.getState !== "function" || typeof session.subscribe !== "function" || typeof session.dispatch !== "function") {
     throw new TypeError("A dispatchable game session is required.");
   }
 
   const mapView = createLiveMapView();
-  let selectedUnitId = null;
+  let selectedUnitId = unitSelection?.get(session.getState()) ?? null;
   let errorMessage = "";
   let advanceRoll = null;
   let livePointerDrag = null;
@@ -116,6 +116,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   function selectUnit(unitId) {
     if (unitId !== selectedUnitId) advanceRoll = null;
     selectedUnitId = unitId;
+    unitSelection?.select(session.getState(), unitId);
     rosterView = 'mine';
     errorMessage = "";
   }
