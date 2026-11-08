@@ -25,7 +25,7 @@ import { appendHistoryEntry } from "../state/history.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { changePhase } from "./state-transitions.js";
 
-const SHOOTING_ACTION_TYPES = new Set(["shoot", "mission_action", "special_action", "not_shoot"]);
+const SHOOTING_ACTION_TYPES = new Set(["shoot", "mission_action", "special_action", "not_shoot", "unlogged"]);
 
 export function recordShootingActivation(state, {
   unitId,

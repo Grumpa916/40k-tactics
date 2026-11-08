@@ -2,6 +2,7 @@ import { createLiveMapView } from './live-map-view.js';
 import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 import { captureViewContinuity } from './view-continuity.js';
+import { renderActionReceipt } from './action-receipt.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getChargeOpportunity, getChargeTargetPriorities } from '../rules/tactical-charge-opportunity.js';
 import { getCombatFormationMembers } from '../rules/battle-unit-reference.js';
@@ -79,16 +80,16 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       measuredDistances:distances,
       limit:3
     }) : [];
-    // Keep the outcome buttons visible while scrolling through chargers, targets
-    // and measurements. This is the fixed top strip of the Charge controls panel.
+    const selectableIds = [...model.candidates.map(item => item.unit.unitId), ...valid];
     const topControls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
       ${state.phase !== 'charge' ? '<p class="combat-workspace__error" role="status">Viewing Charge. Return to the current game phase and advance to Charge to record an outcome.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
-      ${candidate ? `<div class="combat-workspace__charge-results" role="group" aria-label="Record charge result">
+      ${!candidate ? '<small>Choose a charger on the map or from the army list.</small>' : ''}`;
+    const resultControls = candidate && state.phase === 'charge' ? `<div class="combat-workspace__charge-results" role="group" aria-label="Record charge result">
         <button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button>
         <button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button>
         <button type="button" data-charge-decline>Do not charge</button>
-      </div>` : '<small>Choose a charger on the map or from the list below.</small>'}`;
+      </div>` : '';
     const controls = `<p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
       <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
         <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No deployed units available for a Charge decision.</p>'}</div></details>
@@ -146,11 +147,19 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
         </section>`;
         }).join('')}` : ''}
       <details><summary>Charge history · ${model.outcomes.length}</summary><ol>${model.outcomes.map(item => `<li>${esc(item.unit.name)} · ${esc(item.outcome)} · ${item.targets.map(t => esc(t.name) + ' (' + esc(item.measuredDistances?.[t.unitId]) + '″)').join(', ')}</li>`).join('')}</ol></details>`;
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, interactivePlayerId:state.phase === 'charge' ? activePlayerId : null, selectedUnitId, controls, topControls, footer:`<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>` });
+    container.innerHTML = renderCombatWorkspace({
+      state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
+      interactivePlayerId:state.phase === 'charge' ? activePlayerId : null,
+      selectedUnitId, selectableIds, targetIds:[...targetIds], controls, topControls,
+      footer:`${renderActionReceipt(session, { compact:true })}${resultControls}<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
+    });
 
     restoreView();
     mapView.bind(container);
-    const chooseUnit = id => { selectedUnitId = id; targetIds = new Set(); distances = new Map(); error = ''; render(); };
+    const chooseUnit = id => {
+      if (id === selectedUnitId) return;
+      selectedUnitId = id; targetIds = new Set(); distances = new Map(); error = ''; render();
+    };
     const toggleTarget = id => {
       if (targetIds.has(id)) { targetIds.delete(id); distances.delete(id); } else targetIds.add(id);
       error = ''; render();
@@ -161,7 +170,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       error = '';
       render();
     };
-    bindCombatMap(container, { selectedUnitId, targetIds:[...targetIds], selectableIds:[...model.candidates.map(item => item.unit.unitId), ...valid], onSelect:id => {
+    bindCombatMap(container, { state, selectedUnitId, targetIds:[...targetIds], selectableIds, onSelect:id => {
       if (valid.has(id)) toggleTarget(id);
       else if (model.candidates.some(item => item.unit.unitId === id)) chooseUnit(id);
       else { error = 'Select an available charger, then one of its recommended enemy targets. Map range remains approximate.'; render(); }

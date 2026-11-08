@@ -5,6 +5,8 @@ import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
+import { createPrototypeWorkspace } from '../../src/ui/prototype-workspace.js';
+import { getTargetThreatImpact } from '../../src/rules/tactical-threat-impact.js';
 
 function testState() {
   return createGameState({
@@ -191,21 +193,71 @@ test('Secondary Action is absent from Shooting while enemy map taps still cycle 
   } finally { screen.destroy(); }
 });
 
-test('tap shooter then enemy selects a target directly and preserves a single activation', () => {
+test('selecting shooter and target previews the attack until Shoot is explicitly chosen', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
-  const session = createGameSession(testState()), root = fakeDom();
-  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  const state = testState();
+  state.units[0].profile.weaponIds.push('sidearm');
+  const sidearm = { ...gameData.weapons[0], id: 'sidearm', name: 'Sidearm' };
+  const session = createGameSession(state), root = fakeDom();
+  const screen = createShootingScreen(root, {
+    session, perspectivePlayerId: 'p1', gameData: { weapons: [...gameData.weapons, sidearm] },
+    missionActions: [{ id:'primary-demo', name:'Primary Action', missionKind:'primary' }]
+  });
   try {
-    root.click('[data-map-unit-id]', 'exo');
+    assert.match(root.innerHTML, /phase-army-roster__section-heading">Ready</);
+    assert.equal(root.node('[data-map-unit-id]', 'exo').getAttribute('data-phase-map-select'), 'true');
+    root.click('[data-select-phase-unit]', 'exo');
+    assert.ok(root.node('[data-open-unit-details]', 'exo'));
+    root.change('[data-weapon]', 'sidearm');
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /value="marine" selected/);
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
+    assert.ok(root.node('[data-choice-action-toggle]'));
+    assert.equal(root.querySelector('[data-attack]'), null);
+    assert.equal(session.getState(), state);
+    root.click('[data-choice-shoot]');
+    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /value="sidearm" selected/);
+    assert.match(root.innerHTML, /phase-army-roster__section-heading">Acting</);
+    assert.ok(root.node('[data-attack]'));
+    assert.equal(root.querySelector('[data-review-end-shooting]'), null);
     assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
+    root.click('[data-finish-unit]');
+    assert.match(root.innerHTML, /phase-army-roster__section-heading">Finished</);
+    assert.ok(root.node('[data-open-unit-details]', 'exo'));
   } finally { screen.destroy(); }
 });
 
-test('browsing Shooting during Command rejects activation and preserves battle state', () => {
+test('selecting a roster row or keyboard-activating a map unit reveals the phase panel', () => {
+  const attrs = new Map();
+  const listeners = new Map();
+  const shell = { setAttribute: (name, value) => attrs.set(name, value) };
+  const root = {
+    querySelector(selector) {
+      if (selector === '.battle-shell') return shell;
+      if (selector === '.shoot-screen--tabletop, .combat-workspace') return {};
+      return null;
+    },
+    querySelectorAll: () => [],
+    addEventListener: (name, handler) => listeners.set(name, handler),
+    removeEventListener: (name) => listeners.delete(name)
+  };
+  const workspace = createPrototypeWorkspace(root, { session: { getState: testState } });
+  const target = attr => ({ closest: selector => selector.includes(`[${attr}]`) ? {} : null });
+  try {
+    workspace.refresh();
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('click')({ target: target('data-select-phase-unit') });
+    assert.equal(attrs.get('data-controls-collapsed'), 'false');
+    listeners.get('click')({ target: target('data-workspace-panel') });
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('keydown')({ target: target('data-phase-map-select'), key: 'Enter' });
+    assert.equal(attrs.get('data-controls-collapsed'), 'false');
+  } finally { workspace.destroy(); }
+});
+
+test('browsing Shooting during Command leaves the phase read-only', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const state = testState(); state.phase = 'command';
   const session = createGameSession(state), root = fakeDom();
@@ -214,11 +266,64 @@ test('browsing Shooting during Command rejects activation and preserves battle s
     assert.match(root.innerHTML, /game is still in command/);
     root.click('[data-map-unit-id]', 'exo');
     assert.equal(root.querySelector('[data-choice-action-toggle]'), null);
-    root.click('[data-choice-shoot]');
-    assert.match(root.innerHTML, /Shooting activations may only be recorded in the Shooting phase/);
+    assert.equal(root.querySelector('[data-choice-shoot]'), null);
+    assert.equal(root.querySelector('[data-review-end-shooting]'), null);
     assert.equal(session.getState(), state);
     root.click('[data-map-unit-id]', 'marine');
     assert.equal(session.getState(), state);
+  } finally { screen.destroy(); }
+});
+
+test('Shooting rail selects an attached formation from either member and retains individual details', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const initial = testState();
+  initial.units[1].metadata = { rosterUnitId: 'squad' };
+  initial.units.push({
+    id: 'captain', name: 'Captain', ownerId: 'p2', status: 'deployed', wounds: 5,
+    position: { x: 26, y: 27 }, metadata: { rosterUnitId: 'leader' }
+  });
+  initial.armyRosters = { p2: { units: [
+    { id: 'squad', attachedLeaderIds: ['leader'] },
+    { id: 'leader', attachedToBodyguardId: 'squad' }
+  ] } };
+  const session = createGameSession(initial), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  try {
+    root.click('[data-select-phase-unit]', 'exo');
+    root.click('[data-select-phase-unit]', 'captain');
+    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.equal(root.node('[data-select-phase-unit]', 'captain').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.node('[data-select-phase-unit]', 'marine').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
+    assert.ok(root.node('[data-open-unit-details]', 'captain'));
+    assert.ok(root.node('[data-open-unit-details]', 'marine'));
+    assert.equal(session.getState(), initial);
+
+    root.click('[data-choice-shoot]');
+    root.click('[data-shoot-damage-plus]');
+    root.click('[data-attack]');
+    const attack = session.getState().history.find(event => event.type === 'combat.attack_resolved');
+    assert.equal(attack?.payload.targetId, 'marine');
+    assert.equal(session.getState().units.find(unit => unit.id === 'captain').wounds, 5);
+  } finally { screen.destroy(); }
+});
+
+test('ending tabletop Shooting asks for review and records skipped results as unlogged', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const session = createGameSession(testState()), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId:'p1', gameData });
+  try {
+    root.click('[data-review-end-shooting]');
+    assert.equal(session.getState().phase, 'shooting');
+    assert.match(root.innerHTML, /1 remaining unit as result not logged/);
+    root.click('[data-cancel-end-shooting]');
+    assert.equal(root.querySelector('[data-confirm-end-shooting]'), null);
+    root.click('[data-review-end-shooting]');
+    root.click('[data-confirm-end-shooting]');
+    assert.equal(session.getState().phase, 'charge');
+    const activation = session.getState().history.find(event => event.type === 'shooting.unit_activated');
+    assert.equal(activation.payload.actionType, 'unlogged');
+    assert.equal(getTargetThreatImpact(session.getState(), { playerId:'p2', targetUnitId:'exo' }).activations, 0);
   } finally { screen.destroy(); }
 });
 

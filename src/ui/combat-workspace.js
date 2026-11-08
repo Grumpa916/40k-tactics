@@ -1,8 +1,8 @@
 import { renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
-import { renderPhaseArmyRoster } from './phase-army-roster.js';
+import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
 import { createLiveMapView } from './live-map-view.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
-import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
+import { getCombatFormationRoot, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 export { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -48,8 +48,10 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
 
 // Each phase owns its selection and command handling. Use the shared reference
 // roster unless the phase supplies its own selection rail.
-export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, mapView = createLiveMapView() }) {
-  leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId);
+export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, mapView = createLiveMapView() }) {
+  leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId, {
+    selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds
+  });
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
   return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
     ${hasLeftRail ? `<aside class="combat-workspace__rail" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
@@ -60,12 +62,15 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     </section></main>`;
 }
 
-export function bindCombatMap(container, { selectedUnitId, targetIds = [], selectableIds = [], onSelect }) {
+export function bindCombatMap(container, { state, selectedUnitId, targetIds = [], selectableIds = [], onSelect }) {
+  bindPhaseArmySelection(container, onSelect);
   const targets = new Set(targetIds), selectable = new Set(selectableIds);
   container.querySelectorAll?.('[data-map-unit-id]').forEach(marker => {
-    const id = marker.getAttribute('data-map-unit-id');
+    const markerId = marker.getAttribute('data-map-unit-id');
+    const id = getCombatFormationRootId(state, markerId);
     const selected = id === selectedUnitId || targets.has(id);
     if (targets.has(id)) marker.classList?.add?.('is-targeted');
+    if (selectable.has(id)) marker.setAttribute?.('data-phase-map-select', 'true');
     marker.setAttribute?.('role', 'button');
     marker.setAttribute?.('tabindex', '0');
     marker.setAttribute?.('aria-pressed', String(selected));

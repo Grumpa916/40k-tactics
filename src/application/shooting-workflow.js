@@ -3,6 +3,7 @@ import { createCommand } from "../commands/command.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getShootingState } from "../rules/shooting-state.js";
+import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
 import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { unitDisplayLabels } from "../ui/map-unit-labels.js";
@@ -197,7 +198,7 @@ export function resolveShootingAttack(session, {
   );
 }
 
-export function skipRemainingShootingUnits(session, context = {}) {
+function completeRemainingShootingUnits(session, actionType, context) {
   if (!session || typeof session.getState !== "function" || typeof session.dispatchBatch !== "function") {
     throw new TypeError("A game session with batch dispatch is required.");
   }
@@ -211,12 +212,20 @@ export function skipRemainingShootingUnits(session, context = {}) {
       .map((activation) => createCommand(COMMAND_TYPES.FINISH_COMBAT_ACTIVATION, { unitId: activation.unitId })),
     ...shooting.candidates.available
       .map((unitId) => createCommand(COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION,
-        shootingActivationPayload({ unitId, actionType: "not_shoot" }))),
+        shootingActivationPayload({ unitId, actionType }))),
     createCommand(COMMAND_TYPES.COMPLETE_SHOOTING_PHASE)
   ];
   // Commit all choices and the phase transition together, so a failed command
   // cannot leave some units skipped and others still awaiting a choice.
   return session.dispatchBatch(commands, context);
+}
+
+export function skipRemainingShootingUnits(session, context = {}) {
+  return completeRemainingShootingUnits(session, "not_shoot", context);
+}
+
+export function finishShootingWithUnloggedResults(session, context = {}) {
+  return completeRemainingShootingUnits(session, "unlogged", context);
 }
 
 export function finishShootingPhase(session, context = {}) {
@@ -229,8 +238,14 @@ export function finishShootingPhase(session, context = {}) {
   );
 }
 
-export function getShootingWeaponOptions(state, { attackerId, gameData = null } = {}) {
-  if (!wasActivatedToShootThisTurn(state, attackerId) || isCombatActivationFinished(state, attackerId, "shooting")) return [];
+function canInspectShot(state, attackerId, preview) {
+  if (!attackerId || isCombatActivationFinished(state, attackerId, "shooting")) return false;
+  return wasActivatedToShootThisTurn(state, attackerId) ||
+    (preview && state.phase === "shooting" && getShootingCandidates(state).available.includes(attackerId));
+}
+
+export function getShootingWeaponOptions(state, { attackerId, gameData = null, preview = false } = {}) {
+  if (!canInspectShot(state, attackerId, preview)) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
 
@@ -259,8 +274,8 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null } 
   return linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
 }
 
-export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null } = {}) {
-  if (!wasActivatedToShootThisTurn(state, attackerId) || isCombatActivationFinished(state, attackerId, "shooting")) return [];
+export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null, preview = false } = {}) {
+  if (!canInspectShot(state, attackerId, preview)) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
   return state.units

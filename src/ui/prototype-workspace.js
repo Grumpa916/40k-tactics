@@ -96,6 +96,10 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
 
   function click(event) {
     const target = event.target;
+    if (collapsed && target?.closest?.('[data-select-phase-unit], [data-phase-map-select]')) {
+      collapsed = false;
+      refresh();
+    }
     const armyTab = target?.closest?.('[data-phase-army-view]');
     if (armyTab) { armyView = armyTab.getAttribute('data-phase-army-view') === 'opponent' ? 'opponent' : 'mine'; refreshPhaseArmyRoster(container, armyView); return; }
     const unitTab = target?.closest?.('[data-unit-detail-tab]');
@@ -155,6 +159,10 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   }
 
   function keydown(event) {
+    if (collapsed && ['Enter', ' '].includes(event.key) && event.target?.closest?.('[data-phase-map-select]')) {
+      collapsed = false;
+      refresh();
+    }
     const selectedTab = event.target?.closest?.('[data-unit-detail-tab]');
     if (selectedTab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
       const tabs = [...selectedTab.closest('[role="tablist"]').querySelectorAll('[data-unit-detail-tab]')];
