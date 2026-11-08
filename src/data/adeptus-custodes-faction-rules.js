@@ -178,7 +178,7 @@ export const ADEPTUS_CUSTODES_DETACHMENTS = Object.freeze([
       E('Augury Uplink',30,'One per army. The upgraded Dreadnought has Feel No Pain 5+.','Adeptus Custodes Dreadnought unit upgrade')
     ],
     stratagems:[
-      S('Honoured Interred',1,'Shooting or Fight phase','The selected unit gains an aura allowing nearby friendly Dreadnoughts to re-roll Hit rolls of 1.'),
+      S('Honoured Interred',1,'Shooting or Fight phase','Target a friendly Adeptus Custodes Dreadnought. Until end of phase, nearby friendly Adeptus Custodes units can re-roll Hit rolls of 1.'),
       S('Unceasing Onslaught',1,'Your Movement phase','After an Advance move, ranged attacks gain Assault and the Advance does not prevent declaring a charge.'),
       S('Unstoppable Momentum',1,'Your Movement or Charge phase','The selected Dreadnought gains Mobile.')
     ]

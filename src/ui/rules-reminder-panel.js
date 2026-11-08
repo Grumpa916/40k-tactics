@@ -47,8 +47,8 @@ function renderEntry(entry, state) {
 
 const isActiveEffect = entry => Boolean(entry.used && entry.duration === 'phase' && entry.activeThisPhase);
 
-function renderDetachmentStratagemReminders(state,playerId,{livePanel=false}={}) {
-  const all=getCustodesDetachmentStratagemReminders(state,{playerId});
+function renderDetachmentStratagemReminders(state,playerId,{livePanel=false,selectedUnitId=null}={}) {
+  const all=getCustodesDetachmentStratagemReminders(state,{playerId,unitId:selectedUnitId,livePanel});
   const controlled = {
     'Preternatural Rapidity':getPreternaturalRapidityOpportunities,
     'Lightning Wrath':getLightningWrathOpportunities,
@@ -57,7 +57,7 @@ function renderDetachmentStratagemReminders(state,playerId,{livePanel=false}={})
   };
   const entries=livePanel ? all.filter(entry => {
     if (!entry.affordable) return false;
-    const opportunities=controlled[entry.title]?.(state,{playerId});
+    const opportunities=controlled[entry.title]?.(state,{playerId,unitId:selectedUnitId});
     return !opportunities || opportunities.some(option => option.available);
   }) : all;
   if(!entries.length)return '';
@@ -75,7 +75,7 @@ function renderDetachmentStratagemReminders(state,playerId,{livePanel=false}={})
 export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=null,selectedUnitId=null,livePanel=false}={}) {
   const playerId=perspective(state,perspectivePlayerId);
   const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId,onlyActionable:livePanel});
-  const detachment=renderDetachmentStratagemReminders(state,playerId,{livePanel});
+  const detachment=renderDetachmentStratagemReminders(state,playerId,{livePanel,selectedUnitId});
   return guardians||detachment?style()+guardians+detachment:'';
 }
 

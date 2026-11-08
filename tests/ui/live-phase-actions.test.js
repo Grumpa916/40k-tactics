@@ -56,14 +56,25 @@ test('Fight sidebar prioritizes Kaptaris at opponent phase start, Rendax when ou
   state.battle.firstPlayerId='p1';
   const start=renderCustodesKatahPhasePanel(state,{phase:'fight',playerId:'p1',unitId:'sentinel'});
   assert.match(start,/Use Kaptaris/);
-  assert.doesNotMatch(start,/Use Dacatarai|Use Rendax/);
+  assert.match(start,/Use Dacatarai/);
+  assert.doesNotMatch(start,/Use Rendax/);
   const filtered=getLivePhaseReminderEntries(state,{playerId:'p1',selectedUnitId:'sentinel',
     entries:[{ruleId:'katah-fight-window',katahChoices:[{id:'Dacatarai'},{id:'Kaptaris'},{id:'Rendax'}],
       katahEffectLines:[{name:'Dacatarai',effect:'Hit reroll'},{name:'Kaptaris',effect:'Defense'},{name:'Rendax',effect:'Lethal'}]}]});
-  assert.deepEqual(filtered[0].katahChoices.map(x=>x.id),['Kaptaris']);
+  assert.deepEqual(filtered[0].katahChoices.map(x=>x.id),['Dacatarai','Kaptaris']);
   state.history.push({type:'fight.unit_activated',payload:{unitId:'marine',turn:1,round:1}});
   const late=renderCustodesKatahPhasePanel(state,{phase:'fight',playerId:'p1',unitId:'sentinel'});
   assert.match(late,/Use Rendax/);
   assert.doesNotMatch(late,/Use Dacatarai|Use Kaptaris/);
   assert.equal(renderCustodesKatahPhasePanel({...state,phase:'shooting'},{phase:'shooting',playerId:'p1',unitId:'sentinel'}),'');
+});
+
+test("Custodes live reminders match selected unit eligibility",()=>{
+  const state=custodesReminderState({phase:"shooting",activePlayer:"p2"});
+  const roster=state.armyRosters.p1;roster.detachments=["Emperor's Chosen","Lions of the Emperor","Might of the Moritoi"];delete roster.detachment;
+  const sisters=renderUnitRulesReminders(state,{perspectivePlayerId:"p1",selectedUnitId:"prosecutors",livePanel:true});
+  assert.doesNotMatch(sisters,/Magna Imperator|Honoured Interred|Vigil Unending/);
+  const dreadnought=renderUnitRulesReminders(state,{perspectivePlayerId:"p1",selectedUnitId:"galatus",livePanel:true});
+  assert.match(dreadnought,/Honoured Interred/);
+  assert.match(dreadnought,/nearby friendly Adeptus Custodes units/);
 });
