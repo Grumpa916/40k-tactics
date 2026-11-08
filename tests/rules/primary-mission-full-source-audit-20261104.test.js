@@ -255,6 +255,9 @@ test('previously photographed primary faces distinguish scoring from action veri
 
 test('official Event Companion v1.2 primary FAQ notes remain scoped and visible in metadata', () => {
   assert.equal(PRIMARY_MISSION_EVIDENCE_SOURCES.officialCompanionVersion,'1.2');
+  assert.equal(PRIMARY_MISSION_EVIDENCE_SOURCES.latestListedEventCompanionVersion,'1.3');
+  assert.match(PRIMARY_MISSION_EVIDENCE_SOURCES.latestListedEventCompanionUrl,/eng_14-10_wh40k_event_companion/);
+  assert.match(PRIMARY_MISSION_EVIDENCE_SOURCES.latestFaqCrossCheck,/not-fully-retrieved/);
   assert.equal(PRIMARY_MISSION_EVIDENCE_SOURCES.officialFullCardCertificateCount,0);
   for (const [slug,notes] of Object.entries(PRIMARY_OFFICIAL_FAQ_NOTES)) {
     assert.deepEqual(bySlug[slug].officialCompanionFaqNotes,notes);
@@ -262,6 +265,10 @@ test('official Event Companion v1.2 primary FAQ notes remain scoped and visible 
   assert.match(bySlug['death-trap'].officialCompanionFaqNotes.join(' '),/does not have to be trapped/);
   assert.match(bySlug['surveil-the-foe'].officialCompanionFaqNotes.join(' '),/later in the same turn/);
   assert.match(bySlug['vital-link'].officialCompanionFaqNotes.join(' '),/different central objectives/);
+  assert.match(bySlug['locate-and-deny'].officialCompanionFaqNotes.join(' '),/only be removed when and how/i);
+  assert.match(bySlug['triangulation'].officialCompanionFaqNotes.join(' '),/cannot be removed unless/i);
+  assert.equal(bySlug['locate-and-deny'].scoring.flatMap(w=>w.items.map(i=>i.vp)).join(','),'4,4,4,5');
+  assert.equal(bySlug['triangulation'].scoring.flatMap(w=>w.items.map(i=>i.vp)).join(','),'4,3,6,10,10');
 });
 
 test('command-phase primary checks are not due before round 2; fifth-round end-turn replacements stay due', () => {
