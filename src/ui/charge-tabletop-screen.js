@@ -51,9 +51,9 @@ function chargePrioritySummary(advice) {
   return { chance, fight: fight + counter, strategic: `Strategic value: ${strategic}${flip}` };
 }
 
-export function createChargeTabletopScreen(container, { session, perspectivePlayerId = null }) {
+export function createChargeTabletopScreen(container, { session, perspectivePlayerId = null, unitSelection = null }) {
   const mapView = createLiveMapView();
-  let selectedUnitId = null;
+  let selectedUnitId = unitSelection?.get(session.getState()) ?? null;
   let targetIds = new Set();
   let distances = new Map();
   let error = '';
@@ -158,7 +158,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     mapView.bind(container);
     const chooseUnit = id => {
       if (id === selectedUnitId) return;
-      selectedUnitId = id; targetIds = new Set(); distances = new Map(); error = ''; render();
+      selectedUnitId = id; unitSelection?.select(state, id); targetIds = new Set(); distances = new Map(); error = ''; render();
     };
     const toggleTarget = id => {
       if (targetIds.has(id)) { targetIds.delete(id); distances.delete(id); } else targetIds.add(id);
