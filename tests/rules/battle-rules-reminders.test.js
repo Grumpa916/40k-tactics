@@ -11,6 +11,31 @@ import { recordCustodesKatahUse } from '../../src/engine/custodes-katah-transiti
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS as sheets } from '../../src/data/adeptus-custodes-datasheet-details.js';
 const defenses=(state,id,strength=8,phase=state.phase)=>getTargetDefenseReminders(state,{targetUnitId:id,weapon:{characteristics:{strength}},phase});
 
+test('Quicksilver Execution appears after the unit moves, only on its own turn, and is once per battle',()=>{
+  let state=custodesReminderState({phase:'movement',activePlayer:'p1'});
+  const roster={id:'r-vertus',name:'Vertus Praetors',modelCount:2,datasheet:structuredClone(sheets['adeptus-custodes:vertus-praetors'])};
+  state.armyRosters.p1.units.push(roster);
+  state.units.push({id:'vertus',name:'Vertus Praetors',ownerId:'p1',status:'deployed',position:{x:20,y:20},metadata:{rosterUnitId:'r-vertus'}});
+  const list=()=>getBattleRulesReminders(state,{playerId:'p1',unitId:'vertus'});
+  assert.ok(!list().some(item=>item.ruleId==='quicksilver-execution'));
+  for(const type of ['unit.normal_move_resolved','unit.advanced']){
+    state.history.push({type,payload:{unitId:'vertus',playerId:'p1',round:state.battle.round,turn:state.turn,moves:[{from:{x:20,y:20},to:{x:21,y:20}}]}});
+    const entry=list().find(item=>item.ruleId==='quicksilver-execution');
+    assert.ok(entry);assert.equal(entry.available,true);assert.equal(entry.limit,'battle-unit');
+    assert.match(entry.effect,/excluding Monsters and Vehicles/);
+    state.history.length=0;
+  }
+  state.activePlayer='p2';state.battle.activePlayerId='p2';
+  assert.ok(!list().some(item=>item.ruleId==='quicksilver-execution'));
+  state.activePlayer='p1';state.battle.activePlayerId='p1';state.phase='shooting';
+  assert.ok(!list().some(item=>item.ruleId==='quicksilver-execution'));
+  state.phase='movement';
+  state.history.push({type:'unit.normal_move_resolved',payload:{unitId:'vertus',playerId:'p1',round:state.battle.round,turn:state.turn,moves:[{from:{x:20,y:20},to:{x:21,y:20}}]}});
+  state=recordRulesReminderUse(state,{playerId:'p1',unitId:'vertus',ruleId:'quicksilver-execution'});
+  const used=list().find(item=>item.ruleId==='quicksilver-execution');
+  assert.ok(used.used);assert.equal(used.available,false);
+});
+
 test('opponent shooting shows Warden AP protection and excludes their Auramite option',()=>{
   const state=custodesReminderState();const list=defenses(state,'wardens');
   assert.ok(list.some(item=>item.id==='living-fortress'&&item.effect.includes('AP −2 becomes AP −1')));
