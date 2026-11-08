@@ -12,13 +12,13 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 
 3. **Official rules-data verification**
    - **Publication/source-index pass completed 2026-11-03:** versions and catalog provenance are explicitly tracked; see [audit](official-rules-source-audit-2026-11-03.md).
-   - **Still pending, not falsely certified:** current official PDF content comparison, 25 Primary card texts, deferred 18 physical Secondary cards (issue #502), and October Space Marines faction/points data.
+   - **Still pending, not falsely certified:** current official PDF content comparison, five remaining Primary scoring faces and subsequent complete full-card/FAQ certification, and October Space Marines faction/points data. The 18 physical Secondary faces were compared and merged through #563.
    - Preserve accepted terrain maps and manual scoring until a documented official rules discrepancy requires a focused correction.
 
 4. **Army Builder and combat-data completeness audit**
    - **First coverage and conditional-pricing audit in progress:** see [2026-11-03 findings](army-builder-wargear-completeness-audit-2026-11-03.md). Preserve saved points and equipment; detect known invalid unit-copy pricing and report unresolved source coverage.
    - Follow-on: **Space Marines official MFM/Codex vs exported points and missing wargear**, then Custodes and Tyranids datasheet/points/wargear/Leader reconciliation. Include enhancements, invulnerable saves/FNP, and detachment data.
-   - Primary source pass 2026-11-04: all 25 mission pairings and VP sets independently corroborated; 14 physical scoring faces and all 11 printed mission-Action faces inspected, official Event Companion v1.2 FAQ clarifications added. Eleven scoring faces remain absent from user photos, so complete official-card certification is still pending; see [dated audit](primary-missions-source-audit-2026-11-04.md).
+   - Primary source pass 2026-11-04: all 25 pairings/VP sets independently corroborated and 14 physical scoring faces reviewed; November 8 batch adds six photographs, bringing physical scoring coverage to **20/25**. All 11 printed mission-Action faces were previously inspected; official Event Companion v1.2 FAQ clarifications added. Five scoring faces remain, and full-card certification remains separate; see [November 8 addendum](primary-physical-scoring-batch1-2026-11-08.md) and [November 4 baseline](primary-missions-source-audit-2026-11-04.md).
 
 5. **Combat and Tactical Advisor validation**
    - Validate expected-vs-actual damage, split fire, focus fire, range filtering, charge distance/rerolls, fight-back estimates, Fights First, engaged Vehicle/Monster shooting, Battle-shock/OC effects, and opponent-turn history.
@@ -31,7 +31,7 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 
 ## Physical Secondary card verification (2026-11-08)
 
-- **All 18 Chapter Approved 2026–27 Secondary Mission printed rule/scoring faces directly checked against user photos.** Batch 1 (#560) corrected Fixed Bring It Down; Batch 2 (#562) corrected Fixed A Grievous Blow; Batch 3 records six matching cards (see `secondary-physical-card-audit-batch3-2026-11-08.md`). [Issue #502](https://github.com/Grumpa916/40k-tactics/issues/502) tracks closure after the final audit PR merges. A new official FAQ/errata check remains separate; manual VP confirmation remains authoritative.
+- **All 18 Chapter Approved 2026–27 Secondary Mission printed rule/scoring faces directly checked against user photos.** Batch 1 (#560) corrected Fixed Bring It Down; Batch 2 (#562) corrected Fixed A Grievous Blow; Batch 3 (#563, merged) records six matching cards (see `secondary-physical-card-audit-batch3-2026-11-08.md`). [Issue #502](https://github.com/Grumpa916/40k-tactics/issues/502) is closed as completed. A new official FAQ/errata check remains separate; manual VP confirmation remains authoritative.
 
 ## Current priority
 
