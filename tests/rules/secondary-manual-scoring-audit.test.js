@@ -17,7 +17,7 @@ const MATRIX = [
   ['assassination', { fixed: { 'end-of-turn':[3,4,6,7,8,9,10,11,12,13,14,15], 'end-of-opponent-turn':[3,4,6,7,8,9,10,11,12,13,14,15] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
   ['beacon', { tactical: { 'end-of-opponent-turn':[3,5] } }],
   ['behind-enemy-lines', { tactical: { 'end-of-turn':[3,5] } }],
-  ['bring-it-down', { fixed: { 'end-of-turn':[4,8,12], 'end-of-opponent-turn':[4,8,12] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
+  ['bring-it-down', { fixed: { 'end-of-turn':[4,8,12,15], 'end-of-opponent-turn':[4,8,12,15] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
   ['burden-of-trust', { tactical: { 'end-of-opponent-turn':[2,4,5] } }],
   ['centre-ground', { tactical: { 'end-of-turn':[3,5] } }],
   ['cleanse', { tactical: { 'end-of-turn':[2,5] } }],
@@ -195,7 +195,7 @@ test('physical Bring It Down awards Fixed 4 VP per model, not a 5 VP cap',()=>{
   for(const timing of ['end-of-turn','end-of-opponent-turn']) {
     const fixed=card.scoringWindows.filter(w=>w.timing===timing&&w.modes.includes('fixed'));
     assert.equal(fixed[0].tiers[0].maxVP,undefined,'5 VP maximum is Tactical only');
-    assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:fixed}}),[4,8,12]);
+    assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:fixed}}),[4,8,12,15]);
     const tactical=card.scoringWindows.filter(w=>w.timing===timing&&w.modes.includes('tactical'));
     assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:tactical}}),[5]);
   }
