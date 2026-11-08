@@ -170,7 +170,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       error = '';
       render();
     };
-    bindCombatMap(container, { selectedUnitId, targetIds:[...targetIds], selectableIds, onSelect:id => {
+    bindCombatMap(container, { state, selectedUnitId, targetIds:[...targetIds], selectableIds, onSelect:id => {
       if (valid.has(id)) toggleTarget(id);
       else if (model.candidates.some(item => item.unit.unitId === id)) chooseUnit(id);
       else { error = 'Select an available charger, then one of its recommended enemy targets. Map range remains approximate.'; render(); }

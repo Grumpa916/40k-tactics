@@ -235,6 +235,40 @@ test('browsing Shooting during Command leaves the phase read-only', () => {
   } finally { screen.destroy(); }
 });
 
+test('Shooting rail selects an attached formation from either member and retains individual details', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const initial = testState();
+  initial.units[1].metadata = { rosterUnitId: 'squad' };
+  initial.units.push({
+    id: 'captain', name: 'Captain', ownerId: 'p2', status: 'deployed', wounds: 5,
+    position: { x: 26, y: 27 }, metadata: { rosterUnitId: 'leader' }
+  });
+  initial.armyRosters = { p2: { units: [
+    { id: 'squad', attachedLeaderIds: ['leader'] },
+    { id: 'leader', attachedToBodyguardId: 'squad' }
+  ] } };
+  const session = createGameSession(initial), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  try {
+    root.click('[data-select-phase-unit]', 'exo');
+    root.click('[data-select-phase-unit]', 'captain');
+    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.equal(root.node('[data-select-phase-unit]', 'captain').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.node('[data-select-phase-unit]', 'marine').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
+    assert.ok(root.node('[data-open-unit-details]', 'captain'));
+    assert.ok(root.node('[data-open-unit-details]', 'marine'));
+    assert.equal(session.getState(), initial);
+
+    root.click('[data-choice-shoot]');
+    root.click('[data-shoot-damage-plus]');
+    root.click('[data-attack]');
+    const attack = session.getState().history.find(event => event.type === 'combat.attack_resolved');
+    assert.equal(attack?.payload.targetId, 'marine');
+    assert.equal(session.getState().units.find(unit => unit.id === 'captain').wounds, 5);
+  } finally { screen.destroy(); }
+});
+
 test('ending tabletop Shooting asks for review and records skipped results as unlogged', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const session = createGameSession(testState()), root = fakeDom();

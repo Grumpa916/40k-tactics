@@ -116,7 +116,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       error = ''; render();
     };
     const chooseTarget = id => { targetId = id; precisionAllocationId = null; damage = 0; error = ''; render(); };
-    bindCombatMap(container, { selectedUnitId:attackerId, targetIds, selectableIds, onSelect:id => {
+    bindCombatMap(container, { state, selectedUnitId:attackerId, targetIds, selectableIds, onSelect:id => {
       if (attackerId && options.targets.some(unit => unit.unitId === id)) chooseTarget(id);
       else choose(id);
     } });

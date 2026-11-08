@@ -1,4 +1,5 @@
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
+import { getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { getArmyUnitDisplayGroups, armyUnitMemberRole } from './army-unit-display-groups.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -16,8 +17,10 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
     const id = esc(unit.id);
     const name = esc(unit.name ?? unit.id);
     const details = 'data-open-unit-details="' + id + '"';
-    const selection = selectable.has(unit.id)
-      ? 'data-select-phase-unit="' + id + '" aria-pressed="' + (unit.id === selectedUnitId || targets.has(unit.id)) + '"' : null;
+    const formationId = selectable.size && unit.status === 'deployed'
+      ? getCombatFormationRootId(state, unit) : unit.id;
+    const selection = selectable.has(formationId)
+      ? 'data-select-phase-unit="' + id + '" value="' + esc(formationId) + '" aria-pressed="' + (formationId === selectedUnitId || targets.has(formationId)) + '"' : null;
     const button = '<button type="button" class="phase-army-roster__unit" ' + (selection ?? details) + '><span class="phase-army-roster__token ' + (side === 'mine' ? 'is-friendly' : 'is-opponent') + '">' + esc(symbols.get(unit.id) ?? 'U') + '</span><span>' +
       (role ? '<small class="phase-army-roster__role">' + role + '</small>' : '') +
       '<strong>' + name + '</strong><small class="phase-army-roster__vitals"><span>' + esc(unit.status ?? 'Unknown status') + '</span><b aria-label="' + remaining + ' of ' + (maximum ? maximum.slice(1) : 'unknown') + ' wounds remaining">W ' + remaining + maximum + '</b></small></span></button>';
@@ -34,7 +37,7 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
 
 export function bindPhaseArmySelection(container, onSelect) {
   container.querySelectorAll?.('[data-select-phase-unit]').forEach(button => {
-    button.addEventListener('click', () => onSelect(button.getAttribute('data-select-phase-unit')));
+    button.addEventListener('click', () => onSelect(button.value));
   });
 }
 

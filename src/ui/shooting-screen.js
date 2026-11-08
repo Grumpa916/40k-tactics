@@ -405,7 +405,7 @@ export function createShootingScreen(container, {
         const isTarget = targets.some((target) => target.unitId === unitId);
         marker.setAttribute?.("role", "button");
         marker.setAttribute?.("tabindex", "0");
-        marker.setAttribute?.("aria-pressed", unitId === selectedTargetId ? "true" : "false");
+        marker.setAttribute?.("aria-pressed", String(unitId === selectedTargetId || unitId === renderedActiveUnitId));
         if (isTarget) marker.setAttribute?.("data-shoot-target-marker", "true");
         if (marker.style) marker.style.touchAction = "none";
         marker.addEventListener?.("click", () => selectMapUnit(unitId));
