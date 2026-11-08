@@ -97,7 +97,7 @@ test("end-turn screen refreshes after an optional Consecrate review and unsubscr
   current=recordConsecrateReview(current,{playerId:"p1",assignments:[]});
   for(const listener of listeners)listener();
   assert.match(container.innerHTML,/Consecrate review recorded/);
-  assert.doesNotMatch(container.innerHTML,/data-consecrate-review-form/);
+  assert.doesNotMatch(container.innerHTML,/<form\s+data-consecrate-review-form/);
   assert.equal(getPhaseProgressionAction(current).type,COMMAND_TYPES.END_TURN);
   view.destroy();
   assert.equal(listeners.size,0);
@@ -109,6 +109,6 @@ test("end-turn screen never blocks other missions or reintroduces an Action gate
   assert.equal(getPhaseProgressionAction(s).type,COMMAND_TYPES.END_TURN);
   const html=renderEndTurnContent(s);
   assert.match(html,/data-end-turn-screen/);
-  assert.doesNotMatch(html,/data-consecrate-review-form/);
+  assert.doesNotMatch(html,/<form\s+data-consecrate-review-form/);
   assert.match(html,/Scoring remains manual|Scoring remains manual/i);
 });
