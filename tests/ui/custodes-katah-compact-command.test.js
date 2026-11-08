@@ -88,10 +88,11 @@ test('the selected unit exposes timed buttons; SPENT persists across own and opp
   assert.match(overview,/allarus/);
 });
 
-test('opponent-turn Fight still offers defensive Kaptaris at opening for a readied unit',()=>{
+test('opponent-turn Fight opening offers Kaptaris and legal offensive Dacatarai without early Rendax',()=>{
   const own=state('fight');
   const opponent={...own,activePlayer:'p2',battle:{...own.battle,activePlayerId:'p2'}};
   const html=renderCustodesKatahPhasePanel(opponent,{phase:'fight',unitId:'allarus',playerId:'p1'});
   assert.match(html,/Use Kaptaris/);
-  assert.doesNotMatch(html,/Use Dacatarai|Use Rendax/);
+  assert.match(html,/Use Dacatarai/,'offensive Ka’tah remains legal in the opponent Fight phase');
+  assert.doesNotMatch(html,/Use Rendax/,'Rendax is only offered when selected to fight');
 });
