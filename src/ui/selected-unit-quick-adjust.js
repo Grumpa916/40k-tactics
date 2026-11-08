@@ -60,7 +60,7 @@ function renderUnitControls(state, unit, { member = false } = {}) {
     : '';
   const hint=(!casualtyButton && initialModels!=null && initialModels>1 && models==null)
     ? '<small>Model count unknown · check at table</small>' : '';
-  return '<section class="unit-quick-adjust__unit'+(member?' is-member':'')+'" data-global-state-controls data-quick-unit-id="'+esc(unit.id)+'">'+
+  return '<section class="unit-quick-adjust__unit'+(member?' is-member':'')+'" data-global-state-controls data-casualty-controls data-quick-unit-id="'+esc(unit.id)+'">'+
     (member?'<h4>'+esc(unit.name??unit.id)+'</h4>':'')+
     '<div class="unit-quick-adjust__metric"><span>Wounds</span><strong>'+esc(wounds??'—')+
       (max!=null?' / '+esc(max):'')+'</strong>'+woundButtons+'</div>'+
@@ -70,7 +70,7 @@ function renderUnitControls(state, unit, { member = false } = {}) {
       (undo?undo:'')+'</div>'+
     (casualty?.requiresIdentity?casualtyButton:'')+hint+
     (shock||position?'<div class="unit-quick-adjust__actions">'+shock+position+'</div>':'')+
-    '<span class="unit-quick-adjust__message" data-global-state-message role="status"></span>'+
+    '<span class="unit-quick-adjust__message" data-global-state-message role="status"></span><span data-casualty-message role="status"></span>'+ 
   '</section>';
 }
 
@@ -88,7 +88,8 @@ export function renderSelectedUnitQuickAdjust(state, selectedUnitId) {
       '<summary>Attached models · '+otherMembers.length+' member'+(otherMembers.length===1?'':'s')+'</summary>'+
       otherMembers.map(member=>renderUnitControls(state,member,{member:true})).join('')+
       '</details>' : '';
-  return '<section class="unit-quick-adjust" aria-label="Quick adjust selected unit" data-selected-unit-quick-adjust>'+
+  const sheet = new URL('./styles/selected-unit-quick-adjust.css', import.meta.url).href;
+  return '<link rel="stylesheet" href="'+esc(sheet)+'"><section class="unit-quick-adjust" aria-label="Quick adjust selected unit" data-selected-unit-quick-adjust>'+ 
     '<header><span>SELECTED UNIT · QUICK ADJUST</span><strong>'+esc(root.name??root.id)+'</strong></header>'+
     renderUnitControls(state,root)+extras+'</section>';
 }
