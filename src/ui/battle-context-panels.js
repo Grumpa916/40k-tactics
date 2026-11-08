@@ -120,7 +120,11 @@ export function summarizeGameEvent(event, state = {}) {
     if (Number.isFinite(payload.balanceAfter)) details.push("Balance " + payload.balanceAfter);
   } else {
     if (payload.unitId) details.push(unitName(payload.unitId));
-    if (event?.type === "shooting.unit_activated") details.push(payload.actionType === "not_shoot" ? "Did not shoot" : payload.actionType === "shoot" || !payload.actionType ? "Shoot" : "Action: " + (payload.actionId ?? payload.actionType));
+    if (event?.type === "shooting.unit_activated") {
+      const action = payload.actionType ?? "shoot";
+      const label = { not_shoot: "Did not shoot", unlogged: "Result not logged", shoot: "Shoot" }[action];
+      details.push(label ?? "Action: " + (payload.actionId ?? action));
+    }
     if (payload.playerId) details.push(playerName(state, payload.playerId));
     if (payload.phase) details.push(payload.phase);
     if (payload.reason) details.push(payload.reason);

@@ -96,7 +96,13 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining inferred combats as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     const finishUnitControl = active && unit ? '<button type="button" data-fight-finish-entry>Finish unit</button>' : '';
     const endFightControl = active && unit || endReview ? '' : `<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
-    container.innerHTML = renderCombatWorkspace({ state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer, selectedUnitId:attackerId, reminderUnitId:incomingAttackMode?targetId:attackerId, controls, footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}` });
+    const selectableIds = [...options.attackers, ...options.targets].map(unit => unit.unitId);
+    const targetIds = targetId ? [targetId] : [];
+    container.innerHTML = renderCombatWorkspace({
+      state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
+      selectedUnitId:attackerId, selectableIds, targetIds, reminderUnitId:incomingAttackMode?targetId:attackerId, controls,
+      footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}`
+    });
 
     restoreView();
     mapView.bind(container);
@@ -110,7 +116,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       error = ''; render();
     };
     const chooseTarget = id => { targetId = id; precisionAllocationId = null; damage = 0; error = ''; render(); };
-    bindCombatMap(container, { selectedUnitId:attackerId, targetIds:targetId ? [targetId] : [], selectableIds:[...options.attackers.map(unit => unit.unitId), ...options.targets.map(unit => unit.unitId)], onSelect:id => {
+    bindCombatMap(container, { selectedUnitId:attackerId, targetIds, selectableIds, onSelect:id => {
       if (attackerId && options.targets.some(unit => unit.unitId === id)) chooseTarget(id);
       else choose(id);
     } });

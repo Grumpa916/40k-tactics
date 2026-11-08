@@ -1,7 +1,12 @@
+import { refreshPhaseArmyRoster } from './phase-army-roster.js';
+
 // Preserve the player's place when a phase view refreshes.
 export function captureViewContinuity(container) {
-  const selectors = ['.shoot-tabletop__control-scroll', '.combat-workspace__scroll'];
+  const selectors = ['.shoot-tabletop__control-scroll', '.combat-workspace__scroll',
+    '[data-phase-army-list="mine"]', '[data-phase-army-list="opponent"]'];
   const scroll = selectors.map(selector => [selector, container.querySelector?.(selector)?.scrollTop ?? 0]);
+  const armySide = container.querySelector?.('[data-phase-army-view][aria-pressed="true"]')
+    ?.getAttribute('data-phase-army-view');
   const more = container.querySelector?.('[data-comparison-more]')?.open;
   const disclosures = [...(container.querySelectorAll?.('[data-view-key]') ?? [])]
     .map(node => [node.getAttribute('data-view-key'), node.open]);
@@ -22,7 +27,9 @@ export function captureViewContinuity(container) {
   const focusedControl = active ? focusSelectors.find(selector => container.querySelector?.(selector) === active) : null;
   const focusedTarget = active && [...(container.querySelectorAll?.('[data-advisor-target]') ?? [])].includes(active)
     ? active.getAttribute('data-advisor-target') : null;
+  const focusedUnit = active?.getAttribute?.('data-select-phase-unit') ?? null;
   return () => {
+    if (armySide) refreshPhaseArmyRoster(container, armySide);
     const moreNode = container.querySelector?.('[data-comparison-more]');
     if (moreNode && more !== undefined) moreNode.open = more;
     for (const node of container.querySelectorAll?.('[data-view-key]') ?? []) {
@@ -41,7 +48,9 @@ export function captureViewContinuity(container) {
     }
     const focusNode = focusedControl ? container.querySelector?.(focusedControl) : focusedTarget !== null
       ? [...(container.querySelectorAll?.('[data-advisor-target]') ?? [])]
-        .find(node => node.getAttribute('data-advisor-target') === focusedTarget) : null;
+        .find(node => node.getAttribute('data-advisor-target') === focusedTarget)
+      : focusedUnit !== null ? [...(container.querySelectorAll?.('[data-select-phase-unit]') ?? [])]
+        .find(node => node.getAttribute('data-select-phase-unit') === focusedUnit) : null;
     if (focusNode && !focusNode.disabled) focusNode.focus?.({ preventScroll: true });
     for (const [selector, top] of scroll) {
       const node = container.querySelector?.(selector);

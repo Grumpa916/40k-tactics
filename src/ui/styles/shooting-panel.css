@@ -52,4 +52,9 @@
 .shoot-advisory__decision p { margin:5px 0; }
 .shoot-advisory__decision li { margin:8px 0; }
 
-.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__footer .shoot-tabletop__skip { grid-column:1/-1; background:#c4e99b; border-color:#c4e99b; color:#17212b; font-weight:700; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__review,
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__end-review { grid-column:1/-1; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__review { background:#1c2926; border-color:#657b6b; color:#ecf2e8; }
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__footer .live-action-receipt--compact { display:flex; align-items:center; gap:8px; }
+.shoot-tabletop__footer .live-action-receipt__summary { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shoot-tabletop__end-review p { margin:4px 0; }

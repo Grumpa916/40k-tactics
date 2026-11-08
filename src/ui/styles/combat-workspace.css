@@ -55,10 +55,10 @@
 .combat-workspace li { margin:8px 0; font-size:12px; line-height:1.5; }
 @media (max-width:1100px) and (orientation:landscape) { .combat-workspace.has-left-rail { grid-template-columns:152px minmax(0,1fr) 290px; } }
 @media (max-width:760px), (orientation:portrait) { .combat-workspace, .combat-workspace.has-left-rail { height:auto; grid-template-columns:minmax(0,1fr); } .combat-workspace__map { min-height:440px; } .combat-workspace__scroll { overflow:visible; } .combat-workspace__rail { max-height:260px; } }
-/* Fight: compact receipt and action-first Advisor; preserve 44px touch target. */
-.combat-workspace[data-combat-phase="fight"] .live-action-receipt--compact { display:flex; align-items:center; gap:8px; min-width:0; max-width:100%; margin-bottom:6px; }
-.combat-workspace[data-combat-phase="fight"] .live-action-receipt__summary { display:block; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; }
-.combat-workspace[data-combat-phase="fight"] .live-action-receipt--compact button { width:auto; min-width:62px; min-height:44px; flex:none; padding:8px 10px; }
+/* Keep recent results and Undo beside the combat controls. */
+.combat-workspace__panel footer .live-action-receipt--compact { display:flex; align-items:center; gap:8px; min-width:0; max-width:100%; margin-bottom:6px; }
+.combat-workspace__panel footer .live-action-receipt__summary { display:block; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; }
+.combat-workspace__panel footer .live-action-receipt--compact button { width:auto; min-width:62px; min-height:44px; flex:none; padding:8px 10px; }
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__confidence { display:block; color:#b8d1b0; margin-bottom:4px; }
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__recommendation { margin:0 0 8px; line-height:1.35; }
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__grid { gap:5px; }
@@ -66,10 +66,14 @@
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more summary { min-height:44px; display:flex; align-items:center; }
 .combat-workspace[data-combat-phase="fight"] .fight-advisory--compact .fight-advisory__more > .fight-advisory__grid { padding:8px 0; }
 
-/* Charge: result actions stay at the top while the unit/target list scrolls. */
+/* Charge: the header identifies the charger while the footer records the result. */
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls { flex:none; padding:10px 12px; border-bottom:1px solid #40545c; background:#1d2927; }
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls h1 { font-size:17px; margin:0 0 6px; overflow-wrap:anywhere; }
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls > small { color:#bdc9c8; font-size:12px; }
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__charge-results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__charge-results button { width:100%; min-width:0; min-height:44px; padding:8px 5px; font-size:12px; line-height:1.2; font-weight:700; text-align:center; }
+.battle-shell.is-tabletop-experiment .combat-workspace__charge-results [data-charge-decline],
+.battle-shell.is-tabletop-experiment .combat-workspace__charge-results + [data-charge-complete],
+.battle-shell.is-tabletop-experiment .combat-workspace__panel footer [data-fight-finish-entry] { background:#1c2926; border-color:#657b6b; color:#ecf2e8; }
+.combat-workspace__charge-results + [data-charge-complete] { margin-top:6px; }
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls .combat-workspace__error { margin:4px 0 8px; }

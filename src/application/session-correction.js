@@ -7,6 +7,7 @@ const LABELS = {
   'custodes.record_katah_use': 'rule reminder use',
   'unit.set_battle_note': 'unit note',
   'combat.resolve_attack': 'attack',
+  'charge.record_outcome': 'charge result', 'charge.decline': 'charge choice',
   'unit.normal_move': 'normal move', 'unit.advance': 'advance', 'unit.record_stationary': 'stationary choice',
   'unit.record_fall_back': 'fall back', 'battlefield_map.adjust_live_position': 'map move',
   'unit.adjust_wounds': 'wound adjustment', 'battle_shock.set_status': 'Battle-shock adjustment',
@@ -19,8 +20,13 @@ export function describeSessionCorrection(command, state) {
   if (!label) return null;
   const p = command.payload ?? {};
   const unit = id => state.units?.find(u => u.id === id)?.name ?? id;
-  const detail = command.type === 'combat.resolve_attack'
+  let detail = command.type === 'combat.resolve_attack'
     ? [unit(p.attackerId), '→', unit(p.allocationTargetId ?? p.targetId), '·', p.weapon?.name ?? 'weapon', '·', p.actualDamage ?? p.totalDamage ?? 0, 'damage'].join(' ')
     : label;
+  if (command.type === 'charge.record_outcome') {
+    detail = unit(p.unitId) + ' · Charge ' + (p.succeeded ? 'successful' : 'failed');
+  } else if (command.type === 'charge.decline') {
+    detail = unit(p.unitId) + ' · Did not charge';
+  }
   return { label, detail };
 }

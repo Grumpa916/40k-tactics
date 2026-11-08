@@ -145,6 +145,7 @@ export function getCombatHistorySummary(state, { playerId } = {}) {
     }
 
     if (event.type === SHOOTING_ACTIVATION_EVENT) {
+      if (event.payload?.actionType === "unlogged") continue;
       const actor = unitById(state, event.payload?.unitId);
       if (!actor || actor.ownerId === playerId) continue;
       opponentActions.push({

@@ -5,6 +5,7 @@ import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
+import { getTargetThreatImpact } from '../../src/rules/tactical-threat-impact.js';
 
 function testState() {
   return createGameState({
@@ -191,21 +192,33 @@ test('Secondary Action is absent from Shooting while enemy map taps still cycle 
   } finally { screen.destroy(); }
 });
 
-test('tap shooter then enemy selects a target directly and preserves a single activation', () => {
+test('selecting shooter and target previews the attack until Shoot is explicitly chosen', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const session = createGameSession(testState()), root = fakeDom();
-  const screen = createShootingScreen(root, { session, perspectivePlayerId: 'p1', gameData });
+  const screen = createShootingScreen(root, {
+    session, perspectivePlayerId: 'p1', gameData,
+    missionActions: [{ id:'primary-demo', name:'Primary Action', missionKind:'primary' }]
+  });
   try {
-    root.click('[data-map-unit-id]', 'exo');
+    root.click('[data-select-phase-unit]', 'exo');
+    assert.ok(root.node('[data-open-unit-details]', 'exo'));
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /value="marine" selected/);
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
+    assert.ok(root.node('[data-choice-action-toggle]'));
+    assert.equal(root.querySelector('[data-attack]'), null);
+    assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 0);
+    root.click('[data-choice-shoot]');
+    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /value="bio" selected/);
+    assert.ok(root.node('[data-attack]'));
+    assert.equal(root.querySelector('[data-review-end-shooting]'), null);
     assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
   } finally { screen.destroy(); }
 });
 
-test('browsing Shooting during Command rejects activation and preserves battle state', () => {
+test('browsing Shooting during Command leaves the phase read-only', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
   const state = testState(); state.phase = 'command';
   const session = createGameSession(state), root = fakeDom();
@@ -214,11 +227,30 @@ test('browsing Shooting during Command rejects activation and preserves battle s
     assert.match(root.innerHTML, /game is still in command/);
     root.click('[data-map-unit-id]', 'exo');
     assert.equal(root.querySelector('[data-choice-action-toggle]'), null);
-    root.click('[data-choice-shoot]');
-    assert.match(root.innerHTML, /Shooting activations may only be recorded in the Shooting phase/);
+    assert.equal(root.querySelector('[data-choice-shoot]'), null);
+    assert.equal(root.querySelector('[data-review-end-shooting]'), null);
     assert.equal(session.getState(), state);
     root.click('[data-map-unit-id]', 'marine');
     assert.equal(session.getState(), state);
+  } finally { screen.destroy(); }
+});
+
+test('ending tabletop Shooting asks for review and records skipped results as unlogged', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const session = createGameSession(testState()), root = fakeDom();
+  const screen = createShootingScreen(root, { session, perspectivePlayerId:'p1', gameData });
+  try {
+    root.click('[data-review-end-shooting]');
+    assert.equal(session.getState().phase, 'shooting');
+    assert.match(root.innerHTML, /1 remaining unit as result not logged/);
+    root.click('[data-cancel-end-shooting]');
+    assert.equal(root.querySelector('[data-confirm-end-shooting]'), null);
+    root.click('[data-review-end-shooting]');
+    root.click('[data-confirm-end-shooting]');
+    assert.equal(session.getState().phase, 'charge');
+    const activation = session.getState().history.find(event => event.type === 'shooting.unit_activated');
+    assert.equal(activation.payload.actionType, 'unlogged');
+    assert.equal(getTargetThreatImpact(session.getState(), { playerId:'p2', targetUnitId:'exo' }).activations, 0);
   } finally { screen.destroy(); }
 });
 

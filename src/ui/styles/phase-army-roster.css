@@ -19,6 +19,11 @@
 .phase-army-roster__group h3{margin:1px 3px 5px;font-size:11px;color:#c4e99b}
 .phase-army-roster__group .phase-army-roster__unit:last-child{margin-bottom:0}
 .phase-army-roster__role{color:#c4e99b}
+.phase-army-roster__selectable{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px;margin-bottom:4px}
+.phase-army-roster__selectable .phase-army-roster__unit{margin:0;grid-template-columns:26px minmax(0,1fr);gap:4px}
+.phase-army-roster__selectable .phase-army-roster__token{width:26px;height:26px}
+.phase-army-roster__selectable .phase-army-roster__unit[aria-pressed=true]{border-color:#c4e99b;background:#263b32}
+.phase-army-roster .phase-army-roster__details{font-size:16px!important}
 @media (orientation:landscape) and (min-width:761px){
  .battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail,.battle-shell.is-tabletop-experiment .shoot-screen--tabletop.has-army-roster{grid-template-columns:180px minmax(0,1fr) 310px!important}
  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace.has-left-rail,.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-screen--tabletop.has-army-roster{grid-template-columns:180px minmax(0,1fr)!important}

@@ -24,7 +24,7 @@ test('Command Charge and Fight render the shared rail alongside their controls',
  assert.match(html,/data-phase-army-view="opponent"/);assert.match(html,/phase controls/);
  }
  const source=fs.readFileSync(new URL('../../src/ui/shooting-screen.js',import.meta.url),'utf8');
- assert.match(source,/renderPhaseArmyRoster\(state, perspectivePlayerId\)/);
+ assert.match(source,/renderPhaseArmyRoster\(state, perspectivePlayerId,/);
 });
 test('switching army tabs changes only reference visibility and pressed state',()=>{
  const node=(attribute,value)=>({hidden:false,attributes:{[attribute]:value},getAttribute(k){return this.attributes[k]},setAttribute(k,v){this.attributes[k]=v}});

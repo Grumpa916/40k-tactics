@@ -56,28 +56,27 @@ test('Charge map selects multiple declared targets and records fresh preset dist
   } finally { x.screen.destroy(); }
 });
 
-test('Charge outcomes remain at top of panel while targets and unit list scroll', () => {
+test('Charge outcomes stay in the fixed footer and a recorded result can be undone', () => {
   const x=setup();
   try {
-    click(x,'data-map-unit-id','fighter');
+    click(x,'data-select-phase-unit','fighter');
     const html=x.root.innerHTML;
     const fixedStart=html.indexOf('class="combat-workspace__top-controls"');
     const scrollStart=html.indexOf('class="combat-workspace__scroll"');
-    assert.ok(fixedStart>=0&&scrollStart>fixedStart,'Charge results are above the scrollable controls');
-    const header=html.slice(fixedStart,scrollStart);
-    const scroll=html.slice(scrollStart);
-    assert.match(header,/data-charge-success/);
-    assert.match(header,/data-charge-failed/);
-    assert.match(header,/data-charge-decline/);
-    assert.doesNotMatch(scroll,/data-charge-success|data-charge-failed|data-charge-decline/,
-      'outcomes are not duplicated at the bottom after target rows');
-    assert.ok(header.indexOf('data-charge-success')<scrollStart);
+    const footerStart=html.indexOf('<footer>',scrollStart);
+    assert.ok(fixedStart>=0&&scrollStart>fixedStart&&footerStart>scrollStart);
+    assert.doesNotMatch(html.slice(fixedStart,footerStart),/data-charge-success|data-charge-failed|data-charge-decline/);
+    const footer=html.slice(footerStart,html.indexOf('</footer>',footerStart));
+    assert.match(footer,/data-charge-success[\s\S]*data-charge-failed[\s\S]*data-charge-decline/);
     assert.equal(x.root.node('[data-charge-success]').disabled,true);
     click(x,'data-map-unit-id','enemy');
     measured(x,'enemy',6);
     assert.equal(x.root.node('[data-charge-success]').disabled,false);
     click(x,'data-charge-success');
     assert.equal(x.session.getState().history.filter(event=>event.type==='charge.outcome_recorded').length,1);
+    assert.match(x.root.innerHTML,/data-live-undo aria-label="Undo charge result"/);
+    assert.equal(x.session.undoLastAction(),true);
+    assert.equal(getChargeViewModel(x.session.getState()).candidates.length,1);
   } finally { x.screen.destroy(); }
 });
 
