@@ -1,3 +1,4 @@
+import { renderScoreTransactions, scoreboardAdjustmentCommand } from "../../src/ui/scoreboard-transactions.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -74,4 +75,13 @@ test('scoreboard CP buttons record manual changes for either player', () => {
   assert.equal(getCommandPointBalance(session.getState(), 'p2'), 2);
   assert.deepEqual(getCommandPointHistory(session.getState()).map(item => item.reason), ['adjustment', 'adjustment', 'adjustment']);
  } finally { shell.destroy(); }
+});
+
+test('scoreboard reason choices preserve CP ledger semantics and transaction history',()=>{
+ const state=createGameState({phase:'shooting',turn:2,activePlayer:'p1',players:[{id:'p1',name:'You'}],units:[],commandPoints:{p1:2},battle:{status:'active',round:1}});
+ const spend=scoreboardAdjustmentCommand(state,{playerId:'p1',kind:'cp',amount:-1,reason:'stratagem'});
+ assert.equal(spend.payload.reason,'spend'); assert.throws(()=>scoreboardAdjustmentCommand(state,{playerId:'p1',kind:'cp',amount:1,reason:'spend'}),/−1/);
+ const vp=scoreboardAdjustmentCommand(state,{playerId:'p1',kind:'vp',amount:-1,reason:'missed'});assert.equal(vp.payload.reason,'Missed score');
+ const html=renderScoreTransactions({...state,history:[{type:'command_points.changed',payload:{playerId:'p1',amount:-1,reason:'spend',note:'Stratagem spend',turn:2,round:1,phase:'shooting',balanceBefore:2,balanceAfter:1}}]},'p1','cp');
+ assert.match(html,/Stratagem spend/);assert.match(html,/Round 1 · Turn 2 · shooting · Balance 1/);
 });

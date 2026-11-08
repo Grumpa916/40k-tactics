@@ -6,15 +6,17 @@ const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;'
 const checkpointLabels={'command-phase':'End of own Command','end-of-turn':'End of own turn','end-of-opponent-turn':"End of opponent's turn",'end-of-battle':'End of battle'};
 
 function scoringRequirementMarkup(windows = []) {
-  const rows = windows.flatMap(window => {
+  const blocks = windows.map(window => {
     const entries = [...(window?.items ?? []), ...(window?.tiers ?? [])];
-    return entries.map(entry => {
+    const rows = entries.map(entry => {
       const vp = Number.isInteger(Number(entry?.vp)) && Number(entry.vp) > 0 ? `<strong>${esc(entry.vp)} VP</strong> · ` : '';
       return `<li>${vp}${esc(entry?.summary ?? 'Review the mission requirement on the physical card.')}</li>`;
-    });
+    }).join('');
+    if (!rows) return '';
+    return `<section class="checkpoint-mission__window"><h4>${esc(window?.when ?? 'Scoring window')}</h4><ul>${rows}</ul></section>`;
   });
-  if (!rows.length) return '<p><strong>Scoring requirements:</strong> Review the mission card and agree the completed condition on the tabletop.</p>';
-  return `<div class="checkpoint-mission__requirements"><p><strong>Scoring requirements</strong></p><ul>${rows.join('')}</ul></div>`;
+  if (!blocks.some(Boolean)) return '<p><strong>Scoring requirements:</strong> Review the mission card and agree the completed condition on the tabletop.</p>';
+  return `<div class="checkpoint-mission__requirements"><p><strong>Scoring requirements · check each window below</strong></p>${blocks.join('')}</div>`;
 }
 
 function primaryOpportunityMarkup(state, group) {

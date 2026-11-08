@@ -1,3 +1,4 @@
+import { renderScoreReason, renderScoreTransactions } from './scoreboard-transactions.js';
 import { getCommandPointBalance } from "../engine/command-points-ledger.js";
 import { getVictoryPointScore } from "../engine/victory-points-ledger.js";
 import { formatElapsedTime, getTurnClockElapsedMs } from "../state/turn-clock.js";
@@ -43,8 +44,8 @@ export function renderScoreAdjustOverlay(
     (scoreAdjustCollapsed ? 'Expand score adjustment' : 'Minimize score adjustment') + '">' +
     (scoreAdjustCollapsed ? '□' : '−') +
     '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current">' +
-    current + '</div><div class="battle-shell__score-adjust-grid">' + controls +
-    '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p></section></div>';
+    current + '</div>' + (showVp ? renderScoreReason('vp') : '') + (showCp ? renderScoreReason('cp') : '') + '<div class="battle-shell__score-adjust-grid">' + controls +
+    '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p>' + renderScoreTransactions(state, scorePlayer.id, scoreAdjustKind) + '</section></div>';
 }
 
 export function renderStatusSummaryContent(state, viewedPhase) {
@@ -73,7 +74,7 @@ export function renderStatusSummaryContent(state, viewedPhase) {
 export function renderScoreAdjustStyles() {
   return '<style>.battle-shell__player-summary{appearance:none;color:inherit;text-align:left;cursor:pointer}' +
     '.battle-shell__score-adjust-backdrop{position:fixed;inset:0;z-index:10050;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px}' +
-    '.battle-shell__score-adjust{width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}' +
+    '.battle-shell__score-adjust{max-height:90dvh;overflow:auto;width:min(460px,92vw);background:#171b20;border:1px solid #5b6876;border-radius:14px;padding:18px;box-shadow:0 18px 50px #000b}' +
     '.battle-shell__score-adjust header{display:flex;justify-content:space-between;align-items:center;gap:12px}' +
     '.battle-shell__score-adjust header>div{display:flex;gap:8px}.battle-shell__score-adjust header h2{margin:0}' +
     '.battle-shell__score-adjust header button{font-size:24px;min-width:46px}.battle-shell__score-adjust-current{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}' +
@@ -81,5 +82,5 @@ export function renderScoreAdjustStyles() {
     '.battle-shell__score-adjust-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}' +
     '.battle-shell__score-adjust-grid button{min-width:76px;min-height:52px;font-size:20px;font-weight:800}' +
     '.battle-shell__score-adjust-message{min-height:1.3em;margin:10px 0 0}.battle-shell__score-adjust.is-collapsed{width:min(360px,86vw);padding:10px 12px}' +
-    '.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-current,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-grid,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-message{display:none}</style>';
+    '.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-current,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-grid,.battle-shell__score-adjust.is-collapsed .battle-shell__score-adjust-message{display:none}.score-transaction-reason{display:grid;gap:6px;margin:12px 0}.score-transaction-reason select{min-height:44px;font:inherit}.score-transactions{margin-top:14px}.score-transactions ol{padding-left:22px;max-height:190px;overflow:auto}.score-transactions li{margin:10px 0}.score-transactions small{display:block}.battle-shell__score-adjust.is-collapsed .score-transactions,.battle-shell__score-adjust.is-collapsed .score-transaction-reason{display:none}</style>';
 }

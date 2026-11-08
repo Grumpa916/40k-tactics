@@ -17,6 +17,14 @@ test('primary timing alternatives enforce their own round range and no-op checkp
   const state=seed();state.phase='movement';state.battle.round=1;
   assert.equal(getScoringCheckpointReminder(state,{previousPhase:'command'}),null);
 });
+test('checkpoint dialog labels each scoring window separately',()=>{
+  const state=seed();state.phase='end_turn';
+  state.battlefieldMap.missionSetup={myDisposition:'Purge the Foe',opponentDisposition:'Take and Hold'};
+  const reminder=getScoringCheckpointReminder(state,{previousPhase:'fight'});
+  const html=renderScoringCheckpointDialog(state,reminder);
+  assert.match(html,/Scoring requirements · check each window below/);
+  assert.match(html,/End of your turn/);
+});
 test('objective evidence distinguishes recorded success, failure, and unavailable data',()=>{
   const state=seed(),condition='Control at least one non-home objective.';
   assert.equal(missionConditionEvidence(state,'p1',condition).count,1);
