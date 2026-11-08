@@ -12,7 +12,7 @@ import { getScoringCheckpointReminder } from '../../src/application/scoring-chec
 // card. These are based on the project's user-supplied 2026-27 card transcription.
 // The physical deck and current official FAQs remain authoritative.
 const MATRIX = [
-  ['a-grievous-blow', { fixed: { 'end-of-turn':[4,5], 'end-of-opponent-turn':[4,5] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
+  ['a-grievous-blow', { fixed: { 'end-of-turn':[4,8,12,15], 'end-of-opponent-turn':[4,8,12,15] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
   ['a-tempting-target', { tactical: { 'end-of-turn':[5] } }],
   ['assassination', { fixed: { 'end-of-turn':[3,4,6,7,8,9,10,11,12,13,14,15], 'end-of-opponent-turn':[3,4,6,7,8,9,10,11,12,13,14,15] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
   ['beacon', { tactical: { 'end-of-opponent-turn':[3,5] } }],
@@ -170,16 +170,22 @@ test('fifth-round alternative Secondary award respects remaining battle-round al
 });
 
 
-test('six physical Chapter Approved Secondary card faces are individually verified', () => {
+test('twelve physical Chapter Approved Secondary card faces are individually verified', () => {
   const checked = new Map([
     ['assassination','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
     ['bring-it-down','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
     ['beacon','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
     ['defend-stronghold','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg'],
     ['cleanse','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg'],
-    ['burden-of-trust','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg']
+    ['burden-of-trust','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg'],
+    ['a-grievous-blow','IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg'],
+    ['a-tempting-target','IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg'],
+    ['behind-enemy-lines','IMG_ACBC8821-7C33-4602-AA96-6DE4682FD74E.jpeg'],
+    ['centre-ground','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg'],
+    ['display-of-might','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg'],
+    ['engage-on-all-fronts','IMG_5788EBC7-5E36-4BD0-BC43-55386D895FAC.jpeg']
   ]);
-  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerifiedCount,6);
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerifiedCount,12);
   assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerificationDate,'2026-11-08');
   for(const [slug,card] of MATRIX.map(([id])=>[id,byId.get('secondary-'+id)])){
     const photo=checked.get(slug);
@@ -208,4 +214,27 @@ test('physical Bring It Down awards Fixed 4 VP per model, not a 5 VP cap',()=>{
   const scored=recordSecondaryMissionScore(game,{playerId:'p1',instanceId:'reviewed-card',amount:8,scoringTiming:'end-of-turn'});
   assert.equal(scored.victoryPoints.p1,8);
   assert.equal(scored.scoring.secondaryMissions[0].status,'active');
+});
+
+test('physical A Grievous Blow awards Fixed 4 VP per qualifying unit without Tactical cap', () => {
+  const card=byId.get('secondary-a-grievous-blow');
+  for (const timing of ['end-of-turn','end-of-opponent-turn']) {
+    const fixed=card.scoringWindows.filter(w=>w.timing===timing && w.modes.includes('fixed'));
+    assert.equal(fixed.length,1);
+    assert.equal(fixed[0].tiers[0].maxVP,undefined,'5 VP max only applies to Tactical scoring');
+    assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:fixed}}),[4,8,12,15]);
+    const tactical=card.scoringWindows.filter(w=>w.timing===timing && w.modes.includes('tactical'));
+    assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:tactical}}),[5]);
+  }
+  const game=stateFor(card,'fixed');
+  const mission={category:'secondary',instanceId:'reviewed-card',definitionId:card.id,definitionName:card.name,
+    result:{scoringWindows:card.scoringWindows.filter(w=>w.timing==='end-of-turn' && w.modes.includes('fixed'))}};
+  const html=renderCheckpointScore(game,{playerId:'p1',checkpoint:'end-of-turn'},mission);
+  assert.match(html,/value="8"/);
+  assert.match(html,/value="12"/);
+  assert.match(html,/value="15"/);
+  assert.doesNotMatch(html,/value="5"/);
+  const scored=recordSecondaryMissionScore(game,{playerId:'p1',instanceId:'reviewed-card',amount:8,scoringTiming:'end-of-turn'});
+  assert.equal(scored.victoryPoints.p1,8);
+  assert.equal(scored.scoring.secondaryMissions[0].status,'active','Fixed card persists after scoring');
 });
