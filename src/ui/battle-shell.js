@@ -1,3 +1,4 @@
+import { scoreboardAdjustmentCommand } from './scoreboard-transactions.js';
 import { PHASES, SCREEN_FACTORIES } from './battle-screen-registry.js';
 import { createRulesReminderController } from './rules-reminder-panel.js';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
@@ -510,8 +511,8 @@ export function createBattleShell(container, {
     const kind = adjust.getAttribute("data-score-adjust-kind");
     if (!Number.isInteger(amount) || !["vp","cp"].includes(kind)) return;
     try {
-      if (kind === "vp") session.dispatch({ type: COMMAND_TYPES.ADJUST_VICTORY_POINTS, payload: { playerId: scoreAdjustPlayerId, amount, reason: "Scoreboard adjustment", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
-      else session.dispatch({ type: COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, payload: { playerId: scoreAdjustPlayerId, amount, reason: "adjustment", note: "Scoreboard popup", turn: state.turn ?? 0, round: state.battle?.round ?? 0 } });
+      const reason = container.querySelector?.('[data-score-reason="' + kind + '"]')?.value ?? 'adjustment';
+      session.dispatch(scoreboardAdjustmentCommand(state, { playerId: scoreAdjustPlayerId, amount, kind, reason }));
       scoreAdjustMessage = (amount > 0 ? "+" : "") + amount + " " + kind.toUpperCase() + " recorded.";
     } catch (error) {
       scoreAdjustMessage = error?.message ?? String(error);
