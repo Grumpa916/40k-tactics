@@ -60,7 +60,7 @@ function outcomeRow(outcome) {
 
 export function createChargeScreen(
   container,
-  { session, perspectivePlayerId = null, layoutMode = "tabletop" } = {}
+  { session, perspectivePlayerId = null, layoutMode = "tabletop", unitSelection = null } = {}
 ) {
   if (!container || typeof container.replaceChildren !== 'function') {
     throw new TypeError('A browser container element is required.');
@@ -69,7 +69,7 @@ export function createChargeScreen(
     throw new TypeError('A game session is required.');
   }
 
-  if (layoutMode === "tabletop") return createChargeTabletopScreen(container, { session, perspectivePlayerId });
+  if (layoutMode === "tabletop") return createChargeTabletopScreen(container, { session, perspectivePlayerId, unitSelection });
 
   let selectedUnitId = null;
   let selectedTargetIds = new Set();
