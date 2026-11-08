@@ -8,7 +8,8 @@ import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondar
 import { renderBattlefieldMap } from "./battlefield-map.js";
 import { createLiveMapView } from "./live-map-view.js";
 import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
-import { renderCombatWorkspace } from "./combat-workspace.js";
+import { renderCombatWorkspace, bindCombatMap } from "./combat-workspace.js";
+import { getCombatFormationRootId } from "../rules/battle-unit-reference.js";
 import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
 import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-stratagem-opportunities.js";
 import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
@@ -56,7 +57,8 @@ export function createCommandScreen(container, {
   scoringCheckpoint = null,
   scoringCheckpointActivePlayerId = null,
   scoringCheckpointPlayerId = null,
-  layoutMode = "tabletop"
+  layoutMode = "tabletop",
+  unitSelection = null
 } = {}) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -777,11 +779,17 @@ export function createCommandScreen(container, {
       secondaryMissionManager + secondaryRedrawMarkup + '</details>' +
       '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details></div>';
     if (layoutMode === "tabletop") {
+      const currentPlayerId = state.activePlayer ?? state.battle?.activePlayerId;
+      const selectableIds = [...new Set((state.units ?? [])
+        .filter(unit => unit.ownerId === currentPlayerId && unit.status === 'deployed')
+        .map(unit => getCombatFormationRootId(state, unit)))];
+      const selectedCommandUnitId = unitSelection?.get(state, { eligibleIds:selectableIds }) ?? null;
       container.innerHTML = renderCombatWorkspace({
         state,
         phase: "command",
         perspectivePlayerId: perspectivePlayerId ?? playerId,
-        selectedUnitId: null,
+        selectedUnitId: selectedCommandUnitId,
+        selectableIds,
         interactivePlayerId: null,
         mapView,
         controls: commandControls,
@@ -789,6 +797,13 @@ export function createCommandScreen(container, {
         footer: ''
       });
       mapView.bind(container);
+      if (unitSelection) bindCombatMap(container, {
+        state, selectedUnitId:selectedCommandUnitId, selectableIds,
+        onSelect: id => {
+          if (session.getState().phase !== 'command') return;
+          if (unitSelection.select(session.getState(), id, { eligibleIds:selectableIds })) render();
+        }
+      });
       restoreView();
       return;
     }
