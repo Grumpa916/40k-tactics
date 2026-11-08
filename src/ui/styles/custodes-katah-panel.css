@@ -129,3 +129,65 @@
   outline: 3px solid #78bdff;
   outline-offset: 2px;
 }
+
+/* Tablet-first Command Phase: show the action window, not one automatic
+   READY row per unit. Only spent or re-readied exceptions get unit rows. */
+.custodes-katah-panel.is-compact {
+  margin: 4px 0 8px;
+  padding: 10px 12px;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__readiness {
+  display: flex;
+  gap: 6px 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 8px 0;
+  font-size: .875rem;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__readiness strong {
+  color: #9edb9f;
+  white-space: nowrap;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__readiness span,
+.custodes-katah-panel__later {
+  color: #b4c2b9;
+  font-size: .8rem;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__units {
+  margin: 8px 0;
+  gap: 4px;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__units li {
+  padding: 8px;
+  flex-wrap: wrap;
+  font-size: .84rem;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__option {
+  padding: 9px 10px;
+}
+
+.custodes-katah-panel.is-compact .custodes-katah-panel__option p {
+  margin-top: 4px;
+  font-size: .84rem;
+}
+
+.custodes-katah-panel__later {
+  margin: 7px 0 0;
+}
+
+.custodes-katah-phase__rereadied {
+  padding: 8px 10px;
+  border-left: 3px solid #9edb9f;
+  border-radius: 5px;
+  background: #203529;
+}
+
+.custodes-katah-phase__rereadied strong {
+  color: #9edb9f;
+}
