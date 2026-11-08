@@ -17,7 +17,7 @@ const MATRIX = [
   ['assassination', { fixed: { 'end-of-turn':[3,4,6,7,8,9,10,11,12,13,14,15], 'end-of-opponent-turn':[3,4,6,7,8,9,10,11,12,13,14,15] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
   ['beacon', { tactical: { 'end-of-opponent-turn':[3,5] } }],
   ['behind-enemy-lines', { tactical: { 'end-of-turn':[3,5] } }],
-  ['bring-it-down', { fixed: { 'end-of-turn':[4,5], 'end-of-opponent-turn':[4,5] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
+  ['bring-it-down', { fixed: { 'end-of-turn':[4,8,12], 'end-of-opponent-turn':[4,8,12] }, tactical: { 'end-of-turn':[5], 'end-of-opponent-turn':[5] } }],
   ['burden-of-trust', { tactical: { 'end-of-opponent-turn':[2,4,5] } }],
   ['centre-ground', { tactical: { 'end-of-turn':[3,5] } }],
   ['cleanse', { tactical: { 'end-of-turn':[2,5] } }],
@@ -167,4 +167,45 @@ test('fifth-round alternative Secondary award respects remaining battle-round al
   assert.equal(scored.history.at(-1)?.type,'victory_points.awarded');
   assert.equal(scored.history.at(-1)?.payload.amount,2);
   assert.equal(scored.scoring.secondaryMissions[0].status,'scored');
+});
+
+
+test('six physical Chapter Approved Secondary card faces are individually verified', () => {
+  const checked = new Map([
+    ['assassination','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
+    ['bring-it-down','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
+    ['beacon','IMG_376981BB-993F-4503-9951-DE8CDC47D14F.jpeg'],
+    ['defend-stronghold','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg'],
+    ['cleanse','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg'],
+    ['burden-of-trust','IMG_664C74BC-36BE-4F8F-AAA5-8948A805D60F.jpeg']
+  ]);
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerifiedCount,6);
+  assert.equal(SECONDARY_MISSION_CATALOG_SOURCE.physicalCardVerificationDate,'2026-11-08');
+  for(const [slug,card] of MATRIX.map(([id])=>[id,byId.get('secondary-'+id)])){
+    const photo=checked.get(slug);
+    assert.equal(card.officialCardVerified,Boolean(photo),slug);
+    assert.equal(card.sourceVerification,photo?'physical-official-card-photo-2026-11-08':'user-supplied-card-transcription',slug);
+    assert.equal(card.physicalCardEvidence?.photo??null,photo??null,slug);
+    if(photo)assert.equal(card.physicalCardEvidence.verifiedAt,'2026-11-08');
+  }
+});
+
+test('physical Bring It Down awards Fixed 4 VP per model, not a 5 VP cap',()=>{
+  const card=byId.get('secondary-bring-it-down');
+  for(const timing of ['end-of-turn','end-of-opponent-turn']) {
+    const fixed=card.scoringWindows.filter(w=>w.timing===timing&&w.modes.includes('fixed'));
+    assert.equal(fixed[0].tiers[0].maxVP,undefined,'5 VP maximum is Tactical only');
+    assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:fixed}}),[4,8,12]);
+    const tactical=card.scoringWindows.filter(w=>w.timing===timing&&w.modes.includes('tactical'));
+    assert.deepEqual(getMissionVpOptions({category:'secondary',instanceId:'x',result:{scoringWindows:tactical}}),[5]);
+  }
+  const game=stateFor(card,'fixed');
+  const mission={category:'secondary',instanceId:'reviewed-card',definitionId:card.id,definitionName:card.name,
+    result:{scoringWindows:card.scoringWindows.filter(w=>w.timing==='end-of-turn'&&w.modes.includes('fixed'))}};
+  const html=renderCheckpointScore(game,{playerId:'p1',checkpoint:'end-of-turn'},mission);
+  assert.match(html,/value="8"/);
+  assert.doesNotMatch(html,/value="5"/);
+  const scored=recordSecondaryMissionScore(game,{playerId:'p1',instanceId:'reviewed-card',amount:8,scoringTiming:'end-of-turn'});
+  assert.equal(scored.victoryPoints.p1,8);
+  assert.equal(scored.scoring.secondaryMissions[0].status,'active');
 });
