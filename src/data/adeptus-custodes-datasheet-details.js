@@ -128,7 +128,7 @@ export const ADEPTUS_CUSTODES_DATASHEET_DETAILS = freeze({
   }),
   'adeptus-custodes:vertus-praetors': unit({
     characteristics:C('12"',8,'2+',7,'5+',2,'4+'), keywords:['Mounted','Fly','Imperium','Adeptus Custodes'],
-    weapons:[W('Hurricane Bolter','18"',3,'2+',5,-1,2,'Rapid Fire 3, Twin-linked','Wargear option'),W('Salvo Launcher','24"',2,'2+',10,-2,'D3+2'),W('Interceptor Lance','Melee',6,'2+',8,-2,2,'Lance')],
+    weapons:[W('Hurricane Bolter','18"',3,'2+',5,-1,2,'Rapid Fire 3, Twin-linked','Wargear option'),W('Salvo Launcher','24"',1,'2+',10,-3,'D6+1','Twin-linked'),W('Interceptor Lance','Melee',6,'2+',8,-2,2,'Lance')],
     abilities:[A('Deep Strike','This unit can enter using Deep Strike.'),...custodesCore,A('Quicksilver Execution','Once per battle, after this unit ends a Normal or Advance move, select one enemy unit (excluding Monsters and Vehicles) that it moved over. Roll one D6 for each model in this unit; for each 2+, the selected unit suffers 2 mortal wounds.')],
     defaultModelCount:2,defaultPoints:220,pointsOptions:[P(2,220,'1st unit'),P(3,330,'1st unit'),P(2,240,'2nd–3rd unit'),P(3,350,'2nd–3rd unit')]
   }),
