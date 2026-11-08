@@ -50,6 +50,12 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
         if (!def.phases.includes(state.phase) || !reviewedAbility(state, unit, def.ability)) continue;
         if (def.venatariOnly && !reviewedAbility(state, unit, 'Take Wing')) continue;
         if (def.requiresIngress && !arrivedFromReservesThisTurn(state, unit.id)) continue;
+        if (def.requiresMove && !(state.history ?? []).some(event =>
+          ['unit.normal_move_resolved','unit.advanced'].includes(event.type) &&
+          event.payload?.unitId === unit.id && event.payload?.playerId === playerId &&
+          event.payload?.round === state.battle?.round && event.payload?.turn === state.turn &&
+          !event.payload?.movementRefinement
+        )) continue;
         if (def.id==='praesidium-shield' && !getRecordedCombatRules(state,unit).effects.includes('sentinel-shield')) continue;
         const used = def.limit && getReminderUse(state, {...def, ruleId:def.id, playerId, unitId:unit.id});
         if (unit.status !== (def.reserves ? 'reserves' : 'deployed') && !(def.venatariControl && used)) continue;
