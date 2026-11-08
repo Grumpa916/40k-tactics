@@ -237,7 +237,7 @@ test('25 complete primary scoring VP sets agree with independent transcription',
 });
 
 test('previously photographed primary faces distinguish scoring from action verification', () => {
-  assert.equal(Object.keys(PRIMARY_PHOTOGRAPHED_SCORING_FACES).length,22);
+  assert.equal(Object.keys(PRIMARY_PHOTOGRAPHED_SCORING_FACES).length,25);
   assert.equal(Object.keys(PRIMARY_PHOTOGRAPHED_ACTION_FACES).length,11);
   for (const card of actualCards) {
     const slug=card.id.replace(/^primary-/,'');
@@ -312,6 +312,9 @@ test('Nov 8 scoring and repeat Action photos retain distinct evidence identities
   assert.equal(PRIMARY_PHOTOGRAPHED_SCORING_FACES['secure-asset'],'IMG_9AABC8D9-D31D-4874-8521-07E4C8F38BA3.jpeg');
   assert.equal(PRIMARY_PHOTOGRAPHED_ACTION_FACES['triangulation'],'IMG_036DC38C-9A7B-42B0-8253-F2849AECE7F7.jpeg');
   assert.equal(PRIMARY_PHOTOGRAPHED_ACTION_FACES['surveil-the-foe'],'IMG_9AABC8D9-D31D-4874-8521-07E4C8F38BA3.jpeg');
-  const remaining=['locate-and-deny','triangulation','surveil-the-foe'];
-  for(const slug of remaining)assert.equal(PRIMARY_PHOTOGRAPHED_SCORING_FACES[slug],undefined,slug+' scoring face not yet supplied');
+  for(const slug of ['locate-and-deny','triangulation','surveil-the-foe']){
+    assert.equal(PRIMARY_PHOTOGRAPHED_SCORING_FACES[slug],
+      'IMG_4A7684A0-3C51-4E8B-A46A-AF5D17A548E5.jpeg',slug+' scoring photo');
+  }
+  assert.equal(new Set(Object.keys(PRIMARY_PHOTOGRAPHED_SCORING_FACES)).size,25);
 });
