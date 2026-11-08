@@ -1,4 +1,5 @@
 import { createEndgameReviewScreen } from './endgame-review-screen.js';
+import { createEndTurnScreen } from './end-turn-screen.js';
 import { createChargeScreen } from "./charge-screen.js";
 import { createCommandScreen } from "./command-screen.js";
 import { createEventPreparationScreen as createBattleSetupScreen } from "./event-preparation-screen.js";
@@ -23,6 +24,7 @@ export const SCREEN_FACTORIES = Object.freeze({
   shooting: createShootingScreen,
   charge: createChargeScreen,
   fight: createFightScreen,
+  end_turn: createEndTurnScreen,
   review: createEndgameReviewScreen
 });
 
