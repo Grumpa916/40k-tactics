@@ -29,9 +29,9 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 7. **Game Review / endgame analysis**
    - Complete objective-control history, positioning history, losses, expected-vs-actual attacks, missed scoring opportunities, CP/resource use, and Tactical Advisor forecast review.
 
-## Deferred verification reminder
+## Physical Secondary card verification (2026-11-08)
 
-- **Physical Secondary Mission card review — ON HOLD.** Retain [issue #502](https://github.com/Grumpa916/40k-tactics/issues/502) until the user has the Chapter Approved 2026–27 cards available. Code-level 18-card manual scoring audit completed in merged PR #501; printed-card/FAQ comparison must not block subsequent development.
+- **All 18 Chapter Approved 2026–27 Secondary Mission printed rule/scoring faces directly checked against user photos.** Batch 1 (#560) corrected Fixed Bring It Down; Batch 2 (#562) corrected Fixed A Grievous Blow; Batch 3 records six matching cards (see `secondary-physical-card-audit-batch3-2026-11-08.md`). [Issue #502](https://github.com/Grumpa916/40k-tactics/issues/502) tracks closure after the final audit PR merges. A new official FAQ/errata check remains separate; manual VP confirmation remains authoritative.
 
 ## Current priority
 
