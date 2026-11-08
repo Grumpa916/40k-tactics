@@ -11,10 +11,10 @@ import { getRulesDataRevisionForFaction } from '../../src/data/rules-data-revisi
 
 test('official publication index is dated and does not imply full document comparison', () => {
   const sources=OFFICIAL_RULES_SOURCE_INDEX;
-  assert.equal(sources.checkedAt,'2026-11-03');
+  assert.equal(sources.checkedAt,'2026-11-08');
   assert.equal(sources.edition,'11th');
   assert.match(sources.downloadsUrl,/warhammer-community\.com\/en-gb\/downloads\/warhammer-40000/);
-  assert.equal(sources.publications.eventCompanion.version,'1.2');
+  assert.equal(sources.publications.eventCompanion.version,'1.3');
   assert.equal(sources.publications.eventCompanion.updatedAt,'2026-10-14');
   assert.equal(sources.publications.eventCompanion.status,'official-source-authenticated-content-partially-checked');
   assert.equal(sources.publications.eventCompanion.geometryStatus,'previously-reviewed-by-user');
@@ -23,7 +23,14 @@ test('official publication index is dated and does not imply full document compa
   assert.equal(sources.publications.universalRules.updatedAt,'2026-08-26');
   assert.equal(sources.nextScheduledOfficialBalanceWeek,'2026-12-07');
   assert.equal(EVENT_COMPANION_MAP_CATALOG.source.version,'1.2');
-  assert.equal(EVENT_COMPANION_MAP_CATALOG.source.sourceUrl,sources.publications.eventCompanion.url);
+  assert.equal(EVENT_COMPANION_MAP_CATALOG.source.sourceUrl,sources.publications.eventCompanion.inspectedPdfUrl);
+  assert.equal(sources.publications.eventCompanion.inspectedDocumentVersion,'1.2');
+  assert.equal(sources.publications.eventCompanion.fullCurrentPdfInspected,false);
+  assert.equal(sources.publications.eventCompanion.currentVersionGeometryRechecked,false);
+  assert.match(sources.publications.eventCompanion.url,/eng_14-10_wh40k_event_companion/);
+  assert.match(sources.publications.eventCompanion.currentFaqCrossCheck,/v1.3.*v1.2/);
+  assert.equal(sources.publications.worldChampionships2026.applicability,'world-championships-2026-only');
+  assert.equal(sources.publications.worldChampionships2026.status,'official-event-only-clarifications-not-general-rules-or-errata');
 });
 
 test('all 25 primary and 18 secondary card records expose honest provenance', () => {

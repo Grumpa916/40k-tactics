@@ -66,6 +66,12 @@ export const PRIMARY_OFFICIAL_FAQ_NOTES = Object.freeze({
     'Event Companion FAQ: the terrain area does not have to be trapped when the enemy unit is destroyed.',
     'Event Companion FAQ: removing an operation marker also removes any status that marker applies.'
   ]),
+  'locate-and-deny': Object.freeze([
+    'Event Companion FAQ: mission operation markers can only be removed when and how that Primary Mission card expressly permits; do not remove the last marker unless the card allows it.'
+  ]),
+  'triangulation': Object.freeze([
+    'Event Companion FAQ: mission operation markers cannot be removed unless the Primary Mission card specifically allows their removal.'
+  ]),
   'surveil-the-foe': Object.freeze([
     'Event Companion FAQ: removing the relevant operation marker later in the same turn can still allow a previously surveilled enemy unit to count.'
   ]),
@@ -81,6 +87,9 @@ export const PRIMARY_MISSION_EVIDENCE_SOURCES = Object.freeze({
   missionPack:'Chapter Approved 2026–27',
   officialCompanionVersion:'1.2',
   officialCompanionUrl:'https://assets.warhammer-community.com/eng_wh40k_event_companion-pl87i44rzn-a7ieny8i9x.pdf',
+  latestListedEventCompanionVersion:'1.3',
+  latestListedEventCompanionUrl:'https://assets.warhammer-community.com/eng_14-10_wh40k_event_companion-rdwnqprl4c-nj8oqogadv.pdf',
+  latestFaqCrossCheck:'2026-11-08-v1.3-reproduced-text-v1.3-official-PDF-not-fully-retrieved',
   officialCardAmendments:'none-as-of-event-companion-v1.2',
   independentlyTranscribedMissionCount:25,
   independentReferenceUrl:'https://github.com/wn-mitch/40kdc-data/tree/709ecd9f5bb6c06b7446eda6a6a0eae6b921a1c8/data/core',
