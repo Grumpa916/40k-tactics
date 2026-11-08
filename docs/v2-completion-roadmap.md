@@ -12,7 +12,7 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 
 3. **Official rules-data verification**
    - **Publication/source-index pass completed 2026-11-03:** versions and catalog provenance are explicitly tracked; see [audit](official-rules-source-audit-2026-11-03.md).
-   - **Still pending, not falsely certified:** current official PDF content comparison, the completed 25/25 Primary scoring-face photographic audit and subsequent current full-card/FAQ certification, and October Space Marines faction/points data. The 18 physical Secondary faces were compared and merged through #563.
+   - **GW mission FAQ/errata cross-check added 2026-11-08:** the GW Event Companion now has a published **v1.3** (October), whose displayed Chapter Approved FAQ list was compared against previously inspected v1.2 and existing mission references. World Championships November 2026 clarifications are **event-only**, not general app rules; see [dated FAQ review](gw-mission-faq-errata-audit-2026-11-08.md). **Still pending:** direct full v1.3 PDF inspection including layout changes, comprehensive latest Core/Faction FAQ and errata review, full current official source certification, and October Space Marines faction/points. The 25/25 Primary scoring faces, 11 Action faces, and 18/18 Secondary physical cards are documented.
    - Preserve accepted terrain maps and manual scoring until a documented official rules discrepancy requires a focused correction.
 
 4. **Army Builder and combat-data completeness audit**
