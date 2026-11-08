@@ -29,7 +29,7 @@ This corroborates, but does not formally certify through direct PDF inspection, 
 - Both players as active player
 - Command → Movement and Fight → End of Turn transitions
 - 250 ordered per-player turn cases, with independent Command/end-turn checkpoint assertions
-- Final-round end-of-turn substitution for Command-scoring windows; only the active player's Primary is eligible on their own end-of-turn.
+- Final-round end-of-turn substitution for Command-scoring windows; active player's Primary and any **explicitly printed end-of-either-player-turn Primary** (such as Punishment) are eligible at the appropriate checkpoint.
 
 Tests inspect generated reminder groups and user-visible manual-scoring dialog presence. They do **not** judge objectives or automatically award victory points.
 
