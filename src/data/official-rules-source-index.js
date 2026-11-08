@@ -25,7 +25,16 @@ export const OFFICIAL_RULES_SOURCE_INDEX = Object.freeze({
       status:"official-source-authenticated-content-partially-checked",
       geometryStatus:"previously-reviewed-by-user",
       currentVersionGeometryRechecked:false,
-      fullCurrentPdfInspected:false
+      fullCurrentPdfInspected:false,
+      // Independent v1.3 reading reports "Layouts updated: None".
+      // This corroborates retaining v1.2 geometry; it is NOT a direct PDF diff.
+      layoutRevisionCorroboration:Object.freeze({
+        status:"third-party-report-no-layout-changes-v1.3",
+        sourceUrl:"https://40-carrot.app/guides/40k-terrain-layouts/",
+        sourceCheckedAt:"2026-11-08",
+        reportedLayoutsUpdated:"None",
+        fullOfficialVisualRecheckComplete:false
+      })
     }),
     munitorumFieldManual: Object.freeze({
       name:"Munitorum Field Manual", updatedAt:"2026-10-14",
