@@ -1,3 +1,4 @@
+import { renderFullAttackAdvisor } from './full-attack-advisor.js';
 import { renderAdvisorAppliedRules } from './advisor-applied-rules.js';
 import { renderAdvisorDamageReduction } from './advisor-damage-reduction.js';
 import { getShootingTargetComparison } from '../rules/tactical-shooting-comparison.js';
@@ -63,6 +64,7 @@ export function shootingAdvisory(attackerId, weaponId, targetId, state, weapons,
         <div><strong>${destruction}</strong><span>destruction chance</span></div>
       </div>
       ${renderAdvisorDecisionSummary(recommendation)}
+      ${renderFullAttackAdvisor(state, { attackerId, targetId, weapon, shooting: recommendation, mapDistance: recommendation.targetDistance })}
       ${renderAdvisorDamageReduction(recommendation.damageDistribution?.contextualAbilities)}
       ${renderAdvisorAppliedRules(recommendation.damageDistribution?.contextualAbilities?.appliedRules)}
       <details class="shoot-advisory__details" data-view-key="shoot-assumptions" ${openDetails ? "open" : ""}><summary>Advisor assumptions &amp; detail</summary>
@@ -114,3 +116,4 @@ export function shootingDamageForecast(attackerId, weaponId, targetId, state, we
     </aside>
   `;
 }
+
