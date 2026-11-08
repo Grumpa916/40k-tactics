@@ -1,5 +1,6 @@
 import { scoreboardAdjustmentCommand } from './scoreboard-transactions.js';
 import { PHASES, SCREEN_FACTORIES } from './battle-screen-registry.js';
+import { createPhaseUnitSelection } from './phase-unit-selection.js';
 import { createRulesReminderController } from './rules-reminder-panel.js';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
@@ -189,6 +190,7 @@ export function createBattleShell(container, {
     throw new TypeError("A game session is required.");
   }
 
+  const unitSelection = createPhaseUnitSelection();
   let mountedPhase = null;
   let mountedScreen = null;
   let mountedPersistencePanel = null;
@@ -468,7 +470,8 @@ export function createBattleShell(container, {
           scoringCheckpointActivePlayerId: scoringReviewActivePlayerId,
           scoringCheckpointPlayerId: scoringReviewPlayerId,
           setupTab: setupWorkspaceTab,
-          layoutMode
+          layoutMode,
+          unitSelection
         });
         mountedPhase = viewedPhase;
       } else if (screenContainer) {
@@ -825,6 +828,7 @@ export function createBattleShell(container, {
       container.removeEventListener?.("click", handleCloseArmyRoster);
       container.removeEventListener?.("click", handleDismissScoringReminder);
       decisionReminders.destroy();
+      unitSelection.clear();
       container.removeEventListener?.("click", handleReviewScoring);
       container.removeEventListener?.("submit", handleSubmit);
       destroyMountedScreen();

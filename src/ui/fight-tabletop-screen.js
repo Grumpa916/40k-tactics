@@ -15,10 +15,10 @@ import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './comba
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from './custodes-katah-panel.js';
 import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
 
-export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null }) {
+export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null, unitSelection = null }) {
   const mapView = createLiveMapView();
   let endReview = false;
-  let attackerId = null, weaponId = null, targetId = null, precisionAllocationId = null;
+  let attackerId = unitSelection?.get(session.getState()) ?? null, weaponId = null, targetId = null, precisionAllocationId = null;
   let damage = 0, error = '', dispatching = false;
   const reset = () => { attackerId = weaponId = targetId = precisionAllocationId = null; damage = 0; };
 
@@ -113,6 +113,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
         error = skipped || isCombatActivationFinished(state, id, 'fight') ? 'This unit has finished its Fight activation this turn.' : 'This unit is not available as a separate deployed Fight formation.'; render(); return;
       }
       if (id !== attackerId) { reset(); attackerId = id; }
+      unitSelection?.select(state, id);
       error = ''; render();
     };
     const chooseTarget = id => { targetId = id; precisionAllocationId = null; damage = 0; error = ''; render(); };

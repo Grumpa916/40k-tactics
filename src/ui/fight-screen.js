@@ -119,7 +119,7 @@ function activationRow(activation, index) {
 
 export function createFightScreen(
   container,
-  { session, perspectivePlayerId = null, gameData = null, layoutMode = "tabletop" } = {}
+  { session, perspectivePlayerId = null, gameData = null, layoutMode = "tabletop", unitSelection = null } = {}
 ) {
   if (!container || typeof container.replaceChildren !== "function") {
     throw new TypeError("A browser container element is required.");
@@ -128,7 +128,7 @@ export function createFightScreen(
     throw new TypeError("A game session is required.");
   }
 
-  if (layoutMode === "tabletop") return createFightTabletopScreen(container, { session, perspectivePlayerId, gameData });
+  if (layoutMode === "tabletop") return createFightTabletopScreen(container, { session, perspectivePlayerId, gameData, unitSelection });
 
   let selectedAttackerId = null;
   let selectedWeaponId = null;
