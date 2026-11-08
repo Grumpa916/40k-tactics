@@ -164,6 +164,8 @@ export function createShootingScreen(container, {
     const availableMissionActions = livePrimaryActions.length ? livePrimaryActions : configuredPrimaryActions;
     const hasPrimaryMissionAction = availableMissionActions.length > 0;
     const actionOnly = hasPrimaryMissionAction ? (model.actionOnly ?? []) : [];
+    const readyUnits = [...model.candidates, ...actionOnly];
+    const openUnits = model.activations.filter(item => item.actionType === 'shoot' && !isCombatActivationFinished(state, item.unitId, 'shooting'));
 
     if (selectedAttackerId && (isCombatActivationFinished(state, selectedAttackerId, "shooting") || !model.activations.some((activation) =>
       activation.unitId === selectedAttackerId && activation.actionType === "shoot"
@@ -174,11 +176,14 @@ export function createShootingScreen(container, {
       precisionAllocationId = null;
     }
 
-    const pendingUnit = [...model.candidates, ...actionOnly].find((unit) => unit.unitId === pendingUnitId);
+    const pendingUnit = readyUnits.find((unit) => unit.unitId === pendingUnitId);
     const preview = layoutMode === "tabletop" && Boolean(pendingUnit);
     const attackerId = selectedAttackerId ?? (preview ? pendingUnit.unitId : null);
     const weapons = getShootingWeaponOptions(state, { attackerId, gameData, preview });
     const targets = getShootingTargetOptions(state, { attackerId, perspectivePlayerId, preview });
+    const selectableIds = new Set(state.phase === 'shooting'
+      ? [...readyUnits, ...targets, ...openUnits].map(item => item.unitId)
+      : []);
     if (!weapons.some((weapon) => weapon.id === selectedWeaponId)) {
       selectedWeaponId = preview && weapons.length === 1 ? weapons[0].id : null;
     }
@@ -197,18 +202,20 @@ export function createShootingScreen(container, {
         ? model.activations.find((activation) => activation.unitId === selectedAttackerId && activation.actionType === "shoot")
         : null;
       const reminderUnitId = incomingAttackMode ? (activeActivation ? selectedTargetId : null) : activeUnitId;
-      const openUnits = model.activations.filter(item => item.actionType === "shoot" && !isCombatActivationFinished(state, item.unitId, "shooting"));
       const remaining = model.candidates.length + openUnits.length;
-      const selectableIds = state.phase === 'shooting'
-        ? [...model.candidates, ...actionOnly, ...targets, ...openUnits].map(item => item.unitId)
-        : [];
+      const actingIds = new Set(openUnits.map(item => item.unitId));
+      const sections = state.phase === 'shooting' ? [
+        { label: 'Acting', unitIds: actingIds },
+        { label: 'Ready', unitIds: new Set(readyUnits.map(item => item.unitId)) },
+        { label: 'Finished', unitIds: new Set(model.activations.map(item => item.unitId).filter(id => !actingIds.has(id))) }
+      ] : [];
       const comparison = !incomingAttackMode && attackerId && selectedWeapon
         ? compareTargets(state, { playerId: activeUnit.ownerId, attackerId, weapon: selectedWeapon }) : null;
       const targetComparison = incomingAttackMode
         ? renderIncomingDamageForecast(state, { attackerId, targetId: selectedTargetId, weapon: selectedWeapon })
         : shootingTargetComparisonCards(attackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison);
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
-        ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId] })}
+        ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId], sections })}
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
           perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
           selectedUnitId: activeUnitId })}
@@ -224,7 +231,7 @@ export function createShootingScreen(container, {
             ${state.phase === 'shooting' ? renderUnitRulesReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,includeStratagems:false,livePanel:true}) : ''}
             <label class="shoot-tabletop__unit-picker">Acting unit · ${escapeHtml(model.activePlayerId === perspectivePlayerId ? 'your army' : 'opponent army')}
               <select data-shooting-unit-picker ${state.phase === "shooting" ? "" : "disabled"}><option value="">Choose unit by name…</option>
-              ${[...model.candidates, ...actionOnly].map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === pendingUnitId ? 'selected' : ''}>${escapeHtml(item.name)} · awaiting choice</option>`).join('')}
+              ${readyUnits.map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === pendingUnitId ? 'selected' : ''}>${escapeHtml(item.name)} · awaiting choice</option>`).join('')}
               ${openUnits.map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === selectedAttackerId ? 'selected' : ''}>${escapeHtml(item.unit.name)} · continue shooting</option>`).join('')}
               </select></label>
             ${phaseNotice}
@@ -371,7 +378,7 @@ export function createShootingScreen(container, {
           return;
         }
         if (unitId === pendingUnitId || unitId === selectedAttackerId) return;
-        if ([...model.candidates, ...actionOnly].some((unit) => unit.unitId === unitId)) {
+        if (readyUnits.some((unit) => unit.unitId === unitId)) {
           pendingUnitId = unitId;
           selectedAttackerId = null;
           selectedWeaponId = null;
@@ -383,7 +390,7 @@ export function createShootingScreen(container, {
           render();
           return;
         }
-        if (model.activations.some((activation) => activation.unitId === unitId && activation.actionType === "shoot") && !isCombatActivationFinished(state, unitId, "shooting")) {
+        if (openUnits.some(activation => activation.unitId === unitId)) {
           selectedAttackerId = unitId;
           pendingUnitId = null;
           const availableWeapons = getShootingWeaponOptions(state, { attackerId: unitId, gameData });
@@ -406,6 +413,7 @@ export function createShootingScreen(container, {
         marker.setAttribute?.("role", "button");
         marker.setAttribute?.("tabindex", "0");
         marker.setAttribute?.("aria-pressed", String(unitId === selectedTargetId || unitId === renderedActiveUnitId));
+        if (selectableIds.has(unitId)) marker.setAttribute?.('data-phase-map-select', 'true');
         if (isTarget) marker.setAttribute?.("data-shoot-target-marker", "true");
         if (marker.style) marker.style.touchAction = "none";
         marker.addEventListener?.("click", () => selectMapUnit(unitId));

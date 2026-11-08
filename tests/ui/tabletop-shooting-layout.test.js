@@ -5,6 +5,7 @@ import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
+import { createPrototypeWorkspace } from '../../src/ui/prototype-workspace.js';
 import { getTargetThreatImpact } from '../../src/rules/tactical-threat-impact.js';
 
 function testState() {
@@ -194,28 +195,66 @@ test('Secondary Action is absent from Shooting while enemy map taps still cycle 
 
 test('selecting shooter and target previews the attack until Shoot is explicitly chosen', () => {
   clearCommandHandlers(); registerCoreCommandHandlers();
-  const session = createGameSession(testState()), root = fakeDom();
+  const state = testState();
+  state.units[0].profile.weaponIds.push('sidearm');
+  const sidearm = { ...gameData.weapons[0], id: 'sidearm', name: 'Sidearm' };
+  const session = createGameSession(state), root = fakeDom();
   const screen = createShootingScreen(root, {
-    session, perspectivePlayerId: 'p1', gameData,
+    session, perspectivePlayerId: 'p1', gameData: { weapons: [...gameData.weapons, sidearm] },
     missionActions: [{ id:'primary-demo', name:'Primary Action', missionKind:'primary' }]
   });
   try {
+    assert.match(root.innerHTML, /phase-army-roster__section-heading">Ready</);
+    assert.equal(root.node('[data-map-unit-id]', 'exo').getAttribute('data-phase-map-select'), 'true');
     root.click('[data-select-phase-unit]', 'exo');
     assert.ok(root.node('[data-open-unit-details]', 'exo'));
+    root.change('[data-weapon]', 'sidearm');
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /value="marine" selected/);
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
     assert.ok(root.node('[data-choice-action-toggle]'));
     assert.equal(root.querySelector('[data-attack]'), null);
-    assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 0);
+    assert.equal(session.getState(), state);
     root.click('[data-choice-shoot]');
     assert.match(root.innerHTML, /value="marine" selected/);
-    assert.match(root.innerHTML, /value="bio" selected/);
+    assert.match(root.innerHTML, /value="sidearm" selected/);
+    assert.match(root.innerHTML, /phase-army-roster__section-heading">Acting</);
     assert.ok(root.node('[data-attack]'));
     assert.equal(root.querySelector('[data-review-end-shooting]'), null);
     assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
+    root.click('[data-finish-unit]');
+    assert.match(root.innerHTML, /phase-army-roster__section-heading">Finished</);
+    assert.ok(root.node('[data-open-unit-details]', 'exo'));
   } finally { screen.destroy(); }
+});
+
+test('selecting a roster row or keyboard-activating a map unit reveals the phase panel', () => {
+  const attrs = new Map();
+  const listeners = new Map();
+  const shell = { setAttribute: (name, value) => attrs.set(name, value) };
+  const root = {
+    querySelector(selector) {
+      if (selector === '.battle-shell') return shell;
+      if (selector === '.shoot-screen--tabletop, .combat-workspace') return {};
+      return null;
+    },
+    querySelectorAll: () => [],
+    addEventListener: (name, handler) => listeners.set(name, handler),
+    removeEventListener: (name) => listeners.delete(name)
+  };
+  const workspace = createPrototypeWorkspace(root, { session: { getState: testState } });
+  const target = attr => ({ closest: selector => selector.includes(`[${attr}]`) ? {} : null });
+  try {
+    workspace.refresh();
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('click')({ target: target('data-select-phase-unit') });
+    assert.equal(attrs.get('data-controls-collapsed'), 'false');
+    listeners.get('click')({ target: target('data-workspace-panel') });
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('keydown')({ target: target('data-phase-map-select'), key: 'Enter' });
+    assert.equal(attrs.get('data-controls-collapsed'), 'false');
+  } finally { workspace.destroy(); }
 });
 
 test('browsing Shooting during Command leaves the phase read-only', () => {

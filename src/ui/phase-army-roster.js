@@ -5,7 +5,7 @@ import { getArmyUnitDisplayGroups, armyUnitMemberRole } from './army-unit-displa
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 
 export function renderPhaseArmyRoster(state, perspectivePlayerId, {
-  selectableIds = [], selectedUnitId = null, targetIds = []
+  selectableIds = [], selectedUnitId = null, targetIds = [], sections = []
 } = {}) {
   const myId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
   const symbols = liveUnitSymbolLabels(state.units ?? []);
@@ -27,11 +27,21 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
     return selection ? '<div class="phase-army-roster__selectable">' + button +
       '<button type="button" class="phase-army-roster__details" ' + details + ' aria-label="Details for ' + name + '">ⓘ</button></div>' : button;
   };
-  const list = side => getArmyUnitDisplayGroups(state, (state.units ?? []).filter(unit =>
-    side === 'mine' ? unit.ownerId === myId : unit.ownerId !== myId)).map(group => group.attached
+  const list = side => {
+    const units = (state.units ?? []).filter(unit => side === 'mine' ? unit.ownerId === myId : unit.ownerId !== myId);
+    const groups = getArmyUnitDisplayGroups(state, units);
+    const renderGroup = group => group.attached
       ? '<section class="phase-army-roster__group" aria-label="' + esc(group.name) + '"><h3>Attached unit</h3>' +
         group.members.map(unit => row(unit, side, armyUnitMemberRole(group, unit))).join('') + '</section>'
-      : row(group.root, side)).join('') || '<p>No units to show.</p>';
+      : row(group.root, side);
+    const sectionHtml = sections.map(({ label, unitIds }) => {
+      const matches = groups.filter(group => unitIds.has(group.root.id));
+      return matches.length ? `<h3 class="phase-army-roster__section-heading">${esc(label)}</h3>${matches.map(renderGroup).join('')}` : '';
+    }).join('');
+    const other = groups.filter(group => !sections.some(section => section.unitIds.has(group.root.id)));
+    const otherHeading = sectionHtml && other.length ? '<h3 class="phase-army-roster__section-heading">Other units</h3>' : '';
+    return sectionHtml + otherHeading + other.map(renderGroup).join('') || '<p>No units to show.</p>';
+  };
   return '<link rel="stylesheet" href="' + new URL('./styles/phase-army-roster.css', import.meta.url).href + '"><aside class="phase-army-roster" aria-label="Army lists"><div class="phase-army-roster__tabs"><button type="button" data-phase-army-view="mine" aria-pressed="true">My Army</button><button type="button" data-phase-army-view="opponent" aria-pressed="false">Opponent</button></div><div class="phase-army-roster__list" data-phase-army-list="mine">' + list('mine') + '</div><div class="phase-army-roster__list" data-phase-army-list="opponent" hidden>' + list('opponent') + '</div></aside>';
 }
 

@@ -70,6 +70,7 @@ export function bindCombatMap(container, { state, selectedUnitId, targetIds = []
     const id = getCombatFormationRootId(state, markerId);
     const selected = id === selectedUnitId || targets.has(id);
     if (targets.has(id)) marker.classList?.add?.('is-targeted');
+    if (selectable.has(id)) marker.setAttribute?.('data-phase-map-select', 'true');
     marker.setAttribute?.('role', 'button');
     marker.setAttribute?.('tabindex', '0');
     marker.setAttribute?.('aria-pressed', String(selected));
