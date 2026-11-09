@@ -2,6 +2,7 @@ import {
   ADVISOR_IPAD_SCENARIOS,createAdvisorIpadState,applyAdvisorIpadAction
 } from './advisor-ipad-scenarios.js';
 import { inspectAdvisorIpadScenario } from './advisor-ipad-checks.js';
+import { summarizeAdvisorScenarioChecks, formatAdvisorScenarioVisitReport } from './advisor-ipad-report.js';
 
 const root=document.getElementById('advisor-ipad-lab');
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;')
@@ -21,6 +22,26 @@ let messageError=false;
 let lastInspection=null;
 const manual=new Map();
 const visits=new Map();
+const initials=new Map();
+const interactions=new Map();
+
+function recordInteraction(id,action) {
+  const actions=interactions.get(id)??[];
+  actions.push(action);
+  interactions.set(id,actions.slice(-12));
+}
+
+function ensureInitialSnapshot(id) {
+  if(initials.has(id))return;
+  try {
+    const initial=createAdvisorIpadState(id);
+    initials.set(id,summarizeAdvisorScenarioChecks(inspectAdvisorIpadScenario(initial,{
+      scenarioId:id,measuredDistance:7
+    })));
+  }catch(error){
+    initials.set(id,{passed:0,total:1,unmet:['Initial fixture error: '+String(error)]});
+  }
+}
 let drag=null;
 
 function scaffold() {
@@ -104,10 +125,16 @@ function controls() {
     add('charge-failed','Record failed Charge','class="is-destructive"');
   }else if(scenarioId==='success'){
     add('fight-3','Record 3 Fight damage','class="is-positive"');
-    add('finish-fight','Finish Fight activation');
   }else if(scenarioId==='fight'){
-    add('reset','Restart completed Fight');
-    add('load:success','Practice unfinished Fight');
+    const fought=state.history.some(event=>event.type==='combat.attack_resolved' &&
+      event.payload?.phase==='fight' && event.payload?.attackerId==='a');
+    const finished=state.history.some(event=>event.type==='combat.activation_finished' &&
+      event.payload?.phase==='fight' && event.payload?.unitId==='a');
+    if(fought && !finished) add('finish-fight','Finish Fight activation','class="is-positive"');
+    else {
+      add('reset','Restart completed Fight');
+      add('load:success','Practice unfinished Fight');
+    }
   }else if(scenarioId==='movement'){
     add('reset','Reset marker position');
     add('load:planning','Compare Command plan');
@@ -125,7 +152,12 @@ function controls() {
 }
 
 function renderChecks(inspection) {
-  document.getElementById('lab-count').textContent=inspection.passed+'/'+inspection.total+' passed';
+  const baseline=initials.get(scenarioId);
+  const baselineLabel=baseline && baseline.passed!==inspection.passed
+    ? ' · preset '+baseline.passed+'/'+baseline.total
+    : '';
+  document.getElementById('lab-count').textContent=
+    inspection.passed+'/'+inspection.total+' current'+baselineLabel;
   document.getElementById('lab-checks').innerHTML=inspection.checks.map(check=>
     '<section class="lab-check '+(check.passes?'pass':'pending')+'">'+
       '<span class="lab-status">'+(check.passes?'PASS':'TO VERIFY')+'</span>'+
@@ -183,11 +215,12 @@ function restoreDisclosure(){
 }
 
 function render(){
+  ensureInitialSnapshot(scenarioId);
   const disclosure=restoreDisclosure();
   const scenario=ADVISOR_IPAD_SCENARIOS.find(item=>item.id===scenarioId);
   document.getElementById('lab-scenario-title').textContent=scenario.title;
   document.getElementById('lab-expect').innerHTML='<p><strong>Expected:</strong> '+esc(scenario.expected)+'</p>'+
-    '<p>Step through the scenario, expand the right panel and compare automatic calculations with actual iPad touch behavior.</p>';
+    '<p>Step through the scenario, expand the right panel and compare automatic calculations with actual iPad touch behavior. Marker drags and recorded actions can change initial-condition checks; Reset scenario restores the starting position.</p>';
   scenarioButtons();
   document.getElementById('lab-actions').innerHTML=controls();
   const messageNode=document.getElementById('lab-message');
@@ -205,14 +238,14 @@ function render(){
     }
     document.getElementById('lab-metrics').innerHTML=formatDiagnostics(lastInspection);
     renderChecks(lastInspection);
-    visits.set(scenarioId,{passed:lastInspection.passed,total:lastInspection.total});
+    visits.set(scenarioId,summarizeAdvisorScenarioChecks(lastInspection));
   }catch(error){
     lastInspection=null;
     document.getElementById('lab-real-panel').innerHTML='<p class="lab-fallback">Advisor calculation failed: '+esc(error.message)+'</p>';
     document.getElementById('lab-metrics').textContent='This failure can be included in the copied report.';
     document.getElementById('lab-checks').textContent='ERROR · '+error.message;
     document.getElementById('lab-count').textContent='0 checks';
-    visits.set(scenarioId,{passed:0,total:1,error:String(error)});
+    visits.set(scenarioId,{passed:0,total:1,unmet:['Advisor calculation failed'],error:String(error)});
   }
 }
 
@@ -220,6 +253,7 @@ function loadScenario(id){
   state=createAdvisorIpadState(id);
   scenarioId=id;
   measuredDistance=7;
+  interactions.delete(id);
   message='Scenario reset. Changes here never touch a saved game.';
   messageError=false;
   render();
@@ -229,7 +263,9 @@ function perform(action){
   if(action==='reset'){loadScenario(scenarioId);return;}
   if(action.startsWith('load:')){loadScenario(action.slice(5));return;}
   try {
+    const startingScenario=scenarioId;
     state=applyAdvisorIpadAction(state,action,{distance:measuredDistance});
+    recordInteraction(startingScenario,action);
     if(action==='charge-success'||action==='charge-failed'){
       scenarioId=action==='charge-success'?'success':'failed';
       state={...state,phase:'fight'};
@@ -250,10 +286,7 @@ function manualReport(){
 }
 
 function reportText(){
-  const all=ADVISOR_IPAD_SCENARIOS.map(item=>{
-    const info=visits.get(item.id);
-    return item.title+': '+(info?info.passed+'/'+info.total+(info.error?' · '+info.error:''):'not visited');
-  }).join('\n');
+  const all=formatAdvisorScenarioVisitReport(ADVISOR_IPAD_SCENARIOS,visits,initials,interactions);
   const self=lastInspection;
   const statuses=manualItems.map(item=>item.label+' — '+currentManual(item.key)).join('\n');
   return '40K Tactics · iPad Tactical Advisor Test Report\n'+
@@ -264,7 +297,8 @@ function reportText(){
     'Automatic result: '+(self?self.passed+'/'+self.total:'error')+'\n'+
     (self?self.checks.map(check=>(check.passes?'PASS':'PENDING')+' · '+check.label).join('\n'):'')+
     '\n\nManual results (current scenario):\n'+statuses+
-    '\n\nScenarios visited:\n'+all+
+    '\n\nScenarios visited (initial preset vs latest interaction):\n'+all+
+    '\n\nCurrent checks can change after marker movement or recorded combat. Initial preset scores are retained for comparison.'+
     '\n\nAll manual results:\n'+JSON.stringify(manualReport(),null,2)+
     '\n\nSafety: synthetic browser-memory state; no live battle data or cloud used.';
 }
@@ -312,6 +346,7 @@ function init(){
   root.addEventListener('change',event=>{
     if(event.target.matches('[data-measured-distance]')){
       measuredDistance=Number(event.target.value);
+      recordInteraction(scenarioId,'set charge distance '+measuredDistance+'″');
       message='Measured distance updated for this scenario only.';
       messageError=false;
       render();
@@ -345,6 +380,8 @@ function init(){
     };
     try{
       state=applyAdvisorIpadAction(state,'move-marker',{position});
+      recordInteraction(scenarioId,'drag marker to '+state.units.find(unit=>unit.id==='a')?.position?.x+
+        ','+state.units.find(unit=>unit.id==='a')?.position?.y);
       message='Test marker repositioned. Forecast recalculated from new approximate position.';
       messageError=false;
     }catch(error){
