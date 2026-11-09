@@ -10,7 +10,10 @@ export function getLiveUnitVitals(state, unit) {
   const startingWounds = positive(unit.startingWounds) ?? (perModel && startingModels ? perModel * startingModels : null);
   const damage = (state.history ?? []).filter(event => event.type === 'combat.attack_resolved' && event.payload?.targetId === unit.id)
     .reduce((sum,event) => sum + (event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0),0);
-  const wounds = unit.status === 'destroyed' ? 0 : Number.isFinite(unit.wounds) ? unit.wounds : startingWounds == null ? null : Math.max(0,startingWounds-damage);
-  const models = unit.status === 'destroyed' ? 0 : Number.isFinite(unit.currentStrength) ? unit.currentStrength : Number.isFinite(unit.metadata?.currentModelCount) ? unit.metadata.currentModelCount : startingModels === 1 && wounds != null ? (wounds > 0 ? 1 : 0) : damage === 0 && (wounds == null || wounds === startingWounds) ? startingModels : null;
-  return { wounds, startingWounds, models, startingModels };
+  const models = unit.status === 'destroyed' ? 0 : Number.isFinite(unit.currentStrength) ? unit.currentStrength : Number.isFinite(unit.metadata?.currentModelCount) ? unit.metadata.currentModelCount : startingModels === 1 ? (Number.isFinite(unit.wounds) && unit.wounds <= 0 ? 0 : startingModels) : damage === 0 ? startingModels : null;
+  const woundCap = perModel && Number.isFinite(models) ? perModel * models : startingWounds;
+  const wounds = unit.status === 'destroyed' ? 0 : Number.isFinite(unit.wounds)
+    ? (woundCap == null ? Math.max(0, unit.wounds) : Math.min(woundCap, Math.max(0, unit.wounds)))
+    : startingWounds == null ? null : Math.max(0, Math.min(woundCap ?? startingWounds, startingWounds-damage));
+  return { wounds, startingWounds, woundCap, models, startingModels };
 }
