@@ -88,3 +88,41 @@
   min-height:0 !important;
   flex:none !important;
 }
+
+
+/* Keep the live battlefield measurable in both display modes. Older phase-focus
+   rules assigned percentage heights through a chain of flex parents; on iPad
+   Safari that chain can collapse the board to an empty panel. */
+.live-map .live-map__viewport {
+  display:block !important;
+  position:relative;
+  flex:1 1 auto !important;
+  min-height:240px !important;
+}
+.live-map .live-map__canvas {
+  min-width:100%;
+  min-height:0 !important;
+  height:auto !important;
+  flex:none !important;
+}
+.live-map .battlefield-map {
+  display:block !important;
+  width:100%;
+  height:auto !important;
+  min-height:0 !important;
+  flex:none !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__board,
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace .live-map .battlefield-map__board {
+  display:block !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  aspect-ratio:60 / 44 !important;
+  flex:none !important;
+  background-color:#17221f !important;
+  background-image:linear-gradient(to right,rgba(220,235,230,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.16) 1px,transparent 1px) !important;
+  background-size:10% 9.0909% !important;
+}
