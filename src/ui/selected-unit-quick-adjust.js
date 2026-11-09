@@ -55,9 +55,6 @@ function renderUnitControls(state, unit, { member = false } = {}) {
     ? '<button type="button" data-toggle-live-battle-shock data-unit-id="'+esc(unit.id)+
       '" aria-pressed="'+String(shocked)+'">'+(shocked?'Battle-shocked':'Battle-shock: Off')+'</button>'
     : '';
-  const position=active && unit.status==='deployed'
-    ? '<button type="button" data-live-map-reposition data-unit-id="'+esc(unit.id)+'">Reposition</button>'
-    : '';
   const hint=(!casualtyButton && initialModels!=null && initialModels>1 && models==null)
     ? '<small>Model count unknown · check at table</small>' : '';
   return '<section class="unit-quick-adjust__unit'+(member?' is-member':'')+'" data-global-state-controls data-casualty-controls data-quick-unit-id="'+esc(unit.id)+'">'+
@@ -69,7 +66,7 @@ function renderUnitControls(state, unit, { member = false } = {}) {
       (casualtyButton&&!casualty?.requiresIdentity?casualtyButton:'')+
       (undo?undo:'')+'</div>'+
     (casualty?.requiresIdentity?casualtyButton:'')+hint+
-    (shock||position?'<div class="unit-quick-adjust__actions">'+shock+position+'</div>':'')+
+    (shock?'<div class="unit-quick-adjust__actions">'+shock+'</div>':'')+
     '<span class="unit-quick-adjust__message" data-global-state-message role="status"></span><span data-casualty-message role="status"></span>'+ 
   '</section>';
 }
