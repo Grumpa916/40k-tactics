@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recordUnitCasualty, undoUnitCasualty } from '../../src/engine/unit-casualty-transitions.js';
 import { getCasualtyLoadoutState } from '../../src/rules/live-casualty-loadout.js';
-import { getDatasheetWeaponOptions } from '../../src/rules/saved-roster-combat-profile.js';
+import { getDatasheetWeaponOptions, getEquippedWeaponReferences } from '../../src/rules/saved-roster-combat-profile.js';
+import { getLiveUnitVitals } from '../../src/rules/live-unit-vitals.js';
 
 function termagantState({ mixed = false } = {}) {
   const equippedWargear = [
@@ -164,4 +165,38 @@ test('casualty undo retains a stable reference when other history entries are re
  assert.ok(id);next.history.shift();
  const undone=undoUnitCasualty(next,{unitId:'p1:gants'});
  assert.equal(undone.history.at(-1).payload.originalCasualtyEventId,id);
+});
+
+
+test('generic one-per-model weapon quantities and wound caps follow casualties', () => {
+  const state = {
+    phase: 'shooting', turn: 1,
+    battle: { id: 'b', status: 'active', round: 1, activePlayerId: 'p1' },
+    history: [],
+    armyRosters: { p1: { units: [{
+      id: 'bikes', name: 'Vertus Praetors', datasheetId: 'custodes:vertus-praetors', modelCount: 2,
+      equippedWeapons: [
+        { name: 'Salvo Launcher', quantity: 2 },
+        { name: 'Interceptor Lance', quantity: 2 }
+      ],
+      datasheet: {
+        characteristics: { Wounds: 3, OC: 2 },
+        weapons: [
+          { name: 'Salvo Launcher', range: '24"', attacks: 1, skill: '2+', strength: 9, ap: -3, damage: 4 },
+          { name: 'Interceptor Lance', range: 'Melee', attacks: 4, skill: '2+', strength: 7, ap: -2, damage: 2 }
+        ]
+      }
+    }] } },
+    units: [{
+      id: 'p1:bikes', ownerId: 'p1', name: 'Vertus Praetors', status: 'deployed',
+      metadata: { rosterUnitId: 'bikes', modelCount: 2, datasheetId: 'custodes:vertus-praetors' }
+    }]
+  };
+
+  const next = recordUnitCasualty(state, { unitId: 'p1:bikes' });
+  const unit = next.units[0];
+  assert.equal(unit.currentStrength, 1);
+  assert.deepEqual(getEquippedWeaponReferences(next, unit).map(item => item.activeQuantity), [1, 1]);
+  assert.equal(getLiveUnitVitals(next, unit).woundCap, 3);
+  assert.equal(getLiveUnitVitals(next, unit).wounds, 3);
 });
