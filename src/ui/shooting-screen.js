@@ -6,7 +6,6 @@ import { renderActionReceipt } from './action-receipt.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
 import { renderCombatMapPanel } from './combat-workspace.js';
-import { renderSelectedUnitQuickAdjust } from './selected-unit-quick-adjust.js';
 import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { createMissionActionPicker } from "./mission-action-picker.js";
 import { getLiveMissionActionOptions } from '../rules/mission-action-state.js';
@@ -233,13 +232,12 @@ export function createShootingScreen(container, {
         ? renderIncomingDamageForecast(state, { attackerId, targetId: selectedTargetId, weapon: selectedWeapon })
         : shootingTargetComparisonCards(attackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison);
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
-        ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId], sections })}
+        ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId], sections, enableAdjust:state.phase === 'shooting' })}
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
           perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
           selectedUnitId: activeUnitId })}
 
         <section class="shoot-tabletop__control-panel">
-          ${state.phase === 'shooting' ? renderSelectedUnitQuickAdjust(state, activeUnitId) : ''}
           <div class="shoot-tabletop__control-scroll">
             ${state.phase === 'shooting' ? renderStratagemOpportunityReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,livePanel:true}) : ''}
             ${state.phase === 'shooting' ? renderAdaptiveExecutionPanel(state, {selectedUnitId:activeUnitId, playerId:perspectivePlayerId ?? state.activePlayer, targetId:selectedTargetId}) : ''}
