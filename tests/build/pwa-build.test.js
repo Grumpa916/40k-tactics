@@ -11,7 +11,7 @@ test('deployment bundle includes install metadata and every referenced app icon'
   const fixture = mkdtempSync(join(tmpdir(), '40k-pwa-build-'));
   t.after(() => rmSync(fixture, { recursive: true, force: true }));
   mkdirSync(join(fixture, 'scripts'));
-  for (const path of ['scripts/build.mjs', 'index.html', 'battle.html', 'account.html', 'charge.html', 'shooting.html', 'supabase-cloud-check.html', 'terrain-preview.html', '_headers', 'manifest.webmanifest', 'icons', 'src']) {
+  for (const path of ['scripts/build.mjs', 'index.html', 'battle.html', 'account.html', 'charge.html', 'shooting.html', 'supabase-cloud-check.html', 'terrain-preview.html', 'advisor-ipad-test.html', '_headers', 'manifest.webmanifest', 'icons', 'src']) {
     cpSync(join(root, path), join(fixture, path), { recursive: true });
   }
   const build = spawnSync(process.execPath, ['scripts/build.mjs'], { cwd: fixture, encoding: 'utf8' });

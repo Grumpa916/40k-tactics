@@ -7,7 +7,7 @@ const outDir = join(repoRoot, 'dist');
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
 
-for (const name of ['index.html', 'account.html', 'battle.html', 'charge.html', 'shooting.html', 'supabase-cloud-check.html', 'terrain-preview.html', '_headers', 'manifest.webmanifest']) {
+for (const name of ['index.html', 'account.html', 'battle.html', 'charge.html', 'shooting.html', 'supabase-cloud-check.html', 'terrain-preview.html', 'advisor-ipad-test.html', '_headers', 'manifest.webmanifest']) {
   await cp(join(repoRoot, name), join(outDir, name));
 }
 
