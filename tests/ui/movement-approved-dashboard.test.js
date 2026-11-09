@@ -31,6 +31,11 @@ test('Movement roster rail provides My Army and Opponent views with compact unit
   assert.match(html, /Custodian Guard/);
   assert.match(html, /RESERVES/);
   assert.match(html, /movement-roster__token/);
+  assert.match(html, /roster-unit-editor-u1" open/);
+  assert.match(html, /data-toggle-live-battle-shock data-unit-id="u1"/);
+  assert.match(html, /data-adjust-unit-wounds="-1" data-unit-id="u1"/);
+  const opponent = renderMovementRosterRail(state,{playerId:'p1',perspectivePlayerId:'p1',rosterView:'opponent'});
+  assert.match(opponent, /data-toggle-live-battle-shock data-unit-id="e1"/);
 });
 
 test('selected-unit Movement card colors its token by army perspective and shows the approved M T SV W OC strip', () => {
