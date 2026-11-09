@@ -1,23 +1,57 @@
 import { getEarlyTurnPlan } from '../rules/early-turn-plan.js';
+import { getMovementWhatIfPlans } from '../rules/early-turn-movement-options.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;')
   .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const percent=value=>Number.isFinite(value)?Math.round(100*value)+'%':'Unknown';
 const damage=value=>Number.isFinite(value)?value.toFixed(1):'Unknown';
-let previousState=null,previousKey=null,previousPlan=null;
+let previousState=null,previousKey=null,previousPlan=null,previousMovement=null;
 
 function cachedPlan(state,{unitId,playerId}){
   const key=JSON.stringify([unitId,playerId]);
   if(state!==previousState || key!==previousKey){
     previousState=state;previousKey=key;
     previousPlan=getEarlyTurnPlan(state,{unitId,playerId});
+    previousMovement=getMovementWhatIfPlans(state,{unitId,playerId});
   }
   return previousPlan;
+}
+
+function renderMovementWhatIf(whatIf) {
+  if(!whatIf) return '';
+  if(!whatIf.available)
+    return '<p class="early-turn-plan__what-if-unavailable">Movement what-if: '+esc(whatIf.reason)+'</p>';
+  if(whatIf.options.length<=1)
+    return '<p class="early-turn-plan__what-if-unavailable">No distinct hypothetical Normal Move destination was available. Check actual map placement and saved movement speed.</p>';
+  const rows=whatIf.options.map(option=>{
+    const shot=option.attack;
+    const full=shot?.fullAttack;
+    return '<div class="early-turn-plan__what-if-row" data-what-if-kind="'+esc(option.kind)+'">'+
+      '<strong>'+esc(option.label)+'</strong>'+
+      '<small>'+esc(option.travel)+'″ sample · ('+esc(option.position.x)+', '+esc(option.position.y)+') on approximate map</small>'+
+      (option.kind==='objective'?
+        '<small>Approximate objective-center gap: '+esc(option.destinationDistance)+'″ · OC unverified</small>':'')+
+      (shot?
+        '<span>Best sampled ranged target: '+esc(shot.targetName)+'</span>'+
+        '<span>Shoot only: '+damage(shot.expectedShootingDamage)+' wounds · kill '+percent(shot.shootingKillProbability)+'</span>'+
+        (full?.available?
+          '<span>Full Attack: kill '+percent(full.destructionProbability)+
+          ' · charge '+percent(full.chargeProbability)+
+          ' · retaliation '+damage(full.retaliationExpectedDamage)+'</span>':
+          '<small>Full Attack unavailable: '+esc(full?.reason??'Incomplete data')+'</small>'):
+        '<small>Nothing currently in comparable sampled shooting range from this position.</small>')+
+    '</div>';
+  }).join('');
+  return '<details class="early-turn-plan__what-if" data-view-key="early-turn-movement-what-if">'+
+    '<summary>Movement what-if · '+esc(whatIf.options.length)+' positions</summary>'+
+    '<div class="early-turn-plan__what-if-list">'+rows+
+    '<small class="early-turn-plan__caution">'+esc(whatIf.assumptions)+'</small></div></details>';
 }
 
 export function renderEarlyTurnPlanPanel(state,{selectedUnitId,playerId}={}){
   if(!selectedUnitId || !['command','movement'].includes(state?.phase)) return '';
   const plan=cachedPlan(state,{unitId:selectedUnitId,playerId});
+  const movementPreview=previousMovement;
   if(!plan.available) return '';
   const shot=plan.attack;
   const full=shot?.fullAttack??null;
@@ -56,6 +90,7 @@ export function renderEarlyTurnPlanPanel(state,{selectedUnitId,playerId}={}){
       '</div>'+
       (shot?.objectiveReason?'<p class="early-turn-plan__mission"><strong>Objective context:</strong> '+esc(shot.objectiveReason)+'</p>':'')+
       (plan.alternative?'<p class="early-turn-plan__alternative">Other target to compare: '+esc(plan.alternative.targetName)+'. Confirm weapon and range before committing.</p>':'')+
+      renderMovementWhatIf(movementPreview)+
       '<small class="early-turn-plan__caution">'+esc(plan.assumptions)+
       (plan.limitedWeapons?' Only up to three saved ranged profiles were sampled.':'')+
       (plan.loadoutUncertain?' Saved loadout needs review; speculative damage was withheld.':'')+
