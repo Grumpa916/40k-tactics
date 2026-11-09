@@ -129,3 +129,67 @@
   background-image:linear-gradient(to right,rgba(220,235,230,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.16) 1px,transparent 1px) !important;
   background-size:10% 9.0909% !important;
 }
+
+
+/* Keep the two live-map modes and the board visible in iPad Safari. */
+.battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=command] .live-map > nav.live-map__tools {
+  display:flex !important;
+  visibility:visible !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map {
+  display:flex !important;
+  flex-direction:column !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools {
+  display:flex !important;
+  flex:0 0 auto !important;
+  visibility:visible !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__viewport {
+  display:block !important;
+  flex:1 1 auto !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  overflow:auto !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__canvas,
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map {
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__board {
+  position:relative !important;
+  display:block !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:auto !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  max-height:none !important;
+  aspect-ratio:60 / 44 !important;
+  overflow:hidden !important;
+  background-color:#17221f !important;
+  background-image:
+    linear-gradient(to right,rgba(220,235,230,.12) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(220,235,230,.12) 1px,transparent 1px) !important;
+  background-size:1.666667% 2.272727% !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__geometry,
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__precision-overlay,
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map [data-live-map-threat-overlay] {
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  pointer-events:none !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit,
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__objective {
+  position:absolute !important;
+}
