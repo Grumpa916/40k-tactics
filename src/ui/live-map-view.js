@@ -1,4 +1,5 @@
 import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
+import { mapObjectiveMarkerLabel } from '../rules/objective-display-labels.js';
 import { getLiveUnitPosition } from '../rules/spatial-context.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
 import { applyApprovedLiveMapSymbols } from './live-map-symbols.js';
@@ -137,7 +138,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'planner-style-live-map-v1');
+      stylesheet.searchParams.set('v', 'planner-style-live-map-v2');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
@@ -149,7 +150,7 @@ export function createLiveMapView() {
       map = addPrecisionOverlay(map);
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
-      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down' : ' is-standard'} is-planner-view" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
+      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
     },
     bind(container, state = renderedState, options = renderedOptions) {
       const viewport = container.querySelector('[data-live-map-viewport]');
@@ -161,9 +162,15 @@ export function createLiveMapView() {
       let selectedModelIndex = liveTools(state, options, preferences).selectedModelIndex;
       drawPrecision(container, state, options, preferences, selectedModelIndex);
       const updatePressed = (selector, value) => container.querySelector(selector)?.setAttribute('aria-pressed', String(value));
+      const objectives = Array.from(container.querySelectorAll('.live-map .battlefield-map__objective'));
+      const fullObjectiveLabels = objectives.map(node => node.textContent);
+      const refreshObjectiveLabels = () => objectives.forEach((node, index) => {
+        node.textContent = preferences.topDown ? fullObjectiveLabels[index] : mapObjectiveMarkerLabel(fullObjectiveLabels[index]);
+      });
       const updateMapStyle = () => {
         container.querySelector('.live-map')?.classList.toggle('is-top-down', preferences.topDown);
         container.querySelector('.live-map')?.classList.toggle('is-standard', !preferences.topDown);
+        container.querySelector('.live-map')?.classList.toggle('is-planner-view', preferences.topDown);
         container.querySelector('.live-map')?.setAttribute('data-live-map-mode', preferences.topDown ? 'top-down' : 'standard');
         container.querySelector('[data-live-map-viewport]')?.classList.toggle('is-top-down', preferences.topDown);
         if (canvas?.style) canvas.style.height = preferences.topDown ? 'auto' : zoom*100+'%';
@@ -171,7 +178,9 @@ export function createLiveMapView() {
         const styleButton = container.querySelector('button[data-live-map-style]');
         if (styleButton) styleButton.textContent = preferences.topDown ? 'Standard map' : 'Top-down map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
+        refreshObjectiveLabels();
       };
+      refreshObjectiveLabels();
       container.querySelector('[data-live-map-style]')?.addEventListener('click', () => {
         preferences.topDown = !preferences.topDown;
         saveMapPreferences(preferences);
