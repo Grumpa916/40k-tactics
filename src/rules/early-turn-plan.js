@@ -1,5 +1,5 @@
 import { getCombatFormationRoot, getCombatFormationMembers, hasInvalidWargear } from './battle-unit-reference.js';
-import { getCombatFormationWeaponOptions } from './saved-roster-combat-profile.js';
+import { getCombatFormationWeaponOptions, getProbabilisticUnitProfile } from './saved-roster-combat-profile.js';
 import { getShootingTargetPriorities } from './tactical-shooting-targets.js';
 import { getTargetStrategicContext } from './tactical-target-context.js';
 import { getFullAttackAdvice } from './full-attack-advisor.js';
@@ -102,11 +102,18 @@ export function getEarlyTurnPlan(state, { unitId, playerId } = {}) {
         !closest || Math.abs(item.requiredRoll-best.shooting.targetDistance)<
           Math.abs(closest.requiredRoll-best.shooting.targetDistance)?item:closest,null)
       : null;
+    const target = state.units.find(unit => unit.id === best.targetId);
+    const targetWounds = getProbabilisticUnitProfile(state, target).wounds;
+    // Match the Full Attack damage basis by discarding overkill in each outcome.
+    const expectedShootingDamage = best.shooting.damageDistribution.outcomes.reduce(
+      (sum, { damage, probability }) => sum + Math.min(damage, targetWounds) * probability,
+      0
+    );
     attack=Object.freeze({
       targetId:best.targetId,targetName:best.targetName,
       weaponName:best.weapon.name,
       mapDistance:best.shooting.targetDistance,
-      expectedShootingDamage:best.shooting.expectedDamage,
+      expectedShootingDamage,
       shootingKillProbability:best.shooting.destructionProbability,
       confidence:best.shooting.confidence,
       primaryReason:best.strategicContext?.primary?.reason??null,
