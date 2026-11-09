@@ -67,3 +67,24 @@
   .live-map__base-editor summary { text-align:center; }
 }
 
+
+
+/* The phase-focus stylesheet has legacy full-height rules for the standard map.
+   Keep the new toolbar visible and preserve the 60:44 board ratio in top-down mode. */
+.battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=command] .live-map > nav.live-map__tools { display:flex !important; }
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .live-map.is-top-down .battlefield-map__board,
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace .live-map.is-top-down .battlefield-map__board,
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .battlefield-map__board {
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  aspect-ratio:60 / 44 !important;
+  flex:none !important;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace .live-map.is-top-down .live-map__canvas {
+  height:auto !important;
+  min-height:0 !important;
+  flex:none !important;
+}
