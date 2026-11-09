@@ -174,9 +174,39 @@ test('attached Leader attacks count toward the bodyguard without confusing oppon
   assert.equal(result.shooting.actualDamage,3);
 });
 
+test('existing engagement without a recorded successful charge is not called a new charged Fight',()=>{
+  const s=fixture('fight');
+  const result=advice(s,{targetId:'b'});
+  assert.equal(result.available,true);
+  assert.equal(result.remainingForecast,null);
+  assert.match(result.forecastReason,/No successful charge recorded/);
+});
+
+test('Fall Back and unpermitted Advance suppress speculative Charge-to-Fight sequence',()=>{
+  for (const type of ['unit.fell_back','unit.advanced']) {
+    const s=fixture('charge');
+    s.history.push({type,payload:{unitId:'a',round:1,turn:1}});
+    const result=advice(s,{targetId:'b',measuredDistance:7});
+    assert.equal(result.remainingForecast,null);
+    assert.match(result.forecastReason,type==='unit.fell_back'?/Fell Back/:/Advanced/);
+  }
+});
+
+test('compact adaptive summary avoids pushing live combat controls below fold on iPad',()=>{
+  const s=fixture('shooting');
+  s.history.push(shot(4));
+  s.units[1].wounds=6;
+  const html=renderAdaptiveExecutionPanel(s,{selectedUnitId:'a',playerId:'p1'});
+  assert.match(html,/Shoot 1 · 4\.0 dmg/);
+  assert.match(html,/data-adaptive-execution/);
+  assert.doesNotMatch(html,/class="adaptive-execution" open/);
+  assert.match(html,/Current wounds: 6/);
+});
+
 test('shared Phase workspace renders adaptive panel only for active Charge/Fight phases',()=>{
   for (const phase of ['charge','fight']){
     const s=fixture(phase);
+    if(phase==='fight') s.history.push(charge('successful'));
     const html=renderCombatWorkspace({state:s,phase,selectedUnitId:'a',perspectivePlayerId:'p1',
       controls:'Manual phase actions',adaptiveContext:{targetId:'b',measuredDistance:7},
       mapView:{render:()=>'<div class="map">map</div>'}});
