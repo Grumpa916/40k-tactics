@@ -9,7 +9,7 @@ const state = {
   activePlayer:'p1', turn:1, phase:'movement', history:[], objectives:[],
   players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
   units:[
-    {id:'u1',ownerId:'p1',name:'Shield Captain',status:'deployed',profile:{characteristics:{movement:'6"',toughness:6,save:'2+',wounds:6,objectiveControl:1}}},
+    {id:'u1',ownerId:'p1',name:'Shield Captain',status:'deployed',wounds:6,startingWounds:6,profile:{characteristics:{movement:'6"',toughness:6,save:'2+',wounds:6,objectiveControl:1}}},
     {id:'u2',ownerId:'p1',name:'Custodian Guard',status:'reserves'},
     {id:'e1',ownerId:'p2',name:'Enemy Unit',status:'deployed'}
   ]
