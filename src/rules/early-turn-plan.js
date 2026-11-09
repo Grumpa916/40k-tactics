@@ -20,8 +20,17 @@ export function getEarlyTurnPlan(state, { unitId, playerId } = {}) {
   const unit = getCombatFormationRoot(state,member);
   if (!unit || unit.ownerId !== playerId || unit.status !== 'deployed')
     return unavailable('Select a deployed formation from your army.');
-  const formation = getCombatFormationMembers(state,unit);
-  const loadoutUncertain = formation.some(item => hasInvalidWargear(state,item));
+  let formation = [];
+  let loadoutUncertain = false;
+  let allWeapons = [];
+  try {
+    formation = getCombatFormationMembers(state,unit);
+    loadoutUncertain = formation.some(item => hasInvalidWargear(state,item));
+    if (!loadoutUncertain) allWeapons = getCombatFormationWeaponOptions(state,unit,{type:'ranged'});
+  } catch {
+    // Broken imported profiles must never prevent phase navigation or editing.
+    loadoutUncertain = true;
+  }
   const projectedShooting = {...state,phase:'shooting',activePlayer};
   const projectedMovement = phase==='movement' ? state : {...state,phase:'movement'};
   let movement = null;
@@ -35,7 +44,7 @@ export function getEarlyTurnPlan(state, { unitId, playerId } = {}) {
 
   // A bounded sample rather than exhaustive turn optimization. Each option is
   // explicitly ONE ranged profile (not all combined formation shooting).
-  const weapons = loadoutUncertain ? [] : getCombatFormationWeaponOptions(state,unit,{type:'ranged'})
+  const weapons = allWeapons
     .filter(weapon => !weapon.quantityUncertain && weapon.characteristics)
     .slice(0,3);
   const candidates = [];
@@ -133,7 +142,7 @@ export function getEarlyTurnPlan(state, { unitId, playerId } = {}) {
       actionHint:movement.actionHint??null,
       confidence:movement.confidence??'low'
     }):null,
-    limitedWeapons: getCombatFormationWeaponOptions(state,unit,{type:'ranged'}).length>weapons.length,
+    limitedWeapons: allWeapons.length>weapons.length,
     loadoutUncertain,
     assumptions:'Baseline from current approximate map markers only; no future move, line of sight, complete weapon allocation, charge path, CP use, or enemy reaction is simulated. Tabletop legality, actual OC and agreed VP remain authoritative.'
   });
