@@ -131,7 +131,7 @@ function liveStatusLabel(state) {
 export function renderBattlefieldMap(state, {
   mode = "live", perspectivePlayerId = state?.activePlayer ?? null, interactivePlayerId = perspectivePlayerId, selectedUnitId = null, showUnits = true,
   showMeasurements = mode === "live", showTerrainEdgeMeasurements = false, terrainMeasurements = [],
-  terrainMeasurementLines = [], mapLabel = null, compactMarkers = false, activationForUnit = () => ''
+  terrainMeasurementLines = [], mapLabel = null, compactMarkers = false, plannerStyleObjectives = false, activationForUnit = () => ''
 } = {}) {
   if (!["planning", "deployment", "live"].includes(mode)) throw new RangeError("Unknown battlefield map mode: " + mode);
   const safeState = state && typeof state === "object" ? state : {};
@@ -186,7 +186,7 @@ export function renderBattlefieldMap(state, {
     const objective = objectives.find((item) => item && (item.layoutObjective === name || item.id === "event-companion:" + name));
     const objectiveId = objective?.id ?? ("event-companion:" + name); const controlLabel = objective ? objectiveControlLabel(objective, safeState) : "Uncontrolled";
     const label = perspectiveObjectiveName(name, safeState, perspectivePlayerId);
-    const displayLabel = mode === "live" ? compactObjectiveLabel(label) : label;
+    const displayLabel = mode === "live" && !plannerStyleObjectives ? compactObjectiveLabel(label) : label;
     const controlClass = objectiveControlClass(objective, perspectivePlayerId);
     return '<button type="button" class="battlefield-map__objective battlefield-map__objective--layout ' + controlClass + '" data-layout-objective="' + escapeHtml(name) + '" data-map-objective-id="' + escapeHtml(objectiveId) + '" data-objective-control="' + escapeHtml(controlLabel) + '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(label + " · " + controlLabel + " · Event Companion p. " + layoutGeometry.page) + '">' + escapeHtml(displayLabel) + '</button>';
   }).join("") : "";
