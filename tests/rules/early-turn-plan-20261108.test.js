@@ -68,11 +68,11 @@ test('Movement uses the same read-only planner without altering phase or history
   assert.deepEqual(s,before);
   const html=renderCombatWorkspace({
     state:s,phase:'movement',perspectivePlayerId:'p1',selectedUnitId:'a',
-    controls:'Movement controls',mapView:{render:()=>'<div class="battlefield-map">map</div>'}
+    controls:'<span data-phase-action>Movement controls</span>',mapView:{render:()=>'<div class="battlefield-map">map</div>'}
   });
   assert.match(html,/data-early-turn-plan/);
   assert.match(html,/Movement controls/);
-  assert.ok(html.indexOf('data-early-turn-plan')<html.indexOf('Movement controls'));
+  assert.ok(html.indexOf('data-early-turn-plan')<html.indexOf('data-phase-action'), 'planner precedes real phase controls, not the panel ARIA label');
   assert.match(html,/battlefield-map/);
 });
 
