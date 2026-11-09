@@ -85,6 +85,8 @@ function liveTools(state, options, preferences) {
   const modelPicker = models.length > 1 ? `<label class="live-map__sight-model">Sight from <select data-live-map-sight-model>${models.map((model, index) => `<option value="${index}"${index === selectedModelIndex ? ' selected' : ''}>Model ${index + 1}</option>`).join('')}</select></label>` : '';
   const controls = `<nav class="live-map__tools" aria-label="Map tools">
     <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Top-down map' : 'Standard map'}</button>
+    ${options?.showThreatCoverage !== false ? `<button type="button" data-map-threat-toggle aria-pressed="false" title="Approximate enemy weapon coverage; verify on the table">Threat view</button>` : ""}
+    <details class="live-map__more-tools"><summary>Map tools</summary><div class="live-map__more-tools-content">
     <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
     <button type="button" data-live-map-bases-toggle aria-pressed="${preferences.bases}">Model bases</button>
     <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Potential sight</button>
@@ -95,7 +97,8 @@ function liveTools(state, options, preferences) {
       ${modelPicker}<small>Saved on this device for this unit type. Blank length uses a round base.</small><small aria-live="polite" data-live-map-base-status></small></details>
     <small class="live-map__sight-caveat" data-live-map-sight-caveat${preferences.sight ? '' : ' hidden'}>Potential 2D sight only; check model height, gaps and visibility on the table.</small>
     ${options?.showZoomControls !== false ? `<button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><span data-map-zoom-value>100%</span><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="fit">Fit</button>` : ''}
-    ${options?.showThreatCoverage !== false ? `<button type="button" data-map-threat-toggle aria-pressed="false">Threat view</button><small data-map-threat-note hidden>Longest confirmed enemy weapon ranges · terrain shadows are approximate; verify line of sight on the table.</small>` : ''}
+    ${options?.showThreatCoverage !== false ? `<small data-map-threat-note hidden>Longest confirmed enemy weapon ranges · terrain shadows are approximate; verify line of sight on the table.</small>` : ""}
+    </div></details>
   </nav>`;
   return { controls, key, unit, models, selectedModelIndex };
 }
@@ -144,7 +147,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'shooting-coverage-1-live-map-render-fix5');
+      stylesheet.searchParams.set('v', 'shooting-coverage-1-map-first-fit1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
