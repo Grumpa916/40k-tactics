@@ -21,8 +21,6 @@ export function renderAdaptiveExecutionPanel(state,{
   if(!['shooting','charge','fight'].includes(state?.phase) || !selectedUnitId) return '';
   const advice=adviceFor(state,{unitId:selectedUnitId,playerId,targetId,measuredDistance});
   if(!advice.available) return '';
-  const started=advice.shooting.attacks||advice.charge.outcome||
-    advice.fight.attacks||advice.fight.finished;
   const target=advice.targetName;
   const forecast=advice.remainingForecast;
   const outcome=advice.charge.outcome;
@@ -59,8 +57,10 @@ export function renderAdaptiveExecutionPanel(state,{
             ' actual damage</span>':'<small>No Fight attacks recorded for this formation</small>')+
           (fight.finished?'<small>Fight activation finished.</small>':'')+'</div>'+
         '<div class="adaptive-execution__remaining"><strong>'+esc(target?'Current target · '+target:'Remaining opportunity')+'</strong>'+
-          (target?'<span>Current wounds: '+(advice.targetWounds??'Unknown')+
-            ' · surviving models: '+(advice.targetModels??'Unknown')+'</span>':'')+
+          (target?(advice.targetStatus==='destroyed'
+            ? '<span>Target destroyed (recorded) · review actual objective control and scoring.</span>'
+            : '<span>Current wounds: '+(advice.targetWounds??'Unknown')+
+              ' · surviving models: '+(advice.targetModels??'Unknown')+'</span>'):'')+
           (!fight.finished&&!fight.attacks?loading:
             '<small>Recorded Fight results replace the original full-activation estimate; no second full attack is assumed.</small>')+
           (forecast?.conditionalFight && !outcome?
