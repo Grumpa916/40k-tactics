@@ -57,7 +57,6 @@ export function getAdaptiveExecutionAdvice(state,{
   const targetDamage=records=>records.filter(e=>
     e.payload?.targetId===chosenTarget || e.payload?.stateDelta?.target?.unitId===chosenTarget)
     .reduce((sum,e)=>sum+(finite(e.payload?.actualDamage)?Math.max(0,e.payload.actualDamage):0),0);
-  const shotDone=shooting.length>0;
   const fightDone=fighting.length>0;
   const chargeOutcome=charge?.payload?.outcome??null;
   const observedDistance=targetId && finite(measuredDistance) ? measuredDistance :
@@ -88,7 +87,7 @@ export function getAdaptiveExecutionAdvice(state,{
   else if(!targetAlive) forecastReason='The selected or recorded target is destroyed or no longer available; choose another legal target.';
   else if(fightFinished) forecastReason='Fight activation finished. Do not forecast another attack for this formation.';
   else if(fightDone) forecastReason='Fight damage already recorded. Full-activation melee will not be estimated a second time.';
-  else if(blocked && state.phase!=='fight') forecastReason='Recorded charge '+chargeOutcome+'; do not project a Charge → Fight sequence from this attempt.';
+  else if(blocked) forecastReason='Recorded charge '+chargeOutcome+'; no Fight is forecast from this attempt. Check any separate Engagement eligibility at the table.';
   else if(charge && !chargeAppliesToTarget) forecastReason='This target was not declared in the recorded charge. Review actual Fight eligibility.';
   else{
     try{
@@ -158,6 +157,6 @@ export function getAdaptiveExecutionAdvice(state,{
       primary:strategic.primary?.reason??null,
       secondary:strategic.secondary?.reason??null
     }):null,
-    caveat:'Actual recorded damage and remaining wounds are authoritative for this view. Melee damage is an independent conditional baseline on current surviving models, not a replay of recorded shots or a promise of a legal Fight. Confirm charge paths, fight eligibility, model allocation, OC and scoring at the table.'
+    caveat:'Actual recorded damage and remaining wounds are authoritative for this view. Melee uses the existing approximate strongest-profile baseline; attached-formation weapon allocations may be incomplete. It never replays recorded shots or promises a legal Fight. Confirm charge paths, fight eligibility, model allocation, OC and scoring at the table.'
   });
 }
