@@ -438,3 +438,24 @@
 .battle-shell__setup-bottom-nav[hidden] { display:none !important; }
 
 /* Threat overlay and its explanatory text have been removed from the live map. */
+
+/* Prioritize the full planner-sized live battlefield on iPad landscape.
+   The roster remains selectable and the advisor continues to scroll independently. */
+@media (min-width:761px) and (orientation:landscape) {
+  .battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail {
+    grid-template-columns:minmax(120px,150px) minmax(0,1fr) minmax(255px,285px) !important;
+    column-gap:5px !important;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace:not(.has-left-rail) {
+    grid-template-columns:minmax(0,1fr) minmax(255px,285px) !important;
+    column-gap:5px !important;
+  }
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace,
+  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace.has-left-rail {
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__rail { font-size:11px; }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map { padding:2px !important; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__status-summary { min-height:36px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { min-height:38px; }
+}

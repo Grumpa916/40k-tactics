@@ -17,11 +17,12 @@ function loadMapPreferences() {
       grid: true,
       bases: parsed?.bases !== false,
       sight: parsed?.sight === true,
+      markerSize: Math.max(14, Math.min(38, Number(parsed?.markerSize) || 18)),
       baseSizes: parsed?.baseSizes && typeof parsed.baseSizes === 'object' ? parsed.baseSizes : {},
       sightModels: parsed?.sightModels && typeof parsed.sightModels === 'object' ? parsed.sightModels : {}
     };
   } catch {
-    return { topDown: true, grid: true, bases: true, sight: false, baseSizes: {}, sightModels: {} };
+    return { topDown: true, grid: true, bases: true, sight: false, markerSize: 18, baseSizes: {}, sightModels: {} };
   }
 }
 
@@ -84,10 +85,27 @@ function liveTools(state, options, preferences) {
   const selectedModelId = unit ? preferences.sightModels[unit.id] : null;
   const selectedModelIndex = Math.max(0, models.findIndex(model => model.id === selectedModelId));
   const modelPicker = models.length > 1 ? `<label class="live-map__sight-model">Sight from <select data-live-map-sight-model>${models.map((model, index) => `<option value="${index}"${index === selectedModelIndex ? ' selected' : ''}>Model ${index + 1}</option>`).join('')}</select></label>` : '';
-  // The map planner layout is the live default. Keep only the optional view
-  // switch; the tactical overlay and map-tools menu no longer cover the board.
-  const controls = `<nav class="live-map__tools" aria-label="Map view">
+  // Compact live toolbar mirrors Map Planner without replacing battle state.
+  // Display sizing is deliberately separate from physical tabletop coordinates.
+  const controls = `<nav class="live-map__tools" aria-label="Live battlefield display controls">
     <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
+    <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
+    <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
+    <button type="button" data-live-map-zoom aria-pressed="false">2× zoom</button>
+    <label class="live-map__marker-size">Unit size
+      <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Rendered unit marker size">
+      <output data-live-map-marker-value>${preferences.markerSize}px</output>
+    </label>
+    <details class="live-map__base-editor" ${unit ? '' : 'data-disabled="true"'}>
+      <summary>Model base size</summary>
+      <div>
+        <label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}" ${unit ? '' : 'disabled'}></label>
+        <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}" ${unit ? '' : 'disabled'}></label>
+        <button type="button" data-live-map-base-apply ${unit ? '' : 'disabled'}>Set base size</button>
+      </div>
+      ${modelPicker}
+      <small data-live-map-base-status aria-live="polite"></small>
+    </details>
   </nav>`;
   return { controls, key, unit, models, selectedModelIndex };
 }
@@ -138,19 +156,19 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'planner-style-live-map-v2');
+      stylesheet.searchParams.set('v', 'full-planner-live-map-v1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
       const symbolsHref = symbolsStylesheet.href;
       const controls = liveTools(state, options, preferences);
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, plannerStyleObjectives:true, activationForUnit:id => getUnitActivationPresentation(state,id) });
-      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true });
+      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true, numberedMarkers: true });
       map = applyLiveMapStatusBadges(map, state);
       map = addPrecisionOverlay(map);
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
-      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
+      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}" data-live-zoom="1" style="--live-marker-size:${preferences.markerSize}px">${controls.controls}${map}</div>`;
     },
     bind(container, state = renderedState, options = renderedOptions) {
       const viewport = container.querySelector('[data-live-map-viewport]');
@@ -185,6 +203,23 @@ export function createLiveMapView() {
         preferences.topDown = !preferences.topDown;
         saveMapPreferences(preferences);
         updateMapStyle();
+      });
+      container.querySelector('[data-live-map-marker-size]')?.addEventListener('input', event => {
+        const size = Math.max(14, Math.min(38, Number(event.currentTarget.value) || 18));
+        preferences.markerSize = size;
+        const liveMap = container.querySelector('.live-map');
+        liveMap?.style?.setProperty?.('--live-marker-size', size + 'px');
+        const output = container.querySelector('[data-live-map-marker-value]');
+        if (output) output.textContent = size + 'px';
+        saveMapPreferences(preferences);
+      });
+      container.querySelector('[data-live-map-zoom]')?.addEventListener('click', event => {
+        const liveMap = container.querySelector('.live-map');
+        const expanded = liveMap?.getAttribute('data-live-zoom') !== '2';
+        liveMap?.setAttribute('data-live-zoom', expanded ? '2' : '1');
+        event.currentTarget.setAttribute('aria-pressed', String(expanded));
+        event.currentTarget.textContent = expanded ? 'Fit map' : '2× zoom';
+        if (!expanded && viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
       });
       container.querySelector('[data-live-map-grid-toggle]')?.addEventListener('click', () => {
         preferences.grid = !preferences.grid; saveMapPreferences(preferences);

@@ -60,9 +60,16 @@ function formatObjectiveMarkerLabels(html) {
     });
 }
 
-export function applyApprovedLiveMapSymbols(mapHtml, state, { preserveObjectiveLabels = false } = {}) {
+export function applyApprovedLiveMapSymbols(mapHtml, state, { preserveObjectiveLabels = false, numberedMarkers = false } = {}) {
   let html = String(mapHtml ?? '');
   const labels = liveUnitSymbolLabels(Array.isArray(state?.units) ? state.units : []);
-  for (const [unitId, symbol] of labels) html = replaceUnitMarkerText(html, unitId, symbol);
+  let number = 0;
+  for (const [unitId, symbol] of labels) {
+    // Number only the markers currently rendered in the live battlefield.
+    // Keep the underlying unit ID, title and drag target unchanged.
+    const isRendered = html.includes(`data-map-unit-id="${escapeHtml(unitId)}"`);
+    if (numberedMarkers && !isRendered) continue;
+    html = replaceUnitMarkerText(html, unitId, numberedMarkers ? String(++number) : symbol);
+  }
   return preserveObjectiveLabels ? html : formatObjectiveMarkerLabels(html);
 }
