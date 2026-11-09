@@ -7,14 +7,14 @@ function esc(value) {
     .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
-function renderGlobalStateControls(state, unit) {
+function renderGlobalStateControls(state, unit, { compact = false, includeMapControls = true } = {}) {
   if (state?.battle?.status !== 'active') return '';
   const vitals = getLiveUnitVitals(state, unit);
   const controls = [];
 
   if (Number.isFinite(vitals.wounds)) {
-    const atMaximum = Number.isFinite(vitals.startingWounds) && vitals.wounds >= vitals.startingWounds;
-    controls.push(`<div><span><strong>${esc(vitals.wounds)}</strong>${Number.isFinite(vitals.startingWounds) ? ` / ${esc(vitals.startingWounds)}` : ''} W</span>` +
+    const atMaximum = Number.isFinite(vitals.woundCap) && vitals.wounds >= vitals.woundCap;
+    controls.push(`<div><span><strong>${esc(vitals.wounds)}</strong>${Number.isFinite(vitals.woundCap) ? ` / ${esc(vitals.woundCap)}` : ''} W</span>` +
       `<button type="button" data-adjust-unit-wounds="-1" data-unit-id="${esc(unit.id)}"${vitals.wounds <= 0 ? ' disabled' : ''}>−1 W</button>` +
       `<button type="button" data-adjust-unit-wounds="1" data-unit-id="${esc(unit.id)}"${atMaximum ? ' disabled' : ''}>+1 W</button></div>`);
   }
@@ -24,20 +24,21 @@ function renderGlobalStateControls(state, unit) {
       `Battle-shock: ${isUnitBattleShocked(unit) ? 'On' : 'Off'}</button></div>`);
   }
 
-  if (unit.status === 'deployed') {
+  if (!compact && includeMapControls && unit.status === 'deployed') {
     controls.push(`<div><button type="button" data-live-map-reposition data-unit-id="${esc(unit.id)}">Reposition on map</button>` +
       `<button type="button" data-live-reserve-transfer="reserves" data-unit-id="${esc(unit.id)}">Move to reserves</button></div>`);
-  } else if (unit.status === 'reserves') {
+  } else if (!compact && includeMapControls && unit.status === 'reserves') {
     controls.push(`<div><button type="button" data-live-reserve-transfer="battlefield" data-unit-id="${esc(unit.id)}">Place on battlefield</button></div>`);
   }
 
   if (!controls.length) return '';
-  return `<details class="battle-context__test-controls" data-global-state-controls><summary>Adjust live state</summary>` +
-    `${controls.join('')}<span data-global-state-message></span></details>`;
+  const content = `${controls.join('')}<span data-global-state-message></span>`;
+  return compact ? `<div class="unit-state__controls" data-global-state-controls>${content}</div>` :
+    `<details class="battle-context__test-controls" data-global-state-controls><summary>Adjust live state</summary>${content}</details>`;
 }
 
-export function renderLiveCasualtyStatus(state, unit) {
-  const globalControls = renderGlobalStateControls(state, unit);
+export function renderLiveCasualtyStatus(state, unit, { compact = false, includeMapControls = true } = {}) {
+  const globalControls = renderGlobalStateControls(state, unit, { compact, includeMapControls });
   const casualty = getCasualtyLoadoutState(state, unit);
   if (!casualty || !Number.isInteger(casualty.startingModels) || casualty.startingModels <= 1) {
     return { meta: '', controls: globalControls };
@@ -74,6 +75,8 @@ export function renderLiveCasualtyStatus(state, unit) {
   if (!casualty.complexIdentity) body += '<span data-casualty-message></span>';
   return {
     meta,
-    controls: globalControls + `<details class="battle-context__test-controls" data-casualty-controls><summary>Record casualty</summary>${body}</details>`
+    controls: globalControls + (compact
+      ? `<div class="unit-state__casualty" data-casualty-controls><strong>Models: ${meta}</strong>${body}</div>`
+      : `<details class="battle-context__test-controls" data-casualty-controls><summary>Record casualty</summary>${body}</details>`)
   };
 }

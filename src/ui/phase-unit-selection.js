@@ -17,6 +17,8 @@ function sameScope(left, right) {
 
 export function createPhaseUnitSelection() {
   let selected = null;
+  const listeners = new Set();
+  const notify = () => { for (const listener of listeners) listener(selected?.unitId ?? null); };
 
   const validSelection = state => {
     if (!selected) return null;
@@ -54,9 +56,12 @@ export function createPhaseUnitSelection() {
       const root = (state.units ?? []).find(item => item.id === rootId);
       if (!root || !['deployed', 'reserves'].includes(root.status)) return false;
       if (eligibleIds != null && !new Set(eligibleIds).has(rootId)) return false;
+      const changed = selected?.unitId !== rootId || !sameScope(selected.scope, turnScope(state));
       selected = { unitId:rootId, scope:turnScope(state) };
+      if (changed) notify();
       return true;
     },
-    clear() { selected = null; }
+    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    clear() { if (selected) { selected = null; notify(); } }
   };
 }

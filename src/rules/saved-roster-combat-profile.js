@@ -93,8 +93,17 @@ function reviewedQuantityContext(rosterUnit, profileName, loadoutEntry) {
     return { exactPerModel: true, perModel: explicitPerModel, kind: 'explicit-per-model' };
   }
 
+  const inferredGenericPerModel = () => {
+    const quantity = Number(loadoutEntry?.quantity);
+    const modelCount = Number(rosterUnit?.modelCount);
+    return Number.isInteger(quantity) && quantity > 0 && Number.isInteger(modelCount) &&
+      modelCount > 0 && quantity === modelCount
+      ? { exactPerModel: true, perModel: 1, kind: 'quantity-matches-model-count' }
+      : null;
+  };
+
   const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
-  if (!ruleSet) return null;
+  if (!ruleSet) return inferredGenericPerModel();
   const selectionName = loadoutEntry?.selectionName ?? loadoutEntry?.name ?? profileName;
   const selectionKey = normalizeWeaponName(selectionName);
 
@@ -119,7 +128,7 @@ function reviewedQuantityContext(rosterUnit, profileName, loadoutEntry) {
       normalizeWeaponName(choice.name) === selectionKey || profileIsSelection(profileName, choice)
     )
   );
-  if (!slot?.perModel) return null;
+  if (!slot?.perModel) return inferredGenericPerModel();
 
   const equippedSelections = new Set((rosterUnit?.equippedWeapons ?? [])
     .map((item) => item?.selectionName ?? item?.name)

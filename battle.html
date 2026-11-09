@@ -41,6 +41,22 @@
     .battle-shell__panel-toggle { display:flex; align-items:center; justify-content:center; width:100%; min-width:0; min-height:44px; padding:9px 8px; border:1px solid #434b59; border-radius:7px; background:#202631; color:inherit; font:inherit; font-weight:750; cursor:pointer; touch-action:manipulation; }
     .battle-shell__panel-toggle:focus-visible { outline:2px solid #c5a2ed; outline-offset:2px; }
     .battle-shell__panel-body { min-width:0; }
+    .unit-state { margin:0 0 12px; padding:12px; border:1px solid #59616d; border-radius:10px; background:#1b2028; }
+    .unit-state h3 { margin:0 0 6px; font-size:17px; }
+    .unit-state h4 { margin:10px 0 5px; font-size:15px; }
+    .unit-state p { margin:4px 0 8px; }
+    .unit-state__formation { font-weight:700; }
+    .unit-state__formation-oc { font-size:13px; }
+    .unit-state__formation-oc small { display:block; opacity:.72; }
+    .unit-state__member { padding:8px 0; border-top:1px solid #3d4652; }
+    .unit-state__summary { display:flex; flex-wrap:wrap; gap:6px 12px; font-size:14px; }
+    .unit-state__controls > div, .unit-state__casualty > div { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0; }
+    .unit-state__controls button, .unit-state__casualty button { min-height:44px; min-width:52px; padding:8px 12px; font:inherit; }
+    .unit-state__casualty { margin-top:8px; }
+    .unit-state__casualty > strong { display:block; font-size:13px; }
+    .unit-state__weapons { margin:6px 0; padding-left:18px; font-size:13px; }
+    .unit-state__unknown { font-size:13px; opacity:.72; }
+    .unit-state [data-global-state-message], .unit-state [data-casualty-message] { display:block; min-height:1em; font-size:12px; }
     .battle-shell__workspace[data-left-collapsed="true"] .battle-shell__side-panel--left .battle-shell__panel-body,
     .battle-shell__workspace[data-right-collapsed="true"] .battle-shell__side-panel--right .battle-shell__panel-body { display:none; }
     .battle-shell__workspace[data-left-collapsed="true"] .battle-shell__side-panel--left,
