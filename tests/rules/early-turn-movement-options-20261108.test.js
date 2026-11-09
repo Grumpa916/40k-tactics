@@ -18,7 +18,7 @@ function fixture(phase='command'){
     phase,turn:1,activePlayer:'p1',
     battle:{id:'what-if-battle',round:1,status:'active',activePlayerId:'p1'},
     history:[],players:[{id:'p1',name:'Me'},{id:'p2',name:'Other'}],
-    objectives:[{id:'c1',name:'Center 1',position:{x:30,y:22}}],
+    objectives:[{id:'c1',name:'Center 1',position:{x:30,y:30}}],
     battlefieldMap:{actualDeployment:{a:{position:{x:4,y:22}},b:{position:{x:33,y:22}}}},
     units:[
       {id:'a',ownerId:'p1',name:'Allarus',status:'deployed',wounds:10,modelCount:1,
