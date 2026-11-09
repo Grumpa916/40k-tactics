@@ -132,7 +132,7 @@ test('view toggle changes only marker text, retaining badge, unit IDs and event 
     const markers= [
       {member:'guard',root:'guard',expected:'CG'},
       {member:'leader',root:'guard',expected:'TRA'},
-      {member:'enemy',root:'enemy',expected:'HS'}
+      {member:'enemy',root:'enemy',expected:'HEL'}
     ].map((item,index)=>{
       const firstChild={nodeType:3,nodeValue:String(index+1)};
       const statusBadge={className:'unit-activation-badge'};
