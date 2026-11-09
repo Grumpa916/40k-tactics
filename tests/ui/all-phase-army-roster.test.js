@@ -41,3 +41,23 @@ test('Movement keeps acting selection separate from both armies reference button
  const other=renderMovementRosterRail(state,{playerId:'me',perspectivePlayerId:'me',rosterView:'opponent'});
  assert.match(other,/data-open-unit-details="b"/);assert.match(other,/data-open-unit-details="d"/);assert.doesNotMatch(other,/data-move-roster-unit/);
 });
+
+test('active army-list rows contain independent wound and Battle-shock controls for both armies',()=>{
+ const active={...state,battle:{status:'active',round:1},
+   units:state.units.map(unit=>({...unit,wounds:unit.id==='a'?7:5,startingWounds:10}))};
+ const before=JSON.stringify(active);
+ const html=renderPhaseArmyRoster(active,'me',{selectedUnitId:'a',enableAdjust:true});
+ const friendly=html.split('data-phase-army-list="mine">')[1].split('data-phase-army-list="opponent"')[0];
+ const opponent=html.split('data-phase-army-list="opponent" hidden>')[1];
+ assert.match(friendly,/roster-unit-editor-a" open/,'selected unit opens its own controls');
+ assert.match(friendly,/data-adjust-unit-wounds="-1" data-unit-id="a"/);
+ assert.match(friendly,/data-adjust-unit-wounds="1" data-unit-id="a"/);
+ assert.match(friendly,/data-toggle-live-battle-shock data-unit-id="a"/);
+ assert.match(opponent,/data-adjust-unit-wounds="-1" data-unit-id="b"/);
+ assert.match(opponent,/data-toggle-live-battle-shock data-unit-id="b"/);
+ assert.doesNotMatch(opponent,/data-toggle-live-battle-shock data-unit-id="d"/,'destroyed units cannot be edited');
+ assert.doesNotMatch(friendly,/data-toggle-live-battle-shock data-unit-id="e"/,'embarked units cannot be edited');
+ assert.equal(JSON.stringify(active),before,'rendering cannot mutate battle state');
+ const historical=renderPhaseArmyRoster(active,'me',{selectedUnitId:'a',enableAdjust:false});
+ assert.doesNotMatch(historical,/data-adjust-unit-wounds|data-toggle-live-battle-shock/);
+});
