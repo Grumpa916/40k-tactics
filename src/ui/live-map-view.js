@@ -92,7 +92,7 @@ function liveTools(state, options, preferences) {
       <div><label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}"${unit ? '' : ' disabled'}></label>
       <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}"${unit ? '' : ' disabled'}></label>
       <button type="button" data-live-map-base-apply${unit ? '' : ' disabled'}>Save size</button></div>
-      ${modelPicker}<small>Saved on this device for this unit type. Blank length uses a round base.</small></details>
+      ${modelPicker}<small>Saved on this device for this unit type. Blank length uses a round base.</small><small aria-live="polite" data-live-map-base-status></small></details>
     <small class="live-map__sight-caveat" data-live-map-sight-caveat${preferences.sight ? '' : ' hidden'}>Potential 2D sight only; check model height, gaps and visibility on the table.</small>
     ${options?.showZoomControls !== false ? `<button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><span data-map-zoom-value>100%</span><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="fit">Fit</button>` : ''}
     ${options?.showThreatCoverage !== false ? `<button type="button" data-map-threat-toggle aria-pressed="false">Threat view</button><small data-map-threat-note hidden>Longest confirmed enemy weapon ranges · terrain shadows are approximate; verify line of sight on the table.</small>` : ''}
@@ -223,7 +223,7 @@ export function createLiveMapView() {
         if (!key) return;
         const width = container.querySelector('[data-live-map-base-width]')?.value ?? '';
         const length = container.querySelector('[data-live-map-base-length]')?.value ?? '';
-        const status = container.querySelector('[data-map-game-status]');
+        const status = container.querySelector('[data-live-map-base-status]');
         if (!width && !length) delete preferences.baseSizes[key];
         else if (baseDimensions(width, length)) preferences.baseSizes[key] = { width, length };
         else {
@@ -231,6 +231,7 @@ export function createLiveMapView() {
           return;
         }
         saveMapPreferences(preferences);
+        if (status) status.textContent = 'Base size saved.';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       });
       container.querySelector('[data-map-threat-toggle]')?.addEventListener('click', (event) => {
