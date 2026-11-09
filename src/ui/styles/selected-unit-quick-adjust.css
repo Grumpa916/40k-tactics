@@ -14,7 +14,8 @@
 .unit-quick-adjust button{cursor:pointer}
 .unit-quick-adjust button[disabled]{opacity:.35;cursor:default}
 .unit-quick-adjust__buttons button{min-width:44px;font-size:17px;font-weight:800;min-height:44px}
-.unit-quick-adjust__actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.unit-quick-adjust__actions{display:flex;gap:6px}
+.unit-quick-adjust__actions button{width:100%}
 .unit-quick-adjust__actions button{min-width:0;white-space:normal;line-height:1.15}
 .unit-quick-adjust [aria-pressed="true"]{border-color:#d9b76a;background:#4a3e27;color:#ffe0a3}
 .unit-quick-adjust [data-record-casualty]{border-color:#adc993}
