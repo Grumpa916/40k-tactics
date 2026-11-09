@@ -1,7 +1,6 @@
 import { renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
 import { createLiveMapView } from './live-map-view.js';
-import { renderSelectedUnitQuickAdjust } from './selected-unit-quick-adjust.js';
 import { renderEarlyTurnPlanPanel } from './early-turn-plan-panel.js';
 import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
@@ -53,7 +52,7 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
 // roster unless the phase supplies its own selection rail.
 export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, adaptiveContext = {}, mapView = createLiveMapView() }) {
   leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId, {
-    selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds
+    selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds, enableAdjust: state.phase === phase
   });
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
   return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
@@ -61,7 +60,6 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
-      ${state.phase === phase ? renderSelectedUnitQuickAdjust(state, selectedUnitId) : ''}
       <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, livePanel:true}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${state.phase === phase ? renderEarlyTurnPlanPanel(state, {selectedUnitId, playerId:perspectivePlayerId}) : ''}${state.phase === phase ? renderAdaptiveExecutionPanel(state, {selectedUnitId, playerId:perspectivePlayerId, ...adaptiveContext}) : ''}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, includeStratagems:false, livePanel:true}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
     </section></main>`;
 }
