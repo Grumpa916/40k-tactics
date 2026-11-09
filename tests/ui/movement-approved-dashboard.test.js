@@ -48,7 +48,7 @@ test('Movement screen makes selected-unit controls primary and advisor expandabl
   const source = fs.readFileSync(new URL('../../src/ui/movement-screen.js', import.meta.url),'utf8');
   assert.match(source,/renderMovementRosterRail/);
   assert.match(source,/renderMovementSelectedUnitCard/);
-  assert.match(source,/leftRail,mapExtra:reserveTray,controls/);
+  assert.match(source,/leftRail,mapExtra:MAP_PLANNING_BUTTON\s*\+\s*reserveTray,controls/);
   assert.match(source,/class="movement-advisor-drawer"><summary>Tactical Advisor<\/summary>/);
   assert.doesNotMatch(source,/controls:`[^`]*\$\{advisor\}\$\{editor\}<details><summary>Units/);
 });
