@@ -567,3 +567,23 @@
     margin:0 auto;
   }
 }
+
+/* Match the Map Planner grid. SVG dimensions are 60 × 44 tabletop inches:
+   0.07 SVG units becomes ~1px at iPad landscape map size. Earlier
+   non-scaling strokes were only 0.07 physical pixels and nearly invisible. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .live-map__precision-grid {
+  stroke:#d5f0ee;
+  stroke-opacity:.24;
+  stroke-width:.07;
+  vector-effect:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .live-map__precision-major-grid {
+  stroke:#d5f0ee;
+  stroke-opacity:.42;
+  stroke-width:.07;
+  vector-effect:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .live-map__precision-overlay {
+  z-index:3;
+  pointer-events:none;
+}
