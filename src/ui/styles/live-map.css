@@ -28,3 +28,35 @@
 .live-map__terrain-shadow polygon { fill:rgba(10,14,19,.46); stroke:rgba(246,189,98,.58); stroke-width:.12; stroke-dasharray:.45 .35; vector-effect:non-scaling-stroke; }
 
 .live-map__threat-empty { fill:#fff0d4; font-size:1.2px; font-family:Arial,sans-serif; font-weight:700; }
+
+/* The planner surface uses fixed tabletop proportions, inch-based overlays,
+   and the existing live-map controls. Standard view remains one tap away. */
+.live-map__tools { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:0 0 6px; }
+.live-map__tools > button, .live-map__tools summary, .live-map__tools input, .live-map__tools select { min-height:40px; padding:6px 9px; border:1px solid #60737e; border-radius:7px; background:#21303a; color:inherit; font:inherit; font-size:12px; touch-action:manipulation; }
+.live-map__tools > button[aria-pressed="true"] { border-color:#c6e99e; background:#354a35; }
+.live-map__base-editor { position:relative; }
+.live-map__base-editor summary { cursor:pointer; list-style-position:inside; }
+.live-map__base-editor[open] { flex:1 1 100%; display:grid; grid-template-columns:minmax(0,1fr); gap:5px; padding:5px; border:1px solid #40545c; border-radius:8px; background:#152229; }
+.live-map__base-editor > div { display:flex; align-items:end; flex-wrap:wrap; gap:5px; }
+.live-map__base-editor label { display:grid; flex:1 1 100px; gap:2px; font-size:11px; }
+.live-map__base-editor input { box-sizing:border-box; width:100%; }
+.live-map__base-editor small { color:#bdc9c8; font-size:11px; }
+.live-map__sight-model { display:flex; align-items:center; gap:4px; font-size:11px; }
+.live-map__precision-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; overflow:visible; pointer-events:none; }
+.live-map__precision-grid { stroke:#d5f0ee; stroke-opacity:.19; stroke-width:.035; vector-effect:non-scaling-stroke; }
+.live-map__precision-sight { fill:#49d7ac38; stroke:#8de9ca; stroke-width:.11; vector-effect:non-scaling-stroke; }
+.live-map__model-base { fill:rgba(32,78,103,.28); stroke:#a8daff; stroke-width:.09; vector-effect:non-scaling-stroke; }
+.live-map__model-base.is-opponent { fill:rgba(103,56,55,.28); stroke:#ffbfb1; }
+.live-map__model-base.is-selected { stroke:#fff09e; stroke-width:.16; }
+.live-map.is-top-down .live-map__canvas { min-width:100%; min-height:0; height:auto !important; flex:none; }
+.live-map.is-top-down .live-map__viewport { flex:1 1 auto; min-height:200px; }
+.live-map.is-top-down .battlefield-map .battlefield-map__board,
+.combat-workspace__map .live-map.is-top-down .battlefield-map__board { box-sizing:border-box; width:100%; height:auto; min-height:0; aspect-ratio:60 / 44; flex:none; }
+.live-map.is-top-down .battlefield-map__geometry { max-height:none; }
+.live-map.is-top-down .battlefield-map__unit.is-compact { z-index:4; }
+.live-map.is-standard .live-map__precision-overlay { display:none; }
+@media (max-width:690px) {
+  .live-map__tools > button { flex:1 1 auto; }
+  .live-map__base-editor summary { text-align:center; }
+}
+
