@@ -69,7 +69,7 @@ function addPrecisionOverlay(map) {
   const grid = mapGridPath();
   const majorGrid = Array.from({ length: Math.ceil(BOARD_WIDTH / 5) - 1 }, (_, index) => `M${(index + 1) * 5} 0V${BOARD_HEIGHT}`).concat(Array.from({ length: Math.ceil(BOARD_HEIGHT / 5) - 1 }, (_, index) => `M0 ${(index + 1) * 5}H${BOARD_WIDTH}`)).join('');
   const overlay = `<svg class="live-map__precision-overlay" data-live-map-precision viewBox="0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}" preserveAspectRatio="none" aria-label="One inch battlefield grid and model bases">
-    <path class="live-map__precision-grid" data-live-map-grid d="${grid}" fill="none" /><path class="live-map__precision-major-grid" data-live-map-major-grid d="${majorGrid}" fill="none" />
+    <path class="live-map__precision-grid" data-live-map-grid d="${grid}" fill="none" stroke="#d5f0ee" stroke-width=".07" stroke-opacity=".24" /><path class="live-map__precision-major-grid" data-live-map-major-grid d="${majorGrid}" fill="none" stroke="#d5f0ee" stroke-width=".07" stroke-opacity=".42" />
     <polygon class="live-map__precision-sight" data-live-map-sight points=""></polygon>
     <g data-live-map-bases></g></svg>`;
   const boardStart = map.indexOf('<div class="battlefield-map__board"');
@@ -156,7 +156,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'full-planner-live-map-v1');
+      stylesheet.searchParams.set('v', 'full-planner-live-map-v2-grid');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
