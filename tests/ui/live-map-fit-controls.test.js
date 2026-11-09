@@ -15,7 +15,9 @@ test('live battlefield uses planner presentation without overlay toolbar clutter
   assert.match(nav, /Standard map/);
   assert.doesNotMatch(nav, /Threat view|Map tools|data-map-threat-toggle|data-live-map-grid-toggle|data-live-map-bases-toggle|data-live-map-sight-toggle/);
   assert.doesNotMatch(markup, /data-live-map-threat-overlay|live-map__more-tools|data-map-threat-note/);
-  assert.match(markup, /is-planner-view/);
+  assert.match(markup, /is-top-down is-planner-view/);
+  assert.match(css, /\.live-map\.is-standard \.battlefield-map__board/);
+  assert.match(css, /\.live-map\.is-standard \.battlefield-map__objective/);
   assert.match(markup, /data-live-map-major-grid/);
   assert.match(css, /\.live-map\.is-planner-view \.battlefield-map__objective/);
   assert.match(css, /\.live-map\.is-top-down \.live-map__precision-major-grid/);
@@ -25,7 +27,7 @@ test('tabletop map fits 60 by 44 board inside its viewport without map scrolling
   assert.match(css, /\.live-map__viewport\s*\{[\s\S]*?place-items:center;[\s\S]*?overflow:hidden !important;[\s\S]*?container-type:size;/);
   assert.match(css, /\.live-map__canvas\s*\{[\s\S]*?width:min\(100cqw, 136\.363636cqh\) !important;[\s\S]*?aspect-ratio:60 \/ 44;/);
   assert.match(css, /\.battlefield-map__board\s*\{[\s\S]*?height:100% !important;[\s\S]*?aspect-ratio:60 \/ 44 !important;/);
-  assert.match(battle, /live-map\.css\?v=planner-style-live-map-v1/);
+  assert.match(battle, /live-map\.css\?v=planner-style-live-map-v2/);
   for (const [availableWidth, availableHeight] of [[820,460],[920,545],[700,490],[480,290]]) {
     const boardWidth = Math.min(availableWidth, availableHeight*60/44);
     const boardHeight = boardWidth*44/60;
