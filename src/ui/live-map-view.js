@@ -162,7 +162,7 @@ export function createLiveMapView() {
       let selectedModelIndex = liveTools(state, options, preferences).selectedModelIndex;
       drawPrecision(container, state, options, preferences, selectedModelIndex);
       const updatePressed = (selector, value) => container.querySelector(selector)?.setAttribute('aria-pressed', String(value));
-      const objectives = Array.from(container.querySelectorAll('.live-map .battlefield-map__objective'));
+      const objectives = Array.from(container.querySelectorAll?.('.live-map .battlefield-map__objective') ?? []);
       const fullObjectiveLabels = objectives.map(node => node.textContent);
       const refreshObjectiveLabels = () => objectives.forEach((node, index) => {
         node.textContent = preferences.topDown ? fullObjectiveLabels[index] : mapObjectiveMarkerLabel(fullObjectiveLabels[index]);
