@@ -60,6 +60,25 @@ test('Command phase can compare shooting-only and conditional Full Attack from c
     'planning surfaces never commit actions');
 });
 
+test('Shoot only and Full Attack both discard overkill against a wounded target', () => {
+  const state = fixture();
+  state.units[1].wounds = 1;
+  const plan = getEarlyTurnPlan(state, { unitId: 'a', playerId: 'p1' });
+  const shot = plan.attack;
+  assert.ok(shot);
+  assert.ok(shot.shootingKillProbability > 0 && shot.shootingKillProbability < 1);
+  assert.ok(Math.abs(shot.expectedShootingDamage - shot.shootingKillProbability) < 1e-9,
+    'a one-wound target loses exactly one wound on any lethal shooting outcome');
+  assert.equal(shot.fullAttack.available, true, shot.fullAttack.reason);
+  assert.ok(shot.fullAttack.expectedDamage >= shot.expectedShootingDamage - 1e-9);
+  assert.ok(shot.fullAttack.expectedDamage <= 1 + 1e-9);
+
+  const html = renderEarlyTurnPlanPanel(state, { selectedUnitId: 'a', playerId: 'p1' });
+  assert.match(html, /Overall kill chance:/);
+  assert.match(html, /expected wounds removed:/);
+  assert.doesNotMatch(html, /Conditional kill/);
+});
+
 test('Movement uses the same read-only planner without altering phase or history',()=>{
   const s=fixture('movement'), before=structuredClone(s);
   const plan=getEarlyTurnPlan(s,{unitId:'a',playerId:'p1'});
