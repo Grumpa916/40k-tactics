@@ -34,9 +34,9 @@ export function renderEarlyTurnPlanPanel(state,{selectedUnitId,playerId}={}){
         (shot
           ? '<span>'+esc(shot.targetName)+' · '+esc(shot.weaponName)+'</span>'+
             (full?.available
-              ? '<span>Conditional kill: '+percent(full.destructionProbability)+
+              ? '<span>Overall kill chance: '+percent(full.destructionProbability)+
                 ' · charge: '+percent(full.chargeProbability)+
-                ' · combined damage: '+damage(full.expectedDamage)+'</span>'+
+                ' · expected wounds removed: '+damage(full.expectedDamage)+'</span>'+
                 '<small>Expected fight-back: '+damage(full.retaliationExpectedDamage)+
                 ' damage. Unknown is not zero risk.</small>'
               : '<small>Combined estimate unknown: '+esc(full?.reason??'Insufficient information')+'</small>')
@@ -46,7 +46,7 @@ export function renderEarlyTurnPlanPanel(state,{selectedUnitId,playerId}={}){
         (shot
           ? '<span>'+esc(shot.targetName)+' · '+esc(shot.weaponName)+'</span>'+
             '<span>Single-profile baseline: '+damage(shot.expectedShootingDamage)+
-              ' damage · kill: '+percent(shot.shootingKillProbability)+'</span>'
+              ' wounds removed · kill chance: '+percent(shot.shootingKillProbability)+'</span>'
           : '<small>Unknown at current range or with saved weapon data. Moving may create an opportunity.</small>')+
       '</div>'+
       '<div class="early-turn-plan__option"><strong>C · Mission positioning</strong>'+
