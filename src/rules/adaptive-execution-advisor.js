@@ -3,6 +3,9 @@ import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getChargeOpportunity } from './tactical-charge-opportunity.js';
 import { getTargetStrategicContext } from './tactical-target-context.js';
 import { getSpatialContext } from './spatial-context.js';
+import { getFightEngagementState } from './fight-engagement-state.js';
+import { getEffectiveMovementAction } from '../engine/movement-refinement-transitions.js';
+import { getCustodesChargeAdvisorContext } from './custodes-tactical-advisor.js';
 
 // Read-only execution context: actual events are authoritative, remaining
 // estimates are recomputed on current surviving units. Never replay prior
@@ -82,12 +85,28 @@ export function getAdaptiveExecutionAdvice(state,{
     }catch{}
   }
   const blocked=chargeOutcome==='failed' || chargeOutcome==='declined';
+  const alreadyEngaged=!charge && getFightEngagementState(state).engagedUnitIds.some(id=>ids.has(id));
+  const moves=formation.map(member=>getEffectiveMovementAction(state,member.id)?.movementType).filter(Boolean);
+  const fellBack=moves.includes('fall_back');
+  const advanced=moves.includes('advance');
+  let advanceChargePermission=false;
+  if(advanced && !charge) {
+    try {
+      advanceChargePermission=getCustodesChargeAdvisorContext(state,{
+        playerId,unitId:root.id,baseProbability:0
+      }).advanceChargePermission===true;
+    }catch{}
+  }
   if(root.status==='destroyed') forecastReason='This formation has been destroyed.';
   else if(!chosenTarget) forecastReason='Select a target or record an attack to evaluate the remaining sequence.';
   else if(!targetAlive) forecastReason='The selected or recorded target is destroyed or no longer available; choose another legal target.';
   else if(fightFinished) forecastReason='Fight activation finished. Do not forecast another attack for this formation.';
   else if(fightDone) forecastReason='Fight damage already recorded. Full-activation melee will not be estimated a second time.';
   else if(blocked) forecastReason='Recorded charge '+chargeOutcome+'; no Fight is forecast from this attempt. Check any separate Engagement eligibility at the table.';
+  else if(state.phase==='fight' && !charge) forecastReason='No successful charge recorded for this formation. Use the existing Fight-phase Advisor for any separate engagement.';
+  else if(!charge && fellBack) forecastReason='Fell Back: no new Charge is projected.';
+  else if(!charge && advanced && !advanceChargePermission) forecastReason='Advanced: no recorded permission to Charge.';
+  else if(alreadyEngaged) forecastReason='Formation already engaged: no fresh Charge sequence is projected. Use the Fight-phase Advisor.';
   else if(charge && !chargeAppliesToTarget) forecastReason='This target was not declared in the recorded charge. Review actual Fight eligibility.';
   else{
     try{
@@ -101,7 +120,7 @@ export function getAdaptiveExecutionAdvice(state,{
   }
   const melee=opportunity?.projectedFight;
   const counter=opportunity?.projectedCounterFight;
-  const afterCharge=state.phase==='fight' || chargeOutcome==='successful';
+  const afterCharge=chargeOutcome==='successful';
   const remainingForecast=opportunity ? Object.freeze({
     chargeStatus:chargeOutcome,
     chargeProbability:chargeOutcome==='successful'?1:
@@ -117,7 +136,7 @@ export function getAdaptiveExecutionAdvice(state,{
     // Fight eligibility; it is NEVER additive to already-recorded Shooting.
     conditionalFight:true,
     chargeAlreadyResolved:Boolean(charge),
-    fightBasis:afterCharge?'current survivors, recorded charge considered':'if Charge succeeds and Fight is eligible'
+    fightBasis:afterCharge?'current survivors after recorded successful charge':'if Charge succeeds and Fight is eligible'
   }):null;
 
   const vitals=targetAlive?getLiveUnitVitals(state,target):null;
