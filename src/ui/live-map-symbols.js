@@ -60,9 +60,9 @@ function formatObjectiveMarkerLabels(html) {
     });
 }
 
-export function applyApprovedLiveMapSymbols(mapHtml, state) {
+export function applyApprovedLiveMapSymbols(mapHtml, state, { preserveObjectiveLabels = false } = {}) {
   let html = String(mapHtml ?? '');
   const labels = liveUnitSymbolLabels(Array.isArray(state?.units) ? state.units : []);
   for (const [unitId, symbol] of labels) html = replaceUnitMarkerText(html, unitId, symbol);
-  return formatObjectiveMarkerLabels(html);
+  return preserveObjectiveLabels ? html : formatObjectiveMarkerLabels(html);
 }

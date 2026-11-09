@@ -3,7 +3,6 @@ import { getLiveUnitPosition } from '../rules/spatial-context.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
 import { applyApprovedLiveMapSymbols } from './live-map-symbols.js';
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
-import { renderShootingCoverageOverlay } from './shooting-coverage-overlay.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
 
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -14,14 +13,14 @@ function loadMapPreferences() {
     const parsed = JSON.parse(globalThis.localStorage?.getItem(MAP_PREFERENCES_KEY) ?? 'null');
     return {
       topDown: parsed?.topDown !== false,
-      grid: parsed?.grid === true,
+      grid: true,
       bases: parsed?.bases !== false,
       sight: parsed?.sight === true,
       baseSizes: parsed?.baseSizes && typeof parsed.baseSizes === 'object' ? parsed.baseSizes : {},
       sightModels: parsed?.sightModels && typeof parsed.sightModels === 'object' ? parsed.sightModels : {}
     };
   } catch {
-    return { topDown: true, grid: false, bases: true, sight: false, baseSizes: {}, sightModels: {} };
+    return { topDown: true, grid: true, bases: true, sight: false, baseSizes: {}, sightModels: {} };
   }
 }
 
@@ -66,8 +65,9 @@ function terrainFootprints(board) {
 
 function addPrecisionOverlay(map) {
   const grid = mapGridPath();
-  const overlay = `<svg class="live-map__precision-overlay" data-live-map-precision viewBox="0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}" preserveAspectRatio="none" aria-label="Optional one inch grid, model bases and potential line of sight">
-    <path class="live-map__precision-grid" data-live-map-grid d="${grid}" fill="none" />
+  const majorGrid = Array.from({ length: Math.ceil(BOARD_WIDTH / 5) - 1 }, (_, index) => `M${(index + 1) * 5} 0V${BOARD_HEIGHT}`).concat(Array.from({ length: Math.ceil(BOARD_HEIGHT / 5) - 1 }, (_, index) => `M0 ${(index + 1) * 5}H${BOARD_WIDTH}`)).join('');
+  const overlay = `<svg class="live-map__precision-overlay" data-live-map-precision viewBox="0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}" preserveAspectRatio="none" aria-label="One inch battlefield grid and model bases">
+    <path class="live-map__precision-grid" data-live-map-grid d="${grid}" fill="none" /><path class="live-map__precision-major-grid" data-live-map-major-grid d="${majorGrid}" fill="none" />
     <polygon class="live-map__precision-sight" data-live-map-sight points=""></polygon>
     <g data-live-map-bases></g></svg>`;
   const boardStart = map.indexOf('<div class="battlefield-map__board"');
@@ -83,22 +83,10 @@ function liveTools(state, options, preferences) {
   const selectedModelId = unit ? preferences.sightModels[unit.id] : null;
   const selectedModelIndex = Math.max(0, models.findIndex(model => model.id === selectedModelId));
   const modelPicker = models.length > 1 ? `<label class="live-map__sight-model">Sight from <select data-live-map-sight-model>${models.map((model, index) => `<option value="${index}"${index === selectedModelIndex ? ' selected' : ''}>Model ${index + 1}</option>`).join('')}</select></label>` : '';
-  const controls = `<nav class="live-map__tools" aria-label="Map tools">
-    <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Top-down map' : 'Standard map'}</button>
-    ${options?.showThreatCoverage !== false ? `<button type="button" data-map-threat-toggle aria-pressed="false" title="Approximate enemy weapon coverage; verify on the table">Threat view</button>` : ""}
-    <details class="live-map__more-tools"><summary>Map tools</summary><div class="live-map__more-tools-content">
-    <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
-    <button type="button" data-live-map-bases-toggle aria-pressed="${preferences.bases}">Model bases</button>
-    <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Potential sight</button>
-    <details class="live-map__base-editor"${unit ? '' : ' data-disabled="true"'}><summary>Base size${unit ? ` · ${esc(unit.name ?? unit.id)}` : ''}</summary>
-      <div><label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}"${unit ? '' : ' disabled'}></label>
-      <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}"${unit ? '' : ' disabled'}></label>
-      <button type="button" data-live-map-base-apply${unit ? '' : ' disabled'}>Save size</button></div>
-      ${modelPicker}<small>Saved on this device for this unit type. Blank length uses a round base.</small><small aria-live="polite" data-live-map-base-status></small></details>
-    <small class="live-map__sight-caveat" data-live-map-sight-caveat${preferences.sight ? '' : ' hidden'}>Potential 2D sight only; check model height, gaps and visibility on the table.</small>
-    ${options?.showZoomControls !== false ? `<button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><span data-map-zoom-value>100%</span><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="fit">Fit</button>` : ''}
-    ${options?.showThreatCoverage !== false ? `<small data-map-threat-note hidden>Longest confirmed enemy weapon ranges · terrain shadows are approximate; verify line of sight on the table.</small>` : ""}
-    </div></details>
+  // The map planner layout is the live default. Keep only the optional view
+  // switch; the tactical overlay and map-tools menu no longer cover the board.
+  const controls = `<nav class="live-map__tools" aria-label="Map view">
+    <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
   </nav>`;
   return { controls, key, unit, models, selectedModelIndex };
 }
@@ -108,9 +96,11 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   const overlay = container.querySelector('[data-live-map-precision]');
   if (!board || !overlay) return;
   const grid = overlay.querySelector('[data-live-map-grid]');
+  const majorGrid = overlay.querySelector('[data-live-map-major-grid]');
   const bases = overlay.querySelector('[data-live-map-bases]');
   const sight = overlay.querySelector('[data-live-map-sight]');
   grid.style.display = preferences.topDown && preferences.grid ? '' : 'none';
+  if (majorGrid) majorGrid.style.display = preferences.topDown && preferences.grid ? '' : 'none';
   bases.style.display = preferences.topDown && preferences.bases ? '' : 'none';
   sight.style.display = preferences.topDown && preferences.sight ? '' : 'none';
   bases.innerHTML = (state.units ?? []).filter(unit => unit.status === 'deployed').map(unit => {
@@ -147,27 +137,19 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'shooting-coverage-1-map-first-fit1');
+      stylesheet.searchParams.set('v', 'planner-style-live-map-v1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
       const symbolsHref = symbolsStylesheet.href;
       const controls = liveTools(state, options, preferences);
-      let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, activationForUnit:id => getUnitActivationPresentation(state,id) });
-      map = applyApprovedLiveMapSymbols(map, state);
+      let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, plannerStyleObjectives:true, activationForUnit:id => getUnitActivationPresentation(state,id) });
+      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true });
       map = applyLiveMapStatusBadges(map, state);
       map = addPrecisionOverlay(map);
-      if (options?.showThreatCoverage !== false) {
-        const overlay = renderShootingCoverageOverlay(map, state, options?.perspectivePlayerId ?? state?.activePlayer ?? null);
-        if (overlay) {
-          const boardStart = map.indexOf('<div class="battlefield-map__board"');
-          const boardEnd = map.indexOf('>', boardStart);
-          if (boardStart >= 0 && boardEnd >= 0) map = map.slice(0, boardEnd + 1) + overlay + map.slice(boardEnd + 1);
-        }
-      }
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
-      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
+      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down' : ' is-standard'} is-planner-view" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
     },
     bind(container, state = renderedState, options = renderedOptions) {
       const viewport = container.querySelector('[data-live-map-viewport]');
@@ -187,7 +169,7 @@ export function createLiveMapView() {
         if (canvas?.style) canvas.style.height = preferences.topDown ? 'auto' : zoom*100+'%';
         updatePressed('button[data-live-map-style]', preferences.topDown);
         const styleButton = container.querySelector('button[data-live-map-style]');
-        if (styleButton) styleButton.textContent = preferences.topDown ? 'Top-down map' : 'Standard map';
+        if (styleButton) styleButton.textContent = preferences.topDown ? 'Standard map' : 'Top-down map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       };
       container.querySelector('[data-live-map-style]')?.addEventListener('click', () => {
@@ -236,15 +218,6 @@ export function createLiveMapView() {
         saveMapPreferences(preferences);
         if (status) status.textContent = 'Base size saved.';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
-      });
-      container.querySelector('[data-map-threat-toggle]')?.addEventListener('click', (event) => {
-        const button = event.currentTarget;
-        const overlay = container.querySelector('[data-live-map-threat-overlay]');
-        const note = container.querySelector('[data-map-threat-note]');
-        const enabled = button.getAttribute('aria-pressed') !== 'true';
-        button.setAttribute('aria-pressed', String(enabled));
-        if (overlay) overlay.style.visibility = enabled ? 'visible' : 'hidden';
-        if (note) note.hidden = !enabled;
       });
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
         const old = zoom;

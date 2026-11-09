@@ -318,3 +318,81 @@
     aspect-ratio:60 / 44 !important;
   }
 }
+
+/* Match the clean, full-board Map Planner presentation without swapping out
+   the live board's selection, drag, objective and Tactical Advisor bindings. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools {
+  display:flex !important;
+  visibility:visible !important;
+  z-index:2;
+  flex:0 0 auto;
+  margin:0 0 2px;
+  padding:0;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools button {
+  min-height:36px;
+  min-width:108px;
+  padding:4px 10px;
+  font-size:12px;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__viewport {
+  background:#0c161b;
+  border:0;
+  border-radius:8px;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__board {
+  background-color:#102027 !important;
+  background-image:none !important;
+  border:1px solid #536e78 !important;
+  border-radius:8px !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .live-map__precision-grid {
+  stroke:#d5f0ee;
+  stroke-opacity:.24;
+  stroke-width:.07;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .live-map__precision-major-grid {
+  stroke:#d5f0ee;
+  stroke-opacity:.42;
+  stroke-width:.07;
+  vector-effect:non-scaling-stroke;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-standard .live-map__precision-major-grid { display:none; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__terrain {
+  fill:rgba(135,145,132,.8);
+  stroke:#d0d7d0;
+  stroke-width:.28;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit-key {
+  display:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__objective {
+  box-sizing:border-box;
+  width:clamp(65px,8vw,98px);
+  max-width:98px;
+  height:auto;
+  min-height:34px;
+  padding:4px 6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #9da9ae;
+  border-radius:8px;
+  background:rgba(25,34,43,.79);
+  color:#eff7fa;
+  font-size:11px;
+  font-weight:650;
+  line-height:1.15;
+  white-space:normal;
+  text-wrap:balance;
+  overflow-wrap:break-word;
+  box-shadow:0 1px 4px #0008;
+  z-index:4;
+  pointer-events:auto;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__objective::before {
+  content:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__objective.is-mine { border-color:#79bbff; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__objective.is-opponent { border-color:#ff8585; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__objective.is-contested { border-color:#f6d783; }
