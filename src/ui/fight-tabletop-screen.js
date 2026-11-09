@@ -101,6 +101,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     container.innerHTML = renderCombatWorkspace({
       state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
       selectedUnitId:attackerId, selectableIds, targetIds, reminderUnitId:incomingAttackMode?targetId:attackerId, controls,
+      adaptiveContext:{targetId},
       footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}`
     });
 
