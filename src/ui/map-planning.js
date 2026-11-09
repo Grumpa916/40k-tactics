@@ -10,13 +10,15 @@ const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<'
 export const MAP_PLANNING_BUTTON = '<button type="button" data-open-map-planning>Map Planner</button>';
 
 function planningUnits(state, mode) {
-  return (state.units ?? []).filter(unit => mode === 'movement'
+  const units = (state.units ?? []).filter(unit => mode === 'movement'
     ? unit.status === 'deployed'
     : !['destroyed', 'embarked'].includes(unit.status) && !state.battlefieldMap?.declaredReserves?.[unit.id]
   ).map(unit => {
     const map = state.battlefieldMap;
     const deployment = map?.actualDeployment?.[unit.id] ?? map?.deploymentPlan?.[unit.id];
-    const position = mode === 'movement' ? getLiveUnitPosition(state, unit) : (deployment?.position ?? deployment);
+    const recordedPosition = mode === 'movement'
+      ? getLiveUnitPosition(state, unit)
+      : (deployment?.position ?? deployment ?? getLiveUnitPosition(state, unit));
     const strength = getUnitStrengthAssessment(unit);
     const count = strength.currentModels ?? strength.startingModels ??
       unit.currentStrength ?? unit.remainingStrength ?? unit.metadata?.currentModelCount ??
@@ -25,10 +27,28 @@ function planningUnits(state, mode) {
       id: unit.id, ownerId: unit.ownerId, name: unit.name ?? unit.id,
       sizeKey: unit.metadata?.datasheetId || unit.id,
       count: Math.max(1, Math.min(100, Math.trunc(Number(count)) || 1)),
-      position: isValidBattlefieldPosition(position) ? { x: position.x, y: BOARD_HEIGHT - position.y } : null,
+      position: isValidBattlefieldPosition(recordedPosition)
+        ? { x: recordedPosition.x, y: BOARD_HEIGHT - recordedPosition.y }
+        : null,
       expanded: false, models: null, angle: 0
     };
   });
+
+  const positionlessIndexByPlayer = new Map();
+  for (const unit of units) {
+    if (unit.position) continue;
+    const index = positionlessIndexByPlayer.get(unit.ownerId) ?? 0;
+    positionlessIndexByPlayer.set(unit.ownerId, index + 1);
+    const column = index % 8;
+    const row = Math.floor(index / 8);
+    unit.position = {
+      x: 3 + column * 7.7,
+      y: unit.ownerId === (state.activePlayer ?? state.players?.[0]?.id)
+        ? 2.5 + row * 2.5
+        : BOARD_HEIGHT - 2.5 - row * 2.5
+    };
+  }
+  return units;
 }
 
 function arrangeModels(unit, size) {
