@@ -26,7 +26,9 @@ export function renderAdaptiveExecutionPanel(state,{
   const outcome=advice.charge.outcome;
   const shot=advice.shooting;
   const fight=advice.fight;
-  const loading=forecast ? [
+  const loading=forecast?.chargeProbability===0 && !forecast.chargeAlreadyResolved
+    ? '<small>Charge outside estimated 2D6 reach; no charge-linked Fight is included. Other threats remain unknown.</small>'
+    : forecast ? [
     '<span>Remaining Fight, if eligible: '+number(forecast.fightExpectedDamage)+' baseline damage</span>',
     '<span>Enemy melee return: '+number(forecast.fightBackExpectedDamage)+
       ' (unknown is not safe)</span>'
@@ -41,13 +43,14 @@ export function renderAdaptiveExecutionPanel(state,{
         percent(forecast.chargeProbability)+
         (forecast.probabilityBasis==='measured'?' success':' from approximate map')
       : 'Unresolved · measure or select a target';
+  const compact=[shot.attacks?'Shoot '+shot.attacks+' · '+number(shot.actualDamage)+' dmg':'Shoot —',
+    outcome?'Charge '+outcome:'Charge —',
+    fight.attacks?'Fight '+fight.attacks+' · '+number(fight.actualDamage)+' dmg':'Fight —'].join(' | ');
   const style=new URL('./styles/adaptive-execution-panel.css',import.meta.url).href;
   return '<link rel="stylesheet" href="'+esc(style)+'">'+
-    '<details data-adaptive-execution data-view-key="adaptive-execution" class="adaptive-execution" open>'+
+    '<details data-adaptive-execution data-view-key="adaptive-execution" class="adaptive-execution">'+
       '<summary><strong>ADAPTIVE EXECUTION · '+esc(advice.unitName)+'</strong>'+
-        '<small>'+esc(state.phase==='shooting'?'Shooting results → remaining Charge/Fight':
-          state.phase==='charge'?'Measured Charge → Fight':
-            'Recorded results → Fight review')+'</small></summary>'+
+        '<small>'+esc(compact)+'</small></summary>'+
       '<div class="adaptive-execution__body">'+
         '<div class="adaptive-execution__step"><b>1 · Shooting</b>'+
           (shot.attacks?'<span>'+shot.attacks+' weapon attack(s) · '+number(shot.actualDamage)+
