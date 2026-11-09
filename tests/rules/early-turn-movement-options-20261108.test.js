@@ -83,6 +83,18 @@ test('projection enforces known Normal Move distance and legal board bounds with
   assert.equal(getMovementWhatIfPlans(s,{unitId:'a',playerId:'p1'}).available,false);
 });
 
+test('diagonal position rounding never drops a reachable Normal Move sample',()=>{
+  const s=fixture();
+  s.objectives=[{id:'diagonal',name:'Diagonal objective',position:{x:37,y:43}}];
+  const plan=getMovementWhatIfPlans(s,{unitId:'a',playerId:'p1'});
+  assert.equal(plan.available,true,plan.reason);
+  const candidate=plan.options.find(option=>option.kind==='objective');
+  assert.ok(candidate,'diagonal candidate must survive rounding-to-tenths');
+  assert.ok(candidate.travel<=6,'sampled diagonal distance must not exceed known Move');
+  assert.ok(candidate.travel>5.7);
+  assert.deepEqual(s.units[0].position,{x:4,y:22});
+});
+
 test('attached formation stays together and cannot use a faster bodyguard move',()=>{
   const s=fixture();
   const leader={id:'leader',ownerId:'p1',name:'Attached Leader',status:'deployed',
