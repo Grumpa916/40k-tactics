@@ -114,6 +114,21 @@ test('prior movement Advance may withhold combined attack but preserve independe
   assert.doesNotMatch(html,/Expected fight-back: 0\.0/);
 });
 
+test('incomplete imported loadout never blocks early-turn Command or Movement navigation',()=>{
+  const s=fixture('command');
+  s.armyRosters.p1.units[0].datasheet=null;
+  s.armyRosters.p1.units[0].equippedWeapons=[];
+  const before=structuredClone(s);
+  const plan=getEarlyTurnPlan(s,{unitId:'a',playerId:'p1'});
+  assert.equal(plan.available,true);
+  assert.equal(plan.attack,null);
+  assert.deepEqual(s,before);
+  const html=renderCombatWorkspace({state:s,phase:'command',perspectivePlayerId:'p1',
+    selectedUnitId:'a',controls:'Score your mission',mapView:{render:()=>'<div>map</div>'}});
+  assert.match(html,/Score your mission/);
+  assert.match(html,/Mission positioning/);
+});
+
 test('reuses shared sidebar only for live Command and Movement, not historical views',()=>{
   const s=fixture('command');
   const html=renderCombatWorkspace({state:s,phase:'command',perspectivePlayerId:'p1',
