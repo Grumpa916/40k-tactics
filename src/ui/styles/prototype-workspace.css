@@ -184,7 +184,7 @@
 }
 .battle-shell__player-summary time { font-variant-numeric:tabular-nums; font-weight:800; white-space:nowrap; }
 /* Command uses the same full live-map workspace sizing as Movement. */
-.battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=command] .live-map > nav { display:none; }
+/* Live map controls are available in Command as well as other phases. */
 @media (orientation:landscape) and (min-width:761px) {
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .combat-workspace__map > header,
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace[data-combat-phase=command] .combat-workspace__map > p { display:none; }
