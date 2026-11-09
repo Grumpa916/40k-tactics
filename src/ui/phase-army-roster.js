@@ -1,11 +1,12 @@
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
+import { renderRosterUnitEditor, rosterUnitEditorStylesheet } from './roster-unit-adjust.js';
 import { getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { getArmyUnitDisplayGroups, armyUnitMemberRole } from './army-unit-display-groups.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 
 export function renderPhaseArmyRoster(state, perspectivePlayerId, {
-  selectableIds = [], selectedUnitId = null, targetIds = [], sections = []
+  selectableIds = [], selectedUnitId = null, targetIds = [], sections = [], enableAdjust = state?.battle?.status === 'active'
 } = {}) {
   const myId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
   const symbols = liveUnitSymbolLabels(state.units ?? []);
@@ -24,8 +25,11 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
     const button = '<button type="button" class="phase-army-roster__unit" ' + (selection ?? details) + '><span class="phase-army-roster__token ' + (side === 'mine' ? 'is-friendly' : 'is-opponent') + '">' + esc(symbols.get(unit.id) ?? 'U') + '</span><span>' +
       (role ? '<small class="phase-army-roster__role">' + role + '</small>' : '') +
       '<strong>' + name + '</strong><small class="phase-army-roster__vitals"><span>' + esc(unit.status ?? 'Unknown status') + '</span><b aria-label="' + remaining + ' of ' + (maximum ? maximum.slice(1) : 'unknown') + ' wounds remaining">W ' + remaining + maximum + '</b></small></span></button>';
-    return selection ? '<div class="phase-army-roster__selectable">' + button +
+    const unitButton = selection ? '<div class="phase-army-roster__selectable">' + button +
       '<button type="button" class="phase-army-roster__details" ' + details + ' aria-label="Details for ' + name + '">ⓘ</button></div>' : button;
+    return '<div class="phase-army-roster__entry">' + unitButton +
+      renderRosterUnitEditor(state, unit, { selected: unit.id === selectedUnitId, enabled: enableAdjust }) +
+      '</div>';
   };
   const list = side => {
     const units = (state.units ?? []).filter(unit => side === 'mine' ? unit.ownerId === myId : unit.ownerId !== myId);
@@ -42,7 +46,7 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
     const otherHeading = sectionHtml && other.length ? '<h3 class="phase-army-roster__section-heading">Other units</h3>' : '';
     return sectionHtml + otherHeading + other.map(renderGroup).join('') || '<p>No units to show.</p>';
   };
-  return '<link rel="stylesheet" href="' + new URL('./styles/phase-army-roster.css', import.meta.url).href + '"><aside class="phase-army-roster" aria-label="Army lists"><div class="phase-army-roster__tabs"><button type="button" data-phase-army-view="mine" aria-pressed="true">My Army</button><button type="button" data-phase-army-view="opponent" aria-pressed="false">Opponent</button></div><div class="phase-army-roster__list" data-phase-army-list="mine">' + list('mine') + '</div><div class="phase-army-roster__list" data-phase-army-list="opponent" hidden>' + list('opponent') + '</div></aside>';
+  return '<link rel="stylesheet" href="' + new URL('./styles/phase-army-roster.css', import.meta.url).href + '">' + rosterUnitEditorStylesheet() + '<aside class="phase-army-roster" aria-label="Army lists"><div class="phase-army-roster__tabs"><button type="button" data-phase-army-view="mine" aria-pressed="true">My Army</button><button type="button" data-phase-army-view="opponent" aria-pressed="false">Opponent</button></div><div class="phase-army-roster__list" data-phase-army-list="mine">' + list('mine') + '</div><div class="phase-army-roster__list" data-phase-army-list="opponent" hidden>' + list('opponent') + '</div></aside>';
 }
 
 export function bindPhaseArmySelection(container, onSelect) {
