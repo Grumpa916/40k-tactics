@@ -67,9 +67,10 @@ test('Movement uses the same expandable name row, keeping acting selection and i
   const state={...fixture(),phase:'movement'};
   const html=renderMovementRosterRail(state,{playerId:'p1',perspectivePlayerId:'p1',selectedUnitId:'leader'});
   assert.match(html,/data-move-roster-unit="leader" data-roster-adjust-toggle="leader"/);
-  assert.match(html,/data-roster-adjust-toggle="enemy"/);
-  assert.match(html,/data-open-unit-details="enemy"/);
-  assert.match(html,/data-open-unit-details="lost"/);
+  const enemyHtml=renderMovementRosterRail(state,{playerId:'p1',perspectivePlayerId:'p1',rosterView:'opponent'});
+  assert.match(enemyHtml,/data-roster-adjust-toggle="enemy"/);
+  assert.match(enemyHtml,/data-open-unit-details="enemy"/);
+  assert.match(enemyHtml,/data-open-unit-details="lost"/);
   assert.doesNotMatch(html,/roster-unit-editor-leader"[^>]* open/);
   const css=readFileSync(new URL('../../src/ui/styles/roster-unit-adjust.css',import.meta.url),'utf8');
   assert.match(css,/\.roster-unit-editor:not\(\[open\]\) \{ display:none; \}/);
