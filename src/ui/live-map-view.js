@@ -149,7 +149,7 @@ export function createLiveMapView() {
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, activationForUnit:id => getUnitActivationPresentation(state,id) });
       map = applyApprovedLiveMapSymbols(map, state);
       map = applyLiveMapStatusBadges(map, state);
-      if (preferences.topDown) map = addPrecisionOverlay(map);
+      map = addPrecisionOverlay(map);
       if (options?.showThreatCoverage !== false) {
         const overlay = renderShootingCoverageOverlay(map, state, options?.perspectivePlayerId ?? state?.activePlayer ?? null);
         if (overlay) {
@@ -177,6 +177,7 @@ export function createLiveMapView() {
         container.querySelector('.live-map')?.classList.toggle('is-standard', !preferences.topDown);
         container.querySelector('.live-map')?.setAttribute('data-live-map-style', preferences.topDown ? 'top-down' : 'standard');
         container.querySelector('[data-live-map-viewport]')?.classList.toggle('is-top-down', preferences.topDown);
+        if (canvas?.style) canvas.style.height = preferences.topDown ? 'auto' : zoom*100+'%';
         updatePressed('[data-live-map-style]', preferences.topDown);
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       };
