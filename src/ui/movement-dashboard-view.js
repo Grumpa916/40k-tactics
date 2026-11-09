@@ -55,11 +55,15 @@ export function renderMovementRosterRail(state, {
     const selected = unit.id === selectedUnitId;
     const vitals = getLiveUnitVitals(state, unit);
     const wounds = (vitals.wounds ?? '—') + (Number.isFinite(vitals.startingWounds) ? '/' + vitals.startingWounds : '');
-    return `<div class="movement-roster__item"><div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : `data-open-unit-details="${esc(unit.id)}"`} aria-pressed="${selected}">
+    const editor = renderRosterUnitEditor(state, unit, {enabled:state.phase === 'movement'});
+    const toggle = editor ? ` data-roster-adjust-toggle="${esc(unit.id)}" aria-controls="roster-unit-editor-${esc(unit.id)}" aria-expanded="false"` : '';
+    const action = selectable ? `data-move-roster-unit="${esc(unit.id)}"${toggle}` :
+      editor ? toggle : `data-open-unit-details="${esc(unit.id)}"`;
+    return `<div class="movement-roster__item"><div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${action} aria-pressed="${selected}">
       <span class="movement-roster__token ${unit.ownerId === myId ? 'is-friendly' : 'is-opponent'}">${esc(symbols.get(unit.id) ?? 'U')}</span>
       <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}${isUnitBattleShocked(unit) ? ' · BS' : ''}</span><b>W ${esc(wounds)}</b></small></span>
-    </button>${selectable ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>
-    ${renderRosterUnitEditor(state, unit, {selected, enabled:state.phase === 'movement'})}</div>`;
+    </button>${selectable || editor ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>
+    ${editor}</div>`;
   };
   const rows = getArmyUnitDisplayGroups(state, units).map(group => group.attached
     ? `<section class="movement-roster__group" aria-label="${esc(group.name)}"><h3>Attached unit</h3>${group.members.map(unit => row(unit, armyUnitMemberRole(group, unit))).join('')}</section>`
