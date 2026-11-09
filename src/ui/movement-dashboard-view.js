@@ -1,4 +1,5 @@
 import { getArmyUnitReference } from './army-unit-summary.js';
+import { renderRosterUnitEditor, rosterUnitEditorStylesheet } from './roster-unit-adjust.js';
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
 import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
@@ -54,15 +55,16 @@ export function renderMovementRosterRail(state, {
     const selected = unit.id === selectedUnitId;
     const vitals = getLiveUnitVitals(state, unit);
     const wounds = (vitals.wounds ?? '—') + (Number.isFinite(vitals.startingWounds) ? '/' + vitals.startingWounds : '');
-    return `<div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : `data-open-unit-details="${esc(unit.id)}"`} aria-pressed="${selected}">
+    return `<div class="movement-roster__item"><div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${selectable ? `data-move-roster-unit="${esc(unit.id)}"` : `data-open-unit-details="${esc(unit.id)}"`} aria-pressed="${selected}">
       <span class="movement-roster__token ${unit.ownerId === myId ? 'is-friendly' : 'is-opponent'}">${esc(symbols.get(unit.id) ?? 'U')}</span>
       <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}${isUnitBattleShocked(unit) ? ' · BS' : ''}</span><b>W ${esc(wounds)}</b></small></span>
-    </button>${selectable ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>`;
+    </button>${selectable ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>
+    ${renderRosterUnitEditor(state, unit, {selected, enabled:state.phase === 'movement'})}</div>`;
   };
   const rows = getArmyUnitDisplayGroups(state, units).map(group => group.attached
     ? `<section class="movement-roster__group" aria-label="${esc(group.name)}"><h3>Attached unit</h3>${group.members.map(unit => row(unit, armyUnitMemberRole(group, unit))).join('')}</section>`
     : row(group.root)).join('');
-  return `<section class="movement-roster" aria-label="Army units">
+  return `${rosterUnitEditorStylesheet()}<section class="movement-roster" aria-label="Army units">
     <div class="movement-roster__tabs">
       <button type="button" data-movement-roster-view="mine" aria-pressed="${rosterView !== 'opponent'}">My Army</button>
       <button type="button" data-movement-roster-view="opponent" aria-pressed="${rosterView === 'opponent'}">Opponent</button>
