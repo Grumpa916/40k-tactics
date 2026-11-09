@@ -31,8 +31,8 @@ test('approved symbol transform preserves unit status badge and abbreviates obje
   assert.match(result, /data-map-objective-id="c">oE<\/button>/);
   assert.doesNotMatch(result, /data-objective-number=/);
   const numbered = applyApprovedLiveMapSymbols(html, {units}, {preserveObjectiveLabels:true,numberedMarkers:true});
-  assert.match(numbered, /data-map-unit-id="hive">1<span class="unit-activation-badge">✓<\\/span>/);
-  assert.match(numbered, /data-map-objective-id="a">MY HOME<\\/button>/);
+  assert.ok(numbered.includes('data-map-unit-id="hive">1<span class="unit-activation-badge">✓</span>'));
+  assert.ok(numbered.includes('data-map-objective-id="a">MY HOME</button>'));
   const planner = applyApprovedLiveMapSymbols(html, {units}, {preserveObjectiveLabels:true});
   assert.match(planner, /data-map-objective-id="a">MY HOME<\/button>/);
   assert.match(planner, /data-map-objective-id="c">OPP EXP<\/button>/);
