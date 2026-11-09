@@ -114,36 +114,44 @@ test('attached formation offers bodyguard corrections and separately expandable 
   assert.match(html,/data-quick-unit-id="trajann"/);
 });
 
-test('all shared live combat phases show the panel only when their current selected unit is active',()=>{
-  const s=state();
-  for(const phase of ['command','movement','charge','fight']){
-    const current={...s,phase};
+test('shared combat phases move active state edits to the left roster and free the right panel',()=>{
+  const base=state();
+  for (const phase of ['command','movement','charge','fight']) {
+    const current={...base,phase};
     const html=renderCombatWorkspace({state:current,phase,perspectivePlayerId:'p1',selectedUnitId:'p1:gants',
       controls:'Phase controls',mapView:{render:()=>'<div class="map">map</div>'}});
-    assert.match(html,/data-selected-unit-quick-adjust/);
-    assert.ok(html.indexOf('data-selected-unit-quick-adjust')<html.indexOf('combat-workspace__scroll'),
-      phase+' quick controls should be accessible without scrolling');
+    const rail=html.split('class="combat-workspace__rail"')[1].split('class="combat-workspace__map"')[0];
+    const right=html.split('class="combat-workspace__panel"')[1];
+    assert.match(rail,/data-adjust-unit-wounds="-1" data-unit-id="p1:gants"/);
+    assert.match(rail,/data-adjust-unit-wounds="1" data-unit-id="p1:gants"/);
+    assert.match(rail,/data-toggle-live-battle-shock data-unit-id="p1:gants"/);
+    assert.match(rail,/data-record-casualty/,'casualty tracking stays accessible');
+    assert.match(rail,/class="roster-unit-editor"[^>]*open/);
+    assert.doesNotMatch(right,/data-selected-unit-quick-adjust|data-adjust-unit-wounds|data-toggle-live-battle-shock/,
+      phase+' should have no right-side quick adjust');
   }
-  const historical={...s,phase:'movement'};
-  assert.doesNotMatch(renderCombatWorkspace({state:historical,phase:'fight',perspectivePlayerId:'p1',
-    selectedUnitId:'p1:gants',controls:'Historical view',mapView:{render:()=>'<div>map</div>'}}),
-    /data-selected-unit-quick-adjust/,'historical phase views must not expose editing actions');
-  assert.equal(renderSelectedUnitQuickAdjust({...s,battle:{status:'deployment'}},'p1:gants'),'');
-  assert.equal(renderSelectedUnitQuickAdjust(s,'missing'),'');
-  assert.equal(renderSelectedUnitQuickAdjust(s,null),'');
+  const historical={...base,phase:'movement'};
+  const html=renderCombatWorkspace({state:historical,phase:'fight',perspectivePlayerId:'p1',
+    selectedUnitId:'p1:gants',controls:'Historical view',mapView:{render:()=>'<div>map</div>'}});
+  assert.doesNotMatch(html,/data-adjust-unit-wounds|data-toggle-live-battle-shock|data-selected-unit-quick-adjust/,
+    'historical phase views cannot edit unit state');
+  assert.equal(renderSelectedUnitQuickAdjust({...base,battle:{status:'deployment'}},'p1:gants'),'');
+  assert.equal(renderSelectedUnitQuickAdjust(base,'missing'),'');
+  assert.equal(renderSelectedUnitQuickAdjust(base,null),'');
 });
 
-test('Shooting places quick adjustment above the scrollable Advisor without committing a shot',()=>{
+test('Shooting uses the shared roster adjustment commands rather than the right panel',()=>{
   const source=fs.readFileSync(new URL('../../src/ui/shooting-screen.js',import.meta.url),'utf8');
-  assert.match(source,/renderSelectedUnitQuickAdjust\(state, activeUnitId\)/);
-  const quick=source.indexOf('renderSelectedUnitQuickAdjust(state, activeUnitId)');
-  const scroll=source.indexOf('<div class="shoot-tabletop__control-scroll">');
-  assert.ok(quick<scroll);
+  assert.match(source,/renderPhaseArmyRoster\(state, perspectivePlayerId,/);
+  assert.match(source,/enableAdjust:state\.phase === 'shooting'/);
+  assert.doesNotMatch(source,/renderSelectedUnitQuickAdjust\(state, activeUnitId\)/);
+  const combat=fs.readFileSync(new URL('../../src/ui/combat-workspace.js',import.meta.url),'utf8');
+  assert.doesNotMatch(combat,/renderSelectedUnitQuickAdjust/);
   const component=fs.readFileSync(new URL('../../src/ui/selected-unit-quick-adjust.js',import.meta.url),'utf8');
   assert.doesNotMatch(component,/data-live-map-reposition|>Reposition</,
-    'quick adjust must not restore a redundant position control');
+    'state edits must not duplicate map positioning controls');
   assert.doesNotMatch(component,/session\.dispatch|activateShootingUnit|resolveShootingAttack/);
   const shell=fs.readFileSync(new URL('../../src/ui/battle-demo.js',import.meta.url),'utf8');
   assert.match(shell,/bindLiveCasualtyControls\(root, \{ session \}\)/,
-    'new buttons must use the existing global correction controller');
+    'roster buttons must use existing global correction controller');
 });

@@ -9,7 +9,7 @@ const state = {
   activePlayer:'p1', turn:1, phase:'movement', history:[], objectives:[],
   players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
   units:[
-    {id:'u1',ownerId:'p1',name:'Shield Captain',status:'deployed',profile:{characteristics:{movement:'6"',toughness:6,save:'2+',wounds:6,objectiveControl:1}}},
+    {id:'u1',ownerId:'p1',name:'Shield Captain',status:'deployed',wounds:6,startingWounds:6,profile:{characteristics:{movement:'6"',toughness:6,save:'2+',wounds:6,objectiveControl:1}}},
     {id:'u2',ownerId:'p1',name:'Custodian Guard',status:'reserves'},
     {id:'e1',ownerId:'p2',name:'Enemy Unit',status:'deployed'}
   ]
@@ -31,6 +31,11 @@ test('Movement roster rail provides My Army and Opponent views with compact unit
   assert.match(html, /Custodian Guard/);
   assert.match(html, /RESERVES/);
   assert.match(html, /movement-roster__token/);
+  assert.match(html, /roster-unit-editor-u1" open/);
+  assert.match(html, /data-toggle-live-battle-shock data-unit-id="u1"/);
+  assert.match(html, /data-adjust-unit-wounds="-1" data-unit-id="u1"/);
+  const opponent = renderMovementRosterRail(state,{playerId:'p1',perspectivePlayerId:'p1',rosterView:'opponent'});
+  assert.match(opponent, /data-toggle-live-battle-shock data-unit-id="e1"/);
 });
 
 test('selected-unit Movement card colors its token by army perspective and shows the approved M T SV W OC strip', () => {

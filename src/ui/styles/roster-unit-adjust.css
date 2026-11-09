@@ -1,0 +1,25 @@
+/* Compact live state controls inside the independently scrollable army list. */
+.roster-unit-editor { margin:0 0 5px; border:1px solid #384f59; border-radius:7px; background:#15252c; min-width:0; }
+.roster-unit-editor > summary { cursor:pointer; min-height:30px; display:flex; align-items:center; padding:4px 8px; font-size:10px; font-weight:700; color:#b6d5da; user-select:none; touch-action:manipulation; }
+.roster-unit-editor[open] > summary { border-bottom:1px solid #405b61; color:#c4e99b; }
+.roster-unit-editor__body { padding:6px; min-width:0; }
+.roster-unit-editor .unit-quick-adjust__unit { display:grid; gap:6px; font-size:11px; }
+.roster-unit-editor .unit-quick-adjust__metric { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px; align-items:center; min-width:0; }
+.roster-unit-editor .unit-quick-adjust__metric > span { font-size:10px; min-width:0; }
+.roster-unit-editor .unit-quick-adjust__metric > strong { font-size:11px; min-width:0; text-align:right; font-variant-numeric:tabular-nums; }
+.roster-unit-editor .unit-quick-adjust__buttons { grid-column:1/-1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
+.roster-unit-editor .unit-quick-adjust__buttons > button { min-width:0; width:100%; font-size:18px!important; font-weight:800; min-height:44px!important; }
+.roster-unit-editor button { color:#eaf2f5; background:#283e38; border:1px solid #607d7b; border-radius:7px; cursor:pointer; }
+.roster-unit-editor button[disabled] { opacity:.35; }
+.roster-unit-editor .unit-quick-adjust__actions { display:block; }
+.roster-unit-editor .unit-quick-adjust__actions > button { width:100%; min-height:44px!important; padding:4px!important; white-space:normal; font-size:11px!important; }
+.roster-unit-editor [aria-pressed=true] { border-color:#d9b76a!important; background:#4a3e27!important; color:#ffe0a3; }
+.roster-unit-editor [data-record-casualty], .roster-unit-editor [data-undo-casualty] { grid-column:1/-1; width:100%; min-height:38px!important; padding:4px!important; font-size:10px!important; }
+.roster-unit-editor .unit-quick-adjust__casualty-picker { grid-column:1/-1; min-width:0; }
+.roster-unit-editor .unit-quick-adjust__casualty-picker > summary { min-height:38px; font-size:10px; padding:5px 2px; cursor:pointer; }
+.roster-unit-editor .unit-quick-adjust__picker-body { display:grid; gap:6px; min-width:0; }
+.roster-unit-editor .unit-quick-adjust__picker-body label { display:grid; min-width:0; font-size:10px; gap:3px; }
+.roster-unit-editor select { width:100%; min-width:0; min-height:40px; color:inherit; background:#172329; }
+.roster-unit-editor .unit-quick-adjust__message, .roster-unit-editor [data-casualty-message] { display:block; min-width:0; color:#f7d0ab; overflow-wrap:anywhere; font-size:10px; }
+.roster-unit-editor > summary:focus-visible, .roster-unit-editor button:focus-visible { outline:2px solid #c4e99b; outline-offset:1px; }
+.phase-army-roster__entry, .movement-roster__item { min-width:0; margin:0 0 4px; }
