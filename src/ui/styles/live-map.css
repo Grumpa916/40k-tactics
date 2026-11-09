@@ -300,7 +300,7 @@
     display:block !important;
     flex:none !important;
     box-sizing:border-box;
-    width:min(100cqw, calc(100cqh * 60 / 44)) !important;
+    width:min(100cqw, 136.363636cqh) !important;
     height:auto !important;
     min-width:0 !important;
     min-height:0 !important;
