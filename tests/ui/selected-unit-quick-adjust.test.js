@@ -37,7 +37,7 @@ function state({mixed=false, phase='shooting'}={}) {
   };
 }
 
-test('selected homogeneous formation offers 44px one-tap wounds, models, Battle-shock and reposition',()=>{
+test('selected homogeneous formation offers 44px one-tap wounds, models and Battle-shock without Reposition',()=>{
   const s=state(),before=JSON.stringify(s);
   const html=renderSelectedUnitQuickAdjust(s,'p1:gants');
   assert.match(html,/data-selected-unit-quick-adjust/);
@@ -47,7 +47,8 @@ test('selected homogeneous formation offers 44px one-tap wounds, models, Battle-
   assert.match(html,/data-adjust-unit-wounds="1"/);
   assert.match(html,/data-record-casualty data-unit-id="p1:gants"/);
   assert.match(html,/data-toggle-live-battle-shock/);
-  assert.match(html,/data-live-map-reposition/);
+  assert.doesNotMatch(html,/data-live-map-reposition|>Reposition</,
+    'map dragging is the only positioning control; avoid a duplicate button');
   assert.match(html,/data-global-state-message/);
   assert.match(html,/selected-unit-quick-adjust\.css/);
   assert.doesNotMatch(html,/data-casualty-editor/,'homogeneous equipment does not need a picker');
@@ -139,6 +140,8 @@ test('Shooting places quick adjustment above the scrollable Advisor without comm
   const scroll=source.indexOf('<div class="shoot-tabletop__control-scroll">');
   assert.ok(quick<scroll);
   const component=fs.readFileSync(new URL('../../src/ui/selected-unit-quick-adjust.js',import.meta.url),'utf8');
+  assert.doesNotMatch(component,/data-live-map-reposition|>Reposition</,
+    'quick adjust must not restore a redundant position control');
   assert.doesNotMatch(component,/session\.dispatch|activateShootingUnit|resolveShootingAttack/);
   const shell=fs.readFileSync(new URL('../../src/ui/battle-demo.js',import.meta.url),'utf8');
   assert.match(shell,/bindLiveCasualtyControls\(root, \{ session \}\)/,
