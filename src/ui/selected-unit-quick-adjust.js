@@ -90,3 +90,12 @@ export function renderSelectedUnitQuickAdjust(state, selectedUnitId) {
     '<header><span>SELECTED UNIT · QUICK ADJUST</span><strong>'+esc(root.name??root.id)+'</strong></header>'+
     renderUnitControls(state,root)+extras+'</section>';
 }
+
+
+// Reuse the same verified controls inside an army-list row. The existing
+// global casualty-state binder handles wounds, model losses and Battle-shock.
+export function renderRosterUnitQuickAdjust(state, unit) {
+  if (!unit || state?.battle?.status !== 'active' ||
+      !['deployed','reserves'].includes(unit.status)) return '';
+  return renderUnitControls(state, unit);
+}
