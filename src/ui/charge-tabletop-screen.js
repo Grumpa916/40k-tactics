@@ -151,6 +151,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
       interactivePlayerId:state.phase === 'charge' ? activePlayerId : null,
       selectedUnitId, selectableIds, targetIds:[...targetIds], controls, topControls,
+      adaptiveContext:{ targetId:[...targetIds][0] ?? null, measuredDistance:distances.get([...targetIds][0]) ?? null },
       footer:`${renderActionReceipt(session, { compact:true })}${resultControls}<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
     });
 

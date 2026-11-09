@@ -1,0 +1,15 @@
+/* Compact read-only progress panel; existing combat phase footer and map retain their layout. */
+.adaptive-execution{margin:7px 0 10px;border:1px solid #577a66;border-radius:9px;overflow:hidden;background:#1b3028;color:#eff5ed;font-size:12px}
+.adaptive-execution>summary{display:flex;flex-direction:column;gap:4px;cursor:pointer;min-height:44px;padding:10px;background:#233c2e}
+.adaptive-execution>summary strong{font-size:12px;letter-spacing:.025em}
+.adaptive-execution>summary small{font-size:11px;color:#c7d8cc}
+.adaptive-execution__body{display:grid;gap:7px;padding:9px}
+.adaptive-execution__step{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0;border-bottom:1px solid #415649}
+.adaptive-execution__step b{color:#cbe7ba}
+.adaptive-execution__step span,.adaptive-execution__step small{font-size:11px;line-height:1.4;color:#e6eee6}
+.adaptive-execution__remaining{display:grid;gap:5px;padding:9px;border:1px solid #56705c;border-radius:6px;background:#142820}
+.adaptive-execution__remaining strong{color:#e2efd9}
+.adaptive-execution__remaining span,.adaptive-execution__remaining small{font-size:11px;line-height:1.4;color:#d5e2d5}
+.adaptive-execution__scoring{margin:0;padding:5px 8px;border-left:2px solid #abc59e;font-size:11px;line-height:1.4}
+.adaptive-execution__note{border-top:1px solid #496153;padding-top:7px;font-size:10px;line-height:1.35;color:#bcd0c0}
+.adaptive-execution>summary:focus-visible{outline:3px solid #d7e9b7;outline-offset:-3px}

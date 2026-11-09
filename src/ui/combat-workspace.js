@@ -3,6 +3,7 @@ import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-rost
 import { createLiveMapView } from './live-map-view.js';
 import { renderSelectedUnitQuickAdjust } from './selected-unit-quick-adjust.js';
 import { renderEarlyTurnPlanPanel } from './early-turn-plan-panel.js';
+import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 import { getCombatFormationRoot, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 export { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
@@ -50,7 +51,7 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
 
 // Each phase owns its selection and command handling. Use the shared reference
 // roster unless the phase supplies its own selection rail.
-export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, mapView = createLiveMapView() }) {
+export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, adaptiveContext = {}, mapView = createLiveMapView() }) {
   leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId, {
     selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds
   });
@@ -61,7 +62,7 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
       ${state.phase === phase ? renderSelectedUnitQuickAdjust(state, selectedUnitId) : ''}
-      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, livePanel:true}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${state.phase === phase ? renderEarlyTurnPlanPanel(state, {selectedUnitId, playerId:perspectivePlayerId}) : ''}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, includeStratagems:false, livePanel:true}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
+      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, livePanel:true}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${state.phase === phase ? renderEarlyTurnPlanPanel(state, {selectedUnitId, playerId:perspectivePlayerId}) : ''}${state.phase === phase ? renderAdaptiveExecutionPanel(state, {selectedUnitId, playerId:perspectivePlayerId, ...adaptiveContext}) : ''}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, includeStratagems:false, livePanel:true}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
     </section></main>`;
 }
 
