@@ -88,3 +88,44 @@
   min-height:0 !important;
   flex:none !important;
 }
+
+
+/* Give Safari a definite board ratio without allowing the scroll viewport to
+   grow beyond the live workspace. If the board is taller than the panel, the
+   viewport scrolls so its bottom edge and unit markers remain reachable. */
+.live-map .live-map__viewport {
+  display:flex !important;
+  flex-direction:column;
+  flex:1 1 0 !important;
+  min-height:0 !important;
+  max-height:100%;
+  overflow:auto !important;
+}
+.live-map .live-map__canvas {
+  min-width:100%;
+  min-height:100% !important;
+  height:auto !important;
+  flex:0 0 auto !important;
+}
+.live-map .battlefield-map {
+  display:flex !important;
+  flex-direction:column;
+  width:100%;
+  height:auto !important;
+  min-height:100% !important;
+  flex:0 0 auto !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__board,
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .combat-workspace .live-map .battlefield-map__board {
+  display:block !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  aspect-ratio:60 / 44 !important;
+  flex:none !important;
+  background-color:#17221f !important;
+  background-image:linear-gradient(to right,rgba(220,235,230,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(220,235,230,.16) 1px,transparent 1px) !important;
+  background-size:10% 9.0909% !important;
+}
