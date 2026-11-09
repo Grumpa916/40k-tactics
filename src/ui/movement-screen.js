@@ -2,6 +2,7 @@ import { renderMapReserveTray, renderVenatariIngressTray, tappedMapPosition } fr
 import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
+import { MAP_PLANNING_BUTTON, openMapPlanning } from './map-planning.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { renderMovementAdvisor } from './movement-advisor.js';
@@ -211,7 +212,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedCard = renderMovementSelectedUnitCard(state, selectedAny, {action:selectedAction, refinement:selectedRefinement, perspectivePlayerId:perspectivePlayerId ?? state?.players?.[0]?.id ?? playerId});
       const controls = `<div class="movement-screen movement-screen--dashboard">${selectedCard}${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details class="movement-advisor-drawer"><summary>Tactical Advisor</summary>${advisor}</details></div>`;
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        leftRail,mapExtra:reserveTray,controls,footer:''});
+        leftRail,mapExtra:MAP_PLANNING_BUTTON + reserveTray,controls,footer:''});
       mapView.bind(container);
       restoreView();
       return;
@@ -221,6 +222,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       <p class="move-note">Map positions are approximate and may be adjusted repeatedly. The app does not enforce movement distance. Each unit still records one gameplay movement choice per turn.</p>
       <section class="battlefield-map-section">
         <div class="move-heading"><h2>Live Battlefield</h2><span>Recorded positions · both armies</span></div>
+        ${MAP_PLANNING_BUTTON}
         ${renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId, interactivePlayerId: playerId, selectedUnitId })}
         ${reserveTray}
         <p>Drag an active player’s marker to place or refine its approximate position. If no movement choice has been recorded yet, the first drag records a Normal Move. Later drags only refine map position.</p>
@@ -314,6 +316,11 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   function handleClick(event) {
+    const planningButton = event.target?.closest?.('[data-open-map-planning]');
+    if (planningButton) {
+      openMapPlanning(planningButton, { session, mode: 'movement', selectedUnitId, perspectivePlayerId });
+      return;
+    }
     const battleShock = event.target?.closest?.('[data-movement-battle-shock]');
     if (battleShock) {
       const unit = session.getState().units.find(item => item.id === battleShock.getAttribute('data-movement-battle-shock'));
@@ -460,4 +467,5 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     }
   };
 }
+
 

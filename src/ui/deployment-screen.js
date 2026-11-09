@@ -1,6 +1,7 @@
 import { attachmentParent } from '../rules/event-preparation.js';
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
+import { MAP_PLANNING_BUTTON, openMapPlanning } from './map-planning.js';
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -79,7 +80,7 @@ export function createDeploymentScreen(container, {
     ).join("");
 
     let markup = '<main class="deployment-screen">' +
-      '<section class="battlefield-map-section"><h2>Deployment Map</h2>' +
+      '<section class="battlefield-map-section"><h2>Deployment Map</h2>' + MAP_PLANNING_BUTTON +
       renderBattlefieldMap(state, { mode: "deployment", perspectivePlayerId: perspectivePlayerId ?? state.activePlayer ?? players[0]?.id, selectedUnitId }) +
       '<p>Drag any unit marker to its actual starting location. Tap a marker to select it, then tap an empty point as a fallback. Dashed markers are awaiting placement; planned positions are not copied automatically.</p>' +
       '<style>.deployment-reserve-tray__unit{display:inline-flex;flex-direction:column;gap:5px;min-height:44px;margin:4px;padding:9px 12px;border:1px solid #8b6aa8;border-radius:7px;background:#21182b;color:#fff;text-align:left;font-weight:700;cursor:pointer}.deployment-reserve-tray__unit small{font-size:11px;font-weight:400}</style><section class="deployment-reserve-tray" aria-label="Units declared in reserves"><h3>Reserves</h3>' +
@@ -110,7 +111,7 @@ export function createDeploymentScreen(container, {
         .replace('Tap to select, then tap the map to deploy', 'Off battlefield — use a rule-authorised reserve change below')
         .replace('No units declared in reserves. Select a unit above and use “Declare selected unit in reserves”.', 'No units declared in reserves.');
     }
-    if (mapOnly) markup = '<section class="combined-deployment-map"><h2>Deployment map</h2><p>Drag either army’s units from the staging edges. Planned positions are retained. Dashed markers still need placement.</p>' + renderBattlefieldMap(state,{mode:'deployment',perspectivePlayerId:perspectivePlayerId ?? players[0]?.id,selectedUnitId,compactMarkers:true,showMeasurements:false}) + '</section>';
+    if (mapOnly) markup = '<section class="combined-deployment-map"><h2>Deployment map</h2>' + MAP_PLANNING_BUTTON + '<p>Drag either army’s units from the staging edges. Planned positions are retained. Dashed markers still need placement.</p>' + renderBattlefieldMap(state,{mode:'deployment',perspectivePlayerId:perspectivePlayerId ?? players[0]?.id,selectedUnitId,compactMarkers:true,showMeasurements:false}) + '</section>';
     container.innerHTML = markup;
   }
 
@@ -160,6 +161,11 @@ export function createDeploymentScreen(container, {
   }
 
   function handleClick(event) {
+    const planningButton = event.target?.closest?.('[data-open-map-planning]');
+    if (planningButton) {
+      openMapPlanning(planningButton, { session, mode: 'deployment', selectedUnitId, perspectivePlayerId });
+      return;
+    }
     const reserveToken = event.target?.closest?.("[data-reserve-select]");
     if (reserveToken) {
       const reserveUnitId = reserveToken.getAttribute("data-reserve-select");
@@ -289,4 +295,5 @@ export function createDeploymentScreen(container, {
     }
   };
 }
+
 
