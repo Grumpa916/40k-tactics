@@ -35,8 +35,11 @@ export function renderAdaptiveExecutionPanel(state,{
     ? (outcome==='successful'?'Successful (recorded)':outcome==='failed'?'Failed (recorded)':'Declined (recorded)')+
       (advice.charge.measuredDistance!=null?' · '+esc(advice.charge.measuredDistance)+'″ measured':'')
     : forecast
-      ? 'Unresolved · '+percent(forecast.chargeProbability)+
-        (forecast.probabilityBasis==='measured'?' from measured distance':' from approximate map')
+      ? 'Unresolved · '+
+        (forecast.probabilityBasis==='measured' && forecast.measuredDistance!=null
+          ? esc(forecast.measuredDistance)+'″ measured · ':'')+
+        percent(forecast.chargeProbability)+
+        (forecast.probabilityBasis==='measured'?' success':' from approximate map')
       : 'Unresolved · measure or select a target';
   const style=new URL('./styles/adaptive-execution-panel.css',import.meta.url).href;
   return '<link rel="stylesheet" href="'+esc(style)+'">'+
