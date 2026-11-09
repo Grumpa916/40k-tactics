@@ -137,8 +137,11 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
 export function createLiveMapView() {
   let zoom = 1, left = 0, top = 0;
   const preferences = loadMapPreferences();
+  let renderedState = {}, renderedOptions = {};
   return {
     render(state, options) {
+      renderedState = state ?? {};
+      renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
       stylesheet.searchParams.set('v', 'topdown-live-map-1');
       const href = stylesheet.href;
@@ -162,7 +165,7 @@ export function createLiveMapView() {
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
       return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down' : ' is-standard'}" data-live-map-style="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
     },
-    bind(container, state = {}, options = {}) {
+    bind(container, state = renderedState, options = renderedOptions) {
       const viewport = container.querySelector('[data-live-map-viewport]');
       const canvas = container.querySelector('[data-live-map-canvas]');
       if (viewport) {
