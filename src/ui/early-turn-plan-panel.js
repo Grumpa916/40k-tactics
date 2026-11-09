@@ -35,9 +35,11 @@ function renderMovementWhatIf(whatIf) {
         '<span>Best sampled ranged target: '+esc(shot.targetName)+'</span>'+
         '<span>Shoot only: '+damage(shot.expectedShootingDamage)+' wounds · kill '+percent(shot.shootingKillProbability)+'</span>'+
         (full?.available?
-          '<span>Full Attack: kill '+percent(full.destructionProbability)+
-          ' · charge '+percent(full.chargeProbability)+
-          ' · retaliation '+damage(full.retaliationExpectedDamage)+'</span>':
+          (full.chargeProbability>0?
+            '<span>Conditional Full Attack: kill '+percent(full.destructionProbability)+
+              ' · charge '+percent(full.chargeProbability)+
+              ' · melee fight-back '+damage(full.retaliationExpectedDamage)+'</span>':
+            '<small>Charge outside estimated 2D6 reach from this position; combined result is shooting-only. Other enemy attacks are not estimated.</small>'):
           '<small>Full Attack unavailable: '+esc(full?.reason??'Incomplete data')+'</small>'):
         '<small>Nothing currently in comparable sampled shooting range from this position.</small>')+
     '</div>';
