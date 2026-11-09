@@ -85,10 +85,17 @@ export function projectNormalMoveForPlanning(state,{unitId,destination}={}) {
 function projectedDestination(origin,goal,speed,stopAt) {
   if (!valid(goal)) return null;
   const d=distance(origin,goal);
-  const travel=Math.min(speed,Math.max(0,d-stopAt));
+  let travel=Math.min(speed,Math.max(0,d-stopAt));
   if (d<1e-7||travel<0.05) return null;
-  return {x:rounded(origin.x+(goal.x-origin.x)*travel/d),
-    y:rounded(origin.y+(goal.y-origin.y)*travel/d)};
+  // Quantizing diagonal coordinates to 0.1" can push the rounded point just
+  // beyond the actual Move. Back off a fraction rather than offering an
+  // overlong move or dropping the what-if candidate.
+  for(let attempt=0;attempt<4 && travel>=0.05;attempt++,travel-=0.1){
+    const candidate={x:rounded(origin.x+(goal.x-origin.x)*travel/d),
+      y:rounded(origin.y+(goal.y-origin.y)*travel/d)};
+    if (distance(origin,candidate)<=speed+1e-6) return candidate;
+  }
+  return null;
 }
 
 function nearestGoal(state, origin, collection){
