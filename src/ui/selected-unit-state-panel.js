@@ -36,7 +36,7 @@ function renderMember(state, unit) {
     (Number.isFinite(vitals.models) ? esc(vitals.models) : '—') + ' models</span><span>' +
     (Number.isFinite(vitals.wounds) ? esc(vitals.wounds) : '—') + ' / ' +
     (Number.isFinite(currentWoundCap) ? esc(currentWoundCap) : '—') +
-    ' W</span><span>OC ' + (shocked ? '0 (Battle-shocked)' : oc == null ? '—' : esc(oc * (Number.isFinite(vitals.models) ? vitals.models : 1))) + '</span></div>' +
+    ' W</span><span>OC ' + (shocked ? '0 (Battle-shocked)' : oc == null || !Number.isFinite(vitals.models) ? '—' : esc(oc * vitals.models)) + '</span></div>' +
     casualty.controls + weaponMarkup + '</section>';
 }
 
