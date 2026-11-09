@@ -40,11 +40,11 @@ function mapGridPath() {
   return lines.join('');
 }
 
-function unitModelsForMap(unit) {
+function unitModelsForMap(unit, state = null) {
   const models = Array.isArray(unit?.models) ? unit.models.filter(model =>
     Number.isFinite(model?.position?.x) && Number.isFinite(model?.position?.y)) : [];
   if (models.length) return models;
-  const position = unit?.position;
+  const position = unit?.position ?? (state && unit ? getLiveUnitPosition(state, unit) : null);
   return Number.isFinite(position?.x) && Number.isFinite(position?.y)
     ? [{ id: unit.id, position }]
     : [];
@@ -79,8 +79,8 @@ function liveTools(state, options, preferences) {
   const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
   const key = sizeKey(unit);
   const dimensions = key ? preferences.baseSizes[key] : null;
-  const models = unit ? unitModelsForMap(unit) : [];
-  const selectedModelId = key ? preferences.sightModels[key] : null;
+  const models = unit ? unitModelsForMap(unit, state) : [];
+  const selectedModelId = unit ? preferences.sightModels[unit.id] : null;
   const selectedModelIndex = Math.max(0, models.findIndex(model => model.id === selectedModelId));
   const modelPicker = models.length > 1 ? `<label class="live-map__sight-model">Sight from <select data-live-map-sight-model>${models.map((model, index) => `<option value="${index}"${index === selectedModelIndex ? ' selected' : ''}>Model ${index + 1}</option>`).join('')}</select></label>` : '';
   const controls = `<nav class="live-map__tools" aria-label="Map tools">
@@ -88,11 +88,12 @@ function liveTools(state, options, preferences) {
     <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
     <button type="button" data-live-map-bases-toggle aria-pressed="${preferences.bases}">Model bases</button>
     <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Potential sight</button>
-    ${preferences.topDown ? `<details class="live-map__base-editor"${unit ? '' : ' data-disabled="true"'}><summary>Base size${unit ? ` · ${esc(unit.name ?? unit.id)}` : ''}</summary>
+    <details class="live-map__base-editor"${unit ? '' : ' data-disabled="true"'}><summary>Base size${unit ? ` · ${esc(unit.name ?? unit.id)}` : ''}</summary>
       <div><label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}"${unit ? '' : ' disabled'}></label>
       <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}"${unit ? '' : ' disabled'}></label>
       <button type="button" data-live-map-base-apply${unit ? '' : ' disabled'}>Save size</button></div>
-      ${modelPicker}<small>Saved on this device for this unit type. Blank length uses a round base.</small></details>` : ''}
+      ${modelPicker}<small>Saved on this device for this unit type. Blank length uses a round base.</small></details>
+    <small class="live-map__sight-caveat" data-live-map-sight-caveat${preferences.sight ? '' : ' hidden'}>Potential 2D sight only; check model height, gaps and visibility on the table.</small>
     ${options?.showZoomControls !== false ? `<button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><span data-map-zoom-value>100%</span><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="fit">Fit</button>` : ''}
     ${options?.showThreatCoverage !== false ? `<button type="button" data-map-threat-toggle aria-pressed="false">Threat view</button><small data-map-threat-note hidden>Longest confirmed enemy weapon ranges · terrain shadows are approximate; verify line of sight on the table.</small>` : ''}
   </nav>`;
@@ -112,7 +113,7 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   bases.innerHTML = (state.units ?? []).filter(unit => unit.status === 'deployed').map(unit => {
     const size = baseDimensions(preferences.baseSizes[sizeKey(unit)]?.width, preferences.baseSizes[sizeKey(unit)]?.length);
     if (!size) return '';
-    const models = unitModelsForMap(unit);
+    const models = unitModelsForMap(unit, state);
     return models.map((model, index) => {
       const position = model.position ?? getLiveUnitPosition(state, unit);
       if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return '';
@@ -124,7 +125,7 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   }).join('');
   if (!preferences.sight || !preferences.topDown) { sight.setAttribute('points', ''); return; }
   const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
-  const models = unit ? unitModelsForMap(unit) : [];
+  const models = unit ? unitModelsForMap(unit, state) : [];
   const model = models[selectedModelIndex] ?? models[0];
   if (!model?.position) { sight.setAttribute('points', ''); return; }
   const footprints = terrainFootprints(board);
@@ -182,6 +183,8 @@ export function createLiveMapView() {
         container.querySelector('[data-live-map-viewport]')?.classList.toggle('is-top-down', preferences.topDown);
         if (canvas?.style) canvas.style.height = preferences.topDown ? 'auto' : zoom*100+'%';
         updatePressed('[data-live-map-style]', preferences.topDown);
+        const styleButton = container.querySelector('[data-live-map-style]');
+        if (styleButton) styleButton.textContent = preferences.topDown ? 'Top-down map' : 'Standard map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       };
       container.querySelector('[data-live-map-style]')?.addEventListener('click', () => {
@@ -202,13 +205,15 @@ export function createLiveMapView() {
       container.querySelector('[data-live-map-sight-toggle]')?.addEventListener('click', () => {
         preferences.sight = !preferences.sight; saveMapPreferences(preferences);
         updatePressed('[data-live-map-sight-toggle]', preferences.sight);
+        const caveat = container.querySelector('[data-live-map-sight-caveat]');
+        if (caveat) caveat.hidden = !preferences.sight;
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       });
       container.querySelector('[data-live-map-sight-model]')?.addEventListener('change', event => {
         selectedModelIndex = Number(event.currentTarget.value) || 0;
         const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
-        const model = unitModelsForMap(unit)[selectedModelIndex];
-        if (unit && model) preferences.sightModels[sizeKey(unit)] = model.id;
+        const model = unitModelsForMap(unit, state)[selectedModelIndex];
+        if (unit && model) preferences.sightModels[unit.id] = model.id;
         saveMapPreferences(preferences);
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       });
