@@ -14,3 +14,14 @@
 .early-turn-plan__caution{display:block;border-top:1px solid #445950;padding-top:7px}
 .early-turn-plan:focus-within{outline-offset:2px}
 .early-turn-plan>summary:focus-visible{outline:3px solid #c6e99e;outline-offset:-3px}
+
+/* Separate, collapsible what-if comparison; no change to unit marker DOM or map geometry. */
+.early-turn-plan__what-if{border:1px solid #52695f;border-radius:8px;margin:4px 0;background:#182e2a}
+.early-turn-plan__what-if>summary{cursor:pointer;min-height:44px;padding:10px;font-size:12px;font-weight:750}
+.early-turn-plan__what-if-list{display:grid;gap:6px;padding:0 7px 8px}
+.early-turn-plan__what-if-row{display:grid;gap:4px;padding:8px;border:1px solid #425c53;border-radius:6px;background:#1e2b28}
+.early-turn-plan__what-if-row strong{font-size:12px}
+.early-turn-plan__what-if-row span{font-size:11px;line-height:1.3}
+.early-turn-plan__what-if-row small,.early-turn-plan__what-if-unavailable{font-size:11px;line-height:1.35;color:#c2d1c8}
+.early-turn-plan__what-if-unavailable{margin:4px 0}
+.early-turn-plan__what-if>summary:focus-visible{outline:3px solid #c6e99e;outline-offset:-3px}
