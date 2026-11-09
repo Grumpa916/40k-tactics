@@ -100,3 +100,15 @@ test('selection wiring uses one shell-scoped controller and restores previews wi
   assert.match(chargeWrapper,/createChargeTabletopScreen\(container, \{ session, perspectivePlayerId, unitSelection \}\)/);
   assert.match(fightWrapper,/createFightTabletopScreen\(container, \{ session, perspectivePlayerId, gameData, unitSelection \}\)/);
 });
+
+
+test('selected-unit selection notifies the persistent context panel', () => {
+  const state = fixture();
+  const selection = createPhaseUnitSelection();
+  const selected = [];
+  const unsubscribe = selection.subscribe((id) => selected.push(id));
+  assert.equal(selection.select(state, 'wardens'), true);
+  selection.clear();
+  unsubscribe();
+  assert.deepEqual(selected, ['wardens', null]);
+});
