@@ -44,14 +44,22 @@ function reviewedPerModelSelectionKeys(ruleSet) {
   return keys;
 }
 
-function explicitPerModelSelections(rosterUnit, ruleSet) {
+function explicitPerModelSelections(rosterUnit, ruleSet, currentModels, activeSelections) {
   const reviewedKeys = reviewedPerModelSelectionKeys(ruleSet);
   const values = new Map();
   for (const item of rosterUnit?.equippedWeapons ?? []) {
-    const perModel = Number(item?.casualtyPerModel);
-    if (!Number.isInteger(perModel) || perModel <= 0) continue;
     const name = item?.selectionName ?? item?.name;
     const key = normalizeCasualtySelectionName(name);
+    const liveQuantity = key ? activeSelections?.[key] : null;
+    const rosterQuantity = Number(item?.quantity);
+    const explicitlyPerModel = Number(item?.casualtyPerModel);
+    // Infer one-per-model only when the live amount exactly matches every current model.
+    // Mixed or partial loadouts remain unidentified and keep their selector flow.
+    const perModel = Number.isInteger(explicitlyPerModel) && explicitlyPerModel > 0
+      ? explicitlyPerModel
+      : Number.isInteger(currentModels) && currentModels > 0 &&
+        (Number.isInteger(liveQuantity) ? liveQuantity : rosterQuantity) === currentModels ? 1 : null;
+    if (!Number.isInteger(perModel) || perModel <= 0) continue;
     if (!key || reviewedKeys.has(key)) continue;
     const current = values.get(key);
     if (!current || perModel > current.perModel) values.set(key, { name, perModel });
@@ -86,7 +94,7 @@ export function recordUnitCasualty(state, {
   // Explicit fixed-profile loadouts can declare per-model ownership even when
   // there is no reviewed selectable-wargear rule set. This keeps acceptance
   // fixtures and imported fixed profiles model-aware without guessing globally.
-  for (const item of explicitPerModelSelections(rosterUnit, ruleSet)) {
+  for (const item of explicitPerModelSelections(rosterUnit, ruleSet, casualty.currentModels, activeSelections)) {
     decrement(activeSelections, item.name, item.perModel);
     removedSelections.push(item.name);
   }
