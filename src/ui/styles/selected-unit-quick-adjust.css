@@ -1,0 +1,34 @@
+/* Compact, phase-independent corrections. Only the controls panel changes;
+   no battlefield scaling, terrain, or objective marker CSS is affected. */
+.unit-quick-adjust{flex:none;min-width:0;padding:9px 11px;border-bottom:1px solid #5e7957;background:#1b3024;color:#eef5e7;font-size:12px;max-height:40%;overflow-y:auto;overscroll-behavior:contain}
+.unit-quick-adjust *{box-sizing:border-box}
+.unit-quick-adjust header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 8px;margin-bottom:7px}
+.unit-quick-adjust header span{font-size:10px;letter-spacing:.07em;font-weight:800;color:#b0d99b}
+.unit-quick-adjust header strong{font-size:13px;line-height:1.2;overflow-wrap:anywhere}
+.unit-quick-adjust__unit{display:grid;gap:6px}
+.unit-quick-adjust__metric{display:flex;align-items:center;gap:7px;min-width:0}
+.unit-quick-adjust__metric>span{flex:1;min-width:54px}
+.unit-quick-adjust__metric>strong{font-variant-numeric:tabular-nums;min-width:50px;text-align:right;font-size:13px}
+.unit-quick-adjust__buttons{display:flex;gap:5px}
+.unit-quick-adjust button,.unit-quick-adjust select{font:inherit;color:#edf5ed;background:#283e38;border:1px solid #82988a;border-radius:8px;touch-action:manipulation;min-height:42px;padding:5px 9px}
+.unit-quick-adjust button{cursor:pointer}
+.unit-quick-adjust button[disabled]{opacity:.35;cursor:default}
+.unit-quick-adjust__buttons button{min-width:44px;font-size:17px;font-weight:800;min-height:44px}
+.unit-quick-adjust__actions{display:flex;gap:6px}
+.unit-quick-adjust__actions button{width:100%}
+.unit-quick-adjust__actions button{min-width:0;white-space:normal;line-height:1.15}
+.unit-quick-adjust [aria-pressed="true"]{border-color:#d9b76a;background:#4a3e27;color:#ffe0a3}
+.unit-quick-adjust [data-record-casualty]{border-color:#adc993}
+.unit-quick-adjust [data-undo-casualty]{font-size:11px;padding:4px 7px}
+.unit-quick-adjust__casualty-picker,.unit-quick-adjust__members{border-top:1px solid #4d6555;padding-top:4px}
+.unit-quick-adjust summary{cursor:pointer;min-height:40px;padding:9px 0;font-weight:700;list-style-position:inside}
+.unit-quick-adjust__picker-body{display:grid;gap:7px;padding:6px}
+.unit-quick-adjust__picker-body p,.unit-quick-adjust__unit>small{margin:0;color:#c6d7cc;font-size:11px}
+.unit-quick-adjust__picker-body label{display:grid;gap:4px}
+.unit-quick-adjust__picker-body select{width:100%;min-height:44px}
+.unit-quick-adjust__members{margin-top:5px}
+.unit-quick-adjust__unit.is-member{padding:7px 0;border-top:1px solid #536857}
+.unit-quick-adjust__unit h4{font-size:12px;margin:0}
+.unit-quick-adjust__message,[data-casualty-message]{font-size:11px;color:#f7d0ab}
+.unit-quick-adjust button:focus-visible,.unit-quick-adjust summary:focus-visible,.unit-quick-adjust select:focus-visible{outline:3px solid #c6e99e;outline-offset:2px}
+@media(max-width:420px){.unit-quick-adjust__metric{flex-wrap:wrap}.unit-quick-adjust__buttons{margin-left:auto}.unit-quick-adjust{max-height:34vh}}
