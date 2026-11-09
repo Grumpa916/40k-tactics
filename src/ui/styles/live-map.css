@@ -221,3 +221,100 @@
   -webkit-overflow-scrolling:touch !important;
   touch-action:pan-x pan-y;
 }
+
+/* Map-first live layout: keep the entire 60 × 44 board visible at once. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools {
+  position:relative;
+  z-index:30;
+  display:flex !important;
+  flex:0 0 auto;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:5px;
+  margin:0 0 3px;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools > button,
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__more-tools > summary {
+  min-height:40px;
+  padding:5px 9px;
+  font-size:12px;
+  white-space:nowrap;
+}
+.live-map__more-tools { position:relative; flex:0 0 auto; min-width:0; }
+.live-map__more-tools > summary { cursor:pointer; list-style:none; }
+.live-map__more-tools > summary::-webkit-details-marker { display:none; }
+.live-map__more-tools > summary::after { content:" ▾"; }
+.live-map__more-tools[open] > summary { border-color:#c6e99e; background:#354a35; }
+.live-map__more-tools-content {
+  position:absolute;
+  z-index:50;
+  right:0;
+  top:calc(100% + 5px);
+  width:min(310px,calc(100vw - 28px));
+  max-height:min(65dvh,390px);
+  overflow:auto;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  padding:8px;
+  border:1px solid #60737e;
+  border-radius:9px;
+  background:#172329;
+  box-shadow:0 12px 32px #0009;
+  -webkit-overflow-scrolling:touch;
+}
+.live-map__more-tools-content > button { min-width:0; }
+.live-map__more-tools-content > .live-map__base-editor,
+.live-map__more-tools-content > small,
+.live-map__more-tools-content > .live-map__sight-model { grid-column:1/-1; }
+.live-map__more-tools-content > .live-map__base-editor[open] { flex:auto; }
+.live-map__more-tools-content > [data-map-zoom-value] { align-self:center; text-align:center; }
+
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map {
+    flex:1 1 0 !important;
+    height:100% !important;
+    min-height:0 !important;
+    gap:2px;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map {
+    display:flex !important;
+    flex:1 1 0 !important;
+    flex-direction:column !important;
+    height:100% !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__viewport {
+    display:grid !important;
+    place-items:center;
+    flex:1 1 0 !important;
+    height:0 !important;
+    width:100% !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+    container-type:size;
+    touch-action:none;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__canvas {
+    display:block !important;
+    flex:none !important;
+    box-sizing:border-box;
+    width:min(100cqw, calc(100cqh * 60 / 44)) !important;
+    height:auto !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    aspect-ratio:60 / 44;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__board {
+    box-sizing:border-box !important;
+    display:block !important;
+    position:relative !important;
+    flex:none !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    aspect-ratio:60 / 44 !important;
+  }
+}
