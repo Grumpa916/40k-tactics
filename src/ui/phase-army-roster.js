@@ -22,14 +22,16 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
       ? getCombatFormationRootId(state, unit) : unit.id;
     const selection = selectable.has(formationId)
       ? 'data-select-phase-unit="' + id + '" value="' + esc(formationId) + '" aria-pressed="' + (formationId === selectedUnitId || targets.has(formationId)) + '"' : null;
-    const button = '<button type="button" class="phase-army-roster__unit" ' + (selection ?? details) + '><span class="phase-army-roster__token ' + (side === 'mine' ? 'is-friendly' : 'is-opponent') + '">' + esc(symbols.get(unit.id) ?? 'U') + '</span><span>' +
+    const editor = renderRosterUnitEditor(state, unit, { enabled: enableAdjust });
+    const toggle = editor ? ' data-roster-adjust-toggle="' + id +
+      '" aria-controls="roster-unit-editor-' + id + '" aria-expanded="false"' : '';
+    const buttonAction = selection ? selection + toggle : editor ? toggle : details;
+    const button = '<button type="button" class="phase-army-roster__unit" ' + buttonAction + '><span class="phase-army-roster__token ' + (side === 'mine' ? 'is-friendly' : 'is-opponent') + '">' + esc(symbols.get(unit.id) ?? 'U') + '</span><span>' +
       (role ? '<small class="phase-army-roster__role">' + role + '</small>' : '') +
       '<strong>' + name + '</strong><small class="phase-army-roster__vitals"><span>' + esc(unit.status ?? 'Unknown status') + '</span><b aria-label="' + remaining + ' of ' + (maximum ? maximum.slice(1) : 'unknown') + ' wounds remaining">W ' + remaining + maximum + '</b></small></span></button>';
-    const unitButton = selection ? '<div class="phase-army-roster__selectable">' + button +
+    const unitButton = selection || editor ? '<div class="phase-army-roster__selectable">' + button +
       '<button type="button" class="phase-army-roster__details" ' + details + ' aria-label="Details for ' + name + '">ⓘ</button></div>' : button;
-    return '<div class="phase-army-roster__entry">' + unitButton +
-      renderRosterUnitEditor(state, unit, { selected: unit.id === selectedUnitId, enabled: enableAdjust }) +
-      '</div>';
+    return '<div class="phase-army-roster__entry">' + unitButton + editor + '</div>';
   };
   const list = side => {
     const units = (state.units ?? []).filter(unit => side === 'mine' ? unit.ownerId === myId : unit.ownerId !== myId);
