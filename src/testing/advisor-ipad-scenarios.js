@@ -141,7 +141,7 @@ export function applyAdvisorIpadAction(state,action,{distance=7,position=null}={
       throw new Error('Charge already recorded. Reset the scenario to try a different outcome.');
     if(!Number.isFinite(distance)||distance<2||distance>12)
       throw new Error('Choose a measured distance from 2 to 12 inches.');
-    const outcome=action.slice('charge-'.length);
+    const outcome=action==='charge-success'?'successful':action.slice('charge-'.length);
     return {...state,history:[...state.history,advisorTestCharge(outcome,distance,turn,round)]};
   }
   if(action==='fight-3'){
