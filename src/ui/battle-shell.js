@@ -1,6 +1,7 @@
 import { scoreboardAdjustmentCommand } from './scoreboard-transactions.js';
 import { PHASES, SCREEN_FACTORIES } from './battle-screen-registry.js';
 import { createPhaseUnitSelection } from './phase-unit-selection.js';
+import { renderSelectedUnitStatePanel } from './selected-unit-state-panel.js';
 import { createRulesReminderController } from './rules-reminder-panel.js';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from './prototype-workspace.js';
 import { getScoringCheckpointReminder } from "../application/scoring-checkpoint-reminders.js";
@@ -41,6 +42,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   perspectivePlayerId = null,
   leftPanelCollapsed = true,
   rightPanelCollapsed = false,
+  selectedUnitId = null,
   armyRosterPlayerId = null,
   clockPanelOpen = false,
   clockMessage = "",
@@ -126,7 +128,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     '</section>' +
     '<aside class="battle-shell__side-panel battle-shell__side-panel--right" data-battle-side-panel="right"' + (isSetupView ? ' hidden' : '') + '>' +
     rightToggle + '<div id="battle-right-panel-body" class="battle-shell__panel-body" data-battle-reference-body>' +
-    renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></aside></section>';
+    '<div data-selected-unit-state-host>' + renderSelectedUnitStatePanel(state, selectedUnitId, { perspectivePlayerId }) + '</div>' +
+    '<div data-battle-reference-content>' + renderReferencePanel(state, gameData ?? {}, perspectivePlayerId, { openSections: referenceOpenStates }) + '</div></div></aside></section>';
   const scoreAdjustOverlay = '<div data-score-adjust-host>' + renderScoreAdjustOverlay(state, players, scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind) + '</div>';
   const armyOverlay = '<div class="battle-shell__army-overlay" data-army-roster-overlay' +
     (armyRosterPlayerId ? "" : " hidden") + '>' +
@@ -324,7 +327,9 @@ export function createBattleShell(container, {
         perspectivePlayerId, missionDefinitions, openStates
       });
     }
-    const referenceContainer = container.querySelector?.("[data-battle-reference-body]");
+    const selectedStateHost = container.querySelector?.("[data-selected-unit-state-host]");
+    if (selectedStateHost) selectedStateHost.innerHTML = renderSelectedUnitStatePanel(state, unitSelection.get(state), { perspectivePlayerId });
+    const referenceContainer = container.querySelector?.("[data-battle-reference-content]");
     if (referenceContainer) {
       const openSections = readOpenStates(referenceContainer, "details[data-reference-key]", "data-reference-key");
       referenceOpenStates = { ...referenceOpenStates, ...openSections };
@@ -407,7 +412,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind, selectedUnitId: unitSelection.get(state)
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
@@ -791,6 +796,7 @@ export function createBattleShell(container, {
   container.addEventListener?.("click", handleDismissScoringReminder);
   container.addEventListener?.("click", handleReviewScoring);
   container.addEventListener?.("submit", handleSubmit);
+  const unsubscribeSelection = unitSelection.subscribe(() => refreshPersistentPanels());
   const unsubscribe = session.subscribe(render);
   render();
 
@@ -809,6 +815,7 @@ export function createBattleShell(container, {
     render,
     destroy: () => {
       unsubscribe();
+      unsubscribeSelection();
       prototypeWorkspace.destroy();
       rulesReminders.destroy();
       if (clockTickInterval != null) clearInterval(clockTickInterval);
