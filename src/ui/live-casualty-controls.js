@@ -78,6 +78,20 @@ function translatedMoves(unit, target) {
   }));
 }
 
+// Capture before per-screen selection listeners redraw the roster. The
+// existing view-continuity snapshot then retains this expansion across
+// selected-unit changes and state updates.
+export function toggleRosterUnitAdjustment(event, container) {
+  const row = event.target?.closest?.('[data-roster-adjust-toggle]');
+  if (!row || !container?.contains?.(row)) return false;
+  const entry = row.closest?.('.phase-army-roster__entry, .movement-roster__item');
+  const editor = entry?.querySelector?.('.roster-unit-editor');
+  if (!editor) return false;
+  editor.open = !editor.open;
+  row.setAttribute?.('aria-expanded', String(editor.open));
+  return true;
+}
+
 export function bindLiveCasualtyControls(container, { session } = {}) {
   if (!container?.addEventListener || !session?.dispatch) return { destroy() {} };
 
@@ -212,6 +226,11 @@ export function bindLiveCasualtyControls(container, { session } = {}) {
     }
   };
 
+  const onRosterClick = event => toggleRosterUnitAdjustment(event, container);
+  container.addEventListener('click', onRosterClick, true);
   container.addEventListener('click', onClick);
-  return { destroy: () => container.removeEventListener('click', onClick) };
+  return { destroy: () => {
+    container.removeEventListener('click', onRosterClick, true);
+    container.removeEventListener('click', onClick);
+  } };
 }

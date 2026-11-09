@@ -1,7 +1,11 @@
 /* Compact live state controls inside the independently scrollable army list. */
-.roster-unit-editor { margin:0 0 5px; border:1px solid #384f59; border-radius:7px; background:#15252c; min-width:0; }
-.roster-unit-editor > summary { cursor:pointer; min-height:30px; display:flex; align-items:center; padding:4px 8px; font-size:10px; font-weight:700; color:#b6d5da; user-select:none; touch-action:manipulation; }
-.roster-unit-editor[open] > summary { border-bottom:1px solid #405b61; color:#c4e99b; }
+.roster-unit-editor:not([open]) { display:none; }
+.roster-unit-editor[open] { display:block; margin:0 0 5px; border:1px solid #384f59; border-radius:7px; background:#15252c; min-width:0; }
+/* The unit-name button is the disclosure trigger; the original summary
+   remains accessible but consumes no vertical space. */
+.roster-unit-editor > .roster-unit-editor__summary { position:absolute; width:1px; height:1px; overflow:hidden; padding:0; margin:0; clip-path:inset(50%); white-space:nowrap; }
+.phase-army-roster__unit[data-roster-adjust-toggle][aria-expanded="true"],
+.movement-roster__row[data-roster-adjust-toggle][aria-expanded="true"] { border-color:#c4e99b!important; }
 .roster-unit-editor__body { padding:6px; min-width:0; }
 .roster-unit-editor .unit-quick-adjust__unit { display:grid; gap:6px; font-size:11px; }
 .roster-unit-editor .unit-quick-adjust__metric { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px; align-items:center; min-width:0; }

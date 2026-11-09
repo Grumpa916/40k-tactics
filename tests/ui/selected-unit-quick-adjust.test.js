@@ -126,7 +126,9 @@ test('shared combat phases move active state edits to the left roster and free t
     assert.match(rail,/data-adjust-unit-wounds="1" data-unit-id="p1:gants"/);
     assert.match(rail,/data-toggle-live-battle-shock data-unit-id="p1:gants"/);
     assert.match(rail,/data-record-casualty/,'casualty tracking stays accessible');
-    assert.match(rail,/class="roster-unit-editor"[^>]*open/);
+    assert.match(rail,/data-roster-adjust-toggle="p1:gants"/);
+    assert.match(rail,/class="roster-unit-editor" id="roster-unit-editor-p1:gants"/);
+    assert.doesNotMatch(rail,/roster-unit-editor-p1:gants"[^>]* open/);
     assert.doesNotMatch(right,/data-selected-unit-quick-adjust|data-adjust-unit-wounds|data-toggle-live-battle-shock/,
       phase+' should have no right-side quick adjust');
   }

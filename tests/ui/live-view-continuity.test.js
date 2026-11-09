@@ -81,3 +81,18 @@ test('Shooting panel reset key tracks acting unit only, not weapon or target cha
   assert.match(source, /const renderedActiveUnitId = selectedAttackerId \?\? pendingUnitId \?\? null;/);
   assert.doesNotMatch(source, /\[selectedAttackerId, selectedWeaponId, selectedTargetId\]\.join/);
 });
+
+test('unit-name disclosure restoration retains open state and accessibility after a redraw', () => {
+  const row = () => ({ attributes:{}, setAttribute(key,value){this.attributes[key]=value;} });
+  let old = { open:true, getAttribute:()=> 'roster-unit-editor-guard',
+    classList:{contains:(name)=>name==='roster-unit-editor'},parentElement:{querySelector:()=>row()} };
+  let detail=old, button=row();
+  const container = { querySelectorAll: selector => selector==='[data-view-key]' ? [detail] : [],
+    querySelector:()=>null };
+  const restore = captureViewContinuity(container);
+  detail={ open:false, getAttribute:()=> 'roster-unit-editor-guard',
+    classList:{contains:(name)=>name==='roster-unit-editor'},parentElement:{querySelector:()=>button} };
+  restore();
+  assert.equal(detail.open,true);
+  assert.equal(button.attributes['aria-expanded'],'true');
+});

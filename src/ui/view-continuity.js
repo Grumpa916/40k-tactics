@@ -35,6 +35,10 @@ export function captureViewContinuity(container) {
     for (const node of container.querySelectorAll?.('[data-view-key]') ?? []) {
       const previous = disclosures.find(([key]) => key === node.getAttribute('data-view-key'));
       if (previous) node.open = previous[1];
+      if (node.classList?.contains?.('roster-unit-editor')) {
+        const button = node.parentElement?.querySelector?.('[data-roster-adjust-toggle]');
+        button?.setAttribute?.('aria-expanded', String(node.open));
+      }
     }
     const menuPositions = new Map();
     for (const node of container.querySelectorAll?.('details') ?? []) {
