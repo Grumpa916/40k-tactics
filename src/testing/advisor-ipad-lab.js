@@ -152,7 +152,12 @@ function controls() {
 }
 
 function renderChecks(inspection) {
-  document.getElementById('lab-count').textContent=inspection.passed+'/'+inspection.total+' passed';
+  const baseline=initials.get(scenarioId);
+  const baselineLabel=baseline && baseline.passed!==inspection.passed
+    ? ' · preset '+baseline.passed+'/'+baseline.total
+    : '';
+  document.getElementById('lab-count').textContent=
+    inspection.passed+'/'+inspection.total+' current'+baselineLabel;
   document.getElementById('lab-checks').innerHTML=inspection.checks.map(check=>
     '<section class="lab-check '+(check.passes?'pass':'pending')+'">'+
       '<span class="lab-status">'+(check.passes?'PASS':'TO VERIFY')+'</span>'+
@@ -215,7 +220,7 @@ function render(){
   const scenario=ADVISOR_IPAD_SCENARIOS.find(item=>item.id===scenarioId);
   document.getElementById('lab-scenario-title').textContent=scenario.title;
   document.getElementById('lab-expect').innerHTML='<p><strong>Expected:</strong> '+esc(scenario.expected)+'</p>'+
-    '<p>Step through the scenario, expand the right panel and compare automatic calculations with actual iPad touch behavior.</p>';
+    '<p>Step through the scenario, expand the right panel and compare automatic calculations with actual iPad touch behavior. Marker drags and recorded actions can change initial-condition checks; Reset scenario restores the starting position.</p>';
   scenarioButtons();
   document.getElementById('lab-actions').innerHTML=controls();
   const messageNode=document.getElementById('lab-message');
