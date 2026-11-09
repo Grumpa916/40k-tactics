@@ -193,3 +193,31 @@
 .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__objective {
   position:absolute !important;
 }
+
+
+/* Keep the live board in a bounded touch-scroll viewport on iPad Safari. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map {
+  height:100% !important;
+  min-height:0 !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map {
+  display:flex !important;
+  flex:1 1 0 !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+  height:auto !important;
+  overflow:hidden !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__viewport {
+  display:block !important;
+  box-sizing:border-box !important;
+  flex:1 1 0 !important;
+  height:0 !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow-x:auto !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch !important;
+  touch-action:pan-x pan-y;
+}
