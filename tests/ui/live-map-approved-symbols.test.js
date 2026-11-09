@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from '../../src/ui/live-map-symbols.js';
 import { createLiveMapView } from '../../src/ui/live-map-view.js';
+import { renderPhaseArmyRoster } from '../../src/ui/phase-army-roster.js';
 
 const units = [
   {id:'hive',ownerId:'p1',name:'Hive Tyrant'},
@@ -85,4 +86,81 @@ test('approved live symbol CSS keeps compact objectives below both armies', () =
   assert.match(css, /battlefield-map__objective[\s\S]*width:36px[\s\S]*height:36px[\s\S]*font-size:8px[\s\S]*z-index:4/);
   assert.match(css, /battlefield-map__objective::before[\s\S]*clip-path:polygon\(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%\)/);
   assert.match(css, /is-contested[\s\S]*linear-gradient\(90deg,#205d87 0 50%,#7a3035 50% 100%\)/);
+});
+
+test('Standard map renders the identical abbreviations used in both army roster tabs', () => {
+  const snapshot = {
+    units: [
+      {id:'trajann',ownerId:'p1',name:'Trajann Valoris',status:'deployed',position:{x:8,y:8}},
+      {id:'telemon',ownerId:'p1',name:'Telemon Heavy Dreadnought',status:'deployed',position:{x:22,y:10}},
+      {id:'enemy',ownerId:'p2',name:'Custodian Guard',status:'deployed',position:{x:40,y:33}}
+    ],
+    battle:{status:'active',round:1,activePlayerId:'p1'},players:[{id:'p1'},{id:'p2'}],
+    activePlayer:'p1',phase:'command',objectives:[],history:[]
+  };
+  const storage = globalThis.localStorage;
+  try {
+    globalThis.localStorage = {getItem:()=>JSON.stringify({topDown:false}),setItem:()=>{}};
+    const rendered = createLiveMapView().render(snapshot,{perspectivePlayerId:'p1'});
+    const roster = renderPhaseArmyRoster(snapshot,'p1');
+    const symbols = liveUnitSymbolLabels(snapshot.units);
+    assert.match(rendered,/class="live-map is-standard"/);
+    for(const unit of snapshot.units) {
+      const abbreviation=symbols.get(unit.id);
+      const marker=rendered.match(new RegExp('data-map-unit-id="'+unit.id+'"[^>]*>([^<]*)'))?.[1];
+      assert.equal(marker,abbreviation,unit.name+' should use the left roster abbreviation');
+      assert.ok(roster.includes('>'+abbreviation+'</span>'),unit.name+' abbreviation should appear in the roster');
+    }
+  } finally {
+    if (storage === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage=storage;
+  }
+});
+
+test('view toggle changes only marker text, retaining badge, unit IDs and event targets', () => {
+  const state = {
+    units: [
+      {id:'guard',ownerId:'p1',name:'Custodian Guard',status:'deployed'},
+      {id:'leader',ownerId:'p1',name:'Trajann Valoris',status:'deployed'},
+      {id:'enemy',ownerId:'p2',name:'Hellblaster Squad',status:'deployed'}
+    ],objectives:[],battle:{status:'active'},phase:'command'
+  };
+  const storage=globalThis.localStorage;
+  try {
+    globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
+    const view=createLiveMapView();
+    const markers= [
+      {member:'guard',root:'guard',expected:'CG'},
+      {member:'leader',root:'guard',expected:'TRA'},
+      {member:'enemy',root:'enemy',expected:'HS'}
+    ].map((item,index)=>{
+      const firstChild={nodeType:3,nodeValue:String(index+1)};
+      const statusBadge={className:'unit-activation-badge'};
+      return {...item,firstChild,badge:statusBadge,
+        getAttribute(name){return name==='data-map-member-id'?(this.member===this.root?null:this.member):name==='data-map-unit-id'?this.root:null;}
+      };
+    });
+    const handlers={};
+    const button={addEventListener(event,cb){handlers[event]=cb;},setAttribute(){},textContent:'Standard map'};
+    const live={classList:{toggle(){}},setAttribute(){}};
+    const container={
+      querySelector(selector){return selector==='.live-map'?live:
+        selector==='[data-live-map-style]'||selector==='button[data-live-map-style]'?button:null;},
+      querySelectorAll(selector){return selector==='.live-map [data-map-unit-id]'?markers:[];}
+    };
+    view.bind(container,state,{perspectivePlayerId:'p1'});
+    assert.equal(markers[0].firstChild.nodeValue,'1');
+    handlers.click();
+    for(const marker of markers) {
+      assert.equal(marker.firstChild.nodeValue,marker.expected);
+      assert.equal(marker.badge.className,'unit-activation-badge','status badge is unchanged');
+    }
+    assert.equal(button.textContent,'Top-down map');
+    handlers.click();
+    assert.deepEqual(markers.map(m=>m.firstChild.nodeValue),['1','2','3']);
+    assert.equal(button.textContent,'Standard map');
+  } finally {
+    if(storage===undefined) delete globalThis.localStorage;
+    else globalThis.localStorage=storage;
+  }
 });
