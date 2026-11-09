@@ -164,7 +164,7 @@ export function createLiveMapView() {
       }
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
-      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down' : ' is-standard'}" data-live-map-style="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
+      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}">${controls.controls}${map}</div>`;
     },
     bind(container, state = renderedState, options = renderedOptions) {
       const viewport = container.querySelector('[data-live-map-viewport]');
@@ -179,11 +179,11 @@ export function createLiveMapView() {
       const updateMapStyle = () => {
         container.querySelector('.live-map')?.classList.toggle('is-top-down', preferences.topDown);
         container.querySelector('.live-map')?.classList.toggle('is-standard', !preferences.topDown);
-        container.querySelector('.live-map')?.setAttribute('data-live-map-style', preferences.topDown ? 'top-down' : 'standard');
+        container.querySelector('.live-map')?.setAttribute('data-live-map-mode', preferences.topDown ? 'top-down' : 'standard');
         container.querySelector('[data-live-map-viewport]')?.classList.toggle('is-top-down', preferences.topDown);
         if (canvas?.style) canvas.style.height = preferences.topDown ? 'auto' : zoom*100+'%';
-        updatePressed('[data-live-map-style]', preferences.topDown);
-        const styleButton = container.querySelector('[data-live-map-style]');
+        updatePressed('button[data-live-map-style]', preferences.topDown);
+        const styleButton = container.querySelector('button[data-live-map-style]');
         if (styleButton) styleButton.textContent = preferences.topDown ? 'Top-down map' : 'Standard map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       };
