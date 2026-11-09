@@ -2,7 +2,7 @@ import { getUnitActivationPresentation } from '../rules/unit-activation-presenta
 import { mapObjectiveMarkerLabel } from '../rules/objective-display-labels.js';
 import { getLiveUnitPosition } from '../rules/spatial-context.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
-import { applyApprovedLiveMapSymbols } from './live-map-symbols.js';
+import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-symbols.js';
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
 
@@ -163,7 +163,7 @@ export function createLiveMapView() {
       const symbolsHref = symbolsStylesheet.href;
       const controls = liveTools(state, options, preferences);
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, plannerStyleObjectives:true, activationForUnit:id => getUnitActivationPresentation(state,id) });
-      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true, numberedMarkers: true });
+      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true, numberedMarkers: preferences.topDown });
       map = applyLiveMapStatusBadges(map, state);
       map = addPrecisionOverlay(map);
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
@@ -185,6 +185,24 @@ export function createLiveMapView() {
       const refreshObjectiveLabels = () => objectives.forEach((node, index) => {
         node.textContent = preferences.topDown ? fullObjectiveLabels[index] : mapObjectiveMarkerLabel(fullObjectiveLabels[index]);
       });
+      // Use the exact abbreviation function used by the left army roster.
+      // Update only the marker text node so activation badges, selections,
+      // drag listeners, map coordinates and formation metadata stay intact.
+      const unitMarkers = Array.from(container.querySelectorAll?.('.live-map [data-map-unit-id]') ?? []);
+      const unitSymbols = liveUnitSymbolLabels(state.units ?? []);
+      const markerUnitId = marker => marker.getAttribute('data-map-member-id') || marker.getAttribute('data-map-unit-id');
+      const visibleUnitIds = new Set(unitMarkers.map(markerUnitId));
+      const unitNumbers = new Map();
+      for (const unit of state.units ?? []) {
+        if (visibleUnitIds.has(unit.id)) unitNumbers.set(unit.id, String(unitNumbers.size + 1));
+      }
+      const refreshUnitLabels = () => unitMarkers.forEach(marker => {
+        const text = marker.firstChild;
+        if (text?.nodeType !== 3) return;
+        const id = markerUnitId(marker);
+        const label = preferences.topDown ? unitNumbers.get(id) : unitSymbols.get(id);
+        if (label != null) text.nodeValue = label;
+      });
       const updateMapStyle = () => {
         container.querySelector('.live-map')?.classList.toggle('is-top-down', preferences.topDown);
         container.querySelector('.live-map')?.classList.toggle('is-standard', !preferences.topDown);
@@ -197,8 +215,10 @@ export function createLiveMapView() {
         if (styleButton) styleButton.textContent = preferences.topDown ? 'Standard map' : 'Top-down map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
         refreshObjectiveLabels();
+        refreshUnitLabels();
       };
       refreshObjectiveLabels();
+      refreshUnitLabels();
       container.querySelector('[data-live-map-style]')?.addEventListener('click', () => {
         preferences.topDown = !preferences.topDown;
         saveMapPreferences(preferences);
