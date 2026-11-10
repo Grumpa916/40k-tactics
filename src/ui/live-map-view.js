@@ -414,6 +414,74 @@ export function createLiveMapView() {
         applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
         drawIndividualModelHandles(container,state,preferences);
       });
+      const individualLayer=container.querySelector?.('[data-live-map-individual-models]');
+      if(individualLayer&&liveSession) {
+        let drag=null;
+        const locate=(event,board)=>{
+          const rect=board.getBoundingClientRect?.();
+          if(!rect?.width||!rect?.height) return null;
+          return {x:Math.max(0,Math.min(BOARD_WIDTH,(event.clientX-rect.left)/rect.width*BOARD_WIDTH)),
+            y:Math.max(0,Math.min(BOARD_HEIGHT,(1-(event.clientY-rect.top)/rect.height)*BOARD_HEIGHT))};
+        };
+        individualLayer.addEventListener('pointerdown',event=>{
+          const target=event.target?.closest?.('[data-live-model-id]');
+          if(!target) return;
+          const board=target.closest?.('[data-battlefield-map-board]');
+          const unitId=target.getAttribute('data-live-model-unit-id');
+          const modelId=target.getAttribute('data-live-model-id');
+          const unit=liveSession.getState().units.find(item=>item.id===unitId);
+          const model=unit?.models?.find(item=>item.id===modelId);
+          const pointer=board&&locate(event,board);
+          if(!pointer||unit?.status!=='deployed'||!model?.position) return;
+          drag={pointerId:event.pointerId,unitId,modelId,board,target,
+            x:event.clientX,y:event.clientY,start:{...model.position},pointer,moved:false};
+          try{target.setPointerCapture?.(event.pointerId);}catch{}
+          event.stopPropagation?.();
+        });
+        individualLayer.addEventListener('pointermove',event=>{
+          if(!drag||event.pointerId!==drag.pointerId)return;
+          if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<5&&!drag.moved)return;
+          const point=locate(event,drag.board);
+          if(!point)return;
+          drag.moved=true;
+          event.preventDefault?.();
+          event.stopPropagation?.();
+          const x=Math.max(0,Math.min(BOARD_WIDTH,drag.start.x+point.x-drag.pointer.x));
+          const y=Math.max(0,Math.min(BOARD_HEIGHT,drag.start.y+point.y-drag.pointer.y));
+          drag.target.style.left=x/BOARD_WIDTH*100+'%';
+          drag.target.style.top=(BOARD_HEIGHT-y)/BOARD_HEIGHT*100+'%';
+        });
+        individualLayer.addEventListener('pointerup',event=>{
+          if(!drag||event.pointerId!==drag.pointerId)return;
+          const current=drag;
+          drag=null;
+          event.stopPropagation?.();
+          if(!current.moved)return;
+          const point=locate(event,current.board);
+          if(!point)return;
+          const latest=liveSession.getState();
+          const unit=latest.units.find(item=>item.id===current.unitId);
+          const models=unit?.models;
+          if(!Array.isArray(models)||!models.some(model=>model.id===current.modelId))return;
+          const position={x:Math.round(Math.max(0,Math.min(BOARD_WIDTH,current.start.x+point.x-current.pointer.x))*10)/10,
+            y:Math.round(Math.max(0,Math.min(BOARD_HEIGHT,current.start.y+point.y-current.pointer.y))*10)/10};
+          try{
+            liveSession.dispatch({type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,payload:{
+              unitId:unit.id,playerId:unit.ownerId,
+              moves:models.map(model=>({modelId:model.id,
+                position:model.id===current.modelId?position:model.position}))
+            }});
+          }catch(error){
+            const status=container.querySelector?.('[data-live-map-base-status]');
+            if(status)status.textContent=error?.message??String(error);
+            drawIndividualModelHandles(container,latest,preferences);
+          }
+        });
+        individualLayer.addEventListener('pointercancel',()=>{drag=null;drawIndividualModelHandles(container,liveSession.getState(),preferences);});
+        individualLayer.addEventListener('click',event=>{
+          if(event.target?.closest?.('[data-live-model-id]'))event.stopPropagation?.();
+        });
+      }
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
         const old = zoom;
         zoom = button.getAttribute('data-map-zoom') === 'fit' ? 1 : Math.max(1,Math.min(3,zoom+(button.getAttribute('data-map-zoom') === 'in' ? .5 : -.5)));
