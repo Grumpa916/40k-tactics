@@ -210,7 +210,7 @@ function drawIndividualModelHandles(container,state,preferences) {
     const ovalAngle=base?.shape==='oval'?getLiveOvalAngle(unit,preferences.ovalAngles):0;
     for(let i=0;i<models.length;i++) {
       const model=models[i];
-      parts.push(`<div role="button" tabindex="0" class="live-map__individual-model ${unit.ownerId===(state.activePlayer??state.battle?.activePlayerId)?'friendly':'opponent'}"
+      parts.push(`<div role="button" tabindex="0" class="live-map__individual-model ${base?.shape==='oval'?'is-oval':''} ${unit.ownerId===(state.activePlayer??state.battle?.activePlayerId)?'friendly':'opponent'}"
         data-live-model-unit-id="${esc(unit.id)}" data-live-model-id="${esc(model.id)}"
         style="left:${(model.position.x/BOARD_WIDTH*100).toFixed(5)}%;top:${((BOARD_HEIGHT-model.position.y)/BOARD_HEIGHT*100).toFixed(5)}%;width:${width.toFixed(5)}%;height:${height.toFixed(5)}%;--live-individual-angle:${ovalAngle}deg"
         aria-label="${esc(unit.name)} model ${i+1}; drag to adjust tabletop position" title="${esc(unit.name)} · Model ${i+1}">${i+1}</div>`);
