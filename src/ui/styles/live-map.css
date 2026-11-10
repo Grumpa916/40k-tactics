@@ -587,3 +587,40 @@
   z-index:3;
   pointer-events:none;
 }
+
+/* Physical bases are an independent non-interactive SVG layer.
+   Previously base rings were below 14-38px marker tokens and SVG .09px
+   non-scaling strokes were almost invisible at iPad resolution. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay {
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:visible;
+  z-index:11 !important;
+  pointer-events:none !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay .live-map__model-base {
+  fill:none;
+  stroke:#9eecff;
+  stroke-width:.19;
+  vector-effect:none;
+  opacity:.95;
+  pointer-events:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay .live-map__model-base.is-opponent {
+  stroke:#ffc4b7;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay .live-map__model-base.is-selected {
+  stroke:#ffe478;
+  stroke-width:.27;
+  opacity:1;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay .live-map__model-base.is-reference {
+  stroke-dasharray:.29 .18;
+  stroke-opacity:.88;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay .live-map__model-base.is-reference.is-selected {
+  stroke-opacity:1;
+}
