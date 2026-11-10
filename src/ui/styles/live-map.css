@@ -624,3 +624,30 @@
 .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__physical-base-overlay .live-map__model-base.is-reference.is-selected {
   stroke-opacity:1;
 }
+
+/* Top-down physical-size markers: unit token bounds are a percentage of the
+   actual 60 by 44 inch board, so shrinking/zooming the battlefield changes
+   the pixel dimensions automatically. Standard map keeps its original tokens.
+   A squad-centre token shows just one model's base as a dashed reference. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled {
+  box-sizing:border-box !important;
+  width:var(--live-base-width) !important;
+  height:var(--live-base-height) !important;
+  min-width:0 !important;
+  max-width:none !important;
+  min-height:0 !important;
+  max-height:none !important;
+  padding:0 !important;
+  border-radius:50% !important;
+  font-size:clamp(7px, .7vw, 10px) !important;
+  line-height:1 !important;
+  overflow:visible !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled.is-base-reference {
+  border-style:dashed !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled::before {
+  width:max(44px, 100%) !important;
+  height:max(44px, 100%) !important;
+  border-radius:50% !important;
+}
