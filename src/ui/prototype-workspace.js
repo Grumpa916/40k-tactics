@@ -36,7 +36,7 @@ export function removeRedundantLiveHelperCopy(container) {
 
 export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}) {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
-  stylesheet.searchParams.set('v', 'compact-live-layout-1');
+  stylesheet.searchParams.set('v', 'all-phase-unit-drawer-1');
   const href = stylesheet.href;
   const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const planningMapHref = new URL('./styles/planning-map-fit.css', import.meta.url).href;
@@ -63,20 +63,26 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
 export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   let armyView = 'mine';
   let collapsed = true, unitId = null, logOpen = false, returnFocus = null, unitDetailTab = 'profile';
-  let movementRosterOpen = false;
+  let unitsRosterOpen = false, lastRosterPhase = null;
 
-  function movementRoster() {
-    return container.querySelector?.('#movement-units');
+  // The Movement drawer and the Shooting/Charge/Fight drawer deliberately use
+  // the same top-strip Units button. Only the legacy Movement id differs.
+  function unitsRoster() {
+    return container.querySelector?.('#movement-units') ?? container.querySelector?.('#live-units');
   }
 
-  function refreshMovementRoster() {
-    const roster = movementRoster();
+  function refreshUnitsRoster() {
+    const movement = container.querySelector?.('#movement-units');
+    const roster = movement ?? container.querySelector?.('#live-units');
     const button = container.querySelector('[data-movement-roster-toggle]');
-    if (!roster) movementRosterOpen = false;
-    container.querySelector('.battle-shell')?.setAttribute('data-movement-roster-open', String(movementRosterOpen));
+    if (!roster) unitsRosterOpen = false;
+    const shell = container.querySelector('.battle-shell');
+    shell?.setAttribute('data-movement-roster-open', String(unitsRosterOpen));
+    shell?.setAttribute('data-live-roster-open', String(unitsRosterOpen));
     if (button) {
       button.hidden = !roster;
-      button.setAttribute('aria-expanded', String(movementRosterOpen));
+      button.setAttribute('aria-controls', movement ? 'movement-units' : 'live-units');
+      button.setAttribute('aria-expanded', String(unitsRosterOpen));
     }
   }
 
@@ -84,6 +90,14 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const shell = container.querySelector?.('.battle-shell');
     if (!shell) return;
     const state = session.getState();
+    if (state.phase !== lastRosterPhase) {
+      // Switching phases closes the old drawer. On an opponent turn the list
+      // opens on that army's tab, without affecting the map's own selection.
+      unitsRosterOpen = false;
+      const localId = state.players?.[0]?.id;
+      if (localId && state.activePlayer) armyView = state.activePlayer === localId ? 'mine' : 'opponent';
+      lastRosterPhase = state.phase;
+    }
     removeRedundantLiveHelperCopy(container);
     refreshPhaseArmyRoster(container, armyView);
     const combat = !!container.querySelector?.('.shoot-screen--tabletop, .combat-workspace');
@@ -94,7 +108,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const summary = container.querySelector('[data-battle-status-summary]');
     const scoreHost = container.querySelector('[data-workspace-score-host]');
     if (summary && combat && scoreHost && summary.parentElement !== scoreHost) scoreHost.append?.(summary);
-    refreshMovementRoster();
+    refreshUnitsRoster();
     container.querySelectorAll?.('.prototype-phase-chips [data-battle-phase-button]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.getAttribute('data-battle-phase-button') === state.phase));
     });
@@ -115,11 +129,18 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   function click(event) {
     const target = event.target;
     if (target?.closest?.('[data-movement-roster-toggle]')) {
-      movementRosterOpen = !movementRosterOpen;
-      refreshMovementRoster();
+      unitsRosterOpen = !unitsRosterOpen;
+      refreshUnitsRoster();
       return;
     }
-    if (collapsed && !movementRoster() && target?.closest?.('[data-select-phase-unit], [data-phase-map-select]')) {
+    const phaseDrawer = container.querySelector?.('#live-units');
+    if (unitsRosterOpen && phaseDrawer && target?.closest?.('[data-select-phase-unit], [data-phase-map-select]')) {
+      // A single unit/target tap dismisses the overlay but never forces the
+      // separate right-side action panel open.
+      unitsRosterOpen = false;
+      refreshUnitsRoster();
+    }
+    if (collapsed && !unitsRoster() && target?.closest?.('[data-select-phase-unit], [data-phase-map-select]')) {
       collapsed = false;
       refresh();
     }
@@ -182,7 +203,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   }
 
   function keydown(event) {
-    if (collapsed && !movementRoster() && ['Enter', ' '].includes(event.key) && event.target?.closest?.('[data-phase-map-select]')) {
+    if (collapsed && !unitsRoster() && ['Enter', ' '].includes(event.key) && event.target?.closest?.('[data-phase-map-select]')) {
       collapsed = false;
       refresh();
     }
@@ -201,9 +222,9 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
       const closeDialog = container.querySelector('[data-close-army-roster]');
       if (closeDialog) {
         closeDialog.click?.();
-      } else if (movementRosterOpen) {
-        movementRosterOpen = false;
-        refreshMovementRoster();
+      } else if (unitsRosterOpen) {
+        unitsRosterOpen = false;
+        refreshUnitsRoster();
         container.querySelector('[data-movement-roster-toggle]')?.focus?.();
       }
     }

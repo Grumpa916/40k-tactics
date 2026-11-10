@@ -79,7 +79,7 @@ test('a submitted stratagem form spends once, displays attacker-specific protect
 test('actual opponent Shooting target changes keep the correct defensive opportunity next to damage controls',async()=>{
   const session=game(custodesReminderState()),root=fakeDom();
   const screen=createShootingScreen(root,{session,perspectivePlayerId:'p1',gameData:{weapons:[{id:'bolter',name:'Bolter',type:'ranged',characteristics:{attacks:2,range:24,skill:3,strength:8,ap:-2,damage:3}}]}});
-  root.change('[data-shooting-unit-picker]','marine');root.click('[data-choice-shoot]');root.change('[data-target]','sentinel');
+  root.click('[data-select-phase-unit]','marine');root.click('[data-choice-shoot]');root.change('[data-target]','sentinel');
   await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));
   assert.match(root.innerHTML,/data-guardians-stratagem-form/);assert.match(root.innerHTML,/value="marine" selected/);
   root.change('[data-target]','wardens');await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));

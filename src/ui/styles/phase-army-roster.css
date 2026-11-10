@@ -34,3 +34,98 @@
  .battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace.has-left-rail,.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-screen--tabletop.has-army-roster{grid-template-columns:152px minmax(0,1fr)!important}
 }
 @media (max-width:760px),(orientation:portrait){.phase-army-roster{max-height:220px}}
+
+/* Priority 2: one-tap Units drawer, not a permanent 152–180px roster column.
+   The board and phase controls occupy the normal grid columns; the roster is
+   an overlay only while explicitly opened. Movement keeps its existing drawer. */
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop.has-army-roster,
+.battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail[data-combat-phase="charge"],
+.battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail[data-combat-phase="fight"] {
+  position:relative;
+  grid-template-columns:minmax(0,2.55fr) minmax(290px,1fr) !important;
+}
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .shoot-screen--tabletop.has-army-roster,
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace.has-left-rail[data-combat-phase="charge"],
+.battle-shell.is-tabletop-experiment[data-controls-collapsed=true] .combat-workspace.has-left-rail[data-combat-phase="fight"] {
+  grid-template-columns:minmax(0,1fr) !important;
+}
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop.has-army-roster > #live-units,
+.battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail > #live-units {
+  position:absolute !important;
+  z-index:35;
+  inset:0 auto 0 0;
+  width:min(252px,82vw);
+  height:100%;
+  max-height:100%;
+  min-width:0;
+  overflow:hidden;
+  box-shadow:4px 6px 18px #0009;
+}
+.battle-shell:not([data-live-roster-open="true"]) #live-units {
+  display:none !important;
+}
+.battle-shell.is-tabletop-experiment #live-units .phase-army-roster {
+  border-radius:10px;
+  height:100%;
+}
+.battle-shell.is-tabletop-experiment #live-units .phase-army-roster__list {
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.battle-shell.is-tabletop-experiment #live-units .phase-army-roster__section-heading {
+  margin-top:10px;
+  padding:3px 4px;
+  border-bottom:1px solid #496454;
+  color:#d9efb6;
+}
+@media (max-width:760px), (orientation:portrait) {
+  .battle-shell.is-tabletop-experiment .shoot-screen--tabletop.has-army-roster,
+  .battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail[data-combat-phase="charge"],
+  .battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail[data-combat-phase="fight"] {
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+  .battle-shell.is-tabletop-experiment .shoot-screen--tabletop.has-army-roster > #live-units,
+  .battle-shell.is-tabletop-experiment .combat-workspace.has-left-rail > #live-units {
+    height:min(75dvh,100%);
+    bottom:auto;
+  }
+}
+
+/* All three combat panels show the selected model's vitals in one short row.
+   Existing one-tap correction controls expand inside the same right panel. */
+.battle-shell.is-tabletop-experiment .phase-selected-vitals {
+  margin:6px 0 10px;
+  border:1px solid #536c56;
+  border-radius:9px;
+  background:#1b3024;
+  min-width:0;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals > summary {
+  display:flex;
+  justify-content:space-between;
+  gap:5px 10px;
+  align-items:center;
+  flex-wrap:wrap;
+  min-height:44px;
+  padding:7px 9px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:750;
+  color:#d8f1c9;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals[open] > summary {
+  border-bottom:1px solid #536c56;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals .unit-quick-adjust {
+  padding:8px;
+  max-height:none;
+  border:0;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals .unit-quick-adjust header {
+  display:none;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals .unit-quick-adjust__metric {
+  flex-wrap:wrap;
+}

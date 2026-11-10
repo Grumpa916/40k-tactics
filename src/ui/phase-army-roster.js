@@ -48,7 +48,7 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
     const otherHeading = sectionHtml && other.length ? '<h3 class="phase-army-roster__section-heading">Other units</h3>' : '';
     return sectionHtml + otherHeading + other.map(renderGroup).join('') || '<p>No units to show.</p>';
   };
-  return '<link rel="stylesheet" href="' + new URL('./styles/phase-army-roster.css', import.meta.url).href + '">' + rosterUnitEditorStylesheet() + '<aside class="phase-army-roster" aria-label="Army lists"><div class="phase-army-roster__tabs"><button type="button" data-phase-army-view="mine" aria-pressed="true">My Army</button><button type="button" data-phase-army-view="opponent" aria-pressed="false">Opponent</button></div><div class="phase-army-roster__list" data-phase-army-list="mine">' + list('mine') + '</div><div class="phase-army-roster__list" data-phase-army-list="opponent" hidden>' + list('opponent') + '</div></aside>';
+  return '<link rel="stylesheet" href="' + new URL('./styles/phase-army-roster.css?v=all-phase-unit-drawer-1', import.meta.url).href + '">' + rosterUnitEditorStylesheet() + '<aside class="phase-army-roster" aria-label="Army lists"><div class="phase-army-roster__tabs"><button type="button" data-phase-army-view="mine" aria-pressed="true">My Army</button><button type="button" data-phase-army-view="opponent" aria-pressed="false">Opponent</button></div><div class="phase-army-roster__list" data-phase-army-list="mine">' + list('mine') + '</div><div class="phase-army-roster__list" data-phase-army-list="opponent" hidden>' + list('opponent') + '</div></aside>';
 }
 
 export function bindPhaseArmySelection(container, onSelect) {

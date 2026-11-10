@@ -55,7 +55,8 @@ test('Shooting presents target comparison before selected-target detail', () => 
 test('Movement, Command and Fight use compact action-first controls', () => {
   assert.ok(read('src/ui/movement-screen.js').includes('data-move-stationary>Did Not Move</button>'));
   assert.ok(read('src/ui/command-screen.js').includes('command-tabletop-section'));
-  assert.ok(read('src/ui/fight-tabletop-screen.js').includes('fight-order__unit'));
+  assert.ok(read('src/ui/fight-tabletop-screen.js').includes("label:'Fights First'"));
+  assert.ok(read('src/ui/fight-tabletop-screen.js').includes("label:'Unfinished activations'"));
 });
 
 test('scoreboard routes VP, CP and timer taps to their specific controls', () => {

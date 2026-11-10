@@ -23,7 +23,7 @@ export function captureViewContinuity(container) {
   }
   const active = container.ownerDocument?.activeElement;
   const focusSelectors = ['[data-weapon]', '[data-target]', '[data-shoot-precision]',
-    '[data-shooting-unit-picker]', '[data-fight-weapon]', '[data-fight-target]', '[data-fight-precision]'];
+    '[data-fight-weapon]', '[data-fight-target]', '[data-fight-precision]'];
   const focusedControl = active ? focusSelectors.find(selector => container.querySelector?.(selector) === active) : null;
   const focusedTarget = active && [...(container.querySelectorAll?.('[data-advisor-target]') ?? [])].includes(active)
     ? active.getAttribute('data-advisor-target') : null;

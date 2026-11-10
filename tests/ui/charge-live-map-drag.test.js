@@ -80,7 +80,7 @@ test('Charge live map lets the active player drag deployed units without adding 
   const x = setup();
   try {
     const historyBefore = x.session.getState().history.length;
-    assert.match(x.root.innerHTML, /Drag an active player's deployed unit/);
+    assert.match(x.root.innerHTML, /data-map-unit-id="charger"/, 'live map marker remains available for dragging');
     x.drag('charger', {x:30,y:24});
     assert.deepEqual(x.session.getState().units.find(unit => unit.id === 'charger').position, {x:30,y:24});
     assert.equal(x.session.getState().history.length, historyBefore + 1);

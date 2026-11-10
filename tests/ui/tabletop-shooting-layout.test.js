@@ -229,7 +229,7 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
   } finally { screen.destroy(); }
 });
 
-test('selecting a roster row or keyboard-activating a map unit reveals the phase panel', () => {
+test('Shooting map and Units drawer selections keep phase panel closed until explicitly opened', () => {
   const attrs = new Map();
   const listeners = new Map();
   const shell = { setAttribute: (name, value) => attrs.set(name, value) };
@@ -237,6 +237,7 @@ test('selecting a roster row or keyboard-activating a map unit reveals the phase
     querySelector(selector) {
       if (selector === '.battle-shell') return shell;
       if (selector === '.shoot-screen--tabletop, .combat-workspace') return {};
+       if (selector === '#live-units') return {id:'live-units'};
       return null;
     },
     querySelectorAll: () => [],
@@ -249,11 +250,13 @@ test('selecting a roster row or keyboard-activating a map unit reveals the phase
     workspace.refresh();
     assert.equal(attrs.get('data-controls-collapsed'), 'true');
     listeners.get('click')({ target: target('data-select-phase-unit') });
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('keydown')({ target: target('data-phase-map-select'), key: 'Enter' });
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('click')({ target: target('data-workspace-panel') });
     assert.equal(attrs.get('data-controls-collapsed'), 'false');
     listeners.get('click')({ target: target('data-workspace-panel') });
     assert.equal(attrs.get('data-controls-collapsed'), 'true');
-    listeners.get('keydown')({ target: target('data-phase-map-select'), key: 'Enter' });
-    assert.equal(attrs.get('data-controls-collapsed'), 'false');
   } finally { workspace.destroy(); }
 });
 
@@ -335,7 +338,7 @@ test('opponent shooter can be chosen by name and resolve damage without Advisor 
   const session=createGameSession(initial), root=fakeDom();
   const screen=createShootingScreen(root,{session,perspectivePlayerId:'p1',gameData});
   try {
-    root.change('[data-shooting-unit-picker]','marine'); root.click('[data-choice-shoot]');
+    root.click('[data-select-phase-unit]','marine'); root.click('[data-choice-shoot]');
     assert.match(root.innerHTML,/data-attack/);
     root.change('[data-target]','exo'); root.click('[data-shoot-damage-plus]'); root.click('[data-attack]');
     assert.equal(session.getState().units.find(u=>u.id==='exo').wounds,13);

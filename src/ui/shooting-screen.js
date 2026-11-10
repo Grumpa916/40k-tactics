@@ -1,3 +1,4 @@
+import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { renderTargetDefenseReminders, renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
@@ -232,7 +233,9 @@ export function createShootingScreen(container, {
         ? renderIncomingDamageForecast(state, { attackerId, targetId: selectedTargetId, weapon: selectedWeapon })
         : shootingTargetComparisonCards(attackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison);
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
-        ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId], sections, enableAdjust:state.phase === 'shooting' })}
+        <aside class="combat-workspace__rail" id="live-units" aria-label="Shooting units and targets">
+          ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId], sections, enableAdjust:state.phase === 'shooting' })}
+        </aside>
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
           perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
           selectedUnitId: activeUnitId })}
@@ -241,17 +244,12 @@ export function createShootingScreen(container, {
           <div class="shoot-tabletop__control-scroll">
             ${state.phase === 'shooting' ? renderStratagemOpportunityReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,livePanel:true}) : ''}
             ${state.phase === 'shooting' ? renderAdaptiveExecutionPanel(state, {selectedUnitId:activeUnitId, playerId:perspectivePlayerId ?? state.activePlayer, targetId:selectedTargetId}) : ''}
-            <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map or in the army list")}</p></div><span>${remaining === 0 ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
-            ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
+            <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map or open Units")}</p></div><span>${remaining === 0 ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
+            ${activeUnit && state.phase === "shooting" ? `<div class="shoot-tabletop__unit-status">${renderPhaseSelectedVitals(state, activeUnitId)}</div>` : ""}
             ${renderCustodesKatahPhasePanel(state, { phase: "shooting", unitId: activeUnitId, playerId: viewingPlayerId })}
 
             ${activeActivation ? renderTargetDefenseReminders(state, {targetUnitId:selectedTargetId,allocationTargetId:precisionAllocationId,attackerId:selectedAttackerId,weapon:selectedWeapon,phase:'shooting',viewingPlayerId}) : ''}
             ${state.phase === 'shooting' ? renderUnitRulesReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,includeStratagems:false,livePanel:true}) : ''}
-            <label class="shoot-tabletop__unit-picker">Acting unit · ${escapeHtml(model.activePlayerId === perspectivePlayerId ? 'your army' : 'opponent army')}
-              <select data-shooting-unit-picker ${state.phase === "shooting" ? "" : "disabled"}><option value="">Choose unit by name…</option>
-              ${readyUnits.map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === pendingUnitId ? 'selected' : ''}>${escapeHtml(item.name)} · awaiting choice</option>`).join('')}
-              ${openUnits.map(item => `<option value="${escapeHtml(item.unitId)}" ${item.unitId === selectedAttackerId ? 'selected' : ''}>${escapeHtml(item.unit.name)} · continue shooting</option>`).join('')}
-              </select></label>
             ${phaseNotice}
             ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
             ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
@@ -427,7 +425,7 @@ export function createShootingScreen(container, {
       mapView.bind(container, undefined, undefined, session);
       bindPhaseArmySelection(container, selectMapUnit);
       bindCustodesKatahActions(container, session, message => { attackError = message; }, render);
-      container.querySelector("[data-shooting-unit-picker]")?.addEventListener("change", event => selectMapUnit(event.target.value));
+
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         const unitId = marker.getAttribute?.("data-map-unit-id");
         const isTarget = targets.some((target) => target.unitId === unitId);
