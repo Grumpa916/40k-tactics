@@ -228,8 +228,8 @@ function renderMemberProfile(state, original, unit) {
 function renderMemberPanel(state, original, gameData, tab) {
   const unit = getArmyUnitReference(state, original);
   const rosterUnit = getBattleRosterUnit(state, original);
-  if (tab === 'profile') return renderMemberProfile(state, original, unit);
-  if (tab === 'weapons') return renderUnitWeapons(state, unit, rosterUnit, gameData);
+  if (tab === 'profile') return renderMemberProfile(state, original, unit) +
+    '<h4>Weapons</h4>' + renderUnitWeapons(state, unit, rosterUnit, gameData);
   if (tab === 'abilities') return renderUnitAbilities(unit);
   return renderUnitNotes(unit, rosterUnit);
 }
@@ -247,9 +247,10 @@ function renderMemberVitals(state, group, member) {
 export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab = 'profile') {
   const group = getArmyUnitDisplayGroup(state, unitId);
   if (!group) return '<p>Unit no longer available.</p><button data-army-back>Back to army</button>';
-  const tabs = ['profile', 'weapons', 'abilities', 'notes'];
-  const activeTab = tabs.includes(selectedTab) ? selectedTab : 'profile';
-  const titles = { profile: 'Profile', weapons: 'Weapons', abilities: 'Abilities', notes: 'Notes' };
+  const tabs = ['profile', 'abilities', 'notes'];
+  const normalizedTab = selectedTab === 'weapons' ? 'profile' : selectedTab;
+  const activeTab = tabs.includes(normalizedTab) ? normalizedTab : 'profile';
+  const titles = { profile: 'Profile + Weapons', abilities: 'Abilities', notes: 'Notes' };
   const tabButtons = tabs.map(tab =>
     '<button type="button" role="tab" id="army-unit-tab-' + tab + '" aria-controls="army-unit-panel-' + tab +
     '" aria-selected="' + String(activeTab === tab) + '" tabindex="' + (activeTab === tab ? '0' : '-1') +
