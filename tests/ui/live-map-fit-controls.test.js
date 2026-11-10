@@ -14,7 +14,7 @@ test('live battlefield keeps zoom at hand and groups display tools and selected 
   assert.match(nav, /data-live-map-style/);
   assert.match(nav, /Standard map/);
   assert.doesNotMatch(nav, /Threat view|data-map-threat-toggle|data-live-map-bases-toggle/);
-  assert.match(nav, /data-live-map-zoom[^>]*>2× zoom<\/button>\s*<details[^>]+>\s*<summary>Map tools/);
+  assert.match(nav, /data-live-map-zoom[^>]*>2× zoom<\/button>\s*<button[^>]*data-live-map-style[^>]*>Standard map<\/button>\s*<details[^>]+>\s*<summary>Map tools/);
   assert.match(nav, /data-live-map-grid-toggle/);
   assert.match(nav, /data-live-map-sight-toggle/);
   assert.match(nav, /data-live-map-marker-size/);
