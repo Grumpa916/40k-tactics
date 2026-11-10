@@ -335,7 +335,7 @@ test('opponent shooter can be chosen by name and resolve damage without Advisor 
   const session=createGameSession(initial), root=fakeDom();
   const screen=createShootingScreen(root,{session,perspectivePlayerId:'p1',gameData});
   try {
-    root.change('[data-shooting-unit-picker]','marine'); root.click('[data-choice-shoot]');
+    root.click('[data-select-phase-unit]','marine'); root.click('[data-choice-shoot]');
     assert.match(root.innerHTML,/data-attack/);
     root.change('[data-target]','exo'); root.click('[data-shoot-damage-plus]'); root.click('[data-attack]');
     assert.equal(session.getState().units.find(u=>u.id==='exo').wounds,13);
