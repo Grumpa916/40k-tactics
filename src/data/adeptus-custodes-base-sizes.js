@@ -59,7 +59,7 @@ export const ADEPTUS_CUSTODES_BASE_CATALOG = Object.freeze([
   record('Gyrfalcon Jetbike Sodality','oval',90,52,'kit',
     'https://www.gamersguildusa.com/products/warhammer-40k-horus-heresy-custodes-gyrfalcon-jetbike-sodality'),
   record('Caladius Annihilator Grav-Tank','oval',150,95,'kit',
-    'https://divinegamez.com/products/product_01m5368gztfvksbebk18538av0')
+    'https://www.miniaturemarket.com/Warhammer-Horus-Heresy-Legio-Custodes-Caladius-Annihilator-Grav-Tank/GW-31-139-2026')
 ]);
 const byName = new Map(ADEPTUS_CUSTODES_BASE_CATALOG.map(item => [normalize(item.name), item]));
 
