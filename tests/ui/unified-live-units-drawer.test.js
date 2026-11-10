@@ -101,16 +101,24 @@ test('all three combat phases have a map-first drawer with no duplicate unit pic
         assert.match(html,/phase-army-roster__section-heading">Ready/);
         root.click('[data-select-phase-unit]','custodian');
         assert.match(root.innerHTML,/data-choice-shoot/);
+        assert.match(root.innerHTML,/class="phase-selected-vitals"/);
+        assert.match(root.innerHTML,/data-adjust-unit-wounds="-1"/);
+        assert.match(root.innerHTML,/data-toggle-live-battle-shock/);
       }else if(phase==='charge'){
         assert.match(html,/phase-army-roster__section-heading">Eligible chargers/);
         assert.doesNotMatch(html,/<summary>Available chargers/);
         root.click('[data-select-phase-unit]','custodian');
-        assert.match(root.innerHTML,/Select a charging unit|custodian/);
+        assert.match(root.innerHTML,/class="phase-selected-vitals"/);
+        assert.match(root.innerHTML,/data-adjust-unit-wounds="-1"/);
+        assert.match(root.innerHTML,/data-toggle-live-battle-shock/);
       }else{
         assert.match(html,/phase-army-roster__section-heading">Other eligible fighters/);
         assert.doesNotMatch(html,/class="fight-order"/);
         root.click('[data-select-phase-unit]','custodian');
         assert.match(root.innerHTML,/data-fight-weapon/);
+        assert.match(root.innerHTML,/class="phase-selected-vitals"/);
+        assert.match(root.innerHTML,/data-adjust-unit-wounds="-1"/);
+        assert.match(root.innerHTML,/data-toggle-live-battle-shock/);
       }
     }finally{screen.destroy();}
   }
