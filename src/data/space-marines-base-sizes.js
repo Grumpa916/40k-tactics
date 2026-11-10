@@ -80,7 +80,7 @@ export const SPACE_MARINES_BASE_CATALOG = Object.freeze([
   round('Invictor Tactical Warsuit',90),
   round('Iron Father Feirros',40),
   round('Judiciar',40),
-  round('Kaius Konorius',40,'40'),
+  record('Kaius Konorius','round',40,40,'kit','https://www.warhammer.com/en-US/shop/space-marines-kaius-konorius-2026'),
   round('Kayvaan Shrike',40),
   round('Kor\'sarro Khan',40),
   hull('Land Raider'),
@@ -129,8 +129,6 @@ export const SPACE_MARINES_BASE_CATALOG = Object.freeze([
   hull('Whirlwind'),
   hull('Astraeus'),
   unique('Thunderhawk Gunship'),
-  // New kit not individually listed in the Event Companion guide.
-  record('Kaius Konorius (kit reference)','round',40,40,'kit','https://www.warhammer.com/en-US/shop/space-marines-kaius-konorius-2026')
 ]);
 
 const byName = new Map(SPACE_MARINES_BASE_CATALOG.map(item => [normalize(item.name), item]));
