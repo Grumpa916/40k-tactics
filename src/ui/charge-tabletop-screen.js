@@ -1,3 +1,4 @@
+import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { createLiveMapView } from './live-map-view.js';
 import { getChargeViewModel, recordChargeOutcomeForSession, recordChargeDeclinedForSession, finishChargePhase } from '../application/charge-workflow.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
@@ -91,7 +92,8 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
         <button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button>
         <button type="button" data-charge-decline>Do not charge</button>
       </div>` : '';
-    const controls = `      ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
+    const controls = `${candidate && state.phase === 'charge' ? renderPhaseSelectedVitals(state,selectedUnitId) : ''}
+      ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
         <h2>Incoming charge · Defensive review</h2>
         <p>Review the enemy charger and your threatened units. Confirm the declared targets and measured distance on the tabletop; map positions do not establish charge legality.</p>
         ${targets.slice(0, 4).map(target => {
