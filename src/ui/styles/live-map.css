@@ -750,3 +750,28 @@
   border-color:#fff09e;
   box-shadow:0 0 0 2px #fff09e;
 }
+
+/* The oval shape rotates below the upright model number, exactly as the
+   unexpanded oval unit marker and scale-accurate SVG outline do. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model.is-oval {
+  isolation:isolate;
+  border-color:transparent;
+  background:transparent;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model.is-oval::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border:2px solid #a8daff;
+  border-radius:50%;
+  box-sizing:border-box;
+  background:#204e67;
+  transform:rotate(var(--live-individual-angle,0deg));
+  transform-origin:center;
+  pointer-events:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model.is-oval.opponent::after {
+  border-color:#ffbfb1;
+  background:#673837;
+}
