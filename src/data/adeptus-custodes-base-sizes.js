@@ -9,6 +9,8 @@
  * box contents and distinctly label the source as "kit", not "official guide".
  * Neither a display base nor these dimensions changes game-state positions.
  */
+import { getSpaceMarinesBaseSize } from './space-marines-base-sizes.js';
+
 export const CUSTODES_BASE_GUIDE_URL = 'https://assets.warhammer-community.com/eng_12-06_warhammer40000_event_companion-s3bfb5f9s1-ivswuij3fo.pdf';
 export const CUSTODES_BASE_GUIDE_LABEL = 'GW Warhammer Event Companion (2026), p. 56';
 
@@ -105,12 +107,18 @@ export function modelBaseSizeForUnit(unit, manual = null) {
       widthMm: override, lengthMm: length, source:'manual', sourceUrl:null
     });
   }
-  return getAdeptusCustodesBaseSize(unit);
+  const faction = normalize(unit?.faction ?? unit?.metadata?.faction ?? unit?.factionName);
+  const datasheetId = unit?.metadata?.datasheetId ?? unit?.datasheetId;
+  const declaredFaction = datasheetId ? normalize(String(datasheetId).split(':')[0]) : '';
+  if (faction === 'space marines' || declaredFaction === 'space marines') return getSpaceMarinesBaseSize(unit);
+  if (faction === 'adeptus custodes' || declaredFaction === 'adeptus custodes') return getAdeptusCustodesBaseSize(unit);
+  return getAdeptusCustodesBaseSize(unit) ?? getSpaceMarinesBaseSize(unit);
 }
 
 export function modelBaseSizeLabel(base) {
   if (!base) return 'No verified base size';
   if (base.shape === 'hull') return 'Hull (no standard base)';
+  if (base.shape === 'unique') return 'Unique base (confirm with event organiser)';
   return base.shape === 'round' ? String(base.widthMm) + 'mm round' :
     String(base.widthMm) + '×' + String(base.lengthMm) + 'mm oval';
 }

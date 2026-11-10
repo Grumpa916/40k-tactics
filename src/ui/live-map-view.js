@@ -98,6 +98,7 @@ function liveTools(state, options, preferences, zoomed = false) {
   } : null;
   const ovalRotation = base?.shape === 'oval' && unit ? getLiveOvalAngle(unit, preferences.ovalAngles) : 0;
   const baseSource = base?.source === 'manual' ? 'Custom base' :
+    base?.shape === 'unique' ? 'GW Event Companion · unique; confirm with event organiser' :
     base?.source === 'kit' ? 'Kit-supplied base (event-guide review pending)' :
     base?.source === 'event-guide' ? 'GW 2026 Event Companion' :
     base?.shape === 'hull' ? 'Hull; no standard circular base' : 'No verified base size';
@@ -111,10 +112,10 @@ function liveTools(state, options, preferences, zoomed = false) {
   // Display sizing is deliberately separate from physical tabletop coordinates.
   const controls = `<nav class="live-map__tools" aria-label="Live battlefield display controls">
     <button type="button" data-live-map-zoom aria-pressed="${zoomed}">${zoomed ? 'Fit map' : '2× zoom'}</button>
+    <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
     <details class="live-map__more-tools" name="live-map-tools" data-view-key="live-map-display-tools">
       <summary>Map tools</summary>
       <div class="live-map__more-tools-content">
-        <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
         <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
         <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
         ${options?.showMapPlanner ? MAP_PLANNING_BUTTON : ''}
@@ -247,7 +248,7 @@ export function createLiveMapView() {
       const symbolsHref = symbolsStylesheet.href;
       const controls = liveTools(state, options, preferences, liveZoomed);
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, plannerStyleObjectives:true, activationForUnit:id => getUnitActivationPresentation(state,id) });
-      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true, numberedMarkers: preferences.topDown });
+      map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true, numberedMarkers: false });
       map = applyLiveMapStatusBadges(map, state);
       map = addPrecisionOverlay(map);
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
@@ -280,16 +281,11 @@ export function createLiveMapView() {
       const unitMarkers = Array.from(container.querySelectorAll?.('.live-map [data-map-unit-id]') ?? []);
       const unitSymbols = liveUnitSymbolLabels(state.units ?? []);
       const markerUnitId = marker => marker.getAttribute('data-map-member-id') || marker.getAttribute('data-map-unit-id');
-      const visibleUnitIds = new Set(unitMarkers.map(markerUnitId));
-      const unitNumbers = new Map();
-      for (const unit of state.units ?? []) {
-        if (visibleUnitIds.has(unit.id)) unitNumbers.set(unit.id, String(unitNumbers.size + 1));
-      }
       const refreshUnitLabels = () => unitMarkers.forEach(marker => {
         const text = marker.firstChild;
         if (text?.nodeType !== 3) return;
         const id = markerUnitId(marker);
-        const label = preferences.topDown ? unitNumbers.get(id) : unitSymbols.get(id);
+        const label = unitSymbols.get(id);
         if (label != null) text.nodeValue = label;
       });
       const updateMapStyle = () => {
