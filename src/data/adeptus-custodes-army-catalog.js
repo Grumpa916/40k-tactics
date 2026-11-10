@@ -1,5 +1,6 @@
 import { getAdeptusCustodesDatasheetDetails } from './adeptus-custodes-datasheet-details.js';
 import { getAdeptusCustodesAttachmentMetadata } from './adeptus-custodes-leader-bodyguard-compatibility.js';
+import { getAdeptusCustodesBaseSize } from './adeptus-custodes-base-sizes.js';
 import { getRulesDataRevisionForFaction } from './rules-data-revisions.js';
 
 const RULES_REVISION = getRulesDataRevisionForFaction('Adeptus Custodes');
@@ -53,6 +54,7 @@ export const ADEPTUS_CUSTODES_ARMY_CATALOG = Object.freeze(units.map(([name,slug
     id,
     name,
     faction:'Adeptus Custodes',
+    baseSize:getAdeptusCustodesBaseSize({name,datasheetId:id,faction:'Adeptus Custodes'}),
     defaultModelCount,
     defaultPoints,
     pointsOptions,
