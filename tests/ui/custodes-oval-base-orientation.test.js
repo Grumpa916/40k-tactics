@@ -91,7 +91,7 @@ test('Top-down oval marker and physical base layer rotate together while label s
     const css=readFileSync(new URL('../../src/ui/styles/live-map.css',import.meta.url),'utf8');
     assert.match(css,/\.is-base-scaled\.is-base-oval::after \{[\s\S]*?transform:rotate\(var\(--live-oval-angle,0deg\)\)/);
     assert.match(css,/\.is-base-oval\.is-base-reference::after \{[\s\S]*?border-style:dashed/);
-    assert.doesNotMatch(css.slice(css.lastIndexOf('/* Rotatable oval miniatures:')),/\.live-map\.is-standard/);
+    assert.doesNotMatch(css.slice(css.lastIndexOf('/* Rotatable oval miniatures:'),css.indexOf('/* Individual-model map positioning:')),/\.live-map\.is-standard/);
   } finally {
     if(old===undefined) delete globalThis.localStorage;
     else globalThis.localStorage=old;

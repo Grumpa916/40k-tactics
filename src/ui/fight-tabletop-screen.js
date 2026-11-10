@@ -106,7 +106,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     });
 
     restoreView();
-    mapView.bind(container);
+    mapView.bind(container, undefined, undefined, session);
     bindCustodesKatahActions(container, session, message => { error = message; }, render);
     const choose = id => {
       if (!options.attackers.some(unit => unit.unitId === id)) {

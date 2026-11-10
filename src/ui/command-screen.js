@@ -796,7 +796,7 @@ export function createCommandScreen(container, {
         afterRuleReminders: renderCustodesKatahCommandPanel(state, { playerId }),
         footer: ''
       });
-      mapView.bind(container);
+      mapView.bind(container, undefined, undefined, session);
       if (unitSelection) bindCombatMap(container, {
         state, selectedUnitId:selectedCommandUnitId, selectableIds,
         onSelect: id => {

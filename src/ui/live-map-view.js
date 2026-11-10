@@ -1,4 +1,5 @@
 import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
+import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { mapObjectiveMarkerLabel } from '../rules/objective-display-labels.js';
 import { getLiveUnitPosition } from '../rules/spatial-context.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
@@ -24,10 +25,11 @@ function loadMapPreferences() {
       markerSize: Math.max(14, Math.min(38, Number(parsed?.markerSize) || 18)),
       baseSizes: parsed?.baseSizes && typeof parsed.baseSizes === 'object' ? parsed.baseSizes : {},
       ovalAngles: parsed?.ovalAngles && typeof parsed.ovalAngles === 'object' ? parsed.ovalAngles : {},
+      expandedUnits: parsed?.expandedUnits && typeof parsed.expandedUnits === 'object' ? parsed.expandedUnits : {},
       sightModels: parsed?.sightModels && typeof parsed.sightModels === 'object' ? parsed.sightModels : {}
     };
   } catch {
-    return { topDown: true, grid: true, bases: true, sight: false, markerSize: 18, baseSizes: {}, ovalAngles: {}, sightModels: {} };
+    return { topDown: true, grid: true, bases: true, sight: false, markerSize: 18, baseSizes: {}, ovalAngles: {}, expandedUnits: {}, sightModels: {} };
   }
 }
 
@@ -79,7 +81,8 @@ function addPrecisionOverlay(map) {
   </svg>
   <svg class="live-map__physical-base-overlay" data-live-map-bases-layer viewBox="0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}" preserveAspectRatio="none" aria-label="Physical model base outlines at tabletop scale">
     <g data-live-map-bases></g>
-  </svg>`;
+  </svg>
+  <div class="live-map__individual-models" data-live-map-individual-models></div>`;
   const boardStart = map.indexOf('<div class="battlefield-map__board"');
   const boardEnd = map.indexOf('>', boardStart);
   return boardStart >= 0 && boardEnd >= 0 ? map.slice(0, boardEnd + 1) + overlay + map.slice(boardEnd + 1) : map;
@@ -97,6 +100,8 @@ function liveTools(state, options, preferences) {
     base?.source === 'kit' ? 'Kit-supplied base (event-guide review pending)' :
     base?.source === 'event-guide' ? 'GW 2026 Event Companion' :
     base?.shape === 'hull' ? 'Hull; no standard circular base' : 'No verified base size';
+  const count = Number(unit?.currentStrength ?? unit?.remainingStrength ?? unit?.metadata?.currentModelCount ?? unit?.metadata?.modelCount);
+  const canExpand = unit?.status === 'deployed' && Number.isInteger(count) && count > 1;
   const models = unit ? unitModelsForMap(unit, state) : [];
   const selectedModelId = unit ? preferences.sightModels[unit.id] : null;
   const selectedModelIndex = Math.max(0, models.findIndex(model => model.id === selectedModelId));
@@ -108,6 +113,7 @@ function liveTools(state, options, preferences) {
     <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
     <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
     <button type="button" data-live-map-zoom aria-pressed="false">2× zoom</button>
+    ${canExpand ? `<button type="button" data-live-map-squad-toggle data-unit-id="${esc(unit.id)}" aria-pressed="${Boolean(preferences.expandedUnits[unit.id])}">${preferences.expandedUnits[unit.id] ? 'Hide models' : 'Expand squad'} · ${count}</button>` : ''}
     ${unit && base?.shape === 'oval' ? `<button type="button" data-live-map-oval-rotate data-unit-id="${esc(unit.id)}" title="Rotate selected oval base 45 degrees; display only" aria-label="Rotate ${esc(unit.name)} oval base 45 degrees">Rotate oval · ${ovalRotation}°</button>` : ''}
     <label class="live-map__marker-size" title="Used for units without verified base dimensions; known bases scale automatically in Top-down view">Fallback size
       <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Marker size for units without verified physical bases">
@@ -183,6 +189,36 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   sight.setAttribute('points', result.points.map(mapPoint).join(' '));
 }
 
+
+function drawIndividualModelHandles(container,state,preferences) {
+  const layer=container.querySelector?.('[data-live-map-individual-models]');
+  if(!layer) return;
+  const markers=new Map(Array.from(container.querySelectorAll?.('.live-map [data-map-unit-id]')??[])
+    .map(node=>[node.getAttribute('data-map-member-id')??node.getAttribute('data-map-unit-id'),node]));
+  const parts=[];
+  for(const unit of state.units??[]) {
+    const active=Boolean(preferences.topDown&&preferences.expandedUnits[unit.id]&&unit.status==='deployed');
+    const count=Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
+    const models=Array.isArray(unit.models)?unit.models:[];
+    const expanded=active&&count>1&&models.length>1&&
+      models.every(model=>Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y));
+    markers.get(unit.id)?.classList?.toggle?.('is-squad-expanded',expanded);
+    if(!expanded) continue;
+    const base=modelBaseSizeForUnit(unit,preferences.baseSizes[sizeKey(unit)]);
+    const width=base?.widthMm?base.widthMm/25.4/BOARD_WIDTH*100:1.5/BOARD_WIDTH*100;
+    const height=base?.lengthMm?base.lengthMm/25.4/BOARD_HEIGHT*100:1.5/BOARD_HEIGHT*100;
+    const ovalAngle=base?.shape==='oval'?getLiveOvalAngle(unit,preferences.ovalAngles):0;
+    for(let i=0;i<models.length;i++) {
+      const model=models[i];
+      parts.push(`<div role="button" tabindex="0" class="live-map__individual-model ${base?.shape==='oval'?'is-oval':''} ${unit.ownerId===(state.activePlayer??state.battle?.activePlayerId)?'friendly':'opponent'}"
+        data-live-model-unit-id="${esc(unit.id)}" data-live-model-id="${esc(model.id)}"
+        style="left:${(model.position.x/BOARD_WIDTH*100).toFixed(5)}%;top:${((BOARD_HEIGHT-model.position.y)/BOARD_HEIGHT*100).toFixed(5)}%;width:${width.toFixed(5)}%;height:${height.toFixed(5)}%;--live-individual-angle:${ovalAngle}deg"
+        aria-label="${esc(unit.name)} model ${i+1}; drag to adjust tabletop position" title="${esc(unit.name)} · Model ${i+1}">${i+1}</div>`);
+    }
+  }
+  layer.innerHTML=parts.join('');
+}
+
 // Zoom changes presentation only. Stored unit coordinates are never changed.
 export function createLiveMapView() {
   let zoom = 1, left = 0, top = 0;
@@ -193,7 +229,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'custodes-oval-orientation-v1');
+      stylesheet.searchParams.set('v', 'individual-squad-models-v1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
@@ -207,7 +243,7 @@ export function createLiveMapView() {
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
       return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}" data-live-zoom="1" style="--live-marker-size:${preferences.markerSize}px">${controls.controls}${map}</div>`;
     },
-    bind(container, state = renderedState, options = renderedOptions) {
+    bind(container, state = renderedState, options = renderedOptions, liveSession = null) {
       const viewport = container.querySelector('[data-live-map-viewport]');
       const canvas = container.querySelector('[data-live-map-canvas]');
       if (viewport) {
@@ -217,6 +253,7 @@ export function createLiveMapView() {
       let selectedModelIndex = liveTools(state, options, preferences).selectedModelIndex;
       drawPrecision(container, state, options, preferences, selectedModelIndex);
       applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
+      drawIndividualModelHandles(container,state,preferences);
       const updatePressed = (selector, value) => container.querySelector(selector)?.setAttribute('aria-pressed', String(value));
       const objectives = Array.from(container.querySelectorAll?.('.live-map .battlefield-map__objective') ?? []);
       const fullObjectiveLabels = objectives.map(node => node.textContent);
@@ -253,6 +290,7 @@ export function createLiveMapView() {
         if (styleButton) styleButton.textContent = preferences.topDown ? 'Standard map' : 'Top-down map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
         applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
+        drawIndividualModelHandles(container,state,preferences);
         refreshObjectiveLabels();
         refreshUnitLabels();
       };
@@ -262,6 +300,37 @@ export function createLiveMapView() {
         preferences.topDown = !preferences.topDown;
         saveMapPreferences(preferences);
         updateMapStyle();
+      });
+      container.querySelector('[data-live-map-squad-toggle]')?.addEventListener('click', event => {
+        const unit=(state.units??[]).find(item=>item.id===options?.selectedUnitId);
+        const session=liveSession;
+        if(!unit||!session) return;
+        const opening=!preferences.expandedUnits[unit.id];
+        if(opening&&(!Array.isArray(unit.models)||
+          unit.models.length!==Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount)||
+          !unit.models.every(model=>Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y)))) {
+          try {
+            // Mark expanded before dispatch since the session immediately
+            // notifies all phase views and re-renders the map.
+            preferences.expandedUnits[unit.id]=true;
+            saveMapPreferences(preferences);
+            session.dispatch({type:COMMAND_TYPES.EXPAND_LIVE_SQUAD_MODELS,payload:{
+              unitId:unit.id,playerId:unit.ownerId,baseOverride:preferences.baseSizes[sizeKey(unit)]??null
+            }});
+          } catch(error) {
+            preferences.expandedUnits[unit.id]=false;
+            saveMapPreferences(preferences);
+            const status=container.querySelector('[data-live-map-base-status]');
+            if(status) status.textContent=error?.message??String(error);
+          }
+          return;
+        }
+        preferences.expandedUnits[unit.id]=opening;
+        saveMapPreferences(preferences);
+        event.currentTarget.textContent=(opening?'Hide models':'Expand squad')+' · '+
+          Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
+        event.currentTarget.setAttribute('aria-pressed',String(opening));
+        drawIndividualModelHandles(container,state,preferences);
       });
       container.querySelector('[data-live-map-oval-rotate]')?.addEventListener('click', event => {
         const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
@@ -274,6 +343,7 @@ export function createLiveMapView() {
         event.currentTarget.textContent = 'Rotate oval · ' + angle + '°';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
         applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
+        drawIndividualModelHandles(container,state,preferences);
       });
       container.querySelector('[data-live-map-marker-size]')?.addEventListener('input', event => {
         const size = Math.max(14, Math.min(38, Number(event.currentTarget.value) || 18));
@@ -344,7 +414,86 @@ export function createLiveMapView() {
         if (status) status.textContent = !width && !length ? 'Default base size restored.' : 'Custom base size saved.';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
         applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
+        drawIndividualModelHandles(container,state,preferences);
       });
+      const individualLayer=container.querySelector?.('[data-live-map-individual-models]');
+      if(individualLayer&&liveSession) {
+        let drag=null;
+        const locate=(event,board)=>{
+          const rect=board.getBoundingClientRect?.();
+          if(!rect?.width||!rect?.height) return null;
+          return {x:Math.max(0,Math.min(BOARD_WIDTH,(event.clientX-rect.left)/rect.width*BOARD_WIDTH)),
+            y:Math.max(0,Math.min(BOARD_HEIGHT,(1-(event.clientY-rect.top)/rect.height)*BOARD_HEIGHT))};
+        };
+        individualLayer.addEventListener('pointerdown',event=>{
+          const target=event.target?.closest?.('[data-live-model-id]');
+          if(!target) return;
+          const board=target.closest?.('[data-battlefield-map-board]');
+          const unitId=target.getAttribute('data-live-model-unit-id');
+          const modelId=target.getAttribute('data-live-model-id');
+          const unit=liveSession.getState().units.find(item=>item.id===unitId);
+          const pointer=board&&locate(event,board);
+          if(!pointer||unit?.status!=='deployed'||!unit.models?.length)return;
+          // Model bases can sit only ~20px apart on a fitted iPad map while
+          // their 44px touch regions overlap. Choose the *nearest centre*
+          // inside the touched squad, not the last overlapping DOM element.
+          const positioned=unit.models.filter(model=>
+            Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y));
+          if(!positioned.length)return;
+          const model=positioned.reduce((nearest,item)=>
+            Math.hypot(item.position.x-pointer.x,item.position.y-pointer.y) <
+            Math.hypot(nearest.position.x-pointer.x,nearest.position.y-pointer.y) ? item : nearest);
+          const activeTarget=Array.from(individualLayer.querySelectorAll?.('[data-live-model-id]')??[])
+            .find(node=>node.getAttribute('data-live-model-id')===model.id)??target;
+          drag={pointerId:event.pointerId,unitId,modelId:model.id,board,target:activeTarget,
+            x:event.clientX,y:event.clientY,start:{...model.position},pointer,moved:false};
+          try{activeTarget.setPointerCapture?.(event.pointerId);}catch{}
+          event.stopPropagation?.();
+        });
+        individualLayer.addEventListener('pointermove',event=>{
+          if(!drag||event.pointerId!==drag.pointerId)return;
+          if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<5&&!drag.moved)return;
+          const point=locate(event,drag.board);
+          if(!point)return;
+          drag.moved=true;
+          event.preventDefault?.();
+          event.stopPropagation?.();
+          const x=Math.max(0,Math.min(BOARD_WIDTH,drag.start.x+point.x-drag.pointer.x));
+          const y=Math.max(0,Math.min(BOARD_HEIGHT,drag.start.y+point.y-drag.pointer.y));
+          drag.target.style.left=x/BOARD_WIDTH*100+'%';
+          drag.target.style.top=(BOARD_HEIGHT-y)/BOARD_HEIGHT*100+'%';
+        });
+        individualLayer.addEventListener('pointerup',event=>{
+          if(!drag||event.pointerId!==drag.pointerId)return;
+          const current=drag;
+          drag=null;
+          event.stopPropagation?.();
+          if(!current.moved)return;
+          const point=locate(event,current.board);
+          if(!point)return;
+          const latest=liveSession.getState();
+          const unit=latest.units.find(item=>item.id===current.unitId);
+          const models=unit?.models;
+          if(!Array.isArray(models)||!models.some(model=>model.id===current.modelId))return;
+          const position={x:Math.round(Math.max(0,Math.min(BOARD_WIDTH,current.start.x+point.x-current.pointer.x))*10)/10,
+            y:Math.round(Math.max(0,Math.min(BOARD_HEIGHT,current.start.y+point.y-current.pointer.y))*10)/10};
+          try{
+            liveSession.dispatch({type:COMMAND_TYPES.ADJUST_LIVE_MAP_POSITION,payload:{
+              unitId:unit.id,playerId:unit.ownerId,
+              moves:models.map(model=>({modelId:model.id,
+                position:model.id===current.modelId?position:model.position}))
+            }});
+          }catch(error){
+            const status=container.querySelector?.('[data-live-map-base-status]');
+            if(status)status.textContent=error?.message??String(error);
+            drawIndividualModelHandles(container,latest,preferences);
+          }
+        });
+        individualLayer.addEventListener('pointercancel',()=>{drag=null;drawIndividualModelHandles(container,liveSession.getState(),preferences);});
+        individualLayer.addEventListener('click',event=>{
+          if(event.target?.closest?.('[data-live-model-id]'))event.stopPropagation?.();
+        });
+      }
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
         const old = zoom;
         zoom = button.getAttribute('data-map-zoom') === 'fit' ? 1 : Math.max(1,Math.min(3,zoom+(button.getAttribute('data-map-zoom') === 'in' ? .5 : -.5)));

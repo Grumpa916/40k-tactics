@@ -5,7 +5,7 @@ import { rulesContextKey } from '../rules/rules-phase-window.js';
 import { recordCommandPointChange } from './command-points-ledger.js';
 import { splitCustodesTerminators } from './unleash-the-lions-transitions.js';
 
-export function recordCustodesDetachmentStratagemUse(state,{playerId,unitId,stratagemId,timingConfirmed=false,unitLimitConfirmed=false,woundsByModel=null}={}) {
+export function recordCustodesDetachmentStratagemUse(state,{playerId,unitId,stratagemId,timingConfirmed=false,unitLimitConfirmed=false,woundsByModel=null,vexillaModelIndex=null}={}) {
   const getOpportunities=stratagemId==='preternatural-rapidity' ? getPreternaturalRapidityOpportunities
     : stratagemId==='lightning-wrath' ? getLightningWrathOpportunities
       : stratagemId==='golden-light-of-the-moiraides' ? getGoldenLightOpportunities
@@ -21,5 +21,5 @@ export function recordCustodesDetachmentStratagemUse(state,{playerId,unitId,stra
     contextKey:rulesContextKey(state)
   }));
   return stratagemId==='unleash-the-lions'
-    ? splitCustodesTerminators(recorded,{playerId,unitId,woundsByModel}) : recorded;
+    ? splitCustodesTerminators(recorded,{playerId,unitId,woundsByModel,vexillaModelIndex}) : recorded;
 }

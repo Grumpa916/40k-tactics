@@ -1,5 +1,5 @@
 import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
-import { getBattleUnitDatasheet, getCombatFormationMembers } from '../rules/battle-unit-reference.js';
+import { getBattleUnitDatasheet, getCombatFormationMembers, getBattleRosterUnit } from '../rules/battle-unit-reference.js';
 import { getRecordedStratagemUses, isGoldenLightActive } from '../rules/stratagem-use-state.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -17,11 +17,15 @@ export function renderCustodesDetachmentStratagemControls(state,{playerId,strata
     const perModel=Number(getBattleUnitDatasheet(state,bodyguard)?.characteristics?.Wounds??6);
     const limits=[...Array(chosen.modelCount-leaders.length).fill(perModel),
       ...leaders.map(member=>Number(getBattleUnitDatasheet(state,member)?.characteristics?.Wounds??0))];
+    const rosterUnit=getBattleRosterUnit(state,bodyguard);
+    const vexilla=(rosterUnit?.equippedWargear??[]).find(item=>String(item.selectionName??item.name??item.sourceName??'').toLowerCase()==='vexilla');
+    const hasSingleVexilla=vexilla&&vexilla.quantity===1&&chosen.modelCount-leaders.length>1;
     const leaderNote=leaders.length?' Enter Terminator models first, then '+leaders.map(member=>member.name).join(', ')+'.':'';
     return `<details class="venatari-ability-controls"><summary>${available.length?'Split terminators · 1 CP':'Review eligibility'}</summary>`+
       `<form data-custodes-detachment-stratagem-form data-detachment-stratagem-id="unleash-the-lions" data-detachment-stratagem-player="${esc(playerId)}">`+
       `<label>Terminator unit<select name="unitId" required>${entries.map(entry=>`<option value="${esc(entry.unitId)}" ${entry===chosen?'selected ':''}${entry.available?'':'disabled'}>${esc(entry.unitName)} · ${entry.modelCount} models${entry.blockedReason?' · '+esc(entry.blockedReason):''}</option>`).join('')}</select></label>`+
       `<label>Remaining wounds per model, comma separated<input name="woundsByModel" type="text" required placeholder="e.g. ${limits.join(', ')}" autocomplete="off"></label>`+
+      (hasSingleVexilla?`<label>Which Terminator has the Vexilla?<select name="vexillaModelIndex" required>${Array.from({length:chosen.modelCount-leaders.length},(_,index)=>`<option value="${index+1}">Allarus model ${index+1}</option>`).join('')}</select></label>`:'')+
       `<small>Enter current wounds for each surviving model.${esc(leaderNote)} Mixed wargear needs model-level assignment and cannot be split automatically. After splitting, drag each marker to its tabletop position.</small>`+
       check('timingConfirmed','I am using this Stratagem in my Command phase on a battlefield unit')+
       check('unitLimitConfirmed','No other Stratagem targeted this unit this phase, including one resolved at the table')+
@@ -64,5 +68,6 @@ export function readCustodesDetachmentStratagemForm(form) {
   return {playerId:form.getAttribute('data-detachment-stratagem-player'),stratagemId:form.getAttribute('data-detachment-stratagem-id'),
     unitId:form.querySelector('[name="unitId"]')?.value,timingConfirmed:checked('timingConfirmed'),unitLimitConfirmed:checked('unitLimitConfirmed'),
     ...(form.getAttribute('data-detachment-stratagem-id')==='unleash-the-lions'?{
-      woundsByModel:String(form.querySelector('[name="woundsByModel"]')?.value??'').split(',').map(value=>Number(value.trim()))}: {})};
+      woundsByModel:String(form.querySelector('[name="woundsByModel"]')?.value??'').split(',').map(value=>Number(value.trim())),
+      vexillaModelIndex:form.querySelector('[name="vexillaModelIndex"]') ? Number(form.querySelector('[name="vexillaModelIndex"]').value) : null}: {})};
 }
