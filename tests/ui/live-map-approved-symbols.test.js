@@ -54,7 +54,7 @@ test('live map loads the approved symbol stylesheet after the base live-map styl
   const symbols = html.indexOf('live-map-symbols.css');
   assert.ok(base >= 0);
   assert.ok(symbols > base);
-  assert.match(html, /live-map\.css\?v=compact-map-tools-1/);
+  assert.match(html, /live-map\\.css\\?v=compact-map-tools-1/);
   assert.match(html, /live-map-symbols\.css\?v=approved-symbols-2/);
 });
 
@@ -117,7 +117,7 @@ test('Standard map renders the identical abbreviations used in both army roster 
   }
 });
 
-test('view toggle changes only marker text, retaining badge, unit IDs and event targets', () => {
+test('view toggle preserves roster abbreviations, badge, unit IDs and event targets', () => {
   const state = {
     units: [
       {id:'guard',ownerId:'p1',name:'Custodian Guard',status:'deployed'},
@@ -149,15 +149,15 @@ test('view toggle changes only marker text, retaining badge, unit IDs and event 
       querySelectorAll(selector){return selector==='.live-map [data-map-unit-id]'?markers:[];}
     };
     view.bind(container,state,{perspectivePlayerId:'p1'});
-    assert.equal(markers[0].firstChild.nodeValue,'1');
+    assert.deepEqual(markers.map(marker=>marker.firstChild.nodeValue),markers.map(marker=>marker.expected));
     handlers.click();
     for(const marker of markers) {
-      assert.equal(marker.firstChild.nodeValue,marker.expected);
+      assert.equal(marker.firstChild.nodeValue,marker.expected,'both map modes retain the roster abbreviation');
       assert.equal(marker.badge.className,'unit-activation-badge','status badge is unchanged');
     }
     assert.equal(button.textContent,'Top-down map');
     handlers.click();
-    assert.deepEqual(markers.map(m=>m.firstChild.nodeValue),['1','2','3']);
+    assert.deepEqual(markers.map(marker=>marker.firstChild.nodeValue),markers.map(marker=>marker.expected));
     assert.equal(button.textContent,'Standard map');
   } finally {
     if(storage===undefined) delete globalThis.localStorage;
