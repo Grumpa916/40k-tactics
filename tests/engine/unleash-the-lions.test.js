@@ -9,6 +9,7 @@ import { getDatasheetWeaponOptions } from '../../src/rules/saved-roster-combat-p
 import { renderCustodesDetachmentStratagemControls } from '../../src/ui/custodes-detachment-stratagem-controls.js';
 import { renderPhaseArmyRoster } from '../../src/ui/phase-army-roster.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
+import { expandLiveSquadModels } from '../../src/engine/battlefield-map-transitions.js';
 
 function battle({sheet='allarus-custodians',detachment='Lions of the Emperor',status='deployed',phase='command',weapons=null}={}) {
   const datasheetId='adeptus-custodes:'+sheet;
@@ -169,4 +170,42 @@ test('two surviving models including the attached Leader are sufficient to split
   assert.equal(next.units.length,2);
   assert.equal(next.commandPoints.p1,1);
   assert.deepEqual(next.units.map(unit=>unit.wounds),[5,9]);
+});
+
+test('Trajann plus prepositioned three Allarus split into four preserved tabletop positions with a chosen Vexilla bearer',()=>{
+  const initial=withTrajannAttached();
+  initial.armyRosters.p1.units[0].equippedWargear=[
+    {name:'Guardian Spear',quantity:3},
+    {name:'Balistus Grenade Launcher',quantity:3},
+    {name:'Vexilla',quantity:1}
+  ];
+  const form=renderCustodesDetachmentStratagemControls(initial,{playerId:'p1',stratagemId:'unleash-the-lions'});
+  assert.match(form,/Which Terminator has the Vexilla/);
+  assert.match(form,/name="vexillaModelIndex"/);
+  const expanded=expandLiveSquadModels(initial,{unitId:'p1:u1',playerId:'p1'});
+  const positions=expanded.units[0].models.map(m=>({...m.position}));
+  const withLeaderPosition={...expanded,units:expanded.units.map(u=>
+    u.id==='p1:trajann'?{...u,position:{x:23.5,y:22.5}}:u)};
+  assert.throws(()=>recordCustodesDetachmentStratagemUse(withLeaderPosition,{
+    ...command,woundsByModel:[6,4,6,9]
+  }),/Choose which surviving Terminator model carries the Vexilla/);
+  const start=JSON.stringify(withLeaderPosition);
+  const next=recordCustodesDetachmentStratagemUse(withLeaderPosition,{
+    ...command,woundsByModel:[6,4,6,9],vexillaModelIndex:2
+  });
+  assert.equal(JSON.stringify(withLeaderPosition),start,'input battle remains unchanged');
+  assert.equal(next.units.length,4);
+  assert.equal(next.commandPoints.p1,1);
+  assert.deepEqual(next.units.slice(0,3).map(u=>u.position),positions);
+  assert.deepEqual(next.units[3].position,{x:23.5,y:22.5});
+  assert.deepEqual(next.units.slice(0,3).map(u=>u.models[0].position),positions);
+  assert.deepEqual(next.units.map(u=>u.wounds),[6,4,6,9]);
+  assert.deepEqual(next.armyRosters.p1.units.slice(0,3).map(u=>
+    u.equippedWargear.some(item=>item.name==='Vexilla')),[false,true,false]);
+  assert.deepEqual(next.units.slice(0,3).map(u=>u.liveWargear.activeSelections.vexilla ?? 0),[0,1,0]);
+  assert.equal(next.armyRosters.p1.units.find(u=>u.isWarlord)?.name,'Trajann Valoris');
+  assert.equal(getCombatFormationMembers(next,next.units[0]).length,1);
+  assert.equal(next.history.at(-1).payload.vexillaModelIndex,2);
+  const map=renderBattlefieldMap(next,{mode:'live',perspectivePlayerId:'p1'});
+  for(const id of next.units.map(u=>u.id))assert.ok(map.includes('data-map-unit-id="'+id+'"'));
 });
