@@ -127,10 +127,11 @@ export function expandLiveSquadModels(state,{unitId,playerId,baseOverride=null}=
   const count=Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
   if(!Number.isInteger(count)||count<2||count>100)
     throw new Error('Confirm the surviving model count (2–100) before expanding.');
-  if(Array.isArray(unit.models)&&unit.models.length) {
-    if(unit.models.length===count&&unit.models.every(model=>Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y))) return state;
-    throw new Error('Existing model positions are incomplete. Review them rather than generating duplicates.');
-  }
+  const existing=Array.isArray(unit.models)?unit.models:[];
+  if(existing.length&&existing.length!==count)
+    throw new Error('Tracked model identities differ from the surviving model count. Review casualties before expanding.');
+  if(existing.length===count&&existing.every(model=>
+    Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y)))return state;
   const anchor=getLiveUnitPosition(state,unit);
   if(!Number.isFinite(anchor?.x)||!Number.isFinite(anchor?.y))
     throw new Error('Place the squad on the map before expanding models.');
@@ -141,13 +142,20 @@ export function expandLiveSquadModels(state,{unitId,playerId,baseOverride=null}=
   const width=(columns-1)*stepX,height=(rows-1)*stepY;
   const cx=Math.max(width/2,Math.min(WIDTH_IN-width/2,anchor.x));
   const cy=Math.max(height/2,Math.min(HEIGHT_IN-height/2,anchor.y));
-  const models=Array.from({length:count},(_,index)=>({
-    id:unit.id+':model:'+(index+1),
-    position:validatePosition({
-      x:cx+((index%columns)-(columns-1)/2)*stepX,
-      y:cy+(Math.floor(index/columns)-(rows-1)/2)*stepY
-    })
-  }));
+  const models=Array.from({length:count},(_,index)=>{
+    const original=existing[index]??{};
+    const saved=original.position;
+    return {...original,id:original.id||unit.id+':model:'+(index+1),
+      position:Number.isFinite(saved?.x)&&Number.isFinite(saved?.y)
+        ? {...saved}
+        : validatePosition({
+          x:cx+((index%columns)-(columns-1)/2)*stepX,
+          y:cy+(Math.floor(index/columns)-(rows-1)/2)*stepY
+        })
+    };
+  });
+  if(new Set(models.map(model=>model.id)).size!==models.length)
+    throw new Error('Duplicate existing model IDs; review the roster before expanding.');
   return appendHistoryEntry({
     ...state,units:state.units.map(item=>item.id===unitId?{...item,models}:item)
   },createEvent('battlefield_map.models_expanded',{
