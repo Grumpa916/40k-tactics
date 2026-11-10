@@ -687,3 +687,66 @@
   background:#5c581e;
   box-shadow:0 0 0 2px #fff09e;
 }
+
+/* Individual-model map positioning: parent squad marker is visually hidden
+   when its numbered models are expanded. Each small footprint has a 44px
+   transparent touch target; only map display is affected. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down .battlefield-map__unit.is-squad-expanded {
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-models {
+  position:absolute;
+  inset:0;
+  z-index:12;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-standard .live-map__individual-models { display:none; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model {
+  box-sizing:border-box;
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:grid;
+  place-items:center;
+  padding:0;
+  min-width:0;
+  min-height:0;
+  border:2px solid #a8daff;
+  border-radius:50%;
+  color:#fff;
+  background:#204e67;
+  font-size:clamp(8px,.75vw,12px);
+  font-weight:800;
+  line-height:1;
+  text-align:center;
+  touch-action:none;
+  pointer-events:auto;
+  cursor:grab;
+  user-select:none;
+  -webkit-user-select:none;
+  z-index:12;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model.opponent {
+  color:#ffe1e1;
+  border-color:#ffbfb1;
+  background:#673837;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model::before {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:max(100%,44px);
+  height:max(100%,44px);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:transparent;
+  pointer-events:auto;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .live-map__individual-model:active {
+  cursor:grabbing;
+  border-color:#fff09e;
+  box-shadow:0 0 0 2px #fff09e;
+}
