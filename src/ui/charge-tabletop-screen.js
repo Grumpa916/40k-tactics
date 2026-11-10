@@ -156,7 +156,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     });
 
     restoreView();
-    mapView.bind(container);
+    mapView.bind(container, undefined, undefined, session);
     const chooseUnit = id => {
       if (id === selectedUnitId) return;
       selectedUnitId = id; unitSelection?.select(state, id); targetIds = new Set(); distances = new Map(); error = ''; render();
