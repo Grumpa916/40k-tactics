@@ -651,3 +651,39 @@
   height:max(44px, 100%) !important;
   border-radius:50% !important;
 }
+
+/* Rotatable oval miniatures: rotate the physical shape, not the number/text.
+   The same display-only angle is used by the SVG base outline. The original
+   map unit element, center position and 44px tap area are unchanged. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled.is-base-oval {
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+  isolation:isolate;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled.is-base-oval::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  display:block;
+  border:2px dotted #a8daff;
+  border-radius:50%;
+  box-sizing:border-box;
+  background:#204e67;
+  transform:rotate(var(--live-oval-angle,0deg));
+  transform-origin:center;
+  z-index:-1;
+  pointer-events:none;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-oval.opponent::after {
+  border-color:#ffbfb1;
+  background:#673837;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-oval.is-base-reference::after {
+  border-style:dashed;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-oval.is-selected::after {
+  border-color:#fff09e;
+  background:#5c581e;
+  box-shadow:0 0 0 2px #fff09e;
+}

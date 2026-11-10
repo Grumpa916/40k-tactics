@@ -6,7 +6,7 @@ import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-sy
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
 import { modelBaseSizeForUnit, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
-import { applyLiveMarkerBaseScales } from './live-map-marker-base-scale.js';
+import { applyLiveMarkerBaseScales, getLiveOvalAngle } from './live-map-marker-base-scale.js';
 
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const MAP_PREFERENCES_KEY = 'fortyk-tactics-live-map-v1';
@@ -23,10 +23,11 @@ function loadMapPreferences() {
       sight: parsed?.sight === true,
       markerSize: Math.max(14, Math.min(38, Number(parsed?.markerSize) || 18)),
       baseSizes: parsed?.baseSizes && typeof parsed.baseSizes === 'object' ? parsed.baseSizes : {},
+      ovalAngles: parsed?.ovalAngles && typeof parsed.ovalAngles === 'object' ? parsed.ovalAngles : {},
       sightModels: parsed?.sightModels && typeof parsed.sightModels === 'object' ? parsed.sightModels : {}
     };
   } catch {
-    return { topDown: true, grid: true, bases: true, sight: false, markerSize: 18, baseSizes: {}, sightModels: {} };
+    return { topDown: true, grid: true, bases: true, sight: false, markerSize: 18, baseSizes: {}, ovalAngles: {}, sightModels: {} };
   }
 }
 
@@ -91,6 +92,7 @@ function liveTools(state, options, preferences) {
   const dimensions = base?.widthMm ? {
     width:base.widthMm, length:base.shape === 'round' ? '' : base.lengthMm
   } : null;
+  const ovalRotation = base?.shape === 'oval' && unit ? getLiveOvalAngle(unit, preferences.ovalAngles) : 0;
   const baseSource = base?.source === 'manual' ? 'Custom base' :
     base?.source === 'kit' ? 'Kit-supplied base (event-guide review pending)' :
     base?.source === 'event-guide' ? 'GW 2026 Event Companion' :
@@ -106,6 +108,7 @@ function liveTools(state, options, preferences) {
     <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
     <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
     <button type="button" data-live-map-zoom aria-pressed="false">2× zoom</button>
+    ${unit && base?.shape === 'oval' ? `<button type="button" data-live-map-oval-rotate data-unit-id="${esc(unit.id)}" title="Rotate selected oval base 45 degrees; display only" aria-label="Rotate ${esc(unit.name)} oval base 45 degrees">Rotate oval · ${ovalRotation}°</button>` : ''}
     <label class="live-map__marker-size" title="Used for units without verified base dimensions; known bases scale automatically in Top-down view">Fallback size
       <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Marker size for units without verified physical bases">
       <output data-live-map-marker-value>${preferences.markerSize}px</output>
@@ -117,7 +120,7 @@ function liveTools(state, options, preferences) {
         <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}" ${unit ? '' : 'disabled'}></label>
         <button type="button" data-live-map-base-apply ${unit ? '' : 'disabled'}>Set base size</button>
         <small data-live-map-base-source>${esc(baseSource)}${base ? ' · ' + esc(modelBaseSizeLabel(base)) : ''}</small>
-        <small data-live-map-base-explanation>Bright outline = physical base, separate from marker size. Dashed = one-model reference only; squad footprint is not recorded.</small>
+        <small data-live-map-base-explanation>Bright outline = physical base, separate from fallback marker size. Rotate oval changes the selected unit’s direction only. Dashed = one-model reference; squad footprint is not recorded.</small>
       </div>
       ${modelPicker}
       <small data-live-map-base-status aria-live="polite"></small>
@@ -156,7 +159,11 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
       const position = model.position ?? getLiveUnitPosition(state, unit);
       if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return '';
       const selected = unit.id === options?.selectedUnitId && index === selectedModelIndex;
-      const angle = Number.isFinite(model.angle) ? model.angle : 0;
+      const angle = base.shape === 'oval'
+        ? (Object.prototype.hasOwnProperty.call(preferences.ovalAngles, unit.id)
+          ? getLiveOvalAngle(unit, preferences.ovalAngles)
+          : (Number.isFinite(model.angle) ? model.angle : getLiveOvalAngle(unit, preferences.ovalAngles)))
+        : 0;
       const owner = unit.ownerId === (options?.perspectivePlayerId ?? state?.activePlayer) ? 'friendly' : 'opponent';
       const reference = isReference ? ' is-reference' : '';
       const title = isReference
@@ -186,7 +193,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'physical-base-sized-markers-v1');
+      stylesheet.searchParams.set('v', 'custodes-oval-orientation-v1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
@@ -209,7 +216,7 @@ export function createLiveMapView() {
       }
       let selectedModelIndex = liveTools(state, options, preferences).selectedModelIndex;
       drawPrecision(container, state, options, preferences, selectedModelIndex);
-      applyLiveMarkerBaseScales(container, state, preferences.baseSizes);
+      applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
       const updatePressed = (selector, value) => container.querySelector(selector)?.setAttribute('aria-pressed', String(value));
       const objectives = Array.from(container.querySelectorAll?.('.live-map .battlefield-map__objective') ?? []);
       const fullObjectiveLabels = objectives.map(node => node.textContent);
@@ -245,7 +252,7 @@ export function createLiveMapView() {
         const styleButton = container.querySelector('button[data-live-map-style]');
         if (styleButton) styleButton.textContent = preferences.topDown ? 'Standard map' : 'Top-down map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
-        applyLiveMarkerBaseScales(container, state, preferences.baseSizes);
+        applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
         refreshObjectiveLabels();
         refreshUnitLabels();
       };
@@ -255,6 +262,18 @@ export function createLiveMapView() {
         preferences.topDown = !preferences.topDown;
         saveMapPreferences(preferences);
         updateMapStyle();
+      });
+      container.querySelector('[data-live-map-oval-rotate]')?.addEventListener('click', event => {
+        const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
+        const key = sizeKey(unit);
+        const base = unit && modelBaseSizeForUnit(unit, preferences.baseSizes[key]);
+        if (!unit || base?.shape !== 'oval') return;
+        const angle = (getLiveOvalAngle(unit, preferences.ovalAngles) + 45) % 180;
+        preferences.ovalAngles[unit.id] = angle;
+        saveMapPreferences(preferences);
+        event.currentTarget.textContent = 'Rotate oval · ' + angle + '°';
+        drawPrecision(container, state, options, preferences, selectedModelIndex);
+        applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
       });
       container.querySelector('[data-live-map-marker-size]')?.addEventListener('input', event => {
         const size = Math.max(14, Math.min(38, Number(event.currentTarget.value) || 18));
@@ -324,7 +343,7 @@ export function createLiveMapView() {
         if (lengthInput) lengthInput.value = effective?.shape === 'oval' ? effective.lengthMm : '';
         if (status) status.textContent = !width && !length ? 'Default base size restored.' : 'Custom base size saved.';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
-        applyLiveMarkerBaseScales(container, state, preferences.baseSizes);
+        applyLiveMarkerBaseScales(container, state, preferences.baseSizes, preferences.ovalAngles);
       });
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
         const old = zoom;
