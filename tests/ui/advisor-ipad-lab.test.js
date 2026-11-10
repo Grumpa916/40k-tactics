@@ -123,3 +123,26 @@ test('invalid scenario and combat actions are safely rejected rather than changi
   assert.throws(()=>applyAdvisorIpadAction(planning,'charge-success'),/Switch to Charge/);
   assert.throws(()=>applyAdvisorIpadAction(planning,'invented'),/Unknown test action/);
 });
+
+test('Safari right column isolates Advisor scrolling from collapsible evidence and retains scroll on updates',()=>{
+  const script=readFileSync(new URL('../../src/testing/advisor-ipad-lab.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../../src/testing/advisor-ipad-test.css',import.meta.url),'utf8');
+  const evidenceMarkup=script.match(/'<details id="lab-metrics"[^]*?<\/details>'\+/)?.[0]??'';
+  assert.match(evidenceMarkup,/class="lab-metrics"/);
+  assert.match(evidenceMarkup,/<summary id="lab-evidence-summary">Scenario evidence<\/summary>/);
+  assert.doesNotMatch(evidenceMarkup,/\sopen(?:\s|>)/,
+    'evidence must start collapsed so it cannot obstruct Turn Planning');
+  assert.match(script,/document\.getElementById\('lab-evidence-detail'\)\.innerHTML=formatDiagnostics/);
+  assert.match(script,/const advisorScroll=resetAdvisorScroll\?0:/);
+  assert.match(script,/advisorViewport\.scrollTop=advisorScroll/);
+  assert.match(script,/render\(\{resetAdvisorScroll:true\}\)/);
+  assert.match(css,/\.lab-right\{[^}]*overflow:hidden/);
+  assert.match(css,/\.lab-real-panel\{[^}]*flex:1 1 0;min-height:0;[^}]*overflow-y:auto/);
+  assert.match(css,/\.lab-metrics\{[^}]*flex:0 0 auto;[^}]*max-height:34%/);
+  assert.match(css,/\.lab-metrics > summary\{[^}]*min-height:44px/);
+  assert.match(css,/\.lab-root\{height:100dvh;min-height:0/);
+  assert.doesNotMatch(css,/height:calc\(100dvh - 165px\)/,
+    'old hardcoded header offset did not match actual iPad Safari header height');
+  assert.match(css,/@media \(max-width:849px\),\(orientation:portrait\)/);
+  assert.match(css,/\.lab-real-panel\{flex:0 0 auto;max-height:none;min-height:0;overflow:visible\}/);
+});

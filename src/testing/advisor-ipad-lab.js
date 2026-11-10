@@ -84,7 +84,9 @@ function scaffold() {
         '<h2>Actual Advisor panel</h2>'+
         '<p class="lab-board-explain">This section renders the project’s real Turn Planning or Adaptive Execution component. Tap the headings to open or close.</p>'+
         '<div id="lab-real-panel" class="lab-real-panel"></div>'+
-        '<div id="lab-metrics" class="lab-metrics" aria-label="Calculated values"></div>'+
+        '<details id="lab-metrics" class="lab-metrics" aria-label="Calculated values">'+
+          '<summary id="lab-evidence-summary">Scenario evidence</summary>'+
+          '<div id="lab-evidence-detail" class="lab-metrics__detail"></div></details>'+
       '</section>'+
     '</section>'+
     '<footer class="lab-footer">Isolated browser-memory test · refreshed or closed = reset · calculated pass/fail does not replace real live-play acceptance on iPad</footer>'+
@@ -214,7 +216,9 @@ function restoreDisclosure(){
     .map(node=>[node.getAttribute('data-view-key'),node.open]));
 }
 
-function render(){
+function render({resetAdvisorScroll=false}={}){
+  const advisorViewport=document.getElementById('lab-real-panel');
+  const advisorScroll=resetAdvisorScroll?0:(advisorViewport?.scrollTop??0);
   ensureInitialSnapshot(scenarioId);
   const disclosure=restoreDisclosure();
   const scenario=ADVISOR_IPAD_SCENARIOS.find(item=>item.id===scenarioId);
@@ -236,13 +240,18 @@ function render(){
       const previously=disclosure.get(node.getAttribute('data-view-key'));
       if(previously!==undefined) node.open=previously;
     }
-    document.getElementById('lab-metrics').innerHTML=formatDiagnostics(lastInspection);
+    document.getElementById('lab-evidence-summary').textContent=
+      'Scenario evidence · '+lastInspection.passed+'/'+lastInspection.total+' automatic checks';
+    document.getElementById('lab-evidence-detail').innerHTML=formatDiagnostics(lastInspection);
+    advisorViewport.scrollTop=advisorScroll;
     renderChecks(lastInspection);
     visits.set(scenarioId,summarizeAdvisorScenarioChecks(lastInspection));
   }catch(error){
     lastInspection=null;
     document.getElementById('lab-real-panel').innerHTML='<p class="lab-fallback">Advisor calculation failed: '+esc(error.message)+'</p>';
-    document.getElementById('lab-metrics').textContent='This failure can be included in the copied report.';
+    document.getElementById('lab-evidence-summary').textContent='Scenario evidence · error';
+    document.getElementById('lab-evidence-detail').textContent='This failure can be included in the copied report.';
+    advisorViewport.scrollTop=advisorScroll;
     document.getElementById('lab-checks').textContent='ERROR · '+error.message;
     document.getElementById('lab-count').textContent='0 checks';
     visits.set(scenarioId,{passed:0,total:1,unmet:['Advisor calculation failed'],error:String(error)});
@@ -256,12 +265,13 @@ function loadScenario(id){
   interactions.delete(id);
   message='Scenario reset. Changes here never touch a saved game.';
   messageError=false;
-  render();
+  render({resetAdvisorScroll:true});
 }
 
 function perform(action){
   if(action==='reset'){loadScenario(scenarioId);return;}
   if(action.startsWith('load:')){loadScenario(action.slice(5));return;}
+  const previousScenarioId=scenarioId;
   try {
     const startingScenario=scenarioId;
     state=applyAdvisorIpadAction(state,action,{distance:measuredDistance});
@@ -278,7 +288,7 @@ function perform(action){
     message='Test action blocked: '+error.message;
     messageError=true;
   }
-  render();
+  render({resetAdvisorScroll:scenarioId!==previousScenarioId});
 }
 
 function manualReport(){
