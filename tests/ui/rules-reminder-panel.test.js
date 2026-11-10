@@ -22,7 +22,7 @@ test('an opponent shooter selecting Wardens displays their incoming AP reminder 
   const session=createGameSession(custodesReminderState()),root=fakeDom();
   const gameData={weapons:[{id:'bolter',name:'Bolter',type:'ranged',characteristics:{range:24,attacks:2,skill:3,strength:8,ap:-2,damage:2}}]};
   const screen=createShootingScreen(root,{session,gameData,perspectivePlayerId:'p1'});
-  root.change('[data-shooting-unit-picker]','marine');root.click('[data-choice-shoot]');root.change('[data-target]','wardens');
+  root.click('[data-select-phase-unit]','marine');root.click('[data-choice-shoot]');root.change('[data-target]','wardens');
   await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));
   assert.match(root.innerHTML,/Target defenses · wardens/);assert.match(root.innerHTML,/AP −2 becomes AP −1/);
   root.change('[data-target]','telemon');await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));assert.match(root.innerHTML,/Target defenses · telemon/);assert.match(root.innerHTML,/Reduce incoming ranged Damage by 1/);
@@ -64,7 +64,7 @@ test('opponent Fight target selection also displays the Warden defensive reminde
   state.history.push({type:'charge.outcome_recorded',payload:{unitId:'marine',targetIds:['wardens'],outcome:'successful',round:1,turn:1}});
   const session=createGameSession(state),root=fakeDom();
   const screen=createFightTabletopScreen(root,{session,perspectivePlayerId:'p1',gameData:{weapons:[{id:'sword',name:'Sword',type:'melee',characteristics:{attacks:2,skill:3,strength:8,ap:-2,damage:2}}]}});
-  root.click('[data-fight-select]','marine');root.change('[data-fight-target]','wardens');
+  root.click('[data-select-phase-unit]','marine');root.change('[data-fight-target]','wardens');
   assert.match(root.innerHTML,/Target defenses · wardens/);assert.match(root.innerHTML,/AP −2 becomes AP −1/);screen.destroy();
 });
 
