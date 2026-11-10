@@ -129,10 +129,10 @@ test('opening either member shows the same grouped dialog and distinct member pr
   assert.match(overlay, /data-open-unit-details="leader"/);
 });
 
-test('Weapons, Abilities and Notes stay associated with their owning member', () => {
+test('Profile and Weapons, Abilities and Notes stay associated with their owning member', () => {
   const state = attachedState();
   const html = renderArmyUnitDialog(state, 'leader', {}, 'weapons');
-  const weapons = panel(html, 'weapons');
+  const weapons = panel(html, 'profile');
   const guard = weapons.split('data-unit-reference-member="guard"')[1].split('</section>')[0];
   const leader = weapons.split('data-unit-reference-member="leader"')[1].split('</section>')[0];
   assert.match(guard, /Bodyguard weapon/);
