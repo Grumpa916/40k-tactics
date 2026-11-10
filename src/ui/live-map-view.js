@@ -5,6 +5,7 @@ import { renderBattlefieldMap } from './battlefield-map.js';
 import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-symbols.js';
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
+import { modelBaseSizeForUnit, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
 
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const MAP_PREFERENCES_KEY = 'fortyk-tactics-live-map-v1';
@@ -80,7 +81,14 @@ function addPrecisionOverlay(map) {
 function liveTools(state, options, preferences) {
   const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
   const key = sizeKey(unit);
-  const dimensions = key ? preferences.baseSizes[key] : null;
+  const base = unit ? modelBaseSizeForUnit(unit, key ? preferences.baseSizes[key] : null) : null;
+  const dimensions = base?.widthMm ? {
+    width:base.widthMm, length:base.shape === 'round' ? '' : base.lengthMm
+  } : null;
+  const baseSource = base?.source === 'manual' ? 'Custom base' :
+    base?.source === 'kit' ? 'Kit-supplied base (event-guide review pending)' :
+    base?.source === 'event-guide' ? 'GW 2026 Event Companion' :
+    base?.shape === 'hull' ? 'Hull; no standard circular base' : 'No verified base size';
   const models = unit ? unitModelsForMap(unit, state) : [];
   const selectedModelId = unit ? preferences.sightModels[unit.id] : null;
   const selectedModelIndex = Math.max(0, models.findIndex(model => model.id === selectedModelId));
@@ -102,6 +110,7 @@ function liveTools(state, options, preferences) {
         <label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}" ${unit ? '' : 'disabled'}></label>
         <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}" ${unit ? '' : 'disabled'}></label>
         <button type="button" data-live-map-base-apply ${unit ? '' : 'disabled'}>Set base size</button>
+        <small data-live-map-base-source>${esc(baseSource)}${base ? ' · ' + esc(modelBaseSizeLabel(base)) : ''}</small>
       </div>
       ${modelPicker}
       <small data-live-map-base-status aria-live="polite"></small>
@@ -123,9 +132,18 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   bases.style.display = preferences.topDown && preferences.bases ? '' : 'none';
   sight.style.display = preferences.topDown && preferences.sight ? '' : 'none';
   bases.innerHTML = (state.units ?? []).filter(unit => unit.status === 'deployed').map(unit => {
-    const size = baseDimensions(preferences.baseSizes[sizeKey(unit)]?.width, preferences.baseSizes[sizeKey(unit)]?.length);
+    const base = modelBaseSizeForUnit(unit, preferences.baseSizes[sizeKey(unit)]);
+    const size = base?.widthMm ? baseDimensions(base.widthMm, base.lengthMm) : null;
     if (!size) return '';
-    const models = unitModelsForMap(unit, state);
+    // Unit-centre markers are not individual model positions. A multi-model
+    // squad without model-level coordinates must not imply a single 40mm base
+    // is its entire footprint.
+    const recordedModels = Array.isArray(unit.models) ? unit.models.filter(model =>
+      Number.isFinite(model?.position?.x) && Number.isFinite(model?.position?.y)) : [];
+    const reportedCount = Number(unit.metadata?.modelCount ?? unit.startingStrength ??
+      unit.currentStrength ?? unit.remainingStrength);
+    const models = recordedModels.length ? recordedModels :
+      reportedCount === 1 ? unitModelsForMap(unit, state) : [];
     return models.map((model, index) => {
       const position = model.position ?? getLiveUnitPosition(state, unit);
       if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return '';
@@ -280,7 +298,17 @@ export function createLiveMapView() {
           return;
         }
         saveMapPreferences(preferences);
-        if (status) status.textContent = 'Base size saved.';
+        const effective = modelBaseSizeForUnit(unit, preferences.baseSizes[key]);
+        const source = container.querySelector('[data-live-map-base-source]');
+        if (source) source.textContent = effective?.source === 'manual' ? 'Custom base · ' + modelBaseSizeLabel(effective)
+          : effective?.source === 'kit' ? 'Kit-supplied · ' + modelBaseSizeLabel(effective)
+          : effective ? 'GW 2026 Event Companion · ' + modelBaseSizeLabel(effective)
+          : 'No verified base size';
+        const lengthInput = container.querySelector('[data-live-map-base-length]');
+        const widthInput = container.querySelector('[data-live-map-base-width]');
+        if (widthInput) widthInput.value = effective?.widthMm ?? '';
+        if (lengthInput) lengthInput.value = effective?.shape === 'oval' ? effective.lengthMm : '';
+        if (status) status.textContent = !width && !length ? 'Default base size restored.' : 'Custom base size saved.';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
       });
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
