@@ -47,6 +47,7 @@ export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel,ve
     for(const item of items??[]) {
       const name=normalizeCasualtySelectionName(item.selectionName??item.sourceName??item.name);
       const amount=active[name]??item.quantity;
+      if(amount===0) continue; // already lost to casualties; do not resurrect the model's equipment
       if(!Number.isInteger(amount)||amount<1)
         throw new Error('Mixed or uncertain wargear needs model-level assignment before splitting: '+(item.name??item.selectionName??'unknown selection')+'.');
       if(name==='vexilla'&&amount===1&&models>1){
