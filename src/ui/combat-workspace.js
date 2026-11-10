@@ -51,13 +51,13 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
 
 // Each phase owns its selection and command handling. Use the shared reference
 // roster unless the phase supplies its own selection rail.
-export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, adaptiveContext = {}, mapView = createLiveMapView() }) {
+export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, adaptiveContext = {}, rosterSections = [], mapView = createLiveMapView() }) {
   leftRail = leftRail || renderPhaseArmyRoster(state, perspectivePlayerId, {
-    selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds, enableAdjust: state.phase === phase
+    selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds, sections:rosterSections, enableAdjust: state.phase === phase
   });
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
   return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
-    ${hasLeftRail ? `<aside class="combat-workspace__rail"${phase === 'movement' ? ' id="movement-units"' : ''} aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
+    ${hasLeftRail ? `<aside class="combat-workspace__rail"${phase === 'movement' ? ' id="movement-units"' : ['shooting','charge','fight'].includes(phase) ? ' id="live-units"' : ''} aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
