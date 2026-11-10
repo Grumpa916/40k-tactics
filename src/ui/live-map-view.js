@@ -432,12 +432,22 @@ export function createLiveMapView() {
           const unitId=target.getAttribute('data-live-model-unit-id');
           const modelId=target.getAttribute('data-live-model-id');
           const unit=liveSession.getState().units.find(item=>item.id===unitId);
-          const model=unit?.models?.find(item=>item.id===modelId);
           const pointer=board&&locate(event,board);
-          if(!pointer||unit?.status!=='deployed'||!model?.position) return;
-          drag={pointerId:event.pointerId,unitId,modelId,board,target,
+          if(!pointer||unit?.status!=='deployed'||!unit.models?.length)return;
+          // Model bases can sit only ~20px apart on a fitted iPad map while
+          // their 44px touch regions overlap. Choose the *nearest centre*
+          // inside the touched squad, not the last overlapping DOM element.
+          const positioned=unit.models.filter(model=>
+            Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y));
+          if(!positioned.length)return;
+          const model=positioned.reduce((nearest,item)=>
+            Math.hypot(item.position.x-pointer.x,item.position.y-pointer.y) <
+            Math.hypot(nearest.position.x-pointer.x,nearest.position.y-pointer.y) ? item : nearest);
+          const activeTarget=Array.from(individualLayer.querySelectorAll?.('[data-live-model-id]')??[])
+            .find(node=>node.getAttribute('data-live-model-id')===model.id)??target;
+          drag={pointerId:event.pointerId,unitId,modelId:model.id,board,target:activeTarget,
             x:event.clientX,y:event.clientY,start:{...model.position},pointer,moved:false};
-          try{target.setPointerCapture?.(event.pointerId);}catch{}
+          try{activeTarget.setPointerCapture?.(event.pointerId);}catch{}
           event.stopPropagation?.();
         });
         individualLayer.addEventListener('pointermove',event=>{
