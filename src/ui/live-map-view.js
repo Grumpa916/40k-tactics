@@ -306,7 +306,9 @@ export function createLiveMapView() {
         const session=liveSession;
         if(!unit||!session) return;
         const opening=!preferences.expandedUnits[unit.id];
-        if(opening&&(!Array.isArray(unit.models)||!unit.models.length)) {
+        if(opening&&(!Array.isArray(unit.models)||
+          unit.models.length!==Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount)||
+          !unit.models.every(model=>Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y)))) {
           try {
             // Mark expanded before dispatch since the session immediately
             // notifies all phase views and re-renders the map.
