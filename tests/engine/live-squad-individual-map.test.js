@@ -52,7 +52,7 @@ test('never fabricate squads when current model count or battlefield position is
   assert.throws(()=>expandLiveSquadModels(absent,{unitId:'p1:guard',playerId:'p1'}),/Place the squad/);
   const partial=state();
   partial.units[0].models=[{id:'existing',position:{x:17,y:18}}];
-  assert.throws(()=>expandLiveSquadModels(partial,{unitId:'p1:guard',playerId:'p1'}),/incomplete/);
+  assert.throws(()=>expandLiveSquadModels(partial,{unitId:'p1:guard',playerId:'p1'}),/Tracked model identities differ/);
   const reserved=state();
   reserved.units[0].status='reserves';
   assert.throws(()=>expandLiveSquadModels(reserved,{unitId:'p1:guard',playerId:'p1'}),/deployed/);
