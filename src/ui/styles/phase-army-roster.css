@@ -92,3 +92,40 @@
     bottom:auto;
   }
 }
+
+/* All three combat panels show the selected model's vitals in one short row.
+   Existing one-tap correction controls expand inside the same right panel. */
+.battle-shell.is-tabletop-experiment .phase-selected-vitals {
+  margin:6px 0 10px;
+  border:1px solid #536c56;
+  border-radius:9px;
+  background:#1b3024;
+  min-width:0;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals > summary {
+  display:flex;
+  justify-content:space-between;
+  gap:5px 10px;
+  align-items:center;
+  flex-wrap:wrap;
+  min-height:44px;
+  padding:7px 9px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:750;
+  color:#d8f1c9;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals[open] > summary {
+  border-bottom:1px solid #536c56;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals .unit-quick-adjust {
+  padding:8px;
+  max-height:none;
+  border:0;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals .unit-quick-adjust header {
+  display:none;
+}
+.battle-shell.is-tabletop-experiment .phase-selected-vitals .unit-quick-adjust__metric {
+  flex-wrap:wrap;
+}
