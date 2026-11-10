@@ -54,7 +54,7 @@ test('live map loads the approved symbol stylesheet after the base live-map styl
   const symbols = html.indexOf('live-map-symbols.css');
   assert.ok(base >= 0);
   assert.ok(symbols > base);
-  assert.match(html, /live-map\.css\?v=full-planner-live-map-v2-grid/);
+  assert.match(html, /live-map\.css\?v=physical-base-overlays-v1/);
   assert.match(html, /live-map-symbols\.css\?v=approved-symbols-2/);
 });
 
