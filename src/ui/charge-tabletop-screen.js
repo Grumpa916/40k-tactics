@@ -81,19 +81,17 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       limit:3
     }) : [];
     const selectableIds = [...model.candidates.map(item => item.unit.unitId), ...valid];
+    const rosterSections = [{ label:'Eligible chargers', unitIds:new Set(model.candidates.map(item => item.unit.unitId)) }];
     const topControls = `<h1>${esc(candidate?.unit.name ?? 'Select a charging unit')}</h1>
       ${state.phase !== 'charge' ? '<p class="combat-workspace__error" role="status">Viewing Charge. Return to the current game phase and advance to Charge to record an outcome.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
-      ${!candidate ? '<small>Choose a charger on the map or from the army list.</small>' : ''}`;
+      ${!candidate ? '<small>Choose a charger on the map or open Units.</small>' : ''}`;
     const resultControls = candidate && state.phase === 'charge' ? `<div class="combat-workspace__charge-results" role="group" aria-label="Record charge result">
         <button type="button" data-charge-success ${completeMeasurements() ? '' : 'disabled'}>Charge successful</button>
         <button type="button" data-charge-failed ${completeMeasurements() ? '' : 'disabled'}>Charge failed</button>
         <button type="button" data-charge-decline>Do not charge</button>
       </div>` : '';
-    const controls = `<p><small>Drag an active player's deployed unit on the live map to update its approximate Charge position.</small></p>
-      <details ${selectedUnitId ? '' : 'open'}><summary>Available chargers · ${model.candidates.length}</summary>
-        <div class="combat-workspace__choices">${model.candidates.map(item => `<button type="button" data-charge-unit="${esc(item.unit.unitId)}" aria-pressed="${item.unit.unitId === selectedUnitId}">${esc(item.unit.name)}</button>`).join('') || '<p>No deployed units available for a Charge decision.</p>'}</div></details>
-      ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
+    const controls = `      ${candidate ? `${defending ? `<aside class="combat-workspace__card combat-workspace__advisor" data-incoming-charge-advisor aria-label="Incoming charge threats">
         <h2>Incoming charge · Defensive review</h2>
         <p>Review the enemy charger and your threatened units. Confirm the declared targets and measured distance on the tabletop; map positions do not establish charge legality.</p>
         ${targets.slice(0, 4).map(target => {
@@ -150,7 +148,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     container.innerHTML = renderCombatWorkspace({
       state, mapView, phase:'charge', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
       interactivePlayerId:state.phase === 'charge' ? activePlayerId : null,
-      selectedUnitId, selectableIds, targetIds:[...targetIds], controls, topControls,
+      selectedUnitId, selectableIds, targetIds:[...targetIds], rosterSections, controls, topControls,
       adaptiveContext:{ targetId:[...targetIds][0] ?? null, measuredDistance:distances.get([...targetIds][0]) ?? null },
       footer:`${renderActionReceipt(session, { compact:true })}${resultControls}<button type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
     });
@@ -176,7 +174,6 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       else if (model.candidates.some(item => item.unit.unitId === id)) chooseUnit(id);
       else { error = 'Select an available charger, then one of its recommended enemy targets. Map range remains approximate.'; render(); }
     } });
-    container.querySelectorAll('[data-charge-unit]').forEach(button => button.addEventListener('click', () => chooseUnit(button.getAttribute('data-charge-unit'))));
     container.querySelectorAll('[data-charge-priority-target]').forEach(button => button.addEventListener('click', () => selectPriorityTarget(button.getAttribute('data-charge-priority-target'))));
     container.querySelectorAll('[data-charge-target-toggle]').forEach(button => button.addEventListener('click', () => toggleTarget(button.getAttribute('data-charge-target-toggle'))));
     container.querySelectorAll('[data-charge-distance-value]').forEach(button => button.addEventListener('click', () => {
