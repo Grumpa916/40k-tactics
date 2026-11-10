@@ -32,8 +32,8 @@ function mixedLoadoutState() {
   };
 }
 
-const weaponPanel = state => renderArmyUnitDialog(state, 'p1:gants', {}, 'weapons')
-  .split('data-unit-detail-panel="weapons"')[1].split('<div id="army-unit-panel-abilities"')[0];
+const weaponPanel = state => renderArmyUnitDialog(state, 'p1:gants')
+  .split('data-unit-detail-panel="profile"')[1].split('<div id="army-unit-panel-abilities"')[0];
 
 test('mixed casualties show uncertain active counts without inventing surviving weapons', () => {
   const state = mixedLoadoutState();
