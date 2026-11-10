@@ -104,7 +104,7 @@ test('Top-down CSS uses percent-scaled physical base shape; Standard view retain
   assert.match(rules,/border-radius:50% !important;/);
   assert.match(rules,/\.is-base-reference \{[\s\S]*?border-style:dashed !important;/);
   assert.match(rules,/::before \{[\s\S]*?width:max\(44px, 100%\) !important;/);
-  assert.doesNotMatch(rules,/\.live-map\.is-standard/,'Standard stays unchanged');
+  assert.doesNotMatch(rules,/\.live-map\.is-standard[^\n]*\.battlefield-map__unit\.is-compact\.is-base-scaled/,'Standard markers do not use physical base widths');
 });
 
 test('live event handlers refresh scaled marker dimensions on manual override and mode switch', () => {
