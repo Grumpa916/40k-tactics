@@ -6,6 +6,7 @@ import { renderBattlefieldMap } from './battlefield-map.js';
 import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-symbols.js';
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
+import { MAP_PLANNING_BUTTON } from './map-planning.js';
 import { modelBaseSizeForUnit, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
 import { applyLiveMarkerBaseScales, getLiveOvalAngle } from './live-map-marker-base-scale.js';
 
@@ -17,7 +18,7 @@ function loadMapPreferences() {
     const parsed = JSON.parse(globalThis.localStorage?.getItem(MAP_PREFERENCES_KEY) ?? 'null');
     return {
       topDown: parsed?.topDown !== false,
-      grid: true,
+      grid: parsed?.grid !== false,
       // Older builds stored a "bases off" preference but later removed its
       // toggle. Physical outlines must be visible without a hidden control.
       bases: true,
@@ -88,7 +89,7 @@ function addPrecisionOverlay(map) {
   return boardStart >= 0 && boardEnd >= 0 ? map.slice(0, boardEnd + 1) + overlay + map.slice(boardEnd + 1) : map;
 }
 
-function liveTools(state, options, preferences) {
+function liveTools(state, options, preferences, zoomed = false) {
   const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);
   const key = sizeKey(unit);
   const base = unit ? modelBaseSizeForUnit(unit, key ? preferences.baseSizes[key] : null) : null;
@@ -109,28 +110,37 @@ function liveTools(state, options, preferences) {
   // Compact live toolbar mirrors Map Planner without replacing battle state.
   // Display sizing is deliberately separate from physical tabletop coordinates.
   const controls = `<nav class="live-map__tools" aria-label="Live battlefield display controls">
-    <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
-    <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
-    <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
-    <button type="button" data-live-map-zoom aria-pressed="false">2× zoom</button>
-    ${canExpand ? `<button type="button" data-live-map-squad-toggle data-unit-id="${esc(unit.id)}" aria-pressed="${Boolean(preferences.expandedUnits[unit.id])}">${preferences.expandedUnits[unit.id] ? 'Hide models' : 'Expand squad'} · ${count}</button>` : ''}
-    ${unit && base?.shape === 'oval' ? `<button type="button" data-live-map-oval-rotate data-unit-id="${esc(unit.id)}" title="Rotate selected oval base 45 degrees; display only" aria-label="Rotate ${esc(unit.name)} oval base 45 degrees">Rotate oval · ${ovalRotation}°</button>` : ''}
-    <label class="live-map__marker-size" title="Used for units without verified base dimensions; known bases scale automatically in Top-down view">Fallback size
-      <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Marker size for units without verified physical bases">
-      <output data-live-map-marker-value>${preferences.markerSize}px</output>
-    </label>
-    <details class="live-map__base-editor" ${unit ? '' : 'data-disabled="true"'}>
-      <summary>Model base size</summary>
-      <div>
-        <label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}" ${unit ? '' : 'disabled'}></label>
-        <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}" ${unit ? '' : 'disabled'}></label>
-        <button type="button" data-live-map-base-apply ${unit ? '' : 'disabled'}>Set base size</button>
-        <small data-live-map-base-source>${esc(baseSource)}${base ? ' · ' + esc(modelBaseSizeLabel(base)) : ''}</small>
-        <small data-live-map-base-explanation>Bright outline = physical base, separate from fallback marker size. Rotate oval changes the selected unit’s direction only. Dashed = one-model reference; squad footprint is not recorded.</small>
+    <button type="button" data-live-map-zoom aria-pressed="${zoomed}">${zoomed ? 'Fit map' : '2× zoom'}</button>
+    <details class="live-map__more-tools" name="live-map-tools" data-view-key="live-map-display-tools">
+      <summary>Map tools</summary>
+      <div class="live-map__more-tools-content">
+        <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
+        <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
+        <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
+        ${options?.showMapPlanner ? MAP_PLANNING_BUTTON : ''}
+        ${modelPicker}
+        <label class="live-map__marker-size" title="Used for units without verified base dimensions; known bases scale automatically in Top-down view">Fallback size
+          <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Marker size for units without verified physical bases">
+          <output data-live-map-marker-value>${preferences.markerSize}px</output>
+        </label>
       </div>
-      ${modelPicker}
-      <small data-live-map-base-status aria-live="polite"></small>
     </details>
+    ${unit ? `<details class="live-map__more-tools live-map__model-tools" name="live-map-tools" data-view-key="live-map-model-tools-${esc(unit.id)}">
+      <summary aria-label="Models for ${esc(unit.name ?? unit.id)}">Models</summary>
+      <div class="live-map__more-tools-content">
+        ${canExpand ? `<button type="button" data-live-map-squad-toggle data-unit-id="${esc(unit.id)}" aria-pressed="${Boolean(preferences.expandedUnits[unit.id])}">${preferences.expandedUnits[unit.id] ? 'Hide models' : 'Expand squad'} · ${count}</button>` : ''}
+        ${base?.shape === 'oval' ? `<button type="button" data-live-map-oval-rotate data-unit-id="${esc(unit.id)}" title="Rotate selected oval base 45 degrees; display only" aria-label="Rotate ${esc(unit.name)} oval base 45 degrees">Rotate oval · ${ovalRotation}°</button>` : ''}
+        <fieldset class="live-map__base-fields">
+          <legend>Model base size</legend>
+          <label>Width (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" data-live-map-base-width value="${esc(dimensions?.width ?? '')}"></label>
+          <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}"></label>
+          <button type="button" data-live-map-base-apply>Set base size</button>
+          <small data-live-map-base-source>${esc(baseSource)}${base ? ' · ' + esc(modelBaseSizeLabel(base)) : ''}</small>
+          <small data-live-map-base-explanation>Dashed outline shows one model’s base.</small>
+        </fieldset>
+        <small data-live-map-base-status aria-live="polite"></small>
+      </div>
+    </details>` : ''}
   </nav>`;
   return { controls, key, unit, models, selectedModelIndex };
 }
@@ -222,6 +232,7 @@ function drawIndividualModelHandles(container,state,preferences) {
 // Zoom changes presentation only. Stored unit coordinates are never changed.
 export function createLiveMapView() {
   let zoom = 1, left = 0, top = 0;
+  let liveZoomed = false;
   const preferences = loadMapPreferences();
   let renderedState = {}, renderedOptions = {};
   return {
@@ -229,19 +240,19 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'individual-squad-models-v1');
+      stylesheet.searchParams.set('v', 'compact-map-tools-1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
       const symbolsHref = symbolsStylesheet.href;
-      const controls = liveTools(state, options, preferences);
+      const controls = liveTools(state, options, preferences, liveZoomed);
       let map = renderBattlefieldMap(state, { ...options, compactMarkers:true, showMeasurements:false, plannerStyleObjectives:true, activationForUnit:id => getUnitActivationPresentation(state,id) });
       map = applyApprovedLiveMapSymbols(map, state, { preserveObjectiveLabels: true, numberedMarkers: preferences.topDown });
       map = applyLiveMapStatusBadges(map, state);
       map = addPrecisionOverlay(map);
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
-      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}" data-live-zoom="1" style="--live-marker-size:${preferences.markerSize}px">${controls.controls}${map}</div>`;
+      return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}" data-live-zoom="${liveZoomed ? '2' : '1'}" style="--live-marker-size:${preferences.markerSize}px">${controls.controls}${map}</div>`;
     },
     bind(container, state = renderedState, options = renderedOptions, liveSession = null) {
       const viewport = container.querySelector('[data-live-map-viewport]');
@@ -249,6 +260,9 @@ export function createLiveMapView() {
       if (viewport) {
         viewport.scrollLeft = left; viewport.scrollTop = top;
         viewport.addEventListener('scroll', () => { left = viewport.scrollLeft; top = viewport.scrollTop; });
+        viewport.addEventListener('pointerdown', () => {
+          container.querySelectorAll?.('.live-map__more-tools[open]').forEach(menu => { menu.open = false; });
+        });
       }
       let selectedModelIndex = liveTools(state, options, preferences).selectedModelIndex;
       drawPrecision(container, state, options, preferences, selectedModelIndex);
@@ -356,11 +370,11 @@ export function createLiveMapView() {
       });
       container.querySelector('[data-live-map-zoom]')?.addEventListener('click', event => {
         const liveMap = container.querySelector('.live-map');
-        const expanded = liveMap?.getAttribute('data-live-zoom') !== '2';
-        liveMap?.setAttribute('data-live-zoom', expanded ? '2' : '1');
-        event.currentTarget.setAttribute('aria-pressed', String(expanded));
-        event.currentTarget.textContent = expanded ? 'Fit map' : '2× zoom';
-        if (!expanded && viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
+        liveZoomed = !liveZoomed;
+        liveMap?.setAttribute('data-live-zoom', liveZoomed ? '2' : '1');
+        event.currentTarget.setAttribute('aria-pressed', String(liveZoomed));
+        event.currentTarget.textContent = liveZoomed ? 'Fit map' : '2× zoom';
+        if (!liveZoomed && viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
       });
       container.querySelector('[data-live-map-grid-toggle]')?.addEventListener('click', () => {
         preferences.grid = !preferences.grid; saveMapPreferences(preferences);

@@ -36,7 +36,7 @@ export function removeRedundantLiveHelperCopy(container) {
 
 export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}) {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
-  stylesheet.searchParams.set('v', 'live-controls-3');
+  stylesheet.searchParams.set('v', 'compact-live-layout-1');
   const href = stylesheet.href;
   const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const planningMapHref = new URL('./styles/planning-map-fit.css', import.meta.url).href;
@@ -52,6 +52,7 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
       <div class="prototype-phase-chips" aria-label="Battle phases">${phases}</div>
       <button type="button" class="prototype-missions-button" data-toggle-mission-review aria-expanded="${String(missionReviewOpen)}">Missions</button>
       <button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button>
+      <button type="button" data-movement-roster-toggle aria-controls="movement-units" aria-expanded="false" hidden>Units</button>
       <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-battle-phase-button="review">Game review</button></div></details>
     </div>
     <button type="button" data-workspace-panel aria-expanded="false" aria-label="Show phase panel">Panel</button>
@@ -62,6 +63,22 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
 export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   let armyView = 'mine';
   let collapsed = true, unitId = null, logOpen = false, returnFocus = null, unitDetailTab = 'profile';
+  let movementRosterOpen = false;
+
+  function movementRoster() {
+    return container.querySelector?.('#movement-units');
+  }
+
+  function refreshMovementRoster() {
+    const roster = movementRoster();
+    const button = container.querySelector('[data-movement-roster-toggle]');
+    if (!roster) movementRosterOpen = false;
+    container.querySelector('.battle-shell')?.setAttribute('data-movement-roster-open', String(movementRosterOpen));
+    if (button) {
+      button.hidden = !roster;
+      button.setAttribute('aria-expanded', String(movementRosterOpen));
+    }
+  }
 
   function refresh() {
     const shell = container.querySelector?.('.battle-shell');
@@ -77,6 +94,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const summary = container.querySelector('[data-battle-status-summary]');
     const scoreHost = container.querySelector('[data-workspace-score-host]');
     if (summary && combat && scoreHost && summary.parentElement !== scoreHost) scoreHost.append?.(summary);
+    refreshMovementRoster();
     container.querySelectorAll?.('.prototype-phase-chips [data-battle-phase-button]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.getAttribute('data-battle-phase-button') === state.phase));
     });
@@ -96,7 +114,12 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
 
   function click(event) {
     const target = event.target;
-    if (collapsed && target?.closest?.('[data-select-phase-unit], [data-phase-map-select]')) {
+    if (target?.closest?.('[data-movement-roster-toggle]')) {
+      movementRosterOpen = !movementRosterOpen;
+      refreshMovementRoster();
+      return;
+    }
+    if (collapsed && !movementRoster() && target?.closest?.('[data-select-phase-unit], [data-phase-map-select]')) {
       collapsed = false;
       refresh();
     }
@@ -159,7 +182,7 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
   }
 
   function keydown(event) {
-    if (collapsed && ['Enter', ' '].includes(event.key) && event.target?.closest?.('[data-phase-map-select]')) {
+    if (collapsed && !movementRoster() && ['Enter', ' '].includes(event.key) && event.target?.closest?.('[data-phase-map-select]')) {
       collapsed = false;
       refresh();
     }
@@ -174,8 +197,15 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
       tabs[nextIndex]?.click?.();
       return;
     }
-    if (event.key === 'Escape' && !container.querySelector('[data-army-roster-overlay]')?.hidden) {
-      container.querySelector('[data-close-army-roster]')?.click?.();
+    if (event.key === 'Escape') {
+      const closeDialog = container.querySelector('[data-close-army-roster]');
+      if (closeDialog) {
+        closeDialog.click?.();
+      } else if (movementRosterOpen) {
+        movementRosterOpen = false;
+        refreshMovementRoster();
+        container.querySelector('[data-movement-roster-toggle]')?.focus?.();
+      }
     }
   }
 

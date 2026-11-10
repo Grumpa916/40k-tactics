@@ -240,7 +240,8 @@
   font-size:12px;
   white-space:nowrap;
 }
-.live-map__more-tools { position:relative; flex:0 0 auto; min-width:0; }
+.live-map__tools { position:relative; z-index:5; justify-content:flex-end; }
+.live-map__more-tools { flex:0 0 auto; min-width:0; }
 .live-map__more-tools > summary { cursor:pointer; list-style:none; }
 .live-map__more-tools > summary::-webkit-details-marker { display:none; }
 .live-map__more-tools > summary::after { content:" ▾"; }
@@ -250,7 +251,8 @@
   z-index:50;
   right:0;
   top:calc(100% + 5px);
-  width:min(310px,calc(100vw - 28px));
+  box-sizing:border-box;
+  width:min(310px,100%);
   max-height:min(65dvh,390px);
   overflow:auto;
   display:grid;
@@ -264,11 +266,21 @@
   -webkit-overflow-scrolling:touch;
 }
 .live-map__more-tools-content > button { min-width:0; }
-.live-map__more-tools-content > .live-map__base-editor,
+.live-map__more-tools-content > .live-map__base-fields,
 .live-map__more-tools-content > small,
+.live-map__more-tools-content > .live-map__marker-size,
 .live-map__more-tools-content > .live-map__sight-model { grid-column:1/-1; }
-.live-map__more-tools-content > .live-map__base-editor[open] { flex:auto; }
-.live-map__more-tools-content > [data-map-zoom-value] { align-self:center; text-align:center; }
+.live-map__base-fields {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px;
+  min-width:0; margin:0; padding:6px; border:1px solid #60737e; border-radius:7px;
+}
+.live-map__base-fields label { display:grid; gap:3px; font-size:12px; }
+.live-map__base-fields input { box-sizing:border-box; width:100%; min-width:0; }
+.live-map__base-fields button, .live-map__base-fields small { grid-column:1/-1; }
+.live-map__tools .live-map__more-tools-content > .live-map__marker-size { max-width:none; }
+.live-map__tools .live-map__more-tools-content button,
+.live-map__tools > details > summary { min-height:44px; box-sizing:border-box; }
+.live-map__tools > details > summary { display:flex; align-items:center; gap:4px; white-space:nowrap; }
 
 @media (orientation:landscape) and (min-width:761px) {
   .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map {
@@ -450,9 +462,9 @@
   margin:0 0 2px;
 }
 .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools > button,
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__base-editor > summary {
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools > details > summary {
   min-width:0;
-  min-height:32px;
+  min-height:44px;
   padding:4px 7px;
   font-size:11px;
   white-space:nowrap;

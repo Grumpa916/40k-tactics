@@ -200,7 +200,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;
       const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
       const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url);
-      dashboardStyles.searchParams.set('v', 'movement-battle-shock-1');
+      dashboardStyles.searchParams.set('v', 'movement-units-drawer-1');
       const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
         playerId,
         perspectivePlayerId: perspectivePlayerId ?? playerId,
@@ -212,7 +212,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedCard = renderMovementSelectedUnitCard(state, selectedAny, {action:selectedAction, refinement:selectedRefinement, perspectivePlayerId:perspectivePlayerId ?? state?.players?.[0]?.id ?? playerId});
       const controls = `<div class="movement-screen movement-screen--dashboard">${selectedCard}${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details class="movement-advisor-drawer"><summary>Tactical Advisor</summary>${advisor}</details></div>`;
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
-        leftRail,mapExtra:MAP_PLANNING_BUTTON + reserveTray,controls,footer:''});
+        leftRail,mapExtra:reserveTray,controls,footer:''});
       mapView.bind(container, undefined, undefined, session);
       restoreView();
       return;

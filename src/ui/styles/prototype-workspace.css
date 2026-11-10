@@ -326,6 +326,10 @@
 }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu > div button { white-space:nowrap; }
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-menu [data-live-session-tools] { display:flex; flex-wrap:nowrap; margin:0; }
+.prototype-phase-row > [data-movement-roster-toggle][hidden] { display:none !important; }
+.prototype-phase-row > [data-movement-roster-toggle] {
+  flex:none; min-height:44px; padding:4px 9px;
+}
 .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] {
   position:fixed; right:calc(10px + env(safe-area-inset-right,0px)); bottom:calc(10px + env(safe-area-inset-bottom,0px)); z-index:1100;
   box-sizing:border-box; width:var(--live-panel-toggle-width); height:56px; min-width:0; min-height:48px; padding:5px 8px; font-size:12px; white-space:nowrap;
@@ -458,4 +462,27 @@
   .battle-shell.is-tabletop-experiment .combat-workspace__map { padding:2px !important; }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__status-summary { min-height:36px; }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button { min-height:38px; }
+}
+
+@media (min-width:1024px) and (orientation:landscape) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools {
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__round-summary > span {
+    display:none;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__player-summary {
+    flex:0 1 auto;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button {
+    flex:0 0 auto;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__summary-value,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-score-host .battle-shell__summary-time,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-chips button,
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-phase-row > button {
+    min-width:44px;
+    min-height:44px;
+  }
 }
