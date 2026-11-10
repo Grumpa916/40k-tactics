@@ -209,3 +209,102 @@ test('Trajann plus prepositioned three Allarus split into four preserved tableto
   const map=renderBattlefieldMap(next,{mode:'live',perspectivePlayerId:'p1'});
   for(const id of next.units.map(u=>u.id))assert.ok(map.includes('data-map-unit-id="'+id+'"'));
 });
+
+
+test('Allarus-only squad of two surviving models splits into two independent units with no Leader',()=>{
+  // Battle began with three; one model was removed earlier, leaving two and a
+  // single Vexilla carried by one survivor. Live model positions are known.
+  const start=battle();
+  const bodyguard=start.units[0];
+  bodyguard.currentStrength=2;
+  bodyguard.metadata.currentModelCount=2;
+  bodyguard.wounds=11;
+  bodyguard.models=[
+    {id:'all-1',position:{x:18.2,y:20.1}},
+    {id:'all-3',position:{x:20.7,y:19.5}}
+  ];
+  bodyguard.liveWargear={
+    source:'tabletop-casualty-tracking',modelsRemaining:2,
+    activeSelections:{
+      'balistus grenade launcher':2,
+      'guardian spear':2,
+      vexilla:1
+    }
+  };
+  start.armyRosters.p1.units[0].equippedWargear.push({name:'Vexilla',quantity:1});
+
+  const candidate=getUnleashTheLionsOpportunities(start,{playerId:'p1'})[0];
+  assert.equal(candidate.available,true);
+  assert.equal(candidate.modelCount,2);
+  const form=renderCustodesDetachmentStratagemControls(start,{playerId:'p1',stratagemId:'unleash-the-lions'});
+  assert.match(form,/Allarus Custodians · 2 models/);
+  assert.match(form,/Which Terminator has the Vexilla/);
+  assert.doesNotMatch(form,/Enter Terminator models first, then/,'no Leader allocation requested');
+
+  const previous=JSON.stringify(start);
+  const result=recordCustodesDetachmentStratagemUse(start,{
+    ...command,woundsByModel:[5,6],vexillaModelIndex:2
+  });
+  assert.equal(JSON.stringify(start),previous);
+  assert.equal(result.commandPoints.p1,1);
+  assert.equal(result.units.length,2);
+  assert.equal(result.armyRosters.p1.units.length,2);
+  assert.deepEqual(result.units.map(unit=>unit.wounds),[5,6]);
+  assert.deepEqual(result.units.map(unit=>unit.startingWounds),[6,6]);
+  assert.ok(result.units.every(unit=>unit.currentStrength===1&&unit.startingStrength===1));
+  assert.ok(result.units.every(unit=>getCombatFormationMembers(result,unit).length===1));
+  assert.deepEqual(result.units.map(unit=>unit.position),[
+    {x:18.2,y:20.1},{x:20.7,y:19.5}
+  ]);
+  assert.deepEqual(result.units.map(unit=>unit.models[0].id),['all-1','all-3']);
+  assert.deepEqual(result.armyRosters.p1.units.map(unit=>unit.equippedWargear
+    .some(item=>item.name==='Vexilla')),[false,true]);
+  assert.deepEqual(result.units.map(unit=>unit.liveWargear.activeSelections.vexilla??0),[0,1]);
+  assert.ok(result.armyRosters.p1.units.every(unit=>unit.attachedLeaderIds.length===0));
+  assert.equal(result.armyRosters.p1.units.reduce((total,unit)=>total+(unit.points??0),0),270);
+  assert.deepEqual(result.history.at(-1).payload.unitIds,result.units.map(unit=>unit.id));
+  assert.deepEqual(result.history.at(-1).payload.leaderUnitIds,[]);
+  assert.equal(result.history.at(-1).payload.originalModels,2);
+  const rail=renderPhaseArmyRoster(result,'p1');
+  assert.match(rail,/Allarus Custodians 1/);
+  assert.match(rail,/Allarus Custodians 2/);
+  const map=renderBattlefieldMap(result,{mode:'live',perspectivePlayerId:'p1'});
+  assert.equal((map.match(/data-map-unit-id="p1:u1(?::lions:[^"]*)?"/g)??[]).length,2);
+  assert.equal(getUnleashTheLionsOpportunities(result,{playerId:'p1'}).some(entry=>entry.available),false);
+});
+
+test('original two-model Allarus-only squad splits without a casualty record or Leader',()=>{
+  const start=battle({weapons:[
+    {name:'Balistus Grenade Launcher',quantity:2},
+    {name:'Guardian Spear',quantity:2}
+  ]});
+  start.units[0].metadata.modelCount=2;
+  start.units[0].currentStrength=2;
+  start.units[0].startingStrength=2;
+  start.units[0].wounds=12;
+  start.units[0].startingWounds=12;
+  start.armyRosters.p1.units[0].modelCount=2;
+  const opportunity=getUnleashTheLionsOpportunities(start,{playerId:'p1'})[0];
+  assert.equal(opportunity.modelCount,2);
+  assert.equal(opportunity.available,true);
+  const result=recordCustodesDetachmentStratagemUse(start,{
+    ...command,woundsByModel:[6,4]
+  });
+  assert.deepEqual(result.units.map(unit=>unit.wounds),[6,4]);
+  assert.equal(result.units.length,2);
+  assert.equal(result.commandPoints.p1,1);
+  assert.ok(result.units.every(unit=>unit.metadata.splitOriginId==='p1:u1'));
+});
+
+test('single remaining Allarus without a Leader cannot use Unleash the Lions',()=>{
+  const start=battle();
+  start.units[0].currentStrength=1;
+  start.units[0].metadata.currentModelCount=1;
+  const [opportunity]=getUnleashTheLionsOpportunities(start,{playerId:'p1'});
+  assert.equal(opportunity.available,false);
+  assert.match(opportunity.blockedReason,/at least two surviving models/);
+  assert.throws(()=>recordCustodesDetachmentStratagemUse(start,{
+    ...command,woundsByModel:[6]
+  }),/at least two surviving models/);
+  assert.equal(start.commandPoints.p1,2);
+});
