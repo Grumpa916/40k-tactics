@@ -84,9 +84,9 @@ export function getAdeptusCustodesBaseSize(unit) {
   if (!unit) return null;
   const faction = normalize(unit.faction ?? unit.metadata?.faction ?? unit.factionName);
   if (faction && faction !== 'adeptus custodes') return null;
-  const datasheetId = unit.metadata?.datasheetId ?? unit.datasheetId ?? unit.id;
-  const key = String(datasheetId ?? '').split(':');
-  const declaredFaction = key.length > 1 ? normalize(key[0]) : '';
+  const datasheetId = unit.metadata?.datasheetId ?? unit.datasheetId;
+  const key = String(datasheetId ?? unit.id ?? '').split(':');
+  const declaredFaction = datasheetId && key.length > 1 ? normalize(key[0]) : '';
   if (declaredFaction && declaredFaction !== 'adeptus custodes') return null;
   for (const candidate of [key.at(-1), unit.name]) {
     const name = normalize(candidate);
