@@ -229,7 +229,7 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
   } finally { screen.destroy(); }
 });
 
-test('selecting a roster row or keyboard-activating a map unit reveals the phase panel', () => {
+test('Shooting map and Units drawer selections keep phase panel closed until explicitly opened', () => {
   const attrs = new Map();
   const listeners = new Map();
   const shell = { setAttribute: (name, value) => attrs.set(name, value) };
@@ -237,6 +237,7 @@ test('selecting a roster row or keyboard-activating a map unit reveals the phase
     querySelector(selector) {
       if (selector === '.battle-shell') return shell;
       if (selector === '.shoot-screen--tabletop, .combat-workspace') return {};
+       if (selector === '#live-units') return {id:'live-units'};
       return null;
     },
     querySelectorAll: () => [],
@@ -249,11 +250,13 @@ test('selecting a roster row or keyboard-activating a map unit reveals the phase
     workspace.refresh();
     assert.equal(attrs.get('data-controls-collapsed'), 'true');
     listeners.get('click')({ target: target('data-select-phase-unit') });
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('keydown')({ target: target('data-phase-map-select'), key: 'Enter' });
+    assert.equal(attrs.get('data-controls-collapsed'), 'true');
+    listeners.get('click')({ target: target('data-workspace-panel') });
     assert.equal(attrs.get('data-controls-collapsed'), 'false');
     listeners.get('click')({ target: target('data-workspace-panel') });
     assert.equal(attrs.get('data-controls-collapsed'), 'true');
-    listeners.get('keydown')({ target: target('data-phase-map-select'), key: 'Enter' });
-    assert.equal(attrs.get('data-controls-collapsed'), 'false');
   } finally { workspace.destroy(); }
 });
 
