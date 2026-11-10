@@ -110,6 +110,6 @@ test('Top-down CSS uses percent-scaled physical base shape; Standard view retain
 test('live event handlers refresh scaled marker dimensions on manual override and mode switch', () => {
   const source=readFileSync(new URL('../../src/ui/live-map-view.js',import.meta.url),'utf8');
   assert.match(source,/import \{ applyLiveMarkerBaseScales \} from '\.\/live-map-marker-base-scale\.js';/);
-  assert.ok((source.match(/applyLiveMarkerBaseScales\(container, state, preferences\.baseSizes\)/g)??[]).length>=3);
+  assert.ok((source.match(/applyLiveMarkerBaseScales\(container, state, preferences\.baseSizes, preferences\.ovalAngles\)/g)??[]).length>=3);
   assert.match(source,/Fallback size/);
 });
