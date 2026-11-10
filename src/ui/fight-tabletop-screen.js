@@ -1,3 +1,4 @@
+import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { renderTargetDefenseReminders } from './rules-reminder-panel.js';
 import { renderFightTargetRuleStatus } from './fight-target-rule-status.js';
 import { createLiveMapView } from './live-map-view.js';
@@ -75,6 +76,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const fightsFirstPending = Boolean(unit && !selectedOption?.fightsFirst && model.candidates.fightsFirst.length);
     const controls = `${unitNameColor ? `<style>.combat-workspace[data-combat-phase="fight"] .combat-workspace__panel h1{color:${unitNameColor}}</style>` : ''}<h1>${esc(unit?.name ?? 'Select a fighter')}</h1>
 
+      ${state.phase === 'fight' ? renderPhaseSelectedVitals(state,attackerId) : ''}
       ${state.phase !== 'fight' ? '<p class="combat-workspace__error" role="status">Viewing Fight. Return to the current game phase and advance to Fight before recording an activation.</p>' : ''}
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
       ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,attackerId,weapon:selectedWeapon,phase:'fight',viewingPlayerId})}
