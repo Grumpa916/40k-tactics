@@ -27,7 +27,7 @@ test('Slayer status checks target formation Toughness and never treats a reminde
 test('Fight target selection presents the matchup next to the target picker', () => {
   const state=matchup(), root=fakeDom(), session=createGameSession(state);
   const screen=createFightTabletopScreen(root,{session,perspectivePlayerId:'p1'});
-  root.click('[data-fight-select]','allarus');
+  root.click('[data-select-phase-unit]','allarus');
   assert.match(root.innerHTML,/Slayer of Tyrants · Conditional rule/);
   root.change('[data-fight-target]','impulsor');
   assert.match(root.innerHTML,/Slayer of Tyrants · Applies to selected target/);
