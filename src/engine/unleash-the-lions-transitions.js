@@ -5,7 +5,7 @@ import { getCasualtyLoadoutState, normalizeCasualtySelectionName } from '../rule
 
 // The battle roster is a snapshot. Preserve the paid unit's points on its first
 // model; the remaining model records are free bookkeeping children.
-export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel}={}) {
+export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel,vexillaModelIndex=null}={}) {
   const unit=state.units.find(item=>item.id===unitId&&item.ownerId===playerId);
   const roster=state.armyRosters?.[playerId];
   const rosterUnit=getBattleRosterUnit(state,unit);
@@ -39,15 +39,33 @@ export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel}={
     throw new Error('Enter valid current wounds for every surviving model, including the attached Leader last.');
 
   const active=getCasualtyLoadoutState(state,unit)?.activeSelections??{};
-  const splitItems=items=>(items??[]).map(item=>{
-    const name=normalizeCasualtySelectionName(item.selectionName??item.sourceName??item.name);
-    const amount=active[name]??item.quantity;
-    if(!Number.isInteger(amount)||amount<models||amount%models!==0)
-      throw new Error('Mixed or uncertain wargear needs model-level assignment before splitting: '+(item.name??item.selectionName??'unknown selection')+'.');
-    return {...item,quantity:amount/models};
-  });
+  // Assign models' equipment before the units separate. A single Vexilla
+  // belongs to the selected surviving Allarus, never to all three.
+  // Other mixed or uncertain equipment still requires an explicit review.
+  const splitItems=items=>{
+    const result=Array.from({length:models},()=>[]);
+    for(const item of items??[]) {
+      const name=normalizeCasualtySelectionName(item.selectionName??item.sourceName??item.name);
+      const amount=active[name]??item.quantity;
+      if(!Number.isInteger(amount)||amount<1)
+        throw new Error('Mixed or uncertain wargear needs model-level assignment before splitting: '+(item.name??item.selectionName??'unknown selection')+'.');
+      if(name==='vexilla'&&amount===1&&models>1){
+        if(!Number.isInteger(vexillaModelIndex)||vexillaModelIndex<1||vexillaModelIndex>models)
+          throw new Error('Choose which surviving Terminator model carries the Vexilla before splitting.');
+        result[vexillaModelIndex-1].push({...item,quantity:1});
+      } else {
+        if(amount<models||amount%models!==0)
+          throw new Error('Mixed or uncertain wargear needs model-level assignment before splitting: '+(item.name??item.selectionName??'unknown selection')+'.');
+        result.forEach(items=>items.push({...item,quantity:amount/models}));
+      }
+    }
+    return result;
+  };
   const equippedWeapons=splitItems(rosterUnit.equippedWeapons);
   const equippedWargear=splitItems(rosterUnit.equippedWargear);
+  const selectionsFor=index=>Object.fromEntries([
+    ...equippedWeapons[index],...equippedWargear[index]
+  ].map(item=>[normalizeCasualtySelectionName(item.selectionName??item.sourceName??item.name),item.quantity]));
   const origin=unit.id;
   const originalRosterId=rosterUnit.id;
   const existing=new Set(state.units.map(item=>item.id));
@@ -58,28 +76,34 @@ export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel}={
     if(index>0&&existing.has(id)) throw new Error('A split unit already exists; refresh the battle before trying again.');
     const rosterId=index===0?originalRosterId:originalRosterId+':lions:'+state.battle.round+':'+state.turn+':'+(index+1);
     if(index>0&&roster.units.some(item=>item.id===rosterId)) throw new Error('Split roster identifier already exists.');
-    const position=unit.position&&Number.isFinite(unit.position.x)&&Number.isFinite(unit.position.y)
+    const tracked=Array.isArray(unit.models) ? unit.models[index]?.position : null;
+    const position=Number.isFinite(tracked?.x)&&Number.isFinite(tracked?.y) ? {...tracked} :
+      unit.position&&Number.isFinite(unit.position.x)&&Number.isFinite(unit.position.y)
       ? {x:Math.max(0,Math.min(60,Math.round((unit.position.x+(index%2?1:-1)*Math.ceil(index/2)*.6)*10)/10)),
         y:Math.max(0,Math.min(44,Math.round((unit.position.y+(index%2?.4:-.4)*Math.ceil(index/2))*10)/10))}
       : unit.position;
     children.push({...unit,id,name:unit.name+' '+(index+1),position,
-      models:Array.isArray(unit.models)&&unit.models[index]?[unit.models[index]]:[],
+      models:Array.isArray(unit.models)&&unit.models[index]?[{...unit.models[index],position}]:[],
       wounds:woundsByModel[index],startingWounds:perModel,startingStrength:1,currentStrength:1,
       metadata:{...unit.metadata,rosterUnitId:rosterId,modelCount:1,currentModelCount:1,
         splitOriginId:origin,splitModelNumber:index+1},
       liveWargear:{source:'unleash-the-lions',modelsRemaining:1,
-        activeSelections:Object.fromEntries(Object.entries(active).map(([name,quantity])=>[name,quantity/models]))}
+        activeSelections:selectionsFor(index)}
     });
     snapshots.push({...rosterUnit,id:rosterId,name:unit.name+' '+(index+1),modelCount:1,
       attachedLeaderIds:[],attachedToBodyguardId:null,
-      equippedWeapons:equippedWeapons.map(item=>({...item})),
-      equippedWargear:equippedWargear.map(item=>({...item})),
+      equippedWeapons:equippedWeapons[index].map(item=>({...item})),
+      equippedWargear:equippedWargear[index].map(item=>({...item})),
       ...(index>0?{points:0,totalPoints:0}:{}),
       splitOriginId:originalRosterId});
   }
   // The Leader is already its own live record and roster snapshot. Keep both
   // intact, remove the attachment link and give it a separate map position.
-  const leaderPosition=unit.position&&Number.isFinite(unit.position.x)&&Number.isFinite(unit.position.y)
+  const separatelyPlaced=leader?.models?.[0]?.position;
+  const leaderPosition=Number.isFinite(separatelyPlaced?.x)&&Number.isFinite(separatelyPlaced?.y) ? {...separatelyPlaced} :
+    Number.isFinite(leader?.position?.x)&&Number.isFinite(leader?.position?.y)&&
+    (leader.position.x!==unit.position?.x||leader.position.y!==unit.position?.y) ? {...leader.position} :
+    unit.position&&Number.isFinite(unit.position.x)&&Number.isFinite(unit.position.y)
     ? {x:Math.max(0,Math.min(60,Math.round((unit.position.x+1.2)*10)/10)),
       y:Math.max(0,Math.min(44,Math.round((unit.position.y+.8)*10)/10))}
     : leader?.position;
@@ -98,6 +122,7 @@ export function splitCustodesTerminators(state,{playerId,unitId,woundsByModel}={
   return appendHistoryEntry(next,createEvent('custodes.terminators_split',{
     playerId,unitId,unitIds:[...children.map(child=>child.id),...(leader?[leader.id]:[])],
     leaderUnitIds:leader?[leader.id]:[],woundsByModel:[...woundsByModel],
-    originalModels:totalModels,cpSpent:1,round:state.battle.round,turn:state.turn,phase:state.phase
+    originalModels:totalModels,cpSpent:1,vexillaModelIndex,
+    round:state.battle.round,turn:state.turn,phase:state.phase
   }));
 }
