@@ -424,7 +424,7 @@ export function createShootingScreen(container, {
           render();
         }
       };
-      mapView.bind(container);
+      mapView.bind(container, undefined, undefined, session);
       bindPhaseArmySelection(container, selectMapUnit);
       bindCustodesKatahActions(container, session, message => { attackError = message; }, render);
       container.querySelector("[data-shooting-unit-picker]")?.addEventListener("change", event => selectMapUnit(event.target.value));
