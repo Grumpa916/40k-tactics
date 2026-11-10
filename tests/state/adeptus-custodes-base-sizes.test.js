@@ -123,12 +123,15 @@ test('live base overlay draws recorded model positions and never treats a squad 
     view.bind(container,state,{perspectivePlayerId:'p1'});
     assert.match(bases.innerHTML,/data-live-map-model="telemon"/);
     assert.match(bases.innerHTML,/rx="1\.9685"/);
-    assert.doesNotMatch(bases.innerHTML,/data-live-map-model="allarus"/,'do not draw a false one-base squad footprint');
+    assert.match(bases.innerHTML,/data-live-map-model="allarus"/);
+    assert.match(bases.innerHTML,/data-live-base-kind="reference"/,'squad without model positions must be a dashed one-model reference');
+    assert.match(bases.innerHTML,/one model base \(representative only; squad positions untracked\)/);
     const withModels={...squad,models:[{id:'a1',position:{x:24,y:24}},{id:'a2',position:{x:26,y:24}}]};
     const stateWithModels={...state,units:[base,withModels]};
     view.bind(container,stateWithModels,{perspectivePlayerId:'p1'});
     assert.match(bases.innerHTML,/data-live-map-model="a1"/);
     assert.match(bases.innerHTML,/data-live-map-model="a2"/);
+    assert.doesNotMatch(bases.innerHTML,/data-live-base-kind="reference"/,'fully recorded model positions draw actual base rings');
   } finally {
     if(prev===undefined) delete globalThis.localStorage;
     else globalThis.localStorage=prev;
@@ -141,4 +144,72 @@ test('Map Planner uses verified defaults while retaining its custom base editor'
   assert.match(source,/const verified = unit\?\.verifiedBase/);
   assert.match(source,/dimensions\?\.width \?\? defaultBase\?\.widthMm/);
   assert.match(source,/sizes\.has\(selected\?\.sizeKey\)/);
+});
+
+test('physical base outlines are their own visible layer above numbered tokens', () => {
+  const prev=globalThis.localStorage;
+  try {
+    // A previously saved "bases off" setting cannot hide the new layer,
+    // because the old toggle was removed from live play.
+    globalThis.localStorage={getItem:()=>JSON.stringify({bases:false,markerSize:26}),setItem(){}};
+    const map=createLiveMapView();
+    const state={units:[{id:'telemon',ownerId:'p1',name:'Telemon Heavy Dreadnought',status:'deployed',
+      metadata:{datasheetId:'adeptus-custodes:telemon-heavy-dreadnought',modelCount:1},
+      position:{x:25,y:20}}],objectives:[],players:[],battle:{status:'active'}};
+    const html=map.render(state,{selectedUnitId:'telemon',perspectivePlayerId:'p1'});
+    assert.match(html,/class="live-map__precision-overlay"/);
+    assert.match(html,/class="live-map__physical-base-overlay" data-live-map-bases-layer/);
+    assert.match(html,/<g data-live-map-bases><\/g>/);
+    assert.ok(html.indexOf('live-map__physical-base-overlay') < html.indexOf('data-map-unit-id="telemon"'));
+    assert.match(html,/--live-marker-size:26px/,'visual marker remains independently adjustable');
+    const css=readFileSync(new URL('../../src/ui/styles/live-map.css',import.meta.url),'utf8');
+    assert.match(css,/\.live-map__physical-base-overlay \{[\s\S]*?z-index:11 !important;[\s\S]*?pointer-events:none !important;/);
+    assert.match(css,/\.live-map__physical-base-overlay \.live-map__model-base \{[\s\S]*?stroke-width:\.19;[\s\S]*?vector-effect:none;/);
+    assert.match(css,/\.live-map__model-base\.is-reference \{[\s\S]*?stroke-dasharray:\.29 \.18;/);
+    const grid={style:{}},major={style:{}},sight={style:{},setAttribute(){}},bases={style:{},innerHTML:''};
+    const overlay={querySelector:sel=>({'[data-live-map-grid]':grid,
+      '[data-live-map-major-grid]':major,'[data-live-map-sight]':sight})[sel]};
+    const container={
+      querySelector:sel=>sel==='[data-battlefield-map-board]'?{}:
+        sel==='[data-live-map-precision]'?overlay:sel==='[data-live-map-bases]'?bases:null,
+      querySelectorAll:()=>[]
+    };
+    map.bind(container,state,{perspectivePlayerId:'p1',selectedUnitId:'telemon'});
+    assert.equal(bases.style.display,'');
+    assert.match(bases.innerHTML,/data-live-base-kind="model"/);
+    assert.match(bases.innerHTML,/data-live-base-mm="100x100"/);
+    assert.match(bases.innerHTML,/rx="1\.9685"/);
+  } finally {
+    if(prev===undefined) delete globalThis.localStorage;
+    else globalThis.localStorage=prev;
+  }
+});
+
+test('oval bases remain elliptical and manually overridden size changes the physical outline', () => {
+  const prev=globalThis.localStorage;
+  try {
+    globalThis.localStorage={getItem:()=>JSON.stringify({
+      topDown:true,baseSizes:{'adeptus-custodes:vertus-praetors':{width:90,length:52}}
+    }),setItem(){}};
+    const map=createLiveMapView();
+    const state={units:[{id:'bike',ownerId:'p1',name:'Vertus Praetors',status:'deployed',
+      metadata:{datasheetId:'adeptus-custodes:vertus-praetors',modelCount:1},position:{x:19,y:15}}],
+      objectives:[],players:[],battle:{status:'active'}};
+    const grid={style:{}},major={style:{}},sight={style:{},setAttribute(){}},bases={style:{},innerHTML:''};
+    const overlay={querySelector:sel=>({'[data-live-map-grid]':grid,
+      '[data-live-map-major-grid]':major,'[data-live-map-sight]':sight})[sel]};
+    const container={
+      querySelector:sel=>sel==='[data-battlefield-map-board]'?{}:
+        sel==='[data-live-map-precision]'?overlay:sel==='[data-live-map-bases]'?bases:null,
+      querySelectorAll:()=>[]
+    };
+    map.bind(container,state,{perspectivePlayerId:'p1'});
+    assert.match(bases.innerHTML,/data-live-base-mm="90x52"/);
+    assert.match(bases.innerHTML,/rx="1\.7717"/);
+    assert.match(bases.innerHTML,/ry="1\.0236"/);
+    assert.doesNotMatch(bases.innerHTML,/data-live-base-kind="reference"/);
+  } finally {
+    if(prev===undefined) delete globalThis.localStorage;
+    else globalThis.localStorage=prev;
+  }
 });
