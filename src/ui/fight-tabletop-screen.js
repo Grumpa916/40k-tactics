@@ -54,7 +54,15 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const active = model.activations.some(item => item.unitId === attackerId && item.actionType !== 'not_fight');
     const available = [...model.candidates.fightsFirst, ...model.candidates.normal];
     const unfinished = options.attackers.filter(item => item.eligibilitySource === 'active');
-    const chooseButtons = units => units.map(item => `<button type="button" class="fight-order__unit ${item.ownerId === perspectivePlayerId ? 'is-friendly' : 'is-opponent'}" data-fight-select="${esc(item.unitId)}" aria-pressed="${item.unitId === attackerId}">${esc(item.name)}</button>`).join('');
+    const fightsFirstIds = new Set(model.candidates.fightsFirst.map(item => item.unitId));
+    const unfinishedIds = new Set(unfinished.map(item => item.unitId).filter(id => !fightsFirstIds.has(id)));
+    const otherIds = new Set(model.candidates.normal.map(item => item.unitId)
+      .filter(id => !fightsFirstIds.has(id) && !unfinishedIds.has(id)));
+    const rosterSections = [
+      { label:'Fights First', unitIds:fightsFirstIds },
+      { label:'Unfinished activations', unitIds:unfinishedIds },
+      { label:'Other eligible fighters', unitIds:otherIds }
+    ];
     const adviceState = !incomingAttackMode && unit && targetId && weaponId ? getFightAdvisorContext(state, gameData) : state;
     let advice = '';
     if (!incomingAttackMode) {
@@ -71,11 +79,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       ${error ? `<p class="combat-workspace__error" role="alert">${esc(error)}</p>` : ''}
       ${renderTargetDefenseReminders(state, {targetUnitId:targetId,allocationTargetId:precisionAllocationId,attackerId,weapon:selectedWeapon,phase:'fight',viewingPlayerId})}
       ${renderCustodesKatahPhasePanel(state, { phase: 'fight', unitId: attackerId, playerId: viewingPlayerId })}
-      <details class="fight-order" ${attackerId ? '' : 'open'}><summary>Fight order · ${available.length} inferred</summary>
-        <h3>Fights First · recommended priority</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.fightsFirst) || '<small>None remaining</small>'}</div>
-        <h3>Other inferred combats</h3><div class="combat-workspace__choices">${chooseButtons(model.candidates.normal) || '<small>None remaining</small>'}</div>
-        ${unfinished.length ? `<h3>Unfinished activations</h3><div class="combat-workspace__choices">${chooseButtons(unfinished)}</div>` : ''}
-      </details>
+      ${!unit ? `<p>Choose a fighter on the map or open Units · ${fightsFirstIds.size} Fights First · ${unfinishedIds.size} unfinished.</p>` : ''}
       ${unit ? `        ${fightsFirstPending ? '<section class="combat-workspace__card" role="status"><strong>Fights First still pending</strong><p>The app recommends resolving those units first. If the physical tabletop confirms this activation now, you can still record it here.</p></section>' : ''}
         ${selectedOption?.eligibilitySource === 'tabletop-confirmed' ? '<p><small>Tabletop-confirmed eligibility: this formation was not inferred as engaged by the saved app state. The physical table is authoritative.</small></p>' : ''}
         ${options.overrunAvailable ? '<section class="combat-workspace__card" role="status"><strong>Overrun Fight available</strong><p>This formation charged this turn but has no remaining recorded engagement. On the tabletop, choose an enemy within 5″, make the legal Pile In move of up to 3″ and finish engaged. Then select that enemy below and resolve the Fight normally.</p></section>' : ''}
@@ -100,7 +104,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     const targetIds = targetId ? [targetId] : [];
     container.innerHTML = renderCombatWorkspace({
       state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
-      selectedUnitId:attackerId, selectableIds, targetIds, reminderUnitId:incomingAttackMode?targetId:attackerId, controls,
+      selectedUnitId:attackerId, selectableIds, targetIds, rosterSections, reminderUnitId:incomingAttackMode?targetId:attackerId, controls,
       adaptiveContext:{targetId},
       footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}`
     });
@@ -122,7 +126,6 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       if (attackerId && options.targets.some(unit => unit.unitId === id)) chooseTarget(id);
       else choose(id);
     } });
-    container.querySelectorAll('[data-fight-select]').forEach(button => button.addEventListener('click', () => choose(button.getAttribute('data-fight-select'))));
     container.querySelector('[data-fight-weapon]')?.addEventListener('change', event => { weaponId = event.target.value || null; precisionAllocationId = null; damage = 0; error = ''; render(); });
     container.querySelector('[data-fight-target]')?.addEventListener('change', event => chooseTarget(event.target.value || null));
     container.querySelector('[data-fight-precision]')?.addEventListener('change', event => { precisionAllocationId = event.target.value || null; damage = 0; error = ''; render(); });
