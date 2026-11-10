@@ -213,7 +213,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const controls = `<div class="movement-screen movement-screen--dashboard">${selectedCard}${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details class="movement-advisor-drawer"><summary>Tactical Advisor</summary>${advisor}</details></div>`;
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
         leftRail,mapExtra:MAP_PLANNING_BUTTON + reserveTray,controls,footer:''});
-      mapView.bind(container);
+      mapView.bind(container, undefined, undefined, session);
       restoreView();
       return;
     }
