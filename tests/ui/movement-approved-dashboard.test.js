@@ -58,14 +58,15 @@ test('Movement screen makes selected-unit controls primary and advisor expandabl
   const source = fs.readFileSync(new URL('../../src/ui/movement-screen.js', import.meta.url),'utf8');
   assert.match(source,/renderMovementRosterRail/);
   assert.match(source,/renderMovementSelectedUnitCard/);
-  assert.match(source,/leftRail,mapExtra:MAP_PLANNING_BUTTON\s*\+\s*reserveTray,controls/);
+  assert.match(source,/leftRail,mapExtra:reserveTray,controls/);
   assert.match(source,/class="movement-advisor-drawer"><summary>Tactical Advisor<\/summary>/);
   assert.doesNotMatch(source,/controls:`[^`]*\$\{advisor\}\$\{editor\}<details><summary>Units/);
 });
 
-test('Movement dashboard CSS keeps reserves compact and uses three columns on landscape', () => {
+test('Movement dashboard CSS keeps reserves compact and puts the roster outside the map grid', () => {
   const css = fs.readFileSync(new URL('../../src/ui/styles/movement-dashboard.css', import.meta.url),'utf8');
-  assert.match(css,/grid-template-columns:180px minmax\(0,1fr\) 310px/);
+  assert.match(css,/#movement-units\s*\{\s*position:absolute/);
+  assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(255px,285px\)/);
   assert.match(css,/map-reserve-tray small\{display:none\}/);
   assert.match(css,/movement-selected-unit__stats/);
   assert.match(css,/movement-selected-unit__token\.is-opponent\{background:#602e34;border-color:#ff8585\}/);

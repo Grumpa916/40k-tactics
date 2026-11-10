@@ -7,20 +7,27 @@ const css = readFileSync(new URL('../../src/ui/styles/live-map.css', import.meta
 const battle = readFileSync(new URL('../../battle.html', import.meta.url), 'utf8');
 const state = { units: [], objectives: [], players: [], battle: { status:'active', round:1, activePlayerId:'p1' }, activePlayer:'p1', phase:'command' };
 
-test('live battlefield uses planner presentation without overlay toolbar clutter', () => {
-  const markup = createLiveMapView().render(state, { perspectivePlayerId:'p1', showZoomControls:false });
+test('live battlefield keeps zoom at hand and groups display tools and selected model controls', () => {
+  const markup = createLiveMapView().render(state, { perspectivePlayerId:'p1', showZoomControls:false, showMapPlanner:true });
   const nav = markup.match(/<nav class="live-map__tools"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(nav);
   assert.match(nav, /data-live-map-style/);
   assert.match(nav, /Standard map/);
-  assert.doesNotMatch(nav, /Threat view|Map tools|data-map-threat-toggle|data-live-map-bases-toggle/);
+  assert.doesNotMatch(nav, /Threat view|data-map-threat-toggle|data-live-map-bases-toggle/);
+  assert.match(nav, /data-live-map-zoom[^>]*>2× zoom<\/button>\s*<details[^>]+>\s*<summary>Map tools/);
   assert.match(nav, /data-live-map-grid-toggle/);
   assert.match(nav, /data-live-map-sight-toggle/);
   assert.match(nav, /data-live-map-marker-size/);
-  assert.match(nav, /data-live-map-base-apply/);
-  assert.match(nav, /data-live-map-zoom/);
+  assert.match(nav, /<summary>Map tools<\/summary>[\s\S]*data-open-map-planning/);
+  assert.doesNotMatch(nav, /data-live-map-base-apply/);
+  const unit = { id:'guard', name:'Guard', ownerId:'p1', status:'deployed', currentStrength:2, position:{ x:22, y:16 } };
+  const selected = createLiveMapView().render({ ...state, units:[unit] }, { selectedUnitId:unit.id });
+  const modelMenu = selected.match(/<details class="live-map__more-tools live-map__model-tools"[\s\S]*?<\/details>/)?.[0];
+  assert.match(modelMenu, /Models for Guard/);
+  assert.match(modelMenu, /data-live-map-squad-toggle/);
+  assert.match(modelMenu, /data-live-map-base-apply/);
   assert.match(markup, /--live-marker-size:18px/);
-  assert.doesNotMatch(markup, /data-live-map-threat-overlay|live-map__more-tools|data-map-threat-note/);
+  assert.doesNotMatch(markup, /data-live-map-threat-overlay|data-map-threat-note/);
   assert.match(markup, /is-top-down is-planner-view/);
   assert.match(css, /\.live-map\.is-standard \.battlefield-map__board/);
   assert.match(css, /\.live-map\.is-standard \.battlefield-map__objective/);
@@ -33,7 +40,7 @@ test('tabletop map fits 60 by 44 board inside its viewport without map scrolling
   assert.match(css, /\.live-map__viewport\s*\{[\s\S]*?place-items:center;[\s\S]*?overflow:hidden !important;[\s\S]*?container-type:size;/);
   assert.match(css, /\.live-map__canvas\s*\{[\s\S]*?width:min\(100cqw, 136\.363636cqh\) !important;[\s\S]*?aspect-ratio:60 \/ 44;/);
   assert.match(css, /\.battlefield-map__board\s*\{[\s\S]*?height:100% !important;[\s\S]*?aspect-ratio:60 \/ 44 !important;/);
-  assert.match(battle, /live-map\.css\?v=individual-squad-models-v1/);
+  assert.match(battle, /live-map\.css\?v=compact-map-tools-1/);
   for (const [availableWidth, availableHeight] of [[820,460],[920,545],[700,490],[480,290]]) {
     const boardWidth = Math.min(availableWidth, availableHeight*60/44);
     const boardHeight = boardWidth*44/60;

@@ -40,7 +40,8 @@ function formationAwareMapHtml(state, phase, mapHtml) {
 export function renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId = null, mapView = createLiveMapView(), mapExtra = '' }) {
   const styles = new URL('./styles/combat-workspace.css', import.meta.url).href;
   const mapHtml = formationAwareMapHtml(state, phase, mapView.render(state, {
-    mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: false
+    mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: false,
+    showMapPlanner: phase === 'movement'
   }));
   return `<link rel="stylesheet" href="${escapeHtml(styles)}"><section class="combat-workspace__map" data-tabletop-map-phase="${escapeHtml(phase)}">
       ${mapHtml}
@@ -56,7 +57,7 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
   });
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
   return `<main class="combat-workspace${hasLeftRail ? ' has-left-rail' : ''}" data-combat-phase="${phase}">
-    ${hasLeftRail ? `<aside class="combat-workspace__rail" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
+    ${hasLeftRail ? `<aside class="combat-workspace__rail"${phase === 'movement' ? ' id="movement-units"' : ''} aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} unit list">${leftRail}</aside>` : ''}
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
