@@ -2,6 +2,8 @@ import { attachmentParent, formationFor, preparationStep } from '../rules/event-
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from "../rules/event-companion-map-catalog.js";
+import { getLiveUnitPosition } from '../rules/spatial-context.js';
+import { modelBaseSizeForUnit } from '../data/adeptus-custodes-base-sizes.js';
 
 const WIDTH_IN = 60;
 const HEIGHT_IN = 44;
@@ -111,6 +113,49 @@ export function setActualDeploymentPosition(state, { unitId, playerId, position 
   }));
 }
 
+
+
+/**
+ * Expand a unit's surviving models into individually draggable map markers.
+ * Models remain one battle unit, with shared combat and scoring identity.
+ * This is an approximate initial formation, not authoritative coherency.
+ */
+export function expandLiveSquadModels(state,{unitId,playerId,baseOverride=null}={}) {
+  if(state?.battle?.status!=='active') throw new Error('Squad map expansion needs an active battle.');
+  const unit=requirePlayerUnit(state,unitId,playerId);
+  if(unit.status!=='deployed') throw new Error('Only deployed squads can be expanded.');
+  const count=Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
+  if(!Number.isInteger(count)||count<2||count>100)
+    throw new Error('Confirm the surviving model count (2–100) before expanding.');
+  if(Array.isArray(unit.models)&&unit.models.length) {
+    if(unit.models.length===count&&unit.models.every(model=>Number.isFinite(model.position?.x)&&Number.isFinite(model.position?.y))) return state;
+    throw new Error('Existing model positions are incomplete. Review them rather than generating duplicates.');
+  }
+  const anchor=getLiveUnitPosition(state,unit);
+  if(!Number.isFinite(anchor?.x)||!Number.isFinite(anchor?.y))
+    throw new Error('Place the squad on the map before expanding models.');
+  const base=modelBaseSizeForUnit(unit,baseOverride);
+  const stepX=(base?.widthMm??38)/25.4+.22;
+  const stepY=(base?.lengthMm??38)/25.4+.22;
+  const columns=Math.ceil(Math.sqrt(count)),rows=Math.ceil(count/columns);
+  const width=(columns-1)*stepX,height=(rows-1)*stepY;
+  const cx=Math.max(width/2,Math.min(WIDTH_IN-width/2,anchor.x));
+  const cy=Math.max(height/2,Math.min(HEIGHT_IN-height/2,anchor.y));
+  const models=Array.from({length:count},(_,index)=>({
+    id:unit.id+':model:'+(index+1),
+    position:validatePosition({
+      x:cx+((index%columns)-(columns-1)/2)*stepX,
+      y:cy+(Math.floor(index/columns)-(rows-1)/2)*stepY
+    })
+  }));
+  return appendHistoryEntry({
+    ...state,units:state.units.map(item=>item.id===unitId?{...item,models}:item)
+  },createEvent('battlefield_map.models_expanded',{
+    unitId,playerId,modelIds:models.map(model=>model.id),count,
+    round:state.battle.round,turn:state.turn,phase:state.phase,
+    source:'approximate-map-layout'
+  }));
+}
 
 /**
  * Adjust the approximate live-map position without recording another gameplay
