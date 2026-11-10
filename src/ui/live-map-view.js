@@ -6,6 +6,7 @@ import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-sy
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
 import { modelBaseSizeForUnit, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
+import { applyLiveMarkerBaseScales } from './live-map-marker-base-scale.js';
 
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const MAP_PREFERENCES_KEY = 'fortyk-tactics-live-map-v1';
@@ -105,8 +106,8 @@ function liveTools(state, options, preferences) {
     <button type="button" data-live-map-grid-toggle aria-pressed="${preferences.grid}">1″ grid</button>
     <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
     <button type="button" data-live-map-zoom aria-pressed="false">2× zoom</button>
-    <label class="live-map__marker-size">Unit size
-      <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Rendered unit marker size">
+    <label class="live-map__marker-size" title="Used for units without verified base dimensions; known bases scale automatically in Top-down view">Fallback size
+      <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Marker size for units without verified physical bases">
       <output data-live-map-marker-value>${preferences.markerSize}px</output>
     </label>
     <details class="live-map__base-editor" ${unit ? '' : 'data-disabled="true"'}>
@@ -185,7 +186,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'physical-base-overlays-v1');
+      stylesheet.searchParams.set('v', 'physical-base-sized-markers-v1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
@@ -208,6 +209,7 @@ export function createLiveMapView() {
       }
       let selectedModelIndex = liveTools(state, options, preferences).selectedModelIndex;
       drawPrecision(container, state, options, preferences, selectedModelIndex);
+      applyLiveMarkerBaseScales(container, state, preferences.baseSizes);
       const updatePressed = (selector, value) => container.querySelector(selector)?.setAttribute('aria-pressed', String(value));
       const objectives = Array.from(container.querySelectorAll?.('.live-map .battlefield-map__objective') ?? []);
       const fullObjectiveLabels = objectives.map(node => node.textContent);
@@ -243,6 +245,7 @@ export function createLiveMapView() {
         const styleButton = container.querySelector('button[data-live-map-style]');
         if (styleButton) styleButton.textContent = preferences.topDown ? 'Standard map' : 'Top-down map';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
+        applyLiveMarkerBaseScales(container, state, preferences.baseSizes);
         refreshObjectiveLabels();
         refreshUnitLabels();
       };
@@ -321,6 +324,7 @@ export function createLiveMapView() {
         if (lengthInput) lengthInput.value = effective?.shape === 'oval' ? effective.lengthMm : '';
         if (status) status.textContent = !width && !length ? 'Default base size restored.' : 'Custom base size saved.';
         drawPrecision(container, state, options, preferences, selectedModelIndex);
+        applyLiveMarkerBaseScales(container, state, preferences.baseSizes);
       });
       container.querySelectorAll?.('[data-map-zoom]').forEach(button => button.addEventListener('click', () => {
         const old = zoom;
