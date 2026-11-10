@@ -2,6 +2,7 @@ import { getLiveUnitPosition } from '../rules/spatial-context.js';
 import { getUnitStrengthAssessment } from '../rules/unit-status-summary.js';
 import { isValidBattlefieldPosition, renderBattlefieldMap } from './battlefield-map.js';
 import { BOARD_WIDTH, BOARD_HEIGHT, baseDimensions, clampToBoard, planningVisibility } from './map-planning-geometry.js';
+import { getAdeptusCustodesBaseSize, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
 
 const drafts = new WeakMap();
 const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -26,6 +27,7 @@ function planningUnits(state, mode) {
     return {
       id: unit.id, ownerId: unit.ownerId, name: unit.name ?? unit.id,
       sizeKey: unit.metadata?.datasheetId || unit.id,
+      verifiedBase: getAdeptusCustodesBaseSize(unit),
       count: Math.max(1, Math.min(100, Math.trunc(Number(count)) || 1)),
       position: isValidBattlefieldPosition(recordedPosition)
         ? { x: recordedPosition.x, y: BOARD_HEIGHT - recordedPosition.y }
@@ -170,7 +172,9 @@ export function openMapPlanning(launcher, { session, mode, selectedUnitId, persp
   const currentModel = () => modelIndex === null ? selected : selected?.models?.[modelIndex];
   const sizeFor = unit => {
     const input = sizes.get(unit?.sizeKey);
-    return input ? baseDimensions(input.width, input.length) : null;
+    if (input) return baseDimensions(input.width, input.length);
+    const verified = unit?.verifiedBase;
+    return verified?.widthMm ? baseDimensions(verified.widthMm, verified.lengthMm) : null;
   };
   const setPressed = (key, value) => find('[data-plan-' + key + ']').setAttribute('aria-pressed', String(value));
 
@@ -238,12 +242,20 @@ export function openMapPlanning(launcher, { session, mode, selectedUnitId, persp
     find('[data-plan-rotate]').disabled = !currentModel()?.position ||
       (selected.count > 1 && !selected.expanded) || !size || size.width === size.length;
     const dimensions = sizes.get(selected?.sizeKey);
-    find('[data-plan-width]').value = dimensions?.width ?? '';
-    find('[data-plan-length]').value = dimensions?.length ?? '';
+    const defaultBase = selected?.verifiedBase;
+    find('[data-plan-width]').value = dimensions?.width ?? defaultBase?.widthMm ?? '';
+    find('[data-plan-length]').value = dimensions
+      ? dimensions.length ?? ''
+      : defaultBase?.shape === 'oval' ? defaultBase.lengthMm : '';
     for (const key of ['width', 'length', 'size']) find('[data-plan-' + key + ']').disabled = !selected;
     find('[data-plan-unit-status]').textContent = !selected ? 'No units available in this view.'
       : !selected.position ? 'Tap an empty square to place this unit in the planner.'
-      : size ? 'Tap or drag a marker. A blank length sets a round base.'
+      : size ? (sizes.has(selected?.sizeKey) ? 'Custom model base · ' :
+          defaultBase?.source === 'kit' ? 'Kit-supplied model base · ' :
+          'GW 2026 Event Companion · ') +
+          (sizes.has(selected?.sizeKey) ? 'Use Set base size to update.' : modelBaseSizeLabel(defaultBase)) +
+          ' · Spread squads to view individual bases.'
+      : defaultBase?.shape === 'hull' ? 'Hull-based model: use its physical outline; no standard round base.'
       : 'Enter a base width to replace the dashed model markers with bases drawn to scale.';
   }
 
