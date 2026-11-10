@@ -42,7 +42,7 @@ export const SPACE_MARINES_BASE_CATALOG = Object.freeze([
   round('Captain in Phobos Armour',40),
   round('Captain in Terminator Armour',50),
   // Product/kit reference, not listed in the Event Companion base guide.
-  record('Captain on Bike','oval',90,52.5,'kit','https://www.miniaturemarket.com/warhammer-40000-space-marines-captain-on-bike.html'),
+  record('Captain on Bike','oval',90,52.5,'kit','https://www.miniaturemarket.com/Warhammer-40K-Space-Marines-Captain-on-Bike/GW-48-113-2026'),
   round('Captain with Jump Pack',40),
   round('Captain Titus',40),
   round('Cato Sicarius',40),
@@ -80,7 +80,7 @@ export const SPACE_MARINES_BASE_CATALOG = Object.freeze([
   round('Invictor Tactical Warsuit',90),
   round('Iron Father Feirros',40),
   round('Judiciar',40),
-  record('Kaius Konorius','round',40,40,'kit','https://www.warhammer.com/en-US/shop/space-marines-kaius-konorius-2026'),
+  record('Kaius Konorius','round',40,40,'kit','https://www.alaragames.se/collections/newest-games-workshop-products/products/warhammer-40k-space-marines-kaius-konorius'),
   round('Kayvaan Shrike',40),
   round('Kor\'sarro Khan',40),
   hull('Land Raider'),
