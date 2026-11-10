@@ -1,3 +1,4 @@
+import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { renderTargetDefenseReminders, renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
@@ -244,7 +245,7 @@ export function createShootingScreen(container, {
             ${state.phase === 'shooting' ? renderStratagemOpportunityReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,livePanel:true}) : ''}
             ${state.phase === 'shooting' ? renderAdaptiveExecutionPanel(state, {selectedUnitId:activeUnitId, playerId:perspectivePlayerId ?? state.activePlayer, targetId:selectedTargetId}) : ''}
             <header class="shoot-tabletop__phase-heading"><div><span class="kicker">SHOOTING · ACTIVE ARMY</span><h1>${escapeHtml(activeUnit?.name ?? "Select a unit")}</h1><p>${escapeHtml(activeUnit ? ownerLabel({ side: activeUnit.ownerId === perspectivePlayerId ? "self" : "opponent", ownerName: activeUnit.ownerId }) : "Tap an acting unit on the map or open Units")}</p></div><span>${remaining === 0 ? "Ready to advance" : "Round " + escapeHtml(model.round)}</span></header>
-            ${activeUnit ? `<div class="shoot-tabletop__unit-status"><span>${escapeHtml(activeSummary.wounds)} wounds</span><span>${escapeHtml(activeSummary.models)} models</span>${activeSummary.status ? `<span>${escapeHtml(activeSummary.status)}</span>` : ""}</div>` : ""}
+            ${activeUnit && state.phase === "shooting" ? `<div class="shoot-tabletop__unit-status">${renderPhaseSelectedVitals(state, activeUnitId)}</div>` : ""}
             ${renderCustodesKatahPhasePanel(state, { phase: "shooting", unitId: activeUnitId, playerId: viewingPlayerId })}
 
             ${activeActivation ? renderTargetDefenseReminders(state, {targetUnitId:selectedTargetId,allocationTargetId:precisionAllocationId,attackerId:selectedAttackerId,weapon:selectedWeapon,phase:'shooting',viewingPlayerId}) : ''}
