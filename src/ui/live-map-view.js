@@ -16,7 +16,9 @@ function loadMapPreferences() {
     return {
       topDown: parsed?.topDown !== false,
       grid: true,
-      bases: parsed?.bases !== false,
+      // Older builds stored a "bases off" preference but later removed its
+      // toggle. Physical outlines must be visible without a hidden control.
+      bases: true,
       sight: parsed?.sight === true,
       markerSize: Math.max(14, Math.min(38, Number(parsed?.markerSize) || 18)),
       baseSizes: parsed?.baseSizes && typeof parsed.baseSizes === 'object' ? parsed.baseSizes : {},
@@ -72,7 +74,10 @@ function addPrecisionOverlay(map) {
   const overlay = `<svg class="live-map__precision-overlay" data-live-map-precision viewBox="0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}" preserveAspectRatio="none" aria-label="One inch battlefield grid and model bases">
     <path class="live-map__precision-grid" data-live-map-grid d="${grid}" fill="none" stroke="#d5f0ee" stroke-width=".07" stroke-opacity=".24" /><path class="live-map__precision-major-grid" data-live-map-major-grid d="${majorGrid}" fill="none" stroke="#d5f0ee" stroke-width=".07" stroke-opacity=".42" />
     <polygon class="live-map__precision-sight" data-live-map-sight points=""></polygon>
-    <g data-live-map-bases></g></svg>`;
+  </svg>
+  <svg class="live-map__physical-base-overlay" data-live-map-bases-layer viewBox="0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}" preserveAspectRatio="none" aria-label="Physical model base outlines at tabletop scale">
+    <g data-live-map-bases></g>
+  </svg>`;
   const boardStart = map.indexOf('<div class="battlefield-map__board"');
   const boardEnd = map.indexOf('>', boardStart);
   return boardStart >= 0 && boardEnd >= 0 ? map.slice(0, boardEnd + 1) + overlay + map.slice(boardEnd + 1) : map;
@@ -111,6 +116,7 @@ function liveTools(state, options, preferences) {
         <label>Length (mm)<input type="number" min="1" max="400" step="any" inputmode="decimal" placeholder="Round" data-live-map-base-length value="${esc(dimensions?.length ?? '')}" ${unit ? '' : 'disabled'}></label>
         <button type="button" data-live-map-base-apply ${unit ? '' : 'disabled'}>Set base size</button>
         <small data-live-map-base-source>${esc(baseSource)}${base ? ' · ' + esc(modelBaseSizeLabel(base)) : ''}</small>
+        <small data-live-map-base-explanation>Bright outline = physical base, separate from marker size. Dashed = one-model reference only; squad footprint is not recorded.</small>
       </div>
       ${modelPicker}
       <small data-live-map-base-status aria-live="polite"></small>
@@ -125,32 +131,37 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   if (!board || !overlay) return;
   const grid = overlay.querySelector('[data-live-map-grid]');
   const majorGrid = overlay.querySelector('[data-live-map-major-grid]');
-  const bases = overlay.querySelector('[data-live-map-bases]');
+  const bases = container.querySelector('[data-live-map-bases]') ?? overlay.querySelector('[data-live-map-bases]');
   const sight = overlay.querySelector('[data-live-map-sight]');
   grid.style.display = preferences.topDown && preferences.grid ? '' : 'none';
   if (majorGrid) majorGrid.style.display = preferences.topDown && preferences.grid ? '' : 'none';
-  bases.style.display = preferences.topDown && preferences.bases ? '' : 'none';
+  if (!bases) return;
+  bases.style.display = preferences.bases ? '' : 'none';
   sight.style.display = preferences.topDown && preferences.sight ? '' : 'none';
   bases.innerHTML = (state.units ?? []).filter(unit => unit.status === 'deployed').map(unit => {
     const base = modelBaseSizeForUnit(unit, preferences.baseSizes[sizeKey(unit)]);
     const size = base?.widthMm ? baseDimensions(base.widthMm, base.lengthMm) : null;
     if (!size) return '';
-    // Unit-centre markers are not individual model positions. A multi-model
-    // squad without model-level coordinates must not imply a single 40mm base
-    // is its entire footprint.
+    // When the game only records a squad-centre position, a single dashed
+    // *reference model base* may be shown but is never a squad footprint.
+    // Units with individually tracked models use their actual model positions.
     const recordedModels = Array.isArray(unit.models) ? unit.models.filter(model =>
       Number.isFinite(model?.position?.x) && Number.isFinite(model?.position?.y)) : [];
     const reportedCount = Number(unit.metadata?.modelCount ?? unit.startingStrength ??
       unit.currentStrength ?? unit.remainingStrength);
-    const models = recordedModels.length ? recordedModels :
-      reportedCount === 1 ? unitModelsForMap(unit, state) : [];
+    const isReference = recordedModels.length === 0 && reportedCount !== 1;
+    const models = recordedModels.length ? recordedModels : unitModelsForMap(unit, state);
     return models.map((model, index) => {
       const position = model.position ?? getLiveUnitPosition(state, unit);
       if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return '';
       const selected = unit.id === options?.selectedUnitId && index === selectedModelIndex;
       const angle = Number.isFinite(model.angle) ? model.angle : 0;
       const owner = unit.ownerId === (options?.perspectivePlayerId ?? state?.activePlayer) ? 'friendly' : 'opponent';
-      return `<ellipse class="live-map__model-base is-${owner}${selected ? ' is-selected' : ''}" data-live-map-model="${esc(model.id ?? unit.id)}" cx="${Number(position.x).toFixed(4)}" cy="${(BOARD_HEIGHT - Number(position.y)).toFixed(4)}" rx="${(size.width / 2).toFixed(4)}" ry="${(size.length / 2).toFixed(4)}" transform="rotate(${angle} ${Number(position.x).toFixed(4)} ${(BOARD_HEIGHT - Number(position.y)).toFixed(4)})"><title>${esc(unit.name ?? unit.id)} · model ${index + 1}</title></ellipse>`;
+      const reference = isReference ? ' is-reference' : '';
+      const title = isReference
+        ? (unit.name ?? unit.id) + ' · one model base (representative only; squad positions untracked)'
+        : (unit.name ?? unit.id) + ' · model ' + (index + 1) + ' base';
+      return `<ellipse class="live-map__model-base is-${owner}${reference}${selected ? ' is-selected' : ''}" data-live-map-model="${esc(model.id ?? unit.id)}" data-live-base-kind="${isReference ? 'reference' : 'model'}" data-live-base-mm="${base.widthMm}x${base.lengthMm}" cx="${Number(position.x).toFixed(4)}" cy="${(BOARD_HEIGHT - Number(position.y)).toFixed(4)}" rx="${(size.width / 2).toFixed(4)}" ry="${(size.length / 2).toFixed(4)}" transform="rotate(${angle} ${Number(position.x).toFixed(4)} ${(BOARD_HEIGHT - Number(position.y)).toFixed(4)})"><title>${esc(title)}</title></ellipse>`;
     }).join('');
   }).join('');
   if (!preferences.sight || !preferences.topDown) { sight.setAttribute('points', ''); return; }
@@ -174,7 +185,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'full-planner-live-map-v2-grid');
+      stylesheet.searchParams.set('v', 'physical-base-overlays-v1');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
