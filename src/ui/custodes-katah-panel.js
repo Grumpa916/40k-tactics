@@ -63,7 +63,7 @@ function statusFor(state, playerId, unit) {
   };
 }
 
-export function renderCustodesKatahCommandPanel(state, { playerId = state?.activePlayer ?? state?.battle?.activePlayerId } = {}) {
+export function renderCustodesKatahCommandPanel(state, { playerId = state?.activePlayer ?? state?.battle?.activePlayerId, unitId = null } = {}) {
   const roots = eligibleRoots(state, playerId);
   if (!roots.length) return '';
   const readiedCount = roots.filter(unit => unitState(state, playerId, unit).readied).length;
@@ -76,11 +76,41 @@ export function renderCustodesKatahCommandPanel(state, { playerId = state?.activ
         '</span><strong class="' + status.tone + '">' + esc(status.label) + '</strong></li>'
       ).join('') + '</ul>'
     : '';
+  const selected = (state?.units ?? []).find(unit => unit.id === unitId);
+  const root = selected && getCombatFormationRoot(state, selected);
+  const eligible = root && roots.find(unit => unit.id === root.id);
+  const readiness = eligible && unitState(state, playerId, eligible);
+  const currentUse = eligible && (state.history ?? []).findLast(event =>
+    event.type === 'custodes.katah_expended' &&
+    event.payload?.playerId === playerId && event.payload?.unitId === eligible.id &&
+    event.payload?.katahName === 'Conservai' &&
+    event.payload?.cycleRound === readiness.cycleRound &&
+    event.payload?.round === state.battle?.round && event.payload?.turn === state.turn);
+  const canUse = Boolean(eligible && readiness.readied && state.battle?.status === 'active' &&
+    state.phase === 'command' && !isRulesPhaseEndConfirmed(state) &&
+    isCustodesKatahTimingAvailable(state, 'Conservai', playerId));
+  const action = canUse
+    ? '<button type="button" class="custodes-katah-panel__use" data-custodes-katah-use="Conservai"' +
+      ' data-custodes-katah-unit="' + esc(eligible.id) + '" data-custodes-katah-player="' +
+      esc(playerId) + '">Use Conservai</button>'
+    : currentUse
+      ? '<p class="custodes-katah-panel__result" role="status"><strong>Conservai ACTIVE</strong> · ' +
+        esc(eligible.name ?? eligible.id) + ' · Until end of this turn. Ka’tah readiness spent.</p>'
+      : eligible && !readiness.readied
+        ? '<p class="custodes-katah-panel__result is-spent">SPENT · ' +
+          esc(readiness.lastKatah ?? 'Martial Ka’tah') + '. No additional Ka’tah available until readied again.</p>'
+        : !unitId
+          ? '<p class="custodes-katah-panel__select">Select a Custodes unit on the map to use Conservai.</p>'
+          : !eligible
+            ? '<p class="custodes-katah-panel__select">The selected unit is not eligible for Martial Ka’tah. Select an eligible Custodes unit.</p>'
+            : '<p class="custodes-katah-panel__select">Conservai is not available in this Command-phase window.</p>';
   const conservai = ADEPTUS_CUSTODES_KATAH.find(definition => definition.name === 'Conservai');
   const reminder = conservai
     ? '<article class="custodes-katah-panel__option is-current">' +
       '<div class="custodes-katah-panel__option-heading"><strong>Conservai</strong><span>Command phase</span></div>' +
-      '<p>' + esc(conservai.effect) + '</p></article>'
+      '<p>' + esc(conservai.effect) + '</p>' +
+      (eligible ? '<p class="custodes-katah-panel__selected">Selected: <strong>' +
+        esc(eligible.name ?? eligible.id) + '</strong></p>' : '') + action + '</article>'
     : '';
   return styleLink + '<details class="custodes-katah-panel is-compact" data-view-key="command-katah" open>' +
     '<summary>Martial Ka’tah · Command Phase</summary>' +
