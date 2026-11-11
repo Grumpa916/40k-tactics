@@ -1,5 +1,6 @@
 import { TYRANID_FIXED_WARGEAR_COVERAGE } from "./tyranid-fixed-wargear-coverage.js";
 import { TYRANID_REVIEWED_ADDITIONAL_WARGEAR } from "./tyranid-reviewed-additional-wargear.js";
+import { TYRANID_OFFICIAL_EQUIPMENT_OVERRIDES } from "./tyranid-official-field-certification.js";
 import { getAdeptusCustodesWargearRuleSet, getAdeptusCustodesWargearSelections } from './adeptus-custodes-wargear-rules.js';
 import { getSpaceMarinesWargearRuleSet, getSpaceMarinesWargearSelections } from './space-marines-wargear-rules.js';
 
@@ -146,16 +147,16 @@ export const TYRANID_WARGEAR_RULES = Object.freeze({
  * Army Builder / import / casualty pipeline can safely consume Custodes data.
  */
 export function getTyranidWargearRuleSet(datasheetId) {
-  return TYRANID_WARGEAR_RULES[datasheetId] ?? TYRANID_REVIEWED_ADDITIONAL_WARGEAR[datasheetId] ?? TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId] ?? getAdeptusCustodesWargearRuleSet(datasheetId) ?? getSpaceMarinesWargearRuleSet(datasheetId) ?? null;
+  return TYRANID_WARGEAR_RULES[datasheetId] ?? TYRANID_OFFICIAL_EQUIPMENT_OVERRIDES[datasheetId] ?? TYRANID_REVIEWED_ADDITIONAL_WARGEAR[datasheetId] ?? TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId] ?? getAdeptusCustodesWargearRuleSet(datasheetId) ?? getSpaceMarinesWargearRuleSet(datasheetId) ?? null;
 }
 
 export function getTyranidWargearSelections(datasheetId) {
-  if (!TYRANID_WARGEAR_RULES[datasheetId] && !TYRANID_REVIEWED_ADDITIONAL_WARGEAR[datasheetId] && !TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId]) {
+  if (!TYRANID_WARGEAR_RULES[datasheetId] && !TYRANID_OFFICIAL_EQUIPMENT_OVERRIDES[datasheetId] && !TYRANID_REVIEWED_ADDITIONAL_WARGEAR[datasheetId] && !TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId]) {
     return getAdeptusCustodesWargearRuleSet(datasheetId)
       ? getAdeptusCustodesWargearSelections(datasheetId)
       : getSpaceMarinesWargearSelections(datasheetId);
   }
-  const ruleSet = TYRANID_WARGEAR_RULES[datasheetId] ?? TYRANID_REVIEWED_ADDITIONAL_WARGEAR[datasheetId] ?? TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId];
+  const ruleSet = TYRANID_WARGEAR_RULES[datasheetId] ?? TYRANID_OFFICIAL_EQUIPMENT_OVERRIDES[datasheetId] ?? TYRANID_REVIEWED_ADDITIONAL_WARGEAR[datasheetId] ?? TYRANID_FIXED_WARGEAR_COVERAGE[datasheetId];
   const values = [
     ...(ruleSet.fixed ?? []),
     ...(ruleSet.optional ?? []),
