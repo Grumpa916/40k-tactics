@@ -2,6 +2,7 @@ import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profil
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { assessRosterLoadoutReadiness } from '../rules/roster-loadout-readiness.js';
 import { hydrateReviewedFixedCustodesRoster } from '../rules/custodes-fixed-wargear.js';
+import { validateRosterUnitUpgrades } from '../rules/custodes-unit-upgrades.js';
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { createUnit, UNIT_STATUS } from "../state/unit.js";
@@ -40,6 +41,8 @@ export function applyArmyRosterToBattle(state, { roster, playerId, snapshotId = 
   // bypass the Battle Ready gate through another UI path.
   const resolvedRoster = hydrateReviewedFixedCustodesRoster(roster);
   assertBattleReadyLoadouts(resolvedRoster);
+  const upgradeIssues=validateRosterUnitUpgrades(resolvedRoster);
+  if(upgradeIssues.length)throw new Error('Resolve Unit Upgrade selection before battle: '+upgradeIssues.join(' '));
   const snapshot = selectRosterForBattle(resolvedRoster, {
     playerId, snapshotId, battleId: state.battle.id, selectedAt
   });
