@@ -291,7 +291,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
     const quantity = resolveEquippedQuantity(state, unit, name, loadoutEntry);
     if (quantity.activeQuantity === 0) return [];
     const attacks = weapon?.attacks ?? weapon?.characteristics?.attacks;
-    return [applyMementoToProfile({
+    return [applyTrygonPrimeToProfile(applyMementoToProfile({
       id: `datasheet:${unit.id}:${index}`,
       name,
       type: weaponType,
