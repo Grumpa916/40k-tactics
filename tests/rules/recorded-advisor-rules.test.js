@@ -39,31 +39,49 @@ function charge(state, turn = state.turn, round = state.battle.round) {
   state.history.push({type:'charge.outcome_recorded',payload:{unitId:'custodes',targetIds:['enemy'],outcome:'successful',turn,round}});
 }
 
-test('FAQ updates both Salvo Launcher profiles and the Quicksilver move-over rule',()=>{
+test('11th-edition jetbike Salvo Launchers use two attacks with Damage D3+2 (no Twin-linked)',()=>{
   for(const slug of ['shield-captain-on-dawneagle-jetbike','vertus-praetors']){
     const salvo=catalog['adeptus-custodes:'+slug].weapons.find(item=>item.name==='Salvo Launcher');
     assert.deepEqual({range:salvo.range,attacks:salvo.attacks,skill:salvo.skill,strength:salvo.strength,ap:salvo.ap,damage:salvo.damage,abilities:salvo.abilities},
-      {range:'24"',attacks:1,skill:'2+',strength:10,ap:-3,damage:'D6+1',abilities:'Twin-linked'});
+      {range:'24"',attacks:2,skill:'2+',strength:10,ap:-2,damage:'D3+2',abilities:''});
   }
+  const vertus=catalog['adeptus-custodes:vertus-praetors'];
+  assert.deepEqual({movement:vertus.characteristics.Movement,toughness:vertus.characteristics.Toughness,wounds:vertus.characteristics.Wounds},
+    {movement:'12"',toughness:8,wounds:7});
 });
 
-test('Lance requires a successful current-turn charge; Quicksilver Execution is movement-only', () => {
+test('11th-edition Quicksilver adds Sustained Hits 1 to melee after a successful charge, not movement mortal wounds', () => {
   const state = battle('vertus-praetors');
   const lance = getDatasheetWeaponOptions(state,state.units[0],{type:'melee'})[0];
   assert.equal(lance.characteristics.lance,true);
   const baseline = calculation(state,lance);
+  state.history.push({type:'unit.normal_move_resolved',payload:{unitId:'custodes',playerId:'p1',round:state.battle.round,turn:state.turn}});
+  close(calculation(state,lance).expectedDamage,baseline.expectedDamage);
   charge(state,2); close(calculation(state,lance).expectedDamage,baseline.expectedDamage);
   charge(state,3,1); close(calculation(state,lance).expectedDamage,baseline.expectedDamage);
   charge(state);
   const before = JSON.stringify(state), boosted = calculation(state,lance);
   assert.ok(boosted.expectedDamage > baseline.expectedDamage);
-  assert.equal(boosted.contextualAbilities.appliedRules.length,1);
-  assert.match(boosted.contextualAbilities.appliedRules[0],/^Lance:/);
-  assert.equal(boosted.contextualAbilities.sustainedHits,undefined);
+  assert.equal(boosted.contextualAbilities.sustainedHits,1);
+  assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Lance:')));
+  assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
+  // Sustained Hits 1 does not stack with a stronger existing value.
+  const strong=calculation(state,weapon({sustainedHits:2}));
+  assert.equal(strong.contextualAbilities.sustainedHits,2);
+  const ranged=calculation(state,weapon({},'ranged'));
+  assert.ok(!ranged.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
   const quicksilver=catalog['adeptus-custodes:vertus-praetors'].abilities.find(item=>item.name==='Quicksilver Execution');
-  assert.match(quicksilver.description,/Normal or Advance move/);
-  assert.match(quicksilver.description,/moved over/);
+  assert.match(quicksilver.description,/charge move this turn/);
+  assert.match(quicksilver.description,/Sustained Hits 1/);
+  assert.doesNotMatch(quicksilver.description,/Once per battle|moved over|mortal wounds/);
   assert.equal(JSON.stringify(state),before);
+  // Saved older-edition cards with the old effect are not silently reinterpreted.
+  const stale=battle('vertus-praetors');
+  stale.armyRosters.p1.units[0].datasheet=structuredClone(stale.armyRosters.p1.units[0].datasheet);
+  stale.armyRosters.p1.units[0].datasheet.abilities.find(item=>item.name==='Quicksilver Execution').description='Once per battle: fly over for mortal wounds.';
+  charge(stale);
+  const oldCalculation=calculation(stale);
+  assert.ok(!oldCalculation.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
 });
 
 test('charge projection includes charge bonuses only for the charging side and does not record a charge', () => {
