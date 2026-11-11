@@ -59,15 +59,7 @@ export const TYRANID_FIXED_WARGEAR_COVERAGE = Object.freeze({
 });
 
 /** Explicitly unresolved weapon alternatives or mixed-model profile groupings. */
+/** Unresolved mixed-model casualty assignment: which Ravener retains the Venom bolt? */
 export const TYRANID_COMPLEX_LOADOUT_REVIEW = Object.freeze([
-  "tyranids:old-one-eye",
-  "tyranids:zoanthropes",
-  "tyranids:maleceptor",
-  "tyranids:norn-emissary",
-  "tyranids:harpy",
-  "tyranids:hyperadapted-raveners",
-  "tyranids:norn-assimilator",
-  "tyranids:toxicrene",
-  "tyranids:hierophant",
-  "tyranids:harridan"
+  "tyranids:hyperadapted-raveners"
 ]);
