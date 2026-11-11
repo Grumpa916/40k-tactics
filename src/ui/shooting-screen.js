@@ -198,15 +198,15 @@ export function createShootingScreen(container, {
     const preview = layoutMode === "tabletop" && Boolean(pendingUnit);
     const attackerId = selectedAttackerId ?? (preview ? pendingUnit.unitId : null);
     const weapons = getShootingWeaponOptions(state, { attackerId, gameData, preview });
-    const targets = getShootingTargetOptions(state, { attackerId, perspectivePlayerId, preview });
-    const selectableIds = new Set(state.phase === 'shooting'
-      ? [...readyUnits, ...targets, ...openUnits].map(item => item.unitId)
-      : []);
     if (!weapons.some((weapon) => weapon.id === selectedWeaponId)) {
       selectedWeaponId = preview && weapons.length === 1 ? weapons[0].id : null;
     }
-    if (!targets.some((target) => target.unitId === selectedTargetId)) selectedTargetId = null;
     const selectedWeapon = weapons.find((weapon) => weapon.id === selectedWeaponId) ?? null;
+    const targets = getShootingTargetOptions(state, { attackerId, perspectivePlayerId, preview, weapon: selectedWeapon });
+    const selectableIds = new Set(state.phase === 'shooting'
+      ? [...readyUnits, ...targets, ...openUnits].map(item => item.unitId)
+      : []);
+    if (!targets.some((target) => target.unitId === selectedTargetId)) selectedTargetId = null;
     const precisionOptions = selectedWeapon?.characteristics?.precision === true && selectedTargetId
       ? getPrecisionAllocationOptions(state, selectedTargetId)
       : [];

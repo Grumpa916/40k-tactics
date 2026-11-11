@@ -3,6 +3,7 @@ import { getCombatFormationWeaponOptions, getProbabilisticUnitProfile } from "./
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getPostFightTargetStates } from "./post-fight-target-states.js";
 import { getSpatialContext } from "./spatial-context.js";
+import { getShootingEngagementContext, withShootingEngagementModifier } from './shooting-engagement-rules.js';
 import { clamp01, unitById } from "./tactical-context-utils.js";
 
 const RANGE_MARGIN = 3;
@@ -23,11 +24,16 @@ function evaluateWeapon(state, attacker, target, weapon, distance = null) {
   if (!attacker || !target || !weapon?.characteristics || weapon.quantityUncertain) return null;
   const range = weaponRange(weapon);
   if (range != null && distance != null && distance > range + RANGE_MARGIN) return null;
+  const engagement = getShootingEngagementContext(state, { attackerId: attacker.id, targetId: target.id, weapon });
+  if (!engagement.eligible) return null;
   const source = weapon.sourceUnitId ? unitById(state, weapon.sourceUnitId) ?? attacker : attacker;
   try {
     const attackerProfile = getProbabilisticUnitProfile(state, source);
     const targetProfile = getProbabilisticUnitProfile(state, target);
-    const distribution = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon });
+    const distribution = getDamageOutcomeDistribution({
+      attacker: attackerProfile, target: targetProfile,
+      weapon: withShootingEngagementModifier(weapon, engagement)
+    });
     const post = getPostFightTargetStates({ target: targetProfile, attacker: attackerProfile, weapon, distribution });
     return Object.freeze({
       unitId: attacker.id,

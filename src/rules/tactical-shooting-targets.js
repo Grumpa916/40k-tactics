@@ -1,4 +1,3 @@
-import { getCombatHistorySummary } from "./combat-history-summary.js";
 import { getSpatialContext } from "./spatial-context.js";
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getPostFightTargetStates } from "./post-fight-target-states.js";
@@ -6,6 +5,7 @@ import { evaluateShootingOpportunity } from "./tactical-shooting-opportunity.js"
 import { getCombatFormationRoot } from "./battle-unit-reference.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { getCustodesShootingRangeContext } from "./custodes-tactical-advisor.js";
+import { getShootingEngagementContext, withShootingEngagementModifier, withShootingEngagementExplanation } from "./shooting-engagement-rules.js";
 
 function unitById(state, unitId) {
   return (Array.isArray(state?.units) ? state.units : []).find((unit) => unit.id === unitId) ?? null;
@@ -64,8 +64,6 @@ export function getShootingTargetPriorities(state, {
   }
   const sourceAttacker = weapon?.sourceUnitId ? unitById(state, weapon.sourceUnitId) ?? attacker : attacker;
 
-  const combat = getCombatHistorySummary(state, { playerId });
-  const attackerSummary = combat.units.find((unit) => unit.unitId === attackerId);
   const spatial = getSpatialContext(state, { playerId });
   const proximities = spatial.unitProximity.filter(
     (item) => item.unitId === attackerId
@@ -80,11 +78,8 @@ export function getShootingTargetPriorities(state, {
     if (!target || target.ownerId === playerId || target.status === "destroyed") continue;
     if (getCombatFormationRoot(state, target)?.id !== target.id) continue;
 
-    const engaged = attackerSummary?.engagedWith?.includes(target.id) ?? false;
-
-    // Normal Fight-engaged targets are not Shooting recommendations. Any
-    // future exceptions should be supplied by authoritative unit/rule data.
-    if (engaged) continue;
+    const engagement = weapon ? getShootingEngagementContext(state, { attackerId, targetId: target.id, weapon }) : null;
+    if (engagement && !engagement.eligible) continue;
 
     // Keep one coarse bucket beyond range as borderline; screen farther targets.
     if (range != null && proximity.distance > range + RANGE_UNCERTAINTY_MARGIN) continue;
@@ -102,9 +97,11 @@ export function getShootingTargetPriorities(state, {
       try {
         const attackerProfile = getProbabilisticUnitProfile(state, sourceAttacker);
         const targetProfile = getProbabilisticUnitProfile(state, target);
-        const distribution = getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon });
+        const effectiveWeapon = withShootingEngagementModifier(weapon, engagement);
+        const distribution = withShootingEngagementExplanation(
+          getDamageOutcomeDistribution({ attacker: attackerProfile, target: targetProfile, weapon: effectiveWeapon }), engagement);
         damageDistribution = distribution;
-        const postTarget = getPostFightTargetStates({ target: targetProfile, attacker: attackerProfile, weapon, distribution });
+        const postTarget = getPostFightTargetStates({ target: targetProfile, attacker: attackerProfile, weapon: effectiveWeapon, distribution });
         expectedDamage = distribution.expectedDamage;
         destructionProbability = postTarget.destructionProbability;
         survivalProbability = postTarget.survivalProbability;
@@ -122,6 +119,7 @@ export function getShootingTargetPriorities(state, {
     }
 
     const reasons = [];
+    if (engagement?.appliedRule) reasons.push(engagement.appliedRule);
     const rangeStatus = range == null ? "unknown" : proximity.distance <= range ? "within" : "borderline";
     const targetProfile = getProbabilisticUnitProfile(state, target);
     const opportunity = evaluateShootingOpportunity({
@@ -165,6 +163,7 @@ export function getShootingTargetPriorities(state, {
       targetDistance: proximity.distance,
       targetBand: proximity.band,
       weaponId: weapon?.id ?? null,
+      engagement,
       baseRange,
       effectiveRange: range,
       custodesRange,

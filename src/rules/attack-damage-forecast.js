@@ -1,6 +1,7 @@
 import { getDamageOutcomeDistribution } from "./damage-outcome-distribution.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
 import { isGoldenLightActive } from './stratagem-use-state.js';
+import { getShootingEngagementContext, withShootingEngagementModifier, withShootingEngagementExplanation } from './shooting-engagement-rules.js';
 
 export function getAttackDamageForecast(state, { attackerId, targetId, weapon } = {}) {
   if (!attackerId || !targetId || !weapon) return null;
@@ -10,6 +11,9 @@ export function getAttackDamageForecast(state, { attackerId, targetId, weapon } 
     : attacker;
   const target = state?.units?.find((unit) => unit?.id === targetId);
   if (!attacker || !sourceAttacker || !target) return null;
+  const engagement = state?.phase === 'shooting'
+    ? getShootingEngagementContext(state, { attackerId, targetId, weapon }) : null;
+  if (engagement && !engagement.eligible) return null;
 
   try {
     const targetProfile=getProbabilisticUnitProfile(state,target);
@@ -18,11 +22,11 @@ export function getAttackDamageForecast(state, { attackerId, targetId, weapon } 
     const defensiveTarget=goldenLightActive
       ? {...targetProfile,combatRules:{...(targetProfile.combatRules??{}),goldenLightOfMoirades:true}}
       : targetProfile;
-    const distribution = getDamageOutcomeDistribution({
+    const distribution = withShootingEngagementExplanation(getDamageOutcomeDistribution({
       attacker: getProbabilisticUnitProfile(state, sourceAttacker),
       target: defensiveTarget,
-      weapon
-    });
+      weapon: withShootingEngagementModifier(weapon, engagement)
+    }), engagement);
     const expectedDamage = distribution.expectedDamage;
     const thresholdDamage = Math.max(1, Math.round(expectedDamage));
     const probabilityAtLeastThreshold = distribution.outcomes.reduce(

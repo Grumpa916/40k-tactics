@@ -13,7 +13,7 @@ export function weaponAbilityCharacteristics(abilities) {
     }
     const flags = { 'torrent':'torrent', 'ignores cover':'ignoresCover', 'lethal hits':'lethalHits',
       'devastating wounds':'devastatingWounds', 'twin-linked':'twinLinked', 'precision':'precision',
-      'extra attacks':'extraAttacks', 'lance':'lance' };
+      'extra attacks':'extraAttacks', 'lance':'lance', 'close-quarters':'closeQuarters', 'pistol':'closeQuarters' };
     if (flags[token.toLowerCase()]) result[flags[token.toLowerCase()]] = true;
     const numeric = token.match(/^(Sustained Hits|Rapid Fire|Melta|Blast)(?:\s+(\d+))?$/i);
     if (numeric && (numeric[2] || numeric[1].toLowerCase() === 'blast')) {
