@@ -201,7 +201,9 @@ export function createMissionActionPicker() {
           ${completionNote}`
         : option?'<p class="mission-action-picker__note">Custom action · no mission card linked.</p>':'';
       const scoringHref=new URL('./styles/scoring-checkpoints.css',import.meta.url).href;
-      const pickerHref=new URL('./styles/mission-action-picker.css',import.meta.url).href;
+      const pickerCss=new URL('./styles/mission-action-picker.css',import.meta.url);
+      pickerCss.searchParams.set('v','terrain-footprint-labels-1');
+      const pickerHref=pickerCss.href;
       const targetReady=setupMode
         ? locateSetupTerrain.size===expectedLocateSetupCount
         : isDeathTrap ? !!terrainArea : isSmokeAndMirrors ? !!objective : isTriangulation ? !!objective : isSurveilTheFoe ? !!targetUnit : isGatherIntel ? !!objective : isSecureAsset ? !!objective : isVitalLink ? !!objective : isExtractRelic ? !!objective && !!terrainArea : isVanguardOperation ? !!terrainArea : isSabotage ? !!objective : isLocateAndDeny ? !!objective && !!terrainArea : isCleanse ? !!objective : isPlunder ? !!terrainArea && !plunderState?.usedThisTurn : true;
