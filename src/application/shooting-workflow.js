@@ -7,6 +7,7 @@ import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
 import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { unitDisplayLabels } from "../ui/map-unit-labels.js";
+import { getShootingEngagementContext } from '../rules/shooting-engagement-rules.js';
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -274,7 +275,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null, p
   return linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
 }
 
-export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null, preview = false } = {}) {
+export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null, preview = false, weapon = null } = {}) {
   if (!canInspectShot(state, attackerId, preview)) return [];
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
@@ -283,7 +284,8 @@ export function getShootingTargetOptions(state, { attackerId, perspectivePlayerI
       unit?.status === "deployed" &&
       unit?.id !== attackerId &&
       unit?.ownerId !== attacker.ownerId &&
-      getCombatFormationRoot(state, unit)?.id === unit.id
+      getCombatFormationRoot(state, unit)?.id === unit.id &&
+      (!weapon || getShootingEngagementContext(state, { attackerId, targetId: unit.id, weapon }).eligible)
     )
     .map((unit) => describeUnit(state, unit.id, perspectivePlayerId));
 }
