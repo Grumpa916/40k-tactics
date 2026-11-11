@@ -1,5 +1,6 @@
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
 import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
+import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getActiveGuardiansEffects } from './stratagem-use-state.js';
 import { rulesContextKey } from './rules-phase-window.js';
@@ -41,7 +42,18 @@ export function getRecordedCombatRules(state, unit) {
   const unitWideTyranid = new Set([
     'Ocular Adaptation', 'Parasitic Biomorphology', 'Destabilising Predation'
   ]);
-  const ownEnhancements = getUnitUpgradeNames(getBattleRosterUnit(state, unit));
+  const ownRosterUnit=getBattleRosterUnit(state, unit);
+  const ownerRoster=state?.armyRosters?.[unit?.ownerId];
+  const selectedDetachments=new Set(getRosterDetachmentNames(ownerRoster));
+  const ownId=String(ownRosterUnit?.datasheetId??'').toLowerCase();
+  if(ownId.startsWith('tyranids:')){
+    if(selectedDetachments.has('Subterranean Assault'))
+      effects.push('tyranid-surprise-assault');
+    if(selectedDetachments.has('Ambush Predators') &&
+      ['tyranids:lictor','tyranids:neurolictor'].includes(ownId))
+      effects.push('tyranid-mindhunger');
+  }
+  const ownEnhancements = getUnitUpgradeNames(ownRosterUnit);
   for (const name of ownEnhancements) effects.push('tyranid-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''));
   for (const member of members) {
     for (const name of getUnitUpgradeNames(getBattleRosterUnit(state, member))) {
