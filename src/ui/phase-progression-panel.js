@@ -1,6 +1,8 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { isPunishmentCondemnationRequired } from '../rules/punishment-condemnation.js';
 import { TURN_STEPS } from '../state/turn.js';
+import { getCommandPhaseExitBlocker } from '../rules/command-phase-readiness.js';
+import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 
 const LABELS = { start_turn: 'Start of turn', command: 'Command', movement: 'Movement', shooting: 'Shooting', charge: 'Charge', fight: 'Fight', end_turn: 'End of turn', end_battle_round: 'End of battle round' };
 const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -18,7 +20,13 @@ export function getPhaseProgressionAction(state) {
   if (phase === 'end_battle_round') return { type: COMMAND_TYPES.ADVANCE_BATTLE_ROUND, payload: {}, label: 'Begin Round ' + (state.battle.round + 1) };
   const next = TURN_STEPS[TURN_STEPS.indexOf(phase) + 1];
   if (!TURN_STEPS.includes(phase) || !next) return null;
-  return { type: COMMAND_TYPES.CHANGE_PHASE, payload: { phase: next }, label: phase === 'start_turn' ? 'Begin Command phase' : phase === 'fight' ? 'End Fight · Review end of turn' : 'End ' + LABELS[phase] + ' · Continue to ' + LABELS[next] };
+  const blocker = phase === 'command'
+    ? (getPendingVenatariIngress(state).length
+      ? 'Place the confirmed Swift Ruin arrival from its tray before leaving Movement.'
+      : getCommandPhaseExitBlocker(state))
+    : null;
+  return { type: COMMAND_TYPES.CHANGE_PHASE, payload: { phase: next },
+    ...(blocker ? { disabled:true, blockedReason:blocker } : {}), label: phase === 'start_turn' ? 'Begin Command phase' : phase === 'fight' ? 'End Fight · Review end of turn' : 'End ' + LABELS[phase] + ' · Continue to ' + LABELS[next] };
 }
 
 // The shared footer is a fallback. Phase-specific screens with their own
@@ -38,8 +46,8 @@ export function renderPhaseProgressionPanel(state, viewedPhase, message = '', lo
   const blocked = action.disabled === true && !viewingOther;
   const visibleMessage = viewingOther ? '' : message;
   return '<style>.battle-phase-progress{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:12px 16px;border:1px solid #80659c;border-radius:10px;background:#211b2a}.battle-phase-progress p{margin:4px 0}.battle-phase-progress button{min-height:48px;padding:10px 16px;border:1px solid #b99bdd;border-radius:8px;background:#41314f;color:#fff;font:inherit;font-weight:750;touch-action:manipulation}.battle-phase-progress button:disabled{opacity:.55;cursor:not-allowed}.battle-phase-progress [role=status]{flex-basis:100%}</style>' +
-    '<section class="battle-phase-progress" aria-label="Advance the recorded game phase"><div><strong>Current phase: ' + escapeHtml(current) + '</strong><p>' +
+    '<section class="battle-phase-progress" data-phase-ready="' + String(!blocked && !viewingOther) + '" aria-label="Advance the recorded game phase"><div><strong>Current phase: ' + escapeHtml(current) + '</strong><p>' +
     (blocked ? escapeHtml(action.blockedReason ?? 'Complete the required mission review before continuing.') : viewingOther ? 'Return to the current phase to continue play.' : state.phase === 'end_turn' || state.phase === 'end_battle_round' ? 'Finish any scoring checks before continuing.' : 'Complete your tabletop actions, then end this phase.') + '</p></div>' +
-    '<button type="button" ' + (blocked ? 'disabled ' : viewingOther ? 'data-return-current-phase ' : 'data-advance-game-phase ') + '>' + escapeHtml(viewingOther ? 'Return to current phase · ' + current : action.label) + '</button>' +
+    '<button type="button" ' + (blocked ? 'disabled title="' + escapeHtml(action.blockedReason ?? 'Finish the required Command tasks first.') + '" ' : viewingOther ? 'data-return-current-phase ' : 'data-advance-game-phase ') + '>' + escapeHtml(viewingOther ? 'Return to current phase · ' + current : action.label) + '</button>' +
     (visibleMessage ? '<p role="status">' + escapeHtml(visibleMessage) + '</p>' : '') + '</section>';
 }
