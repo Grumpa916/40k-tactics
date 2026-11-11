@@ -57,6 +57,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
           !event.payload?.movementRefinement
         )) continue;
         if (def.id==='praesidium-shield' && !getRecordedCombatRules(state,unit).effects.includes('sentinel-shield')) continue;
+        if (def.id==='quicksilver-execution' && !(getRecordedCombatRules(state,unit).effects.includes('quicksilver-execution') && getRecordedCombatRules(state,unit).chargedThisTurn)) continue;
         const used = def.limit && getReminderUse(state, {...def, ruleId:def.id, playerId, unitId:unit.id});
         if (unit.status !== (def.reserves ? 'reserves' : 'deployed') && !(def.venatariControl && used)) continue;
         if (def.turn === 'own' && !ownTurn || def.turn === 'opponent' && ownTurn) continue;

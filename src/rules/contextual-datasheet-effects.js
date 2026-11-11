@@ -17,6 +17,12 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   const sustained = value => { result.sustainedHits = Math.max(result.sustainedHits ?? 0, value); };
 
   apply(profile.lance && charged, 'Lance: +1 to Wound after recorded charge', woundBonus);
+  // 11th-edition Vertus Quicksilver Execution is a repeatable, charge-triggered
+  // melee bonus. It is not the 10th-edition once-per-battle move-over attack.
+  // The reviewed datasheet match in recorded-combat-rules prevents an old
+  // saved datasheet bearing the same name from gaining the new effect.
+  apply(melee && own.has('quicksilver-execution') && charged,
+    'Quicksilver Execution: Sustained Hits 1 after charging', () => sustained(1));
   apply(melee && own.has('death-blow') && charged, 'Death Blow: improve AP by 1', improveAp);
   apply(melee && own.has('slayer-of-tyrants') && Number.isFinite(attacker?.combatRules?.unitToughness) &&
     profile.toughness > attacker.combatRules.unitToughness, 'Slayer of Tyrants: +1 to Wound', woundBonus);
