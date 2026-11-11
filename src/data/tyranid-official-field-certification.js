@@ -44,7 +44,7 @@ export const TYRANID_OFFICIAL_FIELD_CHECKS = Object.freeze({
   'tyranids:hierophant': item(15, [
     'characteristics', 'wargearNamesAndProfiles', 'twoDireBioCannons', 'damagedRule'
   ]),
-  'tyranids:barbed-hierodule': item(23, [
+  'tyranids:barbed-hierodule': item(26, [
     'wargearNamesAndProfiles', 'twoBioCannons', 'damagedRule'
   ], 'Corrected two Bio-cannons, previously one in the fixed-gear fallback.')
 });
