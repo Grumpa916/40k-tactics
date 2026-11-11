@@ -630,7 +630,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
   ,
   "tyranids:the-red-terror": Object.freeze({
     characteristics: Object.freeze({ Move: '10"', Toughness: 8, Save: "3+", Wounds: 9, Leadership: "8+", "Objective Control": 3 }),
-    keywords: Object.freeze(["Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "Mobile", "The Red Terror", "Vanguard Invader"]),
+    keywords: Object.freeze(["Burrower", "Character", "Epic Hero", "Great Devourer", "Monster", "The Red Terror", "Vanguard Invader"]),
     weapons: Object.freeze([
       Object.freeze({ name: "Gaping maw", equipment: "Default", range: "Melee", attacks: 1, skill: "2+", strength: 5, ap: "—", damage: "D3+2", abilities: "Extra Attacks, Devastating Wounds, Precision" }),
       Object.freeze({ name: "Scything talons", equipment: "Default", range: "Melee", attacks: 12, skill: "2+", strength: 7, ap: -2, damage: 2 })
@@ -926,6 +926,7 @@ export const TYRANID_DATASHEET_DETAILS = Object.freeze({
       Object.freeze({ name: "Hover", description: "This model has the Hover core ability." }),
       Object.freeze({ name: "Synapse", description: "While a TYRANIDS unit from your army is within 6 inches of one or more friendly SYNAPSE models, it is within Synapse Range. While in Synapse Range, it takes Battle-shock tests on 3D6 instead of 2D6, and each model in it adds 1 to the Strength characteristic of its melee attacks." }),
       Object.freeze({ name: "Frenzied Metabolism", description: "When selected to shoot, this model can add 1 to Wound rolls for its attacks this phase; afterward, on a D6 roll of 2+, it suffers D3 mortal wounds." }),
+      Object.freeze({ name: "Damaged: 1-10 Wounds Remaining", description: "While this model has 1-10 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll." }),
       Object.freeze({ name: "Transport", description: "Transport capacity: 20 Gargoyles models and 1 Winged Tyranid Prime model." })
     ]),
     defaultModelCount: 1, defaultPoints: 610,
