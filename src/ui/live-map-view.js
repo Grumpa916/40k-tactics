@@ -241,7 +241,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'compact-map-tools-1');
+      stylesheet.searchParams.set('v', 'compact-map-tools-2');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');
@@ -253,6 +253,9 @@ export function createLiveMapView() {
       map = addPrecisionOverlay(map);
       map = map.replace('<div class="battlefield-map__board"', `<div class="live-map__viewport${preferences.topDown ? ' is-top-down' : ''}" data-live-map-viewport><div class="live-map__canvas" data-live-map-canvas style="width:${zoom*100}%;height:${preferences.topDown ? 'auto' : zoom*100+'%'}"><div class="battlefield-map__board"`);
       map = map.replace('<!-- battlefield-map-board-end -->', '</div></div>');
+      // Keep the control picker inside the fitted viewport so it never consumes
+      // battlefield space or changes the 60:44 map geometry.
+      map = map.replace('data-live-map-viewport>', 'data-live-map-viewport><div class="live-map__objective-picker" data-map-objective-picker hidden></div>');
       return `<link rel="stylesheet" href="${esc(href)}"><link rel="stylesheet" href="${esc(symbolsHref)}"><div class="live-map${preferences.topDown ? ' is-top-down is-planner-view' : ' is-standard'}" data-live-map-mode="${preferences.topDown ? 'top-down' : 'standard'}" data-live-zoom="${liveZoomed ? '2' : '1'}" style="--live-marker-size:${preferences.markerSize}px">${controls.controls}${map}</div>`;
     },
     bind(container, state = renderedState, options = renderedOptions, liveSession = null) {
@@ -308,6 +311,8 @@ export function createLiveMapView() {
       refreshUnitLabels();
       container.querySelector('[data-live-map-style]')?.addEventListener('click', () => {
         preferences.topDown = !preferences.topDown;
+        const objectivePicker = container.querySelector('[data-map-objective-picker]');
+        if (objectivePicker) objectivePicker.hidden = true;
         saveMapPreferences(preferences);
         updateMapStyle();
       });
