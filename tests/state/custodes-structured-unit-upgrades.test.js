@@ -7,6 +7,7 @@ import { importWarhammerAppRoster } from '../../src/state/warhammer-app-roster-i
 import { createGameState } from '../../src/state/game-state.js';
 import { applyArmyRosterToBattle } from '../../src/engine/army-roster-transitions.js';
 import { hydrateReviewedFixedCustodesLoadout } from '../../src/rules/custodes-fixed-wargear.js';
+import { buildManualWargearLoadout } from '../../src/rules/wargear-loadout-validation.js';
 import {
  MORITOI_UPGRADES, setMoritoiUpgrade, validateRosterUnitUpgrades,
  hydrateLegacyCustodesUpgrades,getUnitUpgradeNames,isEligibleMoritoiDreadnought
@@ -24,10 +25,20 @@ const candidate=id=>findArmyUnitCandidates({faction:'Adeptus Custodes'})
 const make=(id,key=id,points=null)=>{
  const c=candidate(key);
  assert.ok(c,key);
- return hydrateReviewedFixedCustodesLoadout({
+ const raw={
    id,name:c.name,datasheetId:c.id,datasheet:structuredClone(c.datasheet),
    pointsOptions:c.pointsOptions,modelCount:1,points:points??c.defaultPoints
- });
+ };
+ if(key==='telemon-heavy-dreadnought'){
+   const selections=[
+     {name:'Spiculus Bolt Launcher',quantity:1},
+     {name:'Caestus Fist',quantity:1},
+     {name:'Twin Neutronium Cascade Projectors',quantity:1},
+     {name:'Adrathic Desolator',quantity:1}
+   ];
+   return {...raw,...buildManualWargearLoadout(raw,selections)};
+ }
+ return hydrateReviewedFixedCustodesLoadout(raw);
 };
 const roster=(units=[make('galatus','contemptor-galatus-dreadnought'),make('telemon','telemon-heavy-dreadnought')],detachments=['Might of the Moritoi'])=>
  createArmyRoster({id:'upgrades',name:'Upgrade roster',faction:'Adeptus Custodes',
