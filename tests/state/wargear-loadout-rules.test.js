@@ -75,7 +75,7 @@ test('one imported equipment selection can map to multiple attack profiles', () 
 
   const oldOneEye = getTyranidDatasheetDetails('tyranids:old-one-eye');
   const claws = matchWargearSelection({ datasheetId: 'tyranids:old-one-eye', datasheet: oldOneEye, sourceName: 'Old One Eye’s claws and talons' });
-  assert.equal(claws.match, 'profile-group');
+  assert.equal(claws.match, 'reviewed-rule');
   assert.equal(claws.profileNames.length, 2);
 
   const norn = getTyranidDatasheetDetails('tyranids:norn-emissary');

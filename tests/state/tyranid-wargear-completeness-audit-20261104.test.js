@@ -14,10 +14,10 @@ test("Tyranid audit accounts for all 57 entries without inventing ambiguous equi
   assert.equal(units.length, 57);
   const audit = auditArmyCatalogCompleteness("Tyranids");
   const unresolved = new Set(TYRANID_COMPLEX_LOADOUT_REVIEW);
-  assert.equal(unresolved.size, 10);
+  assert.equal(unresolved.size, 1);
   assert.equal(audit.counts.missingStructuredLoadoutRules, unresolved.size);
   assert.deepEqual(new Set(audit.loadoutCoverageGaps.map(g => g.datasheetId)), unresolved);
-  assert.equal(audit.counts.withStructuredLoadoutRules, 47);
+  assert.equal(audit.counts.withStructuredLoadoutRules, 56);
   for (const item of units) {
     assert.equal(Boolean(getTyranidWargearRuleSet(item.id)), !unresolved.has(item.id), item.name);
   }
