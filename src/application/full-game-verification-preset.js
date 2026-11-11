@@ -8,6 +8,7 @@ import { setBattleSize, setPreGameRoles } from '../engine/battle-setup-transitio
 import { setDeploymentPlanPosition, setEventCompanionMissionSetup } from '../engine/battlefield-map-transitions.js';
 import { setSecondaryMissionMode } from '../rules/secondary-mission-lifecycle.js';
 import { buildManualWargearLoadout } from '../rules/wargear-loadout-validation.js';
+import { hydrateReviewedFixedCustodesLoadout, isReviewedFixedCustodesLoadout } from '../rules/custodes-fixed-wargear.js';
 
 export const FULL_GAME_VERIFICATION_PRESET = 'full-game';
 export const FULL_GAME_VERIFICATION_BATTLE_ID = 'full-game-verification-v1';
@@ -49,10 +50,6 @@ const REVIEWED_VERIFICATION_LOADOUTS = Object.freeze({
 // generalize this rule to arbitrary datasheets because some units have mixed models
 // or multiple copies that need dedicated ownership data.
 const FIXED_PROFILE_PER_MODEL_IDS = new Set([
-  'adeptus-custodes:trajann-valoris',
-  'adeptus-custodes:venatari-with-verutum-lances',
-  'adeptus-custodes:contemptor-galatus-dreadnought',
-  'adeptus-custodes:prosecutor-squad',
   'tyranids:neurotyrant',
   'tyranids:tyranid-prime-with-lash-whip',
   'tyranids:hormagaunts',
@@ -95,6 +92,12 @@ function fixedProfileLoadout(unit) {
 }
 
 function verificationLoadout(unit) {
+  if (isReviewedFixedCustodesLoadout(unit)) {
+    const filled=hydrateReviewedFixedCustodesLoadout(unit);
+    if (filled===unit) throw new Error('Unable to validate fixed Custodes equipment: '+unit.datasheetId);
+    return {equippedWargear:filled.equippedWargear,equippedWeapons:filled.equippedWeapons,
+      loadoutValidation:filled.loadoutValidation};
+  }
   const reviewedRuleSet = getTyranidWargearRuleSet(unit.datasheetId);
   if (!reviewedRuleSet) return fixedProfileLoadout(unit);
 
