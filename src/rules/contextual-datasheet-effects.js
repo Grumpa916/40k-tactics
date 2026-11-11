@@ -24,6 +24,14 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   // Reviewed Tyranid enhancements: only intrinsic, unconditional attack bonuses.
   // The app does not silently trigger once-per-battle, target-selected or
   // proximity-dependent effects without explicit battle-state evidence.
+  apply(own.has('tyranid-surprise-assault'),
+    'Subterranean Assault: re-roll Hit rolls of 1', () => {
+      result.hitReroll = strongestReroll(result.hitReroll,'ones');
+    });
+  apply(own.has('tyranid-mindhunger') && keywords.includes('character'),
+    'Mindhunger: Lictor/Neurolictor re-roll Hit rolls of 1 versus Character', () => {
+      result.hitReroll = strongestReroll(result.hitReroll,'ones');
+    });
   apply(melee && own.has('tyranid-elevated-might'),
     'Elevated Might: re-roll melee Wound rolls; improve AP by 1', () => {
       improveAp();
