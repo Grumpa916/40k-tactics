@@ -1,4 +1,5 @@
 import { ADEPTUS_CUSTODES_DETACHMENTS } from '../data/adeptus-custodes-faction-rules.js';
+import { getTyranidEnhancementNames, getTyranidEnhancementCost, validateTyranidRosterEnhancements } from './tyranid-enhancements.js';
 import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { validateWargearLoadout } from './wargear-loadout-validation.js';
 
@@ -21,11 +22,15 @@ const lower=v=>String(v??'').toLowerCase().trim();
 const clean=v=>String(v??'').trim();
 export function getUnitUpgradeDefinition(nameOrId){return byName.get(nameOrId)??byId.get(nameOrId)??null;}
 export function getUnitUpgradeNames(unit) {
+  if (String(unit?.datasheetId??'').startsWith('tyranids:'))
+    return getTyranidEnhancementNames(unit);
   return (Array.isArray(unit?.unitUpgrades)?unit.unitUpgrades:[])
     .map(item=>typeof item==='string'?item:item?.name??item?.id)
     .filter(Boolean).map(value=>getUnitUpgradeDefinition(value)?.name??String(value));
 }
 export function getUnitUpgradeCost(unit) {
+  if (String(unit?.datasheetId??'').startsWith('tyranids:'))
+    return getTyranidEnhancementCost(unit);
   return getUnitUpgradeNames(unit).reduce((sum,name)=>sum+(getUnitUpgradeDefinition(name)?.points??0),0);
 }
 export function isEligibleMoritoiDreadnought(unit) {
@@ -36,6 +41,8 @@ export function isEligibleMoritoiDreadnought(unit) {
     !words.includes('epic hero');
 }
 export function validateRosterUnitUpgrades(roster) {
+  if (String(roster?.faction??'').trim().toLowerCase()==='tyranids')
+    return validateTyranidRosterEnhancements(roster);
   const errors=[],units=Array.isArray(roster?.units)?roster.units:[];
   const allowed=lower(roster?.faction)==='adeptus custodes' &&
     getRosterDetachmentNames(roster).includes(DETACHMENT);
