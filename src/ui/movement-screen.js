@@ -200,7 +200,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;
       const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
       const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url);
-      dashboardStyles.searchParams.set('v', 'movement-units-drawer-1');
+      dashboardStyles.searchParams.set('v', 'movement-units-drawer-2');
       const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
         playerId,
         perspectivePlayerId: perspectivePlayerId ?? playerId,
