@@ -173,3 +173,31 @@ test('legacy saved export converts clearly named, priced Upgrade and retains his
  const b=battle(old);
  assert.deepEqual(getUnitUpgradeNames(b.armyRosters.p1.units[0]),['Memento Moritoi']);
 });
+
+test('Augury changes actual expected incoming damage and probability-based wound loss, not only its displayed characteristic',()=>{
+ const baseline=roster();
+ const enhanced=setMoritoiUpgrade(baseline,'telemon','Augury Uplink');
+ const oldState=battle(baseline), enhancedState=battle(enhanced);
+ const lookup=(state)=>state.units.find(unit=>unit.metadata?.rosterUnitId==='telemon');
+ const oldTarget=getProbabilisticUnitProfile(oldState,lookup(oldState));
+ const upgradedTarget=getProbabilisticUnitProfile(enhancedState,lookup(enhancedState));
+ const attacker={characteristics:{ballisticSkill:3}};
+ const weapon={name:'Regression test weapon',type:'ranged',characteristics:{
+  attacks:4,skill:3,strength:12,ap:-2,damage:3
+ }};
+ const normal=getExpectedDamage({attacker,target:oldTarget,weapon});
+ const protectedResult=getExpectedDamage({attacker,target:upgradedTarget,weapon});
+ assert.ok(normal.expectedDamage>0);
+ assert.ok(protectedResult.expectedDamage>0);
+ assert.ok(protectedResult.expectedDamage<normal.expectedDamage);
+ assert.ok(Math.abs(protectedResult.expectedDamage/normal.expectedDamage-2/3)<1e-10,
+  '5+ Feel No Pain should prevent one third of otherwise suffered damage');
+ assert.equal(protectedResult.contextualAbilities.damagePrevention,5);
+ const switched=setMoritoiUpgrade(enhanced,'telemon','Memento Moritoi');
+ assert.equal(switched.units[1].points,310,'swapping 30-point upgrades must not double charge');
+ assert.equal(switched.units[1].basePoints,280);
+ assert.deepEqual(getUnitUpgradeNames(switched.units[1]),['Memento Moritoi']);
+ const removed=setMoritoiUpgrade(switched,'telemon','');
+ assert.equal(removed.units[1].points,280);
+ assert.deepEqual(getUnitUpgradeNames(removed.units[1]),[]);
+});
