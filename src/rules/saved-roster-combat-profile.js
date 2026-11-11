@@ -217,6 +217,7 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
 export function getEquippedWeaponReferences(state, unit, profiles = getBattleUnitDatasheet(state, unit)?.weapons) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit) || isPendingManualLoadout(rosterUnit) || !Array.isArray(profiles)) return [];
+  const memento=getUnitUpgradeNames(rosterUnit).includes('Memento Moritoi');
   const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const loadout = explicitWeaponLoadout(state, unit) ??
     (ruleSet?.coverageSource === 'local-datasheet-default-weapons'
@@ -226,8 +227,11 @@ export function getEquippedWeaponReferences(state, unit, profiles = getBattleUni
     const selection = loadout.get(normalizeWeaponName(weapon?.name));
     if (!selection) return [];
     const quantity = resolveEquippedQuantity(state, unit, weapon.name, selection);
+    const upgradedWeapon=memento && String(weapon?.range??'').toLowerCase()==='melee'
+      ? {...weapon,attacks:plusOne(weapon.attacks),strength:plusOne(weapon.strength),
+        damage:plusOne(weapon.damage)} : weapon;
     return [{
-      weapon,
+      weapon:upgradedWeapon,
       equippedQuantity: quantity.startingQuantity,
       activeQuantity: quantity.quantityUncertain ? null : quantity.activeQuantity,
       quantityUncertain: quantity.quantityUncertain
