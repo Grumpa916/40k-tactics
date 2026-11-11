@@ -1,5 +1,6 @@
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { summarizeRosterPoints } from "../state/army-roster-points-summary.js";
+import { validateRosterUnitUpgrades } from "./custodes-unit-upgrades.js";
 import { assessRosterDetachmentSelection, getRosterDetachmentNames } from "./roster-detachment-selection.js";
 
 const text = (value) => String(value ?? "").trim().toLowerCase();
@@ -20,6 +21,7 @@ export function validateArmyRoster(roster = {}) {
     if(!detachmentAssessment.tracked) warnings.push("Detachment DP costs for this faction are not loaded, so the 3 DP budget cannot be verified automatically.");
   }
   if (!Number.isFinite(roster.pointsLimit) || roster.pointsLimit <= 0) warnings.push("Set a points limit to validate the army budget.");
+  issues.push(...validateRosterUnitUpgrades(roster));
   const summary = summarizeRosterPoints(roster);
   if (summary.overLimit) issues.push(`Army is ${Math.abs(summary.remainingPoints)} points over its ${roster.pointsLimit}-point limit.`);
   if (summary.unitsWithoutPoints) warnings.push(`${summary.unitsWithoutPoints} unit${summary.unitsWithoutPoints === 1 ? " has" : "s have"} no resolved points cost.`);
