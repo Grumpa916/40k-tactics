@@ -18,3 +18,65 @@
 .mission-action-picker__setup-grid button.is-selected,.mission-action-picker__setup-grid button[aria-pressed="true"]{border-color:#bde98b;background:#26351f;color:#f2ffe5}
 .mission-action-picker__note{margin:0!important;font-size:11px!important;line-height:1.35!important;color:#aebbb5!important;overflow-wrap:anywhere}
 .shoot-tabletop__action-picker.mission-action-picker>button{width:100%;min-width:0}
+
+
+/* Locate and Deny / Extract Relic: show the exact source T-number directly on
+   its Event Companion terrain footprint while recording operation markers. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .battlefield-map__board.is-mission-terrain-selecting {
+  isolation:isolate;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .mission-terrain-map-label {
+  position:absolute !important;
+  z-index:13;
+  transform:translate(-50%,-50%);
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  width:36px;
+  min-width:36px;
+  height:36px;
+  min-height:36px;
+  margin:0;
+  padding:0;
+  border:2px solid #b0d6e0;
+  border-radius:50%;
+  background:#142935;
+  color:#f3fbfb;
+  font-size:11px;
+  font-weight:850;
+  line-height:1;
+  box-shadow:0 1px 6px #000c;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .mission-terrain-map-label::before {
+  content:"";
+  position:absolute;
+  inset:50% auto auto 50%;
+  transform:translate(-50%,-50%);
+  width:44px;
+  height:44px;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .mission-terrain-map-label.is-selected {
+  color:#17212b;
+  background:#c4e99b;
+  border-color:#f2ffe5;
+  box-shadow:0 0 0 3px #8aaf6f, 0 2px 8px #000c;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .mission-terrain-map-label:disabled {
+  opacity:.45;
+  cursor:default;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .mission-terrain-map-label:focus-visible {
+  outline:3px solid #f6d783;
+  outline-offset:3px;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__terrain.is-mission-terrain-selected {
+  fill:rgba(159,197,112,.38);
+  stroke:#c4e99b;
+  stroke-width:.44;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__terrain.is-mission-terrain-eligible {
+  stroke:#abd6e2;
+  stroke-width:.32;
+}
