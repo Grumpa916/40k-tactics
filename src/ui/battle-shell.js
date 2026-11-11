@@ -9,6 +9,7 @@ import { renderScoringCheckpointDialog, refreshScoringCheckpointDialog } from ".
 import { getPhaseProgressionAction, renderPhaseProgressionPanel, screenOwnsPhaseProgression } from "./phase-progression-panel.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
+import { mapObjectiveControlCommand, nextMapObjectiveControl, renderMapObjectiveControlPicker } from './map-objective-control-picker.js';
 import { createBattlePersistencePanel } from "./battle-persistence-panel.js";
 import { createSupabaseAuthPanel } from "./supabase-auth-panel.js";
 import { createSupabaseBattleStore } from "../persistence/supabase-battle-store.js";
@@ -529,27 +530,61 @@ export function createBattleShell(container, {
   }
 
   function handleMapObjectiveToggle(event) {
-    const marker = event.target?.closest?.("[data-map-objective-id]");
-    if (!marker || !container.contains(marker)) return;
     const state = session.getState();
-    if (state.battle?.status !== "active") return;
-    const objectiveId = marker.getAttribute("data-map-objective-id");
-    const objective = (state.objectives ?? []).find((item) => item?.id === objectiveId);
+    const option = event.target?.closest?.('[data-map-objective-control-choice]');
+    if (option && container.contains(option)) {
+      const picker = option.closest?.('[data-map-objective-picker]');
+      const objectiveId = picker?.getAttribute('data-objective-id');
+      if (!picker || !objectiveId || state.battle?.status !== 'active') return;
+      try {
+        session.dispatch(mapObjectiveControlCommand(state, {
+          objectiveId, choice: option.getAttribute('data-map-objective-control-choice'), perspectivePlayerId
+        }));
+        picker.hidden = true;
+        render();
+      } catch (error) {
+        const message = picker.querySelector?.('[data-map-objective-control-error]');
+        if (message) message.textContent = error?.message ?? String(error);
+        else console.error(error);
+      }
+      return;
+    }
+    const close = event.target?.closest?.('[data-map-objective-control-close]');
+    if (close && container.contains(close)) {
+      const picker = close.closest?.('[data-map-objective-picker]');
+      if (picker) picker.hidden = true;
+      return;
+    }
+    const marker = event.target?.closest?.('[data-map-objective-id]');
+    if (!marker || !container.contains(marker)) {
+      if (!event.target?.closest?.('[data-map-objective-picker]')) {
+        const picker = container.querySelector?.('[data-map-objective-picker]');
+        if (picker) picker.hidden = true;
+      }
+      return;
+    }
+    if (state.battle?.status !== 'active') return;
+    const objectiveId = marker.getAttribute('data-map-objective-id');
+    const objective = (state.objectives ?? []).find(item => item?.id === objectiveId);
     if (!objective) return;
-    const players = Array.isArray(state.players) ? state.players : [];
-    const me = perspectivePlayerId ?? players[0]?.id ?? state.activePlayer ?? null;
-    const opponent = players.find((player) => player.id !== me)?.id ?? null;
-    const control = objective.control ?? { controlState: "uncontrolled" };
-    let next = "mine";
-    if (control.controlState === "controlled" && control.controllerId === me) next = "opponent";
-    else if (control.controlState === "controlled" && control.controllerId !== me) next = "contested";
-    else if (control.controlState === "contested") next = "uncontrolled";
-    const payload = { objectiveId, controllerId: null, contestingPlayerIds: [], controlState: "uncontrolled" };
-    if (next === "mine") { payload.controlState = "controlled"; payload.controllerId = me; }
-    else if (next === "opponent") { payload.controlState = "controlled"; payload.controllerId = opponent; }
-    else if (next === "contested") { payload.controlState = "contested"; payload.contestingPlayerIds = players.map((player) => player.id); }
-    try { session.dispatch({ type: COMMAND_TYPES.RECORD_OBJECTIVE_CONTROL, payload }); } catch (error) { console.error(error); }
-    render();
+    const topDown = marker.closest?.('.live-map.is-top-down');
+    const picker = topDown?.querySelector?.('[data-map-objective-picker]');
+    if (picker) {
+      picker.setAttribute('data-objective-id', objectiveId);
+      picker.innerHTML = renderMapObjectiveControlPicker(state, {
+        objectiveId, label: marker.textContent?.trim() || objective.name || objectiveId,
+        perspectivePlayerId
+      });
+      picker.hidden = false;
+      return;
+    }
+    // Retain the compact single-tap cycle in the standard map.
+    const next = nextMapObjectiveControl(state, objectiveId, perspectivePlayerId);
+    if (!next) return;
+    try {
+      session.dispatch(mapObjectiveControlCommand(state, { objectiveId, choice: next, perspectivePlayerId }));
+      render();
+    } catch (error) { console.error(error); }
   }
 
   function handleMissionSummaryToggle(event) {
