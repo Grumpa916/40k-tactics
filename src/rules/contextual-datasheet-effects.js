@@ -21,6 +21,35 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   // melee bonus. It is not the 10th-edition once-per-battle move-over attack.
   // The reviewed datasheet match in recorded-combat-rules prevents an old
   // saved datasheet bearing the same name from gaining the new effect.
+  // Reviewed Tyranid enhancements: only intrinsic, unconditional attack bonuses.
+  // The app does not silently trigger once-per-battle, target-selected or
+  // proximity-dependent effects without explicit battle-state evidence.
+  apply(melee && own.has('tyranid-elevated-might'),
+    'Elevated Might: re-roll melee Wound rolls; improve AP by 1', () => {
+      improveAp();
+      result.woundReroll = strongestReroll(result.woundReroll, 'failed');
+    });
+  apply(melee && own.has('tyranid-ocular-adaptation'),
+    'Ocular Adaptation: +1 to melee Hit rolls', () => {
+      result.hitModifier = (result.hitModifier ?? 0) - 1;
+    });
+  apply(melee && own.has('tyranid-parasitic-biomorphology'),
+    'Parasitic Biomorphology: +1 Strength to unit melee weapons', () => {
+      result.strength += 1;
+    });
+  apply(melee && own.has('tyranid-monstrous-nemesis') &&
+      (keywords.includes('monster') || keywords.includes('vehicle')),
+    'Monstrous Nemesis: +1 to Wound against Monster/Vehicle', woundBonus);
+  apply(own.has('tyranid-power-of-the-hive-mind') && profile.psychic,
+    'Power of the Hive Mind: +1 Strength and AP for bearer psychic weapon', () => {
+      result.strength += 1;
+      improveAp();
+    });
+  apply(profile.weaponType === 'ranged' && own.has('tyranid-destabilising-predation'),
+    'Destabilising Predation: ranged attacks gain Anti-Character 2+', () => {
+      result.anti = [...(result.anti ?? []), { keyword:'character', threshold:2 }];
+    });
+
   apply(melee && own.has('quicksilver-execution') && charged,
     'Quicksilver Execution: Sustained Hits 1 after charging', () => sustained(1));
   apply(melee && own.has('death-blow') && charged, 'Death Blow: improve AP by 1', improveAp);
@@ -48,6 +77,8 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   apply(melee && target?.combatRules?.kaptaris, 'Kaptaris: -1 to incoming melee Hit rolls', () => {result.hitModifier=(result.hitModifier??0)+1;});
   apply(target?.combatRules?.goldenLightOfMoirades && !profile.torrent, 'Golden Light of the Moiraides: -1 to incoming Hit rolls', () => {result.hitModifier=(result.hitModifier??0)+1;});
   apply(target?.combatRules?.temporaryInvulnerableSave===3, 'Moment Shackle: allocated model has a 3+ invulnerable save', () => {result.invulnerableSave=Math.min(result.invulnerableSave??7,3);});
+  apply(enemy.has('tyranid-synaptic-control'),
+    'Synaptic Control: reduce Damage allocated to bearer by 1', () => { result.damageReduction += 1; });
   apply(enemy.has('golden-laurels'), 'Golden Laurels: worsen incoming AP by 1', worsenAp);
   for (const [id, label] of [['sentinel-shield','Praesidium Shield'],['unyielding-ancient','Unyielding Ancient']]) {
     apply(enemy.has(id) && profile.strength > profile.toughness, `${label}: -1 to Wound against higher Strength`, () => { result.woundModifier += 1; });
