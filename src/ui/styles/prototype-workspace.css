@@ -487,3 +487,19 @@
     min-height:44px;
   }
 }
+
+/* Command starts neutral. Only a transition accepted by the same engine
+   readiness check gets the green proceed action (rather than a false cue). */
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress button:disabled {
+  background:#233037;
+  border-color:#586b72;
+  color:#91a0a7;
+  opacity:1;
+  box-shadow:none;
+  cursor:not-allowed;
+}
+.battle-shell.is-tabletop-experiment[data-battle-focus=true] .battle-phase-progress button:not(:disabled) {
+  background:#c4e99b;
+  border-color:#c4e99b;
+  color:#17212b;
+}
