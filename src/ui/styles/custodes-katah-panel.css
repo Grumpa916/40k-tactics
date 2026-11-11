@@ -191,3 +191,42 @@
 .custodes-katah-phase__rereadied strong {
   color: #9edb9f;
 }
+
+/* Compact, thumb-friendly command activation for one selected Custodes unit. */
+.custodes-katah-panel__use {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  min-width:148px;
+  margin-top:10px;
+  padding:9px 15px;
+  border:1px solid #6d8a68;
+  border-radius:9px;
+  background:#c4e99b;
+  color:#17212b;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.custodes-katah-panel__use:focus-visible {
+  outline:3px solid #78bdff;
+  outline-offset:2px;
+}
+.custodes-katah-panel__selected,
+.custodes-katah-panel__result,
+.custodes-katah-panel__select {
+  margin:8px 0 0;
+  font-size:.84rem;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.custodes-katah-panel__result strong {
+  color:#9edb9f;
+}
+.command-katah-error {
+  margin:5px 0;
+  padding:7px 9px;
+  border-left:3px solid #df9e79;
+}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { custodesReminderState } from '../helpers/custodes-reminder-state.js';
-import { renderCustodesKatahCommandPanel, renderCustodesKatahPhasePanel } from '../../src/ui/custodes-katah-panel.js';
+import { renderCustodesKatahCommandPanel, renderCustodesKatahPhasePanel, bindCustodesKatahActions } from '../../src/ui/custodes-katah-panel.js';
 import { getCustodesKatahState } from '../../src/rules/custodes-tactical-advisor.js';
 import { recordCustodesKatahUse, recordCustodesKatahReadied } from '../../src/engine/custodes-katah-transitions.js';
 
@@ -96,3 +96,65 @@ test('opponent-turn Fight opening offers Kaptaris and legal offensive Dacatarai 
   assert.match(html,/Use Dacatarai/,'offensive Ka’tah remains legal in the opponent Fight phase');
   assert.doesNotMatch(html,/Use Rendax/,'Rendax is only offered when selected to fight');
 });
+
+
+test('Command offers Use Conservai only for the selected eligible, readied formation',()=>{
+  const initial=state();
+  const readOnly=JSON.stringify(initial);
+  const unselected=renderCustodesKatahCommandPanel(initial,{playerId:'p1'});
+  assert.match(unselected,/Select a Custodes unit on the map/);
+  assert.doesNotMatch(unselected,/data-custodes-katah-use/);
+  const selected=renderCustodesKatahCommandPanel(initial,{playerId:'p1',unitId:'allarus'});
+  assert.match(selected,/Selected: <strong>allarus<\/strong>/);
+  assert.match(selected,/data-custodes-katah-use="Conservai"/);
+  assert.match(selected,/data-custodes-katah-unit="allarus"/);
+  assert.match(selected,/data-custodes-katah-player="p1"/);
+  assert.match(selected,/>Use Conservai<\/button>/);
+  assert.equal((selected.match(/data-custodes-katah-use=/g)??[]).length,1);
+  const enemy=renderCustodesKatahCommandPanel(initial,{playerId:'p1',unitId:'marine'});
+  assert.doesNotMatch(enemy,/data-custodes-katah-use=/);
+  const notKatah=renderCustodesKatahCommandPanel(initial,{playerId:'p1',unitId:'prosecutors'});
+  assert.doesNotMatch(notKatah,/data-custodes-katah-use=/);
+  const attached=renderCustodesKatahCommandPanel(initial,{playerId:'p1',unitId:'trajann'});
+  assert.match(attached,/data-custodes-katah-unit="wardens"/,'attached Leader acts through the bodyguard formation');
+  assert.equal(JSON.stringify(initial),readOnly,'panel must not automatically expend readiness');
+});
+
+test('Use Conservai records only selected unit readiness and shows current-turn ACTIVE feedback',()=>{
+  const initial=state();
+  const previous=JSON.stringify(initial);
+  const used=recordCustodesKatahUse(initial,{playerId:'p1',unitId:'allarus',katahName:'Conservai'});
+  assert.equal(JSON.stringify(initial),previous,'the state transition is immutable');
+  assert.equal(used.history.at(-1).type,'custodes.katah_expended');
+  assert.equal(used.history.at(-1).payload.unitId,'allarus');
+  assert.equal(used.history.at(-1).payload.katahName,'Conservai');
+  assert.deepEqual(used.commandPoints,initial.commandPoints,'Conservai does not spend CP');
+  assert.equal(getCustodesKatahState(used,{playerId:'p1',unitId:'allarus'}).readied,false);
+  assert.equal(getCustodesKatahState(used,{playerId:'p1',unitId:'galatus'}).readied,true);
+  const html=renderCustodesKatahCommandPanel(used,{playerId:'p1',unitId:'allarus'});
+  assert.match(html,/Conservai ACTIVE/);
+  assert.match(html,/Until end of this turn/);
+  assert.match(html,/Ka’tah readiness spent/);
+  assert.doesNotMatch(html,/data-custodes-katah-use/);
+  assert.match(html,/SPENT · Conservai/,'exception list reflects the spent readiness');
+  assert.match(renderCustodesKatahCommandPanel(used,{playerId:'p1',unitId:'galatus'}),/data-custodes-katah-use="Conservai"/);
+  assert.throws(()=>recordCustodesKatahUse(used,{playerId:'p1',unitId:'allarus',katahName:'Conservai'}),/already expended/);
+  const restored=recordCustodesKatahReadied(used,{playerId:'p1',unitId:'allarus',source:'Superhuman Focus'});
+  assert.match(renderCustodesKatahCommandPanel(restored,{playerId:'p1',unitId:'allarus'}),/>Use Conservai<\/button>/);
+});
+
+test('Command Conservai button dispatches one existing Ka’tah use command',()=>{
+  let onclick=null,received=null;
+  const button={getAttribute:name=>({
+    'data-custodes-katah-use':'Conservai',
+    'data-custodes-katah-unit':'allarus',
+    'data-custodes-katah-player':'p1'
+  })[name],addEventListener:(event,listener)=>{if(event==='click')onclick=listener;}};
+  const root={querySelectorAll:selector=>selector==='[data-custodes-katah-use]'?[button]:[]};
+  bindCustodesKatahActions(root,{dispatch:command=>{received=command;}});
+  assert.equal(typeof onclick,'function');
+  onclick();
+  assert.deepEqual(received,{type:'custodes.record_katah_use',payload:{playerId:'p1',unitId:'allarus',katahName:'Conservai'}});
+});
+
+
