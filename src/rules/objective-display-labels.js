@@ -122,15 +122,24 @@ function objectiveNameForId(state,id) {
  return objective?.layoutObjective ?? (id?.startsWith('event-companion:')?id.slice('event-companion:'.length):objective?.name ?? id);
 }
 
+/**
+ * Use the same visual name in mission selectors as the battlefield labels.
+ * The objective ID is still the canonical Event Companion name, which can
+ * have a different role (Central/Expansion) after layout orientation.
+ */
+export function objectiveMapDisplayName(state,id,perspectivePlayerId) {
+ return perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
+}
+
 export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
- const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
+ const label=objectiveMapDisplayName(state,id,perspectivePlayerId);
  const compact=compactObjectiveLabel(label);
  return label===compact?label:label+' ('+compact+')';
 }
 
 // Canonical compact text shown on battlefield objective markers and in Movement advice.
 export function liveMapObjectiveLabel(state,id,perspectivePlayerId) {
- const label=perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
+ const label=objectiveMapDisplayName(state,id,perspectivePlayerId);
  return mapObjectiveMarkerLabel(label);
 }
 
