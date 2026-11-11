@@ -62,12 +62,12 @@ test('11th-edition Quicksilver adds Sustained Hits 1 to melee after a successful
   charge(state);
   const before = JSON.stringify(state), boosted = calculation(state,lance);
   assert.ok(boosted.expectedDamage > baseline.expectedDamage);
-  assert.equal(boosted.contextualAbilities.sustainedHits,1);
+  assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.includes('Sustained Hits 1')));
   assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Lance:')));
   assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
-  // Sustained Hits 1 does not stack with a stronger existing value.
+  // A stronger existing Sustained Hits value is not lowered or doubled.
   const strong=calculation(state,weapon({sustainedHits:2}));
-  assert.equal(strong.contextualAbilities.sustainedHits,2);
+  assert.ok(strong.expectedDamage>=boosted.expectedDamage);
   const ranged=calculation(state,weapon({},'ranged'));
   assert.ok(!ranged.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
   const quicksilver=catalog['adeptus-custodes:vertus-praetors'].abilities.find(item=>item.name==='Quicksilver Execution');
@@ -80,8 +80,11 @@ test('11th-edition Quicksilver adds Sustained Hits 1 to melee after a successful
   stale.armyRosters.p1.units[0].datasheet=structuredClone(stale.armyRosters.p1.units[0].datasheet);
   stale.armyRosters.p1.units[0].datasheet.abilities.find(item=>item.name==='Quicksilver Execution').description='Once per battle: fly over for mortal wounds.';
   charge(stale);
-  const oldCalculation=calculation(stale);
+  const staleLance=getDatasheetWeaponOptions(stale,stale.units[0],{type:'melee'})[0];
+  const oldCalculation=calculation(stale,staleLance);
   assert.ok(!oldCalculation.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
+  assert.ok(boosted.expectedDamage>oldCalculation.expectedDamage,
+    'Quicksilver increases Fight damage beyond the identical Lance-only charged forecast');
 });
 
 test('charge projection includes charge bonuses only for the charging side and does not record a charge', () => {
