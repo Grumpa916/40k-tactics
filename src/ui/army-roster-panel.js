@@ -13,7 +13,7 @@ import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
 import { buildManualWargearLoadout } from "../rules/wargear-loadout-validation.js";
 import { hydrateReviewedFixedCustodesLoadout, hydrateReviewedFixedCustodesRoster } from "../rules/custodes-fixed-wargear.js";
 import { normalizeRosterDetachmentSelection } from "../rules/roster-detachment-selection.js";
-import { setMoritoiUpgrade, validateRosterUnitUpgrades } from "../rules/custodes-unit-upgrades.js";
+import { setMoritoiUpgrade, validateRosterUnitUpgrades, hydrateLegacyCustodesUpgrades } from "../rules/custodes-unit-upgrades.js";
 import { createArmyUnitEditorController } from "./army-unit-editor-controller.js";
 
 function newId() {
@@ -68,7 +68,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   }
   async function loadRosterWithFixedWargear(id) {
     const original=(await store.load(id)).roster;
-    const hydrated=hydrateReviewedFixedCustodesRoster(original);
+    const hydrated=hydrateReviewedFixedCustodesRoster(hydrateLegacyCustodesUpgrades(original));
     // Persist one-time fixed equipment reconciliation. Preserve explicit
     // weapons, invalid source imports, and user-selected optional gear.
     if(hydrated!==original)await store.save({id:hydrated.id,roster:hydrated});
@@ -80,7 +80,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       if (current) rosterCache.set(current.id, current);
       records = await Promise.all(records.map(async record => {
         if (!rosterCache.has(record.id)) {
-          try { rosterCache.set(record.id, hydrateReviewedFixedCustodesRoster((await store.load(record.id)).roster)); } catch { /* A card can still open and report its load error. */ }
+          try { rosterCache.set(record.id, hydrateReviewedFixedCustodesRoster(hydrateLegacyCustodesUpgrades((await store.load(record.id)).roster))); } catch { /* A card can still open and report its load error. */ }
         }
         return {...record, roster:rosterCache.get(record.id)};
       }));
