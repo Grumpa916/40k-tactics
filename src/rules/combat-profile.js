@@ -29,6 +29,7 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
   return Object.freeze({
     weaponType: weapon.type,
     lance: weaponCharacteristics.lance === true,
+    psychic: weaponCharacteristics.psychic === true,
     conditionalAbilities: weaponCharacteristics.conditionalAbilities ?? [],
     torrent: weaponCharacteristics.torrent === true,
     attacks: characteristics.attacks,
