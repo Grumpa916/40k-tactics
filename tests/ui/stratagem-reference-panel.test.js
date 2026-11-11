@@ -68,3 +68,31 @@ test('selected Tyranid stratagems are filtered to the current phase without inco
   assert.doesNotMatch(html, /Tanglestrike Rounds/);
   assert.doesNotMatch(html, /partial catalog|not been imported yet/);
 });
+
+test('Tyranid reference panel lists all selected 11e detachment abilities and both possible force dispositions',()=>{
+  const revision=createRulesDataRevisionStamp('Tyranids');
+  assert.equal(revision.factionRules.detachments.length,10);
+  for(const entry of revision.factionRules.detachments){
+    assert.ok(entry.ruleName&&entry.ruleSummary,entry.name);
+    assert.equal(entry.ruleReferenceStatus,'current-october-secondary-cross-check-gw-pdf-not-retrieved');
+    assert.ok(entry.forceDispositionOptions.includes(entry.forceDisposition),entry.name);
+  }
+  const invasion=revision.factionRules.detachments.find(entry=>entry.name==='Invasion Fleet');
+  assert.deepEqual(invasion.forceDispositionOptions,['Priority Assets','Take and Hold']);
+  const underground=revision.factionRules.detachments.find(entry=>entry.name==='Subterranean Assault');
+  assert.deepEqual(underground.forceDispositionOptions,['Reconnaissance','Disruption']);
+  const html=renderReferencePanel({
+    phase:'command',activePlayer:'p1',
+    players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
+    armyRosters:{p1:{
+      faction:'Tyranids',
+      detachment:'Talons of the Norn Queen',
+      detachments:['Talons of the Norn Queen','Synaptic Nexus','Vanguard Onslaught'],
+      rulesDataRevision:revision
+    }}
+  },{},'p1');
+  assert.match(html,/Higher Imperatives/);
+  assert.match(html,/Synaptic Imperatives/);
+  assert.match(html,/Questing Tendrils/);
+  assert.match(html,/Once per battle/);
+});
