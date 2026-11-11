@@ -3,6 +3,7 @@ import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { escapeHtml as e } from './army-builder-html.js';
 import { renderAttachmentControls } from './army-builder-attachments.js';
 import { renderWargearEditor } from './army-wargear-editor.js';
+import { renderUnitUpgradeEditor } from './army-unit-upgrade-editor.js';
 import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
 import { getAdeptusCustodesBaseSize, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
 
@@ -83,7 +84,7 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button>${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}<h3>${e(unit.name)}</h3>${unitStats(unit)}
  ${physicalBase ? `<p class="ab-muted" data-unit-physical-base="${e(physicalBase.shape)}"><strong>Model base:</strong> ${e(modelBaseSizeLabel(physicalBase))} · ${e(baseSource)}${showBaseLink ? ` · <a href="${e(baseSourceUrl)}" target="_blank" rel="noopener noreferrer">Base source</a>` : ''}</p>` : ''}
  ${renderIndividualModelStats(unit)}
- ${editable?`${renderUnitSizeControls(unit,current)}${renderWargearEditor(unit)}<label>Enhancements / notes<textarea data-unit-notes="${e(unit.id)}" maxlength="2000">${e(unit.notes ?? '')}</textarea></label><button data-save-unit="${e(unit.id)}" ${d}>Save unit changes</button>${renderAttachmentControls(unit,current,busy)}`:`<button class="ab-primary" data-add-catalog-unit="${e(unit.id)}" ${d}>+ Add to list · ${e(unit.defaultPoints ?? 'Unknown')} pts</button>`}
+ ${editable?`${renderUnitSizeControls(unit,current)}${renderWargearEditor(unit)}${renderUnitUpgradeEditor(unit,current)}<label>Notes<textarea data-unit-notes="${e(unit.id)}" maxlength="2000">${e(unit.notes ?? '')}</textarea></label><button data-save-unit="${e(unit.id)}" ${d}>Save unit changes</button>${renderAttachmentControls(unit,current,busy)}`:`<button class="ab-primary" data-add-catalog-unit="${e(unit.id)}" ${d}>+ Add to list · ${e(unit.defaultPoints ?? 'Unknown')} pts</button>`}
  ${editable&&getTyranidWargearRuleSet(unit.datasheetId)?'<details class="ab-profile-reference"><summary>Full weapon profiles and alternate attack modes</summary>':''}
  ${['Ranged','Melee'].map(kind=>{const list=weapons.filter(w=>(String(w.range).toLowerCase()==='melee')===(kind==='Melee'));return `<h4>${kind} weapons</h4>${list.length?`<div class="ab-table"><table><thead><tr><th>Weapon</th><th>Range</th><th>A</th><th>Skill</th><th>S</th><th>AP</th><th>D</th></tr></thead><tbody>${list.map(w=>`<tr><th>${e(w.name)}${w.abilities?`<small>${e(w.abilities)}</small>`:''}</th>${['range','attacks','skill','strength','ap','damage'].map(k=>`<td>${e(w[k] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<p>Profiles unavailable.</p>'}`}).join('')}
  ${editable&&getTyranidWargearRuleSet(unit.datasheetId)?'</details>':''}
