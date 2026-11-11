@@ -15,6 +15,7 @@ import { hydrateReviewedFixedCustodesLoadout, hydrateReviewedFixedCustodesRoster
 import { normalizeRosterDetachmentSelection } from "../rules/roster-detachment-selection.js";
 import { setMoritoiUpgrade, validateRosterUnitUpgrades, hydrateLegacyCustodesUpgrades } from "../rules/custodes-unit-upgrades.js";
 import { createArmyUnitEditorController } from "./army-unit-editor-controller.js";
+import { setTyranidEnhancement } from '../rules/tyranid-enhancements.js';
 
 function newId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -251,6 +252,11 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         if(nextUnit.datasheetId?.startsWith('adeptus-custodes:') &&
            (/dreadnought|galatus|achillus|telemon/i.test(nextUnit.datasheetId)||nextUnit.unitUpgrades?.length)){
           updated=setMoritoiUpgrade(updated,unitId,prepared.upgradeName);
+        } else if(nextUnit.datasheetId?.startsWith('tyranids:')){
+          updated=setTyranidEnhancement(updated,unitId,prepared.upgradeName,{
+            basePoints:prepared.unit.points,
+            subterraneanCharacter:nextUnit.subterraneanCharacter===true
+          });
         }
         const errors=validateRosterUnitUpgrades(updated);
         if(errors.length)throw new Error(errors.join(' '));
