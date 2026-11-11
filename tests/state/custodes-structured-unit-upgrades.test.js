@@ -14,7 +14,7 @@ import {
 } from '../../src/rules/custodes-unit-upgrades.js';
 import { validateArmyRoster } from '../../src/rules/army-roster-validation.js';
 import { assessSavedUnitCost } from '../../src/rules/roster-rules-data-validation.js';
-import { getDatasheetWeaponOptions, getProbabilisticUnitProfile } from '../../src/rules/saved-roster-combat-profile.js';
+import { getDatasheetWeaponOptions, getProbabilisticUnitProfile, getEquippedWeaponReferences } from '../../src/rules/saved-roster-combat-profile.js';
 import { getExpectedDamage } from '../../src/rules/expected-damage.js';
 import { renderRosterRows } from '../../src/ui/army-roster-rows.js';
 import { renderUnitUpgradeEditor } from '../../src/ui/army-unit-upgrade-editor.js';
@@ -128,6 +128,11 @@ test('battle snapshots retain exact Upgrades and Memento modifies only melee A/S
  assert.equal(melee.characteristics.attacks,plain.characteristics.attacks+1);
  assert.equal(Number(melee.characteristics.strength),Number(plain.characteristics.strength)+1);
  assert.equal(Number(melee.characteristics.damage),Number(plain.characteristics.damage)+1);
+ const referenced=getEquippedWeaponReferences(state,unit).find(item=>item.weapon.name==='Warblade');
+ assert.ok(referenced);
+ assert.equal(referenced.weapon.attacks,Number(plain.characteristics.attacks)+1);
+ assert.equal(Number(referenced.weapon.strength),Number(plain.characteristics.strength)+1);
+ assert.equal(Number(referenced.weapon.damage),Number(plain.characteristics.damage)+1);
  const ranged=getDatasheetWeaponOptions(state,unit,{type:'ranged'})[0];
  const plainRanged=getDatasheetWeaponOptions(old,baselineUnit,{type:'ranged'})[0];
  assert.deepEqual(ranged.characteristics,plainRanged.characteristics);
