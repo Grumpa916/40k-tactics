@@ -95,7 +95,7 @@ export function createShootingScreen(container, {
 
   const mapView = createLiveMapView();
   const compareTargets = createShootingComparisonCache();
-  const missionActionPicker = createMissionActionPicker();
+  const missionActionPicker = createMissionActionPicker({ mapPerspectivePlayerId: perspectivePlayerId });
   let pendingUnitId = null;
   let selectedAttackerId = null;
   let selectedWeaponId = null;
