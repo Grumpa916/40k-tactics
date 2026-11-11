@@ -43,10 +43,10 @@ test('11th-edition jetbike Salvo Launchers use two attacks with Damage D3+2 (no 
   for(const slug of ['shield-captain-on-dawneagle-jetbike','vertus-praetors']){
     const salvo=catalog['adeptus-custodes:'+slug].weapons.find(item=>item.name==='Salvo Launcher');
     assert.deepEqual({range:salvo.range,attacks:salvo.attacks,skill:salvo.skill,strength:salvo.strength,ap:salvo.ap,damage:salvo.damage,abilities:salvo.abilities},
-      {range:'24"',attacks:2,skill:'2+',strength:10,ap:-2,damage:'D3+2',abilities:''});
+      {range:'24"',attacks:2,skill:'2+',strength:10,ap:-2,damage:'D3+2',abilities:undefined});
   }
   const vertus=catalog['adeptus-custodes:vertus-praetors'];
-  assert.deepEqual({movement:vertus.characteristics.Movement,toughness:vertus.characteristics.Toughness,wounds:vertus.characteristics.Wounds},
+  assert.deepEqual({movement:vertus.characteristics.Move,toughness:vertus.characteristics.Toughness,wounds:vertus.characteristics.Wounds},
     {movement:'12"',toughness:8,wounds:7});
 });
 
