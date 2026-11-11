@@ -1,5 +1,6 @@
 import { weaponAbilityCharacteristics } from './weapon-ability-characteristics.js';
 import { getRecordedCombatRules } from './recorded-combat-rules.js';
+import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getLiveSelectionQuantity } from './live-casualty-loadout.js';
@@ -16,6 +17,24 @@ export function parseCombatCharacteristic(value) {
   return match ? Number(match[1]) : null;
 }
 
+function plusOne(value) {
+  if(Number.isInteger(value))return value+1;
+  const text=String(value??'').trim();
+  if(/^\d+$/.test(text))return Number(text)+1;
+  const m=text.match(/^D([36])(?:\+(\d+))?$/i);
+  return m?'D'+m[1]+'+'+(Number(m[2]??0)+1):value;
+}
+
+function applyMementoToProfile(weapon,enabled) {
+  if(!enabled||weapon.type!=='melee')return weapon;
+  return {...weapon,
+    unitUpgrades:['Memento Moritoi'],
+    characteristics:{...weapon.characteristics,
+      attacks:plusOne(weapon.characteristics.attacks),
+      strength:plusOne(weapon.characteristics.strength),
+      damage:plusOne(weapon.characteristics.damage)}
+  };
+}
 function normalizeWeaponName(value) {
   return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -198,6 +217,7 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
 export function getEquippedWeaponReferences(state, unit, profiles = getBattleUnitDatasheet(state, unit)?.weapons) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit) || isPendingManualLoadout(rosterUnit) || !Array.isArray(profiles)) return [];
+  const memento=getUnitUpgradeNames(rosterUnit).includes('Memento Moritoi');
   const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const loadout = explicitWeaponLoadout(state, unit) ??
     (ruleSet?.coverageSource === 'local-datasheet-default-weapons'
@@ -207,8 +227,11 @@ export function getEquippedWeaponReferences(state, unit, profiles = getBattleUni
     const selection = loadout.get(normalizeWeaponName(weapon?.name));
     if (!selection) return [];
     const quantity = resolveEquippedQuantity(state, unit, weapon.name, selection);
+    const upgradedWeapon=memento && String(weapon?.range??'').toLowerCase()==='melee'
+      ? {...weapon,attacks:plusOne(weapon.attacks),strength:plusOne(weapon.strength),
+        damage:plusOne(weapon.damage)} : weapon;
     return [{
-      weapon,
+      weapon:upgradedWeapon,
       equippedQuantity: quantity.startingQuantity,
       activeQuantity: quantity.quantityUncertain ? null : quantity.activeQuantity,
       quantityUncertain: quantity.quantityUncertain
@@ -222,6 +245,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
+  const memento=getUnitUpgradeNames(rosterUnit).includes('Memento Moritoi');
   const reviewedRule = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const derivedFixedOnly = reviewedRule?.coverageSource === 'local-datasheet-default-weapons';
   const loadout = isPendingManualLoadout(rosterUnit)
@@ -246,7 +270,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
     const quantity = resolveEquippedQuantity(state, unit, name, loadoutEntry);
     if (quantity.activeQuantity === 0) return [];
     const attacks = weapon?.attacks ?? weapon?.characteristics?.attacks;
-    return [{
+    return [applyMementoToProfile({
       id: `datasheet:${unit.id}:${index}`,
       name,
       type: weaponType,
@@ -263,7 +287,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
         ...(skill == null ? {} : { skill }),
         ...weaponAbilityCharacteristics(weapon?.abilities ?? weapon?.characteristics?.abilities)
       }
-    }];
+    },memento)];
   });
 }
 
@@ -306,7 +330,10 @@ export function getProbabilisticUnitProfile(state, unit) {
   const invulnerableSave = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "invulnerableSave", ["Invulnerable save", "Invulnerable Save", "invulnerableSave"]));
   const ballisticSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "ballisticSkill", ["Ballistic Skill", "ballisticSkill"]));
   const weaponSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "weaponSkill", ["Weapon Skill", "weaponSkill"]));
-  const damagePrevention = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "damagePrevention", ["Feel No Pain", "damagePrevention"]));
+  const rosterUnit=getBattleRosterUnit(state,unit);
+  const augury=getUnitUpgradeNames(rosterUnit).includes('Augury Uplink');
+  const basicPrevention = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "damagePrevention", ["Feel No Pain", "damagePrevention"]));
+  const damagePrevention=augury?Math.min(basicPrevention??7,5):basicPrevention;
   const vitals = getLiveUnitVitals(state, unit);
   const keywords = [...new Set([
     ...(Array.isArray(unit?.keywords) ? unit.keywords : []),

@@ -2,6 +2,7 @@ import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { createRulesDataRevisionStamp, getRulesDataRevisionForFaction } from "../data/rules-data-revisions.js";
 import { validateWargearLoadout } from "./wargear-loadout-validation.js";
 import { hydrateReviewedFixedCustodesLoadout } from "./custodes-fixed-wargear.js";
+import { getUnitUpgradeCost, validateRosterUnitUpgrades } from "./custodes-unit-upgrades.js";
 import { resolveBuilderUnitCost } from "./army-builder-cost.js";
 
 function clone(value) {
@@ -19,7 +20,9 @@ function sameValue(a, b) {
  * Never guess a price when the official option depends on unresolved wargear.
  */
 export function assessSavedUnitCost(candidate, unit, roster) {
-  if (unit?.points == null || !Number.isFinite(Number(unit.points)) || Number(unit.points) < 0) {
+  const baseCost = Number.isFinite(unit?.basePoints)?unit.basePoints:
+    Number.isFinite(unit?.points)?unit.points-getUnitUpgradeCost(unit):unit?.points;
+  if (unit?.points == null || !Number.isFinite(Number(baseCost)) || Number(baseCost) < 0) {
     return { status: "missing", reason: "No valid saved points cost; confirm the unit's current MFM cost." };
   }
   const options = Array.isArray(candidate?.pointsOptions) ? candidate.pointsOptions : [];
@@ -32,19 +35,19 @@ export function assessSavedUnitCost(candidate, unit, roster) {
       'space-marines:victrix-honour-guard'].includes(candidate?.id)){
     const priced=resolveBuilderUnitCost({...unit,pointsOptions:options},roster,unit.equippedWargear??[]);
     if(priced.points==null)return {status:"unverified",reason:priced.reason};
-    return Number(priced.points)===Number(unit.points)
+    return Number(priced.points)===Number(baseCost)
       ? {status:"matched",reason:priced.reason}
-      : {status:"mismatch",reason:"Saved "+unit.points+" pts, expected "+priced.points+" pts for selected wargear/copy order."};
+      : {status:"mismatch",reason:"Saved "+baseCost+" pts, expected "+priced.points+" pts for selected wargear/copy order."};
   }
   if (!options.some((option) =>
-    Number(option.models) === Number(unit.modelCount) && Number(option.points) === Number(unit.points))) {
-    return { status: "mismatch", reason: unit.modelCount + " model(s) at " + unit.points +
+    Number(option.models) === Number(unit.modelCount) && Number(option.points) === Number(baseCost))) {
+    return { status: "mismatch", reason: unit.modelCount + " model(s) at " + baseCost +
       " pts does not match a current catalog points option." };
   }
   const priced = resolveBuilderUnitCost({ ...unit, pointsOptions: options }, roster,
     unit.equippedWargear ?? []);
-  if (priced.points != null && Number(priced.points) !== Number(unit.points)) {
-    return { status: "mismatch", reason: "Saved " + unit.points + " pts, but the reviewed " +
+  if (priced.points != null && Number(priced.points) !== Number(baseCost)) {
+    return { status: "mismatch", reason: "Saved " + baseCost + " pts, but the reviewed " +
       "unit-copy/wargear pricing option is " + priced.points + " pts (" + priced.reason + ")." };
   }
   const differentPrices = new Set(options.filter(option =>
@@ -168,6 +171,7 @@ export function revalidateRosterRulesData(roster, { updatedAt = roster?.updatedA
     refreshedUnits.push(hydrated);
   }
 
+  issues.push(...validateRosterUnitUpgrades({...roster,units:refreshedUnits}));
   if (issues.length) {
     return { status: "review-required", roster: clone(roster), issues, warnings, current: clone(current) };
   }

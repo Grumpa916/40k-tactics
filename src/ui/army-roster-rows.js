@@ -2,6 +2,7 @@ import { escapeHtml as e } from './army-builder-html.js';
 import { unitStats } from './army-unit-details.js';
 import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
 import { loadoutReadinessLabel } from '../rules/roster-loadout-readiness.js';
+import { getUnitUpgradeNames } from '../rules/custodes-unit-upgrades.js';
 
 function resolveRosterUnit(unit, faction = null) {
  if (unit?.datasheet || !faction) return unit;
@@ -33,7 +34,10 @@ export function renderRosterRows(units, selectedId, faction = null) {
   // datasheet. This same snapshot is used by live combat and saved battles.
   const equipmentLine=selectedEquipment && loadoutLabel==='Loadout ready'
     ? '<small class="ab-roster-equipment" aria-label="Equipped wargear">'+e(selectedEquipment)+'</small>' : '';
-  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${equipmentLine}${unitStats(unit)}</button>`;
+  const upgrades=getUnitUpgradeNames(unit);
+  const upgradeLine=upgrades.length?'<small class="ab-roster-equipment" aria-label="Unit Upgrade">'+
+    e(upgrades.join(' · '))+' · upgrade included</small>':'';
+  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${equipmentLine}${upgradeLine}${unitStats(unit)}</button>`;
  }
  return units.map(unit => {
   if (rendered.has(unit.id)) return '';

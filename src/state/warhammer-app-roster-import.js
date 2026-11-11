@@ -4,6 +4,7 @@ import { createRulesDataRevisionStamp } from '../data/rules-data-revisions.js';
 import { resolveInitialUnitPoints } from './army-roster-unit-costs.js';
 import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout, buildManualWargearLoadout } from '../rules/wargear-loadout-validation.js';
 import { hydrateReviewedFixedCustodesLoadout } from '../rules/custodes-fixed-wargear.js';
+import { detectImportMoritoiUpgrade, reconcileUpgradePoints } from '../rules/custodes-unit-upgrades.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 
 const pointsPattern = /\b(\d[\d,]*)\s*(?:pts?\.?|points?)\b/i;
@@ -205,6 +206,13 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    const role = line.match(/Attached as:\s*(Leader|Bodyguard)\b/i);
    if (role) current.importedAttachmentRole = role[1].toLowerCase();
    if (/^[•*]\s*Warlord$/i.test(line)) current.isWarlord = true;
+   const upgrade=selectedFaction.toLowerCase()==='adeptus custodes'
+     ? detectImportMoritoiUpgrade(line) : null;
+   if(upgrade){
+     current.unitUpgrades=[...(current.unitUpgrades??[]),
+       {id:upgrade.id,name:upgrade.name,points:upgrade.points,detachment:upgrade.detachment}];
+     continue;
+   }
 
    const modelGroup = parseModelGroupLine({ raw, line, current, nextRaw: nextNonblankRaw(lines, lineIndex) });
    if (modelGroup) {
@@ -262,6 +270,9 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  units.forEach(hydrateReviewedFixedEquipment);
  units.forEach((unit,index)=>{units[index]=hydrateReviewedFixedCustodesLoadout(unit);});
  units.forEach(finalizeLoadoutValidation);
+ for(let index=0;index<units.length;index++){
+   if(units[index].unitUpgrades?.length)units[index]=reconcileUpgradePoints(units[index]);
+ }
  warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
