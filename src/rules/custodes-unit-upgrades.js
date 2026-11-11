@@ -1,5 +1,6 @@
 import { ADEPTUS_CUSTODES_DETACHMENTS } from '../data/adeptus-custodes-faction-rules.js';
 import { getRosterDetachmentNames } from './roster-detachment-selection.js';
+import { validateWargearLoadout } from './wargear-loadout-validation.js';
 
 const DETACHMENT='Might of the Moritoi';
 const source=ADEPTUS_CUSTODES_DETACHMENTS.find(item=>item.name===DETACHMENT);
@@ -109,4 +110,38 @@ export function detectImportMoritoiUpgrade(line) {
     .replace(/\s*\(\d+\s*(?:pts?|points?)\)\s*$/i,'')
     .replace(/\s*\(one per army\)\s*/i,'').trim();
   return getUnitUpgradeDefinition(normalized);
+}
+
+
+/**
+ * Migrate a previously saved Warhammer App roster only when its own exported
+ * unit block names the upgrade and the stored total matches a unique,
+ * reviewed base+30 price. Never infer from total points alone.
+ */
+export function hydrateLegacyCustodesUpgrades(roster) {
+  if(!roster||!Array.isArray(roster.units)||
+      !getRosterDetachmentNames(roster).includes(DETACHMENT))return roster;
+  const units=roster.units.map(unit=>{
+    if(getUnitUpgradeNames(unit).length||!isEligibleMoritoiDreadnought(unit))return unit;
+    const matches=(unit.notes??'').split(/\r?\n/)
+      .filter(line=>/^\s*[•◦·*]/.test(line)).map(detectImportMoritoiUpgrade).filter(Boolean);
+    const names=[...new Set(matches.map(item=>item.name))];
+    if(names.length!==1 || matches.length!==1)return unit;
+    const def=getUnitUpgradeDefinition(names[0]);
+    const base=publishedBasePoints(unit,def.points);
+    if(base===null)return unit;
+    const upgrade={id:def.id,name:def.name,points:def.points,detachment:def.detachment};
+    const legacyUnmatched=(unit.unmatchedWargear??[]);
+    const unrelated=legacyUnmatched.filter(item=>detectImportMoritoiUpgrade(item.sourceName??'')?.name!==def.name);
+    const fixed={...unit,basePoints:base,unitUpgrades:[upgrade]};
+    if(unrelated.length===legacyUnmatched.length)return fixed;
+    if(unrelated.length){
+      return {...fixed,unmatchedWargear:unrelated};
+    }
+    const {unmatchedWargear,loadoutValidation,...rest}=fixed;
+    const reviewed=validateWargearLoadout(rest);
+    return {...rest,loadoutValidation:reviewed.status==='rules-reviewed-valid'
+      ? reviewed : loadoutValidation};
+  });
+  return units.every((unit,index)=>unit===roster.units[index])?roster:{...roster,units};
 }
