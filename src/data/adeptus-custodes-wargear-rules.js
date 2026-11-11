@@ -9,6 +9,53 @@ const pair=(name,ranged,melee)=>({name,profiles:[ranged,melee]});
 const combos=(combinations,message='Selected wargear does not match a legal reviewed equipment combination.')=>Object.freeze({type:'allowed-combinations',combinations:Object.freeze(combinations.map(item=>Object.freeze(item))),message});
 
 export const ADEPTUS_CUSTODES_WARGEAR_RULES=Object.freeze({
+// Fixed equipment from the 11th-edition Custodes codex/Imperial Armour and
+// explicitly tagged Legends references. Each named selection maps to exactly
+// the profiles printed on the corresponding datasheet; extra copies are not
+// interchangeable optional weapons.
+ 'adeptus-custodes:trajann-valoris':rule({fixed:Object.freeze([
+   fixed("Eagle's Scream",{count:1}),fixed("Watcher's Axe",{count:1})
+ ])}),
+ 'adeptus-custodes:aquilon-terminators-with-solarite-power-gauntlets':rule({fixed:Object.freeze([
+   fixed('Adrathic Combi-destructor',{perModel:1}),fixed('Solarite Power Gauntlet',{perModel:1})
+ ])}),
+ 'adeptus-custodes:venatari-with-kinetic-destroyers':rule({fixed:Object.freeze([
+   fixed('Kinetic Destroyer',{perModel:1}),fixed('Tarsus Buckler',{perModel:1})
+ ])}),
+ 'adeptus-custodes:contemptor-galatus-dreadnought':rule({fixed:Object.freeze([
+   fixed('Warblade',{count:1,profiles:['Warblade (ranged)','Warblade']})
+ ])}),
+ 'adeptus-custodes:prosecutor-squad':rule({fixed:Object.freeze([
+   fixed('Boltgun',{perModel:1}),fixed('Gun Stock',{perModel:1})
+ ])}),
+ 'adeptus-custodes:witchseeker-squad':rule({fixed:Object.freeze([
+   fixed('Flamer',{perModel:1}),fixed('Gun Stock',{perModel:1})
+ ])}),
+ 'adeptus-custodes:vigilator-squad':rule({fixed:Object.freeze([
+   fixed('Executioner Greatblade',{perModel:1})
+ ])}),
+ 'adeptus-custodes:ares-gunship':rule({fixed:Object.freeze([
+   fixed('Arachnus Heavy Blaze Cannon',{count:2}),
+   fixed('Arachnus Magna-blaze Cannon',{count:1}),fixed('Armoured Hull',{count:1})
+ ])}),
+ 'adeptus-custodes:orion-assault-dropship':rule({fixed:Object.freeze([
+   fixed('Arachnus Heavy Blaze Cannon',{count:2}),fixed('Spiculus Heavy Bolt Launcher',{count:2}),
+   fixed('Twin Lastrum Bolt Cannon',{count:2}),fixed('Armoured Hull',{count:1})
+ ])}),
+ 'adeptus-custodes:aleya':rule({fixed:Object.freeze([fixed('Somnus',{count:1})])}),
+ 'adeptus-custodes:valerian':rule({fixed:Object.freeze([
+   fixed('Gnosis',{count:1,profiles:['Gnosis (ranged)','Gnosis']})
+ ])}),
+ 'adeptus-custodes:custodian-guard-sodality-with-adrasite-spears':rule({fixed:Object.freeze([
+   fixed('Adrasite Spear',{perModel:1,profiles:['Adrasite Spear (ranged)','Adrasite Spear']})
+ ])}),
+ 'adeptus-custodes:custodian-guard-sodality-with-pyrithite-spears':rule({fixed:Object.freeze([
+   fixed('Pyrithite Spear',{perModel:1,profiles:['Pyrithite Spear (ranged)','Pyrithite Spear']})
+ ])}),
+ 'adeptus-custodes:sagittarum-custodians-sodality':rule({fixed:Object.freeze([
+   fixed('Adrastus Bolt Caliver',{perModel:1}),fixed('Misericordia',{perModel:1})
+ ])}),
+
  'adeptus-custodes:blade-champion':rule({fixed:Object.freeze([fixed('Vaultswords',{count:1,profiles:['Vaultswords – Behemor','Vaultswords – Hurricanis','Vaultswords – Victus']})])}),
  'adeptus-custodes:shield-captain':rule({
   optional:Object.freeze([
