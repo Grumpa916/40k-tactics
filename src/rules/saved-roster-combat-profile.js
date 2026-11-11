@@ -1,6 +1,7 @@
 import { weaponAbilityCharacteristics } from './weapon-ability-characteristics.js';
 import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
+import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getLiveSelectionQuantity } from './live-casualty-loadout.js';
@@ -353,6 +354,10 @@ export function getProbabilisticUnitProfile(state, unit) {
   const weaponSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "weaponSkill", ["Weapon Skill", "weaponSkill"]));
   const rosterUnit=getBattleRosterUnit(state,unit);
   const upgrades=getUnitUpgradeNames(rosterUnit);
+  const chosenDetachments=new Set(getRosterDetachmentNames(state?.armyRosters?.[unit?.ownerId]));
+  const datasheetId=String(rosterUnit?.datasheetId??'').toLowerCase();
+  const warriorId=/^tyranids:(?:tyranid-warriors-with-(?:ranged|melee)-bio-weapons|tyranid-prime-with-lash-whip|winged-tyranid-prime)$/.test(datasheetId);
+  const warriorInvulnerability=chosenDetachments.has('Warrior Bioform Onslaught') && warriorId;
   const augury=upgrades.includes('Augury Uplink');
   const basicPrevention = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "damagePrevention", ["Feel No Pain", "damagePrevention"]));
   const auguryPrevention=augury?Math.min(basicPrevention??7,5):basicPrevention;
@@ -361,13 +366,21 @@ export function getProbabilisticUnitProfile(state, unit) {
   const damagePrevention=upgrades.includes('Adaptive Biology')?
     Math.min(auguryPrevention??7,5):auguryPrevention;
   const upgradedInvulnerableSave=upgrades.includes('Synaptoprescience')
-    ?Math.min(invulnerableSave??7,4):invulnerableSave;
+    ?Math.min(invulnerableSave??7,4)
+    :warriorInvulnerability?Math.min(invulnerableSave??7,5):invulnerableSave;
   const vitals = getLiveUnitVitals(state, unit);
   const keywords = [...new Set([
     ...(Array.isArray(unit?.keywords) ? unit.keywords : []),
     ...(Array.isArray(unit?.profile?.keywords) ? unit.profile.keywords : []),
     ...(Array.isArray(datasheet?.keywords) ? datasheet.keywords : []),
-    ...(upgrades.includes('Trygon Prime') ? ['Synapse'] : [])
+    ...(upgrades.includes('Trygon Prime') ? ['Synapse'] : []),
+    ...(chosenDetachments.has('Subterranean Assault') && rosterUnit?.subterraneanCharacter===true
+      && datasheetId==='tyranids:trygon'?['Character']:[]),
+    ...(chosenDetachments.has('Ambush Predators') && [
+      'tyranids:lictor','tyranids:neurolictor','tyranids:deathleaper'
+    ].includes(datasheetId)?['Deep Strike']:[]),
+    ...(chosenDetachments.has('Warrior Bioform Onslaught') && datasheetId.startsWith('tyranids:tyranid-warriors-with-')
+      ?['Battleline','Tyranid Warriors']:[])
   ].map((keyword) => String(keyword).trim()).filter(Boolean))];
 
   return {
