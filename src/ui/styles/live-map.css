@@ -788,6 +788,74 @@
   background:#673837;
 }
 
+
+/* Top-down objective labels: 70% of the previous 70–100px width,
+   42px minimum height, 12px type and 5×7px padding. The invisible
+   hit area remains 44px tall for iPad touch interaction. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__objective {
+  box-sizing:border-box;
+  width:clamp(49px,4.9vw,70px) !important;
+  min-width:49px !important;
+  max-width:70px !important;
+  min-height:29.4px !important;
+  padding:3.5px 4.9px !important;
+  font-size:8.4px !important;
+  line-height:1.15 !important;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__objective::after {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:100%;
+  height:44px;
+  transform:translate(-50%,-50%);
+  background:transparent;
+  pointer-events:auto;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__objective.is-mine { border-color:#79bbff !important; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__objective.is-opponent { border-color:#ff8585 !important; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__objective.is-contested { border-color:#f6d783 !important; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__objective:focus-visible {
+  outline:2px solid #c6e99e;
+  outline-offset:3px;
+}
+
+/* Objective control choices overlay the viewport, not the battlefield layout,
+   preserving the exact board ratio and independent pan/zoom state. */
+.live-map .live-map__viewport { position:relative; }
+.live-map [data-map-objective-picker][hidden],
+.live-map.is-standard [data-map-objective-picker] { display:none !important; }
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down [data-map-objective-picker] {
+  box-sizing:border-box;
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:35;
+  width:min(250px,calc(100% - 16px));
+  padding:10px;
+  border:1px solid #9dafba;
+  border-radius:9px;
+  background:rgba(18,29,38,.98);
+  color:#f1f5f1;
+  box-shadow:0 4px 18px #000a;
+}
+.live-map__objective-picker-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.live-map__objective-picker-heading strong { font-size:14px; font-weight:700; }
+.live-map__objective-picker-heading button { min-width:44px; min-height:44px; border:1px solid #60737e; border-radius:7px; color:inherit; background:#293943; font:inherit; }
+.live-map__objective-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin:6px 0; }
+.live-map__objective-choice { box-sizing:border-box; min-height:44px; min-width:0; padding:5px 6px; color:#eff7fa; background:#26333b; border:1px solid #83919a; border-radius:7px; font:inherit; font-size:12px; cursor:pointer; touch-action:manipulation; }
+.live-map__objective-choice.is-mine { border-color:#79bbff; }
+.live-map__objective-choice.is-opponent { border-color:#ff8585; }
+.live-map__objective-choice.is-contested { border-color:#f6d783; }
+.live-map__objective-choice[aria-pressed="true"] { background:#405a4b; box-shadow:inset 0 0 0 2px #c6e99e; }
+.live-map__objective-choice:disabled { opacity:.4; cursor:default; }
+.live-map__objective-picker > small { display:block; color:#bbcbd1; font-size:11px; line-height:1.3; }
+.live-map__objective-picker [role="alert"]:empty { display:none; }
+
+
 /* Live tabletop maps all use Charge's full-height 60:44 board viewport.
    The selected unit is already in the controls/Units drawer; retain this
    live announcement for assistive technology without reserving a footer row. */
