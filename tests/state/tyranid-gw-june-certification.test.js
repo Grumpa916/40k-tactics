@@ -82,7 +82,7 @@ test('June source-matched Tyranid Prime, Raveners and Hierophant remain unchange
  assert.equal(prime.weapons.find(x=>x.name==='Lash whip').attacks,8);
  assert.match(prime.weapons.find(x=>x.name==='Lash whip').abilities,/Extra Attacks/);
  const raveners=unit('tyranids:raveners').datasheet;
- assert.equal(raveners.defaultModelCount,5);
+ assert.equal(unit('tyranids:raveners').defaultModelCount,5);
  assert.equal(raveners.weapons[0].attacks,3);
  assert.equal(raveners.weapons[0].damage,2);
  const hiero=getTyranidWargearRuleSet('tyranids:hierophant');
