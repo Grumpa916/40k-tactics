@@ -1,4 +1,5 @@
 import { getLiveMissionActionOptions } from '../rules/mission-action-state.js';
+import { objectiveMapDisplayName } from '../rules/objective-display-labels.js';
 import { renderMissionTerrainMapLabels } from './mission-terrain-map-labels.js';
 import { getDeathTrapTerrainOptions } from '../rules/death-trap-state.js';
 import { getSmokeAndMirrorsObjectiveOptions } from '../rules/smoke-and-mirrors-state.js';
@@ -25,7 +26,7 @@ function timingsFor(option) {
   if (timings.length) return timings;
   return [validTiming(option?.fallbackTiming)?option.fallbackTiming:'end-of-turn'];
 }
-export function createMissionActionPicker() {
+export function createMissionActionPicker({ mapPerspectivePlayerId = null } = {}) {
   let unit=null, selected='', timing='', confirmed=false, objective='', terrainArea='', targetUnit='';
   let locateSetupTerrain=new Set();
   let expectedLocateSetupCount=5;
@@ -82,6 +83,8 @@ export function createMissionActionPicker() {
           : 5;
       const deathTrapTerrain=isDeathTrap ? getDeathTrapTerrainOptions(state,{playerId}).filter(item=>!item.trapped && item.boobyTrapEligibleByGeometry!==false) : [];
       const smokeObjectives=isSmokeAndMirrors ? getSmokeAndMirrorsObjectiveOptions(state,{playerId}) : [];
+      // Match the battlefield's perspective, which may differ from the acting player.
+      const mapPerspective=mapPerspectivePlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? state.players?.[0]?.id;
       const triangulationObjectives=isTriangulation ? getTriangulationObjectiveOptions(state,{playerId}) : [];
       const surveilTargets=isSurveilTheFoe ? getSurveilTheFoeTargetOptions(state,{playerId,unitId}) : [];
       const gatherIntelObjectives=isGatherIntel ? getGatherIntelObjectiveOptions(state,{playerId}) : [];
@@ -136,7 +139,7 @@ export function createMissionActionPicker() {
         : isDeathTrap
           ? `<label class="mission-action-picker__field"><span>Terrain area to trap</span><select data-action-terrain><option value="">Choose terrain area…</option>${deathTrapTerrain.map(item=>`<option value="${esc(item.terrainAreaId)}" ${item.terrainAreaId===terrainArea?'selected':''}>${esc(item.label)}</option>`).join('')}</select><small>Choose the Event Companion terrain area receiving the operation marker. Already trapped areas and terrain known to be wholly inside your deployment zone are hidden.</small></label>`
           : isSmokeAndMirrors
-            ? `<label class="mission-action-picker__field"><span>Objective to Decoy</span><select data-action-objective><option value="">Choose eligible objective…</option>${smokeObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)} · ${item.enemyTerritory?'enemy territory · ':''}${item.recurringVpIfDecoyed} VP/turn</option>`).join('')}</select><small>Your home objective, active Decoys and objectives already selected for another Decoy attempt this turn are hidden.</small></label>`
+            ? `<label class="mission-action-picker__field"><span>Objective to Decoy</span><select data-action-objective><option value="">Choose eligible objective…</option>${smokeObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(objectiveMapDisplayName(state,item.objectiveId,mapPerspective))} · ${item.enemyTerritory?'enemy territory · ':''}${item.recurringVpIfDecoyed} VP/turn</option>`).join('')}</select><small>Your home objective, active Decoys and objectives already selected for another Decoy attempt this turn are hidden.</small></label>`
             : isTriangulation
               ? `<label class="mission-action-picker__field"><span>Objective to Triangulate</span><select data-action-objective><option value="">Choose eligible objective…</option>${triangulationObjectives.map(item=>`<option value="${esc(item.objectiveId)}" ${item.objectiveId===objective?'selected':''}>${esc(item.name)}${item.controlledByPlayer?' · currently controlled':''}</option>`).join('')}</select><small>Your home objective and objectives already triangulated are hidden. Confirm this unit is within range on the physical tabletop.</small></label>`
               : isSurveilTheFoe
