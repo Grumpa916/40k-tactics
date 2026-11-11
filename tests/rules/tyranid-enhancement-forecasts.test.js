@@ -97,3 +97,40 @@ test('Synaptic Control reduces allocated damage by one and Psychic upgrade appli
  assert.equal(normal.strength,10);
  assert.equal(normal.ap,-2);
 });
+
+test('Warrior Bioform Onslaught grants 5+ invulnerable to Warriors and Prime, not unrelated units',()=>{
+ for(const name of ['tyranid-warriors-with-ranged-bio-weapons','tyranid-warriors-with-melee-bio-weapons','winged-tyranid-prime']){
+  const {state,live}=battle(name,'');
+  state.armyRosters.p1.detachments=['Warrior Bioform Onslaught'];
+  const prof=getProbabilisticUnitProfile(state,live);
+  assert.equal(prof.characteristics.invulnerableSave,5,name);
+ }
+ const {state,live}=battle('trygon','');
+ state.armyRosters.p1.detachments=['Warrior Bioform Onslaught'];
+ assert.notEqual(getProbabilisticUnitProfile(state,live).characteristics.invulnerableSave,5);
+});
+
+test('Subterranean Assault rerolls Hit rolls of one and explicitly designated Trygon is a Character',()=>{
+ const {state,live,saved}=battle('trygon','');
+ state.armyRosters.p1.detachments=['Subterranean Assault'];
+ saved.subterraneanCharacter=true;
+ const prof=getProbabilisticUnitProfile(state,live);
+ assert.ok(prof.keywords.includes('Character'));
+ assert.ok(prof.combatRules.effects.includes('tyranid-surprise-assault'));
+ const applied=applyRecordedCombatEffects({attacker:prof,target:target(['Infantry']),profile:profile()});
+ assert.equal(applied.hitReroll,'ones');
+});
+
+test('Ambush Predators gives Lictors Deep Strike and Hit re-rolls of one versus Characters only',()=>{
+ const {state,live}=battle('lictor','');
+ state.armyRosters.p1.detachments=['Ambush Predators'];
+ const prof=getProbabilisticUnitProfile(state,live);
+ assert.ok(prof.keywords.includes('Deep Strike'));
+ assert.ok(prof.combatRules.effects.includes('tyranid-mindhunger'));
+ assert.equal(applyRecordedCombatEffects({
+  attacker:prof,target:target(['Character','Infantry']),profile:profile()
+ }).hitReroll,'ones');
+ assert.equal(applyRecordedCombatEffects({
+  attacker:prof,target:target(['Infantry']),profile:profile()
+ }).hitReroll,undefined);
+});
