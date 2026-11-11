@@ -1,5 +1,6 @@
 import { renderArmyUnitSummary } from './army-unit-summary.js';
 import { renderLiveCasualtyStatus } from './live-casualty-panel.js';
+import { getFactionDetachments } from '../data/faction-detachments.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { getBattleShockEligibility, getUnitStrengthAssessment, isUnitBattleShocked } from "../rules/unit-status-summary.js";
 import { getArmyUnitDisplayGroups } from './army-unit-display-groups.js';
@@ -337,19 +338,29 @@ export function renderReferencePanel(state = {}, gameData = {}, perspectivePlaye
   const armyRules = [...(Array.isArray(gameData.armyRules) ? gameData.armyRules : []), ...rosterRules];
   const rosterDetachments = players.flatMap((player) => {
     const roster = state.armyRosters?.[player.id];
-    const selectedName = roster?.detachment ?? roster?.detachmentName;
-    const catalog = roster?.rulesDataRevision?.factionRules?.detachments;
-    if (!selectedName || !Array.isArray(catalog)) return [];
-    const match = catalog.find((item) => item?.name === selectedName);
-    return match ? [{ ...match, playerId: player.id, description: `${match.forceDisposition} · ${match.detachmentPoints} DP` }] : [];
+    const savedCatalog = roster?.rulesDataRevision?.factionRules?.detachments ?? [];
+    const currentCatalog = getFactionDetachments(roster?.faction);
+    return selectedDetachmentNames(roster).flatMap((name) => {
+      const match = currentCatalog.find((item) => item.name === name) ??
+        savedCatalog.find((item) => item?.name === name);
+      if (!match) return [];
+      const dispositions=(match.forceDispositionOptions ?? [match.forceDisposition]).filter(Boolean).join(' / ');
+      const summary=match.ruleName && match.ruleSummary
+        ? ` · ${match.ruleName}: ${match.ruleSummary}` : '';
+      return [{
+        ...match,
+        playerId: player.id,
+        description: `${dispositions} · ${match.detachmentPoints} DP${summary}`
+      }];
+    });
   });
   const detachments = [...(Array.isArray(gameData.detachments) ? gameData.detachments : []), ...rosterDetachments];
   const myDetachmentRules = detachments.filter((item) =>
     item?.playerId === yourPlayerId ||
-    (!item?.playerId && !item?.ownerId && item?.name === detachmentFor(yourPlayerId)));
+    (!item?.playerId && !item?.ownerId && selectedDetachmentNames(state.armyRosters?.[yourPlayerId]).includes(item?.name)));
   const opponentDetachmentRules = detachments.filter((item) =>
     item?.playerId === opponentPlayerId ||
-    (!item?.playerId && !item?.ownerId && item?.name === detachmentFor(opponentPlayerId)));
+    (!item?.playerId && !item?.ownerId && selectedDetachmentNames(state.armyRosters?.[opponentPlayerId]).includes(item?.name)));
   const terrainLabel = state.battlefieldMap?.terrainLayout?.name ??
     state.battlefieldMap?.missionSetup?.layout ?? state.battle?.terrainLayout?.name ?? null;
   const terrainDescription = state.battlefieldMap?.terrainLayout?.description ??
