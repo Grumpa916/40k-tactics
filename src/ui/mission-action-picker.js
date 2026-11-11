@@ -1,4 +1,5 @@
 import { getLiveMissionActionOptions } from '../rules/mission-action-state.js';
+import { renderMissionTerrainMapLabels } from './mission-terrain-map-labels.js';
 import { getDeathTrapTerrainOptions } from '../rules/death-trap-state.js';
 import { getSmokeAndMirrorsObjectiveOptions } from '../rules/smoke-and-mirrors-state.js';
 import { getTriangulationObjectiveOptions } from '../rules/triangulation-state.js';
@@ -28,6 +29,7 @@ export function createMissionActionPicker() {
   let unit=null, selected='', timing='', confirmed=false, objective='', terrainArea='', targetUnit='';
   let locateSetupTerrain=new Set();
   let expectedLocateSetupCount=5;
+  let mapSetupTerrainOptions=[];
   let renderState=null;
   let options=[];
   return {
@@ -62,13 +64,16 @@ export function createMissionActionPicker() {
       const extractRelicSetupMode=isExtractRelic && extractRelicState?.opponentMarkerMissionAvailable===true && extractRelicState?.opponentMarkerSetupComplete!==true;
       const setupMode=locateSetupMode||extractRelicSetupMode;
       const extractPerspective=state.players?.[0]?.id??playerId;
-      const extractSetupOptions=extractRelicSetupMode
-        ? getLocateAndDenyTerrainOptions(state,{playerId:extractRelicState.opponentId,perspectivePlayerId:extractPerspective}).filter(item=>item.eligible)
+      const extractSetupAll=extractRelicSetupMode
+        ? getLocateAndDenyTerrainOptions(state,{playerId:extractRelicState.opponentId,perspectivePlayerId:extractPerspective})
         : [];
+      const extractSetupOptions=extractSetupAll.filter(item=>item.eligible);
       const cleanseObjectives=isCleanse ? getCleanseObjectiveOptions(state,{playerId}) : [];
       const plunderTerrains=isPlunder ? getPlunderTerrainOptions(state,{playerId}).filter(item=>item.eligibleByMap!==false) : [];
       const plunderState=isPlunder ? getPlunderActionState(state,{playerId,instanceId:option?.instanceId}) : null;
-      const locateSetupOptions=locateSetupMode ? getLocateAndDenyTerrainOptions(state,{playerId}).filter(item=>item.eligible) : [];
+      const locateSetupAll=locateSetupMode ? getLocateAndDenyTerrainOptions(state,{playerId}) : [];
+      const locateSetupOptions=locateSetupAll.filter(item=>item.eligible);
+      mapSetupTerrainOptions=locateSetupMode?locateSetupAll:extractSetupAll;
       const activeSetupOptions=locateSetupMode?locateSetupOptions:extractSetupOptions;
       expectedLocateSetupCount=locateSetupMode
         ? locateSetup?.expectedMarkerCount??5
@@ -212,13 +217,28 @@ export function createMissionActionPicker() {
       container.querySelector('[data-action-objective]')?.addEventListener('change',event=>{objective=event.target.value;rerender();});
       container.querySelector('[data-action-terrain]')?.addEventListener('change',event=>{terrainArea=event.target.value;rerender();});
       container.querySelector('[data-action-target-unit]')?.addEventListener('change',event=>{targetUnit=event.target.value;rerender();});
-      container.querySelectorAll?.('[data-locate-setup-terrain]')?.forEach(button=>button.addEventListener('click',()=>{
-        const id=button.getAttribute('data-locate-setup-terrain');
-        if(!id)return;
-        if(locateSetupTerrain.has(id)) locateSetupTerrain.delete(id);
-        else if(locateSetupTerrain.size<expectedLocateSetupCount) locateSetupTerrain.add(id);
+      const eligibleTerrainIds=new Set(mapSetupTerrainOptions.filter(item=>item.eligible).map(item=>item.terrainAreaId));
+      const toggleTerrain=id=>{
+        if(!eligibleTerrainIds.has(id))return;
+        if(locateSetupTerrain.has(id))locateSetupTerrain.delete(id);
+        else if(locateSetupTerrain.size<expectedLocateSetupCount)locateSetupTerrain.add(id);
         rerender();
-      }));
+      };
+      container.querySelectorAll?.('[data-locate-setup-terrain]')?.forEach(button=>button.addEventListener('click',()=>toggleTerrain(button.getAttribute('data-locate-setup-terrain'))));
+      // The map and the right-panel buttons share identical eligible source IDs.
+      // These buttons are mounted only when setup capture is visible in Shooting.
+      const mapBoard=container.querySelector?.('[data-battlefield-map-board]');
+      if(mapSetupTerrainOptions.length && mapBoard?.insertAdjacentHTML){
+        mapBoard.classList?.add?.('is-mission-terrain-selecting');
+        mapBoard.insertAdjacentHTML('beforeend',renderMissionTerrainMapLabels(mapSetupTerrainOptions,locateSetupTerrain));
+        const byId=new Map(mapSetupTerrainOptions.map(item=>[item.terrainAreaId,item]));
+        container.querySelectorAll?.('.battlefield-map__terrain[data-terrain]')?.forEach(polygon=>{
+          const terrain=byId.get(polygon.getAttribute('data-terrain'));
+          if(!terrain)return;
+          polygon.classList?.add?.(locateSetupTerrain.has(terrain.terrainAreaId)?'is-mission-terrain-selected':terrain.eligible?'is-mission-terrain-eligible':'is-mission-terrain-ineligible');
+        });
+        container.querySelectorAll?.('[data-locate-map-terrain]')?.forEach(button=>button.addEventListener('click',()=>toggleTerrain(button.getAttribute('data-locate-map-terrain'))));
+      }
       container.querySelector('[data-action-rules-confirmed]')?.addEventListener('change',event=>{confirmed=event.target.checked;rerender();});
       container.querySelector('[data-choice-action-confirm]')?.addEventListener('click',()=>{
         const option=options.find(item=>item.id===selected);
