@@ -1,4 +1,4 @@
-import { renderMapReserveTray, renderVenatariIngressTray, tappedMapPosition } from './map-reserve-tray.js';
+import { renderMovementReserveDock, tappedMapPosition } from './map-reserve-tray.js';
 import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
@@ -194,13 +194,13 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
     const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
     if(reserved)editor=`<div class="move-editor"><p class="move-editor__status"><strong>Reserves</strong></p><p>Tap an empty map position to place this unit on the battlefield.</p></div>`;
-    const reserveTray=renderMapReserveTray(state,{selectedUnitId,playerId})+renderVenatariIngressTray(state,{selectedUnitId});
+    const reserveTray=renderMovementReserveDock(state,{selectedUnitId,playerId});
     const advisor=renderMovementAdvisor(state,{playerId,selectedUnitId,perspectivePlayerId:perspectivePlayerId ?? playerId});
     if (layoutMode === 'tabletop') {
       const selectedAction = selectedAny ? movementAction(state, selectedAny.id) : null;
       const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
       const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url);
-      dashboardStyles.searchParams.set('v', 'movement-units-drawer-1');
+      dashboardStyles.searchParams.set('v', 'movement-units-drawer-2');
       const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
         playerId,
         perspectivePlayerId: perspectivePlayerId ?? playerId,

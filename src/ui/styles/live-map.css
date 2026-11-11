@@ -854,3 +854,18 @@
 .live-map__objective-choice:disabled { opacity:.4; cursor:default; }
 .live-map__objective-picker > small { display:block; color:#bbcbd1; font-size:11px; line-height:1.3; }
 .live-map__objective-picker [role="alert"]:empty { display:none; }
+
+
+/* Live tabletop maps all use Charge's full-height 60:44 board viewport.
+   The selected unit is already in the controls/Units drawer; retain this
+   live announcement for assistive technology without reserving a footer row. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__selected-name {
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:0 !important;
+  overflow:hidden !important;
+  clip-path:inset(50%) !important;
+  white-space:nowrap !important;
+}

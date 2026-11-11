@@ -2,9 +2,20 @@ import { attachmentParent } from '../rules/event-preparation.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
 import { getPendingVenatariIngress } from '../rules/venatari-abilities.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+function getReserveCandidates(state, playerId = null) {
+  return (state?.units ?? []).filter(unit => unit.status !== 'destroyed' &&
+    unit.status !== 'embarked' && !attachmentParent(state, unit) &&
+    (!playerId || unit.ownerId === playerId));
+}
+export function getMapReserveUnits(state, { playerId = null } = {}) {
+  return getReserveCandidates(state, playerId).filter(unit =>
+    unit.status === 'reserves' &&
+    (state.battle?.status === 'active' || state.battlefieldMap?.declaredReserves?.[unit.id]));
+}
+
 export function renderMapReserveTray(state,{selectedUnitId,playerId=null}={}) {
-  const units=state.units.filter(unit=>unit.status!=='destroyed' && unit.status!=='embarked' && !attachmentParent(state,unit) && (!playerId||unit.ownerId===playerId));
-  const reserves=units.filter(unit=>unit.status==='reserves' && (state.battle?.status==='active'||state.battlefieldMap?.declaredReserves?.[unit.id]));
+  const units=getReserveCandidates(state,playerId);
+  const reserves=getMapReserveUnits(state,{playerId});
   const selected=units.find(unit=>unit.id===selectedUnitId);
   const canSend=selected && !reserves.includes(selected);
   const labels=unitDisplayLabels(state.units??[]);
@@ -26,4 +37,22 @@ export function renderVenatariIngressTray(state, {selectedUnitId}={}) {
   if (!pending.length) return '';
   return `<section class="map-reserve-tray" aria-label="Swift Ruin arrivals"><strong>Swift Ruin · place before leaving Movement</strong><div class="map-reserve-tray__units">${pending.map(unit =>
     `<button type="button" data-map-reserve-select="${esc(unit.id)}" aria-pressed="${unit.id===selectedUnitId}">${esc(unit.name)}</button>`).join('')}</div><small>Select this unit, then tap its arrival position on the map. Confirm legal placement at the table.</small></section>`;
+}
+
+/**
+ * The live Movement map uses the same board viewport as Charge. Keep transfers
+ * available from the map surface, but open the full tray only on demand so it
+ * never consumes the board's normal height. Click handling remains on the
+ * existing data-map-reserve-area and data-map-reserve-select controls.
+ */
+export function renderMovementReserveDock(state, { selectedUnitId, playerId = null } = {}) {
+  const reserveCount = getMapReserveUnits(state, { playerId }).length;
+  const arrivals = getPendingVenatariIngress(state).length;
+  return `<details class="movement-map-reserves" data-movement-map-reserves>
+    <summary>Reserves · ${reserveCount}${arrivals ? ' · arrivals' : ''}</summary>
+    <div class="movement-map-reserves__popover">
+      ${renderMapReserveTray(state, { selectedUnitId, playerId })}
+      ${renderVenatariIngressTray(state, { selectedUnitId })}
+    </div>
+  </details>`;
 }
