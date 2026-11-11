@@ -1,6 +1,7 @@
 import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { createRulesDataRevisionStamp, getRulesDataRevisionForFaction } from "../data/rules-data-revisions.js";
 import { validateWargearLoadout } from "./wargear-loadout-validation.js";
+import { hydrateReviewedFixedCustodesLoadout } from "./custodes-fixed-wargear.js";
 import { resolveBuilderUnitCost } from "./army-builder-cost.js";
 
 function clone(value) {
@@ -155,15 +156,16 @@ export function revalidateRosterRulesData(roster, { updatedAt = roster?.updatedA
         officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending"
       }
     };
-    const loadoutValidation = refreshLoadoutValidation(refreshed);
-    if (loadoutValidation) refreshed.loadoutValidation = loadoutValidation;
+    const hydrated = hydrateReviewedFixedCustodesLoadout(refreshed);
+    const loadoutValidation = refreshLoadoutValidation(hydrated);
+    if (loadoutValidation) hydrated.loadoutValidation = loadoutValidation;
     if (loadoutValidation?.status === "rules-invalid") {
       issues.push(`${unit.name}: selected wargear no longer passes the current reviewed loadout rules.`);
     }
     if ((unit.unmatchedWargear ?? []).length || loadoutValidation?.status === "unverified") {
       issues.push(`${unit.name}: one or more wargear selections remain unverified against current combat profiles.`);
     }
-    refreshedUnits.push(refreshed);
+    refreshedUnits.push(hydrated);
   }
 
   if (issues.length) {

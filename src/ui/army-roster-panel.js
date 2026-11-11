@@ -11,6 +11,7 @@ import { assessRosterRulesData, revalidateRosterRulesData } from "../rules/roste
 import { attachLeaderToBodyguard, detachLeaderFromBodyguard } from "../state/leader-bodyguard-attachments.js";
 import { resolveInitialUnitPoints } from "../state/army-roster-unit-costs.js";
 import { buildManualWargearLoadout } from "../rules/wargear-loadout-validation.js";
+import { hydrateReviewedFixedCustodesLoadout, hydrateReviewedFixedCustodesRoster } from "../rules/custodes-fixed-wargear.js";
 import { normalizeRosterDetachmentSelection } from "../rules/roster-detachment-selection.js";
 import { createArmyUnitEditorController } from "./army-unit-editor-controller.js";
 
@@ -64,13 +65,21 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if (destroyed) return;
     container.innerHTML = renderArmyBuilder({records, current, unitDraft:unitEditor.getDraft(current?.units?.find(unit=>unit.id===openUnitDetailId)), page, busy, message, unitSearch, category, sort, fits, includeLegends, previewId, openUnitDetailId, players, canApply, onApplyRoster});
   }
+  async function loadRosterWithFixedWargear(id) {
+    const original=(await store.load(id)).roster;
+    const hydrated=hydrateReviewedFixedCustodesRoster(original);
+    // Persist one-time fixed equipment reconciliation. Preserve explicit
+    // weapons, invalid source imports, and user-selected optional gear.
+    if(hydrated!==original)await store.save({id:hydrated.id,roster:hydrated});
+    return hydrated;
+  }
   async function refresh() {
     try {
       records = await store.list();
       if (current) rosterCache.set(current.id, current);
       records = await Promise.all(records.map(async record => {
         if (!rosterCache.has(record.id)) {
-          try { rosterCache.set(record.id, (await store.load(record.id)).roster); } catch { /* A card can still open and report its load error. */ }
+          try { rosterCache.set(record.id, hydrateReviewedFixedCustodesRoster((await store.load(record.id)).roster)); } catch { /* A card can still open and report its load error. */ }
         }
         return {...record, roster:rosterCache.get(record.id)};
       }));
@@ -103,7 +112,8 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       await action(async()=>{
         const imported=importWarhammerAppRoster({text:values.rosterText,faction:values.faction,name:values.rosterName,pointsLimit:values.pointsLimit===""?null:Number(values.pointsLimit),id:newId(),createdAt:now(),updatedAt:now()});
         if(imported.unrecognized.length && values.acknowledgeUnmatched!=="yes") throw new Error("Review the unrecognized point lines below, then confirm they are preserved in the saved list notes.");
-        await store.save({roster:imported.roster}); selectedId=imported.roster.id; current=(await store.load(selectedId)).roster; page="editor";
+        const hydrated=hydrateReviewedFixedCustodesRoster(imported.roster);
+        await store.save({roster:hydrated}); selectedId=hydrated.id; current=await loadRosterWithFixedWargear(selectedId); page="editor";
         importedSummary=imported.unrecognized.length?`${imported.roster.units.length} units imported. ${imported.unrecognized.length} unrecognized point line(s) remain in list notes for review.`:`${imported.roster.units.length} units imported and saved.`;
       }, ()=>importedSummary); return;
     }
@@ -119,7 +129,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
         });
         await store.save({ roster });
         selectedId = roster.id;
-        current = (await store.load(roster.id)).roster; page = "editor";
+        current = await loadRosterWithFixedWargear(roster.id); page = "editor";
       }, "Roster created and saved.");
       return;
     }
@@ -165,7 +175,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     }
     if (button.matches("[data-roster-import]")) {
       const raw = container.querySelector("[data-import-json]")?.value;
-      await action(async()=>{ const imported = importArmyRoster(raw, newId, now()); await store.save({roster:imported}); selectedId=imported.id; current=imported; page="editor"; }, "Independent army list imported."); return;
+      await action(async()=>{ const imported = hydrateReviewedFixedCustodesRoster(importArmyRoster(raw, newId, now())); await store.save({roster:imported}); selectedId=imported.id; current=imported; page="editor"; }, "Independent army list imported."); return;
     }
     if (button.matches("[data-add-catalog-unit]")) {
       const catalogId = button.getAttribute("data-add-catalog-unit") || container.querySelector("[data-catalog-unit]")?.value;
@@ -186,9 +196,9 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
             officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? "pending" },
           ...(ruleSet ? { loadoutValidation: pendingManualWargearValidation(ruleSet) } : {})
         };
-        const updated = { ...current, units: [...current.units, rosterUnit], updatedAt: now() };
+        const updated = { ...current, units: [...current.units, hydrateReviewedFixedCustodesLoadout(rosterUnit)], updatedAt: now() };
         await store.save({ id: updated.id, roster: updated }); current = updated;
-      }, "Catalog candidate added. Select and save its reviewed wargear before battle use.");
+      }, "Catalog candidate added. Fixed loadouts are ready; selectable wargear still requires your confirmation.");
       return;
     }
     if (button.matches("[data-view-unit-detail]")) {
@@ -283,7 +293,7 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
       await action(async () => {
         selectedId = loadId;
         if (!selectedId) throw new Error("Choose a saved roster first.");
-        current = (await store.load(selectedId)).roster; page = "editor"; openUnitDetailId = "";
+        current = await loadRosterWithFixedWargear(selectedId); page = "editor"; openUnitDetailId = "";
       }, "Roster loaded.");
       return;
     }

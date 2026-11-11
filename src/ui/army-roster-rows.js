@@ -26,7 +26,14 @@ export function renderRosterRows(units, selectedId, faction = null) {
   const unit = resolveRosterUnit(rawUnit, faction);
   const models = unit.modelCount ?? 1;
   const loadoutLabel = loadoutReadinessLabel(unit);
-  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${unitStats(unit)}</button>`;
+  const selectedEquipment=(unit.equippedWargear??[])
+    .filter(item=>item?.name && Number(item.quantity)>0)
+    .map(item=>Number(item.quantity)+'× '+item.name).join(' · ');
+  // Show the actually saved equipment, not every alternative weapon on the
+  // datasheet. This same snapshot is used by live combat and saved battles.
+  const equipmentLine=selectedEquipment && loadoutLabel==='Loadout ready'
+    ? '<small class="ab-roster-equipment" aria-label="Equipped wargear">'+e(selectedEquipment)+'</small>' : '';
+  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${equipmentLine}${unitStats(unit)}</button>`;
  }
  return units.map(unit => {
   if (rendered.has(unit.id)) return '';

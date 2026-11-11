@@ -3,6 +3,7 @@ import { ARMY_UNIT_CATALOG } from '../data/army-unit-catalog.js';
 import { createRulesDataRevisionStamp } from '../data/rules-data-revisions.js';
 import { resolveInitialUnitPoints } from './army-roster-unit-costs.js';
 import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout, buildManualWargearLoadout } from '../rules/wargear-loadout-validation.js';
+import { hydrateReviewedFixedCustodesLoadout } from '../rules/custodes-fixed-wargear.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 
 const pointsPattern = /\b(\d[\d,]*)\s*(?:pts?\.?|points?)\b/i;
@@ -164,8 +165,8 @@ function finalizeLoadoutValidation(unit) {
   };
   return;
  }
- unit.loadoutValidation = unit.loadoutValidation?.source==='reviewed-fixed-equipment-import'
-  ? {...reviewed,source:'reviewed-fixed-equipment-import'}
+ unit.loadoutValidation = ['reviewed-fixed-equipment-import','reviewed-fixed-custodes'].includes(unit.loadoutValidation?.source)
+  ? {...reviewed,source:unit.loadoutValidation.source}
   : reviewed;
 }
 
@@ -259,6 +260,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  }
  attachSourceValidationErrors(units, sourceErrors);
  units.forEach(hydrateReviewedFixedEquipment);
+ units.forEach((unit,index)=>{units[index]=hydrateReviewedFixedCustodesLoadout(unit);});
  units.forEach(finalizeLoadoutValidation);
  warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);

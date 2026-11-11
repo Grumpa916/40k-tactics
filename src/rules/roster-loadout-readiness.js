@@ -1,5 +1,6 @@
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { validateWargearLoadout } from './wargear-loadout-validation.js';
+import { hydrateReviewedFixedCustodesLoadout } from './custodes-fixed-wargear.js';
 
 const INVALID_STATUSES = new Set(['source-invalid', 'rules-invalid', 'unverified']);
 
@@ -20,6 +21,7 @@ function invalidAssessment(unit, { reviewedRules, fallback }) {
 }
 
 export function assessUnitLoadoutReadiness(unit) {
+  unit = hydrateReviewedFixedCustodesLoadout(unit);
   const ruleSet = getTyranidWargearRuleSet(unit?.datasheetId);
   const recordedStatus = unit?.loadoutValidation?.status ?? null;
 

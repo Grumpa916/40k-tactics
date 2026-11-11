@@ -1,6 +1,7 @@
 import { getProbabilisticUnitProfile } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { assessRosterLoadoutReadiness } from '../rules/roster-loadout-readiness.js';
+import { hydrateReviewedFixedCustodesRoster } from '../rules/custodes-fixed-wargear.js';
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { createUnit, UNIT_STATUS } from "../state/unit.js";
@@ -37,8 +38,9 @@ export function applyArmyRosterToBattle(state, { roster, playerId, snapshotId = 
   // This shared boundary is used by both the Army Builder and the normal
   // battle-side Army Selection screen, so unresolved reviewed loadouts cannot
   // bypass the Battle Ready gate through another UI path.
-  assertBattleReadyLoadouts(roster);
-  const snapshot = selectRosterForBattle(roster, {
+  const resolvedRoster = hydrateReviewedFixedCustodesRoster(roster);
+  assertBattleReadyLoadouts(resolvedRoster);
+  const snapshot = selectRosterForBattle(resolvedRoster, {
     playerId, snapshotId, battleId: state.battle.id, selectedAt
   });
   const units = snapshot.units.map((unit) => createUnit({
