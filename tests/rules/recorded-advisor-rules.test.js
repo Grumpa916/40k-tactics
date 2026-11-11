@@ -66,7 +66,7 @@ test('11th-edition Quicksilver adds Sustained Hits 1 to melee after a successful
   assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Lance:')));
   assert.ok(boosted.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
   // A stronger existing Sustained Hits value is not lowered or doubled.
-  const strong=calculation(state,weapon({sustainedHits:2}));
+  const strong=calculation(state,{...lance,characteristics:{...lance.characteristics,sustainedHits:2}});
   assert.ok(strong.expectedDamage>=boosted.expectedDamage);
   const ranged=calculation(state,weapon({},'ranged'));
   assert.ok(!ranged.contextualAbilities.appliedRules.some(rule=>rule.startsWith('Quicksilver Execution:')));
