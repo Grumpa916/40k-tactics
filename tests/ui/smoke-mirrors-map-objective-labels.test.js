@@ -27,7 +27,7 @@ function stateFor(layout) {
 
 function markerLabels(state,perspectivePlayerId) {
   const html=renderBattlefieldMap(state,{mode:'live',perspectivePlayerId,plannerStyleObjectives:true});
-  return new Map([...html.matchAll(/<button\\b[^>]*data-layout-objective="([^"]+)"[^>]*>([^<]*)<\\/button>/g)]
+  return new Map([...html.matchAll(/<button\b[^>]*data-layout-objective="([^"]+)"[^>]*>([^<]*)<\/button>/g)]
     .map(([,id,label])=>[id,label]));
 }
 
@@ -47,7 +47,7 @@ test('Smoke and Mirrors dropdown uses precisely the visible map objective names 
         const displayed=markers.get(canonical);
         assert.ok(displayed,layout+' '+canonical+' appears on the map');
         assert.equal(objectiveMapDisplayName(state,item.objectiveId,perspective),displayed);
-        const optionHtml=[...html.matchAll(/<option\\b[^>]*value="([^"]+)"[^>]*>([^<]*)<\\/option>/g)]
+        const optionHtml=[...html.matchAll(/<option\b[^>]*value="([^"]+)"[^>]*>([^<]*)<\/option>/g)]
           .find(([,id])=>id===item.objectiveId)?.[2];
         assert.ok(optionHtml,layout+' '+item.objectiveId+' is a selectable mission option');
         assert.equal(optionHtml,
@@ -74,7 +74,7 @@ test('geometry-derived labels follow map semantics rather than assuming canonica
 
 test('the Shooting picker uses the same map perspective, without changing target IDs or mission scoring',()=>{
   const source=readFileSync(new URL('../../src/ui/shooting-screen.js',import.meta.url),'utf8');
-  assert.match(source,/createMissionActionPicker\\(\\{ mapPerspectivePlayerId: perspectivePlayerId \\}\\)/);
+  assert.match(source,/createMissionActionPicker\(\{ mapPerspectivePlayerId: perspectivePlayerId \}\)/);
   const state=stateFor('A');
   const options=getSmokeAndMirrorsObjectiveOptions(state,{playerId:'p1'});
   const primaryIds=options.map(item=>item.objectiveId);
