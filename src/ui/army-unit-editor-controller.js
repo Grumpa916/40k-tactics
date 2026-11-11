@@ -3,6 +3,7 @@ import { createWargearChoiceState, chooseWargear, chooseWargearBaseline, chooseW
 import { getBuilderModelCounts, resolveBuilderUnitCost } from '../rules/army-builder-cost.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getOptionalWargearLimit } from '../rules/wargear-quantity-limits.js';
+import { getUnitUpgradeNames } from '../rules/custodes-unit-upgrades.js';
 
 /** Keep unsaved touch selections local to the unit editor; persistence stays in the panel. */
 export function createArmyUnitEditorController(container,{getUnit,getRoster,render}={}) {
@@ -42,8 +43,9 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
   },
   handleChange(event) {
    const input=event.target;
-   if(!input?.matches?.('[data-wargear-choice], [data-wargear-baseline], [data-wargear-special], [data-wargear-toggle], [data-wargear-combination]'))return false;
+   if(!input?.matches?.('[data-wargear-choice], [data-wargear-baseline], [data-wargear-special], [data-wargear-toggle], [data-wargear-combination], [data-unit-upgrade]'))return false;
    update(unit=>{
+    if(input.matches('[data-unit-upgrade]')){unit.unitUpgradeDraft=input.value;return;}
     if(input.matches('[data-wargear-combination]'))unit.builderWargearState=chooseWargearCombination(unit,unit.builderWargearState,input.getAttribute('data-wargear-combination-constraint'),input.getAttribute('data-wargear-combination'));
     else if(input.matches('[data-wargear-choice]'))unit.builderWargearState=chooseWargear(unit,unit.builderWargearState,input.getAttribute('data-wargear-choice'),input.value);
     else if(input.matches('[data-wargear-baseline]'))unit.builderWargearState=chooseWargearBaseline(unit,unit.builderWargearState,input.getAttribute('data-wargear-baseline'),input.value);
@@ -54,7 +56,8 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
   prepareSave(existing) {
    const unit=draft(existing);capture(unit);
    const selections=readWargearChoiceState(unit,unit.builderWargearState);
-   const {builderWargearState,...result}=unit;
+   const selectedUpgrade=unit.unitUpgradeDraft??getUnitUpgradeNames(existing)[0]??'';
+   const {builderWargearState,unitUpgradeDraft,...result}=unit;
    if(getBuilderModelCounts(unit).length){
     if(!getBuilderModelCounts(unit).includes(unit.modelCount))throw new Error('Choose a published unit size.');
     const price=resolveBuilderUnitCost(unit,getRoster(),selections??unit.equippedWargear);
@@ -67,7 +70,8 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
     if(result.points!=null&&(!Number.isFinite(result.points)||result.points<0))throw new Error('Points must be non-negative.');
    }
    if(builderWargearState)result.wargearSlotAssignments={...builderWargearState.assignments};
-   return {unit:selections?result:resizeBuilderFixedEquipment(result),selections};
+   return {unit:selections?result:resizeBuilderFixedEquipment(result),selections,
+     upgradeName:selectedUpgrade};
   },
   reset(unitId){drafts.delete(unitId);}
  };
