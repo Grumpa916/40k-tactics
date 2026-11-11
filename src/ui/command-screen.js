@@ -10,7 +10,7 @@ import { createLiveMapView } from "./live-map-view.js";
 import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
 import { renderCombatWorkspace, bindCombatMap } from "./combat-workspace.js";
 import { getCombatFormationRootId } from "../rules/battle-unit-reference.js";
-import { renderCustodesKatahCommandPanel } from "./custodes-katah-panel.js";
+import { renderCustodesKatahCommandPanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
 import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-stratagem-opportunities.js";
 import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 import { captureViewContinuity } from './view-continuity.js';
@@ -71,6 +71,7 @@ export function createCommandScreen(container, {
   let secondaryMissionMessage = "";
   let vpMessage = "";
   let objectiveMessage = "";
+  let katahMessage = "";
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
@@ -793,10 +794,13 @@ export function createCommandScreen(container, {
         interactivePlayerId: null,
         mapView,
         controls: commandControls,
-        afterRuleReminders: renderCustodesKatahCommandPanel(state, { playerId }),
+        afterRuleReminders: renderCustodesKatahCommandPanel(state, { playerId, unitId: selectedCommandUnitId }) +
+          (katahMessage ? '<p class="command-katah-error" role="alert">' + escapeHtml(katahMessage) + '</p>' : ''),
         footer: ''
       });
       mapView.bind(container, undefined, undefined, session);
+      bindCustodesKatahActions(container, session,
+        message => { katahMessage = message; }, render);
       if (unitSelection) bindCombatMap(container, {
         state, selectedUnitId:selectedCommandUnitId, selectableIds,
         onSelect: id => {
