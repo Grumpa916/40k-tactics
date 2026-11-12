@@ -131,6 +131,16 @@ export function objectiveMapDisplayName(state,id,perspectivePlayerId) {
  return perspectiveObjectiveName(objectiveNameForId(state,id),state,perspectivePlayerId);
 }
 
+/** Display the map's exact objective name and compact marker in Command choices.
+ *  Source Event Companion names can describe a *different* on-map objective
+ *  after landscape geometry orientation. Store the stable ID, show the map name.
+ */
+export function objectivePickerLabel(state,id,perspectivePlayerId) {
+ const displayed=objectiveMapDisplayName(state,id,perspectivePlayerId);
+ const marker=mapObjectiveMarkerLabel(displayed);
+ return marker===displayed ? displayed : displayed+' ('+marker+')';
+}
+
 export function objectiveAdvisorLabel(state,id,perspectivePlayerId) {
  const label=objectiveMapDisplayName(state,id,perspectivePlayerId);
  const compact=compactObjectiveLabel(label);
