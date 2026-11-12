@@ -1,6 +1,7 @@
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from './event-companion-map-catalog.js';
 import { evaluatePreGameReadiness } from './pre-game-readiness.js';
 import { getSecondaryMissionMode, getSecondaryMissionHistory } from './secondary-mission-lifecycle.js';
+import { deploymentTransportIssues } from './deployment-transport-eligibility.js';
 
 export const PREPARATION_STEPS = [
   ['mission', 'Missions & layout', 'Confirm submitted Force Dispositions and both Primary Missions. Use the organiser’s layout or the agreed random result.'],
@@ -56,6 +57,7 @@ export function preparationIssues(state, step = preparationStep(state)) {
     if (mode === 'fixed' && cards.length !== 2) issues.push('Record exactly two Fixed cards for ' + p.name);
   }
   if (step === 'formations') {
+    issues.push(...deploymentTransportIssues(state));
     for (const p of state.players ?? []) {
       const s = reserveSummary(state, p.id);
       if ((s.count && (s.unknown || s.limit == null || s.points > s.limit)) && !state.preparation?.reserveReview?.[p.id])
@@ -63,10 +65,7 @@ export function preparationIssues(state, step = preparationStep(state)) {
     }
     for (const u of deploymentUnits(state)) {
       const f = formationFor(state, u);
-      if (f.kind === 'embarked') {
-        const t = state.units.find(x => x.id === f.transportId && x.ownerId === u.ownerId && x.status !== 'destroyed');
-        if (!t || t.id === u.id || attachmentParent(state, t) || formationFor(state, t).kind === 'embarked') issues.push('Invalid transport for ' + u.name);
-      }
+
       const keywords = rosterUnit(state, u).datasheet?.keywords ?? u.keywords ?? [];
       if (f.kind === 'reserve' && keywords.some(k => String(k).toUpperCase() === 'FORTIFICATION')) issues.push('Fortification cannot enter strategic reserves: ' + u.name);
     }

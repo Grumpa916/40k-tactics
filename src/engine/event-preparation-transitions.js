@@ -1,3 +1,4 @@
+import { assessDeploymentEmbarkation } from '../rules/deployment-transport-eligibility.js';
 import { PREPARATION_STEPS, preparationStep, preparationIssues, deploymentUnits, attachmentParent, formationFor } from '../rules/event-preparation.js';
 import { appendHistoryEntry } from '../state/history.js';
 import { createEvent } from '../events/event.js';
@@ -21,12 +22,12 @@ export function updatePreparation(state, payload = {}) {
     const unit = deploymentUnits(state).find(u => u.id === unitId);
     if (!unit || !['field','reserve','embarked'].includes(kind)) throw new Error('Choose a valid unit and location.');
     if (step !== 'formations' && kind === 'embarked') throw new Error('Declare passengers before deployment.');
-    if (kind === 'embarked' && (!transportId || transportId === unitId)) throw new Error('Choose another friendly transport.');
-    prep = { ...prep, formations: { ...prep.formations, [unitId]: { kind, ...(kind === 'embarked' ? { transportId } : {}), source: step } }, reserveReview: {} };
     if (kind === 'embarked') {
-      const t = state.units.find(u => u.id === transportId && u.ownerId === unit.ownerId && u.status !== 'destroyed');
-      if (!t || attachmentParent(state,t) || formationFor({ ...state, preparation: prep }, t).kind === 'embarked') throw new Error('Choose a friendly, non-embarked transport.');
+      const check=assessDeploymentEmbarkation(state,unit,state.units.find(u=>u.id===transportId));
+      if(!check.ok)throw new Error(check.reason);
     }
+    prep = { ...prep, formations: { ...prep.formations, [unitId]: { kind, ...(kind === 'embarked' ? { transportId } : {}), source: step } }, reserveReview: {} };
+
     const members = state.units.filter(u => u.id === unitId || attachmentParent(state,u) === unitId).map(u => u.id);
     const actualDeployment = { ...state.battlefieldMap?.actualDeployment };
     const declaredReserves = { ...state.battlefieldMap?.declaredReserves };

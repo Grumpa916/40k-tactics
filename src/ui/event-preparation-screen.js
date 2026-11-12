@@ -3,13 +3,14 @@ import { createBattleSetupScreen } from './battle-setup-screen.js';
 import { createDeploymentScreen } from './deployment-screen.js';
 import { PREPARATION_STEPS, preparationStep, preparationIssues, deploymentUnits, formationFor, reserveSummary } from '../rules/event-preparation.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
+import { getDeploymentTransports, getDeploymentTransportChoices } from '../rules/deployment-transport-eligibility.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 
 function formationsMarkup(state, stage) {
   const editable = ['formations','redeployment','pre-battle'].includes(stage);
   if (!editable) return '';
   return '<section><h3>' + (stage === 'formations' ? 'Revealed formations' : 'Rule-authorised reserve changes') + '</h3>' +
-    '<p>Transport choices require tabletop confirmation of the Transport keyword, passenger eligibility and whole-unit capacity. Linked Leaders/Support follow their bodyguard.</p>' +
+    '<p>Only known eligible Transport assignments are selectable; confirm all special rules on the tabletop.</p>' +
     (state.players ?? []).map(p => {
       const units = deploymentUnits(state).filter(u => u.ownerId === p.id);
       const summary = reserveSummary(state,p.id);
@@ -17,9 +18,9 @@ function formationsMarkup(state, stage) {
         const f = formationFor(state,u);
         if (stage !== 'formations' && f.kind === 'embarked') return '<p>'+esc(u.name)+' · Embarked in '+esc(state.units.find(x=>x.id===f.transportId)?.name)+'</p>';
         return '<div class="prep-unit"><strong>'+esc(u.name)+'</strong><select aria-label="Location for '+esc(u.name)+'" data-prep-location="'+esc(u.id)+'">'+
-          ['field','reserve',...(stage === 'formations' ? ['embarked'] : [])].map(k => '<option value="'+k+'"'+(f.kind===k?' selected':'')+'>'+({field:'Battlefield',reserve:'Strategic reserves',embarked:'Embarked'})[k]+'</option>').join('')+'</select>'+
+          ['field','reserve',...(stage === 'formations' && (getDeploymentTransportChoices(state,u).length || f.kind === 'embarked') ? ['embarked'] : [])].map(k => '<option value="'+k+'"'+(f.kind===k?' selected':'')+'>'+({field:'Battlefield',reserve:'Strategic reserves',embarked:'Embarked'})[k]+'</option>').join('')+'</select>'+
           (f.kind === 'embarked' ? '<span>Transport: '+esc(state.units.find(x=>x.id===f.transportId)?.name)+'</span>' : '')+
-          (stage === 'formations' ? '<select aria-label="Transport for '+esc(u.name)+'" data-prep-transport="'+esc(u.id)+'"><option value="">Assign transport…</option>'+units.filter(t=>t.id!==u.id && formationFor(state,t).kind!=='embarked').map(t=>'<option value="'+esc(t.id)+'"'+(t.id===f.transportId?' selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>' : '')+'</div>';
+          (stage === 'formations' && !getDeploymentTransports(state,p.id).some(t=>t.id===u.id) && (getDeploymentTransportChoices(state,u).length || f.kind === 'embarked') ? '<select aria-label="Transport for '+esc(u.name)+'" data-prep-transport="'+esc(u.id)+'"><option value="">Assign transport…</option>'+getDeploymentTransportChoices(state,u).map(t=>'<option value="'+esc(t.id)+'"'+(t.id===f.transportId?' selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>' : '')+'</div>';
       }).join('') + (stage === 'formations' ? '<p>Initial reserves: '+summary.points+' known points'+(summary.unknown?' + '+summary.unknown+' unknown costs':'')+' / '+(summary.limit??'unknown')+' allowed.</p>'+
       ((summary.count && (summary.unknown || summary.limit == null || summary.points > summary.limit)) ? '<label>Tabletop total / rule exception<input data-prep-reserve-note="'+esc(p.id)+'" value="'+esc(state.preparation?.reserveReview?.[p.id]??'')+'" placeholder="Record verified total or named exception"></label><button type="button" data-prep-review="'+esc(p.id)+'">Confirm reserve review</button>' : '') : '')+'</fieldset>';
     }).join('')+'</section>';

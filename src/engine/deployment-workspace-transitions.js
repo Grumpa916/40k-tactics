@@ -1,5 +1,6 @@
 import { deploymentUnits, attachmentParent, formationFor, preparationIssues } from '../rules/event-preparation.js';
 import { isCombinedDeployment, deploymentWorkspaceIssues } from '../rules/deployment-workspace.js';
+import { assessDeploymentEmbarkation } from '../rules/deployment-transport-eligibility.js';
 const isValidBattlefieldPosition = p => !!p && Number.isFinite(p.x) && Number.isFinite(p.y) && p.x>=0 && p.x<=60 && p.y>=0 && p.y<=44;
 import { setActualDeploymentPosition } from './battlefield-map-transitions.js';
 import { setPreGameRoles } from './battle-setup-transitions.js';
@@ -36,10 +37,10 @@ function setLocation(state,{unitId,kind,transportId,normalize=false}) {
   if(!unit || !['field','reserve','embarked'].includes(kind)) throw new Error('Choose a valid unit and location.');
   const previous=formationFor(state,unit);
   if(!normalize && previous.kind===kind && (kind!=='embarked'||previous.transportId===transportId)) return state;
-  if(kind==='embarked') {
-    const carrier=deploymentUnits(state).find(item=>item.id===transportId&&item.ownerId===unit.ownerId&&item.id!==unit.id);
-    if(!carrier || formationFor(state,carrier).kind==='embarked') throw new Error('Choose a friendly, non-embarked transport.');
-    if(deploymentUnits(state).some(item=>formationFor(state,item).transportId===unitId)) throw new Error('Remove this transport’s passengers before embarking it.');
+  if(kind==='embarked' && !normalize) {
+    const carrier=deploymentUnits(state).find(item=>item.id===transportId);
+    const validation=assessDeploymentEmbarkation(state,unit,carrier);
+    if(!validation.ok)throw new Error(validation.reason);
   }
   const members=state.units.filter(item=>item.id===unitId||attachmentParent(state,item)===unitId).map(item=>item.id);
   const actualDeployment={...state.battlefieldMap?.actualDeployment}, declaredReserves={...state.battlefieldMap?.declaredReserves};
