@@ -132,3 +132,25 @@ test('a non-Transport cannot carry units, and unknown transport capacity is neve
   assert.equal(getDeploymentTransportChoices(changed,changed.units[0]).length,0);
   assert.match(assessDeploymentEmbarkation(changed,changed.units[0],changed.units[1]).reason,/not yet verified/);
 });
+
+test('remaining capacity is shared across separate embarked squads',()=>{
+  const x=marineTransportFixture({models:5});
+  const s=x.session.getState();
+  x.session.replaceState({...s,units:[...s.units,{id:'extra',name:'Second squad',ownerId:'p1',status:'reserves',modelCount:3,keywords:['Infantry','Adeptus Astartes','Tacticus']}]});
+  x.send({action:'location',unitId:'troops',kind:'embarked',transportId:'bus'});
+  const state=x.session.getState(),other=state.units.find(u=>u.id==='extra'),bus=state.units.find(u=>u.id==='bus');
+  assert.deepEqual(getDeploymentTransportOccupancy(state,bus),{used:5,capacity:7});
+  assert.match(assessDeploymentEmbarkation(state,other,bus).reason,/2 spaces remaining/);
+  assert.equal(getDeploymentTransportChoices(state,other).length,0);
+  assert.throws(()=>x.send({action:'location',unitId:'extra',kind:'embarked',transportId:'bus'}),/2 spaces remaining/);
+});
+test('attached Leader models occupy passenger capacity alongside the Bodyguard',()=>{
+  const x=marineTransportFixture({models:6});
+  const s=x.session.getState();
+  x.session.replaceState({...s,armyRosters:{p1:{...s.armyRosters.p1,units:[
+    ...s.armyRosters.p1.units,{id:'leader',modelCount:2,attachedToBodyguardId:'troops'}
+  ]}},units:[...s.units,{id:'leader',name:'Attached Leader',ownerId:'p1',status:'reserves',keywords:['Infantry','Adeptus Astartes','Character'],metadata:{rosterUnitId:'leader'}}]});
+  const state=x.session.getState(),troops=state.units.find(u=>u.id==='troops'),bus=state.units.find(u=>u.id==='bus');
+  assert.equal(assessDeploymentEmbarkation(state,troops,bus).spaces,8);
+  assert.match(assessDeploymentEmbarkation(state,troops,bus).reason,/needs 8/);
+});
