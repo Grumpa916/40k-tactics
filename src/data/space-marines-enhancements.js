@@ -13,7 +13,7 @@
 const source='https://tactical40k.com/codex/space-marines';
 const item=(detachment,name,points,restrict='adeptus astartes',scope='model',summary='Refer to published Codex for the complete effect.')=>
   Object.freeze({
-    id:name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
+    id:(detachment+' '+name).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
     name,detachment,points,restriction:restrict,scope,
     upgrade:scope==='unit',description:summary,sourceUrl:source,
     verificationStatus:'11e-current-secondary-cross-check-official-mfm-pending'
