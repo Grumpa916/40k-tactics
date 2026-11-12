@@ -41,7 +41,7 @@ function reviewMissionMarkup(state, group, mission) {
   const name=mission.definitionName??mission.definitionId;
   const windows=mission.result?.scoringWindows??(mission.result?.scoringWindow?[mission.result.scoringWindow]:mission.scoringWindows??[]);
   return `<details open class="checkpoint-mission"><summary>${mission.category==='primary'?'Primary · ':''}${esc(name)} · manual scoring</summary>
-      ${mission.category==='secondary'?'<p>Rules reference comes from supplied card transcription; independent official-card comparison is deferred.</p>':mission.result?.rulesVerified===false?'<p>Primary rules reference awaiting official verification. Confirm the agreed tabletop result before recording the award.</p>':''}
+      ${mission.category==='secondary'?'<p>All 18 Secondary card faces were checked against supplied photographs of the physical cards on Nov 8, 2026. Confirm the current tabletop result manually; no VP is inferred.</p>':mission.result?.rulesVerified===false?'<p>Primary rules reference awaiting official verification. Confirm the agreed tabletop result before recording the award.</p>':''}
       ${scoringRequirementMarkup(windows)}
       ${renderCheckpointScore(state,group,mission)}
       ${(mission.result?.referenceNotes??[]).map(note=>`<p>${esc(note)}</p>`).join('')}
