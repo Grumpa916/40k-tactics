@@ -192,6 +192,16 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
   const territoryReviewText = context.territorySignal?.reviewOnlyMissions?.length
     ? `Review-only territory context: ${context.territorySignal.reviewOnlyMissions.join(", ")}. These cards do not change the numeric ranking until verified.`
     : "";
+  const secondaryPlans=context.secondaryPlans??[];
+  const secondaryPlanningText=secondaryPlans.length
+    ? '<ul>'+secondaryPlans.map(card => {
+        const timing=card.timingLabels.length ? card.timingLabels.join(' / ') : 'Confirm scoring window';
+        const blockers=card.choicePending?' Required When Drawn choice not yet recorded.':'';
+        const action=card.action?` ${card.action}; scoring remains manual.`:'';
+        const guard=card.guarding?.length?` ${card.guarding.length} guard assignment(s) recorded.`:'';
+        return `<li><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(timing)}<small>${escapeHtml(card.advice+blockers+action+guard)}</small></li>`;
+      }).join('')+'</ul>'
+    : '<p>No active Secondary mission cards recorded.</p>';
   const priorities = context.recommendations;
   const selectedOptions = [selected, ...(selected.alternatives ?? [])].slice(0, 3);
   const selectedRank = activeHighlight?.unitId === selected.unitId ? activeHighlight.rank : null;
@@ -242,6 +252,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       <summary>Mission context</summary>
       ${primaryStrategy?.active ? `<p><strong>${escapeHtml(primaryStrategy.missionName)}</strong> · ${escapeHtml(primaryStrategy.summary?.[0] ?? primaryStrategy.reason)}</p>` : ""}
       <p>${escapeHtml(activeMissionText)}</p>
+      <div data-secondary-mission-intelligence>${secondaryPlanningText}</div>
       <small>${escapeHtml(territoryVerifiedText)}</small>
       ${territoryReviewText ? `<br><small>${escapeHtml(territoryReviewText)}</small>` : ""}
       <br><small>Only verified mission text changes movement ranking. Review-only cards remain visible but are not silently scored.</small>
