@@ -41,8 +41,12 @@ const TYRANIDS_RULES_DATA_REVISION = Object.freeze({
   points: Object.freeze({
     name: "Games Workshop Munitorum Field Manual",
     revision: "2026-10-14",
-    revisionLabel: "updated 14/10/2026",
-    sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
+    revisionLabel: "updated 14/10/2026 (official date; prices independently cross-checked)",
+    sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
+    benchmarkDate: "2026-11-08",
+    independentlyComparedDefaultRows: 57,
+    officialOctoberPriceRowsCertified: 0,
+    verificationStatus: "secondary-price-reconciled-official-mfm-numeric-rows-pending"
   }),
   catalog: Object.freeze({
     revision: "2026-11-11.1",
@@ -83,7 +87,11 @@ const BY_FACTION = Object.freeze({
     points: Object.freeze({
       name: "Warhammer App export supplied for 40K Tactics Space Marines expansion",
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
-      sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
+      sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
+      benchmarkDate: "2026-11-08",
+      independentlyComparedDefaultRows: 87,
+      officialOctoberPriceRowsCertified: 0,
+      verificationStatus: "secondary-price-reconciled-official-mfm-numeric-rows-pending"
     }),
     catalog: Object.freeze({ revision: "2026-11-11.2", description: "87 current unit types with independently reviewed equipment; 16 current Codex detachments, 33 current Enhancements/Upgrades, explicit Legends labeling. Direct October Codex/MFM certification remains pending." })
   })
