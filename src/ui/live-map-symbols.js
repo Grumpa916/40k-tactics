@@ -69,7 +69,12 @@ export function applyApprovedLiveMapSymbols(mapHtml, state, { preserveObjectiveL
     // Keep the underlying unit ID, title and drag target unchanged.
     const isRendered = html.includes(`data-map-unit-id="${escapeHtml(unitId)}"`);
     if (numberedMarkers && !isRendered) continue;
-    html = replaceUnitMarkerText(html, unitId, numberedMarkers ? String(++number) : symbol);
+    const token = 'data-map-unit-id="' + escapeHtml(unitId) + '"';
+    const start = html.indexOf(token);
+    const end = start < 0 ? -1 : html.indexOf('>', start);
+    const tag = start >= 0 && end >= 0 ? html.slice(start, end) : '';
+    const composite = tag.match(/data-map-formation-symbol="([^"]+)"/)?.[1];
+    html = replaceUnitMarkerText(html, unitId, numberedMarkers ? String(++number) : (composite || symbol));
   }
   return preserveObjectiveLabels ? html : formatObjectiveMarkerLabels(html);
 }

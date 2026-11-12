@@ -164,3 +164,39 @@ test('view toggle preserves roster abbreviations, badge, unit IDs and event targ
     else globalThis.localStorage=storage;
   }
 });
+
+
+test('a deployed attached formation has one selectable marker in Standard and Top-down maps',()=>{
+  const state={
+    phase:'charge',battle:{status:'active',round:1,activePlayerId:'p1'},activePlayer:'p1',
+    armyRosters:{p1:{units:[
+      {id:'guard-roster',name:'Custodian Guard Sodality',attachedLeaderIds:['blade-roster']},
+      {id:'blade-roster',name:'Blade Champion',attachedToBodyguardId:'guard-roster'}
+    ]}},
+    units:[
+      {id:'guard',name:'Custodian Guard Sodality',ownerId:'p1',status:'deployed',position:{x:40,y:18},metadata:{rosterUnitId:'guard-roster'}},
+      {id:'blade',name:'Blade Champion',ownerId:'p1',status:'deployed',position:{x:20,y:8},metadata:{rosterUnitId:'blade-roster'}},
+      {id:'enemy',name:'Neurotyrant',ownerId:'p2',status:'deployed',position:{x:35,y:32}}
+    ],players:[{id:'p1'},{id:'p2'}],objectives:[],history:[]
+  };
+  const initial=JSON.stringify(state.units);
+  for(const topDown of [true,false]) {
+    const prior=globalThis.localStorage;
+    try {
+      globalThis.localStorage={getItem:()=>JSON.stringify({topDown}),setItem:()=>{}};
+      const html=createLiveMapView().render(state,{perspectivePlayerId:'p1',selectedUnitId:'blade'});
+      assert.match(html,/data-map-unit-id="guard" data-map-formation-symbol="CG\+BC"/);
+      assert.match(html,/is-attached-formation is-selected/);
+      assert.doesNotMatch(html,/data-map-unit-id="blade"/);
+      assert.match(html,/data-map-unit-id="enemy"/);
+      assert.match(html,/CG\+BC/);
+    } finally {
+      if(prior===undefined)delete globalThis.localStorage;
+      else globalThis.localStorage=prior;
+    }
+  }
+  assert.equal(JSON.stringify(state.units),initial,'rendering cannot mutate saved leader offsets');
+  state.units[0].status='destroyed';
+  assert.match(createLiveMapView().render(state,{perspectivePlayerId:'p1'}),/data-map-unit-id="blade"/,
+    'a surviving Leader becomes its own marker after Bodyguard loss');
+});
