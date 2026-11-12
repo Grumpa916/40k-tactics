@@ -1,6 +1,7 @@
 import { getTyranidAttachmentMetadata } from "./tyranid-leader-bodyguard-compatibility.js";
 import { getTyranidDatasheetDetails } from "./tyranid-datasheet-details.js";
 import { getRulesDataRevisionForFaction } from "./rules-data-revisions.js";
+import { PRICE_RECONCILIATION_SOURCES } from "./mfm-points-independent-reconciliation-20261112.js";
 import { ADEPTUS_CUSTODES_ARMY_CATALOG } from "./adeptus-custodes-army-catalog.js";
 import { SPACE_MARINES_ARMY_CATALOG } from "./space-marines-army-catalog.js";
 import { SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES, SPACE_MARINES_LEGENDS_CANDIDATES } from "./space-marines-catalog-coverage.js";
@@ -95,10 +96,14 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
       sourceName: reviewedSource?.sourceName ?? "Candidate unit name; verify against current datasheet",
       sourceUrl: reviewedSource?.sourceUrl ?? "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
       reviewedAt: reviewedSource?.reviewedAt ?? null,
-      pointsSourceName: TYRANID_RULES_REVISION?.points
-        ? `${TYRANID_RULES_REVISION.points.name} (${TYRANID_RULES_REVISION.points.revisionLabel})`
-        : reviewedSource?.pointsSourceName ?? null,
-      pointsSourceUrl: TYRANID_RULES_REVISION?.points?.sourceUrl ?? reviewedSource?.pointsSourceUrl ?? null,
+      // The official 14-Oct MFM publication date is known, but the current
+      // MFM price rows could not be directly retrieved (403). Distinguish
+      // the November independently reconciled prices from official authority.
+      pointsSourceName: "11e independent price cross-check (8 Nov 2026); GW 14 Oct MFM pending",
+      pointsSourceUrl: PRICE_RECONCILIATION_SOURCES.independentTyranids,
+      officialMfmSourceUrl: PRICE_RECONCILIATION_SOURCES.gwTyranids,
+      officialPointsCrossCheck: "pending-direct-current-mfm-read",
+      independentDefaultPriceReviewAt: PRICE_RECONCILIATION_SOURCES.independentSnapshotDate,
       rulesDataRevisionId: TYRANID_RULES_REVISION?.revisionId ?? null,
       officialRulesCrossCheck: reviewedSource?.officialRulesCrossCheck ?? "pending",
       verificationStatus: reviewedSource?.status ?? "name-only-unverified",
