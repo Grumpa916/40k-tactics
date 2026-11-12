@@ -6,9 +6,11 @@ import {
 import { getRosterDetachmentNames } from '../rules/roster-detachment-selection.js';
 import { escapeHtml as e } from './army-builder-html.js';
 import { renderTyranidEnhancementEditor } from './tyranid-enhancement-editor.js';
+import { renderSpaceMarineEnhancementEditor } from './space-marines-enhancement-editor.js';
 
 export function renderUnitUpgradeEditor(unit,roster) {
   if(String(unit?.datasheetId??'').startsWith('tyranids:')) return renderTyranidEnhancementEditor(unit,roster);
+  if(String(unit?.datasheetId??'').startsWith('space-marines:')) return renderSpaceMarineEnhancementEditor(unit,roster);
   const chosen=unit?.unitUpgradeDraft??getUnitUpgradeNames(unit)[0]??'';
   const isCustodes=String(unit?.datasheetId??'').startsWith('adeptus-custodes:');
   if(!isCustodes||(!isEligibleMoritoiDreadnought(unit)&&!chosen))return '';
