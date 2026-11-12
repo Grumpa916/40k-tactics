@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createGameState } from '../../src/state/game-state.js';
 import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
