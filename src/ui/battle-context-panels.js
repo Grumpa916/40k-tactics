@@ -4,6 +4,7 @@ import { getFactionDetachments } from '../data/faction-detachments.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { getBattleShockEligibility, getUnitStrengthAssessment, isUnitBattleShocked } from "../rules/unit-status-summary.js";
 import { getArmyUnitDisplayGroups } from './army-unit-display-groups.js';
+import { objectivePickerLabel } from '../rules/objective-display-labels.js';
 export { renderArmyUnitDialog } from './army-unit-reference-tabs.js';
 
 function escapeHtml(value) {
@@ -134,7 +135,7 @@ export function summarizeGameEvent(event, state = {}) {
     else if (payload.decisionId) details.push(payload.decisionId);
     if (payload.objectiveId) {
       const objective = state.objectives?.find((item) => item.id === payload.objectiveId);
-      details.push(objective?.name ?? payload.objectiveId);
+      details.push(objective ? objectivePickerLabel(state,payload.objectiveId,state.players?.[0]?.id ?? state.activePlayer) : payload.objectiveId);
     }
     if (Number.isFinite(payload.amount)) details.push(String(payload.amount));
     if (Number.isFinite(payload.round) && event?.type === "battle.round_started") details.push("Round " + payload.round);

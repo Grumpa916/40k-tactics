@@ -1,9 +1,10 @@
 import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from "./secondary-mission-lifecycle.js";
+import { objectivePickerLabel } from "./objective-display-labels.js";
 
 const DEFINITION_ID = "secondary-a-tempting-target";
 
 /** Recorded-state evidence for the selected target; final control is tabletop-confirmed. */
-export function getTemptingTargetScoringEvidence(state, playerId, { instanceId = null } = {}) {
+export function getTemptingTargetScoringEvidence(state, playerId, { instanceId = null, perspectivePlayerId = null } = {}) {
   if (!playerId) {
     return Object.freeze({ count: null, objectiveId: null, objectiveName: null, detail: "Scoring player is not specified." });
   }
@@ -27,7 +28,7 @@ export function getTemptingTargetScoringEvidence(state, playerId, { instanceId =
     return Object.freeze({ count: null, objectiveId, objectiveName: objectiveId, detail: "The selected Tempting Target objective is not present in the current battlefield record." });
   }
 
-  const objectiveName = objective.name ?? objective.label ?? objectiveId;
+  const objectiveName = objectivePickerLabel(state,objectiveId,perspectivePlayerId ?? state.players?.[0]?.id ?? playerId);
   const control = objective.control;
   if (!control || control.controlState == null) {
     return Object.freeze({ count: null, objectiveId, objectiveName, detail: objectiveName + " is the selected Tempting Target; objective control has not been recorded." });

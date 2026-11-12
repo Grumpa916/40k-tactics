@@ -1,7 +1,7 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-router.js";
 import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
-import { liveMapObjectiveLabel } from '../rules/objective-display-labels.js';
+import { liveMapObjectiveLabel, objectivePickerLabel } from '../rules/objective-display-labels.js';
 import { getOpponentTurnDefensiveContext, isOpponentTurnFor } from "../rules/tactical-opponent-turn.js";
 import { getSecondaryMissionIntelligence } from "../rules/secondary-mission-intelligence.js";
 
@@ -204,9 +204,10 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     ? '<ul>'+secondaryPlans.map(card => {
         const timing=card.timingLabels.length ? card.timingLabels.join(' / ') : 'Confirm scoring window';
         const blockers=card.choicePending?' Required When Drawn choice not yet recorded.':'';
+        const target=card.selectedObjectiveId?` Recorded target: ${objectivePickerLabel(state,card.selectedObjectiveId,perspectivePlayerId)}.`:'';
         const action=card.action?` ${card.action}; scoring remains manual.`:'';
-        const guard=card.guarding?.length?` ${card.guarding.length} guard assignment(s) recorded.`:'';
-        return `<li><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(timing)}<small>${escapeHtml(card.advice+blockers+action+guard)}</small></li>`;
+        const guard=card.guarding?.length?` Guard assignments: ${card.guarding.map(assignment=>`${objectivePickerLabel(state,assignment.objectiveId,perspectivePlayerId)} — ${(state.units??[]).find(unit=>unit.id===assignment.unitId)?.name??assignment.unitId}`).join('; ')}.`:'';
+        return `<li><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(timing)}<small class="movement-advisor__secondary-advice">${escapeHtml(card.advice+target+blockers+action+guard)}</small></li>`;
       }).join('')+'</ul>'
     : '<p>No active Secondary mission cards recorded.</p>';
   const priorities = context.recommendations;
@@ -216,6 +217,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
   return `<aside class="movement-advisor" data-movement-advisor data-movement-advisor-unit-id="${escapeHtml(selected.unitId)}">
     <style>
       [data-movement-advisor] .movement-advisor__option{color:inherit;text-decoration:none}
+      [data-movement-advisor] .movement-advisor__secondary-advice{display:block;margin-top:4px;line-height:1.4}
       [data-movement-advisor] .movement-advisor__option.is-selected{outline:2px solid #f6d783;outline-offset:1px}
       .battlefield-map__unit.is-advisor-highlight,.battlefield-map__objective.is-advisor-highlight{outline:4px solid #f6d783!important;outline-offset:3px;z-index:9;box-shadow:0 0 0 4px rgba(246,215,131,.28),0 1px 7px #000c!important}
     </style>

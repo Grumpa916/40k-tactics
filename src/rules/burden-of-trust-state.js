@@ -4,6 +4,7 @@ import {
   SECONDARY_MISSION_STATUS
 } from "./secondary-mission-lifecycle.js";
 import { getLiveUnitPosition } from "./spatial-context.js";
+import { objectivePickerLabel } from "./objective-display-labels.js";
 
 const DEFINITION_ID = "secondary-burden-of-trust";
 const OBJECTIVE_RANGE_INCHES = 3;
@@ -15,7 +16,7 @@ function distance(first, second) {
 }
 
 /** Map-based evidence for Burden of Trust; range and control remain tabletop-confirmed. */
-export function getBurdenOfTrustScoringEvidence(state, playerId, { instanceId = null } = {}) {
+export function getBurdenOfTrustScoringEvidence(state, playerId, { instanceId = null, perspectivePlayerId = null } = {}) {
   if (!playerId) {
     return Object.freeze({
       count: null,
@@ -56,7 +57,7 @@ export function getBurdenOfTrustScoringEvidence(state, playerId, { instanceId = 
   const reviews = assignments.map((assignment) => {
     const objective = objectives.find((item) => item?.id === assignment.objectiveId);
     const unit = units.find((item) => item?.id === assignment.unitId && item.ownerId === playerId);
-    const objectiveName = objective?.name ?? objective?.label ?? assignment.objectiveId;
+    const objectiveName = objective ? objectivePickerLabel(state,assignment.objectiveId,perspectivePlayerId ?? state.players?.[0]?.id ?? playerId) : assignment.objectiveId;
     const unitName = unit?.name ?? assignment.unitId;
 
     if (!objective || !unit || unit.status !== "deployed" || !objective.control?.controlState) {

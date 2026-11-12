@@ -2,6 +2,7 @@ import { getCompleteSecondaryMissionById } from '../data/secondary-mission-compl
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from './secondary-mission-lifecycle.js';
 import { isPlayerHomeObjective } from './consecrate-state.js';
 import { getCleanseObjectiveOptions } from './secondary-mission-action-state.js';
+import { objectiveMapDisplayName } from './objective-display-labels.js';
 import { hasKeyword } from './tactical-context-utils.js';
 
 /*
@@ -117,7 +118,7 @@ export function getSecondaryObjectivePlanningSignal(state,{playerId,objectiveId,
         if(ownHome){value=0.26;why='Hold your home objective for the opponent-turn Defend Stronghold review.';}
         break;
       case 'secondary-forward-position':
-        if(enemyHome||noMansLand && /expansion/i.test(String(objective.layoutObjective??objective.name??''))){
+        if(enemyHome || (noMansLand && /Expansion$/.test(objectiveMapDisplayName(state,objectiveId,playerId)))){
           value=0.24;why='Forward Position can use the enemy home or an expansion objective.';}
         break;
       case 'secondary-secure-no-mans-land':

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getEventCompanionMapForForceDispositions } from '../../src/rules/event-companion-map-catalog.js';
 import { getSmokeAndMirrorsObjectiveOptions } from '../../src/rules/smoke-and-mirrors-state.js';
-import { objectiveMapDisplayName, perspectiveObjectiveName } from '../../src/rules/objective-display-labels.js';
+import { objectiveMapDisplayName, objectivePickerLabel, perspectiveObjectiveName } from '../../src/rules/objective-display-labels.js';
 import { createMissionActionPicker } from '../../src/ui/mission-action-picker.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 import { readFileSync } from 'node:fs';
@@ -51,7 +51,7 @@ test('Smoke and Mirrors dropdown uses precisely the visible map objective names 
           .find(([,id])=>id===item.objectiveId)?.[2];
         assert.ok(optionHtml,layout+' '+item.objectiveId+' is a selectable mission option');
         assert.equal(optionHtml,
-          displayed+' · '+(item.enemyTerritory?'enemy territory · ':'')+item.recurringVpIfDecoyed+' VP/turn',
+          objectivePickerLabel(state,item.objectiveId,perspective)+' · '+(item.enemyTerritory?'enemy territory · ':'')+item.recurringVpIfDecoyed+' VP/turn',
           layout+' '+canonical+' text matches the map and retains VP/territory detail');
       }
       assert.equal(new Set([...markers.values()]).size,markers.size,

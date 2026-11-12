@@ -6,6 +6,7 @@ import { SCORING_TIMINGS } from "../rules/mission-definition.js";
 import { evaluateScoringCheckpoint, SCORING_CHECKPOINTS } from "../engine/scoring-check-coordinator.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getPendingSecondaryMissionRuleReplacement, getPendingSecondaryMissionCardChoice, getSecondaryMissionCardChoiceOptions, getActiveBurdenTrustAssignments, getSecondaryMissionReplacementOpportunity, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { renderBattlefieldMap } from "./battlefield-map.js";
+import { objectivePickerLabel } from "../rules/objective-display-labels.js";
 import { createLiveMapView } from "./live-map-view.js";
 import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js";
 import { renderCombatWorkspace, bindCombatMap } from "./combat-workspace.js";
@@ -470,7 +471,7 @@ export function createCommandScreen(container, {
     const objectives = Array.isArray(state.objectives) ? state.objectives : [];
     const objectiveCards = objectives.length ? objectives.map((objective) => {
       const objectiveId = escapeHtml(objective.id);
-      const objectiveName = escapeHtml(objective.name ?? objective.label ?? objective.id);
+      const objectiveName = escapeHtml(objectivePickerLabel(state, objective.id, perspectivePlayerId ?? state.activePlayer ?? players[0]?.id));
       const currentState = objective.control?.controlState ?? "unrecorded";
       const me = perspectivePlayerId ?? state.activePlayer ?? players[0]?.id ?? null;
       const hasOpponent = players.some((player) => player.id !== me);
@@ -682,14 +683,13 @@ export function createCommandScreen(container, {
             }
           } else if (item.definitionId === "secondary-a-tempting-target") {
             const selectedObjectiveId = item.cardState?.temptingTargetObjectiveId;
-            const selectedObjective = state.objectives?.find((objective) => objective.id === selectedObjectiveId);
             if (selectedObjectiveId) {
-              cardChoiceControl = '<p><strong>Opponent selected target:</strong> ' + escapeHtml(selectedObjective?.name ?? selectedObjective?.label ?? selectedObjectiveId) + ' (locked for this card).</p>';
+              cardChoiceControl = '<p><strong>Opponent selected target:</strong> ' + escapeHtml(objectivePickerLabel(state, selectedObjectiveId, perspectivePlayerId ?? state.activePlayer ?? players[0]?.id)) + ' (locked for this card).</p>';
             } else {
               const options = getSecondaryMissionCardChoiceOptions(state, { playerId: item.playerId, choiceType: "tempting-target" });
               cardChoiceControl = '<form data-secondary-card-choice-form data-secondary-choice-type="tempting-target" data-secondary-choice-card="' + escapeHtml(item.instanceId) + '">' +
                 '<label>Opponent selects a No Man’s Land objective<select name="tempting-target" required><option value="">Select objective…</option>' +
-                options.map((objective) => '<option value="' + escapeHtml(objective.id) + '">' + escapeHtml(objective.name ?? objective.label ?? objective.id) + '</option>').join('') +
+                options.map((objective) => '<option value="' + escapeHtml(objective.id) + '">' + escapeHtml(objectivePickerLabel(state, objective.id, perspectivePlayerId ?? state.activePlayer ?? players[0]?.id)) + '</option>').join('') +
                 '</select></label><button type="submit">Record opponent’s target</button></form>';
             }
           } else if (item.definitionId === "secondary-burden-of-trust") {
@@ -701,7 +701,7 @@ export function createCommandScreen(container, {
               const unitOptions = '<option value="">Not guarded</option>' + options.map((unit) =>
                 '<option value="' + escapeHtml(unit.id) + '"' + (current?.unitId === unit.id ? ' selected' : '') + '>' +
                 escapeHtml(unit.name ?? unit.id) + '</option>').join('');
-              return '<label>' + escapeHtml(objective.name ?? objective.label ?? objective.id) +
+              return '<label>' + escapeHtml(objectivePickerLabel(state, objective.id, perspectivePlayerId ?? state.activePlayer ?? players[0]?.id)) +
                 '<select name="guard-' + escapeHtml(objective.id) + '">' + unitOptions + '</select></label>';
             }).join('');
             cardChoiceControl = '<form data-secondary-card-choice-form data-secondary-choice-type="burden-trust" data-secondary-choice-card="' + escapeHtml(item.instanceId) + '">' +

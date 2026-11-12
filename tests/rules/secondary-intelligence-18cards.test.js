@@ -256,3 +256,14 @@ test('a Cleanse objective already used this turn does not receive additional sta
  assert.equal(signal(s,'Central 2').score,0);
  assert.ok(signal(s,'Central 1').score>0);
 });
+
+test('Movement Secondary mission timing and guidance render on separate readable lines',()=>{
+  const s=seed();
+  add(s,'secondary-cleanse');
+  add(s,'secondary-a-tempting-target',{cardState:{temptingTargetObjectiveId:'event-companion:Central 2'}});
+  const html=renderMovementAdvisor(s,{playerId:'p1',selectedUnitId:'mover'});
+  assert.match(html,/movement-advisor__secondary-advice\{display:block;margin-top:4px;line-height:1\.4\}/);
+  assert.match(html,/Cleanse<\/strong> · End of your turn<small class="movement-advisor__secondary-advice">/);
+  assert.match(html,/A Tempting Target<\/strong> · End of your turn<small class="movement-advisor__secondary-advice">/);
+  assert.equal((html.match(/class="movement-advisor__secondary-advice"/g)??[]).length,2);
+});

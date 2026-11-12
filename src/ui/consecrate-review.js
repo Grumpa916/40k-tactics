@@ -1,6 +1,7 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { getConsecrateReviewState } from "../rules/consecrate-state.js";
 import { getLiveUnitPosition } from "../rules/spatial-context.js";
+import { objectivePickerLabel } from "../rules/objective-display-labels.js";
 
 const escapeHtml = value => String(value ?? "")
   .replaceAll("&", "&amp;")
@@ -8,13 +9,6 @@ const escapeHtml = value => String(value ?? "")
   .replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
-
-function objectiveLabel(objective) {
-  const layout = objective?.layoutObjective;
-  if (layout) return String(layout);
-  const id = String(objective?.id ?? "Objective");
-  return id.startsWith("event-companion:") ? id.slice("event-companion:".length) : String(objective?.name ?? id);
-}
 
 function approximateDistance(state, unit, objective) {
   const from = getLiveUnitPosition(state, unit);
@@ -28,7 +22,7 @@ function objectiveOptions(state, unit, objectives) {
     .map((objective) => ({ objective, distance: approximateDistance(state, unit, objective) }))
     .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999))
     .map(({ objective, distance }) =>
-      '<option value="' + escapeHtml(objective.id) + '">' + escapeHtml(objectiveLabel(objective)) +
+      '<option value="' + escapeHtml(objective.id) + '">' + escapeHtml(objectivePickerLabel(state,objective.id,state.players?.[0]?.id ?? state.activePlayer)) +
       (distance == null ? '' : ' · map ≈' + distance + '"') + '</option>'
     ).join("");
 }
