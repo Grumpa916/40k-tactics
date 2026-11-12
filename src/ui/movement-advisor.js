@@ -206,7 +206,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
         const blockers=card.choicePending?' Required When Drawn choice not yet recorded.':'';
         const target=card.selectedObjectiveId?` Recorded target: ${objectivePickerLabel(state,card.selectedObjectiveId,perspectivePlayerId)}.`:'';
         const action=card.action?` ${card.action}; scoring remains manual.`:'';
-        const guard=card.guarding?.length?` ${card.guarding.length} guard assignment(s) recorded.`:'';
+        const guard=card.guarding?.length?` Guard assignments: ${card.guarding.map(assignment=>`${objectivePickerLabel(state,assignment.objectiveId,perspectivePlayerId)} — ${(state.units??[]).find(unit=>unit.id===assignment.unitId)?.name??assignment.unitId}`).join('; ')}.`:'';
         return `<li><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(timing)}<small class="movement-advisor__secondary-advice">${escapeHtml(card.advice+target+blockers+action+guard)}</small></li>`;
       }).join('')+'</ul>'
     : '<p>No active Secondary mission cards recorded.</p>';
