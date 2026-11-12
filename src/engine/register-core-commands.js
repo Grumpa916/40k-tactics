@@ -33,6 +33,8 @@ import { resolveUnitAttack } from "./combat-transitions.js";
 import { resolveNormalMove, resolveAdvance, recordFallBack, recordStationary, undoMovementAction } from "./movement-transitions.js";
 import { refineMovementAction, undoMovementRefinement } from './movement-refinement-transitions.js';
 import { recordCustodesKatahUse } from './custodes-katah-transitions.js';
+import { recordSpaceMarineDoctrineUse } from '../rules/space-marine-doctrines.js';
+import { recordSpaceMarineStratagemUse } from './space-marine-stratagem-transitions.js';
 import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
@@ -98,6 +100,8 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.UNDO_MOVEMENT_REFINEMENT, (state, command) => undoMovementRefinement(state, command.payload)],
     [COMMAND_TYPES.UNDO_MOVEMENT_ACTION, (state, command) => undoMovementAction(state, command.payload)],
     [COMMAND_TYPES.RECORD_CUSTODES_KATAH_USE, (state, command) => recordCustodesKatahUse(state, command.payload)],
+    [COMMAND_TYPES.RECORD_SPACE_MARINE_DOCTRINE, (state, command) => recordSpaceMarineDoctrineUse(state, command.payload)],
+    [COMMAND_TYPES.RECORD_SPACE_MARINE_STRATAGEM_USE, (state, command) => recordSpaceMarineStratagemUse(state, command.payload)],
     [COMMAND_TYPES.RECORD_UNIT_CASUALTY, (state, command) => recordUnitCasualty(state, command.payload)],
     [COMMAND_TYPES.UNDO_UNIT_CASUALTY, (state, command) => undoUnitCasualty(state, command.payload)],
     [COMMAND_TYPES.ADJUST_UNIT_WOUNDS, (state, command) => adjustUnitWounds(state, command.payload)],
