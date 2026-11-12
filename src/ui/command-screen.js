@@ -683,7 +683,6 @@ export function createCommandScreen(container, {
             }
           } else if (item.definitionId === "secondary-a-tempting-target") {
             const selectedObjectiveId = item.cardState?.temptingTargetObjectiveId;
-            const selectedObjective = state.objectives?.find((objective) => objective.id === selectedObjectiveId);
             if (selectedObjectiveId) {
               cardChoiceControl = '<p><strong>Opponent selected target:</strong> ' + escapeHtml(objectivePickerLabel(state, selectedObjectiveId, perspectivePlayerId ?? state.activePlayer ?? players[0]?.id)) + ' (locked for this card).</p>';
             } else {
