@@ -9,6 +9,9 @@ import {renderPersistentMissionSummary} from '../../src/ui/mission-summary-panel
 import {getSecondaryMissionCardChoiceOptions} from '../../src/rules/secondary-mission-lifecycle.js';
 import {SECONDARY_MISSION_CATALOG} from '../../src/data/secondary-mission-catalog.js';
 import {getSecondaryObjectivePlanningSignal} from '../../src/rules/secondary-mission-intelligence.js';
+import {getTemptingTargetScoringEvidence} from '../../src/rules/tempting-target-state.js';
+import {getBurdenOfTrustScoringEvidence} from '../../src/rules/burden-of-trust-state.js';
+import {summarizeGameEvent} from '../../src/ui/battle-context-panels.js';
 const dispositions=Object.keys(EVENT_COMPANION_MAP_CATALOG.forceDispositionMissionMatrix);
 
 function stateFor(mine,theirs,layout){
@@ -133,4 +136,32 @@ test('all objective-dependent Action selectors share the same map name and prese
   assert.ok(src.includes('objectivePickerLabel(state,item.id,mapPerspective)'));
   assert.ok(src.includes('option value=')&&src.includes('esc(item.objectiveId)'),
     'actual stable objective IDs are retained in option values');
+});
+
+
+test('saved-choice scoring evidence and battle history use the same objective labels as the map',()=>{
+  const s=stateFor('Purge the Foe','Reconnaissance','A');
+  const c2=s.objectives.find(o=>objectiveMapDisplayName(s,o.id,'p1')==='Center 2');
+  const expansion=s.objectives.find(o=>objectiveMapDisplayName(s,o.id,'p1')==='My Expansion');
+  assert.ok(c2&&expansion);
+  addCard(s,'secondary-a-tempting-target',{temptingTargetObjectiveId:c2.id});
+  addCard(s,'secondary-burden-of-trust',{burdenTrustAssignments:[
+    {objectiveId:expansion.id,unitId:'guard',expiresAtTurn:4}
+  ]});
+  const tempting=getTemptingTargetScoringEvidence(s,'p1');
+  const burden=getBurdenOfTrustScoringEvidence(s,'p1');
+  const c2Name=objectivePickerLabel(s,c2.id,'p1');
+  const expansionName=objectivePickerLabel(s,expansion.id,'p1');
+  assert.equal(tempting.objectiveName,c2Name);
+  assert.ok(tempting.detail.includes(c2Name));
+  assert.equal(burden.assignments[0].objectiveName,expansionName);
+  assert.ok(burden.detail.includes(expansionName));
+  const event=summarizeGameEvent({
+    type:'secondary_mission.tempting_target_selected',
+    payload:{playerId:'p1',objectiveId:c2.id,selectedByPlayerId:'p2'}
+  },s);
+  assert.ok(event.detail.includes(c2Name));
+  const consecrate=readFileSync(new URL('../../src/ui/consecrate-review.js',import.meta.url),'utf8');
+  assert.ok(consecrate.includes('objectivePickerLabel(state,objective.id'),
+    'Consecrate Primary selection also uses the same map display names');
 });
