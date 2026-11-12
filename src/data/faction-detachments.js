@@ -49,5 +49,8 @@ export function getFactionDetachmentRestrictions(faction) {
   if (norm(faction) === 'adeptus custodes') {
     return Object.freeze([{ tag: 'Shield Host', max: 1 }]);
   }
+  if (norm(faction) === 'space marines') {
+    return Object.freeze([{ tag: 'Doctrines', max: 1 }]);
+  }
   return Object.freeze([]);
 }
