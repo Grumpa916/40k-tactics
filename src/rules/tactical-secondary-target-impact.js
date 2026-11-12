@@ -4,6 +4,7 @@ import {
   SECONDARY_MISSION_STATUS
 } from "./secondary-mission-lifecycle.js";
 import { isUnitBattleShocked } from "./unit-status-summary.js";
+import { getUnitStateAtTurnStart } from "./scoring-evidence-state.js";
 import {
   clamp01,
   distanceBetween,
@@ -45,6 +46,37 @@ function centreGroundRelevance(state, target) {
   if (!Number.isFinite(distance) || distance > 9) return null;
   const score = distance <= 3 ? 1 : distance <= 6 ? 0.82 : 0.3;
   return { score, distance };
+}
+
+function relevantDestructionCard(state,playerId,definition,target) {
+  const slug=definitionSlug(definition);
+  const mode=getSecondaryMissionMode(state,playerId) ?? definition.missionMode ?? null;
+  const scoringModeValid=(definition.scoringWindows??[]).some(window=>
+    !window.modes?.length||!mode||window.modes.includes(mode));
+  if(!scoringModeValid)return null;
+  const perModelWounds=Number(target?.profile?.characteristics?.wounds ?? target?.datasheet?.characteristics?.wounds);
+  const startingStrength=Number(target?.startingStrength);
+  if(slug==='a-grievous-blow'&&Number.isFinite(startingStrength)&&startingStrength>=13)
+    return {score:0.91,vp:mode==='fixed'?4:5,
+      reason:'This enemy unit has recorded Starting Strength 13+ and can satisfy A Grievous Blow if destroyed.'};
+  if(slug==='bring-it-down'&&Number.isFinite(perModelWounds)&&perModelWounds>=10)
+    return {score:0.92,vp:mode==='fixed'?4:5,
+      reason:'This enemy datasheet has a model Wounds characteristic of 10+ and can satisfy Bring it Down if a qualifying model is destroyed.'};
+  if(slug==='no-prisoners')
+    return {score:0.72,vp:2,
+      reason:'Destroying this enemy unit contributes 2 VP to No Prisoners, subject to the 5 VP Tactical card cap.'};
+  if(slug==='overwhelming-force'){
+    // The card tests WHERE THE ENEMY STARTED THE TURN, not its current
+    // marker. If the turn-start record is absent, withhold numeric relevance.
+    const start=getUnitStateAtTurnStart(state,target.id,state.turn);
+    const position=start?.position;
+    if(position&&Number.isFinite(position.x)&&Number.isFinite(position.y) &&
+      (state.objectives??[]).some(obj=>obj?.position&&
+        Math.hypot(position.x-obj.position.x,position.y-obj.position.y)<=3))
+      return {score:0.94,vp:3,
+        reason:'The recorded turn-start location was within the map’s approximate 3-inch objective radius; destruction may support Overwhelming Force. Confirm physical range.'};
+  }
+  return null;
 }
 
 function vpFromWindows(definition, mode) {
@@ -142,6 +174,19 @@ export function getTargetSecondaryMissionImpact(state, { playerId, targetUnitId 
       continue;
     }
 
+    if(verified) {
+      const destruction=relevantDestructionCard(state,playerId,definition,target);
+      if(destruction){
+        scoringSignals.push({
+          missionId:definition.id,missionName:definition.name??definition.id,
+          score:destruction.score,vpAtStake:destruction.vp,
+          confidence:slug==='overwhelming-force'?'moderate':'high',
+          reason:destruction.reason
+        });
+        continue;
+      }
+    }
+
     if (verified && slug === "centre-ground") {
       const relevance = centreGroundRelevance(state, target);
       if (relevance) {
@@ -183,6 +228,26 @@ export function getTargetSecondaryMissionImpact(state, { playerId, targetUnitId 
           reason: `This opponent unit is approximately ${relevance.distance.toFixed(1)} inches from battlefield centre and may be contributing to their Centre Ground scoring${vpAtStake ? ` worth up to ${vpAtStake} verified VP` : ""}.`
         });
       }
+      continue;
+    }
+
+    if(verified && slug==='beacon' && entry.cardState?.beaconUnitId===target.id) {
+      denialSignals.push({
+        missionId:definition.id,missionName:definition.name??'Beacon',
+        score:0.95,vpAtStake:signalVp(state,opponentId,definition,target),
+        confidence:'high',
+        reason:'This enemy is their permanently designated Beacon unit; destroying it can prevent future Beacon scoring and replacement is not allowed.'
+      });
+      continue;
+    }
+    if(verified && slug==='burden-of-trust' &&
+      (entry.cardState?.burdenTrustAssignments??[]).some(a=>a.unitId===target.id &&
+        Number(a.expiresAtTurn)>Number(state.turn??0))) {
+      denialSignals.push({
+        missionId:definition.id,missionName:definition.name??'Burden of Trust',
+        score:0.83,vpAtStake:2,confidence:'moderate',
+        reason:'This enemy is a currently assigned Burden of Trust guard; destruction can deny its guarded objective scoring at the opponent-turn checkpoint.'
+      });
       continue;
     }
 
