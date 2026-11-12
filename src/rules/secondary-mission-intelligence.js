@@ -1,6 +1,7 @@
 import { getCompleteSecondaryMissionById } from '../data/secondary-mission-complete-catalog.js';
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from './secondary-mission-lifecycle.js';
 import { isPlayerHomeObjective } from './consecrate-state.js';
+import { getCleanseObjectiveOptions } from './secondary-mission-action-state.js';
 import { hasKeyword } from './tactical-context-utils.js';
 
 /*
@@ -108,7 +109,9 @@ export function getSecondaryObjectivePlanningSignal(state,{playerId,objectiveId,
         }
         break;
       case 'secondary-cleanse':
-        if(!ownHome){value=0.19;why='This non-home objective is a potential Cleanse Action destination; confirm the Shooting-phase Action and different-unit requirement.';}
+        if(!ownHome && getCleanseObjectiveOptions(state,{playerId}).some(item=>item.objectiveId===objectiveId)){
+          value=0.19;why='This eligible non-home objective is a potential Cleanse Action destination; confirm the Shooting-phase Action and different-unit requirement.';
+        }
         break;
       case 'secondary-defend-stronghold':
         if(ownHome){value=0.26;why='Hold your home objective for the opponent-turn Defend Stronghold review.';}
