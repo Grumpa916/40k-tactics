@@ -54,7 +54,7 @@ test('Fixed mode needs two distinct cards before formations; setup battle record
  x.confirm();assert.equal(preparationStep(x.session.getState()),'formations');
 });
 test('transport passengers count toward reserves but never get independent deployment markers',()=>{
- const x=fixture();x.session.replaceState({...x.session.getState(),units:[...x.session.getState().units,{id:'transport',ownerId:'p1',name:'Transport',status:'reserves',points:200}]});
+ const x=fixture();x.session.replaceState({...x.session.getState(),armyRosters:{p1:{faction:'Space Marines',units:[]}},units:[...x.session.getState().units.map(u=>u.id==='a'?{...u,keywords:['Infantry','Adeptus Astartes'],modelCount:1}:u),{id:'transport',ownerId:'p1',name:'Rhino',status:'reserves',points:200,modelCount:1,keywords:['Transport','Dedicated Transport'],metadata:{datasheetId:'space-marines:rhino'}}]});
  x.toFormations();x.prep({action:'formation',unitId:'a',kind:'embarked',transportId:'transport'});x.prep({action:'formation',unitId:'transport',kind:'reserve'});
  assert.equal(reserveSummary(x.session.getState(),'p1').points,300);
  assert.equal(x.session.getState().units.find(u=>u.id==='a').status,'embarked');
