@@ -12,7 +12,12 @@ function canonicalName(value){
  * separately; do not infer them from one default-size price.
  */
 export function auditIndependentFirstCopyPoints(faction,provided=null){
- const candidates=provided??findArmyUnitCandidates({faction});
+ const all=provided??findArmyUnitCandidates({faction});
+ // Marine benchmark intentionally includes the 87 current core/Codex entries,
+ // excluding the separate 89 Legends names. The Tyranid benchmark contains
+ // all 57 reviewed source rows, including five explicitly marked Legends.
+ const candidates=String(faction??'').toLowerCase()==='space marines'
+  ?all.filter(unit=>unit.legends!==true):all;
  const benchmarks=getFirstCopyPointBenchmark(faction);
  const table=new Map(benchmarks.map(x=>[canonicalName(x.name),x]));
  const found=new Set();
