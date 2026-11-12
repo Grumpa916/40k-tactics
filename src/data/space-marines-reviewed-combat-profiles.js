@@ -1009,7 +1009,7 @@ export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
    ])])}:{}),
    ...(name==='Librarian in Terminator Armour'?{keywords:Object.freeze([...new Set([
      ...(base.keywords??[]),'Character'
-   ])])}:{})
+   ])])}:{}),
    sourceName:'November 2026 11e selected loadout/profile cross-check',
    sourceUrl:'https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html',
    officialOctoberCodexFullTextVerified:false,
