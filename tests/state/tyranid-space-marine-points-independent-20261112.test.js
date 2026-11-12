@@ -93,7 +93,7 @@ test('Explicit higher-copy and weapon premium rules are distinct from independen
   ['Tyranids','Pyrovores',3,1,100],['Tyranids','Pyrovores',3,3,110],
   ['Space Marines','Aggressor Squad',3,1,90],['Space Marines','Aggressor Squad',3,3,100],
   ['Space Marines','Terminator Squad',5,1,190],['Space Marines','Terminator Squad',5,3,230],
-  ['Space Marines','Victrix Honour Guard',3,1,120],['Space Marines','Victrix Honour Guard',3,2,140],
+  ['Space Marines','Victrix Honour Guard',3,1,120],['Space Marines','Victrix Honour Guard',3,3,150],
   ['Space Marines','Repulsor Executioner',1,1,260],['Space Marines','Repulsor Executioner',1,3,280]
  ];
  for(const [faction,name,models,ordinal,expected] of rows){
