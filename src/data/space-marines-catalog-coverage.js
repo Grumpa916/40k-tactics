@@ -1,4 +1,5 @@
 import { SPACE_MARINES_NAMED_ULTRAMARINES_DATASHEETS } from './space-marines-named-ultramarines-datasheets.js';
+import { PRICE_RECONCILIATION_SOURCES } from './mfm-points-independent-reconciliation-20261112.js';
 import { addReviewedUltramarinesAttachmentMetadata } from './space-marines-ultramarines-attachments.js';
 import { applyReviewedSpaceMarineWargearProfiles } from './space-marines-reviewed-combat-profiles.js';
 
@@ -137,8 +138,11 @@ export const SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES=Object.freeze(CURRENT_M
          sourceName:original?.sourceName??'Current 11e named-character datasheet cross-check (official October Codex pending)',
          sourceUrl:reviewed.sourceUrl??sourceUrl
        } : {verificationStatus:'name-and-points-reference-only'}),
-    pointsSourceName:'Independent Nov 2, 2026 list (direct MFM comparison pending)',
-    pointsSourceUrl:sourceUrl,legends:false,
+    pointsSourceName:'Independent 8 Nov 2026 price check; official GW MFM row certification pending',
+    officialPointsCrossCheck:'pending-direct-current-mfm-read',
+    independentDefaultPriceReviewAt:PRICE_RECONCILIATION_SOURCES.independentSnapshotDate,
+    officialMfmSourceUrl:PRICE_RECONCILIATION_SOURCES.gwSpaceMarines,
+    pointsSourceUrl:PRICE_RECONCILIATION_SOURCES.independentSpaceMarines,legends:false,
     ...(GW_UNIT_COMPOSITIONS[name] ? {
       officialCompositionSourceUrl:GW_DATASHEET_SOURCE,
       officialComposition:GW_UNIT_COMPOSITIONS[name],
