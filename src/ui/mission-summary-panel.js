@@ -2,6 +2,7 @@ import { getLayoutOptionsForForceDispositions } from "../rules/event-companion-m
 import { getBattlePrimaryMissionDefinitions } from "../data/primary-mission-catalog.js";
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from "../rules/secondary-mission-lifecycle.js";
 import { getBeaconMissionState } from "../rules/beacon-mission-state.js";
+import { objectivePickerLabel } from "../rules/objective-display-labels.js";
 import { missionSourceNotice } from "../data/official-rules-source-index.js";
 
 function escapeHtml(value) {
@@ -88,7 +89,7 @@ function renderPrimaryPlayer(state, player, playerId, missionName, definition, s
     '</div></details>';
 }
 
-function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
+function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates, perspectivePlayerId) {
   if (!player) return "";
   const history = getSecondaryMissionHistory(state, playerId);
   const active = history.filter((item) => item.status === SECONDARY_MISSION_STATUS.ACTIVE);
@@ -110,10 +111,7 @@ function renderSecondaryPlayer(state, player, playerId, sideLabel, openStates) {
       ? '<p><strong>When drawn:</strong> ' + escapeHtml(definition.whenDrawn) + '</p>'
       : '';
     const unitName = (unitId) => state.units?.find((unit) => unit.id === unitId)?.name ?? unitId;
-    const objectiveName = (objectiveId) => {
-      const objective = state.objectives?.find((item) => item.id === objectiveId);
-      return objective?.name ?? objective?.label ?? objectiveId;
-    };
+    const objectiveName = (objectiveId) => objectivePickerLabel(state,objectiveId,perspectivePlayerId);
     let cardChoiceSummary = '';
     if (item.definitionId === "secondary-beacon") {
       const beacon = getBeaconMissionState(state, { playerId, instanceId: item.instanceId });
@@ -203,8 +201,8 @@ export function renderPersistentMissionSummary(state = {}, {
     primary.myDefinition, "You", openStates, setup) +
     renderPrimaryPlayer(state, opponent, primary.opponentPlayerId, primary.opponentName,
       primary.opponentDefinition, "Opponent", openStates, setup);
-  const secondaryContent = renderSecondaryPlayer(state, yourPlayer, primary.myPlayerId, "You", openStates) +
-    renderSecondaryPlayer(state, opponent, primary.opponentPlayerId, "Opponent", openStates);
+  const secondaryContent = renderSecondaryPlayer(state, yourPlayer, primary.myPlayerId, "You", openStates, yourPlayerId) +
+    renderSecondaryPlayer(state, opponent, primary.opponentPlayerId, "Opponent", openStates, yourPlayerId);
   const primaryKey = "mission-section-primary";
   const secondaryKey = "mission-section-secondary";
   return '<section class="battle-mission-summary" aria-label="Persistent mission summary">' +
