@@ -1,5 +1,6 @@
 import { ADEPTUS_CUSTODES_DETACHMENTS } from '../data/adeptus-custodes-faction-rules.js';
 import { getTyranidEnhancementNames, getTyranidEnhancementCost, validateTyranidRosterEnhancements } from './tyranid-enhancements.js';
+import { getSpaceMarineEnhancementNames, getSpaceMarineEnhancementCost, validateSpaceMarineEnhancements } from './space-marines-enhancements.js';
 import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { validateWargearLoadout } from './wargear-loadout-validation.js';
 
@@ -24,6 +25,8 @@ export function getUnitUpgradeDefinition(nameOrId){return byName.get(nameOrId)??
 export function getUnitUpgradeNames(unit) {
   if (String(unit?.datasheetId??'').startsWith('tyranids:'))
     return getTyranidEnhancementNames(unit);
+  if (String(unit?.datasheetId??'').startsWith('space-marines:'))
+    return getSpaceMarineEnhancementNames(unit);
   return (Array.isArray(unit?.unitUpgrades)?unit.unitUpgrades:[])
     .map(item=>typeof item==='string'?item:item?.name??item?.id)
     .filter(Boolean).map(value=>getUnitUpgradeDefinition(value)?.name??String(value));
@@ -31,6 +34,8 @@ export function getUnitUpgradeNames(unit) {
 export function getUnitUpgradeCost(unit) {
   if (String(unit?.datasheetId??'').startsWith('tyranids:'))
     return getTyranidEnhancementCost(unit);
+  if (String(unit?.datasheetId??'').startsWith('space-marines:'))
+    return getSpaceMarineEnhancementCost(unit);
   return getUnitUpgradeNames(unit).reduce((sum,name)=>sum+(getUnitUpgradeDefinition(name)?.points??0),0);
 }
 export function isEligibleMoritoiDreadnought(unit) {
@@ -43,6 +48,8 @@ export function isEligibleMoritoiDreadnought(unit) {
 export function validateRosterUnitUpgrades(roster) {
   if (String(roster?.faction??'').trim().toLowerCase()==='tyranids')
     return validateTyranidRosterEnhancements(roster);
+  if (String(roster?.faction??'').trim().toLowerCase()==='space marines')
+    return validateSpaceMarineEnhancements(roster);
   const errors=[],units=Array.isArray(roster?.units)?roster.units:[];
   const allowed=lower(roster?.faction)==='adeptus custodes' &&
     getRosterDetachmentNames(roster).includes(DETACHMENT);
