@@ -3,6 +3,7 @@ import { renderArmyUnitDialog, renderEventLogPanel } from './battle-context-pane
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { createCommand } from '../commands/command.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
+import { renderAppThemeToggle } from './app-theme-preference.js';
 
 const LIVE_PHASES = Object.freeze([
   ['command', 'Command'],
@@ -34,7 +35,7 @@ export function removeRedundantLiveHelperCopy(container) {
   }
 }
 
-export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}) {
+export function renderPrototypeWorkspaceTools({ missionReviewOpen = false, appTheme = 'custodes' } = {}) {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
   stylesheet.searchParams.set('v', 'all-phase-unit-drawer-1');
   const href = stylesheet.href;
@@ -53,7 +54,7 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false } = {}
       <button type="button" class="prototype-missions-button" data-toggle-mission-review aria-expanded="${String(missionReviewOpen)}">Missions</button>
       <button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button>
       <button type="button" data-movement-roster-toggle aria-controls="movement-units" aria-expanded="false" hidden>Units</button>
-      <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-battle-phase-button="review">Game review</button></div></details>
+      <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-battle-phase-button="review">Game review</button>${renderAppThemeToggle(appTheme)}</div></details>
     </div>
     <button type="button" data-workspace-panel aria-expanded="false" aria-label="Show phase panel">Panel</button>
   </nav>`;
