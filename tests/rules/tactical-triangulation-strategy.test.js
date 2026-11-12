@@ -12,6 +12,7 @@ import {
 import { getMovementStrategicRecommendations } from "../../src/rules/tactical-movement-router.js";
 import { getMissionActionOptions } from "../../src/rules/mission-action-state.js";
 import { createMissionActionPicker } from "../../src/ui/mission-action-picker.js";
+import { objectivePickerLabel } from "../../src/rules/objective-display-labels.js";
 import { recordShootingActivation } from "../../src/engine/shooting-transitions.js";
 
 function control(controllerId) {
@@ -271,7 +272,7 @@ test("the Action picker requires and labels an eligible Triangulate objective", 
   const html = createMissionActionPicker().render(s, "runner");
   assert.match(html, /Objective to Triangulate/);
   assert.match(html, /Choose eligible objective/);
-  assert.match(html, /Central 1/);
+  assert.ok(html.includes(objectivePickerLabel(s,"central-1","p1")));
   assert.doesNotMatch(html, />Attacker Home</);
 });
 
