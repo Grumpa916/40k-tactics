@@ -1,7 +1,6 @@
 import { getCompleteSecondaryMissionById } from '../data/secondary-mission-complete-catalog.js';
 import { getSecondaryMissionHistory, getSecondaryMissionMode, getActiveBurdenTrustAssignments, SECONDARY_MISSION_STATUS } from './secondary-mission-lifecycle.js';
 import { isPlayerHomeObjective } from './consecrate-state.js';
-import { objectiveMapDisplayName } from './objective-display-labels.js';
 import { hasKeyword } from './tactical-context-utils.js';
 
 /*
