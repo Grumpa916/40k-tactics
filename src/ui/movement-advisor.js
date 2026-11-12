@@ -3,6 +3,7 @@ import { getMovementStrategicRecommendations } from "../rules/tactical-movement-
 import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
 import { liveMapObjectiveLabel } from '../rules/objective-display-labels.js';
 import { getOpponentTurnDefensiveContext, isOpponentTurnFor } from "../rules/tactical-opponent-turn.js";
+import { getSecondaryMissionIntelligence } from "../rules/secondary-mission-intelligence.js";
 
 let highlightEventsBound = false;
 let activeHighlight = null;
@@ -28,6 +29,7 @@ function destinationLabel(option, state, perspectivePlayerId) {
   if (option?.objectiveId) {
     return `Objective · ${liveMapObjectiveLabel(state, option.objectiveId, perspectivePlayerId)}`;
   }
+  if (option?.locationLabel) return `Mission position · ${option.locationLabel}`;
   if (option?.targetName) return `Enemy · ${option.targetName}`;
   if (option?.territoryTarget === "boundary") return "Territory · Boundary";
   if (option?.territoryTarget === "opponent") return "Territory · Opponent";
@@ -135,6 +137,8 @@ function scheduleHighlightRestore(unitId) {
 
 function renderOpponentMovementDefence(state, playerId) {
   const context = getOpponentTurnDefensiveContext(state, { playerId });
+  const secondaryDue=getSecondaryMissionIntelligence(state,{playerId})
+    .filter(card=>card.eligibleNow && card.scoringWindows.some(window=>window.timing==='end-of-opponent-turn'));
   const threats = context.threats.map(item => `<li><strong>${escapeHtml(item.unitName)}</strong> · ${escapeHtml(item.reason)}
     ${item.nearestEnemy ? `<small>Nearby: ${escapeHtml(item.nearestEnemy.enemyName)} · about ${escapeHtml(item.nearestEnemy.distance)}″ on map</small>` : ''}
     ${item.attacksReceived ? `<small>${escapeHtml(item.attacksReceived)} incoming attack(s) recorded · ${escapeHtml(item.damageTakenThisTurn)} damage this turn</small>` : ''}
@@ -150,6 +154,9 @@ function renderOpponentMovementDefence(state, playerId) {
       ${threats ? `<ol>${threats}</ol>` : '<p>No close enemy threats or new attacks are established from recorded data. Check the physical tabletop for untracked threats.</p>'}
     </details>
     ${windows ? `<details open><summary>Current defensive rule windows · ${context.windows.length}</summary><ul>${windows}</ul><small>References only; confirm triggers, targets, timing and CP on the tabletop before using an ability or Stratagem.</small></details>` : ''}
+    ${secondaryDue.length?`<details data-secondary-opponent-turn-intelligence open><summary>Secondary opponent-turn checkpoints · ${secondaryDue.length}</summary>
+      <ul>${secondaryDue.map(card=>`<li><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml(card.advice)} Confirm the printed conditions and VP at the actual checkpoint.</small></li>`).join('')}</ul>
+    </details>`:''}
     <p><small>Incoming damage estimates appear in Shooting and Fight after you select the enemy attacker, its weapon and your target. No ranged damage or legal charge is inferred from approximate map proximity alone.</small></p>
   </aside>`;
 }
