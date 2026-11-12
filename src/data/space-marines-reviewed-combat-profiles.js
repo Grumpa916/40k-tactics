@@ -72,7 +72,7 @@ const changes=Object.freeze({
       ranged("Master-crafted Bolter","24\"","2","2+","5","-1","2","Assault, Rapid Fire 1, Heavy"),
       melee("Master-crafted Chainsword","8","2+","5","-1","2","Anti-non-Monster/Vehicle 2+")]),
     abilities:Object.freeze([ability("Press the Attack","Unit melee attacks gain Sustained Hits 1 vs non-Monster/Vehicle; while Assault doctrine active this becomes Sustained Hits 1 without target restriction."),
-      ability("Righteous Fury","Once per battle in Fight phase: +1 S to melee attacks, then heal D3 after fight or 2D3 if killed enemy model this phase. Manual wounds."),
+      ability("Righteous Fury","In Fight phase, this unit can activate +1 Strength to melee attacks; after the unit fights, Titus heals D3 wounds or 2D3 if he destroyed an enemy model this phase. Record actual healing; no once-per-battle restriction in official October v1.1 update."),
       ability("Honour of Ultramar","If destroyed in Fight before activation, roll D6; on 2+ remain on battlefield to fight once, then remove. Track actual activation and destroyed state."),
       ability("Feel No Pain 5+","Innate 5+ FNP and 4+ invulnerable."),
       ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
@@ -104,7 +104,7 @@ const changes=Object.freeze({
       melee("Medusan Manipuli","2","3+","10","-2","3","Extra Attacks")]),
     abilities:Object.freeze([ability("Master of the Forge","In own Movement at start/end of this unit's move: select one friendly Astartes Vehicle model within 3 inches; heal 3 wounds and ignore weapon BS/hit/wound roll modifiers until next Movement phase."),
       ability("Rites of Tempering","Incoming attacks with Strength greater than this unit's Toughness take -1 to wound rolls."),
-      ability("Iron Father","Lone Operative only within 3 inches of friendly Astartes Vehicle. Innate Feel No Pain 5+.")])
+      ability("Iron Father","This model (not its attached unit) has Lone Operative only while this model is within 3 inches of a friendly ADEPTUS ASTARTES VEHICLE. Innate Feel No Pain 5+.")])
   }),
   "Kaius Konorius":Object.freeze({
     characteristics:Object.freeze({"Move":"6\"","Toughness":"5","Save":"2+","Wounds":"5","Leadership":"6+","Objective Control":"1"}),
@@ -536,7 +536,7 @@ const changes=Object.freeze({
     weapons:Object.freeze([ranged("Forge Bolter","24\"","3","2+","5","-1","2","Sustained Hits 1"),
       ranged("Grav-pistol","12\"","2","2+","2","-1","3","Anti-Vehicle 2+, Close-Quarters"),
       melee("Omnissian Power Axe and Servo-arm","5","3+","6","-2","2","")]),
-    abilities:Object.freeze([ability("Techmarine","Lone Operative while within 3 inches of friendly ADEPTUS ASTARTES VEHICLE."),
+    abilities:Object.freeze([ability("Techmarine","Only this model (not an attached unit) gains Lone Operative while within 3 inches of a friendly ADEPTUS ASTARTES VEHICLE."),
       ability("Blessings of the Omnissiah","Movement phase start/end of move, friendly VEHICLE within 3 inches heals D3 and ignores hit/wound modifiers until next Movement phase. Track actual healing manually."),
       ability("Leader","May join Assault Intercessor, Desolation or Intercessor Squad; special chapters may have more.")])}),
   "Repulsor":Object.freeze({
@@ -1004,6 +1004,12 @@ export function applyReviewedSpaceMarineWargearProfiles(name,datasheet) {
    ...(patch.characteristics ? {characteristics:Object.freeze({...base.characteristics,...patch.characteristics})}:{}),
    weapons:patch.weapons,
    abilities:patch.abilities,
+   ...(name==='Kayvaan Shrike'?{keywords:Object.freeze([...new Set([
+     ...(base.keywords??[]),'Character','Epic Hero'
+   ])])}:{}),
+   ...(name==='Librarian in Terminator Armour'?{keywords:Object.freeze([...new Set([
+     ...(base.keywords??[]),'Character'
+   ])])}:{})
    sourceName:'November 2026 11e selected loadout/profile cross-check',
    sourceUrl:'https://www.wahapedia.ru/wh40k11ed/factions/space-marines/datasheets.html',
    officialOctoberCodexFullTextVerified:false,
