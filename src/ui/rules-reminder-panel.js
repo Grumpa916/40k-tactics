@@ -6,6 +6,8 @@ import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venata
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
 import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
 import { getCustodesDetachmentRuleReminders, getCustodesDetachmentStratagemReminders } from '../rules/custodes-detachment-rule-reminders.js';
+import { renderSpaceMarineStratagemOpportunities } from './space-marine-stratagem-controls.js';
+import { getSpaceMarineStratagemOpportunities } from '../engine/space-marine-stratagem-transitions.js';
 import { renderCustodesDetachmentStratagemControls, readCustodesDetachmentStratagemForm } from './custodes-detachment-stratagem-controls.js';
 
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -76,7 +78,8 @@ export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=n
   const playerId=perspective(state,perspectivePlayerId);
   const guardians=renderGuardiansStratagemOpportunities(state,{playerId,unitId:selectedUnitId,onlyActionable:livePanel});
   const detachment=renderDetachmentStratagemReminders(state,playerId,{livePanel,selectedUnitId});
-  return guardians||detachment?style()+guardians+detachment:'';
+  const marine=renderSpaceMarineStratagemOpportunities(state,{playerId,unitId:selectedUnitId,livePanel});
+  return guardians||detachment||marine?style()+guardians+detachment+marine:'';
 }
 
 export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true,livePanel=false}={}) {
@@ -126,6 +129,7 @@ export function renderRulesReminderDialog(state,{playerId,unitId=null,draft=null
     '<div class="rules-reminder-list">'+(active.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')||'<p>No faction reminders are due in this phase.</p>')+'</div>'+
     (used.length?'<details><summary>Used abilities · '+used.length+'</summary>'+used.map(entry=>renderEntry(entry,state)).join('')+'</details>':'')+
     renderGuardiansStratagemOpportunities(state,{playerId})+renderDetachmentStratagemReminders(state,playerId)+
+    renderSpaceMarineStratagemOpportunities(state,{playerId,unitId,livePanel:false})+
     '<form class="rules-unit-note-editor" data-save-unit-rules-note><h3>My unit notes</h3><label>Unit<select data-rules-note-unit>'+units.map(unit=>'<option value="'+esc(unit.id)+'"'+(unit.id===unitId?' selected':'')+'>'+esc((state.players?.find(p=>p.id===unit.ownerId)?.name??unit.ownerId)+' · '+unit.name)+'</option>').join('')+'</select></label>'+
     '<label>Notes<textarea data-unit-rules-note maxlength="2000" rows="4" placeholder="A reminder for this unit…">'+esc(draft??getUnitBattleNote(state,unitId))+'</textarea></label><button type="submit"'+(!unitId?' disabled':'')+'>Save unit notes</button></form></section></div>';
 }
@@ -143,8 +147,9 @@ export function createRulesReminderController(container,{session,perspectivePlay
     const guardiansCount=new Set(getGuardiansStratagemOpportunities(state,{playerId}).filter(entry=>entry.available||entry.active).map(entry=>entry.stratagemId)).size;
     const detachmentCount=getCustodesDetachmentRuleReminders(state,{playerId}).length;
     const stratagemCount=getCustodesDetachmentStratagemReminders(state,{playerId}).length;
+    const marineCount=getSpaceMarineStratagemOpportunities(state,{playerId,unitId}).filter(x=>x.available).length;
     for(const button of container.querySelectorAll?.('[data-toggle-rules-reminders]')??[]) {
-      button.textContent='Rules · '+(entries.length+detachmentCount+stratagemCount+guardiansCount);button.setAttribute('aria-expanded',String(open));
+      button.textContent='Rules · '+(entries.length+detachmentCount+stratagemCount+guardiansCount+marineCount);button.setAttribute('aria-expanded',String(open));
       button.hidden=state.battle?.status!=='active';
     }
     if(!state.units?.some(unit=>unit.id===unitId))unitId=state.units?.find(unit=>unit.ownerId===playerId)?.id??state.units?.[0]?.id??null;
@@ -158,6 +163,23 @@ export function createRulesReminderController(container,{session,perspectivePlay
     const toggle=event.target?.closest?.('[data-toggle-rules-reminders]');
     if(toggle){event.preventDefault?.();returnFocus=toggle;open=!open;refresh();if(open)container.querySelector?.('[data-close-rules-reminders]')?.focus?.();return;}
     if(event.target?.closest?.('[data-close-rules-reminders]')||event.target===container.querySelector?.('[data-rules-backdrop]')){close();return;}
+    const marine=event.target?.closest?.('[data-marine-stratagem-use]');
+    if(marine){
+      const card=marine.closest?.('[data-marine-stratagem-entry]');
+      const confirmed=card?.querySelector?.('[data-marine-trigger-confirmed]')?.checked===true;
+      const doctrine=card?.querySelector?.('[data-marine-stratagem-doctrine]')?.value??null;
+      try{
+        session.dispatch({type:COMMAND_TYPES.RECORD_SPACE_MARINE_STRATAGEM_USE,payload:{
+          playerId:marine.getAttribute('data-marine-stratagem-player'),
+          unitId:marine.getAttribute('data-marine-stratagem-unit'),
+          stratagemId:marine.getAttribute('data-marine-stratagem-use'),
+          timingConfirmed:confirmed,targetConfirmed:confirmed,
+          ...(doctrine?{doctrine}:{})
+        }});
+        message='Space Marine Stratagem recorded and CP spent. Resolve tabletop effects.';
+      }catch(error){message=error?.message??String(error);open=true;}
+      refresh();return;
+    }
     const katah=event.target?.closest?.('[data-record-katah-reminder]');
     if(katah){try{message='Ka’tah use recorded.';session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_KATAH_USE,payload:{playerId:katah.getAttribute('data-rule-player'),unitId:katah.getAttribute('data-rule-unit'),katahName:katah.getAttribute('data-katah-name')}});}catch(error){message=error.message;open=true;}refresh();return;}
     const use=event.target?.closest?.('[data-record-rule-use]');
