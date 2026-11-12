@@ -186,7 +186,7 @@ test('a deployed attached formation has one selectable marker in Standard and To
       globalThis.localStorage={getItem:()=>JSON.stringify({topDown}),setItem:()=>{}};
       const html=createLiveMapView().render(state,{perspectivePlayerId:'p1',selectedUnitId:'blade'});
       assert.match(html,/data-map-unit-id="guard" data-map-formation-symbol="CG\+BC"/);
-      assert.match(html,/is-attached-formation is-selected/);
+      assert.match(html,/is-selected is-attached-formation/);
       assert.doesNotMatch(html,/data-map-unit-id="blade"/);
       assert.match(html,/data-map-unit-id="enemy"/);
       assert.match(html,/CG\+BC/);
