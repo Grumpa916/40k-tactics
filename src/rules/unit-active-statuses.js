@@ -3,6 +3,7 @@ import { isUnitBattleShocked } from './unit-status-summary.js';
 import { getUnitActivationPresentation } from './unit-activation-presentation.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
 import { getFightCandidates } from './fight-candidates.js';
+import {getActiveSpaceMarineUnitDoctrines,SPACE_MARINES_DOCTRINES} from './space-marine-doctrines.js';
 
 function currentTurnEvent(state, unitId, type, predicate = () => true) {
   const round = state?.battle?.round;
@@ -34,6 +35,11 @@ export function getSelectedUnitActiveStatuses(state = {}, unitId = null) {
   if (!unit) return [];
 
   const statuses = [];
+  const activeDoctrines=getActiveSpaceMarineUnitDoctrines(state,unit);
+  if(activeDoctrines.length){
+    statuses.push({icon:'D',label:'Active Doctrine: '+activeDoctrines.map(id=>
+      SPACE_MARINES_DOCTRINES.find(item=>item.id===id)?.name??id).join(' + ')});
+  }
   if (unit.status === UNIT_STATUS.DESTROYED) statuses.push({ icon: '×', label: 'Destroyed' });
   if (unit.status === UNIT_STATUS.RESERVES) statuses.push({ icon: 'R', label: 'Reserves / Off battlefield' });
   if (isUnitBattleShocked(unit)) statuses.push({ icon: '!', label: 'Battle-shocked' });
