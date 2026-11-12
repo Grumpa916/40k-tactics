@@ -536,7 +536,7 @@ const changes=Object.freeze({
     weapons:Object.freeze([ranged("Forge Bolter","24\"","3","2+","5","-1","2","Sustained Hits 1"),
       ranged("Grav-pistol","12\"","2","2+","2","-1","3","Anti-Vehicle 2+, Close-Quarters"),
       melee("Omnissian Power Axe and Servo-arm","5","3+","6","-2","2","")]),
-    abilities:Object.freeze([ability("Techmarine","Only this model (not an attached unit) gains Lone Operative while within 3 inches of a friendly ADEPTUS ASTARTES VEHICLE."),
+    abilities:Object.freeze([ability("Techmarine","Only this model (not its attached unit) has Lone Operative while within 3 inches of friendly ADEPTUS ASTARTES VEHICLE."),
       ability("Blessings of the Omnissiah","Movement phase start/end of move, friendly VEHICLE within 3 inches heals D3 and ignores hit/wound modifiers until next Movement phase. Track actual healing manually."),
       ability("Leader","May join Assault Intercessor, Desolation or Intercessor Squad; special chapters may have more.")])}),
   "Repulsor":Object.freeze({
