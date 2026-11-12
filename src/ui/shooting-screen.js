@@ -54,6 +54,22 @@ function unitButton(unit) {
   </button>`;
 }
 
+/* Keep identification visible beside the map controls when the Units drawer is
+ * closed and the shooting details panel is scrolled. This does not select or move
+ * anything; the label is derived from the current live phase selection. */
+function renderShootingMapIdentity(state, shooterId, targetId = null) {
+  const units = state?.units ?? [];
+  const shooter = units.find(unit => unit.id === shooterId);
+  const target = units.find(unit => unit.id === targetId);
+  if (!shooter && !target) return '';
+  const item = (caption, unit) => '<span class="shoot-tabletop__map-identity-item" title="' +
+    escapeHtml(caption + ': ' + (unit.name ?? unit.id)) + '"><small>' +
+    escapeHtml(caption) + '</small><strong>' + escapeHtml(unit.name ?? unit.id) + '</strong></span>';
+  return '<div class="shoot-tabletop__map-identity" data-shoot-map-identity aria-label="Selected unit and target">' +
+    (shooter ? item(target ? 'Shooter' : 'Selected unit', shooter) : '') +
+    (target ? item('Target', target) : '') + '</div>';
+}
+
 function tabletopUnitSummary(state, unitId) {
   const unit = (Array.isArray(state?.units) ? state.units : []).find((item) => item?.id === unitId);
   if (!unit) return { unit: null, wounds: "—", models: "—", status: "" };
@@ -252,7 +268,8 @@ export function createShootingScreen(container, {
         </aside>
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
           perspectivePlayerId: perspectivePlayerId ?? model.activePlayerId,
-          selectedUnitId: activeUnitId })}
+          selectedUnitId: activeUnitId,
+          mapExtra: renderShootingMapIdentity(state, activeUnitId, selectedTargetId) })}
 
         <section class="shoot-tabletop__control-panel">
           <div class="shoot-tabletop__control-scroll">
