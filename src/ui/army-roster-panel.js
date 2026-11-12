@@ -16,6 +16,7 @@ import { normalizeRosterDetachmentSelection } from "../rules/roster-detachment-s
 import { setMoritoiUpgrade, validateRosterUnitUpgrades, hydrateLegacyCustodesUpgrades } from "../rules/custodes-unit-upgrades.js";
 import { createArmyUnitEditorController } from "./army-unit-editor-controller.js";
 import { setTyranidEnhancement } from '../rules/tyranid-enhancements.js';
+import { setSpaceMarineEnhancement } from '../rules/space-marines-enhancements.js';
 
 function newId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -256,6 +257,10 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
           updated=setTyranidEnhancement(updated,unitId,prepared.upgradeName,{
             basePoints:prepared.unit.points,
             subterraneanCharacter:nextUnit.subterraneanCharacter===true
+          });
+        } else if(nextUnit.datasheetId?.startsWith('space-marines:')){
+          updated=setSpaceMarineEnhancement(updated,unitId,prepared.upgradeName,{
+            basePoints:prepared.unit.points
           });
         }
         const errors=validateRosterUnitUpgrades(updated);

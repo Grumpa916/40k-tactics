@@ -1,5 +1,6 @@
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
 import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
+import { getSpaceMarineEnhancementDefinitions } from './space-marines-enhancements.js';
 import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getActiveGuardiansEffects } from './stratagem-use-state.js';
@@ -46,6 +47,22 @@ export function getRecordedCombatRules(state, unit) {
   const ownerRoster=state?.armyRosters?.[unit?.ownerId];
   const selectedDetachments=new Set(getRosterDetachmentNames(ownerRoster));
   const ownId=String(ownRosterUnit?.datasheetId??'').toLowerCase();
+  if(ownId.startsWith('space-marines:')){
+    const ownKeywords=[...(ownRosterUnit?.datasheet?.keywords??[]),...(ownRosterUnit?.keywords??[])].map(normalized);
+    if(selectedDetachments.has('Ironclad Champions') &&
+      (ownId.includes('dreadnought')||ownKeywords.includes('dreadnought')))
+      effects.push('marine-ironclad-champions');
+    const toCode=name=>'marine-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    for(const def of getSpaceMarineEnhancementDefinitions(ownRosterUnit)){
+      effects.push(toCode(def.name));
+    }
+    // Only explicit unit-wide permanent effects pass between attached members.
+    // Bearer-only defences and weapon bonuses stay on the equipped model.
+    const unitWideNames=new Set(['Furious Assault','Champion of the First Company','Honour of Vigilance']);
+    for(const member of members)for(const def of getSpaceMarineEnhancementDefinitions(getBattleRosterUnit(state,member))){
+      if(unitWideNames.has(def.name) && !effects.includes(toCode(def.name))) effects.push(toCode(def.name));
+    }
+  }
   if(ownId.startsWith('tyranids:')){
     if(selectedDetachments.has('Subterranean Assault'))
       effects.push('tyranid-surprise-assault');
@@ -53,7 +70,7 @@ export function getRecordedCombatRules(state, unit) {
       ['tyranids:lictor','tyranids:neurolictor'].includes(ownId))
       effects.push('tyranid-mindhunger');
   }
-  const ownEnhancements = getUnitUpgradeNames(ownRosterUnit);
+  const ownEnhancements = ownId.startsWith('tyranids:')?getUnitUpgradeNames(ownRosterUnit):[];
   for (const name of ownEnhancements) effects.push('tyranid-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''));
   for (const member of members) {
     for (const name of getUnitUpgradeNames(getBattleRosterUnit(state, member))) {

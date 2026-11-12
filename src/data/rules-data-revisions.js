@@ -72,8 +72,8 @@ const BY_FACTION = Object.freeze({
   }),
   "space marines": Object.freeze({
     schemaVersion: 1, faction: "Space Marines", edition: "11th",
-    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-04.19",
-    reviewedAt: "2026-11-04", factionRules: SPACE_MARINES_RULES_DATA,
+    revisionId: "space-marines-11e-codex-oct-2026-catalog-2026-11-11.1",
+    reviewedAt: "2026-11-11", factionRules: SPACE_MARINES_RULES_DATA,
     officialRevisionCheck: Object.freeze({
       indexedOfficialUpdate: "2026-10-14", checkedAt:"2026-11-04",
       status:"pending-current-official-profile-and-points-comparison",
@@ -85,7 +85,7 @@ const BY_FACTION = Object.freeze({
       revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/"
     }),
-    catalog: Object.freeze({ revision: "2026-11-04.19", description: "Reviews remaining sixteen 11e Space Marine named heroes and Phobos Lieutenants for complete current-catalog loadout/combat coverage; official direct GW Codex/MFM certification pending" })
+    catalog: Object.freeze({ revision: "2026-11-11.1", description: "87 current unit types with independently reviewed equipment; 16 current Codex detachments, 33 current Enhancements/Upgrades, explicit Legends labeling. Direct October Codex/MFM certification remains pending." })
   })
 });
 

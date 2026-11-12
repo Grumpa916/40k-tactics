@@ -1,3 +1,7 @@
+import {
+  SPACE_MARINES_CURRENT_11E_DETACHMENTS,
+  SPACE_MARINES_EXPLICIT_LEGENDS_DETACHMENTS
+} from './space-marines-current-detachments.js';
 // Space Marines faction metadata from the current official Faction Pack.
 // Rules text is intentionally summarized here; combat-facing implementation
 // remains a separate, reviewed step.
@@ -5,7 +9,7 @@ export const SPACE_MARINES_RULES_SOURCE = Object.freeze({
   sourceName: "Games Workshop Space Marines Faction Pack",
   sourceUrl: "https://assets.warhammer-community.com/eng_08-06_warhammer40000_faction_pack_space-marines-nd2ezs5yzn-wxe2nf2ckk.pdf",
   reviewedAt: "2026-10-24",
-  version: "current official faction pack"
+  version: "June 2026 11e Faction Pack; October Codex recheck pending"
 });
 
 export const SPACE_MARINES_ARMY_RULES = Object.freeze({
@@ -55,8 +59,7 @@ export const ARMOURED_SPEARTIP_STRATAGEMS = Object.freeze([
   })
 ]);
 
-export const SPACE_MARINES_DETACHMENTS = Object.freeze([
-  ["Fulguris Task Force", "Disruption", 1], ["Librarius Conclave", "Reconnaissance", 1],
+const SPACE_MARINES_PREVIOUS_DETACHMENT_ROWS = Object.freeze([  ["Fulguris Task Force", "Disruption", 1], ["Librarius Conclave", "Reconnaissance", 1],
   ["Subversion Assets", "Reconnaissance", 1], ["1st Company Task Force", "Priority Assets", 2],
   ["Anvil Siege Force", "Take and Hold", 2], ["Armoured Speartip", "Take and Hold", 3],
   ["Bastion Task Force", "Take and Hold", 2], ["Blade of Ultramar", "Priority Assets", 3],
@@ -67,13 +70,31 @@ export const SPACE_MARINES_DETACHMENTS = Object.freeze([
   ["Orbital Assault Force", "Take and Hold", 2], ["Reclamation Force", "Take and Hold", 2],
   ["Shadowmark Talon", "Disruption", 2], ["Spearpoint Task Force", "Disruption", 2],
   ["Stormlance Task Force", "Disruption", 3], ["Vanguard Spearhead", "Reconnaissance", 2]
-].map(([name, forceDisposition, detachmentPoints]) => Object.freeze({
-  name, forceDisposition, detachmentPoints,
-  stratagemCatalogStatus: name === "Armoured Speartip" ? "complete" : "not-imported",
-  ...(name === "Armoured Speartip" ? { stratagems: ARMOURED_SPEARTIP_STRATAGEMS } : {}),
-  source: SPACE_MARINES_RULES_SOURCE
-})));
+]);
 
+const currentByName=new Map(SPACE_MARINES_CURRENT_11E_DETACHMENTS.map(item=>[item.name,item]));
+const explicitLegends=new Set(SPACE_MARINES_EXPLICIT_LEGENDS_DETACHMENTS);
+export const SPACE_MARINES_DETACHMENTS = Object.freeze([
+  ...SPACE_MARINES_CURRENT_11E_DETACHMENTS.map(detachment=>Object.freeze({
+    ...detachment,
+    stratagemCatalogStatus:'not-imported',
+    source: Object.freeze({sourceName:'Independent current 11th-edition Codex transcription',
+      sourceUrl:detachment.sourceUrl, officialOctoberPackCompared:false})
+  })),
+  ...SPACE_MARINES_PREVIOUS_DETACHMENT_ROWS
+    .filter(([name])=>!currentByName.has(name))
+    .map(([name,forceDisposition,detachmentPoints])=>{
+      const legends=explicitLegends.has(name);
+      return Object.freeze({
+        name,forceDisposition,detachmentPoints,legends,
+        category:legends?'legends':'chapter-supplement-unverified',
+        rulesCertification:'legacy-entry-requires-current-GW-publication-check',
+        stratagemCatalogStatus: name==='Armoured Speartip'?'complete':'not-imported',
+        ...(name==='Armoured Speartip'?{stratagems:ARMOURED_SPEARTIP_STRATAGEMS}:{}),
+        source:SPACE_MARINES_RULES_SOURCE
+      });
+    })
+]);
 export const SPACE_MARINES_RULES_DATA = Object.freeze({
   faction: "Space Marines", edition: "11th", source: SPACE_MARINES_RULES_SOURCE,
   armyRules: Object.freeze([SPACE_MARINES_ARMY_RULES]), detachments: SPACE_MARINES_DETACHMENTS

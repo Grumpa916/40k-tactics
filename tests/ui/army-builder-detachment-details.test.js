@@ -12,10 +12,12 @@ test('Army Builder detachment names expand to loaded rules text', () => {
   assert.match(html, /Favoured Ka'tah: Calistus/);
 });
 
-test('detachment details never invent missing rule text', () => {
+test('detachment details show source-backed Tyranid rule summaries and keep missing source explicit', () => {
   const html = renderDetachmentChecklist('Tyranids', ['Ambush Predators']);
   assert.match(html, /Ambush Predators/);
   assert.match(html, /1 DP/);
   assert.match(html, /Disruption/);
-  assert.match(html, /Detachment rules text has not been loaded into the app yet/);
+  assert.match(html, /Mindhunger/);
+  const unreviewed=renderDetachmentChecklist('Space Marines',['Anvil Siege Force']);
+  assert.match(unreviewed, /Detachment rules text has not been loaded into the app yet/);
 });

@@ -17,6 +17,37 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   const sustained = value => { result.sustainedHits = Math.max(result.sustainedHits ?? 0, value); };
 
   apply(profile.lance && charged, 'Lance: +1 to Wound after recorded charge', woundBonus);
+  // 11e Space Marine effects: only deterministic, currently active bonuses.
+  // Doctrine selections, per-game activations, proximity and allocated-model
+  // protective saves must be captured separately, never assumed.
+  apply(own.has('marine-ironclad-champions'),
+    'Ironclad Champions: Dreadnought re-rolls Hit rolls of 1', () => {
+      result.hitReroll = strongestReroll(result.hitReroll,'ones');
+    });
+  apply(melee && own.has('marine-champion-of-the-first-company'),
+    'Champion of the First Company: melee Lethal Hits', () => {result.lethalHits=true;});
+  apply(profile.weaponType==='ranged' && own.has('marine-honour-of-vigilance'),
+    'Honour of Vigilance: ranged Lethal Hits', () => {result.lethalHits=true;});
+  apply(melee && own.has('marine-furious-assault') && nonMonsterVehicle,
+    'Furious Assault: Sustained Hits 1 versus non-Monster/Vehicle', () => sustained(1));
+  apply(melee && own.has('marine-laurels-of-triumph'),
+    'Laurels of Triumph: bearer melee +1 Strength and AP', () => {
+      result.strength+=1;improveAp();
+    });
+  apply(profile.weaponType==='ranged' && !profile.psychic && own.has('marine-master-forged-firearms'),
+    'Master-forged Firearms: bearer non-Psychic ranged weapon +1 A/S/AP/D', () => {
+      const addOne=value=>{
+        if(Number.isInteger(value))return value+1;
+        const plain=String(value??'').trim();
+        if(/^\d+$/.test(plain))return Number(plain)+1;
+        const dice=plain.match(/^(\d*)D([36])(?:\+(\d+))?$/i);
+        return dice?`${dice[1]??''}D${dice[2]}+${Number(dice[3]??0)+1}`:value;
+      };
+      result.attacks=addOne(result.attacks);
+      result.strength+=1;improveAp();
+      result.damage=addOne(result.damage);
+    });
+
   // 11th-edition Vertus Quicksilver Execution is a repeatable, charge-triggered
   // melee bonus. It is not the 10th-edition once-per-battle move-over attack.
   // The reviewed datasheet match in recorded-combat-rules prevents an old
@@ -85,6 +116,10 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   apply(melee && target?.combatRules?.kaptaris, 'Kaptaris: -1 to incoming melee Hit rolls', () => {result.hitModifier=(result.hitModifier??0)+1;});
   apply(target?.combatRules?.goldenLightOfMoirades && !profile.torrent, 'Golden Light of the Moiraides: -1 to incoming Hit rolls', () => {result.hitModifier=(result.hitModifier??0)+1;});
   apply(target?.combatRules?.temporaryInvulnerableSave===3, 'Moment Shackle: allocated model has a 3+ invulnerable save', () => {result.invulnerableSave=Math.min(result.invulnerableSave??7,3);});
+  apply(enemy.has('marine-artificer-sarcophagus'),
+    'Artificer Sarcophagus: reduce Damage allocated to Dreadnought by 1', () => {
+      result.damageReduction+=1;
+    });
   apply(enemy.has('tyranid-synaptic-control'),
     'Synaptic Control: reduce Damage allocated to bearer by 1', () => { result.damageReduction += 1; });
   apply(enemy.has('golden-laurels'), 'Golden Laurels: worsen incoming AP by 1', worsenAp);

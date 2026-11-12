@@ -13,7 +13,7 @@ test('Space Marines rules revision exposes current Combat Doctrines and official
 });
 
 test('Space Marines detachment catalog includes dispositions and detachment points', () => {
-  assert.equal(SPACE_MARINES_DETACHMENTS.length, 22);
+  assert.equal(SPACE_MARINES_DETACHMENTS.length, 35);
   const siege = SPACE_MARINES_DETACHMENTS.find(item => item.name === 'Anvil Siege Force');
   assert.deepEqual({ disposition: siege.forceDisposition, points: siege.detachmentPoints }, { disposition: 'Take and Hold', points: 2 });
   const options = detachmentOptions('Space Marines');

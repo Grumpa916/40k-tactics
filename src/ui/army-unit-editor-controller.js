@@ -57,7 +57,9 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
   prepareSave(existing) {
    const unit=draft(existing);capture(unit);
    const selections=readWargearChoiceState(unit,unit.builderWargearState);
-   const selectedUpgrade=unit.unitUpgradeDraft??getUnitUpgradeNames(existing)[0]??'';
+   const selectedUpgrade=unit.unitUpgradeDraft??(String(unit.datasheetId??'').startsWith('space-marines:')
+      ?(existing.unitUpgrades?.[0]?.id??getUnitUpgradeNames(existing)[0]??'')
+      :(getUnitUpgradeNames(existing)[0]??''));
    const {builderWargearState,unitUpgradeDraft,subterraneanCharacterDraft,...result}=unit;
    if(subterraneanCharacterDraft!==undefined)result.subterraneanCharacter=subterraneanCharacterDraft;
    if(getBuilderModelCounts(unit).length){
