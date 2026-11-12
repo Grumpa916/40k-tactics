@@ -8,6 +8,12 @@ import { getTargetStrategicContext } from "./tactical-target-context.js";
 import { getPrimaryStrategyContext, getPrimaryObjectiveStrategySignal } from "./tactical-primary-strategy.js";
 import { getLiveUnitPosition, getSpatialContext } from "./spatial-context.js";
 import { getTerritoryStatusForPosition } from "./battlefield-territory.js";
+import { getSecondaryPositionalPlanningOptions } from "./secondary-positioning-plans.js";
+import {
+  getSecondaryMissionIntelligence,
+  getSecondaryObjectivePlanningSignal,
+  getSecondaryTerritoryPlanningSignal
+} from "./secondary-mission-intelligence.js";
 import { clamp01, unitById } from "./tactical-context-utils.js";
 
 const MAP_UNCERTAINTY = 3;
@@ -25,61 +31,13 @@ function activeSecondaries(state, playerId) {
     }));
 }
 
-function missionReferenceText(mission) {
-  const definition = mission?.definition ?? {};
-  return [
-    ...(definition.scoringWindows ?? []).flatMap((window) => (window?.tiers ?? []).map((tier) => tier?.summary ?? "")),
-    ...(definition.referenceNotes ?? []),
-    ...(definition.notes ?? []),
-    definition.whenDrawn ?? "",
-    definition.missionAction?.summary ?? ""
-  ].join(" ").toLowerCase();
-}
-
+// A card with an objective in its prose is NOT a bonus for every objective.
+// Cards now match exact selected destinations, own/enemy homes, assigned guards,
+// eligible No Man's Land objectives, and the correct active mission mode.
 function verifiedMovementMissionSignal(secondaries) {
-  const relevant = [];
-  for (const mission of secondaries) {
-    if (!mission.verified) continue;
-    const text = missionReferenceText(mission);
-    if (/objective|deployment zone|territory|wholly within|battlefield quarter|centre|center/.test(text)) {
-      relevant.push(mission.name);
-    }
-  }
   return Object.freeze({
-    score: Math.min(0.3, relevant.length * 0.15),
-    missions: Object.freeze(relevant)
-  });
-}
-
-function territoryMissionSignal(secondaries) {
-  const verified = [];
-  const reviewOnly = [];
-  let directOutsideOwn = 0;
-  let forwardStaging = 0;
-
-  for (const mission of secondaries) {
-    const text = missionReferenceText(mission);
-    const outsideOwn = /not within your territory|outside your territory/.test(text);
-    const opponentDeployment = /opponent(?:'|’)?s deployment zone/.test(text);
-    const opponentHome = /opponent(?:'|’)?s home objective/.test(text);
-    if (!outsideOwn && !opponentDeployment && !opponentHome) continue;
-
-    if (!mission.verified) {
-      reviewOnly.push(mission.name);
-      continue;
-    }
-
-    verified.push(mission.name);
-    if (outsideOwn) directOutsideOwn += 0.24;
-    if (opponentDeployment || opponentHome) forwardStaging += 0.08;
-  }
-
-  return Object.freeze({
-    score: Math.min(0.32, directOutsideOwn + forwardStaging),
-    directOutsideOwn: Math.min(0.28, directOutsideOwn),
-    forwardStaging: Math.min(0.12, forwardStaging),
-    missions: Object.freeze(verified),
-    reviewOnlyMissions: Object.freeze(reviewOnly)
+    score:0,
+    missions:Object.freeze(secondaries.filter(mission=>mission.verified).map(mission=>mission.name))
   });
 }
 
@@ -160,6 +118,9 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
     const suppressSmokePrimary = primaryStrategy?.missionId === "primary-smoke-and-mirrors" &&
       (oc.battleShocked === true || (Number.isFinite(oc.effectiveOc) && oc.effectiveOc <= 0));
     const primaryStrategyScoreApplied = suppressSmokePrimary ? 0 : primarySignal.score;
+    const secondarySignal = Number(oc.effectiveOc)>0 && !oc.battleShocked
+      ? getSecondaryObjectivePlanningSignal(state,{playerId,objectiveId:entry.objectiveId,unitId:unit.id})
+      : {score:0,missions:[],reason:''};
     const urgency = Math.min(1.35, (strategy.weights.primary + strategy.weights.objectiveSwing) / 2);
     const holdBonus = purpose === "hold-objective" && Number(oc.effectiveOc) > 0
       ? 0.18 + Math.min(0.12, Number(oc.effectiveOc) * 0.02)
@@ -169,7 +130,7 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
       reachFactor(entry.distance, movement, action) *
       usableOcFactor *
       urgency +
-      missionSignal.score +
+      secondarySignal.score +
       holdBonus +
       primaryStrategyScoreApplied
     );
@@ -180,7 +141,7 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
     if (primarySignal.active && primarySignal.reason && !suppressSmokePrimary) reason += ` ${primarySignal.reason}`;
     if (suppressSmokePrimary) reason += " Smoke and Mirrors objective bonuses are suppressed because this formation has no usable OC to complete or establish the required objective-control play.";
     if (oc.battleShocked) reason += " It is Battle-shocked, so its saved OC is treated as suppressed for this recommendation.";
-    if (missionSignal.missions.length) reason += ` Verified active movement-relevant secondary context: ${missionSignal.missions.join(", ")}.`;
+    if (secondarySignal.missions.length) reason += ` Eligible secondary targets: ${secondarySignal.missions.join(", ")}. ${secondarySignal.reason}`;
     return Object.freeze({
       kind: "objective",
       purpose,
@@ -191,6 +152,7 @@ function objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement
       control,
       primaryStrategySignal: primarySignal,
       primaryStrategyScoreApplied,
+      secondaryMissionSignal:secondarySignal,
       actionHint: movementActionLabel(action),
       confidence: Number.isFinite(movement) && oc.confidence !== "low" ? "moderate" : "low",
       reason
@@ -355,6 +317,7 @@ function recommendationText(unit, best) {
   if (best.purpose === "enter-ranged-pressure") return `${name}: reposition to bring ${best.targetName} into stronger Shooting pressure.`;
   if (best.purpose === "stage-charge") return `${name}: reposition toward ${best.targetName} to improve the later Charge decision.`;
   if (best.purpose === "preserve-ranged-pressure") return `${name}: preserve pressure on ${best.targetName}; do not move without a better mission or positional gain.`;
+  if (best.locationLabel && best.kind==='position') return `${name}: ${best.actionHint}`;
   if (best.purpose === "pressure-target") return `${name}: reposition toward ${best.targetName}, a strategically valuable enemy unit.`;
   return `${name}: improve board position; no higher-confidence mission or combat route is established yet.`;
 }
@@ -370,7 +333,8 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
   const spatial = getSpatialContext(state, { playerId });
   const secondaries = activeSecondaries(state, playerId);
   const missionSignal = verifiedMovementMissionSignal(secondaries);
-  const territorySignal = territoryMissionSignal(secondaries);
+  const territorySignal = getSecondaryTerritoryPlanningSignal(state,{playerId});
+  const secondaryPlans = getSecondaryMissionIntelligence(state,{playerId});
   const roots = (state?.units ?? []).filter((unit) =>
     unit?.ownerId === playerId && unit?.status === "deployed" && getCombatFormationRoot(state, unit)?.id === unit.id
   );
@@ -379,10 +343,13 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
     const movement = getBattleUnitMovement(state, unit);
     const oc = getFormationObjectiveContribution(state, unit);
     const weapons = formationWeapons(state, unit);
-    const territory = territoryOptions(state, { playerId, unit, movement, strategy, territorySignal });
+    const secondaryPositions=getSecondaryPositionalPlanningOptions(state,{playerId,unit,movement});
+    const unitTerritorySignal=getSecondaryTerritoryPlanningSignal(state,{playerId,unit});
+    const territory = territoryOptions(state, { playerId, unit, movement, strategy, territorySignal:unitTerritorySignal });
     const candidates = [
       ...objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal, primaryStrategy }),
       ...territory,
+      ...secondaryPositions,
       ...targetOptions(state, { playerId, unit, movement, spatial, weapons }),
       fallbackOption(unit, movement, strategy)
     ].sort((a, b) => b.score - a.score || a.kind.localeCompare(b.kind));
@@ -406,6 +373,8 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
       targetUnitId: best.targetUnitId ?? null,
       targetName: best.targetName ?? null,
       territoryTarget: best.territoryTarget ?? null,
+      locationLabel:best.locationLabel??null,
+      targetPosition:best.targetPosition??null,
       distance: best.distance ?? null,
       strategicContext: best.strategicContext ?? null,
       primaryStrategySignal: best.primaryStrategySignal ?? null,
@@ -423,6 +392,7 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
     activeSecondaries: Object.freeze(secondaries.map(({ id, name, verified }) => Object.freeze({ id, name, verified }))),
     missionSignal,
     territorySignal,
+    secondaryPlans,
     recommendations: Object.freeze(recommendations)
   });
 }

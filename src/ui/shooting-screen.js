@@ -9,6 +9,7 @@ import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js'
 import { renderCombatMapPanel } from './combat-workspace.js';
 import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { createMissionActionPicker } from "./mission-action-picker.js";
+import { getSecondaryMissionIntelligence } from "../rules/secondary-mission-intelligence.js";
 import { getLiveMissionActionOptions } from '../rules/mission-action-state.js';
 import {
   getShootingViewModel,
@@ -80,6 +81,19 @@ function historyRow(item, state, gameData) {
     ? `${target?.name ?? item.targetId} (${allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
     : target?.name ?? item.targetId;
   return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(targetLabel)}</strong><span>${escapeHtml(weapon?.name ?? item.weaponId ?? "Weapon")} · ${escapeHtml(result)}</span></li>`;
+}
+
+function renderSecondaryShootingIntelligence(state,playerId) {
+  if(!playerId)return '';
+  const plans=getSecondaryMissionIntelligence(state,{playerId})
+    .filter(card=>card.verified&&card.eligibleNow&&card.action);
+  if(!plans.length)return '';
+  return `<details data-secondary-shooting-intelligence>
+    <summary>Secondary Actions · ${plans.length} active</summary>
+    ${plans.map(card=>`<p><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(card.action)}
+      <small>${escapeHtml(card.advice)} Scoring is recorded manually at ${escapeHtml(card.timingLabels.join(' / ')||'the mission checkpoint')}.</small></p>`).join('')}
+    <small>Use the printed Action rules on the tabletop. This reminder is not an Action recording control and does not consume an activation or award VP.</small>
+  </details>`;
 }
 
 export function createShootingScreen(container, {
@@ -251,6 +265,7 @@ export function createShootingScreen(container, {
             ${activeActivation ? renderTargetDefenseReminders(state, {targetUnitId:selectedTargetId,allocationTargetId:precisionAllocationId,attackerId:selectedAttackerId,weapon:selectedWeapon,phase:'shooting',viewingPlayerId}) : ''}
             ${state.phase === 'shooting' ? renderUnitRulesReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,includeStratagems:false,livePanel:true}) : ''}
             ${phaseNotice}
+            ${!incomingAttackMode && state.phase === 'shooting' ? renderSecondaryShootingIntelligence(state,model.activePlayerId) : ''}
             ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
             ${pendingUnit ? `<div class="shoot-tabletop__action-choice">
               <button type="button" data-choice-shoot ${actionOnly.some((unit) => unit.unitId === pendingUnitId) ? "disabled" : ""}>Shoot</button>
