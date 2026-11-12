@@ -228,3 +228,31 @@ test('the opponent Movement Advisor surfaces opponent-turn Secondary reviews as 
  assert.match(html,/Defend Stronghold/);
  assert.match(html,/Confirm the printed conditions and VP/);
 });
+
+test('Plunder stages to a real terrain ID and stops proposing another action after use this turn',async()=>{
+ const {getSecondaryPositionalPlanningOptions}=await import('../../src/rules/secondary-positioning-plans.js');
+ const s=seed();add(s,'secondary-plunder');
+ let plan=getSecondaryPositionalPlanningOptions(s,{playerId:'p1',unit:s.units[0],movement:6})
+   .find(item=>item.purpose==='stage-plunder-terrain');
+ assert.ok(plan,'an actual Event Companion terrain staging option exists');
+ assert.match(plan.locationLabel,/Terrain T\d+/);
+ assert.match(plan.actionHint,/entire terrain area is outside your territory/);
+ s.history.push({type:'shooting.unit_activated',payload:{
+   playerId:'p1',missionDefinitionId:'secondary-plunder',missionInstanceId:'p1:secondary-plunder',
+   round:3,turn:3,unitId:'mover',actionCompletedImmediately:true,terrainAreaId:plan.terrainAreaId
+ }});
+ plan=getSecondaryPositionalPlanningOptions(s,{playerId:'p1',unit:s.units[0],movement:6})
+   .find(item=>item.purpose==='stage-plunder-terrain');
+ assert.equal(plan,undefined,'Plunder is once per turn');
+});
+
+test('a Cleanse objective already used this turn does not receive additional staging bonus',()=>{
+ const s=seed();add(s,'secondary-cleanse');
+ assert.ok(signal(s,'Central 2').score>0);
+ s.history.push({type:'shooting.unit_activated',payload:{
+   playerId:'p1',missionDefinitionId:'secondary-cleanse',round:3,turn:3,
+   objectiveId:'event-companion:Central 2',unitId:'ally'
+ }});
+ assert.equal(signal(s,'Central 2').score,0);
+ assert.ok(signal(s,'Central 1').score>0);
+});
