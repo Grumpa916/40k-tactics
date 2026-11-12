@@ -1,6 +1,7 @@
 import { SPACE_MARINES_DATASHEET_DATA } from './space-marines-datasheet-data.js';
 import { SPACE_MARINES_SUPPLEMENTAL_DATASHEETS } from './space-marines-supplemental-datasheets.js';
 import { SPACE_MARINES_MFM_PRICE_OPTIONS, SPACE_MARINES_MFM_PRICE_SOURCES } from './space-marines-mfm-price-options.js';
+import { PRICE_RECONCILIATION_SOURCES } from './mfm-points-independent-reconciliation-20261112.js';
 import { applyReviewedSpaceMarineCharacteristics } from './space-marines-codex-characteristics.js';
 import { applyReviewedSpaceMarineWargearProfiles } from './space-marines-reviewed-combat-profiles.js';
 import { addReviewedUltramarinesAttachmentMetadata } from './space-marines-ultramarines-attachments.js';
@@ -44,9 +45,14 @@ export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, poin
  sourceName: 'Warhammer App export supplied for 40K Tactics Space Marines expansion',
  sourceUrl: 'https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/',
  verificationStatus: 'points-reviewed',
+ independentDefaultPriceReviewAt: PRICE_RECONCILIATION_SOURCES.independentSnapshotDate,
+ officialMfmSourceUrl: PRICE_RECONCILIATION_SOURCES.gwSpaceMarines,
+ officialPointsCrossCheck: 'pending-direct-current-mfm-read',
+ pointsSourceName: 'Independent 8 Nov 2026 benchmark; direct GW 14 Oct MFM row verification pending',
+ pointsSourceUrl: PRICE_RECONCILIATION_SOURCES.independentSpaceMarines,
  ...(reviewedOptions ? {
-   pointsSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
-   pointsSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
+   extraTierPriceSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
+   extraTierPriceSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
    pointsReviewedAt: SPACE_MARINES_MFM_PRICE_SOURCES.sourceReviewDate,
    officialPointsCrossCheck: 'pending-direct-current-mfm-read'
  } : {}),
