@@ -54,7 +54,7 @@ test('Command Tempting Target choices use the actual map C2 and mE names, not ra
   assert.doesNotMatch(container.innerHTML,new RegExp('<option value="'+myExpansion.id+'">Center 2'));
   state.scoring.secondaryMissions[0].cardState.temptingTargetObjectiveId=c2.id;
   screen.render();
-  assert.match(container.innerHTML,/Opponent selected target:<\\/strong> Center 2 \\(C2\\) \\(locked for this card\\)/);
+  assert.match(container.innerHTML,/Opponent selected target:<\/strong> Center 2 \(C2\) \(locked for this card\)/);
   screen.destroy();
 });
 
@@ -82,7 +82,7 @@ test('Movement Mission context explicitly displays the saved on-map target; no a
     state.scoring.secondaryMissions[0].cardState.temptingTargetObjectiveId=id;
     return renderMovementAdvisor(state,{playerId:'p1',selectedUnitId:'mover',perspectivePlayerId:'p1'});
   };
-  assert.match(htmlFor(myExpansion.id),/Recorded target: My Expansion \\(mE\\)/);
-  assert.match(htmlFor(c2.id),/Recorded target: Center 2 \\(C2\\)/);
+  assert.match(htmlFor(myExpansion.id),/Recorded target: My Expansion \(mE\)/);
+  assert.match(htmlFor(c2.id),/Recorded target: Center 2 \(C2\)/);
   assert.equal(state.scoring.secondaryMissions[0].definitionId,definition.id);
 });
