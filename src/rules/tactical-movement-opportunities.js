@@ -8,6 +8,7 @@ import { getTargetStrategicContext } from "./tactical-target-context.js";
 import { getPrimaryStrategyContext, getPrimaryObjectiveStrategySignal } from "./tactical-primary-strategy.js";
 import { getLiveUnitPosition, getSpatialContext } from "./spatial-context.js";
 import { getTerritoryStatusForPosition } from "./battlefield-territory.js";
+import { getSecondaryPositionalPlanningOptions } from "./secondary-positioning-plans.js";
 import {
   getSecondaryMissionIntelligence,
   getSecondaryObjectivePlanningSignal,
@@ -316,6 +317,7 @@ function recommendationText(unit, best) {
   if (best.purpose === "enter-ranged-pressure") return `${name}: reposition to bring ${best.targetName} into stronger Shooting pressure.`;
   if (best.purpose === "stage-charge") return `${name}: reposition toward ${best.targetName} to improve the later Charge decision.`;
   if (best.purpose === "preserve-ranged-pressure") return `${name}: preserve pressure on ${best.targetName}; do not move without a better mission or positional gain.`;
+  if (best.locationLabel && best.kind==='position') return `${name}: ${best.actionHint}`;
   if (best.purpose === "pressure-target") return `${name}: reposition toward ${best.targetName}, a strategically valuable enemy unit.`;
   return `${name}: improve board position; no higher-confidence mission or combat route is established yet.`;
 }
@@ -341,11 +343,13 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
     const movement = getBattleUnitMovement(state, unit);
     const oc = getFormationObjectiveContribution(state, unit);
     const weapons = formationWeapons(state, unit);
+    const secondaryPositions=getSecondaryPositionalPlanningOptions(state,{playerId,unit,movement});
     const unitTerritorySignal=getSecondaryTerritoryPlanningSignal(state,{playerId,unit});
     const territory = territoryOptions(state, { playerId, unit, movement, strategy, territorySignal:unitTerritorySignal });
     const candidates = [
       ...objectiveOptions(state, { playerId, perspectivePlayerId, unit, movement, oc, spatial, strategy, missionSignal, primaryStrategy }),
       ...territory,
+      ...secondaryPositions,
       ...targetOptions(state, { playerId, unit, movement, spatial, weapons }),
       fallbackOption(unit, movement, strategy)
     ].sort((a, b) => b.score - a.score || a.kind.localeCompare(b.kind));
@@ -369,6 +373,8 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
       targetUnitId: best.targetUnitId ?? null,
       targetName: best.targetName ?? null,
       territoryTarget: best.territoryTarget ?? null,
+      locationLabel:best.locationLabel??null,
+      targetPosition:best.targetPosition??null,
       distance: best.distance ?? null,
       strategicContext: best.strategicContext ?? null,
       primaryStrategySignal: best.primaryStrategySignal ?? null,
