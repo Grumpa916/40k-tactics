@@ -42,7 +42,19 @@ export const OFFICIAL_RULES_SOURCE_INDEX = Object.freeze({
       status:"publication-listed-data-not-fully-rechecked"
     }),
     custodes: Object.freeze({ name:"Adeptus Custodes", updatedAt:"2026-10-14", status:"publication-listed" }),
-    tyranids: Object.freeze({ name:"Faction Pack: Tyranids", updatedAt:"2026-10-14", status:"publication-listed" }),
+    tyranids: Object.freeze({
+      name:"Faction Pack: Tyranids",updatedAt:"2026-10-14",version:"1.3",
+      url:"https://assets.warhammer-community.com/eng_14-10_wh40k_faction_pack_tyranids-an12izciwp-np2hnkcsje.pdf",
+      status:"official-june-field-checks-and-october-secondary-audit",
+      inspectedEarlierDocumentVersion:"11th-edition v1.0 (June 2026)",
+      inspectedEarlierDocumentUrl:"https://assets.warhammer-community.com/eng_09-06_warhammer40000_faction_pack_tyranids-avhhzmcte8-j0kseag7td.pdf",
+      checkedJuneDatasheetFields:6,
+      enhancementCatalog:"34 current entries (30 ordinary Enhancements, 4 Upgrades), Oct 30 third-party source",
+      currentOctoberPackContentCompared:false,
+      currentOctoberMfmPointsFullyCompared:false,
+      fullyCurrentCodexCertified:false,
+      notes:"October PDF over direct fetch size limit; MFM current site returns 403. June primary source checked six datasheets; October enhancements checked against current secondary reference only."
+    }),
     spaceMarines: Object.freeze({ name:"Space Marines", updatedAt:"2026-10-14", status:"publication-listed" }),
     worldChampionships2026: Object.freeze({
       name:"World Championships Rules Updates - November 2026",

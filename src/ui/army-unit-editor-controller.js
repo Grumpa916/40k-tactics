@@ -43,9 +43,10 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
   },
   handleChange(event) {
    const input=event.target;
-   if(!input?.matches?.('[data-wargear-choice], [data-wargear-baseline], [data-wargear-special], [data-wargear-toggle], [data-wargear-combination], [data-unit-upgrade]'))return false;
+   if(!input?.matches?.('[data-wargear-choice], [data-wargear-baseline], [data-wargear-special], [data-wargear-toggle], [data-wargear-combination], [data-unit-upgrade], [data-tyranid-trygon-character]'))return false;
    update(unit=>{
-    if(input.matches('[data-unit-upgrade]')){unit.unitUpgradeDraft=input.value;return;}
+    if(input.matches('[data-tyranid-trygon-character]')){unit.subterraneanCharacterDraft=input.checked;return;}
+     if(input.matches('[data-unit-upgrade]')){unit.unitUpgradeDraft=input.value;return;}
     if(input.matches('[data-wargear-combination]'))unit.builderWargearState=chooseWargearCombination(unit,unit.builderWargearState,input.getAttribute('data-wargear-combination-constraint'),input.getAttribute('data-wargear-combination'));
     else if(input.matches('[data-wargear-choice]'))unit.builderWargearState=chooseWargear(unit,unit.builderWargearState,input.getAttribute('data-wargear-choice'),input.value);
     else if(input.matches('[data-wargear-baseline]'))unit.builderWargearState=chooseWargearBaseline(unit,unit.builderWargearState,input.getAttribute('data-wargear-baseline'),input.value);
@@ -57,7 +58,8 @@ export function createArmyUnitEditorController(container,{getUnit,getRoster,rend
    const unit=draft(existing);capture(unit);
    const selections=readWargearChoiceState(unit,unit.builderWargearState);
    const selectedUpgrade=unit.unitUpgradeDraft??getUnitUpgradeNames(existing)[0]??'';
-   const {builderWargearState,unitUpgradeDraft,...result}=unit;
+   const {builderWargearState,unitUpgradeDraft,subterraneanCharacterDraft,...result}=unit;
+   if(subterraneanCharacterDraft!==undefined)result.subterraneanCharacter=subterraneanCharacterDraft;
    if(getBuilderModelCounts(unit).length){
     if(!getBuilderModelCounts(unit).includes(unit.modelCount))throw new Error('Choose a published unit size.');
     const price=resolveBuilderUnitCost(unit,getRoster(),selections??unit.equippedWargear);

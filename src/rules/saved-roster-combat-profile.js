@@ -1,6 +1,7 @@
 import { weaponAbilityCharacteristics } from './weapon-ability-characteristics.js';
 import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
+import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getLiveSelectionQuantity } from './live-casualty-loadout.js';
@@ -33,6 +34,23 @@ function applyMementoToProfile(weapon,enabled) {
       attacks:plusOne(weapon.characteristics.attacks),
       strength:plusOne(weapon.characteristics.strength),
       damage:plusOne(weapon.characteristics.damage)}
+  };
+}
+function applyTrygonPrimeToProfile(weapon,enabled){
+  if(!enabled||weapon.type!=='melee')return weapon;
+  const c=weapon.characteristics??{};
+  return {...weapon,unitUpgrades:['Trygon Prime'],characteristics:{
+    ...c,
+    strength:plusOne(c.strength),
+    ...(Number.isInteger(c.skill)?{skill:Math.max(2,c.skill-1)}:{})
+  }};
+}
+function applyTrygonPrimeToReference(weapon,enabled){
+  if(!enabled||String(weapon?.range??'').toLowerCase()!=='melee')return weapon;
+  const skill=String(weapon.skill??'').match(/^([2-6])\+$/);
+  return {...weapon,
+    strength:plusOne(weapon.strength),
+    ...(skill?{skill:Math.max(2,Number(skill[1])-1)+'+'}:{})
   };
 }
 function normalizeWeaponName(value) {
@@ -217,7 +235,9 @@ function resolveEquippedQuantity(state, unit, profileName, loadoutEntry) {
 export function getEquippedWeaponReferences(state, unit, profiles = getBattleUnitDatasheet(state, unit)?.weapons) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit) || isPendingManualLoadout(rosterUnit) || !Array.isArray(profiles)) return [];
-  const memento=getUnitUpgradeNames(rosterUnit).includes('Memento Moritoi');
+  const upgrades=getUnitUpgradeNames(rosterUnit);
+  const memento=upgrades.includes('Memento Moritoi');
+  const trygonPrime=upgrades.includes('Trygon Prime');
   const ruleSet = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const loadout = explicitWeaponLoadout(state, unit) ??
     (ruleSet?.coverageSource === 'local-datasheet-default-weapons'
@@ -231,7 +251,7 @@ export function getEquippedWeaponReferences(state, unit, profiles = getBattleUni
       ? {...weapon,attacks:plusOne(weapon.attacks),strength:plusOne(weapon.strength),
         damage:plusOne(weapon.damage)} : weapon;
     return [{
-      weapon:upgradedWeapon,
+      weapon:applyTrygonPrimeToReference(upgradedWeapon,trygonPrime),
       equippedQuantity: quantity.startingQuantity,
       activeQuantity: quantity.quantityUncertain ? null : quantity.activeQuantity,
       quantityUncertain: quantity.quantityUncertain
@@ -245,7 +265,9 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
-  const memento=getUnitUpgradeNames(rosterUnit).includes('Memento Moritoi');
+  const upgrades=getUnitUpgradeNames(rosterUnit);
+  const memento=upgrades.includes('Memento Moritoi');
+  const trygonPrime=upgrades.includes('Trygon Prime');
   const reviewedRule = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const derivedFixedOnly = reviewedRule?.coverageSource === 'local-datasheet-default-weapons';
   const loadout = isPendingManualLoadout(rosterUnit)
@@ -270,7 +292,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
     const quantity = resolveEquippedQuantity(state, unit, name, loadoutEntry);
     if (quantity.activeQuantity === 0) return [];
     const attacks = weapon?.attacks ?? weapon?.characteristics?.attacks;
-    return [applyMementoToProfile({
+    return [applyTrygonPrimeToProfile(applyMementoToProfile({
       id: `datasheet:${unit.id}:${index}`,
       name,
       type: weaponType,
@@ -287,7 +309,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
         ...(skill == null ? {} : { skill }),
         ...weaponAbilityCharacteristics(weapon?.abilities ?? weapon?.characteristics?.abilities)
       }
-    },memento)];
+    },memento),trygonPrime)];
   });
 }
 
@@ -331,14 +353,34 @@ export function getProbabilisticUnitProfile(state, unit) {
   const ballisticSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "ballisticSkill", ["Ballistic Skill", "ballisticSkill"]));
   const weaponSkill = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "weaponSkill", ["Weapon Skill", "weaponSkill"]));
   const rosterUnit=getBattleRosterUnit(state,unit);
-  const augury=getUnitUpgradeNames(rosterUnit).includes('Augury Uplink');
+  const upgrades=getUnitUpgradeNames(rosterUnit);
+  const chosenDetachments=new Set(getRosterDetachmentNames(state?.armyRosters?.[unit?.ownerId]));
+  const datasheetId=String(rosterUnit?.datasheetId??'').toLowerCase();
+  const warriorId=/^tyranids:(?:tyranid-warriors-with-(?:ranged|melee)-bio-weapons|tyranid-prime-with-lash-whip|winged-tyranid-prime)$/.test(datasheetId);
+  const warriorInvulnerability=chosenDetachments.has('Warrior Bioform Onslaught') && warriorId;
+  const augury=upgrades.includes('Augury Uplink');
   const basicPrevention = parseCombatCharacteristic(firstCombatValue(unit, datasheet, "damagePrevention", ["Feel No Pain", "damagePrevention"]));
-  const damagePrevention=augury?Math.min(basicPrevention??7,5):basicPrevention;
+  const auguryPrevention=augury?Math.min(basicPrevention??7,5):basicPrevention;
+  // Adaptive Biology's 5+ protection is always active. Its conditional 4+
+  // improvement requires a recorded start-of-turn check, not inferred wounds.
+  const damagePrevention=upgrades.includes('Adaptive Biology')?
+    Math.min(auguryPrevention??7,5):auguryPrevention;
+  const upgradedInvulnerableSave=upgrades.includes('Synaptoprescience')
+    ?Math.min(invulnerableSave??7,4)
+    :warriorInvulnerability?Math.min(invulnerableSave??7,5):invulnerableSave;
   const vitals = getLiveUnitVitals(state, unit);
   const keywords = [...new Set([
     ...(Array.isArray(unit?.keywords) ? unit.keywords : []),
     ...(Array.isArray(unit?.profile?.keywords) ? unit.profile.keywords : []),
-    ...(Array.isArray(datasheet?.keywords) ? datasheet.keywords : [])
+    ...(Array.isArray(datasheet?.keywords) ? datasheet.keywords : []),
+    ...(upgrades.includes('Trygon Prime') ? ['Synapse'] : []),
+    ...(chosenDetachments.has('Subterranean Assault') && rosterUnit?.subterraneanCharacter===true
+      && datasheetId==='tyranids:trygon'?['Character']:[]),
+    ...(chosenDetachments.has('Ambush Predators') && [
+      'tyranids:lictor','tyranids:neurolictor','tyranids:deathleaper'
+    ].includes(datasheetId)?['Deep Strike']:[]),
+    ...(chosenDetachments.has('Warrior Bioform Onslaught') && datasheetId.startsWith('tyranids:tyranid-warriors-with-')
+      ?['Battleline','Tyranid Warriors']:[])
   ].map((keyword) => String(keyword).trim()).filter(Boolean))];
 
   return {
@@ -354,7 +396,7 @@ export function getProbabilisticUnitProfile(state, unit) {
       ...(toughness == null ? {} : { toughness }),
       ...(save == null ? {} : { save }),
       ...(damagePrevention == null ? {} : { damagePrevention }),
-      ...(invulnerableSave == null ? {} : { invulnerableSave }),
+      ...(upgradedInvulnerableSave == null ? {} : { invulnerableSave:upgradedInvulnerableSave }),
       ...(ballisticSkill == null ? {} : { ballisticSkill }),
       ...(weaponSkill == null ? {} : { weaponSkill })
     }

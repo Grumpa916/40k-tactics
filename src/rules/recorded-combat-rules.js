@@ -1,4 +1,6 @@
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
+import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
+import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getActiveGuardiansEffects } from './stratagem-use-state.js';
 import { rulesContextKey } from './rules-phase-window.js';
@@ -34,6 +36,32 @@ export function getRecordedCombatRules(state, unit) {
   const members = getCombatFormationMembers(state, root).filter(member => member.status === 'deployed');
   const datasheets = members.map(member => getBattleUnitDatasheet(state, member));
   const effects = rules.filter(rule => datasheets.some(datasheet => matches(datasheet, rule))).map(rule => rule.id);
+  // Unit-wide Tyranid Enhancements apply to the attached formation; effects
+  // worded "bearer" stay on that single model. Do not infer unrecorded
+  // once-per-battle activations or selected target conditions.
+  const unitWideTyranid = new Set([
+    'Ocular Adaptation', 'Parasitic Biomorphology', 'Destabilising Predation'
+  ]);
+  const ownRosterUnit=getBattleRosterUnit(state, unit);
+  const ownerRoster=state?.armyRosters?.[unit?.ownerId];
+  const selectedDetachments=new Set(getRosterDetachmentNames(ownerRoster));
+  const ownId=String(ownRosterUnit?.datasheetId??'').toLowerCase();
+  if(ownId.startsWith('tyranids:')){
+    if(selectedDetachments.has('Subterranean Assault'))
+      effects.push('tyranid-surprise-assault');
+    if(selectedDetachments.has('Ambush Predators') &&
+      ['tyranids:lictor','tyranids:neurolictor'].includes(ownId))
+      effects.push('tyranid-mindhunger');
+  }
+  const ownEnhancements = getUnitUpgradeNames(ownRosterUnit);
+  for (const name of ownEnhancements) effects.push('tyranid-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''));
+  for (const member of members) {
+    for (const name of getUnitUpgradeNames(getBattleRosterUnit(state, member))) {
+      if (!unitWideTyranid.has(name)) continue;
+      const code='tyranid-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      if (!effects.includes(code)) effects.push(code);
+    }
+  }
   const ownDatasheet = getBattleUnitDatasheet(state, unit);
   const rosterUnit = getBattleRosterUnit(state, unit);
   const shield = ADEPTUS_CUSTODES_DATASHEET_DETAILS['adeptus-custodes:shield-captain'].abilities.find(ability => ability.name === 'Praesidium Shield');
