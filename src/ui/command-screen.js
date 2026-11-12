@@ -11,6 +11,7 @@ import { bindLiveMapPositionCorrection } from "./live-map-position-correction.js
 import { renderCombatWorkspace, bindCombatMap } from "./combat-workspace.js";
 import { getCombatFormationRootId } from "../rules/battle-unit-reference.js";
 import { renderCustodesKatahCommandPanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
+import { renderSpaceMarineDoctrinePanel } from './space-marine-doctrines-panel.js';
 import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-stratagem-opportunities.js";
 import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 import { captureViewContinuity } from './view-continuity.js';
@@ -72,6 +73,7 @@ export function createCommandScreen(container, {
   let vpMessage = "";
   let objectiveMessage = "";
   let katahMessage = "";
+  let doctrineMessage = "";
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
@@ -84,8 +86,21 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set], [data-marine-doctrine-use]");
     if (!target || !container.contains(target)) return;
+    if (target.hasAttribute('data-marine-doctrine-use')) {
+      const state=session.getState();
+      const scope=target.getAttribute('data-marine-doctrine-scope')??'army';
+      try {
+        session.dispatch({type:COMMAND_TYPES.RECORD_SPACE_MARINE_DOCTRINE,payload:{
+          playerId:target.getAttribute('data-marine-doctrine-player'),
+          doctrine:target.getAttribute('data-marine-doctrine-use'),scope,
+          ...(scope==='unit'?{unitId:target.getAttribute('data-marine-doctrine-unit'),source:'captain'}:{source:'army'})
+        }});
+        doctrineMessage='Combat Doctrine recorded for round '+(state.battle?.round??'?')+'.';
+      }catch(error){doctrineMessage=error?.message??String(error);}
+      render();return;
+    }
     if (target.hasAttribute("data-vp-undo")) {
       const state = session.getState();
       const award = getLatestUndoableVictoryPointsAward(state);
@@ -795,6 +810,8 @@ export function createCommandScreen(container, {
         mapView,
         controls: commandControls,
         afterRuleReminders: renderCustodesKatahCommandPanel(state, { playerId, unitId: selectedCommandUnitId }) +
+          renderSpaceMarineDoctrinePanel(state,{playerId,unitId:selectedCommandUnitId}) +
+          (doctrineMessage ? '<p role="status">'+escapeHtml(doctrineMessage)+'</p>' : '') +
           (katahMessage ? '<p class="command-katah-error" role="alert">' + escapeHtml(katahMessage) + '</p>' : ''),
         footer: ''
       });
@@ -817,6 +834,8 @@ export function createCommandScreen(container, {
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
       escapeHtml(commandPointsFor(state, playerId)) + '</strong></div></header>' +
       '<p class="command-note">Review command points, objective control and command-phase scoring evidence. Mission scoring remains a table-side decision; the app does not award points automatically.</p>' +
+      renderSpaceMarineDoctrinePanel(state,{playerId}) +
+      (doctrineMessage?'<p role="status">'+escapeHtml(doctrineMessage)+'</p>':'') +
       secondaryMissionManager + secondaryRedrawMarkup +
       '<section><h2>Live battlefield map</h2>' +
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +

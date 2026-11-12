@@ -1,6 +1,7 @@
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
 import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
 import { getSpaceMarineEnhancementDefinitions } from './space-marines-enhancements.js';
+import { getActiveSpaceMarineUnitDoctrines } from './space-marine-doctrines.js';
 import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getActiveGuardiansEffects } from './stratagem-use-state.js';
@@ -48,6 +49,8 @@ export function getRecordedCombatRules(state, unit) {
   const selectedDetachments=new Set(getRosterDetachmentNames(ownerRoster));
   const ownId=String(ownRosterUnit?.datasheetId??'').toLowerCase();
   if(ownId.startsWith('space-marines:')){
+    for(const doctrine of getActiveSpaceMarineUnitDoctrines(state,unit))
+      effects.push('marine-doctrine-'+doctrine);
     const ownKeywords=[...(ownRosterUnit?.datasheet?.keywords??[]),...(ownRosterUnit?.keywords??[])].map(normalized);
     if(selectedDetachments.has('Ironclad Champions') &&
       (ownId.includes('dreadnought')||ownKeywords.includes('dreadnought')))

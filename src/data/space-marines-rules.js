@@ -2,6 +2,7 @@ import {
   SPACE_MARINES_CURRENT_11E_DETACHMENTS,
   SPACE_MARINES_EXPLICIT_LEGENDS_DETACHMENTS
 } from './space-marines-current-detachments.js';
+import {SPACE_MARINES_STRATAGEMS_BY_DETACHMENT} from './space-marines-stratagems.js';
 // Space Marines faction metadata from the current official Faction Pack.
 // Rules text is intentionally summarized here; combat-facing implementation
 // remains a separate, reviewed step.
@@ -77,7 +78,8 @@ const explicitLegends=new Set(SPACE_MARINES_EXPLICIT_LEGENDS_DETACHMENTS);
 export const SPACE_MARINES_DETACHMENTS = Object.freeze([
   ...SPACE_MARINES_CURRENT_11E_DETACHMENTS.map(detachment=>Object.freeze({
     ...detachment,
-    stratagemCatalogStatus:'not-imported',
+    stratagemCatalogStatus:'independently-reviewed-current-11e',
+    stratagems:SPACE_MARINES_STRATAGEMS_BY_DETACHMENT[detachment.name]??Object.freeze([]),
     source: Object.freeze({sourceName:'Independent current 11th-edition Codex transcription',
       sourceUrl:detachment.sourceUrl, officialOctoberPackCompared:false})
   })),

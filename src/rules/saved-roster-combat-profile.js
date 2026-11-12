@@ -2,6 +2,7 @@ import { weaponAbilityCharacteristics } from './weapon-ability-characteristics.j
 import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { getUnitUpgradeNames } from './custodes-unit-upgrades.js';
 import { getSpaceMarineEnhancementDefinitions } from './space-marines-enhancements.js';
+import { getActiveSpaceMarineUnitDoctrines } from './space-marine-doctrines.js';
 import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
@@ -269,6 +270,7 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const upgrades=getUnitUpgradeNames(rosterUnit);
   const memento=upgrades.includes('Memento Moritoi');
   const trygonPrime=upgrades.includes('Trygon Prime');
+  const marineDevastator=getActiveSpaceMarineUnitDoctrines(state,unit).includes('devastator');
   const reviewedRule = getTyranidWargearRuleSet(rosterUnit?.datasheetId);
   const derivedFixedOnly = reviewedRule?.coverageSource === 'local-datasheet-default-weapons';
   const loadout = isPendingManualLoadout(rosterUnit)
@@ -308,7 +310,8 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
         ap: weapon?.ap ?? weapon?.characteristics?.ap ?? 0,
         damage: weapon?.damage ?? weapon?.characteristics?.damage,
         ...(skill == null ? {} : { skill }),
-        ...weaponAbilityCharacteristics(weapon?.abilities ?? weapon?.characteristics?.abilities)
+        ...weaponAbilityCharacteristics(weapon?.abilities ?? weapon?.characteristics?.abilities),
+        ...(!isMelee&&marineDevastator?{assault:true}:{})
       }
     },memento),trygonPrime)];
   });

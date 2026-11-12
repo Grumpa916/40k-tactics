@@ -82,7 +82,9 @@ test('October 14 independent errata transcription conditions Lone Operative on t
  const tech=t.datasheet.abilities.find(a=>a.name==='Techmarine')?.description??'';
  const father=f.datasheet.abilities.find(a=>a.name==='Iron Father')?.description??'';
  assert.match(tech,/Lone Operative while within 3 inches of friendly ADEPTUS ASTARTES VEHICLE/);
- assert.match(father,/Lone Operative only within 3 inches of friendly Astartes Vehicle/);
+ assert.match(father,/this model/i);
+ assert.match(father,/Lone Operative/);
+ assert.match(father,/within 3 inches of a friendly ADEPTUS ASTARTES VEHICLE/);
 });
 test('Cato Sicarius currently matches independently transcribed Oct-14 sword amendments without claiming direct GW certification',()=>{
  const c=find('Cato Sicarius');

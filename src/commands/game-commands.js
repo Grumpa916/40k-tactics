@@ -39,6 +39,8 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE: "custodes.record_detachment_stratagem_use",
   SET_UNIT_BATTLE_NOTE: "unit.set_battle_note",
   RECORD_CUSTODES_KATAH_USE: "custodes.record_katah_use",
+  RECORD_SPACE_MARINE_DOCTRINE: "space_marines.record_doctrine",
+  RECORD_SPACE_MARINE_STRATAGEM_USE: "space_marines.record_stratagem_use",
   RECORD_UNIT_CASUALTY: "unit.record_casualty",
   UNDO_UNIT_CASUALTY: "unit.undo_casualty",
   ADJUST_UNIT_WOUNDS: "unit.adjust_wounds",
