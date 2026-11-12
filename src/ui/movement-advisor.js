@@ -1,7 +1,7 @@
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { getMovementStrategicRecommendations } from "../rules/tactical-movement-router.js";
 import { getPrimaryStrategyContext } from "../rules/tactical-primary-strategy-router.js";
-import { liveMapObjectiveLabel } from '../rules/objective-display-labels.js';
+import { liveMapObjectiveLabel, objectivePickerLabel } from '../rules/objective-display-labels.js';
 import { getOpponentTurnDefensiveContext, isOpponentTurnFor } from "../rules/tactical-opponent-turn.js";
 import { getSecondaryMissionIntelligence } from "../rules/secondary-mission-intelligence.js";
 
@@ -204,9 +204,10 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     ? '<ul>'+secondaryPlans.map(card => {
         const timing=card.timingLabels.length ? card.timingLabels.join(' / ') : 'Confirm scoring window';
         const blockers=card.choicePending?' Required When Drawn choice not yet recorded.':'';
+        const target=card.selectedObjectiveId?` Recorded target: ${objectivePickerLabel(state,card.selectedObjectiveId,perspectivePlayerId)}.`:'';
         const action=card.action?` ${card.action}; scoring remains manual.`:'';
         const guard=card.guarding?.length?` ${card.guarding.length} guard assignment(s) recorded.`:'';
-        return `<li><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(timing)}<small class="movement-advisor__secondary-advice">${escapeHtml(card.advice+blockers+action+guard)}</small></li>`;
+        return `<li><strong>${escapeHtml(card.name)}</strong> · ${escapeHtml(timing)}<small class="movement-advisor__secondary-advice">${escapeHtml(card.advice+target+blockers+action+guard)}</small></li>`;
       }).join('')+'</ul>'
     : '<p>No active Secondary mission cards recorded.</p>';
   const priorities = context.recommendations;
