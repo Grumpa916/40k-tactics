@@ -193,3 +193,38 @@ test('Movement UI shows card-specific scoring windows and Shooting preserves man
  const checkpoint=readFileSync(new URL('../../src/ui/scoring-checkpoint-review.js',import.meta.url),'utf8');
  assert.match(checkpoint,/All 18 Secondary card faces were checked/);
 });
+
+test('Centre Ground and quarter/edge secondaries produce specific physical-check movement options',async()=>{
+ const {getSecondaryPositionalPlanningOptions}=await import('../../src/rules/secondary-positioning-plans.js');
+ const cases=[
+  ['secondary-centre-ground','stage-centre-ground','battlefield centre'],
+  ['secondary-behind-enemy-lines','stage-enemy-deployment','deployment zone'],
+  ['secondary-display-of-might','stage-no-mans-land','No Man'],
+  ['secondary-engage-on-all-fronts','stage-empty-quarter','quarter'],
+  ['secondary-outflank','stage-outflank-edge','edge']
+ ];
+ for(const [id,purpose,text] of cases){
+   const s=seed();add(s,id);
+   const options=getSecondaryPositionalPlanningOptions(s,{playerId:'p1',unit:s.units[0],movement:6});
+   const option=options.find(candidate=>candidate.purpose===purpose);
+   assert.ok(option,id+' has its own positioning option');
+   assert.match(option.actionHint,new RegExp(text,'i'));
+   assert.equal(option.confidence,'low','map advisory cannot claim whole-unit legality');
+   assert.ok(option.score>0 && option.score<0.8);
+   s.units[0].battleShocked=true;
+   assert.equal(getSecondaryPositionalPlanningOptions(s,{playerId:'p1',unit:s.units[0],movement:6}).length,0,
+     id+' should not stage a Battle-shocked unit as mission-eligible');
+ }
+});
+
+test('the opponent Movement Advisor surfaces opponent-turn Secondary reviews as defensive reminders',()=>{
+ const s=seed();
+ add(s,'secondary-beacon',{cardState:{beaconUnitId:'mover'}});
+ add(s,'secondary-defend-stronghold');
+ s.activePlayer='p2';s.battle.activePlayerId='p2';
+ const html=renderMovementAdvisor(s,{playerId:'p2',perspectivePlayerId:'p1'});
+ assert.match(html,/data-secondary-opponent-turn-intelligence/);
+ assert.match(html,/Beacon/);
+ assert.match(html,/Defend Stronghold/);
+ assert.match(html,/Confirm the printed conditions and VP/);
+});
