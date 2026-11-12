@@ -99,7 +99,7 @@ export const ARMY_UNIT_CATALOG = Object.freeze([
       // The official 14-Oct MFM publication date is known, but the current
       // MFM price rows could not be directly retrieved (403). Distinguish
       // the November independently reconciled prices from official authority.
-      pointsSourceName: "11e independent price cross-check (8 Nov 2026); GW 14 Oct MFM pending",
+      pointsSourceName: "11e independent price cross-check (8 Nov 2026); GW MFM updated 14/10/2026 — numeric rows pending",
       pointsSourceUrl: PRICE_RECONCILIATION_SOURCES.independentTyranids,
       officialMfmSourceUrl: PRICE_RECONCILIATION_SOURCES.gwTyranids,
       officialPointsCrossCheck: "pending-direct-current-mfm-read",
