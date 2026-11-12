@@ -86,7 +86,7 @@ const BY_FACTION = Object.freeze({
     }),
     points: Object.freeze({
       name: "Warhammer App export supplied for 40K Tactics Space Marines expansion",
-      revision: "2026-10-23", revisionLabel: "export points; 87 independently reconciled; official MFM cross-check pending",
+      revision: "2026-10-23", revisionLabel: "export points; official MFM cross-check pending",
       sourceUrl: "https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/",
       benchmarkDate: "2026-11-08",
       independentlyComparedDefaultRows: 87,
