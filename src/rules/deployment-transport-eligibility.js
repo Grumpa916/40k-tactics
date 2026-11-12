@@ -72,7 +72,7 @@ function footprint(state,passenger,profile) {
     if(disallowed)return {reason:modelUnit.name+' has excluded keyword '+disallowed+'.'};
     const n=count(state,modelUnit);
     if(n===null)return {reason:'Model count is unknown for '+modelUnit.name+'; verify its datasheet before embarking.'};
-    const cost=mounted ? profile.mounted : profile.double.some(word=>has(k,word))?2:1;
+    const cost=mounted ? profile.mounted : (profile.double??[]).some(word=>has(k,word))?2:1;
     space+=n*cost;
   }
   return {space};
