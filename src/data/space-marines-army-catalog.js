@@ -51,8 +51,8 @@ export const SPACE_MARINES_ARMY_CATALOG = Object.freeze(entries.map(([name, poin
  pointsSourceName: 'Independent 8 Nov 2026 benchmark; direct GW 14 Oct MFM row verification pending',
  pointsSourceUrl: PRICE_RECONCILIATION_SOURCES.independentSpaceMarines,
  ...(reviewedOptions ? {
-   extraTierPriceSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
-   extraTierPriceSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
+   pointsSourceName: 'October 2026 Space Marines MFM pricing: independent transcription cross-check',
+   pointsSourceUrl: SPACE_MARINES_MFM_PRICE_SOURCES.independentPriceReview,
    pointsReviewedAt: SPACE_MARINES_MFM_PRICE_SOURCES.sourceReviewDate,
    officialPointsCrossCheck: 'pending-direct-current-mfm-read'
  } : {}),
