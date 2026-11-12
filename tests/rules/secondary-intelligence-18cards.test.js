@@ -77,7 +77,7 @@ test('all 18 physical secondary cards have explicit verified intelligence and va
       assert.ok(window.tiers.every(tier=>typeof tier.summary==='string'&&tier.summary.length>0));
     }
     const state=seed();
-    add(state,card.id,{mode:card.fixedEligible?'fixed':'tactical'});
+    add(state,card.id,{mode:card.fixedAvailable?'fixed':'tactical'});
     const [plan]=getSecondaryMissionIntelligence(state,{playerId:'p1'});
     assert.equal(plan.definitionId,card.id);
     assert.ok(plan.verified,card.id+' has current-mode scoring window');
