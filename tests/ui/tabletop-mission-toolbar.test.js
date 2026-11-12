@@ -8,7 +8,7 @@ const styles = fs.readFileSync(new URL("../../src/ui/styles/prototype-workspace.
 
 test("Missions is a visible, labeled control in the tabletop phase toolbar", () => {
   assert.match(shell, /layoutMode !== "tabletop" && PHASES\.some/);
-  assert.match(shell, /renderPrototypeWorkspaceTools\(\{ missionReviewOpen \}\)/);
+  assert.match(shell, /renderPrototypeWorkspaceTools\(\{ missionReviewOpen, appTheme \}\)/);
   assert.match(workspace, /prototype-missions-button[^>]*data-toggle-mission-review/);
   assert.match(workspace, /Missions<\/button>/);
   assert.match(workspace, /all-phase-unit-drawer-1/);

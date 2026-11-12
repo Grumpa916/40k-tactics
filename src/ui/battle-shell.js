@@ -31,6 +31,7 @@ import {
   renderStatusSummaryContent
 } from "./battle-shell-scoreboard.js";
 import { setupContinueLabel, setupTabLabel, setupScreenOwnsContinue } from "./setup-navigation-labels.js";
+import { readAppTheme, saveAppTheme, nextAppTheme, renderAppThemeToggle, applyAppThemeToShell } from './app-theme-preference.js';
 
 
 function escapeHtml(value) {
@@ -63,7 +64,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   scoreAdjustPlayerId = null,
   scoreAdjustCollapsed = false,
   scoreAdjustMessage = "",
-  scoreAdjustKind = "both"
+  scoreAdjustKind = "both",
+  appTheme = "custodes"
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -83,7 +85,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     open: missionReviewOpen
   });
 
-  if (layoutMode !== 'tabletop') phaseItems += '<li class="battle-phase"><button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button></li>';
+  if (layoutMode !== 'tabletop') phaseItems += '<li class="battle-phase"><button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button></li>' +
+    '<li class="battle-phase battle-phase--theme">' + renderAppThemeToggle(appTheme) + '</li>';
 
   const statusSummary = '<section class="battle-shell__status-summary" data-battle-status-summary aria-label="Persistent score and Command Points">' +
     renderStatusSummaryContent(state, viewedPhase, clockPanelOpen) + '</section>';
@@ -144,9 +147,9 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
       statusSummary + layoutSwitch;
 
   const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen, openStates: missionOpenStates });
-  container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '">' + reminderMarkup +
+  container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '" data-app-theme="' + appTheme + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div><div data-rules-reminder-host></div>' +
-    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen }) : "") +
+    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen, appTheme }) : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase, '', phaseProgressionOwned) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
@@ -159,6 +162,7 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
           ? '<section class="battle-shell__setup-tools" aria-label="Army Builder and cloud battle saves">' +
             '<section data-setup-workspace-panel="saves"' + (setupWorkspaceTab === "saves" ? '' : ' hidden') + '><h2>Account &amp; Cloud Saves</h2>' +
             '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
+            '<div class="setup-appearance-pref"><span>App colors</span>' + renderAppThemeToggle(appTheme) + '</div>' +
             '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' +
             '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section>' +
             '<section data-setup-workspace-panel="army-selection"' + (setupWorkspaceTab === "army-selection" ? '' : ' hidden') + '><div data-army-selection-panel></div></section></section>'
@@ -216,6 +220,7 @@ export function createBattleShell(container, {
   let reminderSequence = 0;
   let leftPanelCollapsed = true;
   let rightPanelCollapsed = false;
+  let appTheme = readAppTheme();
   const prototypeWorkspace = createPrototypeWorkspace(container, { session, gameData });
   const rulesReminders = createRulesReminderController(container, {session, perspectivePlayerId});
   const decisionReminders = createBattleDecisionReminderController(container, {
@@ -413,7 +418,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind, selectedUnitId: unitSelection.get(state)
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind, selectedUnitId: unitSelection.get(state), appTheme
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
@@ -816,6 +821,16 @@ export function createBattleShell(container, {
     render();
   }
 
+  function handleAppThemeToggle(event) {
+    const button = event.target?.closest?.('[data-app-theme-toggle]');
+    if (!button || !container.contains(button)) return;
+    appTheme = saveAppTheme(nextAppTheme(appTheme));
+    applyAppThemeToShell(container, appTheme);
+    // The switch only changes presentation. Do not rerender the battle, clear
+    // map selections, scroll the right panel, or dispatch a game command.
+  }
+
+  container.addEventListener?.("click", handleAppThemeToggle);
   container.addEventListener?.("click", handleMissionSummaryToggle);
   container.addEventListener?.("click", handleScoreAdjust);
   container.addEventListener?.("click", handleMapObjectiveToggle);

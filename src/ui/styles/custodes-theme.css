@@ -1,0 +1,285 @@
+/*
+ * 40K Tactics — Custodes-inspired visual skin.
+ * Pure CSS: no map geometry, phase gating, click targets, scoring or
+ * live-battle state is changed by this theme.
+ * The Classic palette remains untouched when data-app-theme="classic".
+ */
+.battle-shell[data-app-theme="custodes"] {
+  --custodes-night:#101013;
+  --custodes-panel:#1c1a1a;
+  --custodes-deep:#251e1d;
+  --custodes-line:#927147;
+  --custodes-gold:#dfb970;
+  --custodes-gold-light:#f5dda3;
+  --custodes-ivory:#f4e9d3;
+  --custodes-ink:#261d1a;
+  --custodes-red:#671d28;
+  --custodes-red-light:#8c313a;
+  --custodes-text:#f8f0de;
+  --custodes-muted:#d5c3a5;
+  --prototype-bg:var(--custodes-night);
+  --prototype-panel:var(--custodes-panel);
+  --prototype-line:var(--custodes-line);
+  --prototype-accent:var(--custodes-gold);
+  color-scheme:dark;
+  background:
+    radial-gradient(ellipse at 50% -26%, rgba(123,32,39,.2),transparent 44%),
+    var(--custodes-night);
+  color:var(--custodes-text);
+}
+
+/* Thin ceremonial gold edging is intentionally only a few pixels high:
+   no new header band, reduced map area, or extra scroll is introduced. */
+.battle-shell[data-app-theme="custodes"] .battle-shell__tabletop-header,
+.battle-shell[data-app-theme="custodes"] .prototype-workspace-tools {
+  border-top:2px solid var(--custodes-gold);
+  box-shadow:inset 0 1px 0 rgba(255,238,190,.23);
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__status-summary,
+.battle-shell[data-app-theme="custodes"] .battle-shell__army-dock,
+.battle-shell[data-app-theme="custodes"] .battle-shell__side-panel,
+.battle-shell[data-app-theme="custodes"] .battle-shell__setup-bottom-nav {
+  background:linear-gradient(160deg,#292021,var(--custodes-panel) 64%);
+  border-color:var(--custodes-line);
+  color:var(--custodes-text);
+  box-shadow:inset 0 1px 0 rgba(245,221,163,.09);
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__player-summary,
+.battle-shell[data-app-theme="custodes"] .battle-mission-summary__section {
+  background:#252120;
+  border-color:#94744e;
+  color:var(--custodes-text);
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__player-summary.is-active {
+  background:linear-gradient(#f4dfad,#d9ad60);
+  border-color:#ffe5a4;
+  color:#281a12;
+  box-shadow:inset 0 1px 0 #fff2c7,0 0 0 1px #9e7134;
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__player-summary.is-active :is(strong,span,small) {
+  color:#281a12;
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__summary-value,
+.battle-shell[data-app-theme="custodes"] .battle-shell__summary-time {
+  border-color:#8b6e49;
+  background:#161616;
+  color:var(--custodes-gold-light);
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__player-summary.is-active :is(.battle-shell__summary-value,.battle-shell__summary-time) {
+  background:#f5e9cb;
+  border-color:#b98b48;
+  color:var(--custodes-ink);
+}
+
+/* Command / Movement / Shooting / Charge / Fight navigation. */
+.battle-shell[data-app-theme="custodes"] .battle-phase,
+.battle-shell[data-app-theme="custodes"] .prototype-phase-menu > summary {
+  border-color:#9f7b49;
+  background:#1a1919;
+}
+.battle-shell[data-app-theme="custodes"] .battle-phase__button,
+.battle-shell[data-app-theme="custodes"] .prototype-phase-chips button,
+.battle-shell[data-app-theme="custodes"] .prototype-phase-row > button,
+.battle-shell[data-app-theme="custodes"] .prototype-phase-menu > summary,
+.battle-shell[data-app-theme="custodes"] .prototype-phase-menu > div,
+.battle-shell[data-app-theme="custodes"] .prototype-workspace-tools > button {
+  background:linear-gradient(180deg,#302523,#191819);
+  border-color:#9e7c4d;
+  color:var(--custodes-text);
+}
+.battle-shell[data-app-theme="custodes"] .battle-phase.is-active .battle-phase__button,
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"][data-battle-focus="true"] .prototype-phase-chips button[aria-pressed="true"] {
+  background:linear-gradient(180deg,#fff0be,#dca84b) !important;
+  border-color:#ffe29a !important;
+  color:#291b14 !important;
+  box-shadow:inset 0 1px 0 #fff7d8,0 0 0 1px #a67635;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"][data-battle-focus="true"] .prototype-missions-button {
+  background:#392225;
+  color:var(--custodes-gold-light);
+  border-color:#b7864c;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"][data-battle-focus="true"] .prototype-missions-button[aria-expanded="true"] {
+  background:var(--custodes-gold);
+  color:var(--custodes-ink);
+}
+.battle-shell[data-app-theme="custodes"] .prototype-phase-menu > div {
+  border:1px solid #b58c55;
+  box-shadow:0 12px 25px #000a;
+}
+
+/* A reversible, low-profile preference inside the existing More tools menu. */
+.battle-shell[data-app-theme] .app-theme-toggle {
+  min-height:44px;
+  min-width:110px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #a88751;
+  font:inherit;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.battle-shell[data-app-theme="custodes"] .app-theme-toggle {
+  color:#f9e8c7;
+  border-color:#c29a5c;
+  background:linear-gradient(180deg,#5c252b,#381c20);
+}
+.battle-shell[data-app-theme="custodes"] .app-theme-toggle:focus-visible {
+  outline:3px solid #fff0b8;outline-offset:2px;
+}
+.battle-shell[data-app-theme="classic"] .app-theme-toggle {
+  background:#24323b;color:#f1f3e9;border-color:#60737e;
+}
+.battle-shell[data-app-theme] .setup-appearance-pref {
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  margin:10px 0;padding:8px 10px;
+  border:1px solid #7f6950;border-radius:9px;
+}
+.battle-shell[data-app-theme="custodes"] .setup-appearance-pref {
+  background:#251f1e;color:var(--custodes-text);
+}
+.battle-shell[data-app-theme] .setup-appearance-pref > span {font-size:13px;font-weight:750;}
+.battle-shell[data-app-theme="custodes"] .battle-shell__setup-tabs button[aria-pressed="true"] {
+  background:#f4dfac;border-color:#d6a852;color:var(--custodes-ink);
+}
+.battle-shell[data-app-theme="custodes"] .battle-shell__setup-bottom-nav button:not(:disabled) {
+  background:#64212a;border-color:#e0b673;color:#fff1d8;
+}
+
+/* Frame the map without altering battlefield geometry, objective-control
+   coding, player unit colors, hitboxes or drag gesture behavior. */
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] :is(.shoot-tabletop__map-panel,.combat-workspace__map,.combat-workspace__rail,.shoot-tabletop__control-panel,.combat-workspace__panel) {
+  background:var(--custodes-panel);
+  border:1px solid #ac854e;
+  box-shadow:inset 0 1px 0 #f3cd7c30;
+}
+.battle-shell[data-app-theme="custodes"] .live-map__viewport {
+  border-color:#9b8055;
+}
+.battle-shell[data-app-theme="custodes"] .live-map :is(.battlefield-map__unit.is-selected,.battlefield-map__unit.is-targeted) {
+  outline-color:#ffe39a;
+}
+.battle-shell[data-app-theme="custodes"] .live-map__tools > button,
+.battle-shell[data-app-theme="custodes"] .live-map__tools > details > summary,
+.battle-shell[data-app-theme="custodes"] .live-map__tools > select,
+.battle-shell[data-app-theme="custodes"] .live-map__tools > input {
+  background:#282322;
+  color:var(--custodes-text);
+  border-color:#977952;
+}
+.battle-shell[data-app-theme="custodes"] .live-map__tools :is(button,summary)[aria-pressed="true"] {
+  background:#f2d99c;
+  border-color:#eec374;
+  color:#2d2017;
+}
+.battle-shell[data-app-theme="custodes"] .live-map__tools button:focus-visible {
+  outline:3px solid #ffe5a4;outline-offset:2px;
+}
+
+/* Phase controls: charcoal surfaces, gold outline, parchment reading cards. */
+.battle-shell[data-app-theme="custodes"] .combat-workspace__scroll,
+.battle-shell[data-app-theme="custodes"] .shoot-tabletop__control-scroll {
+  background:linear-gradient(180deg,#221e1e,#1b191a);
+  color:var(--custodes-text);
+}
+.battle-shell[data-app-theme="custodes"] .combat-workspace__card,
+.battle-shell[data-app-theme="custodes"] .combat-workspace__active-status,
+.battle-shell[data-app-theme="custodes"] .combat-workspace__top-controls,
+.battle-shell[data-app-theme="custodes"] .command-tabletop-section,
+.battle-shell[data-app-theme="custodes"] .battle-context__section {
+  background:#2b2421;
+  border-color:#94764c;
+  color:var(--custodes-text);
+}
+.battle-shell[data-app-theme="custodes"] :is(.combat-workspace__active-status,.battle-context__section,.combat-workspace__card) :is(strong,h2,h3,summary) {
+  color:var(--custodes-text);
+}
+.battle-shell[data-app-theme="custodes"] :is(.combat-workspace__scroll,.shoot-tabletop__control-scroll,.battle-shell__side-panel) :is(button,select,input,textarea) {
+  color:#fff0d6;
+  background:#342727;
+  border-color:#9f7c50;
+}
+.battle-shell[data-app-theme="custodes"] :is(.combat-workspace__scroll,.shoot-tabletop__control-scroll) :is(button,select)[aria-pressed="true"],
+.battle-shell[data-app-theme="custodes"] .prototype-unit-tabs [role="tab"][aria-selected="true"] {
+  background:#e6c486;
+  color:#2c2018;
+  border-color:#ffe1a0;
+}
+.battle-shell[data-app-theme="custodes"] .prototype-unit-tabs [role="tab"][aria-selected="true"] {
+  border-bottom-color:#ffdb89;
+}
+.battle-shell[data-app-theme="custodes"] .combat-workspace__scroll button:focus-visible,
+.battle-shell[data-app-theme="custodes"] .shoot-tabletop__control-scroll button:focus-visible {
+  outline:3px solid #ffe7af;outline-offset:2px;
+}
+.battle-shell[data-app-theme="custodes"] :is(.shoot-tabletop__advisor,.combat-workspace__advisor) {
+  background:linear-gradient(145deg,#faf1dc,#e9d8b6) !important;
+  border:1px solid #bd9353;
+  border-radius:9px;
+  color:var(--custodes-ink);
+  box-shadow:inset 0 1px 0 #fffaf0;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-tabletop__advisor h2,
+.battle-shell[data-app-theme="custodes"] .combat-workspace__advisor :is(h1,h2,h3,strong,small,p,span) {
+  color:var(--custodes-ink);
+}
+.battle-shell[data-app-theme="custodes"] :is(.shoot-tabletop__advisor,.combat-workspace__advisor) :is(button,select) {
+  background:#f4e7c9;
+  border-color:#a67c42;
+  color:var(--custodes-ink);
+}
+.battle-shell[data-app-theme="custodes"] :is(.shoot-tabletop__advisor,.combat-workspace__advisor) :is(.shoot-advisory__details,.fight-advisory__more,.fight-advisory__grid) {
+  border-color:#c29a62;
+}
+
+/* End-phase action: dark crimson and an unmistakable disabled state.
+   Only colors change: never enable an action or move its footer. */
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"][data-battle-focus="true"] .battle-phase-progress button:not(:disabled),
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .combat-workspace__panel footer > button:not(:disabled),
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-tabletop__finish:not(:disabled),
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-tabletop__record:not(:disabled) {
+  background:linear-gradient(180deg,#8a3035,#5b1721) !important;
+  color:#fff2d8 !important;
+  border-color:#ddb06d !important;
+  box-shadow:inset 0 1px 0 rgba(255,216,164,.28);
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"][data-battle-focus="true"] .battle-phase-progress button:disabled {
+  background:#34302e !important;
+  color:#b8afa0 !important;
+  border-color:#716655 !important;
+  opacity:1;
+  box-shadow:none;
+}
+.battle-shell[data-app-theme="custodes"] .combat-workspace__panel footer {
+  background:#201a1b;
+  border-top-color:#a38353;
+}
+.battle-shell[data-app-theme="custodes"] .combat-workspace__error {
+  background:#472027;border-color:#e5a18c;color:#fff0dc;
+}
+
+/* All disabled controls continue to read as disabled, even inside the ivory
+   cards. These selectors do not interfere with their actual disabled attr. */
+.battle-shell[data-app-theme="custodes"] button:disabled,
+.battle-shell[data-app-theme="custodes"] select:disabled {
+  cursor:not-allowed;
+  opacity:.58;
+}
+.battle-shell[data-app-theme="custodes"] :is(button,select,input,summary,[role="button"]):focus-visible {
+  outline:3px solid #ffe4a1;
+  outline-offset:2px;
+}
+
+/* Keep portrait/iPad scroll regions and touch layout intact. */
+@media (max-width:760px), (orientation:portrait) {
+  .battle-shell[data-app-theme="custodes"] .prototype-phase-menu > div {
+    max-width:calc(100vw - 24px);
+    flex-wrap:wrap;
+    white-space:normal;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .battle-shell[data-app-theme="custodes"] * { scroll-behavior:auto; }
+}
