@@ -58,3 +58,65 @@
 .battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__footer .live-action-receipt--compact { display:flex; align-items:center; gap:8px; }
 .shoot-tabletop__footer .live-action-receipt__summary { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .shoot-tabletop__end-review p { margin:4px 0; }
+
+
+/* Compact live selection anchored in the unused left portion of the Shooting
+   map-toolbar row. Never consume vertical map space or intercept drag/taps. */
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .combat-workspace__map {
+  position:relative;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity {
+  position:absolute;
+  top:8px;
+  left:10px;
+  z-index:4;
+  pointer-events:none;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  max-width:46%;
+  min-width:0;
+  padding:3px 5px;
+  border:1px solid #9f8458;
+  border-radius:6px;
+  background:#252124;
+  color:#f9e7c4;
+  font-size:12px;
+  line-height:1.2;
+  box-shadow:0 1px 5px #0006;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item {
+  display:flex;
+  min-width:0;
+  align-items:baseline;
+  gap:4px;
+  overflow:hidden;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item + .shoot-tabletop__map-identity-item {
+  border-left:1px solid #856d4d;
+  padding-left:6px;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item small {
+  flex:none;
+  color:#e8c98e;
+  font-size:10px;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item strong {
+  display:block;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:700;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item:first-child {
+  flex:1 1 auto;
+}
+.battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item:last-child:not(:first-child) {
+  flex:1 1 auto;
+}
+@media(max-width:960px) {
+  .battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity { max-width:36%; }
+  .battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item small { display:none; }
+}

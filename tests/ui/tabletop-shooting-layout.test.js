@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createGameState } from '../../src/state/game-state.js';
 import { createGameSession } from '../../src/application/game-session.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
@@ -375,4 +376,27 @@ test('classic Shooting opens the linked Primary mission picker instead of the le
     assert.match(root.innerHTML, /data-action-rules-confirmed/);
     assert.match(root.innerHTML, /Action requirements met/);
   } finally { screen.destroy(); }
+});
+
+
+test('Shooting map identifies selected unit and target without opening the Units drawer',()=>{
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const session=createGameSession(testState()), root=fakeDom();
+  const screen=createShootingScreen(root,{session,perspectivePlayerId:'p1',gameData});
+  try {
+    assert.doesNotMatch(root.innerHTML,/data-shoot-map-identity/);
+    root.click('[data-map-unit-id]','exo');
+    assert.match(root.innerHTML,/<div class="shoot-tabletop__map-identity" data-shoot-map-identity[^>]*>[\s\S]*?<small>Selected unit<\/small><strong>Exocrine<\/strong>/);
+    root.click('[data-map-unit-id]','marine');
+    assert.match(root.innerHTML,/<small>Target<\/small><strong>Intercessor Squad<\/strong>/);
+    assert.match(root.innerHTML,/<small>Shooter<\/small><strong>Exocrine<\/strong>/);
+    root.click('[data-choice-not-shoot]');
+    assert.doesNotMatch(root.innerHTML,/data-shoot-map-identity/);
+  } finally {screen.destroy();}
+});
+test('selected-unit name is a noninteractive overlay that preserves the full 60:44 map height',()=>{
+  const css=readFileSync(new URL('../../src/ui/styles/shooting-panel.css',import.meta.url),'utf8');
+  assert.match(css,/\.shoot-tabletop__map-identity\s*\{[\s\S]*?position:absolute;/);
+  assert.match(css,/\.shoot-tabletop__map-identity\s*\{[\s\S]*?pointer-events:none;/);
+  assert.match(css,/\.shoot-tabletop__map-identity-item strong\s*\{[\s\S]*?text-overflow:ellipsis;/);
 });
