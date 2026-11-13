@@ -1,7 +1,7 @@
 import { getFightCandidates } from "./fight-candidates.js";
 import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getShootingTargetPriorities } from "./tactical-shooting-targets.js";
-import { getSpatialContext } from "./spatial-context.js";
+import { getSpatialContext, getApproximateChargeMapDistance } from "./spatial-context.js";
 import { getChargeOpportunity } from "./tactical-charge-opportunity.js";
 import { getMovementStrategicRecommendations } from "./tactical-movement-router.js";
 import { getCustodesPhaseRecommendations } from "./custodes-tactical-advisor.js";
@@ -33,12 +33,13 @@ function chargeCandidates(state, { playerId }) {
     if (attacker.status === "destroyed" || target.status === "destroyed") continue;
     if (engagedUnitIds.has(attacker.id)) continue;
 
-    if (proximity.distance > CHARGE_MAX_DISTANCE + CHARGE_RANGE_UNCERTAINTY_MARGIN) continue;
+    const distance = getApproximateChargeMapDistance(state, attacker, target) ?? proximity.distance;
+    if (distance > CHARGE_MAX_DISTANCE + CHARGE_RANGE_UNCERTAINTY_MARGIN) continue;
 
-    const rangeStatus = proximity.distance <= CHARGE_MAX_DISTANCE ? "within" : "borderline";
+    const rangeStatus = distance <= CHARGE_MAX_DISTANCE ? "within" : "borderline";
     const confidence =
       rangeStatus === "borderline" ? "low" :
-      proximity.distance <= 6 ? "high" :
+      distance <= 6 ? "high" :
       "moderate";
     const basePriority = confidence === "high" ? 3 : confidence === "moderate" ? 2 : 1;
 
@@ -48,7 +49,7 @@ function chargeCandidates(state, { playerId }) {
         playerId,
         attackerId: attacker.id,
         targetUnitId: target.id,
-        mapDistance: proximity.distance
+        mapDistance: distance
       });
     } catch {
       opportunity = null;
@@ -63,7 +64,7 @@ function chargeCandidates(state, { playerId }) {
       priority,
       unitId: attacker.id,
       targetUnitId: target.id,
-      targetDistance: proximity.distance,
+      targetDistance: distance,
       targetBand: proximity.band,
       confidence,
       rangeStatus,
