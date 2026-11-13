@@ -152,6 +152,13 @@ test('Command and Movement panel has one-tap disclosure for what-if positions, n
     assert.match(html,/Hold current position/);
     assert.match(html,/Stage toward enemy/);
     assert.match(html,/Straight-line, current marker positions only/);
+    assert.match(html,/data-view-key="early-turn-advisor-limitations"/);
+    const [mainContent, limitationsContent] = html.split('<details class="early-turn-plan__limitations"');
+    assert.ok(limitationsContent, 'assumptions should have a separate, collapsed section');
+    assert.doesNotMatch(mainContent,/Straight-line, current marker positions only|Baseline from current approximate map markers only/);
+    assert.match(limitationsContent,/Straight-line, current marker positions only/);
+    assert.match(limitationsContent,/Baseline from current approximate map markers only/);
+    assert.match(limitationsContent,/^ data-view-key="early-turn-advisor-limitations"><summary>Estimate limitations<\/summary>/);
     assert.doesNotMatch(html,/data-move-save|data-shoot-unit|data-charge-success|data-record-attack|data-award-vp/);
     const workspace=renderCombatWorkspace({state:s,phase,perspectivePlayerId:'p1',
       selectedUnitId:'a',controls:'Recording controls',mapView:{render:()=>'<div class="map">map</div>'}});
