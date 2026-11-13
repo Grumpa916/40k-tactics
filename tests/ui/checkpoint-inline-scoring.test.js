@@ -71,11 +71,11 @@ test('inline form dispatches selected VP and card lifecycle in one command',()=>
   let submit,command;
   const attrs={'data-player':'p1','data-checkpoint':'end-of-turn','data-instance':'card'};
   const form={addEventListener:(event,handler)=>{submit=handler;},getAttribute:name=>attrs[name],querySelector:()=>({value:'4'})};
-  bindCheckpointScores({querySelectorAll:()=>[form]},{getState:seed,dispatch:c=>{command=c;}},message=>assert.fail(message));
+  bindCheckpointScores({querySelectorAll:selector=>selector==='[data-checkpoint-score]'?[form]:[]},{getState:seed,dispatch:c=>{command=c;}},message=>assert.fail(message));
   submit({preventDefault(){}});
   assert.equal(command.type,'secondary_mission.record_score');assert.equal(command.payload.amount,4);assert.equal(command.payload.retireAfterScoring,true);
   let fixed;
-  bindCheckpointScores({querySelectorAll:()=>[form]}, {getState:()=>seed('fixed'),dispatch:c=>{fixed=c;}},message=>assert.fail(message));
+  bindCheckpointScores({querySelectorAll:selector=>selector==='[data-checkpoint-score]'?[form]:[]}, {getState:()=>seed('fixed'),dispatch:c=>{fixed=c;}},message=>assert.fail(message));
   submit({preventDefault(){}});
   assert.equal(fixed.payload.retireAfterScoring,false,'Fixed card must remain active');
 });
