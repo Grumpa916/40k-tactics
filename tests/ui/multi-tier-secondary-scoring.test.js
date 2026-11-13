@@ -92,3 +92,15 @@ test('clicked scoring tier supplies its own VP amount to the scoring action', ()
   assert.equal(dispatched.payload.instanceId, 'defend-card');
   assert.equal(dispatched.payload.retireAfterScoring, true);
 });
+
+
+test('all Secondary score control formats include 0 VP while tier definitions remain positive',()=>{
+  const group={playerId:'p1',checkpoint:'end-of-opponent-turn'};
+  const html=renderCheckpointScore(state(),group,defendStronghold);
+  assert.match(html,/data-vp-option="0"/);
+  assert.match(html,/Confirm 0 VP/);
+  assert.deepEqual(getMissionVpOptions(defendStronghold),[3,5],
+    'the official mission VP tier matrix must not be altered');
+  const single={...defendStronghold,result:{scoringWindows:[{tiers:[{vp:5,summary:'Score 5 VP'}]}]}};
+  assert.match(renderCheckpointScore(state(),group,single),/name="vp" value="0"/);
+});
