@@ -41,6 +41,15 @@ export function getLiveUnitPosition(state, unit) {
   return centroid(unit);
 }
 
+// Only the Charge readout needs 1-inch display steps. Other spatial advice
+// intentionally remains grouped in coarse ~3-inch bands.
+export function getApproximateChargeMapDistance(state, attacker, target) {
+  const first = getLiveUnitPosition(state, attacker);
+  const second = getLiveUnitPosition(state, target);
+  if (!validPosition(first) || !validPosition(second)) return null;
+  return Math.round(Math.hypot(second.x - first.x, second.y - first.y));
+}
+
 function roughDistance(first, second) {
   if (!validPosition(first) || !validPosition(second)) return null;
   const distance = Math.hypot(second.x - first.x, second.y - first.y);

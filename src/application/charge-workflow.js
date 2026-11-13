@@ -3,7 +3,7 @@ import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { executeCommand } from "../engine/command-engine.js";
 import { getTacticalCombatRecommendations } from "../rules/tactical-combat-recommendations.js";
 import { unitDisplayLabels } from "../ui/map-unit-labels.js";
-import { getSpatialContext } from "../rules/spatial-context.js";
+import { getApproximateChargeMapDistance } from "../rules/spatial-context.js";
 import { getFightEngagementState } from "../rules/fight-engagement-state.js";
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 
@@ -36,8 +36,9 @@ function groupRecommendations(state, playerId, perspectivePlayerId) {
   if (state?.phase !== "charge" || !playerId) return [];
   const recommendations = getTacticalCombatRecommendations(state, { playerId }).charge;
   const byUnit = new Map();
-  const nearby = new Map(getSpatialContext(state, { playerId }).unitProximity
-    .map(item => [item.unitId + ":" + item.otherUnitId, item.distance]));
+  // Use 1-inch Charge display estimates instead of the shared 3-inch
+  // tactical range bands. These are still map-centre approximations.
+  const nearby = new Map();
   const engaged = new Set(getFightEngagementState(state).engagedUnitIds);
   const friendly = state.units.filter(unit =>
     unit?.status === "deployed" && unit.ownerId === playerId &&
@@ -48,6 +49,8 @@ function groupRecommendations(state, playerId, perspectivePlayerId) {
 
   for (const unit of friendly) {
     byUnit.set(unit.id, { unit: describeUnit(state, unit.id, perspectivePlayerId), targets: [] });
+    for (const enemy of enemies) nearby.set(unit.id + ":" + enemy.id,
+      getApproximateChargeMapDistance(state,unit,enemy));
   }
   // Range estimates rank advice; they do not decide whether a tabletop-confirmed
   // unit or target may be selected for Charge recording.
@@ -55,6 +58,7 @@ function groupRecommendations(state, playerId, perspectivePlayerId) {
     const candidate = byUnit.get(recommendation.unitId);
     if (candidate) candidate.targets.push({
       ...recommendation,
+      targetDistance: nearby.get(recommendation.unitId + ":" + recommendation.targetUnitId) ?? recommendation.targetDistance,
       target: describeUnit(state, recommendation.targetUnitId, perspectivePlayerId)
     });
   }
