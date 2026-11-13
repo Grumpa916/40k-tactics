@@ -46,8 +46,7 @@ function renderMovementWhatIf(whatIf) {
   }).join('');
   return '<details class="early-turn-plan__what-if" data-view-key="early-turn-movement-what-if">'+
     '<summary>Movement what-if · '+esc(whatIf.options.length)+' positions</summary>'+
-    '<div class="early-turn-plan__what-if-list">'+rows+
-    '<small class="early-turn-plan__caution">'+esc(whatIf.assumptions)+'</small></div></details>';
+    '<div class="early-turn-plan__what-if-list">'+rows+'</div></details>';
 }
 
 export function renderEarlyTurnPlanPanel(state,{selectedUnitId,playerId}={}){
@@ -93,9 +92,15 @@ export function renderEarlyTurnPlanPanel(state,{selectedUnitId,playerId}={}){
       (shot?.objectiveReason?'<p class="early-turn-plan__mission"><strong>Objective context:</strong> '+esc(shot.objectiveReason)+'</p>':'')+
       (plan.alternative?'<p class="early-turn-plan__alternative">Other target to compare: '+esc(plan.alternative.targetName)+'. Confirm weapon and range before committing.</p>':'')+
       renderMovementWhatIf(movementPreview)+
-      '<small class="early-turn-plan__caution">'+esc(plan.assumptions)+
-      (plan.limitedWeapons?' Only up to three saved ranged profiles were sampled.':'')+
-      (plan.loadoutUncertain?' Saved loadout needs review; speculative damage was withheld.':'')+
-      ' This is guidance, not a selected action or a scoring award.</small>'+
+      (plan.loadoutUncertain?'<small class="early-turn-plan__loadout-warning">Saved loadout needs review; speculative damage was withheld.</small>':'')+
+      '<details class="early-turn-plan__limitations" data-view-key="early-turn-advisor-limitations">'+
+        '<summary>Estimate limitations</summary>'+
+        '<div class="early-turn-plan__limitations-body">'+
+          '<p>'+esc(plan.assumptions)+'</p>'+
+          (movementPreview?.available && movementPreview.options?.length>1
+            ?'<p>'+esc(movementPreview.assumptions)+'</p>':'')+
+          (plan.limitedWeapons?'<p>Only up to three saved ranged profiles were sampled.</p>':'')+
+          '<p>Advisory only; viewing an estimate never records a move, action or VP.</p>'+
+        '</div></details>'+
     '</div></details>';
 }
