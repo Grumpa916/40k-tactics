@@ -1,4 +1,4 @@
-import { recordVictoryPointsAward } from "./victory-points-ledger.js";
+import { recordVictoryPointsAward, recordZeroVictoryPointsCheckpoint } from "./victory-points-ledger.js";
 import {
   getSecondaryMissionHistory,
   getSecondaryMissionMode,
@@ -34,6 +34,13 @@ export function recordSecondaryMissionScore(state, {
   }
 
   const opportunityKey = [instanceId, round, turn, ...(scoringTiming ? [scoringTiming] : [])].join(":");
+  if (amount === 0) {
+    return recordZeroVictoryPointsCheckpoint(state, {
+      playerId, amount:0, reason:entry.definition?.name ?? entry.definitionId,
+      missionDefinitionId:entry.definitionId, category:'secondary',
+      opportunityKey, scoringTiming, round, turn
+    });
+  }
   const awarded = recordVictoryPointsAward(state, {
     playerId,
     amount,
