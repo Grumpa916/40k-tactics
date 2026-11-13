@@ -25,3 +25,11 @@
 .early-turn-plan__what-if-row small,.early-turn-plan__what-if-unavailable{font-size:11px;line-height:1.35;color:#c2d1c8}
 .early-turn-plan__what-if-unavailable{margin:4px 0}
 .early-turn-plan__what-if>summary:focus-visible{outline:3px solid #c6e99e;outline-offset:-3px}
+
+/* Methodology remains accessible without occupying the live iPad decision area. */
+.early-turn-plan__limitations{border-top:1px solid #445950;margin-top:1px}
+.early-turn-plan__limitations>summary{min-height:40px;display:flex;align-items:center;cursor:pointer;padding:7px 9px;font-size:11px;color:#c2d1c8}
+.early-turn-plan__limitations-body{display:grid;gap:6px;padding:0 9px 9px}
+.early-turn-plan__limitations-body p{margin:0!important;font-size:11px;line-height:1.4;color:#c2d1c8}
+.early-turn-plan__limitations>summary:focus-visible{outline:3px solid #c6e99e;outline-offset:-3px}
+.early-turn-plan__loadout-warning{display:block;padding:6px 8px;border-left:2px solid #d8b16f;color:#f3dfb2;font-size:11px}

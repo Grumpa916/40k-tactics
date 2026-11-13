@@ -157,7 +157,9 @@ function renderOpponentMovementDefence(state, playerId) {
     ${secondaryDue.length?`<details data-secondary-opponent-turn-intelligence open><summary>Secondary opponent-turn checkpoints · ${secondaryDue.length}</summary>
       <ul>${secondaryDue.map(card=>`<li><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml(card.advice)} Confirm the printed conditions and VP at the actual checkpoint.</small></li>`).join('')}</ul>
     </details>`:''}
-    <p><small>Incoming damage estimates appear in Shooting and Fight after you select the enemy attacker, its weapon and your target. No ranged damage or legal charge is inferred from approximate map proximity alone.</small></p>
+    <details class="movement-advisor__limitations" data-view-key="opponent-movement-estimate-limitations"><summary>Estimate limitations</summary>
+      <small>Incoming damage estimates appear in Shooting and Fight once an attacker, weapon and target are selected. Map proximity alone does not establish legal attacks or charges.</small>
+    </details>
   </aside>`;
 }
 
@@ -219,6 +221,9 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       [data-movement-advisor] .movement-advisor__option{color:inherit;text-decoration:none}
       [data-movement-advisor] .movement-advisor__secondary-advice{display:block;margin-top:4px;line-height:1.4}
       [data-movement-advisor] .movement-advisor__option.is-selected{outline:2px solid #f6d783;outline-offset:1px}
+      .movement-advisor__limitations{margin-top:8px;border-top:1px solid #53665a;padding-top:4px}
+      .movement-advisor__limitations>summary{min-height:36px;padding:8px;cursor:pointer}
+      .movement-advisor__limitations>small{display:block;padding:0 8px 9px;line-height:1.4}
       .battlefield-map__unit.is-advisor-highlight,.battlefield-map__objective.is-advisor-highlight{outline:4px solid #f6d783!important;outline-offset:3px;z-index:9;box-shadow:0 0 0 4px rgba(246,215,131,.28),0 1px 7px #000c!important}
     </style>
     <div class="move-heading">
@@ -228,7 +233,6 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     ${primaryStrategy?.active ? `<details open data-primary-strategy><summary><strong>Primary strategy · ${escapeHtml(primaryStrategy.missionName)}</strong></summary>
       <p>${escapeHtml(primaryStrategy.reason)}</p>
       <ul>${(primaryStrategy.summary ?? []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-      <small>Recorded-state outlook only; mission timing, actual OC and the physical mission card remain authoritative.</small>
     </details>` : ""}
     <p><strong>${escapeHtml(selected.recommendation)}</strong></p>
     <div class="fight-advisory__grid movement-advisor__grid">
@@ -240,7 +244,6 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     <p>${escapeHtml(selected.actionHint)}</p>
     <details open>
       <summary>Possible destinations · ${selectedOptions.length}</summary>
-      <p><small>Ranked for ${escapeHtml(selected.unitName)}. Strategic fit is comparative guidance, not a movement-success probability.</small></p>
       <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank, state, perspectivePlayerId)).join("")}</div>
       <p><small>Tap an objective or enemy option to highlight it. Territory options use the dotted boundary already shown on the map. Highlight only — the unit is not moved and no movement choice is recorded.</small></p>
     </details>
@@ -266,7 +269,10 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       ${territoryReviewText ? `<br><small>${escapeHtml(territoryReviewText)}</small>` : ""}
       <br><small>Only verified mission text changes movement ranking. Review-only cards remain visible but are not silently scored.</small>
     </details>
-    <small>Map distances are approximate; territory classification is also advisory. Positions within ±3\" of the dotted territory line remain uncertain. Destination options describe strategic purposes, not exact legal endpoints. The Advisor does not determine legal movement, terrain traversal, line of sight, Advance eligibility, or final objective control.</small>
+    <details class="movement-advisor__limitations" data-view-key="movement-estimate-limitations">
+      <summary>Estimate limitations</summary>
+      <small>Map distances are approximate; territory classifications are advisory, and positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destination options describe strategic purposes, not exact legal endpoints. The tabletop, mission rules and actual OC determine movement and scoring.</small>
+    </details>
   </aside>`;
 }
 
