@@ -78,3 +78,21 @@ test("Custodes live reminders match selected unit eligibility",()=>{
   assert.match(dreadnought,/Honoured Interred/);
   assert.match(dreadnought,/nearby friendly Adeptus Custodes units/);
 });
+
+
+test('live Fight sidebar displays the Ka’tah choices only once and retains the full Rules reference',()=>{
+  const state=custodesReminderState({phase:'fight',activePlayer:'p1'});
+  state.battle.firstPlayerId='p1';
+  const compact=renderCustodesKatahPhasePanel(state,{phase:'fight',unitId:'sentinel',playerId:'p1'});
+  const sidebar=renderCombatWorkspace({state,phase:'fight',perspectivePlayerId:'p1',selectedUnitId:'sentinel',
+    controls:compact,mapView:{render:()=>'<div>map</div>'}});
+  assert.match(sidebar,/is-fight-compact/);
+  assert.equal((sidebar.match(/data-custodes-katah-use="Dacatarai"/g)??[]).length,1);
+  assert.equal((sidebar.match(/data-custodes-katah-use="Kaptaris"/g)??[]).length,1);
+  assert.equal((sidebar.match(/data-custodes-katah-use="Rendax"/g)??[]).length,1);
+  assert.doesNotMatch(sidebar,/data-record-katah-reminder/,
+    'no duplicate Ka’tah buttons in the lower Fight rules reminders');
+  const modal=renderRulesReminderDialog(state,{playerId:'p1',unitId:'sentinel'});
+  assert.match(modal,/data-record-katah-reminder/,
+    'full Rules reference retains its separate official choices');
+});

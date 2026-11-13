@@ -82,9 +82,11 @@ export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=n
   return guardians||detachment||marine?style()+guardians+detachment+marine:'';
 }
 
-export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true,livePanel=false}={}) {
+export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true,livePanel=false,suppressFightKatah=false}={}) {
   const playerId=perspective(state,perspectivePlayerId);
-  const sourceEntries=getBattleRulesReminders(state,{playerId,unitId:selectedUnitId}).filter(entry=>!entry.used||isActiveEffect(entry));
+  const sourceEntries=getBattleRulesReminders(state,{playerId,unitId:selectedUnitId})
+    .filter(entry=>(!entry.used||isActiveEffect(entry)) &&
+      !(livePanel && suppressFightKatah && state.phase==='fight' && entry.ruleId==='katah-fight-window'));
   const entries=groupEntries(livePanel ? getLivePhaseReminderEntries(state,{playerId,selectedUnitId,entries:sourceEntries}) : sourceEntries);
   entries.sort((a,b)=>Number(b.ruleId==='aquila-commander')-Number(a.ruleId==='aquila-commander'));
   const sourceDetachment=getCustodesDetachmentRuleReminders(state,{playerId,unitId:selectedUnitId});

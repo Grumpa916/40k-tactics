@@ -230,3 +230,68 @@
   padding:7px 9px;
   border-left:3px solid #df9e79;
 }
+
+
+/* Fight: one consolidated rules list + activation row, rather than three
+   vertically stacked option cards. Remains usable at iPad side-panel width. */
+.custodes-katah-phase.is-fight-compact {
+  margin:8px 0 10px;
+  padding:12px 13px;
+}
+.custodes-katah-phase.is-fight-compact h2 {
+  font-size:1rem;
+}
+.custodes-katah-phase.is-fight-compact > p {
+  margin:5px 0 9px;
+  font-size:.85rem;
+}
+.custodes-katah-phase__fight-list {
+  list-style:none;
+  margin:8px 0 10px;
+  padding:0;
+  display:grid;
+  gap:7px;
+}
+.custodes-katah-phase__fight-list li {
+  display:block;
+  padding:0;
+  background:none;
+  border:0;
+  line-height:1.35;
+  font-size:.86rem;
+  overflow-wrap:anywhere;
+}
+.custodes-katah-phase__fight-list strong {
+  display:inline;
+  color:#f2ce69;
+  margin-right:6px;
+}
+.custodes-katah-phase__fight-list strong::after {
+  content:":";
+}
+.custodes-katah-phase__fight-list span {
+  color:#e8efe9;
+}
+.custodes-katah-phase__fight-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.custodes-katah-phase__fight-actions button {
+  min-height:44px;
+  flex:1 1 128px;
+  padding:9px 10px;
+  border:1px solid #b39257;
+  border-radius:9px;
+  background:#342b2c;
+  color:#fae5b2;
+  cursor:pointer;
+  font:inherit;
+  font-size:.88rem;
+  font-weight:700;
+  touch-action:manipulation;
+}
+.custodes-katah-phase__fight-actions button:focus-visible {
+  outline:3px solid #78bdff;
+  outline-offset:2px;
+}
