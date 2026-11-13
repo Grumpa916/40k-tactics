@@ -60,6 +60,7 @@ export const COMMAND_TYPES = Object.freeze({
   START_TURN_CLOCK: "turn_clock.start",
   PAUSE_TURN_CLOCK: "turn_clock.pause",
   RECORD_VICTORY_POINTS: "victory_points.record_award",
+  UNDO_ZERO_SCORING_CONFIRMATION: "victory_points.undo_zero_confirmation",
   ADJUST_VICTORY_POINTS: "victory_points.adjust",
   UNDO_LATEST_VICTORY_POINTS_AWARD: "victory_points.undo_latest_award",
   DRAW_SECONDARY_MISSION: "secondary_mission.draw",
