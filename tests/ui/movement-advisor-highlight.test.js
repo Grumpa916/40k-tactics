@@ -71,7 +71,7 @@ test("general movement cautions are accessible on demand, not repeated beneath r
   assert.ok(limitationsContent);
   assert.doesNotMatch(mainContent, /Map distances are approximate|Recorded-state outlook only/);
   assert.match(limitationsContent, /<summary>Estimate limitations<\/summary>/);
-  assert.match(limitationsContent, /Map distances and territory classifications are approximate/);
+  assert.match(limitationsContent, /Map distances are approximate; territory classifications are advisory/);
   assert.doesNotMatch(limitationsContent, /^ open/);
 });
 
