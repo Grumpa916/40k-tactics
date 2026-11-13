@@ -85,7 +85,10 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       ${unit ? `        ${fightsFirstPending ? '<section class="combat-workspace__card" role="status"><strong>Fights First still pending</strong><p>The app recommends resolving those units first. If the physical tabletop confirms this activation now, you can still record it here.</p></section>' : ''}
         ${selectedOption?.eligibilitySource === 'tabletop-confirmed' ? '<p><small>Tabletop-confirmed eligibility: this formation was not inferred as engaged by the saved app state. The physical table is authoritative.</small></p>' : ''}
         ${options.overrunAvailable ? '<section class="combat-workspace__card" role="status"><strong>Overrun Fight available</strong><p>This formation charged this turn but has no remaining recorded engagement. On the tabletop, choose an enemy within 5″, make the legal Pile In move of up to 3″ and finish engaged. Then select that enemy below and resolve the Fight normally.</p></section>' : ''}
-        <label>Melee weapon<select data-fight-weapon><option value="">Choose weapon…</option>${weapons.map(weapon => `<option value="${esc(weapon.id)}" ${weapon.id === weaponId ? 'selected' : ''}>${esc(weapon.name)}${weapon.characteristics?.extraAttacks ? ' · Extra Attacks' : ''}</option>`).join('')}</select></label>
+        <div class="combat-workspace__weapon-choice-set" role="group" aria-label="Melee weapon">
+          <strong>Melee weapon</strong>
+          <div class="combat-workspace__weapon-choices">${weapons.map(weapon => `<button type="button" data-fight-weapon-choice="${esc(weapon.id)}" aria-pressed="${String(weapon.id === weaponId)}">${esc(weapon.name)}${weapon.characteristics?.extraAttacks ? ' · Extra Attacks' : ''}</button>`).join('')}</div>
+        </div>
         ${weaponNotice ? `<p class="combat-workspace__error" role="status">${esc(weaponNotice)}</p>` : ''}
         ${selectedWeapon?.characteristics?.extraAttacks ? '<p><strong>Extra Attacks:</strong> record this weapon in addition to the model’s main melee weapon during the same activation.</p>' : ''}
         <label>${options.overrunAvailable ? 'Overrun target · confirm within 5″ on tabletop' : 'Target · confirm legal after Pile In'}<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
@@ -128,7 +131,11 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       if (attackerId && options.targets.some(unit => unit.unitId === id)) chooseTarget(id);
       else choose(id);
     } });
-    container.querySelector('[data-fight-weapon]')?.addEventListener('change', event => { weaponId = event.target.value || null; precisionAllocationId = null; damage = 0; error = ''; render(); });
+    container.querySelectorAll('[data-fight-weapon-choice]').forEach(button => button.addEventListener('click', () => {
+      const choice = button.getAttribute('data-fight-weapon-choice');
+      if (!weapons.some(weapon => weapon.id === choice)) return;
+      weaponId = choice; precisionAllocationId = null; damage = 0; error = ''; render();
+    }));
     container.querySelector('[data-fight-target]')?.addEventListener('change', event => chooseTarget(event.target.value || null));
     container.querySelector('[data-fight-precision]')?.addEventListener('change', event => { precisionAllocationId = event.target.value || null; damage = 0; error = ''; render(); });
     const skip = () => {
