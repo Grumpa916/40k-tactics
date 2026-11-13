@@ -1,4 +1,4 @@
-import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
+import { hasEffectiveVictoryPointOpportunity, hasEffectiveZeroVictoryPointConfirmation } from '../engine/victory-points-ledger.js';
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES } from '../rules/secondary-mission-lifecycle.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export const checkpointScoreKey = (state, playerId, checkpoint) => [state.battle?.round ?? 0, state.turn ?? 0, playerId, checkpoint].join(':');
@@ -120,6 +120,10 @@ function renderSecondaryTierChoices(mission, formAttrs, fixedCard = false) {
   return `<form ${formAttrs}>
     <div class="checkpoint-vp-options" role="group" aria-label="Scoring options for ${esc(mission.definitionName)}">
       <h4>Scoring options</h4>
+      <section class="checkpoint-vp-option" data-vp-option="0">
+        <h4>0 VP</h4><p>No scoring conditions were achieved this window.</p>
+        <button type="submit" name="vp" value="0">Confirm 0 VP · No points earned</button>
+      </section>
       ${rows}
     </div>
     <p>Choose the VP both players agree was earned on the tabletop. The app records the result; it does not decide whether the condition was completed.</p>
@@ -133,6 +137,16 @@ export function renderCheckpointScore(state, group, mission) {
     (getSecondaryMissionMode(state, group.playerId) ?? card?.definition?.missionMode) === SECONDARY_MISSION_MODES.FIXED;
   const scoreLabel = category === 'secondary' && !fixedCard ? ' & remove card' : '';
   const key = instanceId ? [instanceId, state.battle?.round ?? 0, state.turn ?? 0, group.checkpoint].join(':') : checkpointScoreKey(state, group.playerId, group.checkpoint);
+  if (hasEffectiveZeroVictoryPointConfirmation(state, group.playerId, definitionId, key)) {
+    const last = state.history?.at(-1);
+    const canCorrect = last?.type === 'victory_points.zero_confirmed' &&
+      last.payload?.playerId === group.playerId && last.payload?.missionDefinitionId === definitionId &&
+      last.payload?.opportunityKey === key;
+    return `<p role="status"><strong>0 VP confirmed.</strong> No points added. ${category === 'secondary'
+      ? 'The card remains active until scored or discarded under its normal rules.'
+      : 'Primary remains available at later checkpoints.'}</p>` +
+      (canCorrect ? `<button type="button" data-checkpoint-undo-zero data-player="${esc(group.playerId)}" data-mission="${esc(definitionId)}" data-opportunity="${esc(key)}">Change 0 VP confirmation</button>` : '');
+  }
   if (hasEffectiveVictoryPointOpportunity(state, group.playerId, definitionId, key)) {
     return `<p role="status"><strong>VP recorded.</strong> ${category === 'secondary' ? fixedCard ? 'Fixed card remains active for later checkpoints.' : 'Card removed from active missions.' : 'Primary remains active for later checkpoints.'}</p>`;
   }
@@ -143,9 +157,10 @@ export function renderCheckpointScore(state, group, mission) {
   if (tierMarkup) return tierMarkup;
   if (vpOptions.length === 1) {
     const points = vpOptions[0];
-    return `<form ${formAttrs}><input type="hidden" name="vp" value="${points}"><button type="submit">Record +${points} VP${scoreLabel}</button><p>Use the tabletop result agreed by both players. Existing VP caps still apply.</p></form>`;
+    return `<form ${formAttrs}><input type="hidden" name="vp" value="${points}"><button type="submit">Record +${points} VP${scoreLabel}</button><button type="submit" name="vp" value="0">Confirm 0 VP · No points earned</button><p>Use the tabletop result agreed by both players. Existing VP caps still apply.</p></form>`;
   }
-  const optionMarkup = vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
+  const optionMarkup = '<option value="0">0 VP — No points earned</option>' +
+    vpOptions.map(value => `<option value="${value}">${value} VP</option>`).join('');
   return `<form ${formAttrs}>
     <label>Agreed VP earned <select name="vp" required aria-label="VP for ${esc(definitionName)}" ${vpOptions.length ? '' : 'disabled'}><option value="">${vpOptions.length ? 'Choose agreed VP…' : 'No configured VP value'}</option>${optionMarkup}</select></label>
     <button type="submit" ${vpOptions.length ? '' : 'disabled'}>Record score${scoreLabel}</button>
@@ -162,7 +177,14 @@ export function bindCheckpointScores(container, session, onError) {
       const scoringTiming = form.getAttribute('data-checkpoint');
       const instanceId = form.getAttribute('data-instance');
       const submittedValue = event.submitter?.name === 'vp' ? event.submitter.value : form.querySelector('[name="vp"]')?.value;
-      const payload = { playerId, amount: Number(submittedValue), scoringTiming,
+      if (submittedValue == null || String(submittedValue).trim() === '') {
+        throw new Error('Select the agreed VP result before recording.');
+      }
+      const amount = Number(submittedValue);
+      if (!Number.isInteger(amount) || amount < 0) {
+        throw new Error('Agreed VP must be a non-negative whole number.');
+      }
+      const payload = { playerId, amount, scoringTiming,
         round: state.battle?.round ?? 0, turn: state.turn ?? 0 };
       if (instanceId) {
         const card = getSecondaryMissionHistory(state, playerId).find(item => item.instanceId === instanceId);
@@ -174,5 +196,14 @@ export function bindCheckpointScores(container, session, onError) {
         category:'primary', reason:form.getAttribute('data-name'), missionDefinitionId:form.getAttribute('data-mission'),
         opportunityKey:checkpointScoreKey(state,playerId,scoringTiming)}});
     } catch (error) { onError(error?.message ?? String(error)); }
+  }));
+  container.querySelectorAll?.('[data-checkpoint-undo-zero]').forEach(button=>button.addEventListener('click',()=>{
+    try {
+      session.dispatch({type:'victory_points.undo_zero_confirmation',payload:{
+        playerId:button.getAttribute('data-player'),
+        missionDefinitionId:button.getAttribute('data-mission'),
+        opportunityKey:button.getAttribute('data-opportunity')
+      }});
+    } catch(error) {onError(error?.message ?? String(error));}
   }));
 }
