@@ -66,7 +66,7 @@ test('map badges are omitted when a unit has no current visible status', () => {
   assert.deepEqual(getLiveMapStatusBadges(current,'plain'),[]);
 });
 
-test('friendly live-map units stack above enemy units so friendly status badges remain visible', () => {
+test('default marker layers stay above objectives, while active player overrides them for touch selection', () => {
   const css = readFileSync(new URL('../../src/ui/styles/live-map-symbols.css', import.meta.url), 'utf8');
   const opponent = css.match(/\.battlefield-map__unit\.opponent\s*\{[^}]*z-index:(\d+)/s);
   const friendly = css.match(/\.battlefield-map__unit\.friendly\s*\{[^}]*z-index:(\d+)/s);
@@ -74,4 +74,7 @@ test('friendly live-map units stack above enemy units so friendly status badges 
   assert.ok(opponent && friendly && badges);
   assert.ok(Number(friendly[1]) > Number(opponent[1]));
   assert.ok(Number(badges[1]) > Number(friendly[1]));
+  const liveCss = readFileSync(new URL('../../src/ui/styles/live-map.css', import.meta.url), 'utf8');
+  assert.match(liveCss,/\.battlefield-map__unit\.is-active-turn\s*\{\s*z-index:10;/);
+  assert.match(liveCss,/\.battlefield-map__unit\.is-selected\s*\{\s*z-index:12;/);
 });
