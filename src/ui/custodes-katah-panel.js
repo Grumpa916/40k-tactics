@@ -176,6 +176,25 @@ export function renderCustodesKatahPhasePanel(state, { phase, unitId = null, pla
       (source ? 'Available again via ' + esc(source) + '. ' : 'Available again. ') +
       'This unit can use another Martial Ka’tah.</p>'
     : '<p><strong class="is-readied">READIED</strong> · This unit can use one Martial Ka’tah.</p>';
+  if (phase === 'fight') {
+    // One iPad-friendly action list replaces three stacked Fight Ka'tah cards.
+    // Use the same definitions and activation commands; timing checks remain
+    // authoritative in the Ka'tah transition engine.
+    const descriptions = choices.map(definition =>
+      '<li><strong>' + esc(definition.name) + '</strong><span>' +
+      esc(definition.effect) + '</span></li>'
+    ).join('');
+    const actions = choices.map(definition =>
+      '<button type="button" data-custodes-katah-use="' + esc(definition.name) +
+      '" data-custodes-katah-unit="' + esc(root.id) +
+      '" data-custodes-katah-player="' + esc(playerId) +
+      '">Use ' + esc(definition.name) + '</button>'
+    ).join('');
+    return styleLink + '<section class="custodes-katah-phase is-fight-compact" aria-label="Fight Martial Ka’tah choices">' +
+      '<h2>Martial Ka’tah · ' + esc(root.name ?? root.id) + '</h2>' + readinessText +
+      '<ul class="custodes-katah-phase__fight-list">' + descriptions + '</ul>' +
+      '<div class="custodes-katah-phase__fight-actions">' + actions + '</div></section>';
+  }
   return styleLink + '<section class="custodes-katah-phase" aria-label="Available Martial Ka’tah"><h2>Available Ka’tah · ' +
     esc(selected.name ?? selected.id) + '</h2>' + readinessText +
     '<div class="custodes-katah-phase__options">' + buttons + '</div></section>';
