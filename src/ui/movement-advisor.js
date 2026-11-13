@@ -158,7 +158,7 @@ function renderOpponentMovementDefence(state, playerId) {
       <ul>${secondaryDue.map(card=>`<li><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml(card.advice)} Confirm the printed conditions and VP at the actual checkpoint.</small></li>`).join('')}</ul>
     </details>`:''}
     <details class="movement-advisor__limitations" data-view-key="opponent-movement-estimate-limitations"><summary>Estimate limitations</summary>
-      <small>Incoming damage estimates require an attacker, weapon and target in Shooting or Fight. Proximity on the map alone does not establish legal attacks or charges.</small>
+      <small>Incoming damage estimates appear in Shooting and Fight once an attacker, weapon and target are selected. Map proximity alone does not establish legal attacks or charges.</small>
     </details>
   </aside>`;
 }
@@ -233,7 +233,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     ${primaryStrategy?.active ? `<details open data-primary-strategy><summary><strong>Primary strategy · ${escapeHtml(primaryStrategy.missionName)}</strong></summary>
       <p>${escapeHtml(primaryStrategy.reason)}</p>
       <ul>${(primaryStrategy.summary ?? []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-     </details>` : ""}
+    </details>` : ""}
     <p><strong>${escapeHtml(selected.recommendation)}</strong></p>
     <div class="fight-advisory__grid movement-advisor__grid">
       <div><strong>${selected.movement == null ? "—" : `${escapeHtml(selected.movement)}\"`}</strong><span>saved Move</span></div>
@@ -244,7 +244,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     <p>${escapeHtml(selected.actionHint)}</p>
     <details open>
       <summary>Possible destinations · ${selectedOptions.length}</summary>
-       <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank, state, perspectivePlayerId)).join("")}</div>
+      <div class="move-units movement-advisor__options">${selectedOptions.map((option, index) => renderMovementOption(option, index, selectedRank, state, perspectivePlayerId)).join("")}</div>
       <p><small>Tap an objective or enemy option to highlight it. Territory options use the dotted boundary already shown on the map. Highlight only — the unit is not moved and no movement choice is recorded.</small></p>
     </details>
     <details>
@@ -271,7 +271,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     </details>
     <details class="movement-advisor__limitations" data-view-key="movement-estimate-limitations">
       <summary>Estimate limitations</summary>
-      <small>Map distances and territory classifications are approximate; positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destinations are strategic suggestions, not legal endpoints. The tabletop, mission rules and actual OC determine movement and scoring.</small>
+      <small>Map distances are approximate; territory classifications are advisory, and positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destinations are strategic suggestions, not legal endpoints. The tabletop, mission rules and actual OC determine movement and scoring.</small>
     </details>
   </aside>`;
 }
