@@ -39,7 +39,10 @@ test('objective evidence distinguishes recorded success, failure, and unavailabl
 test('confirmed Secondary scoring retires Tactical, retains Fixed, prevents repeat, and supports undo',()=>{
   for(const mode of ['tactical','fixed']) {
     const state=seed(mode),payload={playerId:'p1',instanceId:'card',amount:3,scoringTiming:'end-of-turn',retireAfterScoring:true};
-    assert.throws(()=>recordSecondaryMissionScore(state,{...payload,amount:0}));
+    const zeroReview=recordSecondaryMissionScore(state,{...payload,amount:0});
+    assert.equal(zeroReview.scoring.secondaryMissions[0].status,'active');
+    assert.equal(zeroReview.victoryPoints,undefined);
+    assert.equal(zeroReview.history.at(-1).type,'victory_points.zero_confirmed');
     assert.equal(state.scoring.secondaryMissions[0].status,'active');
     const scored=JSON.parse(JSON.stringify(recordSecondaryMissionScore(state,payload)));
     assert.equal(scored.victoryPoints.p1,3);
