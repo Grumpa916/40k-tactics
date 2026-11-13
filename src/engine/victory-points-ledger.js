@@ -123,9 +123,7 @@ export function recordVictoryPointsAward(state, {
     throw new TypeError("Unsupported scoring timing: " + scoringTiming);
   }
   const priorAwards = getEffectiveAwardEvents(state, playerId);
-  if (missionDefinitionId && opportunityKey && priorAwards.some((entry) =>
-    entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
-  )) {
+  if (missionDefinitionId && opportunityKey && hasEffectiveVictoryPointOpportunity(state,playerId,missionDefinitionId,opportunityKey)) {
     throw new Error("This mission scoring opportunity has already been recorded.");
   }
 
@@ -179,14 +177,78 @@ export function adjustVictoryPoints(state, {
   }));
 }
 
-/** Return whether an opportunity still has an effective, non-reversed VP award. */
+/**
+ * Zero is a reviewed checkpoint, not a VP award. Store a small audit event
+ * without changing the scoreboard or consuming an unscored Tactical card.
+ * This is intentionally separate from the positive-only award ledger.
+ */
+export function recordZeroVictoryPointsCheckpoint(state, {
+  playerId, amount = 0, reason, missionDefinitionId, category,
+  opportunityKey, scoringTiming = null, round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  if (amount !== 0 || !['primary','secondary'].includes(category)) {
+    throw new TypeError('Zero-point review requires 0 VP and a Primary or Secondary mission.');
+  }
+  for (const [name,value] of Object.entries({playerId,reason,missionDefinitionId,opportunityKey})) {
+    if (typeof value !== 'string' || !value.trim()) throw new TypeError(name+' is required.');
+  }
+  if (!Number.isInteger(round) || round < 0 || !Number.isInteger(turn) || turn < 0) {
+    throw new TypeError('Round and turn must be non-negative integers.');
+  }
+  if (scoringTiming !== null && !Object.values(SCORING_TIMINGS).includes(scoringTiming)) {
+    throw new TypeError('Unsupported scoring timing: '+scoringTiming);
+  }
+  if (hasEffectiveVictoryPointOpportunity(state,playerId,missionDefinitionId,opportunityKey)) {
+    throw new Error('This mission scoring opportunity has already been recorded.');
+  }
+  return appendHistoryEntry(state, createEvent('victory_points.zero_confirmed', {
+    playerId, amount:0, reason:reason.trim(), missionDefinitionId, category,
+    opportunityKey, scoringTiming, round, turn, scoreBefore:getVictoryPointScore(state,playerId),
+    scoreAfter:getVictoryPointScore(state,playerId)
+  }));
+}
+
+/** A zero confirmation is reversible when it is the latest history event. */
+export function undoLatestZeroVictoryPointsCheckpoint(state, {
+  playerId, missionDefinitionId, opportunityKey
+} = {}) {
+  const history=Array.isArray(state?.history)?state.history:[];
+  const latest=history.at(-1);
+  if (latest?.type !== 'victory_points.zero_confirmed' ||
+      latest.payload?.playerId !== playerId ||
+      latest.payload?.missionDefinitionId !== missionDefinitionId ||
+      latest.payload?.opportunityKey !== opportunityKey) {
+    throw new Error('Only the latest zero-point scoring confirmation can be changed.');
+  }
+  return appendHistoryEntry(state,createEvent('victory_points.zero_confirmation_undone',{
+    playerId, missionDefinitionId, opportunityKey,
+    originalZeroEventIndex:history.length-1
+  }));
+}
+
+export function hasEffectiveZeroVictoryPointConfirmation(state,playerId,missionDefinitionId,opportunityKey) {
+  if (typeof playerId!=='string' || !playerId.trim() ||
+      typeof missionDefinitionId!=='string' || !missionDefinitionId.trim() ||
+      typeof opportunityKey!=='string' || !opportunityKey.trim()) return false;
+  const history=Array.isArray(state?.history)?state.history:[];
+  const undone=new Set(history.filter(e=>e?.type==='victory_points.zero_confirmation_undone')
+    .map(e=>e.payload?.originalZeroEventIndex).filter(Number.isInteger));
+  return history.some((event,index)=>event?.type==='victory_points.zero_confirmed' &&
+    !undone.has(index) && event.payload?.playerId===playerId &&
+    event.payload?.missionDefinitionId===missionDefinitionId &&
+    event.payload?.opportunityKey===opportunityKey);
+}
+
+/** Return whether an opportunity has an effective award OR a zero confirmation. */
 export function hasEffectiveVictoryPointOpportunity(state, playerId, missionDefinitionId, opportunityKey) {
   if (typeof playerId !== "string" || !playerId.trim()) return false;
   if (typeof missionDefinitionId !== "string" || !missionDefinitionId.trim()) return false;
   if (typeof opportunityKey !== "string" || !opportunityKey.trim()) return false;
-  return getEffectiveAwardEvents(state, playerId).some((entry) =>
-    entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
-  );
+  return hasEffectiveZeroVictoryPointConfirmation(state,playerId,missionDefinitionId,opportunityKey) ||
+    getEffectiveAwardEvents(state, playerId).some((entry) =>
+      entry.missionDefinitionId === missionDefinitionId && entry.opportunityKey === opportunityKey
+    );
 }
 
 export function getVictoryPointScore(state, playerId) {
