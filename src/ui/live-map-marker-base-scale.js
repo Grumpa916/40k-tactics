@@ -54,7 +54,9 @@ export function applyLiveMarkerBaseScales(container, state, manualSizes = {}, ov
       marker.getAttribute?.('data-map-unit-id');
     const unit = units.get(id);
     const key = unit?.metadata?.datasheetId || unit?.datasheetId || unit?.id;
-    const scale = getLiveMarkerBaseScale(unit, manualSizes?.[key]);
+    // A shared formation marker is a symbolic handle, not one model's base.
+    const scale = marker.getAttribute?.('data-map-formation-symbol') ? null
+      : getLiveMarkerBaseScale(unit, manualSizes?.[key]);
     marker.classList?.toggle?.('is-base-scaled', Boolean(scale));
     marker.classList?.toggle?.('is-base-reference', Boolean(scale?.reference));
     marker.classList?.toggle?.('is-base-oval', scale?.shape === 'oval');

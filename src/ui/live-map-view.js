@@ -288,7 +288,7 @@ export function createLiveMapView() {
         const text = marker.firstChild;
         if (text?.nodeType !== 3) return;
         const id = markerUnitId(marker);
-        const label = unitSymbols.get(id);
+        const label = marker.getAttribute('data-map-formation-symbol') || unitSymbols.get(id);
         if (label != null) text.nodeValue = label;
       });
       const updateMapStyle = () => {

@@ -1,5 +1,6 @@
 import { perspectiveObjectiveName, compactObjectiveLabel } from '../rules/objective-display-labels.js';
 import { attachmentParent } from '../rules/event-preparation.js';
+import { getCombatFormationMembers, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { mapUnitLabels, unitDisplayLabels } from './map-unit-labels.js';
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
@@ -140,13 +141,16 @@ export function renderBattlefieldMap(state, {
   const units = Array.isArray(safeState.units) ? safeState.units : [];
   const unitLabels = mapUnitLabels(units);
   const fullUnitLabels = unitDisplayLabels(units);
-  const symbolLabels = mode === 'live' && compactMarkers ? liveUnitSymbolLabels(units) : null;
+  const symbolLabels = mode === 'live' ? liveUnitSymbolLabels(units) : null;
   const unitNodes = [];
   const friendlyUnitKey = new Map();
   let positionedUnits = 0;
   const declaredReserves = safeState.battlefieldMap?.declaredReserves ?? {};
   const visibleUnits = showUnits ? units.filter((unit) => {
     if (!unit || !unit.id || unit.status === "destroyed" || unit.status === "embarked" || (mode !== "live" && attachmentParent(safeState, unit))) return false;
+    // The normal live map represents a deployed attached formation with one
+    // Bodyguard marker. Each member keeps its own saved model positions.
+    if (mode === "live" && getCombatFormationRootId(safeState, unit) !== unit.id) return false;
     if (mode === "planning") return unit.ownerId === perspectivePlayerId;
     if (mode === "deployment") return !declaredReserves[unit.id];
     return unit.status === "deployed";
@@ -172,13 +176,24 @@ export function renderBattlefieldMap(state, {
     }
     const percent = battlefieldPositionToPercent(position); if (!percent) continue; positionedUnits += 1;
     if (mode === 'live' && friendly && symbolLabels?.has(unit.id)) {
-      friendlyUnitKey.set(symbolLabels.get(unit.id), fullUnitLabels.get(unit.id));
+      const members = getCombatFormationMembers(safeState,unit);
+      const groupLabel = members.map(item=>fullUnitLabels.get(item.id) ?? item.name).join(' + ');
+      friendlyUnitKey.set(symbolLabels.get(unit.id), groupLabel);
     }
-    const sideClass = friendly ? "friendly" : "opponent"; const marker = compactMarkers ? escapeHtml(unitLabels.get(unit.id)) : escapeHtml((unit.name ?? unit.id).slice(0, 22));
+    const attached = mode === "live" ? getCombatFormationMembers(safeState, unit).slice(1) : [];
+    const formationSymbol = attached.length
+      ? (symbolLabels?.get(unit.id) ?? unitLabels.get(unit.id)) +
+        (attached.length === 1 ? '+' + (symbolLabels?.get(attached[0].id) ?? 'L') : '+' + attached.length)
+      : null;
+    const formationName = [fullUnitLabels.get(unit.id), ...attached.map(member => fullUnitLabels.get(member.id) ?? member.name)].filter(Boolean).join(' + ');
+    const sideClass = friendly ? "friendly" : "opponent";
+    const marker = compactMarkers ? escapeHtml(formationSymbol ?? unitLabels.get(unit.id)) : escapeHtml((formationName || unit.name || unit.id).slice(0, 45));
     const activation = activationForUnit(unit.id);
     const activationBadge = activation ? '<span class="unit-activation-badge" aria-label="' + (activation === 'resolved' ? 'Activation complete' : 'Activation in progress') + '">' + (activation === 'resolved' ? '✓' : '…') + '</span>' : '';
-    const modelCount = Array.isArray(unit.models) ? unit.models.length : 0; const isSelected = unit.id === selectedUnitId; const battleShocked = isUnitBattleShocked(unit);
-    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + (isSelected ? ' is-selected' : '') + (unplaced ? ' is-unplaced' : '') + (battleShocked ? ' is-battle-shocked' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(fullUnitLabels.get(unit.id)) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(fullUnitLabels.get(unit.id)) + (unplaced ? ' · not placed' : '') + (battleShocked ? ' · Battle-shocked' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + activationBadge + '</div>');
+    const modelCount = Array.isArray(unit.models) ? unit.models.length : 0;
+    const isSelected = unit.id === (mode === "live" ? getCombatFormationRootId(safeState, selectedUnitId) : selectedUnitId);
+    const battleShocked = isUnitBattleShocked(unit) || attached.some(member => isUnitBattleShocked(member));
+    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + (isSelected ? ' is-selected' : '') + (attached.length ? ' is-attached-formation' : '') + (unplaced ? ' is-unplaced' : '') + (battleShocked ? ' is-battle-shocked' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (formationSymbol ? ' data-map-formation-symbol="' + escapeHtml(formationSymbol) + '" data-map-formation-members="' + escapeHtml(attached.map(member => member.id).join(',')) + '"' : '') + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + (unplaced ? ' · not placed' : '') + (battleShocked ? ' · Battle-shocked' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + activationBadge + '</div>');
   }
   const objectives = Array.isArray(safeState.objectives) ? safeState.objectives : [];
   const layoutObjectiveNodes = layoutGeometry ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {
@@ -199,8 +214,8 @@ export function renderBattlefieldMap(state, {
   const liveStatus = mode === "live" ? liveStatusLabel(safeState) : ""; const showCoordinateMeasurements = showMeasurements; const shownMapLabel = modeDescription(mode, mapLabel);
   const objectiveStatusSummary = objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).length ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " + objectiveControlLabel(objective, safeState))).join(" · ") : "";
   const boardAriaLabel = showCoordinateMeasurements ? shownMapLabel + ", 60 by 44 inch reference board with inch coordinate labels" : shownMapLabel + ", battlefield board";
-  const selectedUnit = visibleUnits.find((unit) => unit.id === selectedUnitId);
-  const selectedName = selectedUnit ? '<p class="battlefield-map__selected-name" aria-live="polite">Selected: <strong>' + escapeHtml(fullUnitLabels.get(selectedUnit.id)) + '</strong> · ' + escapeHtml(playerLabel(safeState, selectedUnit.ownerId)) + '</p>' : '';
+  const selectedUnit = visibleUnits.find((unit) => unit.id === (mode === 'live' ? getCombatFormationRootId(safeState, selectedUnitId) : selectedUnitId));
+  const selectedName = selectedUnit ? '<p class="battlefield-map__selected-name" aria-live="polite">Selected: <strong>' + escapeHtml(mode === 'live' ? getCombatFormationMembers(safeState, selectedUnit).map(member => fullUnitLabels.get(member.id) ?? member.name).join(' + ') : fullUnitLabels.get(selectedUnit.id)) + '</strong> · ' + escapeHtml(playerLabel(safeState, selectedUnit.ownerId)) + '</p>' : '';
   const unitKey = friendlyUnitKey.size ? '<div class="battlefield-map__unit-key" aria-label="Your unit designators">' +
     [...friendlyUnitKey].map(([symbol, name]) => '<span><strong>' + escapeHtml(symbol) + '</strong> ' + escapeHtml(name) + '</span>').join('') + '</div>' : '';
   return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode + '" data-battlefield-map data-map-mode="' + mode + '">' +

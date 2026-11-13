@@ -156,3 +156,14 @@ test('live map adjustment is available outside Movement and Charge as a manual c
   assert.deepEqual(session.getState().units.find(unit => unit.id === 'charger').position,{x:22,y:22});
   assert.equal(session.getState().history.at(-1).type,'battlefield_map.position_adjusted');
 });
+
+test('Charge displays one formation root handle while moving both attached members',()=>{
+  const x=setup(attachedState());
+  try {
+    assert.match(x.root.innerHTML,/data-map-unit-id="wardens-live" data-map-formation-symbol="WAR\+TRA"/);
+    assert.doesNotMatch(x.root.innerHTML,/data-map-unit-id="trajann-live"/);
+    x.drag('wardens-live',{x:24,y:24});
+    assert.deepEqual(x.session.getState().units.find(u=>u.id==='wardens-live').position,{x:24,y:24});
+    assert.deepEqual(x.session.getState().units.find(u=>u.id==='trajann-live').position,{x:22,y:24});
+  } finally {x.screen.destroy();}
+});

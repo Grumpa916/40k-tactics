@@ -164,3 +164,24 @@
 .battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-rereadied { background:#17643f; border-color:#9de3ad; }
 .battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-active { background:#8a6822; border-color:#ffe08b; color:#fff3c4; }
 .battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-katah-spent { background:#48535b; border-color:#c2c9ce; color:#e0e5e8; }
+
+
+/* One combined Bodyguard + Leader handle; physical model bases are still
+   represented independently by the precision overlay. */
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-compact.is-attached-formation {
+  width:54px;
+  min-width:54px;
+  max-width:54px;
+  height:32px;
+  min-height:32px;
+  border-radius:13px;
+  padding:0 3px;
+  white-space:nowrap;
+  font-size:9px;
+  letter-spacing:-.025em;
+}
+.battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit.is-attached-formation::before {
+  width:58px;
+  height:48px;
+  border-radius:14px;
+}

@@ -48,7 +48,7 @@ test('verification Wardens formation includes Trajann Eagle’s Scream ranged pr
   assert.equal(eagle.characteristics.damage, 2);
 });
 
-test('combat map routes attached-member markers through the formation root in Shooting', () => {
+test('Shooting map gives the attached formation one combined selectable bodyguard marker', () => {
   const state = activeVerificationState();
   const trajann = battleUnit(state, 'trajann');
   const wardens = battleUnit(state, 'wardens');
@@ -59,10 +59,12 @@ test('combat map routes attached-member markers through the formation root in Sh
     selectedUnitId: null
   });
 
-  assert.match(html, new RegExp(`data-map-unit-id="${wardens.id}" data-map-member-id="${trajann.id}"`));
+  assert.match(html, new RegExp('data-map-unit-id="'+wardens.id+'" data-map-formation-symbol="WAR\\+TRA"'));
+  assert.doesNotMatch(html, new RegExp('data-map-unit-id="'+trajann.id+'"'));
+  assert.doesNotMatch(html, /data-map-member-id=/);
 });
 
-test('attached-member marker keeps its own map identity outside Shooting', () => {
+test('Charge map uses the same combined formation marker as Shooting', () => {
   const state = activeVerificationState();
   const trajann = battleUnit(state, 'trajann');
   const html = renderCombatMapPanel({
@@ -72,8 +74,8 @@ test('attached-member marker keeps its own map identity outside Shooting', () =>
     selectedUnitId: null
   });
 
-  assert.match(html, new RegExp(`data-map-unit-id="${trajann.id}"`));
-  assert.doesNotMatch(html, new RegExp(`data-map-member-id="${trajann.id}"`));
+  assert.match(html, new RegExp('data-map-formation-members="'+trajann.id+'"'));
+  assert.doesNotMatch(html, new RegExp('data-map-unit-id="'+trajann.id+'"'));
 });
 
 test('iPad Shooting layout keeps attack and Action controls ahead of Tactical Advisor and reminders', () => {
