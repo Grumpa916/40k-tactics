@@ -39,7 +39,7 @@ import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
-import { adjustVictoryPoints, recordVictoryPointsAward, undoLatestVictoryPointsAward } from "./victory-points-ledger.js";
+import { adjustVictoryPoints, recordVictoryPointsAward, recordZeroVictoryPointsCheckpoint, undoLatestZeroVictoryPointsCheckpoint, undoLatestVictoryPointsAward } from "./victory-points-ledger.js";
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
 import { useSecondaryMissionRedraw } from "./secondary-mission-redraw.js";
 import { discardTacticalSecondariesForCommandPoint } from "./tactical-secondary-discard.js";
@@ -122,7 +122,12 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_FACTION_ABILITY_DECISION, (state, command) => recordFactionAbilityDecision(state, command.payload)],
     [COMMAND_TYPES.START_TURN_CLOCK, (state, command) => startTurnClock(state, command.payload)],
     [COMMAND_TYPES.PAUSE_TURN_CLOCK, (state, command) => pauseTurnClock(state, command.payload)],
-    [COMMAND_TYPES.RECORD_VICTORY_POINTS, (state, command) => recordVictoryPointsAward(state, command.payload)],
+    [COMMAND_TYPES.RECORD_VICTORY_POINTS, (state, command) =>
+      command.payload?.amount === 0
+        ? recordZeroVictoryPointsCheckpoint(state, command.payload)
+        : recordVictoryPointsAward(state, command.payload)],
+    [COMMAND_TYPES.UNDO_ZERO_SCORING_CONFIRMATION, (state, command) =>
+      undoLatestZeroVictoryPointsCheckpoint(state, command.payload)],
     [COMMAND_TYPES.ADJUST_VICTORY_POINTS, (state, command) => adjustVictoryPoints(state, command.payload)],
     [COMMAND_TYPES.UNDO_LATEST_VICTORY_POINTS_AWARD, (state, command) => undoLatestVictoryPointsAward(state, command.payload)],
     [COMMAND_TYPES.DRAW_SECONDARY_MISSION, (state, command) => drawSecondaryMission(state, command.payload)],
