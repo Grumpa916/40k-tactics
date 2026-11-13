@@ -187,13 +187,18 @@ export function renderBattlefieldMap(state, {
       : null;
     const formationName = [fullUnitLabels.get(unit.id), ...attached.map(member => fullUnitLabels.get(member.id) ?? member.name)].filter(Boolean).join(' + ');
     const sideClass = friendly ? "friendly" : "opponent";
+    // Layer the army whose turn it is over the other army, independently of
+    // which army the user's viewing perspective calls "friendly".
+    const activeTurnPlayerId = safeState.activePlayer ?? safeState.battle?.activePlayerId;
+    const activeTurnClass = mode === "live" && activeTurnPlayerId != null &&
+      unit.ownerId === activeTurnPlayerId ? ' is-active-turn' : '';
     const marker = compactMarkers ? escapeHtml(formationSymbol ?? unitLabels.get(unit.id)) : escapeHtml((formationName || unit.name || unit.id).slice(0, 45));
     const activation = activationForUnit(unit.id);
     const activationBadge = activation ? '<span class="unit-activation-badge" aria-label="' + (activation === 'resolved' ? 'Activation complete' : 'Activation in progress') + '">' + (activation === 'resolved' ? '✓' : '…') + '</span>' : '';
     const modelCount = Array.isArray(unit.models) ? unit.models.length : 0;
     const isSelected = unit.id === (mode === "live" ? getCombatFormationRootId(safeState, selectedUnitId) : selectedUnitId);
     const battleShocked = isUnitBattleShocked(unit) || attached.some(member => isUnitBattleShocked(member));
-    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + (isSelected ? ' is-selected' : '') + (attached.length ? ' is-attached-formation' : '') + (unplaced ? ' is-unplaced' : '') + (battleShocked ? ' is-battle-shocked' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (formationSymbol ? ' data-map-formation-symbol="' + escapeHtml(formationSymbol) + '" data-map-formation-members="' + escapeHtml(attached.map(member => member.id).join(',')) + '"' : '') + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + (unplaced ? ' · not placed' : '') + (battleShocked ? ' · Battle-shocked' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + activationBadge + '</div>');
+    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + activeTurnClass + (isSelected ? ' is-selected' : '') + (attached.length ? ' is-attached-formation' : '') + (unplaced ? ' is-unplaced' : '') + (battleShocked ? ' is-battle-shocked' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (formationSymbol ? ' data-map-formation-symbol="' + escapeHtml(formationSymbol) + '" data-map-formation-members="' + escapeHtml(attached.map(member => member.id).join(',')) + '"' : '') + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + (unplaced ? ' · not placed' : '') + (battleShocked ? ' · Battle-shocked' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + activationBadge + '</div>');
   }
   const objectives = Array.isArray(safeState.objectives) ? safeState.objectives : [];
   const layoutObjectiveNodes = layoutGeometry ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {

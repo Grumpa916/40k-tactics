@@ -256,7 +256,7 @@ export function createLiveMapView() {
       renderedState = state ?? {};
       renderedOptions = options ?? {};
       const stylesheet = new URL('./styles/live-map.css', import.meta.url);
-      stylesheet.searchParams.set('v', 'compact-map-tools-3');
+      stylesheet.searchParams.set('v', 'compact-map-tools-4');
       const href = stylesheet.href;
       const symbolsStylesheet = new URL('./styles/live-map-symbols.css', import.meta.url);
       symbolsStylesheet.searchParams.set('v', 'approved-symbols-2');

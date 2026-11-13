@@ -869,3 +869,29 @@
   clip-path:inset(50%) !important;
   white-space:nowrap !important;
 }
+
+
+/* During a live turn, prioritize the acting army's markers over the opposing
+   army regardless of the fixed Custodes/player perspective. In an overlap the
+   selected handle is highest, with a dragged handle above both. This affects
+   only display/touch stacking, never positions or combat eligibility. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit.is-active-turn {
+  z-index:10;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit.is-selected {
+  z-index:12;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit.is-dragging {
+  z-index:14;
+}
+/* The Top-down stylesheet sets a later high-specificity compact-marker
+   stacking value; explicitly outrank it for the active army and selection. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__unit.is-compact.is-active-turn {
+  z-index:10;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__unit.is-compact.is-selected {
+  z-index:12;
+}
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__unit.is-compact.is-dragging {
+  z-index:14;
+}
