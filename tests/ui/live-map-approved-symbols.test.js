@@ -200,3 +200,52 @@ test('a deployed attached formation has one selectable marker in Standard and To
   assert.match(createLiveMapView().render(state,{perspectivePlayerId:'p1'}),/data-map-unit-id="blade"/,
     'a surviving Leader becomes its own marker after Bodyguard loss');
 });
+
+
+test('live map puts the acting army above the other army, even when perspective remains p1',()=>{
+  const base={
+    phase:'movement',battle:{status:'active',round:1,activePlayerId:'p2'},
+    activePlayer:'p2',players:[{id:'p1',name:'You'},{id:'p2',name:'Opponent'}],
+    units:[
+      {id:'you',ownerId:'p1',name:'Custodian Guard',status:'deployed',position:{x:25,y:22}},
+      {id:'enemy',ownerId:'p2',name:'Termagants',status:'deployed',position:{x:25,y:22}}
+    ],objectives:[],history:[]
+  };
+  const original=JSON.stringify(base);
+  for(const topDown of [false,true]){
+    const oldStorage=globalThis.localStorage;
+    try{
+      globalThis.localStorage={getItem:()=>JSON.stringify({topDown}),setItem:()=>{}};
+      const render = (state,selectedUnitId)=>createLiveMapView().render(state,{perspectivePlayerId:'p1',selectedUnitId});
+      const activeEnemy=render(base,'you');
+      assert.match(activeEnemy,/class="battlefield-map__unit opponent is-compact is-active-turn[^"]*" data-map-unit-id="enemy"/,
+        'Tyranids receive the higher layer on their turn even in the blue-player perspective');
+      assert.match(activeEnemy,/class="battlefield-map__unit friendly is-compact is-selected[^"]*" data-map-unit-id="you"/,
+        'selected units are still distinguishable and have the highest layer');
+      const ownTurn=render({...base,activePlayer:'p1',battle:{...base.battle,activePlayerId:'p1'}},'enemy');
+      assert.match(ownTurn,/class="battlefield-map__unit friendly is-compact is-active-turn[^"]*" data-map-unit-id="you"/,
+        'Custodes receive the higher layer on their turn');
+      assert.doesNotMatch(ownTurn,/class="battlefield-map__unit opponent is-compact is-active-turn/,
+        'enemy marker loses active-layer status when the turn changes');
+      assert.match(ownTurn,/class="battlefield-map__unit opponent is-compact is-selected/,
+        'selection remains possible across both turn directions');
+    } finally{
+      if(oldStorage===undefined)delete globalThis.localStorage;
+      else globalThis.localStorage=oldStorage;
+    }
+  }
+  assert.equal(JSON.stringify(base),original,'display priority must not mutate the live battle or saved markers');
+});
+
+test('live CSS raises acting units, selected units, and dragged units in both map styles',()=>{
+  const css=fs.readFileSync(new URL('../../src/ui/styles/live-map.css',import.meta.url),'utf8');
+  const layers=Array.from(css.matchAll(/\.battlefield-map__unit\.(is-active-turn|is-selected|is-dragging)\s*\{\s*z-index:(\d+);/g));
+  const byClass=new Map(layers.map(([,key,value])=>[key,Number(value)]));
+  assert.ok(byClass.get('is-active-turn')>7,'active turn above friendly/opponent baseline');
+  assert.ok(byClass.get('is-selected')>byClass.get('is-active-turn'),'selected unit should be top');
+  assert.ok(byClass.get('is-dragging')>byClass.get('is-selected'),'dragged handle should be highest');
+  for(const suffix of ['is-active-turn','is-selected','is-dragging']){
+    assert.match(css,new RegExp('is-planner-view \\\\.battlefield-map__unit\\\\.is-compact\\\\.'+suffix+
+      '\\\\s*\\\\{\\\\s*z-index:'+byClass.get(suffix)+';'),suffix+' is supported on the Top-down map');
+  }
+});
