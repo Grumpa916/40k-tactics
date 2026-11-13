@@ -158,3 +158,27 @@ test('Command Conservai button dispatches one existing Ka’tah use command',()=
 });
 
 
+
+
+test('Fight Ka’tahs use one concise list and one group of thumb-sized activation buttons',()=>{
+  const current=state('fight');
+  const before=JSON.stringify(current);
+  const html=renderCustodesKatahPhasePanel(current,{phase:'fight',playerId:'p1',unitId:'allarus'});
+  assert.match(html,/class="custodes-katah-phase is-fight-compact"/);
+  assert.equal((html.match(/custodes-katah-phase__fight-list/g)??[]).length,1);
+  assert.equal((html.match(/class="custodes-katah-phase__option"/g)??[]).length,0,
+    'no more individual stacked Fight option cards');
+  for(const name of ['Dacatarai','Kaptaris','Rendax']){
+    assert.match(html,new RegExp('<strong>'+name+'</strong>'));
+    assert.match(html,new RegExp('data-custodes-katah-use="'+name+'"'));
+    assert.equal((html.match(new RegExp('data-custodes-katah-use="'+name+'"','g'))??[]).length,1);
+  }
+  assert.match(html,/re-roll Hit rolls of 1/);
+  assert.match(html,/are -1 to Hit/);
+  assert.match(html,/gain Lethal Hits/);
+  assert.equal(JSON.stringify(current),before,'presentation must not change Ka’tah readiness');
+  const opponent={...current,activePlayer:'p2',battle:{...current.battle,activePlayerId:'p2'}};
+  const opponentHtml=renderCustodesKatahPhasePanel(opponent,{phase:'fight',playerId:'p1',unitId:'allarus'});
+  assert.match(opponentHtml,/is-fight-compact/);
+  assert.doesNotMatch(opponentHtml,/data-custodes-katah-use="Rendax"/);
+});
