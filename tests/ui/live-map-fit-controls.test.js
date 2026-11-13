@@ -40,7 +40,7 @@ test('tabletop map fits 60 by 44 board inside its viewport without map scrolling
   assert.match(css, /\.live-map__viewport\s*\{[\s\S]*?place-items:center;[\s\S]*?overflow:hidden !important;[\s\S]*?container-type:size;/);
   assert.match(css, /\.live-map__canvas\s*\{[\s\S]*?width:min\(100cqw, 136\.363636cqh\) !important;[\s\S]*?aspect-ratio:60 \/ 44;/);
   assert.match(css, /\.battlefield-map__board\s*\{[\s\S]*?height:100% !important;[\s\S]*?aspect-ratio:60 \/ 44 !important;/);
-  assert.match(battle, /live-map\.css\?v=compact-map-tools-3/);
+  assert.match(battle, /live-map\.css\?v=compact-map-tools-4/);
   for (const [availableWidth, availableHeight] of [[820,460],[920,545],[700,490],[480,290]]) {
     const boardWidth = Math.min(availableWidth, availableHeight*60/44);
     const boardHeight = boardWidth*44/60;
