@@ -6,6 +6,9 @@ import { registerCoreCommandHandlers } from '../../src/engine/register-core-comm
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { createChargeScreen } from '../../src/ui/charge-screen.js';
 import { COMMAND_TYPES } from '../../src/commands/game-commands.js';
+import { getChargeViewModel } from '../../src/application/charge-workflow.js';
+import { getApproximateChargeMapDistance, getSpatialContext } from '../../src/rules/spatial-context.js';
+import { shouldRenderLiveMemberBase } from '../../src/ui/live-map-view.js';
 
 function state(phase = 'charge') {
   return createGameState({
@@ -166,4 +169,40 @@ test('Charge displays one formation root handle while moving both attached membe
     assert.deepEqual(x.session.getState().units.find(u=>u.id==='wardens-live').position,{x:24,y:24});
     assert.deepEqual(x.session.getState().units.find(u=>u.id==='trajann-live').position,{x:22,y:24});
   } finally {x.screen.destroy();}
+});
+
+
+test('compact Charge map suppresses stale attached Leader outlines until expanding the formation',()=>{
+  const x=attachedState();
+  const leader=x.units.find(u=>u.id==='trajann-live');
+  const root=x.units.find(u=>u.id==='wardens-live');
+  assert.equal(shouldRenderLiveMemberBase(x,root),true);
+  assert.equal(shouldRenderLiveMemberBase(x,leader),false,
+    'the lone attached Leader base must not float beside the combined normal map marker');
+  assert.equal(shouldRenderLiveMemberBase(x,leader,{[root.id]:true}),true,
+    'the explicit expanded-model view still exposes the Leader position');
+  const separated={...x,units:x.units.map(u=>u.id===root.id?{...u,status:'destroyed'}:u)};
+  assert.equal(shouldRenderLiveMemberBase(separated,leader),true,
+    'a surviving Leader restores its independent model-base outline');
+});
+test('Charge readout offers all intermediate inch values, unlike coarse general tactical bands',()=>{
+  for(const distance of [6,7,8,9]) {
+    const x=state();
+    const adjusted={...x,units:x.units.map(u=>u.id==='enemy'?{...u,position:{x:20+distance,y:20}}:u)};
+    const attacker=adjusted.units.find(u=>u.id==='charger');
+    const target=adjusted.units.find(u=>u.id==='enemy');
+    assert.equal(getApproximateChargeMapDistance(adjusted,attacker,target),distance);
+    const model=getChargeViewModel(adjusted,{perspectivePlayerId:'p1'});
+    const entry=model.candidates.find(c=>c.unit.unitId==='charger')
+      ?.targets.find(t=>t.targetUnitId==='enemy');
+    assert.equal(entry?.targetDistance,distance,'charge map distance at '+distance+' inches');
+    if(distance===7 || distance===8) {
+      assert.equal(entry?.confidence,'moderate');
+    }
+  }
+  const x=state();
+  const adjusted={...x,units:x.units.map(u=>u.id==='enemy'?{...u,position:{x:27,y:20}}:u)};
+  assert.equal(getSpatialContext(adjusted,{playerId:'p1'}).unitProximity.find(
+    v=>v.unitId==='charger'&&v.otherUnitId==='enemy')?.distance,6,
+    'non-charge tactical context retains 3-inch bucketing');
 });
