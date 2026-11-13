@@ -102,10 +102,29 @@ test('Fight panel omits routine copy while retaining active combat controls', ()
     assert.doesNotMatch(html,/Choose weapon and target\. The first recorded attack/);
     assert.doesNotMatch(html,/Confirm Fight legality from the tabletop now/);
     assert.match(html,/Melee weapon/);
-    assert.ok(x.root.querySelector('[data-fight-weapon]'));
+    assert.equal(x.root.querySelectorAll('[data-fight-weapon-choice]').length,2);
     assert.ok(x.root.querySelector('[data-fight-target]'));
     assert.ok(x.root.querySelector('[data-fight-attack]'));
     assert.ok(x.root.querySelector('[data-fight-complete]'));
+  } finally { x.screen.destroy(); }
+});
+
+test('Fight weapon choices are visible once and require only one tap without changing combat state', () => {
+  const x = setup('fight',engage(state('fight'),['enemy']));
+  try {
+    click(x,'data-map-unit-id','fighter');
+    const html = x.root.innerHTML;
+    assert.equal((html.match(/data-fight-weapon-choice="blade"/g) ?? []).length,1);
+    assert.equal((html.match(/data-fight-weapon-choice="claws"/g) ?? []).length,1);
+    assert.doesNotMatch(html,/<select data-fight-weapon/,'no native iPad popover duplicated over weapon choices');
+    assert.equal(x.root.node('[data-fight-weapon-choice]','blade').getAttribute('aria-pressed'),'false');
+    const before=JSON.stringify(x.session.getState());
+    click(x,'data-fight-weapon-choice','blade');
+    assert.equal(x.root.node('[data-fight-weapon-choice]','blade').getAttribute('aria-pressed'),'true');
+    assert.equal(x.root.node('[data-fight-weapon-choice]','claws').getAttribute('aria-pressed'),'false');
+    click(x,'data-fight-weapon-choice','claws');
+    assert.equal(x.root.node('[data-fight-weapon-choice]','claws').getAttribute('aria-pressed'),'true');
+    assert.equal(JSON.stringify(x.session.getState()),before,'previews never activate, spend CP or resolve attacks');
   } finally { x.screen.destroy(); }
 });
 
@@ -114,7 +133,7 @@ test('Fight map preview does not activate; first attack and second weapon share 
   try {
     click(x,'data-map-unit-id','fighter');
     assert.equal(x.root.querySelector('[data-fight-begin]'),null);
-    x.root.change('[data-fight-weapon]','blade');
+    x.root.click('[data-fight-weapon-choice]','blade');
     click(x,'data-map-unit-id','enemy');
     assert.match(x.root.innerHTML,/value="enemy" selected/);
     assert.match(x.root.innerHTML,/expected retaliation/);
@@ -132,7 +151,7 @@ test('Fight map preview does not activate; first attack and second weapon share 
     assert.match(receiptMarkup,/live-action-receipt--compact/);
     assert.match(receiptMarkup,/data-live-undo aria-label="Undo attack" title="Undo attack">Undo<\/button>/);
     assert.ok(receiptMarkup.indexOf('data-live-undo') < receiptMarkup.indexOf('data-fight-finish-entry'));
-    x.root.change('[data-fight-weapon]','claws'); click(x,'data-map-unit-id','enemy');
+    x.root.click('[data-fight-weapon-choice]','claws'); click(x,'data-map-unit-id','enemy');
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
     const history=x.session.getState().history;
     assert.equal(history.filter(e => e.type === 'fight.unit_activated').length,1);
@@ -149,7 +168,7 @@ test('Fight map allows tabletop-confirmed activation while Fights First remains 
   try {
     click(x,'data-map-unit-id','enemy');
     assert.match(x.root.innerHTML,/Fights First still pending/);
-    x.root.change('[data-fight-weapon]','blade'); click(x,'data-map-unit-id','fighter');
+    x.root.click('[data-fight-weapon-choice]','blade'); click(x,'data-map-unit-id','fighter');
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
     const activation=x.session.getState().history.find(e => e.type === 'fight.unit_activated' && e.payload.unitId === 'enemy');
     assert.equal(activation.payload.tabletopConfirmed,true);
@@ -171,7 +190,7 @@ test('Do not fight excludes attack entry, wrong-phase rejection is visible and l
   } finally { x.screen.destroy(); }
   const initial=state('command'), y=setup('fight',initial);
   try {
-    click(y,'data-map-unit-id','fighter'); y.root.change('[data-fight-weapon]','blade'); click(y,'data-map-unit-id','enemy'); click(y,'data-fight-attack');
+    click(y,'data-map-unit-id','fighter'); y.root.click('[data-fight-weapon-choice]','blade'); click(y,'data-map-unit-id','enemy'); click(y,'data-fight-attack');
     assert.match(y.root.innerHTML,/Fight activations may only be recorded in the Fight phase/);
     assert.equal(y.session.getState(),initial);
   } finally { y.screen.destroy(); }
@@ -188,7 +207,7 @@ test('Fight advisor resolves enemy catalog weapons without mutating the live sta
 test('finishing Fight activation persists across remount and rejects further attacks', () => {
   const x = setup('fight',engage(state('fight'),['enemy']));
   try {
-    click(x,'data-map-unit-id','fighter'); x.root.change('[data-fight-weapon]','blade');
+    click(x,'data-map-unit-id','fighter'); x.root.click('[data-fight-weapon-choice]','blade');
     click(x,'data-map-unit-id','enemy'); click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
     const [scrollContent, footerContent] = x.root.innerHTML.split('<footer>');
     assert.doesNotMatch(scrollContent, /data-fight-finish-entry/, 'Finish unit must not be buried inside the scrollable controls');
@@ -211,7 +230,7 @@ test('finishing Fight activation persists across remount and rejects further att
 test('End Fight reviews remaining inferred combats and closes open activations before advancing', () => {
   const x=setup('fight',engage(state('fight'),['enemy']));
   try {
-    click(x,'data-map-unit-id','fighter'); x.root.change('[data-fight-weapon]','blade'); click(x,'data-map-unit-id','enemy'); click(x,'data-fight-attack');
+    click(x,'data-map-unit-id','fighter'); x.root.click('[data-fight-weapon-choice]','blade'); click(x,'data-map-unit-id','enemy'); click(x,'data-fight-attack');
     x.screen.requestPhaseEnd();
     assert.match(x.root.innerHTML,/remaining inferred combats/);
     assert.equal(x.root.querySelector('[data-fight-complete]'),null,'confirmation replaces, not duplicates, End Fight');
@@ -232,7 +251,7 @@ test('Fight map keeps unit coordinates and selected fighter without zoom control
   try {
     click(x,'data-map-unit-id','fighter');
     assert.equal(x.root.querySelector('[data-map-zoom]'),null);
-    x.root.change('[data-fight-weapon]','blade');
+    x.root.click('[data-fight-weapon-choice]','blade');
     assert.equal(JSON.stringify(x.session.getState().units.map(u=>u.position)),positions);
     assert.match(x.root.innerHTML,/<h1>fighter<\/h1>/);
   } finally { x.screen.destroy(); }
