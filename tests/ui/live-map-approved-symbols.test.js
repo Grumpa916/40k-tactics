@@ -245,7 +245,10 @@ test('live CSS raises acting units, selected units, and dragged units in both ma
   assert.ok(byClass.get('is-selected')>byClass.get('is-active-turn'),'selected unit should be top');
   assert.ok(byClass.get('is-dragging')>byClass.get('is-selected'),'dragged handle should be highest');
   for(const suffix of ['is-active-turn','is-selected','is-dragging']){
-    assert.match(css,new RegExp('is-planner-view \\\\.battlefield-map__unit\\\\.is-compact\\\\.'+suffix+
-      '\\\\s*\\\\{\\\\s*z-index:'+byClass.get(suffix)+';'),suffix+' is supported on the Top-down map');
+    const selector='.live-map.is-planner-view .battlefield-map__unit.is-compact.'+suffix+' {';
+    const start=css.indexOf(selector);
+    assert.ok(start>=0,suffix+' has a Top-down layer override');
+    assert.match(css.slice(start,start+selector.length+44),new RegExp('z-index:'+byClass.get(suffix)+';'),
+      suffix+' shares the intended top-down stacking priority');
   }
 });
