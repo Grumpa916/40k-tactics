@@ -2,6 +2,7 @@ import { getUnitActivationPresentation } from '../rules/unit-activation-presenta
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { mapObjectiveMarkerLabel } from '../rules/objective-display-labels.js';
 import { getLiveUnitPosition } from '../rules/spatial-context.js';
+import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
 import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-symbols.js';
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
@@ -146,6 +147,17 @@ function liveTools(state, options, preferences, zoomed = false) {
   return { controls, key, unit, models, selectedModelIndex };
 }
 
+/**
+ * A combined formation has one normal map marker. Its attached Leader may
+ * retain an old independent coordinate in the save, but that model-base outline
+ * should not float elsewhere on the normal compact map. Detailed model
+ * placement can still show every member when the Bodyguard is expanded.
+ */
+export function shouldRenderLiveMemberBase(state, unit, expandedUnits = {}) {
+  const root = getCombatFormationRoot(state, unit);
+  return !root || root.id === unit?.id || expandedUnits[root.id] === true;
+}
+
 function drawPrecision(container, state, options, preferences, selectedModelIndex) {
   const board = container.querySelector('[data-battlefield-map-board]');
   const overlay = container.querySelector('[data-live-map-precision]');
@@ -159,7 +171,9 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
   if (!bases) return;
   bases.style.display = preferences.bases ? '' : 'none';
   sight.style.display = preferences.topDown && preferences.sight ? '' : 'none';
-  bases.innerHTML = (state.units ?? []).filter(unit => unit.status === 'deployed').map(unit => {
+  bases.innerHTML = (state.units ?? []).filter(unit =>
+    unit.status === 'deployed' && shouldRenderLiveMemberBase(state,unit,preferences.expandedUnits)
+  ).map(unit => {
     const base = modelBaseSizeForUnit(unit, preferences.baseSizes[sizeKey(unit)]);
     const size = base?.widthMm ? baseDimensions(base.widthMm, base.lengthMm) : null;
     if (!size) return '';
@@ -208,7 +222,8 @@ function drawIndividualModelHandles(container,state,preferences) {
     .map(node=>[node.getAttribute('data-map-member-id')??node.getAttribute('data-map-unit-id'),node]));
   const parts=[];
   for(const unit of state.units??[]) {
-    const active=Boolean(preferences.topDown&&preferences.expandedUnits[unit.id]&&unit.status==='deployed');
+    const active=Boolean(preferences.topDown&&preferences.expandedUnits[unit.id]&&unit.status==='deployed' &&
+      shouldRenderLiveMemberBase(state,unit,preferences.expandedUnits));
     const count=Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
     const models=Array.isArray(unit.models)?unit.models:[];
     const expanded=active&&count>1&&models.length>1&&
