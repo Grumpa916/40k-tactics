@@ -65,6 +65,16 @@ test("Movement destination options expose objective/enemy highlight hooks withou
   assert.doesNotMatch(html, /onclick=/);
 });
 
+test("general movement cautions are accessible on demand, not repeated beneath recommendations", () => {
+  const html = renderMovementAdvisor(state(), { playerId: "p1", selectedUnitId: "scorer" });
+  const [mainContent, limitationsContent] = html.split('<details class="movement-advisor__limitations"');
+  assert.ok(limitationsContent);
+  assert.doesNotMatch(mainContent, /Map distances are approximate|Recorded-state outlook only/);
+  assert.match(limitationsContent, /<summary>Estimate limitations<\/summary>/);
+  assert.match(limitationsContent, /Map distances and territory classifications are approximate/);
+  assert.doesNotMatch(limitationsContent, /^ open/);
+});
+
 test("Move priorities lists every recommendation counted in its heading", () => {
   const current = state();
   for (let index = 2; index <= 6; index += 1) {
