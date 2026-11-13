@@ -271,7 +271,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     </details>
     <details class="movement-advisor__limitations" data-view-key="movement-estimate-limitations">
       <summary>Estimate limitations</summary>
-      <small>Map distances are approximate; territory classifications are advisory, and positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destinations are strategic suggestions, not legal endpoints. The tabletop, mission rules and actual OC determine movement and scoring.</small>
+      <small>Map distances are approximate; territory classifications are advisory, and positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destination options describe strategic purposes, not exact legal endpoints. The tabletop, mission rules and actual OC determine movement and scoring.</small>
     </details>
   </aside>`;
 }
