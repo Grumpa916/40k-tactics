@@ -86,3 +86,54 @@ test("damage distribution and expected-damage paths agree after hit and wound re
   assert.equal(distribution.contextualAbilities.hitReroll, "ones");
   assert.equal(distribution.contextualAbilities.woundReroll, "ones");
 });
+
+test("unit and weapon re-roll instructions never suppress a stronger option at either stage", () => {
+  const unit = attacker({ hitReroll: "failed", woundReroll: "ones" });
+  const selectedWeapon = weapon({ hitReroll: "ones", woundReroll: "failed" });
+  const mean = getExpectedDamage({ attacker: unit, target, weapon: selectedWeapon });
+  const distribution = getDamageOutcomeDistribution({ attacker: unit, target, weapon: selectedWeapon });
+  const fullReroll = getExpectedDamage({
+    attacker: attacker(), target,
+    weapon: weapon({ hitReroll: "failed", woundReroll: "failed" })
+  });
+
+  assert.equal(mean.hitReroll, "failed");
+  assert.equal(mean.woundReroll, "failed");
+  assert.equal(distribution.contextualAbilities.hitReroll, "failed");
+  assert.equal(distribution.contextualAbilities.woundReroll, "failed");
+  assert.ok(Math.abs(mean.expectedDamage - fullReroll.expectedDamage) < 1e-10);
+  assert.ok(Math.abs(distribution.expectedDamage - mean.expectedDamage) < 1e-10);
+  assert.ok(Math.abs(distribution.totalProbability - 1) < 1e-10);
+});
+
+test("explicit no-reroll weapons cannot hide unit re-rolls, and stages stay independent", () => {
+  const unit = attacker({ hitReroll: "ones", woundReroll: "failed" });
+  const result = getExpectedDamage({
+    attacker: unit, target,
+    weapon: weapon({ hitReroll: "none", woundReroll: "none" })
+  });
+  assert.equal(result.hitReroll, "ones");
+  assert.equal(result.woundReroll, "failed");
+  const opposite = getExpectedDamage({
+    attacker: attacker({ hitReroll: "failed", woundReroll: "none" }), target,
+    weapon: weapon({ hitReroll: "ones", woundReroll: "ones" })
+  });
+  assert.equal(opposite.hitReroll, "failed");
+  assert.equal(opposite.woundReroll, "ones");
+});
+
+test("recorded detachment rerolls combine with stronger weapon and unit rerolls without chaining", () => {
+  const source = {
+    ...attacker({ hitReroll: "ones", woundReroll: "failed" }),
+    combatRules: { effects: ["tyranid-surprise-assault"] }
+  };
+  const selectedWeapon = weapon({ hitReroll: "failed", woundReroll: "none" });
+  const mean = getExpectedDamage({ attacker: source, target, weapon: selectedWeapon });
+  const distribution = getDamageOutcomeDistribution({ attacker: source, target, weapon: selectedWeapon });
+  assert.equal(mean.hitReroll, "failed");
+  assert.equal(mean.woundReroll, "failed");
+  assert.equal(distribution.contextualAbilities.hitReroll, "failed");
+  assert.equal(distribution.contextualAbilities.woundReroll, "failed");
+  assert.ok(mean.contextualAbilities.appliedRules.some(rule => rule.startsWith("Subterranean Assault")));
+  assert.ok(Math.abs(mean.expectedDamage - distribution.expectedDamage) < 1e-10);
+});
