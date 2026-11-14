@@ -2,6 +2,7 @@ import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_KATAH } from "../data/adeptus-custodes-faction-rules.js";
 import { getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from "./battle-unit-reference.js";
 import { getExpectedDamage } from "./expected-damage.js";
+import { strongestReroll } from "./attack-roll-probabilities.js";
 import { getFightEngagementState } from "./fight-engagement-state.js";
 import { getRosterDetachmentNames, isAdeptusCustodesFaction } from "./roster-detachment-selection.js";
 import { getProbabilisticUnitProfile } from "./saved-roster-combat-profile.js";
@@ -124,13 +125,17 @@ function targetHasKeyword(targetProfile, keyword) {
 }
 
 function weaponWith(weapon, changes) {
-  return {
-    ...weapon,
-    characteristics: {
-      ...(weapon?.characteristics ?? {}),
-      ...changes
-    }
-  };
+  const previous = weapon?.characteristics ?? {};
+  const characteristics = { ...previous, ...changes };
+  // Optional Ka'tah and detachment bonuses may add a re-roll, never replace
+  // a stronger legal weapon re-roll (or erase it with "none").
+  if (changes.hitReroll !== undefined) {
+    characteristics.hitReroll = strongestReroll(previous.hitReroll, changes.hitReroll);
+  }
+  if (changes.woundReroll !== undefined) {
+    characteristics.woundReroll = strongestReroll(previous.woundReroll, changes.woundReroll);
+  }
+  return { ...weapon, characteristics };
 }
 
 function expectedDamage(attacker, target, weapon) {
