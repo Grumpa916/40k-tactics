@@ -39,7 +39,7 @@ test('recorded saved-roster weapon name survives projection and appears instead 
   assert.equal(attack.weaponId, 'datasheet:p1:telemon:3');
   assert.equal(attack.weaponName, 'Spiculus Bolt Launcher');
   const html = renderShootingHistoryRow(attack, state, { weapons: [] });
-  assert.match(html, /Spiculus Bolt Launcher · 1 actual · 0\\.8 expected · 3 wounds/);
+  assert.match(html, /Spiculus Bolt Launcher · 1 actual · 0\.8 expected · 3 wounds/);
   assert.doesNotMatch(html, /datasheet:/);
 });
 
