@@ -1,3 +1,5 @@
+import { strongestReroll } from "./attack-roll-probabilities.js";
+
 export function buildAttackProfile({ attacker, target, weapon } = {}) {
   if (!attacker || !(attacker.characteristics ?? attacker.profile?.characteristics)) throw new TypeError("An attacker unit profile is required.");
   if (!target || !(target.characteristics ?? target.profile?.characteristics)) throw new TypeError("A target unit profile is required.");
@@ -36,12 +38,12 @@ export function buildAttackProfile({ attacker, target, weapon } = {}) {
     hitTarget,
     hitTargetKey,
     hitModifier: characteristics.hitModifier ?? 0,
-    hitReroll: weaponCharacteristics.hitReroll ?? attackerCharacteristics.hitReroll ?? "none",
+    hitReroll: strongestReroll(weaponCharacteristics.hitReroll, attackerCharacteristics.hitReroll),
     range: Number.isFinite(weaponCharacteristics.range) ? weaponCharacteristics.range : null,
     strength: characteristics.strength,
     toughness: characteristics.toughness,
     woundModifier: characteristics.woundModifier ?? 0,
-    woundReroll: weaponCharacteristics.woundReroll ?? attackerCharacteristics.woundReroll ?? "none",
+    woundReroll: strongestReroll(weaponCharacteristics.woundReroll, attackerCharacteristics.woundReroll),
     save: characteristics.save,
     invulnerableSave: characteristics.invulnerableSave ?? null,
     cover: weaponCharacteristics.ignoresCover ? false : characteristics.cover ?? false,
