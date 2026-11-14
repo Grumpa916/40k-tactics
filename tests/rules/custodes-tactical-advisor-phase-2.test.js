@@ -291,3 +291,49 @@ test("Honoured Companions calculates a conditional wound-reroll improvement but 
   assert.equal(honoured.requiresTableConfirmation, true);
   assert.ok(honoured.expectedDamage > fight.baselineExpectedDamage);
 });
+
+test("Custodes optional reroll options preserve stronger weapon abilities", () => {
+  const stronger = {
+    ...spear,
+    characteristics: { ...spear.characteristics, hitReroll: "failed", woundReroll: "failed" }
+  };
+  const fight = state => getCustodesFightAdvisorContext(state, {
+    playerId: "p1", unitId: "custodes", targetUnitId: "enemy", weapon: stronger
+  });
+
+  const plain = fight(makeState({ custodesSheet: datasheet({ weapons: [stronger] }) }));
+  const dacatarai = plain.options.find(option => option.id === "dacatarai");
+  assert.ok(dacatarai);
+  assert.ok(Math.abs(dacatarai.expectedDamage - plain.baselineExpectedDamage) < 1e-10,
+    "Dacatarai must not downgrade a full Hit reroll to reroll 1s");
+
+  const honoured = fight(makeState({
+    detachments: ["Honoured Companions"],
+    custodesSheet: datasheet({ weapons: [stronger] }),
+    custodesPosition: { x: 2, y: 0 },
+    objectives: [{ id: "center", position: { x: 0, y: 0 } }]
+  }));
+  const companion = honoured.options.find(option => option.id === "honoured-companions");
+  assert.ok(companion);
+  assert.ok(Math.abs(companion.expectedDamage - honoured.baselineExpectedDamage) < 1e-10,
+    "Honoured Companions must not downgrade a full Wound reroll to reroll 1s");
+
+  const telemon = datasheet({
+    name: "Telemon Heavy Dreadnought",
+    keywords: ["Vehicle", "Dreadnought", "Adeptus Custodes"],
+    toughness: "11", wounds: "14", weapons: [stronger]
+  });
+  const setup = {
+    custodesSheet: telemon,
+    custodesOverrides: {
+      name: "Telemon Heavy Dreadnought", wounds: 7, maxWounds: 14,
+      startingWounds: 14, toughness: 11
+    }
+  };
+  const noMoritoi = fight(makeState(setup));
+  const withMoritoi = fight(makeState({ ...setup, detachments: ["Might of the Moritoi"] }));
+  assert.equal(withMoritoi.moritoi.hitReroll, "ones");
+  assert.equal(withMoritoi.moritoi.woundReroll, "ones");
+  assert.ok(Math.abs(withMoritoi.baselineExpectedDamage - noMoritoi.baselineExpectedDamage) < 1e-10,
+    "Moritoi must not replace an existing stronger Hit or Wound reroll");
+});
