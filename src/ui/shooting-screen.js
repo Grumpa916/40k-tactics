@@ -80,13 +80,16 @@ function tabletopUnitSummary(state, unitId) {
   return { unit, wounds, models: String(models), status };
 }
 
-function historyRow(item, state, gameData) {
+export function renderShootingHistoryRow(item, state, gameData) {
   const attacker = state.units.find((unit) => unit?.id === item.attackerId);
   const target = state.units.find((unit) => unit?.id === item.targetId);
   const allocation = item.allocationTargetId
     ? state.units.find((unit) => unit?.id === item.allocationTargetId)
     : null;
   const weapon = gameData?.weapons?.find((entry) => entry?.id === item.weaponId);
+  // Event-time weapon names preserve the exact equipped profile even when a
+  // saved-roster weapon ID is not present in the shared weapon catalog.
+  const weaponLabel = item.weaponName || weapon?.name || item.weaponId || "Weapon";
   const expectedDamage = Number.isFinite(item.expectedDamage)
     ? item.expectedDamage.toFixed(1)
     : item.expectedDamage ?? item.totalDamage ?? 0;
@@ -96,7 +99,7 @@ function historyRow(item, state, gameData) {
   const targetLabel = allocation
     ? `${target?.name ?? item.targetId} (${allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
     : target?.name ?? item.targetId;
-  return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(targetLabel)}</strong><span>${escapeHtml(weapon?.name ?? item.weaponId ?? "Weapon")} · ${escapeHtml(result)}</span></li>`;
+  return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(targetLabel)}</strong><span>${escapeHtml(weaponLabel)} · ${escapeHtml(result)}</span></li>`;
 }
 
 function renderSecondaryShootingIntelligence(state,playerId) {
@@ -308,7 +311,7 @@ export function createShootingScreen(container, {
             </section>
 
             <details class="shoot-tabletop__history" data-view-key="shoot-history"><summary>Phase history · ${model.attacks.length} attacks</summary>
-              <ol class="history">${model.attacks.length ? model.attacks.map((item) => historyRow(item, state, gameData)).join("") : "<li>No attacks recorded yet.</li>"}</ol>
+              <ol class="history">${model.attacks.length ? model.attacks.map((item) => renderShootingHistoryRow(item, state, gameData)).join("") : "<li>No attacks recorded yet.</li>"}</ol>
             </details>
           </div>
           <footer class="shoot-tabletop__footer">${renderActionReceipt(session, { compact:true })}${state.phase !== 'shooting' ? '' : activeActivation ? `<div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
