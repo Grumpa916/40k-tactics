@@ -35,10 +35,17 @@ export function getCommandPhaseExitBlocker(state) {
   }
 
   if (getSecondaryMissionMode(state,playerId) === SECONDARY_MISSION_MODES.TACTICAL) {
-    const activeCards=getSecondaryMissionHistory(state,playerId).filter(card =>
-      card.status === SECONDARY_MISSION_STATUS.ACTIVE);
-    if (activeCards.length < 2) {
-      return 'Record two active Tactical secondary cards for the active player before leaving the Command phase.';
+    const round=state.battle?.round ?? 0;
+    const turn=state.turn ?? 0;
+    // Existing active cards carry over, but they do not satisfy this Command
+    // phase's two normal Tactical draws. Ignore returned/replaced card draws
+    // and the extra New Orders replacement, matching the Command UI counter.
+    const drawnThisCommand=getSecondaryMissionHistory(state,playerId).filter(card =>
+      card.drawnRound === round && card.drawnTurn === turn &&
+      card.status !== SECONDARY_MISSION_STATUS.RETURNED_TO_DECK &&
+      card.isRedrawReplacement !== true);
+    if (drawnThisCommand.length < 2) {
+      return 'Record two Tactical secondary cards drawn this Command phase before leaving the Command phase.';
     }
   }
   return null;
