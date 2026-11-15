@@ -9,18 +9,27 @@ const state = (mode, cards = [], activePlayer = 'p1') => ({
   scoring: { secondaryMissionModeByPlayer: { [activePlayer]: mode }, secondaryMissions: cards },
   units: [], objectives: []
 });
-const card = (playerId, id, status = 'active') => ({ playerId, instanceId: id, status, scoringHistory: [] });
+const card = (playerId, id, status = 'active', { round = 1, turn = 1 } = {}) => ({
+  playerId, instanceId: id, status, scoringHistory: [], drawnRound: round, drawnTurn: turn
+});
 
-test('Tactical player needs two active cards before Command advances', () => {
-  for (const cards of [[], [card('p1', 'a')], [card('p1', 'a'), card('p1', 'b', 'scored')]]) {
-    assert.throws(() => changePhase(state('tactical', cards), { phase: 'movement' }), /two active Tactical secondary cards/);
+test('Tactical player needs two new cards from this Command phase before advancing', () => {
+  for (const cards of [[], [card('p1', 'a')], [card('p1', 'a'), card('p1', 'b', 'returned-to-deck')]]) {
+    assert.throws(() => changePhase(state('tactical', cards), { phase: 'movement' }), /two new Tactical secondary cards/);
   }
   const ready = state('tactical', [card('p1', 'a'), card('p1', 'b')]);
   assert.equal(changePhase(ready, { phase: 'movement' }).phase, 'movement');
 });
 
-test('only the active player is checked; Fixed cards persist across turns', () => {
-  const opponentTurn = state('tactical', [card('p1', 'a'), card('p2', 'b'), card('p2', 'c')], 'p2');
+test('only the active player and current Command draws count; Fixed cards persist', () => {
+  const oldOpponentCard = card('p2', 'old', 'active', { round: 1, turn: 0 });
+  const oneDraw = state('tactical', [
+    card('p1', 'a'), oldOpponentCard, card('p2', 'b')
+  ], 'p2');
+  assert.throws(() => changePhase(oneDraw, { phase: 'movement' }), /two new Tactical secondary cards/);
+  const opponentTurn = state('tactical', [
+    card('p1', 'a'), oldOpponentCard, card('p2', 'b'), card('p2', 'c')
+  ], 'p2');
   assert.equal(changePhase(opponentTurn, { phase: 'movement' }).phase, 'movement');
   assert.equal(changePhase(state('fixed'), { phase: 'movement' }).phase, 'movement');
 });
