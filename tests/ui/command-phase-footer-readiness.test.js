@@ -16,9 +16,10 @@ function commandState(){
     secondaryMissionModeByPlayer:{p1:'tactical'},
     secondaryMissions:[]}};
 }
-const card=(playerId,number,status='active')=>({
+const card=(playerId,number,status='active',{round=1,turn=1,isRedrawReplacement=false}={})=>({
   instanceId:playerId+'-card-'+number,playerId,
-  definitionId:'secondary-test-'+number,status
+  definitionId:'secondary-test-'+number,status,drawnRound:round,drawnTurn:turn,
+  ...(isRedrawReplacement ? {isRedrawReplacement:true} : {})
 });
 function withCards(state,cards){
   return {...state,scoring:{...state.scoring,secondaryMissions:cards}};
@@ -36,18 +37,51 @@ function assertBlocked(state,reason){
   assert.throws(()=>changePhase(state,{phase:'movement'}),reason);
   assert.equal(JSON.stringify(state),before,'rendering and validation cannot mutate the battle');
 }
-test('Command starts neutral and locked until two active Tactical secondaries recorded',()=>{
+test('Command starts neutral and locked until two current Command Tactical draws recorded',()=>{
   const state=commandState();
-  assertBlocked(state,/Record two active Tactical secondary cards/);
-  assertBlocked(withCards(state,[card('p1',1)]),/Record two active Tactical secondary cards/);
-  assertBlocked(withCards(state,[card('p1',1),card('p2',2)]),/Record two active Tactical secondary cards/);
-  assertBlocked(withCards(state,[card('p1',1),card('p1',2,'scored')]),/Record two active Tactical secondary cards/);
+  assertBlocked(state,/Record two new Tactical secondary cards/);
+  assertBlocked(withCards(state,[card('p1',1)]),/Record two new Tactical secondary cards/);
+  assertBlocked(withCards(state,[card('p1',1),card('p2',2)]),/Record two new Tactical secondary cards/);
+  assertBlocked(withCards(state,[card('p1',1),card('p1',2,'returned-to-deck')]),/Record two new Tactical secondary cards/);
   const ready=withCards(state,[card('p1',1),card('p1',2)]);
   assert.equal(getCommandPhaseExitBlocker(ready),null);
   assert.equal(getPhaseProgressionAction(ready).disabled,undefined);
   assert.match(renderPhaseProgressionPanel(ready,'command'),/data-phase-ready="true"/);
   assert.match(renderPhaseProgressionPanel(ready,'command'),/<button type="button" data-advance-game-phase /);
   assert.equal(changePhase(ready,{phase:'movement'}).phase,'movement');
+});
+
+test('Older active cards cannot unlock a later opponent Command phase',()=>{
+  const base=commandState();
+  const state={...base,turn:4,activePlayer:'p2',
+    battle:{...base.battle,round:2,activePlayerId:'p2'},
+    scoring:{...base.scoring,secondaryMissionModeByPlayer:{p1:'tactical',p2:'tactical'}}};
+  const carriedOver=[
+    card('p2',1,'active',{round:1,turn:2}),
+    card('p2',2,'active',{round:1,turn:2})
+  ];
+  assertBlocked(withCards(state,carriedOver),/Record two new Tactical secondary cards/);
+  const newCard=card('p2',3,'active',{round:2,turn:4});
+  assertBlocked(withCards(state,[...carriedOver,newCard]),/Record two new Tactical secondary cards/);
+  assertBlocked(withCards(state,[...carriedOver,newCard,card('p1',4,'active',{round:2,turn:4})]),
+    /Record two new Tactical secondary cards/,'Other player draws must not count');
+  assertBlocked(withCards(state,[...carriedOver,newCard,card('p2',5,'active',{round:2,turn:3})]),
+    /Record two new Tactical secondary cards/,'Earlier-turn draws in the same round must not count');
+  const ready=withCards(state,[...carriedOver,newCard,card('p2',6,'active',{round:2,turn:4})]);
+  assert.equal(getCommandPhaseExitBlocker(ready),null);
+  assert.equal(getPhaseProgressionAction(ready).disabled,undefined);
+  assert.equal(changePhase(ready,{phase:'movement'}).phase,'movement');
+});
+
+test('Returned cards and New Orders replacements do not count as normal Command draws',()=>{
+  const state=commandState();
+  const first=card('p1',1);
+  const returned=card('p1',2,'returned-to-deck');
+  const extraRedraw=card('p1',3,'active',{isRedrawReplacement:true});
+  assertBlocked(withCards(state,[first,returned]),/Record two new Tactical secondary cards/);
+  assertBlocked(withCards(state,[first,extraRedraw]),/Record two new Tactical secondary cards/);
+  const ready=withCards(state,[first,returned,extraRedraw,card('p1',4)]);
+  assert.equal(getCommandPhaseExitBlocker(ready),null);
 });
 
 test('pending New Orders or When Drawn card choices keep the footer neutral even with two cards',()=>{
@@ -69,7 +103,7 @@ test('Fixed secondary mode does not require two Tactical cards, and viewing anot
   const preview=renderPhaseProgressionPanel(blocked,'fight');
   assert.match(preview,/data-return-current-phase/);
   assert.doesNotMatch(preview,/<button type="button" disabled/);
-  assert.doesNotMatch(preview,/Record two active Tactical secondary cards/);
+  assert.doesNotMatch(preview,/Record two new Tactical secondary cards/);
 });
 
 test('Landscape Command footer has disabled dark-phase styling and an enabled green highlight',()=>{
