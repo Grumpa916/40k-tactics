@@ -45,7 +45,7 @@ export function getCommandPhaseExitBlocker(state) {
       card.status !== SECONDARY_MISSION_STATUS.RETURNED_TO_DECK &&
       card.isRedrawReplacement !== true);
     if (drawnThisCommand.length < 2) {
-      return 'Record two Tactical secondary cards drawn this Command phase before leaving the Command phase.';
+      return 'Record two new Tactical secondary cards for this Command phase before continuing.';
     }
   }
   return null;
