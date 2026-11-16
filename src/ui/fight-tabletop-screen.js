@@ -15,6 +15,7 @@ import { fightAdvisory } from './fight-advisor.js';
 import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './combat-workspace.js';
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from './custodes-katah-panel.js';
 import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
+import { unitDisplayLabels } from './map-unit-labels.js';
 
 export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null, unitSelection = null }) {
   const mapView = createLiveMapView();
@@ -27,6 +28,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     if (dispatching) return;
     const restoreView = captureViewContinuity(container);
     const state = session.getState();
+    const displayNames = unitDisplayLabels(state.units ?? []);
+    const displayName = unitId => displayNames.get(unitId) ?? state.units.find(unit => unit.id === unitId)?.name ?? unitId ?? 'Unknown unit';
     const model = getFightViewModel(state, { perspectivePlayerId });
     const viewingPlayerId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
     let options = getFightAttackOptions(state, { attackerId, perspectivePlayerId, includeCandidates:true });
@@ -101,7 +104,12 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
           ? renderIncomingDamageForecast(state, { attackerId, targetId, weapon: selectedWeapon })
           : advice || '<p>Select a fighter, melee weapon and target to compare expected damage and return damage.</p>'}
       </aside>
-      <details data-view-key="fight-history"><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => `<li>${esc(state.units.find(unit => unit.id === attack.attackerId)?.name)} → ${esc(attack.allocationTargetName ? `${state.units.find(unit => unit.id === attack.targetId)?.name} (${attack.allocationTargetName})` : state.units.find(unit => unit.id === attack.targetId)?.name)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
+      <details data-view-key="fight-history"><summary>Phase history · ${model.attacks.length} attacks</summary><ol>${model.attacks.map(attack => {
+        const targetName = displayName(attack.targetId);
+        const allocationName = attack.allocationTargetId ? displayName(attack.allocationTargetId) : attack.allocationTargetName;
+        const target = allocationName && allocationName !== targetName ? `${targetName} (${allocationName})` : targetName;
+        return `<li>${esc(displayName(attack.attackerId))} · ${esc(attack.weaponName ?? attack.weaponId ?? 'Melee attack')} → ${esc(target)} · ${esc(attack.actualDamage ?? attack.totalDamage)} damage</li>`;
+      }).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining inferred combats as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button type="button" data-fight-confirm-end>Confirm · End Fight</button><button type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     const finishUnitControl = active && unit ? '<button type="button" data-fight-finish-entry>Finish unit</button>' : '';
     const endFightControl = active && unit || endReview ? '' : `<button type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
