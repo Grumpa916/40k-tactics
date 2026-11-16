@@ -1,4 +1,5 @@
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
+import { unitDisplayLabels } from './map-unit-labels.js';
 import { renderRosterUnitEditor, rosterUnitEditorStylesheet } from './roster-unit-adjust.js';
 import { getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
@@ -10,13 +11,14 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
 } = {}) {
   const myId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
   const symbols = liveUnitSymbolLabels(state.units ?? []);
+  const displayNames = unitDisplayLabels(state.units ?? []);
   const selectable = new Set(selectableIds), targets = new Set(targetIds);
   const row = (unit, side, role = '') => {
     const vitals = getLiveUnitVitals(state, unit);
     const remaining = Number.isFinite(vitals.wounds) ? String(vitals.wounds) : '—';
     const maximum = Number.isFinite(vitals.startingWounds) ? '/' + vitals.startingWounds : '';
     const id = esc(unit.id);
-    const name = esc(unit.name ?? unit.id);
+    const name = esc(displayNames.get(unit.id) ?? unit.name ?? unit.id);
     const details = 'data-open-unit-details="' + id + '"';
     const formationId = selectable.size && unit.status === 'deployed'
       ? getCombatFormationRootId(state, unit) : unit.id;
