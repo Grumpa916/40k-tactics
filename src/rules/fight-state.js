@@ -40,6 +40,7 @@ function getCurrentTurnFightAttacks(state) {
       allocationTargetId: event.payload.allocationTargetId ?? null,
       allocationTargetName: event.payload.allocationTargetName ?? null,
       weaponId: event.payload.weaponId ?? null,
+      weaponName: event.payload.weaponName ?? null,
       round: event.payload.round,
       turn: event.payload.turn,
       expectedDamage: event.payload.expectedDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
