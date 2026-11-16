@@ -221,6 +221,9 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       [data-movement-advisor] .movement-advisor__option{color:inherit;text-decoration:none}
       [data-movement-advisor] .movement-advisor__secondary-advice{display:block;margin-top:4px;line-height:1.4}
       [data-movement-advisor] .movement-advisor__option.is-selected{outline:2px solid #f6d783;outline-offset:1px}
+      .movement-advisor__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .movement-advisor__grid>div{display:flex;flex-direction:column;gap:3px;min-width:0;line-height:1.25}
+      .movement-advisor__grid strong,.movement-advisor__grid span{display:block;min-width:0;white-space:normal;overflow-wrap:anywhere}
       .movement-advisor__limitations{margin-top:8px;border-top:1px solid #53665a;padding-top:4px}
       .movement-advisor__limitations>summary{min-height:36px;padding:8px;cursor:pointer}
       .movement-advisor__limitations>small{display:block;padding:0 8px 9px;line-height:1.4}
