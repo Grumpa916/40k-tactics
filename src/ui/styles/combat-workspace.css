@@ -85,3 +85,7 @@
 .battle-shell.is-tabletop-experiment .combat-workspace__panel footer [data-fight-finish-entry] { background:#1c2926; border-color:#657b6b; color:#ecf2e8; }
 .combat-workspace__charge-results + [data-charge-complete] { margin-top:6px; }
 .combat-workspace[data-combat-phase="charge"] .combat-workspace__top-controls .combat-workspace__error { margin:4px 0 8px; }
+
+.combat-workspace__selected-unit{display:flex;align-items:baseline;gap:7px;min-height:26px;margin:0;padding:3px 6px;color:#eef3f0;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+.combat-workspace__selected-unit strong{flex:none;color:#b9c7c6;font-size:11px}
+.combat-workspace__selected-unit span{min-width:0;font-weight:750;overflow-wrap:anywhere}
