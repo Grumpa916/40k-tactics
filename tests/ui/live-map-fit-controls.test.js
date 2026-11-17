@@ -26,7 +26,7 @@ test('live battlefield keeps zoom at hand and groups display tools and selected 
   assert.match(modelMenu, /Models for Guard/);
   assert.match(modelMenu, /data-live-map-squad-toggle/);
   assert.match(modelMenu, /data-live-map-base-apply/);
-  assert.match(markup, /--live-marker-size:18px/);
+  assert.match(markup, /--live-marker-size:32px/);
   assert.doesNotMatch(markup, /data-live-map-threat-overlay|data-map-threat-note/);
   assert.match(markup, /is-top-down is-planner-view/);
   assert.match(css, /\.live-map\.is-standard \.battlefield-map__board/);
