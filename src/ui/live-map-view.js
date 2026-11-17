@@ -24,14 +24,18 @@ function loadMapPreferences() {
       // toggle. Physical outlines must be visible without a hidden control.
       bases: true,
       sight: parsed?.sight === true,
-      markerSize: Math.max(14, Math.min(38, Number(parsed?.markerSize) || 18)),
+      // Migrate previous base-dependent 14–18px fallback markers to readable
+      // uniform 32px tokens. New adjustments apply to every unit marker.
+      markerDisplayVersion: 2,
+      markerSize: parsed?.markerDisplayVersion === 2
+        ? Math.max(28, Math.min(40, Number(parsed?.markerSize) || 32)) : 32,
       baseSizes: parsed?.baseSizes && typeof parsed.baseSizes === 'object' ? parsed.baseSizes : {},
       ovalAngles: parsed?.ovalAngles && typeof parsed.ovalAngles === 'object' ? parsed.ovalAngles : {},
       expandedUnits: parsed?.expandedUnits && typeof parsed.expandedUnits === 'object' ? parsed.expandedUnits : {},
       sightModels: parsed?.sightModels && typeof parsed.sightModels === 'object' ? parsed.sightModels : {}
     };
   } catch {
-    return { topDown: true, grid: true, bases: true, sight: false, markerSize: 18, baseSizes: {}, ovalAngles: {}, expandedUnits: {}, sightModels: {} };
+    return { topDown: true, grid: true, bases: true, sight: false, markerDisplayVersion: 2, markerSize: 32, baseSizes: {}, ovalAngles: {}, expandedUnits: {}, sightModels: {} };
   }
 }
 
@@ -121,8 +125,8 @@ function liveTools(state, options, preferences, zoomed = false) {
         <button type="button" data-live-map-sight-toggle aria-pressed="${preferences.sight}">Line of sight</button>
         ${options?.showMapPlanner ? MAP_PLANNING_BUTTON : ''}
         ${modelPicker}
-        <label class="live-map__marker-size" title="Used for units without verified base dimensions; known bases scale automatically in Top-down view">Fallback size
-          <input type="range" min="14" max="38" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Marker size for units without verified physical bases">
+        <label class="live-map__marker-size" title="All unit markers use the same readable size; physical model base outlines remain separate">Unit tokens
+          <input type="range" min="28" max="40" step="2" value="${preferences.markerSize}" data-live-map-marker-size aria-label="Uniform size of all map unit tokens">
           <output data-live-map-marker-value>${preferences.markerSize}px</output>
         </label>
       </div>
@@ -376,7 +380,7 @@ export function createLiveMapView() {
         drawIndividualModelHandles(container,state,preferences);
       });
       container.querySelector('[data-live-map-marker-size]')?.addEventListener('input', event => {
-        const size = Math.max(14, Math.min(38, Number(event.currentTarget.value) || 18));
+        const size = Math.max(28, Math.min(40, Number(event.currentTarget.value) || 32));
         preferences.markerSize = size;
         const liveMap = container.querySelector('.live-map');
         liveMap?.style?.setProperty?.('--live-marker-size', size + 'px');
