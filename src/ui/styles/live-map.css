@@ -860,3 +860,52 @@
 .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__unit.is-compact.is-dragging {
   z-index:14;
 }
+
+
+/* One iPad-friendly phase-end vocabulary across Shooting, Charge and Fight.
+   Review never resembles the green action that commits a phase transition. */
+.battle-shell.is-tabletop-experiment :is(.shoot-tabletop__footer,.combat-workspace__panel footer) :is(.phase-end__primary,.phase-end__secondary,.phase-end__review-button) {
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:48px;
+  margin:0;
+  padding:10px 12px;
+  border-radius:9px;
+  font-size:14px;
+  line-height:1.25;
+  font-weight:750;
+  text-align:center;
+  white-space:normal;
+  touch-action:manipulation;
+}
+.battle-shell.is-tabletop-experiment :is(.shoot-tabletop__footer,.combat-workspace__panel footer) .phase-end__primary:not(:disabled) {
+  background:#c4e99b;
+  border:1px solid #c4e99b;
+  color:#17212b;
+}
+.battle-shell.is-tabletop-experiment :is(.shoot-tabletop__footer,.combat-workspace__panel footer) :is(.phase-end__secondary,.phase-end__review-button) {
+  background:#1c2926;
+  border:1px solid #657b6b;
+  color:#ecf2e8;
+}
+.battle-shell.is-tabletop-experiment :is(.shoot-tabletop__footer,.combat-workspace__panel footer) .phase-end__review {
+  box-sizing:border-box;
+  display:grid;
+  grid-column:1/-1;
+  gap:6px;
+  min-width:0;
+  margin:0;
+  padding:10px;
+  border:1px solid #9d8b64;
+  border-radius:9px;
+  background:#211e1b;
+  color:#f4ecdb;
+}
+.battle-shell.is-tabletop-experiment .phase-end__review > strong { display:block; font-size:15px; }
+.battle-shell.is-tabletop-experiment .phase-end__review > p { margin:0; line-height:1.4; }
+.battle-shell.is-tabletop-experiment :is(.shoot-tabletop__footer,.combat-workspace__panel footer) :is(.phase-end__primary,.phase-end__secondary,.phase-end__review-button):focus-visible {
+  outline:3px solid #f5dda3;
+  outline-offset:2px;
+}
