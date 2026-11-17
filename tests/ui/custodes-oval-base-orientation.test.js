@@ -29,7 +29,7 @@ test('oval orientations are per-unit, normalized into 0–179°, with fallback t
   assert.equal(getLiveOvalAngle({...vertus,id:'other'},{vertus:45}),0);
 });
 
-test('Top-down oval marker and physical base layer rotate together while label stays upright', () => {
+test('physical oval base outline rotates independently of the upright uniform marker label', () => {
   const old=globalThis.localStorage;
   let saved='{}';
   try {
@@ -89,9 +89,9 @@ test('Top-down oval marker and physical base layer rotate together while label s
     assert.equal(getLiveOvalAngle(telemon,JSON.parse(saved).ovalAngles),0);
 
     const css=readFileSync(new URL('../../src/ui/styles/live-map.css',import.meta.url),'utf8');
-    assert.match(css,/\.is-base-scaled\.is-base-oval::after \{[\s\S]*?transform:rotate\(var\(--live-oval-angle,0deg\)\)/);
-    assert.match(css,/\.is-base-oval\.is-base-reference::after \{[\s\S]*?border-style:dashed/);
-    assert.doesNotMatch(css.slice(css.lastIndexOf('/* Rotatable oval miniatures:'),css.indexOf('/* Individual-model map positioning:')),/\.live-map\.is-standard/);
+    assert.match(css,/\.live-map \.battlefield-map__unit\.is-compact \{[\s\S]*?width:var\(--live-marker-size,32px\) !important;/);
+    assert.doesNotMatch(css,/\.is-base-scaled\.is-base-oval::after \{/);
+    assert.match(css,/\.live-map__model-base\.is-reference \{[\s\S]*?stroke-dasharray/);
   } finally {
     if(old===undefined) delete globalThis.localStorage;
     else globalThis.localStorage=old;

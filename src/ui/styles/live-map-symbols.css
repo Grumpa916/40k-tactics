@@ -123,36 +123,36 @@
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit .unit-map-status-badges {
   position:absolute;
   z-index:10;
-  top:-9px;
-  right:-10px;
+  top:-11px;
+  right:-12px;
   display:flex;
   flex-wrap:wrap;
   justify-content:flex-start;
-  gap:1px;
+  gap:2px;
   width:max-content;
-  max-width:44px;
+  max-width:52px;
   pointer-events:none;
 }
 .battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge {
   box-sizing:border-box;
   display:grid;
   place-items:center;
-  flex:0 0 14px;
-  width:14px;
-  height:14px;
+  flex:0 0 16px;
+  width:16px;
+  height:16px;
   border:1px solid #d8e0e2;
   border-radius:50%;
   background:#293943;
   color:#fff;
-  font-size:8px;
+  font-size:10px;
   font-weight:900;
   line-height:1;
   text-shadow:0 1px 2px #000;
 }
 .battle-shell.is-tabletop-experiment .live-map .battlefield-map__unit .unit-activation-badge {
   top:auto;
-  right:-6px;
-  bottom:-7px;
+  right:-8px;
+  bottom:-9px;
 }
 .battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-battle-shocked { background:#a34920; border-color:#ffd1a3; }
 .battle-shell.is-tabletop-experiment .live-map .unit-map-status-badge.is-engaged { background:#8b3035; border-color:#ffb0a5; }

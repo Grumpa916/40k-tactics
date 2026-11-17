@@ -504,17 +504,17 @@
 .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__base-editor > small { display:none; }
 .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-planner-view .battlefield-map__unit.is-compact {
   box-sizing:border-box;
-  width:var(--live-marker-size,18px) !important;
-  height:var(--live-marker-size,18px) !important;
-  min-width:var(--live-marker-size,18px) !important;
-  max-width:var(--live-marker-size,18px) !important;
-  min-height:var(--live-marker-size,18px) !important;
+  width:var(--live-marker-size,32px) !important;
+  height:var(--live-marker-size,32px) !important;
+  min-width:var(--live-marker-size,32px) !important;
+  max-width:var(--live-marker-size,32px) !important;
+  min-height:var(--live-marker-size,32px) !important;
   padding:0 !important;
   border:2px dotted #a8daff;
   border-radius:50%;
   background:#204e67;
   color:#fff;
-  font-size:clamp(8px, calc(var(--live-marker-size,18px) * .48), 14px);
+  font-size:clamp(8px, calc(var(--live-marker-size,32px) * .48), 14px);
   font-weight:800;
   line-height:1;
   display:grid;
@@ -637,67 +637,32 @@
   stroke-opacity:1;
 }
 
-/* Top-down physical-size markers: unit token bounds are a percentage of the
-   actual 60 by 44 inch board, so shrinking/zooming the battlefield changes
-   the pixel dimensions automatically. Standard map keeps its original tokens.
-   A squad-centre token shows just one model's base as a dashed reference. */
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled {
+/* Live markers are symbolic unit handles, not measured model footprints.
+   Make Top-down and Standard map tokens equally readable, regardless of the
+   model's physical base. The independent SVG overlay retains verified base
+   circles and rotated oval outlines at their correct 60x44 board scale. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit.is-compact {
   box-sizing:border-box !important;
-  width:var(--live-base-width) !important;
-  height:var(--live-base-height) !important;
-  min-width:0 !important;
-  max-width:none !important;
-  min-height:0 !important;
-  max-height:none !important;
+  width:var(--live-marker-size,32px) !important;
+  height:var(--live-marker-size,32px) !important;
+  min-width:var(--live-marker-size,32px) !important;
+  max-width:var(--live-marker-size,32px) !important;
+  min-height:var(--live-marker-size,32px) !important;
+  max-height:var(--live-marker-size,32px) !important;
   padding:0 !important;
   border-radius:50% !important;
-  font-size:clamp(7px, .7vw, 10px) !important;
+  font-size:clamp(9px, calc(var(--live-marker-size,32px) * .30), 12px) !important;
   line-height:1 !important;
   overflow:visible !important;
 }
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled.is-base-reference {
-  border-style:dashed !important;
-}
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled::before {
-  width:max(44px, 100%) !important;
-  height:max(44px, 100%) !important;
-  border-radius:50% !important;
-}
-
-/* Rotatable oval miniatures: rotate the physical shape, not the number/text.
-   The same display-only angle is used by the SVG base outline. The original
-   map unit element, center position and 44px tap area are unchanged. */
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled.is-base-oval {
-  background:transparent !important;
-  border-color:transparent !important;
-  box-shadow:none !important;
-  isolation:isolate;
-}
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-scaled.is-base-oval::after {
-  content:"";
-  position:absolute;
-  inset:0;
-  display:block;
-  border:2px dotted #a8daff;
-  border-radius:50%;
-  box-sizing:border-box;
-  background:#204e67;
-  transform:rotate(var(--live-oval-angle,0deg));
-  transform-origin:center;
-  z-index:-1;
-  pointer-events:none;
-}
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-oval.opponent::after {
-  border-color:#ffbfb1;
-  background:#673837;
-}
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-oval.is-base-reference::after {
-  border-style:dashed;
-}
-.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map.is-top-down.is-planner-view .battlefield-map__unit.is-compact.is-base-oval.is-selected::after {
-  border-color:#fff09e;
-  background:#5c581e;
-  box-shadow:0 0 0 2px #fff09e;
+/* Attached Leader + Bodyguard remains one wider symbolic handle so both
+   identifiers are legible; its height and status badges match other units. */
+.battle-shell.is-tabletop-experiment .combat-workspace__map .live-map .battlefield-map__unit.is-compact.is-attached-formation {
+  width:calc(var(--live-marker-size,32px) + 22px) !important;
+  min-width:calc(var(--live-marker-size,32px) + 22px) !important;
+  max-width:calc(var(--live-marker-size,32px) + 22px) !important;
+  border-radius:13px !important;
+  padding:0 3px !important;
 }
 
 /* Individual-model map positioning: parent squad marker is visually hidden

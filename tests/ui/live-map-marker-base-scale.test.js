@@ -93,23 +93,22 @@ test('marker attributes update in place and manual size overrides recalculate im
   assert.equal(state.units[1].position.x,12,'no battle state update');
 });
 
-test('Top-down CSS uses percent-scaled physical base shape; Standard view retains existing fixed markers', () => {
+test('Standard and Top-down maps use uniform readable symbols independent of physical base shape', () => {
   const css=readFileSync(new URL('../../src/ui/styles/live-map.css',import.meta.url),'utf8');
-  const rules=css.slice(css.lastIndexOf('/* Top-down physical-size markers:'));
-  assert.ok(rules.length>300);
-  assert.match(rules,/\.live-map\.is-top-down\.is-planner-view \.battlefield-map__unit\.is-compact\.is-base-scaled \{/);
-  assert.match(rules,/width:var\(--live-base-width\) !important;/);
-  assert.match(rules,/height:var\(--live-base-height\) !important;/);
-  assert.match(rules,/min-width:0 !important;/);
-  assert.match(rules,/border-radius:50% !important;/);
-  assert.match(rules,/\.is-base-reference \{[\s\S]*?border-style:dashed !important;/);
-  assert.match(rules,/::before \{[\s\S]*?width:max\(44px, 100%\) !important;/);
-  assert.doesNotMatch(rules,/\.live-map\.is-standard[^\n]*\.battlefield-map__unit\.is-compact\.is-base-scaled/,'Standard markers do not use physical base widths');
+  const rules=css.slice(css.indexOf('/* Live markers are symbolic unit handles,'));
+  assert.match(rules,/\.live-map \.battlefield-map__unit\.is-compact \{/);
+  assert.match(rules,/width:var\(--live-marker-size,32px\) !important;/);
+  assert.match(rules,/height:var\(--live-marker-size,32px\) !important;/);
+  assert.match(rules,/\.is-compact\.is-attached-formation \{/);
+  assert.doesNotMatch(rules,/width:var\(--live-base-width\) !important;/);
+  assert.doesNotMatch(rules,/height:var\(--live-base-height\) !important;/);
+  assert.match(css,/\.live-map__physical-base-overlay \.live-map__model-base \{/);
 });
 
 test('live event handlers refresh scaled marker dimensions on manual override and mode switch', () => {
   const source=readFileSync(new URL('../../src/ui/live-map-view.js',import.meta.url),'utf8');
   assert.match(source,/import \{ applyLiveMarkerBaseScales, getLiveOvalAngle \} from '\.\/live-map-marker-base-scale\.js';/);
   assert.ok((source.match(/applyLiveMarkerBaseScales\(container, state, preferences\.baseSizes, preferences\.ovalAngles\)/g)??[]).length>=3);
-  assert.match(source,/Fallback size/);
+  assert.match(source,/Unit tokens/);
+  assert.match(source,/markerDisplayVersion: 2/);
 });

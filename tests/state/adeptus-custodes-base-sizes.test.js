@@ -87,7 +87,7 @@ test('live map base editor automatically fills the verified size and leaves visu
     assert.match(html,/data-live-map-base-width value="40"/);
     assert.match(html,/data-live-map-base-length value=""/);
     assert.match(html,/GW 2026 Event Companion · 40mm round/);
-    assert.match(html,/--live-marker-size:18px/);
+    assert.match(html,/--live-marker-size:32px/);
     const jetbike={id:'vertus',ownerId:'p1',name:'Vertus Praetors',status:'deployed',
       metadata:{datasheetId:'adeptus-custodes:vertus-praetors',modelCount:2},position:{x:15,y:15}};
     const bikeHtml=createLiveMapView().render({units:[jetbike],objectives:[],players:[]}, {selectedUnitId:'vertus',perspectivePlayerId:'p1'});
@@ -161,7 +161,7 @@ test('physical base outlines are their own visible layer above numbered tokens',
     assert.match(html,/class="live-map__physical-base-overlay" data-live-map-bases-layer/);
     assert.match(html,/<g data-live-map-bases><\/g>/);
     assert.ok(html.indexOf('live-map__physical-base-overlay') < html.indexOf('data-map-unit-id="telemon"'));
-    assert.match(html,/--live-marker-size:26px/,'visual marker remains independently adjustable');
+    assert.match(html,/--live-marker-size:32px/,'legacy tiny fallback marker migrates to a uniform readable size');
     const css=readFileSync(new URL('../../src/ui/styles/live-map.css',import.meta.url),'utf8');
     assert.match(css,/\.live-map__physical-base-overlay \{[\s\S]*?z-index:11 !important;[\s\S]*?pointer-events:none !important;/);
     assert.match(css,/\.live-map__physical-base-overlay \.live-map__model-base \{[\s\S]*?stroke-width:\.19;[\s\S]*?vector-effect:none;/);
