@@ -4,7 +4,7 @@ const MAP_TOLERANCE = 3;
 const MAX_ADVANCE = 6;
 
 export function classifyMovementDestination(distance, movement) {
-  if (!Number.isFinite(Number(distance)) || !Number.isFinite(Number(movement)) || Number(movement) < 0) {
+  if (distance == null || movement == null || !Number.isFinite(Number(distance)) || !Number.isFinite(Number(movement)) || Number(movement) < 0) {
     return Object.freeze({ status: "unknown", remainingGap: null, confidence: "low" });
   }
   const gap = Math.max(0, Number(distance) - (Number(movement) + MAP_TOLERANCE));
