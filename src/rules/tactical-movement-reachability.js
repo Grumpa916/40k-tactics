@@ -50,7 +50,8 @@ export function classifyMovementRecommendations(result) {
       ...item, ...best, unitId: item.unitId, unitName, movement: item.movement,
       effectiveOc: item.effectiveOc, battleShocked: item.battleShocked,
       type: item.type, weapons: item.weapons, territory: item.territory,
-      priority, alternatives: Object.freeze(options.slice(1, 3))
+      priority, recommendation: best.recommendation ?? (best === options[0] && best.objectiveId === item.objectiveId ? item.recommendation : `${unitName}: ${best.actionHint ?? "consider this position"}`),
+      alternatives: Object.freeze(options.slice(1, 3))
     });
   }).sort((a,b) => b.score - a.score || b.priority - a.priority || a.unitName.localeCompare(b.unitName));
   return Object.freeze({ ...result, recommendations: Object.freeze(recommendations) });
