@@ -316,14 +316,14 @@ export function createShootingScreen(container, {
           </div>
           <footer class="shoot-tabletop__footer">${renderActionReceipt(session, { compact:true })}${state.phase !== 'shooting' ? '' : activeActivation ? `<div class="damage-control shoot-tabletop__damage"><span class="damage-control__label">Actual damage</span><div class="damage-control__buttons"><button type="button" data-shoot-damage-minus aria-label="Decrease actual damage">−</button><strong data-shoot-damage-value>${escapeHtml(actualDamage)}</strong><button type="button" data-shoot-damage-plus aria-label="Increase actual damage">+</button></div></div>
               <button class="shoot-tabletop__record" type="button" data-attack ${selectedWeaponId && selectedTargetId ? "" : "disabled"}>Record shooting attack →</button>
-              <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>` : remaining === 0 ? '<button class="complete" type="button" data-complete>End Shooting · Charge →</button>' : endReview ? `
-              <section class="combat-end-review shoot-tabletop__end-review" aria-label="End Shooting review">
+              <button class="shoot-tabletop__finish" type="button" data-finish-unit>Finish unit</button>` : remaining === 0 ? '<button class="complete phase-end__primary" type="button" data-complete>End Shooting · Charge →</button>' : endReview ? `
+              <section class="combat-end-review phase-end__review shoot-tabletop__end-review" role="region" aria-label="End Shooting review">
                 <strong>End Shooting?</strong>
                 ${model.candidates.length ? `<p>Mark ${model.candidates.length} remaining ${model.candidates.length === 1 ? 'unit' : 'units'} as result not logged.</p>` : ''}
                 ${openUnits.length ? `<p>Close ${openUnits.length} open ${openUnits.length === 1 ? 'activation' : 'activations'} with the attacks recorded so far.</p>` : ''}
-                <button type="button" data-confirm-end-shooting>End Shooting</button>
-                <button type="button" data-cancel-end-shooting>Keep playing</button>
-              </section>` : `<button class="shoot-tabletop__review" type="button" data-review-end-shooting>End Shooting · Review ${remaining} ${remaining === 1 ? 'unit' : 'units'}</button>`}</footer>
+                <button class="phase-end__primary" type="button" data-confirm-end-shooting>Confirm · End Shooting → Charge</button>
+                <button class="phase-end__secondary" type="button" data-cancel-end-shooting>Keep shooting</button>
+              </section>` : `<button class="shoot-tabletop__review phase-end__review-button" type="button" data-review-end-shooting>End Shooting · Review ${remaining} ${remaining === 1 ? 'unit' : 'units'}</button>`}</footer>
         </section>
       </main>`;
     } else {
