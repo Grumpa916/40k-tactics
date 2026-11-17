@@ -55,7 +55,7 @@ function renderMovementOption(option, index, selectedRank, state, perspectivePla
   const selected = selectedRank === rank;
   return `<a href="#movement-destination-${rank}" role="button" class="move-unit movement-advisor__option${selected ? " is-selected" : ""}" data-movement-option-rank="${rank}" data-movement-highlight-kind="${escapeHtml(descriptor.kind)}" data-movement-highlight-id="${escapeHtml(descriptor.id)}" aria-pressed="${selected}">
     <strong>${rank}. ${escapeHtml(destinationLabel(option, state, perspectivePlayerId))}${recommended ? " · Recommended" : ""}</strong>
-    <span>${escapeHtml(purposeLabel(option.purpose))} · ${escapeHtml(strategicFitLabel(option.score))} relative fit</span>
+    <span>${escapeHtml(purposeLabel(option.purpose))} · ${escapeHtml(strategicFitLabel(option.score))} relative fit${option.reachability ? ` · ${escapeHtml(option.reachability === "reachable" ? "Plausibly reachable this turn" : option.reachability === "staging" ? "Staging only" : option.reachability === "future" ? "Future-turn objective" : "Range unverified")}` : ""}${Number.isFinite(option.remainingGap) ? ` · remaining gap ${escapeHtml(option.remainingGap)}"` : ""}</span>
     <small>${escapeHtml(option.actionHint ?? "Reposition for this strategic purpose")}</small>
     ${option.reason ? `<small>${escapeHtml(option.reason)}</small>` : ""}
   </a>`;
@@ -243,6 +243,8 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       <div><strong>${selected.effectiveOc == null ? "—" : escapeHtml(selected.effectiveOc)}</strong><span>usable OC</span></div>
       <div><strong>${escapeHtml(purposeLabel(selected.purpose))}</strong><span>purpose</span></div>
       <div><strong>${escapeHtml(selected.confidence)}</strong><span>confidence</span></div>
+      ${selected.reachability ? `<div><strong>${escapeHtml(selected.reachability)}</strong><span>objective reach</span></div>` : ""}
+      ${Number.isFinite(selected.remainingGap) ? `<div><strong>${escapeHtml(selected.remainingGap)}"</strong><span>remaining gap after Normal Move + map tolerance</span></div>` : ""}
     </div>
     <p>${escapeHtml(selected.actionHint)}</p>
     <details open>
@@ -274,7 +276,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
     </details>
     <details class="movement-advisor__limitations" data-view-key="movement-estimate-limitations">
       <summary>Estimate limitations</summary>
-      <small>Map distances are approximate; territory classifications are advisory, and positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destination options describe strategic purposes, not exact legal endpoints. The tabletop, mission rules and actual OC determine movement and scoring.</small>
+      <small>Map distances are approximate; territory classifications are advisory, and positions within ±3\" of the dotted line remain uncertain. Relative fit is not a movement-success probability. Destination options describe strategic purposes, not exact legal endpoints. They distinguish current-turn candidates, staging, and future goals. Normal Move plus ±3" map tolerance is advisory, not permission to move farther. The tabletop, mission rules and actual OC determine movement and scoring.</small>
     </details>
   </aside>`;
 }
