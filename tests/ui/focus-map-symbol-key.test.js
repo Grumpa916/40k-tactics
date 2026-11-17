@@ -37,7 +37,8 @@ test('Map key is included once in all shared tabletop battle maps without replac
 
 test('CSS reveals the reference only when focus map and phase panels are closed', () => {
   assert.match(style,/\.live-map-key \{ display:none; \}/);
-  assert.match(style,/\[data-battle-focus="true"\]\[data-controls-collapsed="true"\] \.combat-workspace__map > \.live-map-key/);
+  assert.match(style,/\[data-battle-focus="true"\]\[data-controls-collapsed="true"\]\[data-live-roster-open="false"\] \.combat-workspace__map > \.live-map-key/);
+  assert.match(shell,/setAttribute\('data-live-roster-open', String\(unitsRosterOpen\)\)/);
   assert.match(style,/position:absolute;/);
   assert.match(style,/left:9px;/);
   assert.match(style,/max-height:calc\(100% - 76px\)/);
