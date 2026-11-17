@@ -1,3 +1,4 @@
+import { classifyMovementRecommendations } from "./tactical-movement-reachability.js";
 import { getMovementStrategicRecommendations as getBaseMovementStrategicRecommendations } from "./tactical-movement-opportunities.js";
 import { getObjectiveControlForPlayer } from "./objective-control-state.js";
 import { objectiveAdvisorLabel } from "./objective-display-labels.js";
@@ -272,7 +273,7 @@ function enhanceBattlefieldDominanceRecommendation(state, options, recommendatio
   });
 }
 
-export function getMovementStrategicRecommendations(state, { playerId, perspectivePlayerId = playerId } = {}) {
+function getUnclassifiedMovementStrategicRecommendations(state, { playerId, perspectivePlayerId = playerId } = {}) {
   const base = getBaseMovementStrategicRecommendations(state, { playerId, perspectivePlayerId });
   if (!playerId || state?.phase !== "movement") return base;
 
@@ -370,4 +371,10 @@ export function getMovementStrategicRecommendations(state, { playerId, perspecti
   }
 
   return base;
+}
+
+// Apply the same reachability guard after all primary-mission-specific ranking
+// layers, so high strategic VP cannot imply an impossible same-turn move.
+export function getMovementStrategicRecommendations(state, options = {}) {
+  return classifyMovementRecommendations(getUnclassifiedMovementStrategicRecommendations(state, options));
 }
