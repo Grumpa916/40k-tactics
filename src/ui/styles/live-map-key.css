@@ -3,7 +3,7 @@
    or map geometry adjustment, no changes to map tap/drag targets. */
 .live-map-key { display:none; }
 @media (min-width:761px) and (orientation:landscape) {
-  .battle-shell.is-tabletop-experiment[data-battle-focus="true"][data-controls-collapsed="true"] .combat-workspace__map > .live-map-key {
+  .battle-shell.is-tabletop-experiment[data-battle-focus="true"][data-controls-collapsed="true"][data-live-roster-open="false"] .combat-workspace__map > .live-map-key {
     display:block;
     box-sizing:border-box;
     position:absolute;
