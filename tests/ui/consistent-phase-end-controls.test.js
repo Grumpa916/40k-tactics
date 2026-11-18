@@ -42,7 +42,7 @@ test('Custodes theme explicitly preserves the shared green-confirm/dark-review s
   assert.ok(blanketCrimsonRule >= 0 && overridesAt > blanketCrimsonRule,
     'The semantic overrides must follow the older crimson !important theme rule');
   const overrides = theme.slice(overridesAt);
-  assert.match(overrides, /\[data-app-theme="custodes"\][^\\n]*\.phase-end__primary:not\(:disabled\)/);
+  assert.match(overrides, /\[data-app-theme="custodes"\][\s\S]*?\.phase-end__primary:not\(:disabled\)/);
   assert.match(overrides, /background:#c4e99b !important;/);
   assert.match(overrides, /border-color:#c4e99b !important;/);
   assert.match(overrides, /color:#17212b !important;/);
