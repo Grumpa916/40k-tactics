@@ -1,8 +1,17 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
+import { importArmyRoster } from "../state/army-roster-import.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+function newId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === "x" ? r : (r & 3 | 8)).toString(16);
+  });
 }
 
 function rosterValue(record) {
@@ -63,7 +72,13 @@ export function createArmySelectionPanel(container, { store, session, canApply =
         records.map(record => '<option value="' + escapeHtml(record.id) + '"' + (record.id === rosterId ? " selected" : "") + '>' +
           escapeHtml(record.name) + ' · ' + escapeHtml(rosterFaction(record) ?? "Faction not set") + ' · ' +
           escapeHtml(rosterDetachmentLabel(record) ?? "Detachment not set") + '</option>').join("") +
-        '</select></label><button type="button" data-army-selection-apply="' + escapeHtml(player.id) + '"' +
+        '</select></label>' +
+        (index === 1 && players.length === 2
+          ? '<label class="army-selection-card__import">Import opponent list (.json)<input type="file" accept=".json,application/json" data-army-selection-import="' + escapeHtml(player.id) + '"' +
+            (!currentCanApply || busyPlayerId ? " disabled" : "") + '></label>' +
+            '<p class="army-selection-card__hint">Choose a 40K Tactics JSON export. The list is saved for reuse and assigned to this battle.</p>'
+          : '') +
+        '<button type="button" data-army-selection-apply="' + escapeHtml(player.id) + '"' +
         (!currentCanApply || busyPlayerId ? " disabled" : "") + '>Use selected roster</button></article>';
     }).join("");
     const battleSetup = state.battleSetup ?? {};
@@ -75,7 +90,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       '<option value="strike_force"' + (selectedSize === "strike_force" ? " selected" : "") + '>Strike Force · 2,000 points</option>' +
       '</select></label>' +
       '</section>';
-    container.innerHTML = '<style>.army-selection{display:grid;gap:14px;background:#101820;color:#edf4f7}.army-selection header h2{margin:0 0 8px}.army-selection{color:#edf4f7}.army-selection__battle-size,.army-selection-card{padding:14px;border:1px solid #43535c;border-radius:9px;background:#172129;color:#edf4f7}.army-selection__battle-size label,.army-selection-card label{display:grid;gap:7px;margin:10px 0;font-weight:700}.army-selection select{box-sizing:border-box;width:100%;min-height:44px;padding:9px 10px;font-size:14px;border:1px solid #536987;border-radius:6px;background:#101820;color:#edf4f7}.army-selection button{width:100%;min-height:44px;padding:10px 12px;border:1px solid #536987;border-radius:6px;background:#202b33;color:#edf4f7;font-size:14px;font-weight:700;cursor:pointer}.army-selection__sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.army-selection-card h3{margin:0 0 8px}.army-selection-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.army-selection-card dl div{padding:8px;background:#202d36;border-radius:6px;min-width:0}.army-selection-card dt{font-size:11px;color:#aebbc5}.army-selection-card dd{margin:3px 0 0;font-weight:700;overflow-wrap:anywhere}.army-selection__message{margin:0;padding:8px 10px;border-radius:6px;background:#202d36;color:#edf4f7}@media(max-width:700px){.army-selection__sides{grid-template-columns:1fr}.army-selection__battle-size,.army-selection-card{padding:12px}}</style><section class="army-selection" aria-label="Army selection">' +
+    container.innerHTML = '<style>.army-selection{display:grid;gap:14px;background:#101820;color:#edf4f7}.army-selection header h2{margin:0 0 8px}.army-selection{color:#edf4f7}.army-selection__battle-size,.army-selection-card{padding:14px;border:1px solid #43535c;border-radius:9px;background:#172129;color:#edf4f7}.army-selection__battle-size label,.army-selection-card label{display:grid;gap:7px;margin:10px 0;font-weight:700}.army-selection select{box-sizing:border-box;width:100%;min-height:44px;padding:9px 10px;font-size:14px;border:1px solid #536987;border-radius:6px;background:#101820;color:#edf4f7}.army-selection-card__import{box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid #536987;border-radius:6px;background:#202b33;color:#edf4f7;font-size:14px;font-weight:700}.army-selection-card__import input{display:block;box-sizing:border-box;width:100%;margin-top:8px;color:#edf4f7;font-size:13px}.army-selection-card__hint{margin:0 0 10px;color:#aebbc5;font-size:12px}.army-selection button{width:100%;min-height:44px;padding:10px 12px;border:1px solid #536987;border-radius:6px;background:#202b33;color:#edf4f7;font-size:14px;font-weight:700;cursor:pointer}.army-selection__sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.army-selection-card h3{margin:0 0 8px}.army-selection-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.army-selection-card dl div{padding:8px;background:#202d36;border-radius:6px;min-width:0}.army-selection-card dt{font-size:11px;color:#aebbc5}.army-selection-card dd{margin:3px 0 0;font-weight:700;overflow-wrap:anywhere}.army-selection__message{margin:0;padding:8px 10px;border-radius:6px;background:#202d36;color:#edf4f7}@media(max-width:700px){.army-selection__sides{grid-template-columns:1fr}.army-selection__battle-size,.army-selection-card{padding:12px}}</style><section class="army-selection" aria-label="Army selection">' +
       sizeMarkup +
       '<div class="army-selection__sides">' + sides + '</div>' +
       '<p class="army-selection__message" role="status">' + escapeHtml(message) + '</p>' +
@@ -102,7 +117,34 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     render();
   }
 
-  function handleChange(event) {
+  async function handleChange(event) {
+    const fileInput = event.target?.closest?.("[data-army-selection-import]");
+    if (fileInput && container.contains(fileInput)) {
+      const file = fileInput.files?.[0];
+      const playerId = fileInput.getAttribute("data-army-selection-import");
+      if (!file || busyPlayerId) return;
+      busyPlayerId = playerId;
+      message = "Importing opponent list…";
+      render();
+      try {
+        if (!store || typeof store.save !== "function") throw new Error("Sign in to save and use imported lists.");
+        if (file.size > 5 * 1024 * 1024) throw new Error("This file is over 5 MB. Choose a smaller 40K Tactics JSON export.");
+        const timestamp = new Date().toISOString();
+        const roster = importArmyRoster(await file.text(), newId, timestamp);
+        if (!String(roster.name ?? "").trim()) roster.name = file.name.replace(/\.json$/i, "") || "Imported opponent list";
+        await store.save({ roster });
+        records = [{ id: roster.id, name: roster.name, roster }, ...records.filter(record => record.id !== roster.id)];
+        session.dispatch({ type: "battle.apply_army_roster", payload: { roster, playerId } });
+        message = "Imported “" + roster.name + "”, saved it to your lists, and assigned it to the opponent.";
+      } catch (error) {
+        message = error?.message ?? String(error);
+      } finally {
+        busyPlayerId = null;
+        fileInput.value = "";
+        render();
+      }
+      return;
+    }
     const select = event.target?.closest?.("[data-battle-size]");
     if (!select || !container.contains(select)) return;
     try {
