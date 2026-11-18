@@ -19,3 +19,86 @@
 .checkpoint-objective-confirmation__objective { min-height:50px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px; padding:8px 10px; border:1px solid #8a7a9f; border-radius:8px; background:#30263b; color:#f2f4f8; font:inherit; touch-action:manipulation; }
 .checkpoint-objective-confirmation__objective span { font-size:12px; font-weight:800; letter-spacing:.04em; }
 .checkpoint-objective-confirmation [data-confirm-checkpoint-objectives] { min-height:46px; padding:8px 12px; border:1px solid #b99bdd; border-radius:8px; background:#41314f; color:#fff; font:inherit; font-weight:750; }
+
+
+/* End-turn Tactical discard: a labeled tap row per card and a distinct,
+   full-width action. The form's existing checkboxes and submit handler remain
+   authoritative for card selection, 1 CP total and mission lifecycle. */
+.battle-scoring-reminder__source-note {
+  margin:6px 0 10px;
+  color:#c6d2c5;
+  font-size:12px;
+  line-height:1.4;
+}
+.battle-tactical-discard {
+  margin-top:16px;
+  padding:12px;
+  border:1px solid #596e5b;
+  border-radius:10px;
+  background:#1b2622;
+}
+.battle-tactical-discard h3 { margin:0 0 6px; font-size:17px; }
+.battle-tactical-discard > p { margin:0 0 10px; }
+.battle-tactical-discard form { display:grid; gap:12px; }
+.battle-tactical-discard__choices { display:grid; gap:8px; min-width:0; }
+.battle-tactical-discard__choice {
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-width:0;
+  min-height:52px;
+  margin:0;
+  padding:10px 12px;
+  border:1px solid #637768;
+  border-radius:9px;
+  background:#26352d;
+  color:#f2f4f8;
+  font-size:15px;
+  line-height:1.3;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.battle-tactical-discard__choice input[type="checkbox"] {
+  box-sizing:border-box;
+  flex:none;
+  width:24px;
+  height:24px;
+  margin:0;
+  accent-color:#bfe695;
+  cursor:pointer;
+}
+.battle-tactical-discard__choice span { min-width:0; overflow-wrap:anywhere; }
+.battle-tactical-discard__choice:has(input:checked) {
+  border-color:#c4e99b;
+  background:#304936;
+}
+.battle-tactical-discard__choice:focus-within {
+  outline:2px solid #f6d783;
+  outline-offset:2px;
+}
+.battle-tactical-discard__submit {
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  min-height:50px;
+  margin:0;
+  padding:10px 12px;
+  border:1px solid #8fb377;
+  border-radius:9px;
+  background:#304d36;
+  color:#f3f8ed;
+  font:inherit;
+  font-size:14px;
+  font-weight:750;
+  line-height:1.3;
+  text-align:center;
+  white-space:normal;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.battle-tactical-discard__submit:focus-visible {
+  outline:3px solid #f6d783;
+  outline-offset:2px;
+}
