@@ -15,8 +15,8 @@ const BATTLEFIELD_WIDTH_IN = 60;
 const BATTLEFIELD_HEIGHT_IN = 44;
 
 function escapeHtml(value) {
-  return String(value ?? "").replaceAll("&", "&").replaceAll("<", "<")
-    .replaceAll(">", ">").replaceAll('"', """).replaceAll("'", "&#039;");
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 export function isValidBattlefieldPosition(position) {
@@ -199,3 +199,51 @@ export function renderBattlefieldMap(state, {
         (attached.length === 1 ? '+' + (symbolLabels?.get(attached[0].id) ?? 'L') : '+' + attached.length)
       : null;
     const formationName = [fullUnitLabels.get(unit.id), ...attached.map(member => fullUnitLabels.get(member.id) ?? member.name)].filter(Boolean).join(' + ');
+    const sideClass = friendly ? "friendly" : "opponent";
+    // Layer the army whose turn it is over the other army, independently of
+    // which army the user's viewing perspective calls "friendly".
+    const activeTurnPlayerId = safeState.activePlayer ?? safeState.battle?.activePlayerId;
+    const activeTurnClass = mode === "live" && activeTurnPlayerId != null &&
+      unit.ownerId === activeTurnPlayerId ? ' is-active-turn' : '';
+    const marker = compactMarkers ? escapeHtml(formationSymbol ?? unitLabels.get(unit.id)) : escapeHtml((formationName || unit.name || unit.id).slice(0, 45));
+    const activation = activationForUnit(unit.id);
+    const activationBadge = activation ? '<span class="unit-activation-badge" aria-label="' + (activation === 'resolved' ? 'Activation complete' : 'Activation in progress') + '">' + (activation === 'resolved' ? '✓' : '…') + '</span>' : '';
+    const modelCount = Array.isArray(unit.models) ? unit.models.length : 0;
+    const isSelected = unit.id === (mode === "live" ? getCombatFormationRootId(safeState, selectedUnitId) : selectedUnitId);
+    const battleShocked = isUnitBattleShocked(unit) || attached.some(member => isUnitBattleShocked(member));
+    unitNodes.push('<div class="battlefield-map__unit ' + sideClass + (compactMarkers ? ' is-compact' : '') + activeTurnClass + (isSelected ? ' is-selected' : '') + (attached.length ? ' is-attached-formation' : '') + (unplaced ? ' is-unplaced' : '') + (battleShocked ? ' is-battle-shocked' : '') + '" data-map-unit-id="' + escapeHtml(unit.id) + '"' + (formationSymbol ? ' data-map-formation-symbol="' + escapeHtml(formationSymbol) + '" data-map-formation-members="' + escapeHtml(attached.map(member => member.id).join(',')) + '"' : '') + (unplaced ? ' data-map-unit-unplaced="true"' : '') + (mode !== "live" || unit.ownerId === interactivePlayerId ? ' role="button" tabindex="0" aria-label="Select ' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + '"' : '') + ' style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(formationName || fullUnitLabels.get(unit.id)) + (unplaced ? ' · not placed' : '') + (battleShocked ? ' · Battle-shocked' : '') + (modelCount ? ' · ' + modelCount + ' models' : '') + '">' + marker + activationBadge + '</div>');
+  }
+  const objectives = Array.isArray(safeState.objectives) ? safeState.objectives : [];
+  const layoutObjectiveNodes = layoutGeometry ? Object.entries(layoutGeometry.objectivePositions ?? {}).map(([name, position]) => {
+    const percent = battlefieldPositionToPercent(position); if (!percent) return "";
+    const objective = objectives.find((item) => item && (item.layoutObjective === name || item.id === "event-companion:" + name));
+    const objectiveId = objective?.id ?? ("event-companion:" + name); const controlLabel = objective ? objectiveControlLabel(objective, safeState) : "Uncontrolled";
+    const label = perspectiveObjectiveName(name, safeState, perspectivePlayerId);
+    const displayLabel = mode === "live" && !plannerStyleObjectives ? compactObjectiveLabel(label) : label;
+    const controlClass = objectiveControlClass(objective, perspectivePlayerId);
+    return '<button type="button" class="battlefield-map__objective battlefield-map__objective--layout ' + controlClass + '" data-layout-objective="' + escapeHtml(name) + '" data-map-objective-id="' + escapeHtml(objectiveId) + '" data-objective-control="' + escapeHtml(controlLabel) + '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(label + " · " + controlLabel + " · Event Companion p. " + layoutGeometry.page) + '">' + escapeHtml(displayLabel) + '</button>';
+  }).join("") : "";
+  const objectiveNodes = layoutGeometry ? "" : objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).map((objective) => {
+    const percent = battlefieldPositionToPercent(objective.position); const name = objective.name ?? objective.id ?? "Objective"; const controlLabel = objectiveControlLabel(objective, safeState);
+    return '<button type="button" class="battlefield-map__objective ' + objectiveControlClass(objective, perspectivePlayerId) + '" data-map-objective-id="' + escapeHtml(objective.id ?? objective.name) + '" data-objective-control="' + escapeHtml(controlLabel) + '" style="left:' + percent.left + '%;top:' + percent.top + '%" title="' + escapeHtml(name + " · " + controlLabel) + '">' + escapeHtml(String(name).slice(0, 18)) + '</button>';
+  }).join("");
+  const emptyMessage = !showUnits || positionedUnits ? "" : '<div class="battlefield-map__empty">No positions recorded for this map mode yet.</div>';
+  const terrainMeasurementOverlay = showTerrainEdgeMeasurements ? terrainEdgeMeasurementOverlay(layoutGeometry, terrainMeasurements, terrainMeasurementLines) : "";
+  const liveStatus = mode === "live" ? liveStatusLabel(safeState) : ""; const showCoordinateMeasurements = showMeasurements; const shownMapLabel = modeDescription(mode, mapLabel);
+  const objectiveStatusSummary = objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).length ? objectives.filter((objective) => objective && isValidBattlefieldPosition(objective.position)).map((objective) => escapeHtml((objective.name ?? objective.id ?? "Objective") + ": " + objectiveControlLabel(objective, safeState))).join(" · ") : "";
+  const boardAriaLabel = showCoordinateMeasurements ? shownMapLabel + ", 60 by 44 inch reference board with inch coordinate labels" : shownMapLabel + ", battlefield board";
+  const selectedUnit = visibleUnits.find((unit) => unit.id === (mode === 'live' ? getCombatFormationRootId(safeState, selectedUnitId) : selectedUnitId));
+  const selectedName = selectedUnit ? '<p class="battlefield-map__selected-name" aria-live="polite">Selected: <strong>' + escapeHtml(mode === 'live' ? getCombatFormationMembers(safeState, selectedUnit).map(member => fullUnitLabels.get(member.id) ?? member.name).join(' + ') : fullUnitLabels.get(selectedUnit.id)) + '</strong> · ' + escapeHtml(playerLabel(safeState, selectedUnit.ownerId)) + '</p>' : '';
+  const unitKey = friendlyUnitKey.size ? '<div class="battlefield-map__unit-key" aria-label="Your unit designators">' +
+    [...friendlyUnitKey].map(([symbol, name]) => '<span><strong>' + escapeHtml(symbol) + '</strong> ' + escapeHtml(name) + '</span>').join('') + '</div>' : '';
+  return '<style>' + BATTLEFIELD_MAP_STYLES + '</style><div class="battlefield-map battlefield-map--' + mode + '" data-battlefield-map data-map-mode="' + mode + '">' +
+    '<div class="battlefield-map__meta"><span>' + shownMapLabel + '</span>' + (showCoordinateMeasurements ? '<span>60″ × 44″ reference grid</span>' : '') + (liveStatus ? '<span data-map-game-status>' + escapeHtml(liveStatus) + '</span>' : '') + (layoutGeometry ? '<span data-map-layout-status>Event Companion layout ' + escapeHtml(layoutGeometry.layout) + ' · p. ' + layoutGeometry.page + '</span>' : '') + '</div>' +
+    (objectiveStatusSummary && mode === "live" ? '<p class="battlefield-map__meta" data-map-objective-status>' + objectiveStatusSummary + '</p>' : '') +
+    '<div class="battlefield-map__board" data-battlefield-map-board role="application" aria-label="' + boardAriaLabel + '">' +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--top">Opponent edge · Y=44″</div>' : '') +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__ruler battlefield-map__ruler--top" aria-label="Horizontal inch measurements">' + [0,10,20,30,40,50,60].map((inch) => '<span style="left:' + (inch / 60 * 100) + '%">' + inch + '″</span>').join("") + '</div><div class="battlefield-map__ruler battlefield-map__ruler--left" aria-label="Vertical inch measurements">' + [0,10,20,30,40,44].map((inch) => '<span style="top:' + ((44 - inch) / 44 * 100) + '%">' + inch + '″</span>').join("") + '</div>' : '') +
+    geometryOverlay(layoutGeometry, showTerrainEdgeMeasurements) + terrainMeasurementOverlay + objectiveNodes + layoutObjectiveNodes + unitNodes + emptyMessage +
+    (showCoordinateMeasurements ? '<div class="battlefield-map__edge battlefield-map__edge--bottom">Your edge · Y=0″</div>' : '') + '</div>' +
+    '<!-- battlefield-map-board-end -->' + selectedName + unitKey + (!showUnits && layoutGeometry ? '<div class="battlefield-map__legend"><span><i class="objective"></i> Objective locations</span></div>' : '') +
+    '<p class="battlefield-map__notice">' + (showTerrainEdgeMeasurements ? "Printed Event Companion terrain dimensions are attached to reproducible V2 terrain corners. Values are copied from the official diagram; the drawn guides are placement references, not calculated measurements." : "Map positions are approximate. Terrain, deployment zones, line of sight, and tabletop measurements are not inferred by this reference grid.") + '</p></div>';
+}
