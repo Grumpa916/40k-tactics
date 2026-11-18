@@ -33,3 +33,20 @@ test('Shared iPad phase-end styling keeps controls full width, touch sized and v
   assert.match(styles, /\.phase-end__primary:not\(:disabled\) \{[\s\S]*?background:#c4e99b/);
   assert.match(styles, /:is\(\.phase-end__secondary,\.phase-end__review-button\) \{[\s\S]*?background:#1c2926/);
 });
+
+
+test('Custodes theme explicitly preserves the shared green-confirm/dark-review semantics', () => {
+  const theme = source('src/ui/styles/custodes-theme.css');
+  const blanketCrimsonRule = theme.indexOf('/* End-phase action: dark crimson');
+  const overridesAt = theme.lastIndexOf('/* PR #652 phase-end semantics win');
+  assert.ok(blanketCrimsonRule >= 0 && overridesAt > blanketCrimsonRule,
+    'The semantic overrides must follow the older crimson !important theme rule');
+  const overrides = theme.slice(overridesAt);
+  assert.match(overrides, /\[data-app-theme="custodes"\][\s\S]*?\.phase-end__primary:not\(:disabled\)/);
+  assert.match(overrides, /background:#c4e99b !important;/);
+  assert.match(overrides, /border-color:#c4e99b !important;/);
+  assert.match(overrides, /color:#17212b !important;/);
+  assert.match(overrides, /:is\(\.phase-end__secondary,\.phase-end__review-button\):not\(:disabled\)/);
+  assert.match(overrides, /background:#1c2926 !important;/);
+  assert.match(overrides, /color:#ecf2e8 !important;/);
+});

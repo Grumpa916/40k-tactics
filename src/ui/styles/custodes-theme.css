@@ -343,3 +343,19 @@
   border-radius:7px;
   padding:6px 8px;
 }
+
+/* PR #652 phase-end semantics win over the older Custodes crimson
+   blanket footer-button rule above. The crimson treatment remains available
+   for unrelated controls, but never for review or keep-playing actions. */
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] :is(.shoot-tabletop__footer,.combat-workspace__panel footer) .phase-end__primary:not(:disabled) {
+  background:#c4e99b !important;
+  border-color:#c4e99b !important;
+  color:#17212b !important;
+  box-shadow:none !important;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] :is(.shoot-tabletop__footer,.combat-workspace__panel footer) :is(.phase-end__secondary,.phase-end__review-button):not(:disabled) {
+  background:#1c2926 !important;
+  border-color:#657b6b !important;
+  color:#ecf2e8 !important;
+  box-shadow:none !important;
+}
