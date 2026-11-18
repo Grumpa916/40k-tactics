@@ -19,12 +19,12 @@ function newId() {
 const IMPORT_FACTIONS = [...new Set(ARMY_UNIT_CATALOG.map(unit => unit.faction).filter(Boolean))].sort();
 
 function normalizeFactionText(value) {
-  return String(value ?? "").normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "")
+  return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function detectFaction(text) {
-  const lines = String(text ?? "").split(/\\r?\\n/).filter(line => line.trim()).slice(0, 12);
+  const lines = String(text ?? "").split(/\r?\n/).filter(line => line.trim()).slice(0, 12);
   const ranked = new Map();
   for (const rawLine of lines) {
     const line = normalizeFactionText(rawLine);
@@ -98,15 +98,15 @@ export function createArmySelectionPanel(container, { store, session, canApply =
           escapeHtml(rosterDetachmentLabel(record) ?? "Detachment not set") + '</option>').join("") +
         '</select></label>' +
         (index === 1 && players.length === 2
-          ? '<label class="army-selection-card__import">Import list file (.json or .txt)<input type="file" accept=".json,.txt,application/json,text/plain" data-army-selection-import="' + escapeHtml(player.id) + '"' +
-            (!currentCanApply || busyPlayerId ? " disabled" : "") + '></label>' +
-            '<p class="army-selection-card__hint">Use a 40K Tactics JSON export or a Warmind Official App text export.</p>' +
-            '<details class="army-selection-card__warmind"><summary>Paste a Warmind list</summary>' +
-            '<p>In Warmind, share the list as Official App text in English, then paste it below.</p>' +
-            '<label>Faction (auto-detected when possible)<select data-army-selection-warmind-faction="' + escapeHtml(player.id) + '"' +
+          ? '<label>Text list faction (auto-detected when possible)<select data-army-selection-warmind-faction="' + escapeHtml(player.id) + '"' +
             (!currentCanApply || busyPlayerId ? " disabled" : "") + '><option value="">Auto-detect</option>' +
             IMPORT_FACTIONS.map(faction => '<option value="' + escapeHtml(faction) + '">' + escapeHtml(faction) + '</option>').join("") +
             '</select></label>' +
+            '<label class="army-selection-card__import">Import list file (.json or .txt)<input type="file" accept=".json,.txt,application/json,text/plain" data-army-selection-import="' + escapeHtml(player.id) + '"' +
+            (!currentCanApply || busyPlayerId ? " disabled" : "") + '></label>' +
+            '<p class="army-selection-card__hint">Use a 40K Tactics JSON export or a Warmind Official App text export. Choose a faction above only if it is not detected automatically.</p>' +
+            '<details class="army-selection-card__warmind"><summary>Paste a Warmind list</summary>' +
+            '<p>In Warmind, share the list as Official App text in English, then paste it below.</p>' +
             '<label>Warmind list text<textarea rows="7" data-army-selection-warmind-text="' + escapeHtml(player.id) + '"' +
             (!currentCanApply || busyPlayerId ? " disabled" : "") + ' placeholder="Paste the shared list text here"></textarea></label>' +
             '<button type="button" data-army-selection-warmind-import="' + escapeHtml(player.id) + '"' +
@@ -181,7 +181,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       id: newId(), createdAt: timestamp, updatedAt: timestamp
     });
     const roster = parsed.roster;
-    roster.notes = "Imported from Warmind's Official App text export. Original text is preserved below for review.\\n\\n" + text;
+    roster.notes = "Imported from Warmind's Official App text export. Original text is preserved below for review.\n\n" + text;
     for (const unit of roster.units) {
       if (unit.dataSource) unit.dataSource.rosterImport = "warmind-text";
     }
@@ -192,7 +192,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     return { roster, detail };
   }
 
-  async function importRosterFile(file, playerId) {
+  async function importRosterFile(file, playerId, faction = "") {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       message = "This file is over 5 MB. Choose a smaller roster export.";
@@ -201,15 +201,15 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     }
     const text = await file.text();
     const timestamp = new Date().toISOString();
-    const isJson = /\\.json$/i.test(file.name) || text.trimStart().startsWith("{");
-    const name = file.name.replace(/\\.(?:json|txt)$/i, "").replace(/[-_]+/g, " ").trim();
+    const isJson = /\.json$/i.test(file.name) || text.trimStart().startsWith("{");
+    const name = file.name.replace(/\.(?:json|txt)$/i, "").replace(/[-_]+/g, " ").trim();
     await assignImportedRoster(playerId, async () => {
       if (isJson) {
         const roster = importArmyRoster(text, newId, timestamp);
         if (!String(roster.name ?? "").trim()) roster.name = name || "Imported opponent list";
         return { roster };
       }
-      return importTextRoster(text, "", name ? "Warmind — " + name : "");
+      return importTextRoster(text, faction, name ? "Warmind — " + name : "");
     });
   }
 
@@ -219,7 +219,8 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       const file = fileInput.files?.[0];
       const playerId = fileInput.getAttribute("data-army-selection-import");
       if (!file || busyPlayerId) return;
-      await importRosterFile(file, playerId);
+      const faction = container.querySelector('[data-army-selection-warmind-faction="' + playerId + '"]')?.value ?? "";
+      await importRosterFile(file, playerId, faction);
       fileInput.value = "";
       return;
     }
