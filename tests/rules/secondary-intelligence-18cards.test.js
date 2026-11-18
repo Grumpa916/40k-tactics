@@ -191,7 +191,9 @@ test('Movement UI shows card-specific scoring windows and Shooting preserves man
  assert.match(source,/data-secondary-shooting-intelligence/);
  assert.match(source,/not an Action recording control/);
  const checkpoint=readFileSync(new URL('../../src/ui/scoring-checkpoint-review.js',import.meta.url),'utf8');
- assert.match(checkpoint,/All 18 Secondary card faces were checked/);
+ const dialog=readFileSync(new URL('../../src/ui/scoring-checkpoint-dialog.js',import.meta.url),'utf8');
+ assert.doesNotMatch(checkpoint,/All 18 Secondary card faces were checked/,'mission sections should not repeat certification');
+ assert.match(dialog,/Secondary card text checked against physical-card photographs/);
 });
 
 test('Centre Ground and quarter/edge secondaries produce specific physical-check movement options',async()=>{
