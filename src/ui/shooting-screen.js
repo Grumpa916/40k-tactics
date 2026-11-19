@@ -58,7 +58,7 @@ function unitButton(unit) {
 /* Keep identification visible beside the map controls when the Units drawer is
  * closed and the shooting details panel is scrolled. This does not select or move
  * anything; the label is derived from the current live phase selection. */
-function renderShootingMapIdentity(state, shooterId, targetId = null) {
+export function renderShootingMapIdentity(state, shooterId, targetId = null) {
   const units = state?.units ?? [];
   const shooter = units.find(unit => unit.id === shooterId);
   const target = units.find(unit => unit.id === targetId);
