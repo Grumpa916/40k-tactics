@@ -23,8 +23,8 @@ test('target tiles stay selectable across repeated changes with an explicit clea
 
 test('no eligible targets displays why a weapon cannot currently be used', () => {
   const html=renderShootingTargetChoices([],null,{hasWeapon:true});
-  assert.match(html,/No eligible targets for this weapon under recorded engagement/);
-  assert.match(html,/Try another weapon or review engagement/);
+  assert.match(html,/No eligible targets for this weapon in the recorded battle state/);
+  assert.match(html,/Try another weapon, or review engagement and deployment/);
   assert.doesNotMatch(html,/data-shoot-target-choice=/);
 });
 
