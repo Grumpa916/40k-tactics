@@ -22,9 +22,9 @@ const descriptions = Object.freeze([
   [/^ignores cover$/i, 'Ignore the target\'s Benefit of Cover for this attack.'],
   [/^indirect fire$/i, 'Check the current indirect-fire and visibility requirements.'],
   [/^psychic$/i, 'Check any applicable Psychic interactions.'],
-  [/^anti[-\\s]/i, 'Apply the listed threshold against qualifying targets.'],
+  [/^anti[-\s]/i, 'Apply the listed threshold against qualifying targets.'],
   [/^extra attacks$/i, 'Check whether this profile makes additional attacks.'],
-  [/\\bvs\\b/i, 'Applies only against the stated target type.']
+  [/\bvs\b/i, 'Applies only against the stated target type.']
 ]);
 
 function noteFor(label) {
@@ -37,7 +37,7 @@ export function getShootingWeaponEffects(weapon) {
   const labels = [];
   const add = label => { if (label && !labels.some(value => value.toLowerCase() === label.toLowerCase())) labels.push(label); };
   const raw = weapon.abilities ?? c.abilities;
-  if (typeof raw === 'string') raw.split(/[,;\\n]+/).map(s => s.trim()).filter(Boolean).forEach(add);
+  if (typeof raw === 'string') raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).forEach(add);
   else if (Array.isArray(raw)) raw.forEach(item => add(typeof item === 'string' ? item : item?.name));
   const flags = [
     ['assault','Assault'],['torrent','Torrent'],['ignoresCover','Ignores Cover'],
@@ -48,7 +48,7 @@ export function getShootingWeaponEffects(weapon) {
   for (const [key,label] of flags) if (c[key] === true) add(label);
   if (c.closeQuarters === true && !labels.some(item => /^pistol$/i.test(item))) add('Pistol');
   for (const [key,label] of [['sustainedHits','Sustained Hits'],['rapidFire','Rapid Fire'],['melta','Melta']]) {
-    if (Number(c[key]) > 0 && !labels.some(item => new RegExp('^'+label+'\\\\b','i').test(item))) add(label+' '+c[key]);
+    if (Number(c[key]) > 0 && !labels.some(item => item.toLowerCase().startsWith(label.toLowerCase()))) add(label+' '+c[key]);
   }
   if (c.blast && !labels.some(item=>/^blast/i.test(item))) add(typeof c.blast === 'number' ? 'Blast '+c.blast : 'Blast');
   for (const entry of c.anti ?? []) add('Anti-'+entry.keyword+' '+entry.threshold+'+');
