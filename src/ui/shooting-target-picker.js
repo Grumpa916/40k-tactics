@@ -12,7 +12,7 @@ export function renderShootingTargetChoices(targets, selectedTargetId, { hasWeap
     ${options.length ? `<div class="shoot-target-picker__choices">${options.map(target =>
       `<button type="button" data-shoot-target-choice="${escapeHtml(target.unitId)}" aria-pressed="${String(target.unitId === selectedTargetId)}">${escapeHtml(target.name)}</button>`
     ).join('')}</div>` : `<p class="shoot-target-picker__empty" role="note">${hasWeapon
-      ? 'No eligible targets for this weapon under recorded engagement. Try another weapon or review engagement on the tabletop.'
+      ? 'No eligible targets for this weapon in the recorded battle state. Try another weapon, or review engagement and deployment on the tabletop.'
       : 'No target currently available. Choose a ranged weapon or review the units on the tabletop.'}</p>`}
     ${selectedTargetId ? '<button type="button" class="shoot-target-picker__clear" data-shoot-target-clear>Clear target / choose another</button>' : ''}
   </div>`;
