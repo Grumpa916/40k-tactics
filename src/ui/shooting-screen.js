@@ -7,6 +7,7 @@ import { renderActionReceipt } from './action-receipt.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { getPrecisionAllocationOptions } from '../rules/precision-allocation.js';
 import { renderCombatMapPanel } from './combat-workspace.js';
+import { unitDisplayLabels } from './map-unit-labels.js';
 import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { createMissionActionPicker } from "./mission-action-picker.js";
 import { getSecondaryMissionIntelligence } from "../rules/secondary-mission-intelligence.js";
@@ -62,9 +63,13 @@ function renderShootingMapIdentity(state, shooterId, targetId = null) {
   const shooter = units.find(unit => unit.id === shooterId);
   const target = units.find(unit => unit.id === targetId);
   if (!shooter && !target) return '';
-  const item = (caption, unit) => '<span class="shoot-tabletop__map-identity-item" title="' +
-    escapeHtml(caption + ': ' + (unit.name ?? unit.id)) + '"><small>' +
-    escapeHtml(caption) + '</small><strong>' + escapeHtml(unit.name ?? unit.id) + '</strong></span>';
+  const displayLabels = unitDisplayLabels(units);
+  const item = (caption, unit) => {
+    const displayName = displayLabels.get(unit.id) ?? unit.name ?? unit.id;
+    return '<span class="shoot-tabletop__map-identity-item" title="' +
+      escapeHtml(caption + ': ' + displayName) + '"><small>' +
+      escapeHtml(caption) + '</small><strong>' + escapeHtml(displayName) + '</strong></span>';
+  };
   return '<div class="shoot-tabletop__map-identity" data-shoot-map-identity aria-label="Selected unit and target">' +
     (shooter ? item(target ? 'Shooter' : 'Selected unit', shooter) : '') +
     (target ? item('Target', target) : '') + '</div>';
@@ -98,10 +103,13 @@ export function renderShootingHistoryRow(item, state, gameData) {
   const result = item.targetStatusAfter === "destroyed"
     ? "Destroyed"
     : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage}` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} · ${item.targetWoundsAfter} wounds`;
+  const labels = unitDisplayLabels(state.units ?? []);
+  const attackerLabel = labels.get(item.attackerId) ?? attacker?.name ?? item.attackerId;
+  const baseTargetLabel = labels.get(item.targetId) ?? target?.name ?? item.targetId;
   const targetLabel = allocation
-    ? `${target?.name ?? item.targetId} (${allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
-    : target?.name ?? item.targetId;
-  return `<li><strong>${escapeHtml(attacker?.name ?? item.attackerId)} → ${escapeHtml(targetLabel)}</strong><span>${escapeHtml(weaponLabel)} · ${escapeHtml(result)}</span></li>`;
+    ? `${baseTargetLabel} (${labels.get(item.allocationTargetId) ?? allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
+    : baseTargetLabel;
+  return `<li><strong>${escapeHtml(attackerLabel)} → ${escapeHtml(targetLabel)}</strong><span>${escapeHtml(weaponLabel)} · ${escapeHtml(result)}</span></li>`;
 }
 
 function renderSecondaryShootingIntelligence(state,playerId) {
