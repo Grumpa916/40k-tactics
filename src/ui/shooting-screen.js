@@ -97,7 +97,7 @@ export function renderShootingHistoryRow(item, state, gameData) {
     : 'estimate unavailable';
   const result = item.targetStatusAfter === "destroyed"
     ? "Destroyed"
-    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected · ${item.targetWoundsAfter} wounds`;
+    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage}` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} · ${item.targetWoundsAfter} wounds`;
   const targetLabel = allocation
     ? `${target?.name ?? item.targetId} (${allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
     : target?.name ?? item.targetId;
