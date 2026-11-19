@@ -303,6 +303,9 @@ export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
       activeQuantity: quantity.activeQuantity,
       quantityBasis: quantity.quantityBasis,
       quantityUncertain: quantity.quantityUncertain,
+      // Keep the exact supplied keyword text for the live weapon-effects panel.
+      // Combat modifiers continue to use the separately parsed characteristics.
+      abilities: weapon?.abilities ?? weapon?.characteristics?.abilities ?? '',
       characteristics: {
         ...(range == null ? {} : { range }),
         ...(!quantity.quantityUncertain ? { attacks: scaleAttackCount(attacks, quantity.activeQuantity) } : {}),

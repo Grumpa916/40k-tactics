@@ -87,6 +87,6 @@ test('iPad Shooting layout keeps attack and Action controls ahead of Tactical Ad
   assert.match(css, /shoot-tabletop__unit-status\s*\{\s*order:3;/);
   assert.match(css, /shoot-tabletop__unit-picker\s*\{\s*order:4;/);
   assert.match(css, /label:has\(\[data-target\]\)\s*\{\s*order:0;/);
-  assert.match(css, /label:has\(\[data-weapon\]\)\s*\{\s*order:1;/);
+  assert.ok(css.includes('.shoot-tabletop__attack-controls .shoot-weapon-picker { order:1; }'));
   assert.match(css, /label:has\(\[data-shoot-precision\]\)\s*\{\s*order:2;/);
 });

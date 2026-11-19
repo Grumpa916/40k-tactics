@@ -120,3 +120,42 @@
   .battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity { max-width:36%; }
   .battle-shell.is-tabletop-experiment .shoot-tabletop__map-identity-item small { display:none; }
 }
+
+
+/* Shooting now shares Fight's iPad-friendly, always-visible weapon choice
+   pattern. Source-backed special rules appear only for the selected weapon. */
+.shoot-screen .shoot-weapon-picker { display:grid; gap:7px; min-width:0; margin:6px 0 10px; }
+.shoot-screen .shoot-weapon-picker > strong { display:block; font-size:13px; line-height:1.3; }
+.shoot-screen .shoot-weapon-picker__choices {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; min-width:0;
+}
+.shoot-screen .shoot-weapon-picker__choices button {
+  box-sizing:border-box; display:block; width:100%; min-width:0; min-height:48px;
+  padding:9px 10px; border:1px solid #856f4f; border-radius:8px;
+  background:#342727; color:#fff0d6; text-align:left; font:inherit;
+  font-size:12px; line-height:1.3; overflow-wrap:anywhere; white-space:normal;
+  cursor:pointer; touch-action:manipulation;
+}
+.shoot-screen .shoot-weapon-picker__choices button[aria-pressed="true"] {
+  background:#e6c486; color:#2c2018; border-color:#ffe1a0; font-weight:750;
+}
+.shoot-screen .shoot-weapon-picker__choices button:focus-visible {
+  outline:3px solid #ffe7af; outline-offset:2px;
+}
+.shoot-screen .shoot-weapon-picker__choices button:disabled { opacity:.48; cursor:default; }
+.shoot-screen .shoot-weapon-picker__effects {
+  min-width:0; padding:9px 10px; background:#1b2923; color:#eaf4e7;
+  border:1px solid #657b6b; border-radius:8px; font-size:12px; line-height:1.4;
+}
+.shoot-screen .shoot-weapon-picker__effects > strong { display:block; color:#d2eab1; font-size:12px; margin-bottom:5px; overflow-wrap:anywhere; }
+.shoot-screen .shoot-weapon-picker__effects ul { display:grid; gap:5px; list-style:none; padding:0; margin:0; }
+.shoot-screen .shoot-weapon-picker__effects li { display:grid; gap:1px; margin:0; padding:5px 0; border-top:1px solid #3d5549; }
+.shoot-screen .shoot-weapon-picker__effects li:first-child { border-top:0; padding-top:0; }
+.shoot-screen .shoot-weapon-picker__effects li strong { color:#f7dcaa; font-size:12px; }
+.shoot-screen .shoot-weapon-picker__effects li span { color:#d5dfd7; font-size:12px; }
+.shoot-screen .shoot-weapon-picker__effects small { color:#c5cfc8; line-height:1.4; }
+@media (max-width:440px) {
+  .shoot-screen .shoot-weapon-picker__choices { grid-template-columns:minmax(0,1fr); }
+}
+/* Keep target ahead of weapon choices in the live panel, as before. */
+.battle-shell.is-tabletop-experiment .shoot-screen--tabletop .shoot-tabletop__attack-controls .shoot-weapon-picker { order:1; }
