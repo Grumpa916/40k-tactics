@@ -230,6 +230,36 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
   } finally { screen.destroy(); }
 });
 
+test('live Shooting can clear and reselect targets, then switch weapons without recording attacks', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const state = testState();
+  state.units.push({ ...state.units[1], id:'marine2', name:'Second squad', position:{x:27,y:25} });
+  state.units[0].profile.weaponIds.push('sidearm');
+  const sidearm = { ...gameData.weapons[0], id:'sidearm', name:'Backup sidearm' };
+  const session = createGameSession(state), root = fakeDom();
+  const screen = createShootingScreen(root, {
+    session, perspectivePlayerId:'p1', gameData:{weapons:[...gameData.weapons,sidearm]}
+  });
+  try {
+    root.click('[data-map-unit-id]','exo');
+    root.click('[data-choice-shoot]');
+    root.click('[data-shoot-weapon-choice]','bio');
+    root.click('[data-shoot-target-choice]','marine');
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine" aria-pressed="true"/);
+    root.click('[data-shoot-target-clear]');
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine" aria-pressed="false"/);
+    root.click('[data-shoot-target-choice]','marine2');
+    root.click('[data-shoot-weapon-choice]','sidearm');
+    assert.match(root.innerHTML,/data-shoot-weapon-choice="sidearm" aria-pressed="true"/);
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine2" aria-pressed="true"/);
+    root.click('[data-shoot-target-choice]','marine');
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine" aria-pressed="true"/);
+    assert.match(root.innerHTML,/data-attack(?! disabled)/);
+    assert.equal(session.getState().history.filter(e => e.type === 'combat.attack_resolved').length,0);
+    assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length,1);
+  } finally { screen.destroy(); }
+});
+
 test('Shooting map and Units drawer selections keep phase panel closed until explicitly opened', () => {
   const attrs = new Map();
   const listeners = new Map();
