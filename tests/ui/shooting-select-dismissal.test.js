@@ -9,6 +9,6 @@ test("target selects defer rerender while ranged weapons use one-tap tiles", () 
   assert.match(source, /select\?\.blur\?\.\(\)/);
   assert.match(source, /requestAnimationFrame \?\? \(callback => globalThis\.setTimeout\(callback, 0\)\)/);
   assert.match(source, /nextFrame\(\(\) => nextFrame\(render\)\)/);
-  assert.match(source, /querySelectorAll\("\\[data-shoot-weapon-choice\\]"\)/);
+  assert.ok(source.includes('querySelectorAll("[data-shoot-weapon-choice]")'));
   assert.match(source, /deferRenderAfterSelectDismissal\(select\)/);
 });
