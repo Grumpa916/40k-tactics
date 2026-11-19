@@ -4,11 +4,11 @@ import fs from "node:fs";
 
 const source = fs.readFileSync(new URL("../../src/ui/shooting-screen.js", import.meta.url), "utf8");
 
-test("shooting select changes blur and defer rerender until native menus dismiss", () => {
+test("target selects defer rerender while ranged weapons use one-tap tiles", () => {
   assert.match(source, /function deferRenderAfterSelectDismissal\(select\)/);
   assert.match(source, /select\?\.blur\?\.\(\)/);
   assert.match(source, /requestAnimationFrame \?\? \(callback => globalThis\.setTimeout\(callback, 0\)\)/);
   assert.match(source, /nextFrame\(\(\) => nextFrame\(render\)\)/);
-  assert.match(source, /querySelectorAll\("\[data-weapon\]"\)/);
+  assert.match(source, /querySelectorAll\("\\[data-shoot-weapon-choice\\]"\)/);
   assert.match(source, /deferRenderAfterSelectDismissal\(select\)/);
 });
