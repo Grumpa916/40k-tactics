@@ -111,3 +111,27 @@ test('unreadied units on first enemy turn never receive a hypothetical Kaptaris 
   assert.ok(comparison);
   assert.ok(!comparison.previews?.some(item=>item.id==='kaptaris'));
 });
+
+
+test('saved string AP cannot make In Auramite Clad preview increase incoming damage (#661)',()=> {
+  const state=custodesReminderState({phase:'shooting',activePlayer:'p2'});
+  state.battle.firstPlayerId='p1';
+  const before=JSON.stringify(state);
+  // Real saved datasheets often use "-1" instead of numeric -1.
+  const pistol={id:'string-ap-pistol',name:'Heavy bolt pistol',type:'ranged',characteristics:{
+    range:18,attacks:4,skill:3,strength:8,ap:'-1',damage:1
+  }};
+  const comparison=getIncomingDamageComparison(state,{
+    attackerId:'marine',targetId:'sentinel',weapon:pistol
+  });
+  assert.ok(comparison?.forecast,'a complete saved profile produces a baseline');
+  const auramite=comparison.previews?.find(item=>item.id==='in-auramite-clad');
+  assert.ok(auramite,'Auramite is available to preview when the enemy targets the Custodes');
+  assert.ok(Number.isFinite(auramite.after)&&Number.isFinite(auramite.before));
+  assert.ok(auramite.after<=auramite.before,
+    'AP worsened from -1 to 0 must not increase the attacker\'s expected damage');
+  const html=renderIncomingDamageForecast(state,{attackerId:'marine',targetId:'sentinel',weapon:pistol});
+  assert.match(html,/In Auramite Clad/);
+  assert.doesNotMatch(html,/−[0-9.]+ prevented/,'negative prevented delta is not a valid AP-only defensive improvement');
+  assert.equal(JSON.stringify(state),before,'read-only preview must never mutate CP, history or battle state');
+});

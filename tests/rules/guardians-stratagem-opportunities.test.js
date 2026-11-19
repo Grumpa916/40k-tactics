@@ -193,3 +193,32 @@ test('Guardians CP and effects undo together and save/resume keeps usage constra
   const saved=JSON.parse(JSON.stringify(session.getState()));assert.throws(()=>use(saved,payload));
   assert.equal(session.undoLastAction(),true);assert.equal(JSON.stringify(session.getState()),before);
 });
+
+
+test('Auramite worsens a saved-string AP of -1 to 0 and never increases expected incoming damage (#661)',()=> {
+  const before=custodesReminderState({phase:'shooting',activePlayer:'p2'});
+  const incoming={...bolter,characteristics:{...bolter.characteristics,ap:'-1'}};
+  const baseline=contextual(profiles(before,'sentinel',incoming));
+  assert.equal(baseline.ap,-1,'saved string AP is normalized to the numeric baseline');
+  const after=use(before,payload);
+  const protectedProfile=contextual(profiles(after,'sentinel',incoming));
+  assert.equal(protectedProfile.ap,0,'-1 string plus one must not concatenate to -11');
+  const baselineDamage=getDamageOutcomeDistribution(profiles(before,'sentinel',incoming)).expectedDamage;
+  const protectedDamage=getDamageOutcomeDistribution(profiles(after,'sentinel',incoming)).expectedDamage;
+  assert.ok(Number.isFinite(baselineDamage)&&Number.isFinite(protectedDamage));
+  assert.ok(protectedDamage<=baselineDamage,'an AP-worsening defence cannot cause more incoming damage');
+  const numeric={...incoming,characteristics:{...incoming.characteristics,ap:-1}};
+  assert.equal(getDamageOutcomeDistribution(profiles(after,'sentinel',numeric)).expectedDamage,protectedDamage,
+    'string and numeric AP use the same combat result');
+  assert.equal(before.commandPoints.p1,3,'the comparison does not alter the baseline state');
+});
+
+test('other AP modifiers also normalize saved string AP before arithmetic',()=> {
+  const state=custodesReminderState();
+  const attacker=getProbabilisticUnitProfile(state,state.units.find(u=>u.id==='marine'));
+  const target=getProbabilisticUnitProfile(state,state.units.find(u=>u.id==='sentinel'));
+  const weapon={...bolter,type:'melee',characteristics:{...bolter.characteristics,ap:'-2'}};
+  attacker.combatRules={...attacker.combatRules,chargedThisTurn:true,effects:['death-blow']};
+  const improved=getContextualWeaponProfile({attacker,target,profile:buildAttackProfile({attacker,target,weapon})});
+  assert.equal(improved.ap,-3,'offensive AP improvement uses numeric -2 → -3, not a concatenated value');
+});
