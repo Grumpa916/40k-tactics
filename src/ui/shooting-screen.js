@@ -90,12 +90,14 @@ export function renderShootingHistoryRow(item, state, gameData) {
   // Event-time weapon names preserve the exact equipped profile even when a
   // saved-roster weapon ID is not present in the shared weapon catalog.
   const weaponLabel = item.weaponName || weapon?.name || item.weaponId || "Weapon";
+  // An incomplete saved combat profile has no forecast; it is not a
+  // modeled 0.0-damage attack. Preserve 0.0 only when genuinely computed.
   const expectedDamage = Number.isFinite(item.expectedDamage)
-    ? item.expectedDamage.toFixed(1)
-    : item.expectedDamage ?? item.totalDamage ?? 0;
+    ? item.expectedDamage.toFixed(1) + ' expected'
+    : 'estimate unavailable';
   const result = item.targetStatusAfter === "destroyed"
     ? "Destroyed"
-    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} expected · ${item.targetWoundsAfter} wounds`;
+    : item.targetWoundsAfter == null ? `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage}` : `${item.actualDamage ?? item.totalDamage ?? 0} actual · ${expectedDamage} · ${item.targetWoundsAfter} wounds`;
   const targetLabel = allocation
     ? `${target?.name ?? item.targetId} (${allocation.name ?? item.allocationTargetName ?? item.allocationTargetId})`
     : target?.name ?? item.targetId;

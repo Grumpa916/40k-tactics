@@ -40,7 +40,7 @@ export function getShootingState(state) {
       allocationTargetName: event.payload.allocationTargetName ?? null,
       weaponId: event.payload.weaponId ?? null,
       weaponName: event.payload.weaponName ?? null,
-      expectedDamage: event.payload.expectedDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
+      expectedDamage: Number.isFinite(event.payload.expectedDamage) ? event.payload.expectedDamage : null,
       actualDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       totalDamage: event.payload.actualDamage ?? event.payload.result?.damage?.totalDamage ?? 0,
       targetWoundsAfter: event.payload.stateDelta?.target?.woundsAfter ?? null,
