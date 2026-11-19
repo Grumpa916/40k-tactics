@@ -1,40 +1,68 @@
 export const PAGE_21_LAYOUT_A_DETAILS = Object.freeze({
   page: 21,
   layout: "A",
-  // Coordinates are in the same 60×44 inch system used by the rest of the map.
-  // These are illustrative starter shapes — replace with measured points from the companion PDF.
+  // Approximate feature shapes based on Event Companion PDF page 21 Layout A.
+  // Coordinates are in the same 60×44 inch system. These sit inside the existing
+  // terrain footprints and are meant as a closer visual match for testing.
   features: Object.freeze([
+    // Dense ruin near defender expansion (upper-left area of PDF)
     {
-      id: "ruin-center-1",
+      id: "ruin-defender-expansion",
       type: "dense",
-      parentFootprint: "T5",
+      parentFootprint: "T1",
       points: Object.freeze([
-        { x: 27.5, y: 19.5 },
-        { x: 32.8, y: 19.5 },
-        { x: 32.8, y: 24.8 },
-        { x: 27.5, y: 24.8 }
+        { x: 9.5, y: 8.0 },
+        { x: 14.5, y: 8.0 },
+        { x: 14.5, y: 13.5 },
+        { x: 9.5, y: 13.5 }
       ])
     },
+    // Light containers / barricade mid-left
     {
-      id: "container-left",
+      id: "container-mid-left",
       type: "light",
-      parentFootprint: "T2",
+      parentFootprint: "T3",
       points: Object.freeze([
-        { x: 12.2, y: 16.0 },
-        { x: 16.5, y: 16.0 },
-        { x: 16.5, y: 20.5 },
-        { x: 12.2, y: 20.5 }
+        { x: 12.0, y: 18.0 },
+        { x: 17.5, y: 18.0 },
+        { x: 17.5, y: 22.5 },
+        { x: 12.0, y: 22.5 }
       ])
     },
+    // Central dense ruin
     {
-      id: "barricade-right",
-      type: "light",
-      parentFootprint: "T11",
+      id: "ruin-center",
+      type: "dense",
+      parentFootprint: "T6",
       points: Object.freeze([
-        { x: 43.0, y: 22.0 },
-        { x: 48.5, y: 22.0 },
-        { x: 48.5, y: 24.2 },
-        { x: 43.0, y: 24.2 }
+        { x: 28.0, y: 19.0 },
+        { x: 34.0, y: 19.0 },
+        { x: 34.0, y: 25.0 },
+        { x: 28.0, y: 25.0 }
+      ])
+    },
+    // Light barricade upper-right of center
+    {
+      id: "barricade-upper-right",
+      type: "light",
+      parentFootprint: "T8",
+      points: Object.freeze([
+        { x: 38.0, y: 22.0 },
+        { x: 44.0, y: 22.0 },
+        { x: 44.0, y: 25.0 },
+        { x: 38.0, y: 25.0 }
+      ])
+    },
+    // Dense ruin near attacker home (lower-right)
+    {
+      id: "ruin-attacker-home",
+      type: "dense",
+      parentFootprint: "T12",
+      points: Object.freeze([
+        { x: 46.0, y: 28.0 },
+        { x: 52.0, y: 28.0 },
+        { x: 52.0, y: 34.0 },
+        { x: 46.0, y: 34.0 }
       ])
     }
   ])
