@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getShootingState } from '../../src/rules/shooting-state.js';
-import { renderShootingHistoryRow } from '../../src/ui/shooting-screen.js';
+import { renderShootingHistoryRow, renderShootingMapIdentity } from '../../src/ui/shooting-screen.js';
 
 const units = [
   { id: 'telemon', name: 'Telemon Heavy Dreadnought', ownerId: 'p1' },
@@ -103,4 +103,49 @@ test('legacy history without an expectedDamage field cannot use actual damage as
   const attack=getShootingState(state).attacks[0];
   assert.equal(attack.expectedDamage,null);
   assert.match(renderShootingHistoryRow(attack,state,{weapons:[]}),/estimate unavailable/);
+});
+
+
+test('identical squad names use stable target numbers in the map identity and phase history', () => {
+  const duplicateUnits=[
+    {id:'eradicators',name:'Eradicator Squad with Melta Rifles',ownerId:'p2'},
+    {id:'land-speeder',name:'Land Speeder',ownerId:'p2'},
+    {id:'allarus1',name:'Allarus Custodians',ownerId:'p1'},
+    {id:'allarus2',name:'Allarus Custodians',ownerId:'p1'}
+  ];
+  const state={units:duplicateUnits};
+  const banner=renderShootingMapIdentity(state,'land-speeder','allarus2');
+  assert.match(banner,/Shooter[^<]*|Shooter/);
+  assert.match(banner,/Target: Allarus Custodians 2/);
+  assert.match(banner,/<strong>Allarus Custodians 2<\/strong>/);
+  assert.doesNotMatch(banner,/Allarus Custodians 1/);
+
+  const first=renderShootingHistoryRow({
+    attackerId:'eradicators',targetId:'allarus1',
+    weaponName:'Multi-melta - Hunter',actualDamage:2,expectedDamage:null,
+    targetWoundsAfter:16
+  },state,{weapons:[]});
+  const second=renderShootingHistoryRow({
+    attackerId:'land-speeder',targetId:'allarus2',
+    weaponName:'Multi-melta',actualDamage:1,expectedDamage:null,
+    targetWoundsAfter:16
+  },state,{weapons:[]});
+  assert.match(first,/Eradicator Squad with Melta Rifles → Allarus Custodians 1/);
+  assert.match(second,/Land Speeder → Allarus Custodians 2/);
+  assert.match(first,/2 actual · estimate unavailable · 16 wounds/);
+  assert.match(second,/1 actual · estimate unavailable · 16 wounds/);
+});
+
+test('unique units and Precision allocations retain existing identity formatting', () => {
+  const state={units:[
+    {id:'marine',name:'Space Marine',ownerId:'p2'},
+    {id:'custodes',name:'Custodian Guard',ownerId:'p1'},
+    {id:'leader',name:'Blade Champion',ownerId:'p1'}
+  ]};
+  const html=renderShootingHistoryRow({
+    attackerId:'marine',targetId:'custodes',allocationTargetId:'leader',
+    weaponName:'Bolt rifle',actualDamage:1,expectedDamage:0.5
+  },state,{weapons:[]});
+  assert.match(html,/Space Marine → Custodian Guard \(Blade Champion\)/);
+  assert.match(html,/1 actual · 0.5 expected/);
 });
