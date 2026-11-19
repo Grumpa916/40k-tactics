@@ -3,7 +3,12 @@ import { strongestReroll } from './attack-roll-probabilities.js';
 // Pure calculation: every effect comes from the reviewed profile adapter and
 // recorded context. No resource is spent and no live unit is modified.
 export function applyRecordedCombatEffects({ attacker, target, profile }) {
-  const result = { ...profile, woundModifier: profile.woundModifier ?? 0, damageReduction: profile.damageReduction ?? 0 }, appliedRules = [];
+  // Saved datasheets can express AP as a string (e.g. "-1"). Normalize it
+  // before applying +/-1 modifiers: "-1" + 1 concatenates to "-11",
+  // incorrectly increasing incoming damage for defensive AP worsening.
+  const ap = Number(profile.ap ?? 0);
+  if (!Number.isFinite(ap)) throw new TypeError('Attack profile AP must be numeric.');
+  const result = { ...profile, ap, woundModifier: profile.woundModifier ?? 0, damageReduction: profile.damageReduction ?? 0 }, appliedRules = [];
   const own = new Set(attacker?.combatRules?.effects ?? []);
   const enemy = new Set(target?.combatRules?.effects ?? []);
   const keywords = (target?.keywords ?? []).map(value => String(value).toLowerCase());
