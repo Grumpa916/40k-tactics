@@ -63,3 +63,44 @@ test('weapon names from history are escaped and remain separate from recorded ID
   assert.match(html, /Blaster &lt;Arc&gt;/);
   assert.doesNotMatch(html, /<Arc>/);
 });
+
+
+test('incomplete combat profiles record tabletop damage without fabricating a 0.0 forecast', () => {
+  const state={
+    phase:'shooting',turn:1,activePlayer:'p2',
+    battle:{round:4,activePlayerId:'p2'},units,
+    history:[{
+      type:'combat.attack_resolved',payload:{
+        attackerId:'eradicators',targetId:'telemon',weaponId:'multi-melta',
+        weaponName:'Multi-melta - Hunter',phase:'shooting',round:4,turn:1,
+        expectedDamage:null,actualDamage:2,
+        stateDelta:{target:{woundsAfter:16,statusAfter:'deployed'}}
+      }
+    }]
+  };
+  const attack=getShootingState(state).attacks[0];
+  assert.equal(attack.actualDamage,2);
+  assert.equal(attack.expectedDamage,null);
+  assert.equal(attack.targetWoundsAfter,16);
+  const html=renderShootingHistoryRow(attack,state,{weapons:[]});
+  assert.match(html,/Multi-melta - Hunter · 2 actual · estimate unavailable · 16 wounds/);
+  assert.doesNotMatch(html,/0\.0 expected/);
+});
+
+test('a genuine forecast of 0.0 remains distinct from an unavailable forecast', () => {
+  const item={attackerId:'eradicators',targetId:'telemon',weaponName:'Bolt pistol',
+    expectedDamage:0,actualDamage:0,targetWoundsAfter:18};
+  const html=renderShootingHistoryRow(item,{units},{weapons:[]});
+  assert.match(html,/0 actual · 0\.0 expected · 18 wounds/);
+});
+
+test('legacy history without an expectedDamage field cannot use actual damage as the prediction', () => {
+  const state={phase:'shooting',turn:1,activePlayer:'p2',battle:{round:4,activePlayerId:'p2'},units,
+    history:[{type:'combat.attack_resolved',payload:{
+      attackerId:'eradicators',targetId:'telemon',phase:'shooting',round:4,turn:1,
+      actualDamage:2,stateDelta:{target:{woundsAfter:16}}
+    }}]};
+  const attack=getShootingState(state).attacks[0];
+  assert.equal(attack.expectedDamage,null);
+  assert.match(renderShootingHistoryRow(attack,state,{weapons:[]}),/estimate unavailable/);
+});
