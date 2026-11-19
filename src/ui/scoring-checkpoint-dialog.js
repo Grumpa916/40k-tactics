@@ -14,18 +14,25 @@ export function renderScoringCheckpointDialog(state,scoringReminder) {
     ? '<section class="battle-tactical-discard"><h3>Discard Tactical cards for +1 CP</h3>' +
       '<p>At the end of your own turn, discard one or more active Tactical cards to gain 1 CP total.</p>' +
       '<form data-tactical-discard-form>' +
+      '<div class="battle-tactical-discard__choices" role="group" aria-label="Choose Tactical cards to discard">' +
       tacticalDiscardCards.map((item) =>
-        '<label><input type="checkbox" name="discard-instance" value="' + escapeHtml(item.instanceId) + '">' +
-        escapeHtml(item.definition?.name ?? item.definitionId) + '</label>'
-      ).join("") +
-      '<button type="submit">Discard selected cards and gain +1 CP</button></form></section>'
+        '<label class="battle-tactical-discard__choice"><input type="checkbox" name="discard-instance" value="' + escapeHtml(item.instanceId) + '">' +
+        '<span>' + escapeHtml(item.definition?.name ?? item.definitionId) + '</span></label>'
+      ).join("") + '</div>' +
+      '<button class="battle-tactical-discard__submit" type="submit">Discard selected cards · gain +1 CP</button></form></section>'
     : "";
+  const secondaryReferenceDue = Boolean(scoringReminder.groups?.some(group =>
+    (group.review?.secondary?.length ?? 0) > 0));
+  const secondaryReference = secondaryReferenceDue
+    ? '<p class="battle-scoring-reminder__source-note">Secondary card text checked against physical-card photographs (Nov 8, 2026). Confirm scoring on the tabletop.</p>'
+    : '';
   const stylesheet = new URL('./styles/scoring-checkpoints.css',import.meta.url);
-  stylesheet.searchParams.set('v','manual-checkpoints-1');
+  stylesheet.searchParams.set('v','scoring-discard-layout-2');
   return '<link rel="stylesheet" href="' + stylesheet.href + '"><div class="battle-scoring-reminder__backdrop">' +
     '<section class="battle-scoring-reminder" role="dialog" aria-modal="true" aria-labelledby="battle-scoring-reminder-title">' +
     '<h2 id="battle-scoring-reminder-title">Scoring reminder</h2>' +
     '<p>Use the physical tabletop and the mission requirements below to agree the score. Objective control, map position, combat history, and recorded Actions do not determine the award.</p>' +
+    secondaryReference +
     (scoringReminder.groups ? renderScoringCheckpointGroups(state, scoringReminder) : '') +
     (scoringReminder?.groups ? '' : '<ul>' + (scoringReminder.missions.map((mission) => '<li>' + escapeHtml(mission) + '</li>').join("") ||
       '<li>Review the mission card and record any agreed points earned.</li>') + '</ul>') +
