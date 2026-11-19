@@ -209,7 +209,7 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
     assert.equal(root.node('[data-map-unit-id]', 'exo').getAttribute('data-phase-map-select'), 'true');
     root.click('[data-select-phase-unit]', 'exo');
     assert.ok(root.node('[data-open-unit-details]', 'exo'));
-    root.change('[data-weapon]', 'sidearm');
+    root.click('[data-shoot-weapon-choice]', 'sidearm');
     root.click('[data-map-unit-id]', 'marine');
     assert.match(root.innerHTML, /value="marine" selected/);
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
@@ -219,7 +219,7 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
     assert.equal(session.getState(), state);
     root.click('[data-choice-shoot]');
     assert.match(root.innerHTML, /value="marine" selected/);
-    assert.match(root.innerHTML, /value="sidearm" selected/);
+    assert.match(root.innerHTML, /data-shoot-weapon-choice="sidearm" aria-pressed="true"/);
     assert.match(root.innerHTML, /phase-army-roster__section-heading">Acting</);
     assert.ok(root.node('[data-attack]'));
     assert.equal(root.querySelector('[data-review-end-shooting]'), null);
