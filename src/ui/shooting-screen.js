@@ -481,7 +481,7 @@ export function createShootingScreen(container, {
         actualDamage = "0";
         attackError = "";
         render();
-      }));
+      });
 
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         const unitId = marker.getAttribute?.("data-map-unit-id");
