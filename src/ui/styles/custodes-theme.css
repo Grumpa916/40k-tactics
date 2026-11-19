@@ -359,3 +359,35 @@
   color:#ecf2e8 !important;
   box-shadow:none !important;
 }
+
+/* Defensive Shooting is a separate target-comparison path from the offensive
+   selected-target details. It nests a legacy charcoal shoot-advisory inside an
+   ivory advisor, producing nearly invisible dark text in the Custodes theme.
+   Scope the parchment treatment to incoming forecasts, including modeled
+   defensive option comparisons and their numerical delta labels. */
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-screen--tabletop .shoot-tabletop__target-comparisons .incoming-damage-forecast {
+  background:#faf1dc !important;
+  border:1px solid #bd9353 !important;
+  color:#261d1a !important;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-screen--tabletop .shoot-tabletop__target-comparisons .incoming-damage-forecast :is(h3,strong,p,span,li,summary) {
+  color:#261d1a !important;
+  opacity:1;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-screen--tabletop .shoot-tabletop__target-comparisons .incoming-damage-forecast :is(small,.shoot-advisory__heading span,.shoot-advisory__grid span) {
+  color:#554936 !important;
+  opacity:1;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-screen--tabletop .shoot-tabletop__target-comparisons .incoming-damage-forecast .shoot-advisory__grid > div {
+  background:#f2e4c5 !important;
+  border:1px solid #c6a46b;
+  border-radius:7px;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-screen--tabletop .shoot-tabletop__target-comparisons .incoming-damage-forecast .advisor-option-impact {
+  background:#fff8e8 !important;
+  border-color:#bd9353;
+  color:#261d1a !important;
+}
+.battle-shell.is-tabletop-experiment[data-app-theme="custodes"] .shoot-screen--tabletop .shoot-tabletop__target-comparisons .incoming-damage-forecast .advisor-option-impact__row {
+  border-top-color:#c6a46b;
+}
