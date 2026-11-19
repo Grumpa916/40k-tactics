@@ -30,6 +30,7 @@ import { finishCombatUnit } from "../application/combat-activation-workflow.js";
 import { isCombatActivationFinished } from "../rules/combat-activation-state.js";
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
 import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
+import { renderShootingWeaponChoices } from './shooting-weapon-picker.js';
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -306,7 +307,7 @@ export function createShootingScreen(container, {
 
             ${attackerId && (activeActivation || targets.length) ? `<div class="shoot-tabletop__attack-controls">
               ${preview ? '<small>Preview · choose Shoot to start recording.</small>' : ''}
-              <label>Ranged weapon<select data-weapon><option value="" ${selectedWeaponId ? "" : "selected"}>Choose weapon…</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
+              ${renderShootingWeaponChoices(weapons, selectedWeaponId)}
               <label>Target · tap an enemy marker or choose below<select data-target><option value="" ${selectedTargetId ? "" : "selected"}>Choose target…</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)}</option>`).join("")}</select></label>
               ${activeActivation && precisionOptions.length ? `<label>Precision allocation · optional<select data-shoot-precision><option value="">Normal allocation</option>${precisionOptions.map((option) => `<option value="${escapeHtml(option.unitId)}" ${option.unitId === precisionAllocationId ? "selected" : ""}>${escapeHtml(option.name)}</option>`).join("")}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ""}
 
@@ -337,7 +338,7 @@ export function createShootingScreen(container, {
         </section>
       </main>`;
     } else {
-      container.innerHTML = `<main class="shoot-screen">
+      container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen">
       <header><div><div class="kicker">LIVE BATTLE</div><h1>Shooting Phase</h1><p>Round ${escapeHtml(model.round)} · Turn ${escapeHtml(model.turn)}</p></div>
       <strong>${model.canComplete ? "All Shooting choices recorded" : "Resolve the next eligible unit"}</strong></header>
       ${phaseNotice}
@@ -364,7 +365,7 @@ export function createShootingScreen(container, {
         <section><div class="heading"><h2>Ranged attack</h2><span>Only units that chose Shoot</span></div>
           <div class="controls">
             <div class="shoot-selected-shooter"><strong>${selectedAttackerId ? escapeHtml(model.activations.find((unit) => unit.unitId === selectedAttackerId)?.unit.name ?? selectedAttackerId) : "No shooter selected"}</strong><span>Selected shooter</span></div>
-            <label>Weapon<select data-weapon ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedWeaponId ? "" : "selected"}>Select ranged weapon</option>${weapons.map((weapon) => `<option value="${escapeHtml(weapon.id)}" ${weapon.id === selectedWeaponId ? "selected" : ""}>${escapeHtml(weapon.name)}</option>`).join("")}</select></label>
+            ${renderShootingWeaponChoices(weapons, selectedWeaponId, { disabled:!selectedAttackerId })}
             <label>Target<select data-target ${selectedAttackerId ? "" : "disabled"}><option value="" ${selectedTargetId ? "" : "selected"}>Select enemy target</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)} · ${escapeHtml(ownerLabel(target))}</option>`).join("")}</select></label>
             ${precisionOptions.length ? `<label>Precision allocation · optional<select data-shoot-precision><option value="">Normal allocation</option>${precisionOptions.map((option) => `<option value="${escapeHtml(option.unitId)}" ${option.unitId === precisionAllocationId ? "selected" : ""}>${escapeHtml(option.name)}</option>`).join("")}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ""}
             <div class="damage-control">
@@ -548,13 +549,16 @@ export function createShootingScreen(container, {
       nextFrame(() => nextFrame(render));
     }
 
-    container.querySelectorAll("[data-weapon]").forEach(select => select.addEventListener("change", event => {
-      const select = event.currentTarget ?? event.target;
-      selectedWeaponId = select.value || null;
+    // Native select popovers could reopen after a redraw on iPad Safari.
+    // Use the same one-tap weapon tiles as Fight; preview remains side-effect-free.
+    container.querySelectorAll("[data-shoot-weapon-choice]").forEach(button => button.addEventListener("click", () => {
+      const choice = button.getAttribute("data-shoot-weapon-choice");
+      if (!weapons.some(weapon => weapon.id === choice)) return;
+      selectedWeaponId = choice;
       precisionAllocationId = null;
       actualDamage = "0";
       attackError = "";
-      deferRenderAfterSelectDismissal(select);
+      render();
     }));
     container.querySelectorAll("[data-target]").forEach(select => select.addEventListener("change", event => {
       const select = event.currentTarget ?? event.target;
@@ -582,7 +586,7 @@ export function createShootingScreen(container, {
       if (value) value.textContent = actualDamage;
     });
     container.querySelector("[data-attack]")?.addEventListener("click", () => {
-      const weaponId = container.querySelector("[data-weapon]")?.value || selectedWeaponId;
+      const weaponId = selectedWeaponId;
       const targetId = container.querySelector("[data-target]")?.value || selectedTargetId;
       const weapon = weapons.find((item) => item.id === weaponId);
       if (!selectedAttackerId || !weaponId || !weapon || !targetId) {
