@@ -23,6 +23,7 @@ import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
+import { isFallBackActionRestricted } from "../rules/fall-back-permissions.js";
 import { changePhase } from "./state-transitions.js";
 
 const SHOOTING_ACTION_TYPES = new Set(["shoot", "mission_action", "special_action", "not_shoot", "unlogged"]);
@@ -55,12 +56,7 @@ export function recordShootingActivation(state, {
   const unit = state.units.find((item) => item.id === unitId);
   if (!unit) throw new Error("Shooting activation unit not found: " + unitId);
   if (unit.status !== UNIT_STATUS.DEPLOYED) throw new Error("Shooting activation unit must be deployed.");
-  if (actionType === "shoot" && state.history.some((event) =>
-    event?.type === "unit.fell_back" &&
-    event?.payload?.unitId === unitId &&
-    event?.payload?.round === state.battle.round &&
-    event?.payload?.turn === state.turn
-  )) {
+  if (actionType === "shoot" && isFallBackActionRestricted(state, unitId)) {
     throw new Error("A unit that Fell Back cannot shoot this turn.");
   }
   if (!unit.ownerId) throw new Error("Shooting activation unit must have an owner.");
