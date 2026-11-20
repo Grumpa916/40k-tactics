@@ -1,4 +1,5 @@
 import { getChargeReviewSnapshot } from '../rules/charge-review-snapshot.js';
+import { isFallBackActionRestricted } from '../rules/fall-back-permissions.js';
 import { UNIT_STATUS } from "../state/unit.js";
 import { createEvent } from "../events/event.js";
 import { appendHistoryEntry } from "../state/history.js";
@@ -48,12 +49,7 @@ export function recordChargeOutcome(state, {
   if (charger.status !== UNIT_STATUS.DEPLOYED) {
     throw new Error("Charging unit must be deployed.");
   }
-  if (state.history.some((event) =>
-    event.type === "unit.fell_back" &&
-    event.payload?.unitId === unitId &&
-    event.payload?.round === state.battle.round &&
-    event.payload?.turn === state.turn
-  )) {
+  if (isFallBackActionRestricted(state, unitId)) {
     throw new Error("A unit that Fell Back cannot declare a charge this turn.");
   }
 
@@ -105,10 +101,7 @@ export function recordChargeDeclined(state, { unitId } = {}) {
   if (!charger) throw new Error("Charging unit not found: " + unitId);
   if (charger.ownerId !== state.activePlayer) throw new Error("Only the active player's units may make a Charge decision.");
   if (charger.status !== UNIT_STATUS.DEPLOYED) throw new Error("Charging unit must be deployed.");
-  if (state.history.some((event) =>
-    event.type === "unit.fell_back" && event.payload?.unitId === unitId &&
-    event.payload?.round === state.battle.round && event.payload?.turn === state.turn
-  )) throw new Error("A unit that Fell Back cannot declare a charge this turn.");
+  if (isFallBackActionRestricted(state, unitId)) throw new Error("A unit that Fell Back cannot declare a charge this turn.");
   if (state.history.some((event) =>
     event.type === "charge.outcome_recorded" && event.payload?.unitId === unitId && event.payload?.turn === state.turn
   )) throw new Error("A unit can make only one Charge decision per turn.");
