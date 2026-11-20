@@ -11,6 +11,7 @@ import { isMeleeWeapon } from "../rules/weapon-rules.js";
 import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
 import { getDamageOutcomeDistribution } from "../rules/damage-outcome-distribution.js";
+import { isFallBackActionRestricted } from "../rules/fall-back-permissions.js";
 
 function wasActivatedToShootThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
@@ -20,16 +21,6 @@ function wasActivatedToShootThisTurn(state, unitId) {
     event?.payload?.round === state?.battle?.round &&
     event?.payload?.turn === state?.turn &&
     (event?.payload?.actionType ?? "shoot") === "shoot"
-  );
-}
-
-function fellBackThisTurn(state, unitId) {
-  const history = Array.isArray(state?.history) ? state.history : [];
-  return history.some((event) =>
-    event?.type === "unit.fell_back" &&
-    event?.payload?.unitId === unitId &&
-    event?.payload?.round === state?.battle?.round &&
-    event?.payload?.turn === state?.turn
   );
 }
 
@@ -60,7 +51,7 @@ export function resolveUnitAttack(state, {
   if (state.phase !== "shooting" && state.phase !== "fight") {
     throw new Error("Attacks may only be resolved in shooting or fight.");
   }
-  if (state.phase === "shooting" && fellBackThisTurn(state, attackerId)) {
+  if (state.phase === "shooting" && isFallBackActionRestricted(state, attackerId)) {
     throw new Error("A unit that Fell Back cannot shoot this turn.");
   }
   if (state.phase === "shooting" && !wasActivatedToShootThisTurn(state, attackerId)) {
