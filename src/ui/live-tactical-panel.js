@@ -5,10 +5,6 @@ import { unitDisplayLabels } from "./map-unit-labels.js";
 
 const esc = v => String(v ?? "").replaceAll("&","&").replaceAll("<","<").replaceAll(">",">").replaceAll('"',""");
 
-/**
- * Live tactical panel: selected unit (or fallback strip) + secondary status.
- * Designed for low-friction live play. Approximate selection only.
- */
 export function renderLiveTacticalPanel(state, {
   playerId,
   selectedUnitId = null
