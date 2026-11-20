@@ -182,13 +182,13 @@ test('Secondary Action is absent from Shooting while enemy map taps still cycle 
       'Secondary cards do not create a Shooting-phase Action choice');
     assert.doesNotMatch(root.innerHTML, /Cleanse/);
     root.click('[data-choice-shoot]');
-    assert.ok(root.querySelector('[data-target]'));
+    assert.ok(root.querySelector('[data-shoot-target-picker]'));
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('data-shoot-target-marker'), 'true');
     assert.equal(root.node('[data-map-unit-id]', 'marine2').getAttribute('data-shoot-target-marker'), 'true');
     root.click('[data-map-unit-id]', 'marine');
-    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /data-shoot-target-choice="marine" aria-pressed="true"/);
     root.click('[data-map-unit-id]', 'marine2');
-    assert.match(root.innerHTML, /value="marine2" selected/);
+    assert.match(root.innerHTML, /data-shoot-target-choice="marine2" aria-pressed="true"/);
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
     assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length, 1);
   } finally { screen.destroy(); }
@@ -211,14 +211,14 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
     assert.ok(root.node('[data-open-unit-details]', 'exo'));
     root.click('[data-shoot-weapon-choice]', 'sidearm');
     root.click('[data-map-unit-id]', 'marine');
-    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /data-shoot-target-choice="marine" aria-pressed="true"/);
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
     assert.match(root.innerHTML, /Advisor assumptions &amp; detail/);
     assert.ok(root.node('[data-choice-action-toggle]'));
     assert.equal(root.querySelector('[data-attack]'), null);
     assert.equal(session.getState(), state);
     root.click('[data-choice-shoot]');
-    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /data-shoot-target-choice="marine" aria-pressed="true"/);
     assert.match(root.innerHTML, /data-shoot-weapon-choice="sidearm" aria-pressed="true"/);
     assert.match(root.innerHTML, /phase-army-roster__section-heading">Acting</);
     assert.ok(root.node('[data-attack]'));
@@ -227,6 +227,36 @@ test('selecting shooter and target previews the attack until Shoot is explicitly
     root.click('[data-finish-unit]');
     assert.match(root.innerHTML, /phase-army-roster__section-heading">Finished</);
     assert.ok(root.node('[data-open-unit-details]', 'exo'));
+  } finally { screen.destroy(); }
+});
+
+test('live Shooting can clear and reselect targets, then switch weapons without recording attacks', () => {
+  clearCommandHandlers(); registerCoreCommandHandlers();
+  const state = testState();
+  state.units.push({ ...state.units[1], id:'marine2', name:'Second squad', position:{x:27,y:25} });
+  state.units[0].profile.weaponIds.push('sidearm');
+  const sidearm = { ...gameData.weapons[0], id:'sidearm', name:'Backup sidearm' };
+  const session = createGameSession(state), root = fakeDom();
+  const screen = createShootingScreen(root, {
+    session, perspectivePlayerId:'p1', gameData:{weapons:[...gameData.weapons,sidearm]}
+  });
+  try {
+    root.click('[data-map-unit-id]','exo');
+    root.click('[data-choice-shoot]');
+    root.click('[data-shoot-weapon-choice]','bio');
+    root.click('[data-shoot-target-choice]','marine');
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine" aria-pressed="true"/);
+    root.click('[data-shoot-target-clear]');
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine" aria-pressed="false"/);
+    root.click('[data-shoot-target-choice]','marine2');
+    root.click('[data-shoot-weapon-choice]','sidearm');
+    assert.match(root.innerHTML,/data-shoot-weapon-choice="sidearm" aria-pressed="true"/);
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine2" aria-pressed="true"/);
+    root.click('[data-shoot-target-choice]','marine');
+    assert.match(root.innerHTML,/data-shoot-target-choice="marine" aria-pressed="true"/);
+    assert.match(root.innerHTML,/data-attack(?! disabled)/);
+    assert.equal(session.getState().history.filter(e => e.type === 'combat.attack_resolved').length,0);
+    assert.equal(session.getState().history.filter(e => e.type === 'shooting.unit_activated').length,1);
   } finally { screen.destroy(); }
 });
 
@@ -295,7 +325,7 @@ test('Shooting rail selects an attached formation from either member and retains
   try {
     root.click('[data-select-phase-unit]', 'exo');
     root.click('[data-select-phase-unit]', 'captain');
-    assert.match(root.innerHTML, /value="marine" selected/);
+    assert.match(root.innerHTML, /data-shoot-target-choice="marine" aria-pressed="true"/);
     assert.equal(root.node('[data-select-phase-unit]', 'captain').getAttribute('aria-pressed'), 'true');
     assert.equal(root.node('[data-select-phase-unit]', 'marine').getAttribute('aria-pressed'), 'true');
     assert.equal(root.node('[data-map-unit-id]', 'marine').getAttribute('aria-pressed'), 'true');
@@ -341,7 +371,7 @@ test('opponent shooter can be chosen by name and resolve damage without Advisor 
   try {
     root.click('[data-select-phase-unit]','marine'); root.click('[data-choice-shoot]');
     assert.match(root.innerHTML,/data-attack/);
-    root.change('[data-target]','exo'); root.click('[data-shoot-damage-plus]'); root.click('[data-attack]');
+    root.click('[data-shoot-target-choice]','exo'); root.click('[data-shoot-damage-plus]'); root.click('[data-attack]');
     assert.equal(session.getState().units.find(u=>u.id==='exo').wounds,13);
     assert.equal(session.getState().history.filter(e=>e.type==='combat.attack_resolved').length,1);
     root.click('[data-finish-unit]');

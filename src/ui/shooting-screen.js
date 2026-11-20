@@ -31,6 +31,7 @@ import { isCombatActivationFinished } from "../rules/combat-activation-state.js"
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from "./custodes-katah-panel.js";
 import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
 import { renderShootingWeaponChoices } from './shooting-weapon-picker.js';
+import { renderShootingTargetChoices } from './shooting-target-picker.js';
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -305,10 +306,10 @@ export function createShootingScreen(container, {
             </div>
             ${actionPickerOpen ? missionActionPicker.render(state, pendingUnitId, availableMissionActions) : ""}` : ""}
 
-            ${attackerId && (activeActivation || targets.length) ? `<div class="shoot-tabletop__attack-controls">
+            ${attackerId && (activeActivation || weapons.length || targets.length) ? `<div class="shoot-tabletop__attack-controls">
               ${preview ? '<small>Preview · choose Shoot to start recording.</small>' : ''}
               ${renderShootingWeaponChoices(weapons, selectedWeaponId)}
-              <label>Target · tap an enemy marker or choose below<select data-target><option value="" ${selectedTargetId ? "" : "selected"}>Choose target…</option>${targets.map((target) => `<option value="${escapeHtml(target.unitId)}" ${target.unitId === selectedTargetId ? "selected" : ""}>${escapeHtml(target.name)}</option>`).join("")}</select></label>
+              ${renderShootingTargetChoices(targets, selectedTargetId, { hasWeapon: Boolean(selectedWeapon) })}
               ${activeActivation && precisionOptions.length ? `<label>Precision allocation · optional<select data-shoot-precision><option value="">Normal allocation</option>${precisionOptions.map((option) => `<option value="${escapeHtml(option.unitId)}" ${option.unitId === precisionAllocationId ? "selected" : ""}>${escapeHtml(option.name)}</option>`).join("")}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ""}
 
             </div>` : ""}
@@ -471,6 +472,16 @@ export function createShootingScreen(container, {
       mapView.bind(container, undefined, undefined, session);
       bindPhaseArmySelection(container, selectMapUnit);
       bindCustodesKatahActions(container, session, message => { attackError = message; }, render);
+      container.querySelectorAll("[data-shoot-target-choice]").forEach(button => button.addEventListener("click", () => {
+        selectMapUnit(button.getAttribute("data-shoot-target-choice"));
+      }));
+      container.querySelector("[data-shoot-target-clear]")?.addEventListener("click", () => {
+        selectedTargetId = null;
+        precisionAllocationId = null;
+        actualDamage = "0";
+        attackError = "";
+        render();
+      });
 
       container.querySelectorAll?.("[data-map-unit-id]").forEach((marker) => {
         const unitId = marker.getAttribute?.("data-map-unit-id");

@@ -17,15 +17,15 @@ test('Aquila Commander is the first Command reminder when its CP decision is ava
   assert.ok(html.indexOf('Aquila Commander') < html.indexOf('Ka’tah readiness'));
 });
 
-test('an opponent shooter selecting Wardens displays their incoming AP reminder after native select dismissal',async()=>{
+test('an opponent shooter selecting Wardens displays their incoming AP reminder after target tile selection',async()=>{
   clearCommandHandlers();registerCoreCommandHandlers();
   const session=createGameSession(custodesReminderState()),root=fakeDom();
   const gameData={weapons:[{id:'bolter',name:'Bolter',type:'ranged',characteristics:{range:24,attacks:2,skill:3,strength:8,ap:-2,damage:2}}]};
   const screen=createShootingScreen(root,{session,gameData,perspectivePlayerId:'p1'});
-  root.click('[data-select-phase-unit]','marine');root.click('[data-choice-shoot]');root.change('[data-target]','wardens');
+  root.click('[data-select-phase-unit]','marine');root.click('[data-choice-shoot]');root.click('[data-shoot-target-choice]','wardens');
   await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));
   assert.match(root.innerHTML,/Target defenses · wardens/);assert.match(root.innerHTML,/AP −2 becomes AP −1/);
-  root.change('[data-target]','telemon');await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));assert.match(root.innerHTML,/Target defenses · telemon/);assert.match(root.innerHTML,/Reduce incoming ranged Damage by 1/);
+  root.click('[data-shoot-target-choice]','telemon');await new Promise(resolve=>setTimeout(()=>setTimeout(resolve,0),0));assert.match(root.innerHTML,/Target defenses · telemon/);assert.match(root.innerHTML,/Reduce incoming ranged Damage by 1/);
   assert.doesNotMatch(root.innerHTML,/Target defenses · wardens/);
   screen.destroy();
 });
