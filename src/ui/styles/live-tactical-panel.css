@@ -1,0 +1,99 @@
+.live-tactical-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px;
+  background: #151b20;
+  color: #e6edf3;
+  font-size: 13px;
+  min-width: 220px;
+}
+
+.live-tactical-panel h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9aa7b2;
+}
+
+.live-tactical-panel__unit-card,
+.live-tactical-panel__secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid #2c3842;
+  border-radius: 6px;
+  background: #1c242c;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+}
+
+.live-tactical-panel__secondary {
+  cursor: pointer;
+}
+
+.live-tactical-panel__secondary:hover {
+  border-color: #4a6270;
+}
+
+.live-tactical-panel__pill {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 99px;
+  text-transform: uppercase;
+}
+
+.live-tactical-panel__pill.is-achievable { background: #1e4d32; color: #7dffa0; }
+.live-tactical-panel__pill.is-at-risk    { background: #4d3a1e; color: #ffc857; }
+.live-tactical-panel__pill.is-scored     { background: #2c3842; color: #9aa7b2; }
+.live-tactical-panel__pill.is-blocked    { background: #3a2c2c; color: #ff8a8a; }
+
+.live-tactical-panel__reason {
+  color: #9aa7b2;
+  font-size: 11px;
+}
+
+.live-tactical-panel__strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.live-tactical-panel__unit-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  border: 1px solid #3a4a56;
+  background: #243038;
+  color: #e6edf3;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.live-tactical-panel__unit-icon.is-shock {
+  border-color: #c45c5c;
+  background: #3a2424;
+}
+
+.live-tactical-panel__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #2c3842;
+}
+
+.badge.is-shock { background: #5c2c2c; }
+.badge.is-ff    { background: #4d3a1e; color: #ffc857; }
+.badge.is-ready { background: #1e4d32; color: #7dffa0; }
