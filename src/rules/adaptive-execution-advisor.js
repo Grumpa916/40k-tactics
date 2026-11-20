@@ -4,6 +4,7 @@ import { getChargeOpportunity } from './tactical-charge-opportunity.js';
 import { getTargetStrategicContext } from './tactical-target-context.js';
 import { getSpatialContext } from './spatial-context.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
+import { isFallBackActionRestricted } from './fall-back-permissions.js';
 import { getEffectiveMovementAction } from '../engine/movement-refinement-transitions.js';
 import { getCustodesChargeAdvisorContext } from './custodes-tactical-advisor.js';
 
@@ -104,7 +105,7 @@ export function getAdaptiveExecutionAdvice(state,{
   else if(fightDone) forecastReason='Fight damage already recorded. Full-activation melee will not be estimated a second time.';
   else if(blocked) forecastReason='Recorded charge '+chargeOutcome+'; no Fight is forecast from this attempt. Check any separate Engagement eligibility at the table.';
   else if(state.phase==='fight' && !charge) forecastReason='No successful charge recorded for this formation. Use the existing Fight-phase Advisor for any separate engagement.';
-  else if(!charge && fellBack) forecastReason='Fell Back: no new Charge is projected.';
+  else if(!charge && fellBack && isFallBackActionRestricted(state,root.id)) forecastReason='Fell Back: no new Charge is projected.';
   else if(!charge && advanced && !advanceChargePermission) forecastReason='Advanced: no recorded permission to Charge.';
   else if(alreadyEngaged) forecastReason='Formation already engaged: no fresh Charge sequence is projected. Use the Fight-phase Advisor.';
   else if(charge && !chargeAppliesToTarget) forecastReason='This target was not declared in the recorded charge. Review actual Fight eligibility.';
