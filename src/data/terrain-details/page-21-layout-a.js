@@ -1,97 +1,97 @@
 export const PAGE_21_LAYOUT_A_DETAILS = Object.freeze({
   page: 21,
   layout: "A",
-  // Feature shapes placed inside the verified page-21 Layout A footprints.
-  // Dense = blocks LOS. Positions are approximate matches to the companion PDF.
+  // Visual estimates matching companion PDF page 21 Layout A feature positions.
+  // Dense features block LOS. All points in 60×44 catalog coordinates.
   features: Object.freeze([
-    // T1 – defender expansion ruin (upper-left on PDF)
+    // Top-left EF ruin (defender expansion area)
     {
-      id: "ruin-t1",
+      id: "ef-defender",
       type: "dense",
       blocksLos: true,
       parentFootprint: "T1",
       points: Object.freeze([
-        { x: 10.0, y: 5.0 },
-        { x: 18.5, y: 5.0 },
-        { x: 18.5, y: 9.0 },
-        { x: 14.0, y: 9.0 },
-        { x: 14.0, y: 14.5 },
-        { x: 10.0, y: 14.5 }
+        { x: 9.5, y: 4.5 },
+        { x: 17.0, y: 4.5 },
+        { x: 17.0, y: 8.5 },
+        { x: 13.0, y: 8.5 },
+        { x: 13.0, y: 13.0 },
+        { x: 9.5, y: 13.0 }
       ])
     },
-    // T3 – mid-left light containers
+    // Upper-right GH ruin
     {
-      id: "container-t3",
-      type: "light",
-      blocksLos: false,
-      parentFootprint: "T3",
-      points: Object.freeze([
-        { x: 8.0, y: 17.0 },
-        { x: 13.5, y: 17.0 },
-        { x: 13.5, y: 20.0 },
-        { x: 10.5, y: 20.0 },
-        { x: 10.5, y: 23.5 },
-        { x: 8.0, y: 23.5 }
-      ])
-    },
-    // T4 – central-left dense ruin
-    {
-      id: "ruin-t4",
-      type: "dense",
-      blocksLos: true,
-      parentFootprint: "T4",
-      points: Object.freeze([
-        { x: 20.0, y: 19.0 },
-        { x: 26.0, y: 19.0 },
-        { x: 26.0, y: 23.0 },
-        { x: 23.0, y: 23.0 },
-        { x: 23.0, y: 27.5 },
-        { x: 20.0, y: 27.5 }
-      ])
-    },
-    // T6 – large dense ruin (right of center)
-    {
-      id: "ruin-t6",
+      id: "gh-upper-right",
       type: "dense",
       blocksLos: true,
       parentFootprint: "T6",
       points: Object.freeze([
-        { x: 40.0, y: 29.0 },
-        { x: 49.0, y: 29.0 },
-        { x: 49.0, y: 33.0 },
-        { x: 44.5, y: 33.0 },
-        { x: 44.5, y: 38.5 },
-        { x: 40.0, y: 38.5 }
+        { x: 41.0, y: 29.5 },
+        { x: 48.5, y: 29.5 },
+        { x: 48.5, y: 33.5 },
+        { x: 44.5, y: 33.5 },
+        { x: 44.5, y: 38.0 },
+        { x: 41.0, y: 38.0 }
       ])
     },
-    // T11 – mid-right light terrain
+    // Center AB ruin
     {
-      id: "light-t11",
+      id: "ab-center",
+      type: "dense",
+      blocksLos: true,
+      parentFootprint: "T4",
+      points: Object.freeze([
+        { x: 20.5, y: 19.5 },
+        { x: 25.5, y: 19.5 },
+        { x: 25.5, y: 23.0 },
+        { x: 23.0, y: 23.0 },
+        { x: 23.0, y: 27.0 },
+        { x: 20.5, y: 27.0 }
+      ])
+    },
+    // Mid-right light terrain (containers/barricade)
+    {
+      id: "light-mid-right",
       type: "light",
       blocksLos: false,
       parentFootprint: "T11",
       points: Object.freeze([
-        { x: 34.5, y: 16.0 },
-        { x: 40.0, y: 16.0 },
-        { x: 40.0, y: 19.0 },
-        { x: 36.5, y: 19.0 },
-        { x: 36.5, y: 24.0 },
-        { x: 34.5, y: 24.0 }
+        { x: 35.0, y: 16.5 },
+        { x: 40.0, y: 16.5 },
+        { x: 40.0, y: 19.5 },
+        { x: 37.0, y: 19.5 },
+        { x: 37.0, y: 23.5 },
+        { x: 35.0, y: 23.5 }
       ])
     },
-    // T7 – attacker home area dense ruin
+    // Bottom-right EF ruin (attacker home)
     {
-      id: "ruin-t7",
+      id: "ef-attacker",
       type: "dense",
       blocksLos: true,
       parentFootprint: "T7",
       points: Object.freeze([
-        { x: 49.0, y: 6.5 },
-        { x: 54.0, y: 6.5 },
+        { x: 49.5, y: 6.0 },
+        { x: 54.0, y: 6.0 },
         { x: 54.0, y: 10.0 },
         { x: 51.5, y: 10.0 },
-        { x: 51.5, y: 14.5 },
-        { x: 49.0, y: 14.5 }
+        { x: 51.5, y: 14.0 },
+        { x: 49.5, y: 14.0 }
+      ])
+    },
+    // Lower-left GH/CD area
+    {
+      id: "gh-lower-left",
+      type: "dense",
+      blocksLos: true,
+      parentFootprint: "T2",
+      points: Object.freeze([
+        { x: 6.0, y: 29.0 },
+        { x: 11.0, y: 29.0 },
+        { x: 11.0, y: 33.0 },
+        { x: 8.5, y: 33.0 },
+        { x: 8.5, y: 37.0 },
+        { x: 6.0, y: 37.0 }
       ])
     }
   ])
