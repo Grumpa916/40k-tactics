@@ -39,7 +39,6 @@ function renderSelectedUnit(state, unitId, labels) {
   const badges = [];
   if (unit.battleShocked) badges.push('<span class="badge is-shock">Battle-shock</span>');
   if (unit.fightsFirst) badges.push('<span class="badge is-ff">Fights First</span>');
-  // Ka'tah and others can be added later from existing status helpers
 
   return `
     <section class="live-tactical-panel__unit" aria-label="Selected unit">
@@ -91,7 +90,6 @@ function renderSecondaryList(state, playerId) {
 function cardStatus(card) {
   if (card.scoredThisTurn) return "scored";
   if (!card.eligibleNow || card.choicePending) return "blocked";
-  // Approximate "at risk" — refine later with more signals
   if (card.focus === "enemy-deployment" && !card.eligibleNow) return "at-risk";
   return "achievable";
 }
