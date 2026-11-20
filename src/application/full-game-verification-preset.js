@@ -143,24 +143,24 @@ function rosterUnit(faction, id, name, extra = {}) {
 function custodesRoster() {
   return createArmyRoster({
     id: 'verification-custodes',
-    name: 'Verification · Custodes combined-arms',
+    name: 'Grumpa · Emperor\'s Chosen',
     faction: 'Adeptus Custodes',
     pointsLimit: 2000,
     battleSize: 'strike_force',
-    detachment: 'Guardians of the Throne',
-    detachments: ['Guardians of the Throne'],
+    detachment: "Emperor's Chosen",
+    detachments: ["Emperor's Chosen", "Lions of the Emperor", "Might of the Moritoi"],
     rulesDataRevision: createRulesDataRevisionStamp('Adeptus Custodes'),
-    notes: 'Scripted V2 full-game acceptance roster. Do not treat as a tournament list.',
+    notes: 'Updated from Warmind list 11.22. 1995/2000 pts.',
     units: [
-      rosterUnit('Adeptus Custodes', 'trajann', 'Trajann Valoris', { attachedToBodyguardId: 'wardens' }),
-      rosterUnit('Adeptus Custodes', 'wardens', 'Custodian Wardens', { attachedLeaderIds: ['trajann'] }),
-      rosterUnit('Adeptus Custodes', 'blade-champion', 'Blade Champion', { attachedToBodyguardId: 'guard' }),
-      rosterUnit('Adeptus Custodes', 'guard', 'Custodian Guard Sodality', { attachedLeaderIds: ['blade-champion'] }),
-      rosterUnit('Adeptus Custodes', 'allarus', 'Allarus Custodians'),
-      rosterUnit('Adeptus Custodes', 'venatari', 'Venatari with Verutum Lances'),
-      rosterUnit('Adeptus Custodes', 'telemon', 'Telemon Heavy Dreadnought'),
-      rosterUnit('Adeptus Custodes', 'galatus', 'Contemptor-Galatus Dreadnought'),
-      rosterUnit('Adeptus Custodes', 'prosecutors', 'Prosecutor Squad')
+      rosterUnit('Adeptus Custodes', 'trajann', 'Trajann Valoris', { attachedToBodyguardId: 'allarus-1', warlord: true }),
+      rosterUnit('Adeptus Custodes', 'allarus-1', 'Allarus Custodians', { modelCount: 3, attachedLeaderIds: ['trajann'] }),
+      rosterUnit('Adeptus Custodes', 'allarus-2', 'Allarus Custodians', { modelCount: 3 }),
+      rosterUnit('Adeptus Custodes', 'prosecutors-1', 'Prosecutor Squad', { modelCount: 5 }),
+      rosterUnit('Adeptus Custodes', 'prosecutors-2', 'Prosecutor Squad', { modelCount: 5 }),
+      rosterUnit('Adeptus Custodes', 'galatus-1', 'Contemptor-Galatus Dreadnought'),
+      rosterUnit('Adeptus Custodes', 'telemon-1', 'Telemon Heavy Dreadnought'),
+      rosterUnit('Adeptus Custodes', 'galatus-2', 'Contemptor-Galatus Dreadnought'),
+      rosterUnit('Adeptus Custodes', 'telemon-2', 'Telemon Heavy Dreadnought')
     ]
   });
 }
@@ -193,11 +193,14 @@ function tyranidRoster() {
 
 const DEPLOYMENT_PLAN = Object.freeze({
   'p1:trajann': { x: 13, y: 7 },
-  'p1:wardens': { x: 15, y: 7 },
-  'p1:blade-champion': { x: 23, y: 8 },
-  'p1:guard': { x: 25, y: 8 },
-  'p1:allarus': { x: 20, y: 5 },
-  'p1:venatari': { x: 45, y: 5 },
+  'p1:allarus-1': { x: 15, y: 7 },
+  'p1:allarus-2': { x: 23, y: 8 },
+  'p1:prosecutors-1': { x: 25, y: 8 },
+  'p1:prosecutors-2': { x: 20, y: 5 },
+  'p1:galatus-1': { x: 45, y: 5 },
+  'p1:telemon-1': { x: 30, y: 10 },
+  'p1:galatus-2': { x: 35, y: 12 },
+  'p1:telemon-2': { x: 40, y: 8 },
   'p1:telemon': { x: 31, y: 8 },
   'p1:galatus': { x: 39, y: 8 },
   'p1:prosecutors': { x: 7, y: 5 },
