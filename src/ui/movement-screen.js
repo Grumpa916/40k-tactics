@@ -4,6 +4,7 @@ import { attachmentParent } from '../rules/event-preparation.js';
 import { createLiveMapView } from './live-map-view.js';
 import { MAP_PLANNING_BUTTON, openMapPlanning } from './map-planning.js';
 import { renderCombatWorkspace } from './combat-workspace.js';
+import { renderLiveTacticalPanel } from './live-tactical-panel.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { renderMovementAdvisor } from './movement-advisor.js';
 import { renderMovementRosterRail, renderMovementSelectedUnitCard } from './movement-dashboard-view.js';
@@ -201,7 +202,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
       const selectedRefinement = selectedAny ? movementRefinement(state, selectedAny.id) : null;
       const dashboardStyles = new URL('./styles/movement-dashboard.css', import.meta.url);
       dashboardStyles.searchParams.set('v', 'movement-units-drawer-2');
-      const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${renderMovementRosterRail(state, {
+      const tacticalPanel = renderLiveTacticalPanel(state, { playerId: perspectivePlayerId ?? playerId, selectedUnitId });
+      const leftRail = `<link rel="stylesheet" href="${dashboardStyles}">${tacticalPanel}${renderMovementRosterRail(state, {
         playerId,
         perspectivePlayerId: perspectivePlayerId ?? playerId,
         selectedUnitId,
