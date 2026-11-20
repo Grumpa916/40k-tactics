@@ -785,6 +785,7 @@ export function createCommandScreen(container, {
     }).join("") : '<li>No victory points recorded yet.</li>';
 
     const commandControls = '<div class="command-screen command-screen--tabletop"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
+      '<div class="aquila-reminder" style="background:#1e3a2f;border:1px solid #2d5a45;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12px;"><strong>Aquila Commander</strong> · +1 CP available at start of battle round (if eligible commander is on the battlefield)</div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>CP</span><strong>' +
