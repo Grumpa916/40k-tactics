@@ -6,6 +6,7 @@ import { unitDisplayLabels } from "../ui/map-unit-labels.js";
 import { getApproximateChargeMapDistance } from "../rules/spatial-context.js";
 import { getFightEngagementState } from "../rules/fight-engagement-state.js";
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
+import { isFallBackActionRestricted } from "../rules/fall-back-permissions.js";
 
 function playerName(player) {
   return player?.name ?? player?.id ?? "Unknown";
@@ -100,7 +101,7 @@ export function getChargeViewModel(
     activePlayerId: state?.activePlayer ?? state?.battle?.activePlayerId ?? null,
     candidates: groupRecommendations(state, state?.activePlayer ?? state?.battle?.activePlayerId, perspectivePlayerId)
       .filter(item => !currentTurnHistory.some(event => event.payload?.unitId === item.unit.unitId))
-      .filter(item => !state.history.some(event => event.type === "unit.fell_back" && event.payload?.unitId === item.unit.unitId && event.payload?.round === state.battle.round && event.payload?.turn === state.turn)),
+      .filter(item => !isFallBackActionRestricted(state, item.unit.unitId)),
     outcomes: currentTurnHistory.map((event) => ({
       ...event.payload,
       unit: describeUnit(state, event.payload.unitId, perspectivePlayerId),

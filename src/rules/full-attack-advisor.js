@@ -6,6 +6,7 @@ import { getChargeSuccessProbability } from './tactical-charge-opportunity.js';
 import { getCustodesChargeAdvisorContext, hasCustodesFightsFirst } from './custodes-tactical-advisor.js';
 import { getEffectiveMovementAction } from '../engine/movement-refinement-transitions.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
+import { isFallBackActionRestricted } from './fall-back-permissions.js';
 
 const unknown = reason => ({ available: false, reason });
 const unitById = (state, id) => state.units?.find(unit => unit.id === id);
@@ -78,7 +79,7 @@ export function getFullAttackAdvice(state, { attackerId, targetId, weapon, shoot
     const chargeRules = getCustodesChargeAdvisorContext(state, { playerId: attacker.ownerId, unitId: attackerId, baseProbability: 0 });
     for (const member of members) {
       const movement = getEffectiveMovementAction(state, member.id)?.movementType;
-      if (movement === 'fall_back') return unknown('Fell Back: charge permission is not modeled.');
+      if (movement === 'fall_back' && isFallBackActionRestricted(state, attackerId)) return unknown('Fell Back: no recorded permission to charge.');
       if (movement === 'advance' && !chargeRules.advanceChargePermission) return unknown('Advanced: no recorded permission to charge.');
     }
     if (getCombatFormationMembers(state, target).length > 1) return unknown('Attached enemy formation: allocation between Leader and Bodyguard needs table review.');
