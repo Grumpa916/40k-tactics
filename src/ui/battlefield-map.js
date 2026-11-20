@@ -68,8 +68,8 @@ function geometryOverlay(geometry, terrainOnly = false) {
   }).join("");
 
   // Optional detail features (prototype: Page 21 Layout A only)
-  // Visible by default; set localStorage "fortyk-tactics-show-terrain-features" to "false" to hide.
-  const showDetails = globalThis.localStorage?.getItem("fortyk-tactics-show-terrain-features") !== "false";
+  // Off by default. Set localStorage "fortyk-tactics-show-terrain-features" to "true" to show.
+  const showDetails = globalThis.localStorage?.getItem("fortyk-tactics-show-terrain-features") === "true";
   let detailFeatures = "";
   if (showDetails) {
     const details = getTerrainDetailsForGeometry(geometry);
