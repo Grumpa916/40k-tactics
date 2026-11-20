@@ -1,6 +1,7 @@
 import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { renderTargetDefenseReminders, renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
+import { renderLiveTacticalPanel } from './live-tactical-panel.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { captureViewContinuity } from './view-continuity.js';
 import { renderActionReceipt } from './action-receipt.js';
@@ -279,6 +280,7 @@ export function createShootingScreen(container, {
         : shootingTargetComparisonCards(attackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison);
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
         <aside class="combat-workspace__rail" id="live-units" aria-label="Shooting units and targets">
+          ${renderLiveTacticalPanel(state, { playerId: perspectivePlayerId, selectedUnitId: activeUnitId })}
           ${renderPhaseArmyRoster(state, perspectivePlayerId, { selectedUnitId:activeUnitId, selectableIds, targetIds:[selectedTargetId], sections, enableAdjust:state.phase === 'shooting' })}
         </aside>
         ${renderCombatMapPanel({ state, phase: 'shooting', mapView,
