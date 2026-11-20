@@ -1,5 +1,7 @@
 import { renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
+import { renderLiveTacticalPanel, bindLiveTacticalPanel } from './live-tactical-panel.js';
+import { selectUnitForSecondary } from '../rules/secondary-selection.js';
 import { createLiveMapView } from './live-map-view.js';
 import { renderEarlyTurnPlanPanel } from './early-turn-plan-panel.js';
 import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
