@@ -64,7 +64,7 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
 // Each phase owns its selection and command handling. Use the shared reference
 // roster unless the phase supplies its own selection rail.
 export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selectedUnitId, selectableIds = [], targetIds = [], interactivePlayerId = null, controls, topControls = '', footer = '', mapExtra = '', leftRail = '', afterRuleReminders = '', reminderUnitId = selectedUnitId, adaptiveContext = {}, rosterSections = [], mapView = createLiveMapView() }) {
-  const useTacticalPanel = ['movement','shooting','charge','fight'].includes(phase) && state?.battle?.status === 'active';
+  const useTacticalPanel = ['movement','shooting','charge','fight'].includes(phase);
   leftRail = leftRail || (useTacticalPanel
     ? renderLiveTacticalPanel(state, { playerId: perspectivePlayerId, selectedUnitId })
     : renderPhaseArmyRoster(state, perspectivePlayerId, {
