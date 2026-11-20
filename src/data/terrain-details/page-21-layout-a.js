@@ -1,83 +1,97 @@
 export const PAGE_21_LAYOUT_A_DETAILS = Object.freeze({
   page: 21,
   layout: "A",
-  // Approximate multi-point feature shapes based on Event Companion PDF page 21 Layout A.
-  // Dense features set blocksLos: true so they can interact with line-of-sight tools.
-  // Coordinates are in the 60×44 inch system and sit inside the existing footprints.
+  // Feature shapes placed inside the verified page-21 Layout A footprints.
+  // Dense = blocks LOS. Positions are approximate matches to the companion PDF.
   features: Object.freeze([
-    // Defender expansion ruin (upper-left on PDF) — L-ish ruin
+    // T1 – defender expansion ruin (upper-left on PDF)
     {
-      id: "ruin-defender-expansion",
+      id: "ruin-t1",
       type: "dense",
       blocksLos: true,
       parentFootprint: "T1",
       points: Object.freeze([
-        { x: 9.0, y: 7.5 },
-        { x: 15.5, y: 7.5 },
-        { x: 15.5, y: 11.0 },
-        { x: 12.5, y: 11.0 },
-        { x: 12.5, y: 14.0 },
-        { x: 9.0, y: 14.0 }
+        { x: 10.0, y: 5.0 },
+        { x: 18.5, y: 5.0 },
+        { x: 18.5, y: 9.0 },
+        { x: 14.0, y: 9.0 },
+        { x: 14.0, y: 14.5 },
+        { x: 10.0, y: 14.5 }
       ])
     },
-    // Mid-left containers / light terrain
+    // T3 – mid-left light containers
     {
-      id: "container-mid-left",
+      id: "container-t3",
       type: "light",
       blocksLos: false,
       parentFootprint: "T3",
       points: Object.freeze([
-        { x: 11.5, y: 17.5 },
-        { x: 18.0, y: 17.5 },
-        { x: 18.0, y: 20.0 },
-        { x: 15.0, y: 20.0 },
-        { x: 15.0, y: 23.0 },
-        { x: 11.5, y: 23.0 }
+        { x: 8.0, y: 17.0 },
+        { x: 13.5, y: 17.0 },
+        { x: 13.5, y: 20.0 },
+        { x: 10.5, y: 20.0 },
+        { x: 10.5, y: 23.5 },
+        { x: 8.0, y: 23.5 }
       ])
     },
-    // Central dense ruin
+    // T4 – central-left dense ruin
     {
-      id: "ruin-center",
+      id: "ruin-t4",
+      type: "dense",
+      blocksLos: true,
+      parentFootprint: "T4",
+      points: Object.freeze([
+        { x: 20.0, y: 19.0 },
+        { x: 26.0, y: 19.0 },
+        { x: 26.0, y: 23.0 },
+        { x: 23.0, y: 23.0 },
+        { x: 23.0, y: 27.5 },
+        { x: 20.0, y: 27.5 }
+      ])
+    },
+    // T6 – large dense ruin (right of center)
+    {
+      id: "ruin-t6",
       type: "dense",
       blocksLos: true,
       parentFootprint: "T6",
       points: Object.freeze([
-        { x: 27.5, y: 18.5 },
-        { x: 34.5, y: 18.5 },
-        { x: 34.5, y: 22.0 },
-        { x: 31.0, y: 22.0 },
-        { x: 31.0, y: 25.5 },
-        { x: 27.5, y: 25.5 }
+        { x: 40.0, y: 29.0 },
+        { x: 49.0, y: 29.0 },
+        { x: 49.0, y: 33.0 },
+        { x: 44.5, y: 33.0 },
+        { x: 44.5, y: 38.5 },
+        { x: 40.0, y: 38.5 }
       ])
     },
-    // Upper-right light barricade / containers
+    // T11 – mid-right light terrain
     {
-      id: "barricade-upper-right",
+      id: "light-t11",
       type: "light",
       blocksLos: false,
-      parentFootprint: "T8",
+      parentFootprint: "T11",
       points: Object.freeze([
-        { x: 37.5, y: 21.5 },
-        { x: 44.5, y: 21.5 },
-        { x: 44.5, y: 23.5 },
-        { x: 40.0, y: 23.5 },
-        { x: 40.0, y: 25.5 },
-        { x: 37.5, y: 25.5 }
+        { x: 34.5, y: 16.0 },
+        { x: 40.0, y: 16.0 },
+        { x: 40.0, y: 19.0 },
+        { x: 36.5, y: 19.0 },
+        { x: 36.5, y: 24.0 },
+        { x: 34.5, y: 24.0 }
       ])
     },
-    // Attacker home ruin (lower-right)
+    // T7 – attacker home area dense ruin
     {
-      id: "ruin-attacker-home",
+      id: "ruin-t7",
       type: "dense",
       blocksLos: true,
-      parentFootprint: "T12",
+      parentFootprint: "T7",
       points: Object.freeze([
-        { x: 45.5, y: 27.5 },
-        { x: 52.5, y: 27.5 },
-        { x: 52.5, y: 31.0 },
-        { x: 49.0, y: 31.0 },
-        { x: 49.0, y: 34.5 },
-        { x: 45.5, y: 34.5 }
+        { x: 49.0, y: 6.5 },
+        { x: 54.0, y: 6.5 },
+        { x: 54.0, y: 10.0 },
+        { x: 51.5, y: 10.0 },
+        { x: 51.5, y: 14.5 },
+        { x: 49.0, y: 14.5 }
       ])
     }
   ])
@@ -91,7 +105,6 @@ export function getTerrainDetailsForGeometry(geometry) {
   return null;
 }
 
-/** Returns dense features that should block line of sight for a given geometry. */
 export function getLosBlockingFeatures(geometry) {
   const details = getTerrainDetailsForGeometry(geometry);
   if (!details) return [];
