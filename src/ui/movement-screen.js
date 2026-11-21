@@ -431,6 +431,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         if (!moves.length) throw new Error("This unit has no map position yet. Place it on the battlefield map first.");
         if (button.hasAttribute("data-move-save")) {
           session.dispatch({ type: COMMAND_TYPES.RESOLVE_NORMAL_MOVE, payload: { unitId: unit.id, moves } });
+          try { session.dispatch({ type: COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, payload: { unitId: unit.id, actionType: "move" } }); } catch {}
         } else if (button.hasAttribute("data-move-advance")) {
           if (!Number.isInteger(advanceRoll) || advanceRoll < 1 || advanceRoll > 6) throw new Error("Select the Advance roll (1–6) first.");
           session.dispatch({ type: COMMAND_TYPES.RESOLVE_ADVANCE, payload: { unitId: unit.id, moves, advanceRoll } });
