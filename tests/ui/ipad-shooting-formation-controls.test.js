@@ -8,7 +8,7 @@ import { renderCombatMapPanel } from '../../src/ui/combat-workspace.js';
 
 const LIVE_TEST_POSITIONS = Object.freeze({
   trajann: { x: 13, y: 7 },
-  wardens: { x: 15, y: 7 }
+  'allarus-1': { x: 15, y: 7 }
 });
 
 function battleUnit(state, rosterUnitId) {
@@ -30,13 +30,13 @@ function activeVerificationState() {
   };
 }
 
-test('verification Wardens formation includes Trajann Eagle’s Scream ranged profile', () => {
+test('verification Allarus formation includes Trajann Eagle’s Scream ranged profile', () => {
   const state = activeVerificationState();
   const trajann = battleUnit(state, 'trajann');
-  const wardens = battleUnit(state, 'wardens');
+  const allarus = battleUnit(state, 'allarus-1');
   assert.ok(trajann);
-  assert.ok(wardens);
-  assert.equal(getCombatFormationRoot(state, trajann)?.id, wardens.id);
+  assert.ok(allarus);
+  assert.equal(getCombatFormationRoot(state, trajann)?.id, allarus.id);
 
   const ranged = getCombatFormationWeaponOptions(state, trajann, { type: 'ranged' });
   const eagle = ranged.find(weapon => weapon.sourceUnitId === trajann.id && weapon.profileName === "Eagle's Scream");
@@ -51,7 +51,7 @@ test('verification Wardens formation includes Trajann Eagle’s Scream ranged pr
 test('Shooting map gives the attached formation one combined selectable bodyguard marker', () => {
   const state = activeVerificationState();
   const trajann = battleUnit(state, 'trajann');
-  const wardens = battleUnit(state, 'wardens');
+  const allarus = battleUnit(state, 'allarus-1');
   const html = renderCombatMapPanel({
     state,
     phase: 'shooting',
@@ -59,7 +59,8 @@ test('Shooting map gives the attached formation one combined selectable bodyguar
     selectedUnitId: null
   });
 
-  assert.match(html, new RegExp('data-map-unit-id="'+wardens.id+'" data-map-formation-symbol="WAR\\+TRA"'));
+  assert.match(html, new RegExp('data-map-unit-id="'+allarus.id+'"'));
+  assert.match(html, new RegExp('data-map-formation-members="'+trajann.id+'"'));
   assert.doesNotMatch(html, new RegExp('data-map-unit-id="'+trajann.id+'"'));
   assert.doesNotMatch(html, /data-map-member-id=/);
 });
