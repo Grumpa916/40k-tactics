@@ -133,11 +133,12 @@ function rosterUnit(faction, id, name, extra = {}) {
       status: candidate.verificationStatus ?? 'verification-preset',
       sourceName: candidate.sourceName ?? null,
       sourceUrl: candidate.sourceUrl ?? null
-    }
+    },
+    ...extra
   };
   const loadout = verificationLoadout(draft);
   const { datasheet, ...unit } = draft;
-  return { ...unit, ...loadout, ...extra };
+  return { ...unit, ...loadout };
 }
 
 function custodesRoster() {
