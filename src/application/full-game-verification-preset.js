@@ -25,16 +25,16 @@ const REVIEWED_VERIFICATION_LOADOUTS = Object.freeze({
   ],
   'adeptus-custodes:allarus-custodians': (modelCount) => [
     { name: 'Balistus Grenade Launcher', quantity: modelCount },
-    { name: 'Castellan Axe', quantity: modelCount }
+    { name: 'Castellan Axe', quantity: modelCount },
+    { name: 'Vexilla', quantity: 1 }
   ],
   'adeptus-custodes:venatari-with-verutum-lances': (modelCount) => [
     { name: 'Verutum Lance', quantity: modelCount }
   ],
   'adeptus-custodes:telemon-heavy-dreadnought': () => [
     { name: 'Spiculus Bolt Launcher', quantity: 1 },
-    { name: 'Caestus Fist', quantity: 1 },
-    { name: 'Twin Neutronium Cascade Projectors', quantity: 1 },
-    { name: 'Arachnus Storm Cannon', quantity: 1 }
+    { name: 'Dual Caestus Fists', quantity: 1 },
+    { name: 'Twin Neutronium Cascade Projectors', quantity: 2 }
   ],
   'tyranids:termagants': (modelCount) => [
     { name: 'Chitinous claws and teeth', quantity: modelCount },
@@ -153,15 +153,15 @@ function custodesRoster() {
     rulesDataRevision: createRulesDataRevisionStamp('Adeptus Custodes'),
     notes: 'Updated from Warmind list 11.22. 1995/2000 pts.',
     units: [
-      rosterUnit('Adeptus Custodes', 'trajann', 'Trajann Valoris', { attachedToBodyguardId: 'allarus-1', warlord: true }),
-      rosterUnit('Adeptus Custodes', 'allarus-1', 'Allarus Custodians', { modelCount: 3, attachedLeaderIds: ['trajann'] }),
-      rosterUnit('Adeptus Custodes', 'allarus-2', 'Allarus Custodians', { modelCount: 3 }),
-      rosterUnit('Adeptus Custodes', 'prosecutors-1', 'Prosecutor Squad', { modelCount: 5 }),
-      rosterUnit('Adeptus Custodes', 'prosecutors-2', 'Prosecutor Squad', { modelCount: 5 }),
-      rosterUnit('Adeptus Custodes', 'galatus-1', 'Contemptor-Galatus Dreadnought'),
-      rosterUnit('Adeptus Custodes', 'telemon-1', 'Telemon Heavy Dreadnought'),
-      rosterUnit('Adeptus Custodes', 'galatus-2', 'Contemptor-Galatus Dreadnought'),
-      rosterUnit('Adeptus Custodes', 'telemon-2', 'Telemon Heavy Dreadnought')
+      rosterUnit('Adeptus Custodes', 'trajann', 'Trajann Valoris', { attachedToBodyguardId: 'allarus-1', warlord: true, points: 265 }),
+      rosterUnit('Adeptus Custodes', 'allarus-1', 'Allarus Custodians', { modelCount: 3, attachedLeaderIds: ['trajann'], points: 270 }),
+      rosterUnit('Adeptus Custodes', 'allarus-2', 'Allarus Custodians', { modelCount: 3, points: 270 }),
+      rosterUnit('Adeptus Custodes', 'prosecutors-1', 'Prosecutor Squad', { modelCount: 5, points: 50 }),
+      rosterUnit('Adeptus Custodes', 'prosecutors-2', 'Prosecutor Squad', { modelCount: 5, points: 50 }),
+      rosterUnit('Adeptus Custodes', 'galatus-1', 'Contemptor-Galatus Dreadnought', { points: 250 }),
+      rosterUnit('Adeptus Custodes', 'telemon-1', 'Telemon Heavy Dreadnought', { points: 310 }),
+      rosterUnit('Adeptus Custodes', 'galatus-2', 'Contemptor-Galatus Dreadnought', { points: 220 }),
+      rosterUnit('Adeptus Custodes', 'telemon-2', 'Telemon Heavy Dreadnought', { points: 310 })
     ]
   });
 }
