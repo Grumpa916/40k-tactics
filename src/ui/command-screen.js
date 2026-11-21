@@ -785,7 +785,7 @@ export function createCommandScreen(container, {
     }).join("") : '<li>No victory points recorded yet.</li>';
 
     const commandControls = '<div class="command-screen command-screen--tabletop"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
-      '<div class="aquila-reminder" style="background:#1e3a2f;border:1px solid #2d5a45;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12px;"><strong>Aquila Commander</strong> · +1 CP available at start of battle round (if eligible commander is on the battlefield)</div>' +
+      '<div class="aquila-reminder" style="background:#1e3a2f;border:1px solid #2d5a45;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><span><strong>Aquila Commander</strong> · +1 CP at start of battle round</span><button type="button" data-aquila-activate style="background:#2d5a45;color:#e6edf3;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;">Activate +1 CP</button></div>' +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>CP</span><strong>' +
@@ -849,7 +849,16 @@ export function createCommandScreen(container, {
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("submit", handleSubmit);
   const unbindMapCorrection = layoutMode === "tabletop"
-    ? bindLiveMapPositionCorrection(container, session, { phase:"command", onError:message => { objectiveMessage = message; render(); } })
+    ? bindLiveMapPositionCorrection(container, session, {
+    if (target.hasAttribute("data-aquila-activate")) {
+      try {
+        session.dispatch({ type: COMMAND_TYPES.USE_RULES_REMINDER, payload: { playerId: state.activePlayer, ruleId: "aquila-commander" } });
+        secondaryMissionMessage = "Aquila Commander activated: +1 CP added.";
+      } catch (e) { secondaryMissionMessage = e.message; }
+      render();
+      return;
+    }
+ phase:"command", onError:message => { objectiveMessage = message; render(); } })
     : () => {};
   const unsubscribe = session.subscribe(render);
   render();
