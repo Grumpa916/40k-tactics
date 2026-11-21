@@ -47,6 +47,7 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_CHARGE_OUTCOME: "charge.record_outcome",
   RECORD_CHARGE_DECLINED: "charge.decline",
   RECORD_SHOOTING_ACTIVATION: "shooting.record_activation",
+  RECORD_DECISION_SNAPSHOT: "decision.record_snapshot",
   COMPLETE_SHOOTING_PHASE: "shooting.complete_phase",
   RECORD_FIGHT_ACTIVATION: "fight.record_activation",
   COMPLETE_FIGHT_PHASE: "fight.complete_phase",
