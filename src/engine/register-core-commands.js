@@ -7,6 +7,7 @@ import { updateDeploymentWorkspace } from './deployment-workspace-transitions.js
 import { setManualBattleShock } from "./manual-battle-shock-transitions.js";
 import { reviewMissionAction } from "./mission-action-transitions.js";
 import { finishCombatActivation } from "./combat-activation-transitions.js";
+import { recordDecisionSnapshot } from "./decision-snapshot-transitions.js";
 import { updatePreparation } from "./event-preparation-transitions.js";
 import { recordPunishmentCondemnation } from "./punishment-transitions.js";
 import { recordConsecrateReview } from "./consecrate-transitions.js";
@@ -108,6 +109,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RECORD_CHARGE_OUTCOME, (state, command) => recordChargeOutcome(state, command.payload)],
     [COMMAND_TYPES.RECORD_CHARGE_DECLINED, (state, command) => recordChargeDeclined(state, command.payload)],
     [COMMAND_TYPES.RECORD_SHOOTING_ACTIVATION, (state, command) => recordShootingActivation(state, command.payload)],
+    [COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, (state, command) => recordDecisionSnapshot(state, command.payload)],
     [COMMAND_TYPES.COMPLETE_SHOOTING_PHASE, (state) => completeShootingPhase(state)],
     [COMMAND_TYPES.RECORD_FIGHT_ACTIVATION, (state, command) => recordFightActivation(state, command.payload)],
     [COMMAND_TYPES.COMPLETE_FIGHT_PHASE, (state, command) => completeFightPhase(state, command.payload)],
