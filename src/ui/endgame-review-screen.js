@@ -2,6 +2,7 @@ import { renderEndgameContext } from './endgame-context-view.js';
 import { renderEndgameEvidence } from './endgame-evidence-view.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
 import { getEndgameReview } from '../rules/endgame-review.js';
+import { getDecisionSnapshots } from '../rules/decision-snapshot.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const num = value => value == null ? '—' : Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -39,6 +40,11 @@ export function renderEndgameReview(state, { playerId, confirmEnd = false, messa
     ${renderEndgameContext(review)}
     <section><h3>Recorded turning points</h3>${swing?`<p><strong>Largest recorded round scoring gap:</strong> Round ${esc(swing.round)}, ${esc(swing.margin>0?first.name:second.name)} gained ${esc(Math.abs(swing.margin))} VP more than the other player. Only rounds with entries for both players are compared.</p>`:''}<p>These are confirmed destruction events, not proof of what decided the game.</p>${review.moments.length?`<ol>${review.moments.map(m=>`<li><strong>${esc(when(m))}</strong> · ${esc(m.text)}</li>`).join('')}</ol>`:'<p>No combat destruction events recorded.</p>'}</section>
     <section><h3>Unit contributions</h3>${unitTables}<p>Damage is the entered attack result; it can exceed wounds remaining. *Actual / expected compares only attacks with both values saved; the number in brackets is the compared attack count. Declined charges are excluded from attempts. Confirmed mission actions do not automatically imply VP.</p></section>
+    <details><summary>Decision log</summary>${(() => {
+      const snaps = getDecisionSnapshots(state);
+      if (!snaps.length) return '<p>No decision snapshots recorded.</p>';
+      return '<ol>' + snaps.map(s => `<li><strong>R${s.round ?? '?'} · ${esc(s.phase ?? '')}</strong> · ${esc(s.unitName)} · ${esc(s.actionType)}${s.weaponName ? ' · ' + esc(s.weaponName) : ''}${s.advisorNote ? ' · ' + esc(s.advisorNote) : ''}</li>`).join('') + '</ol>';
+    })()}</details>
     <details><summary>Scoring entries</summary>${review.scores.length?table('Effective awards and manual adjustments',['When','Player','Category','VP','Reason'],review.scores.map(s=>row([when(s),playerName(s.playerId),s.category,num(s.amount),s.reason]))):'<p>No scoring entries recorded.</p>'}</details>
     <section><h3>What this review can establish</h3><p>${review.coverage.attacks} attack entries · ${review.coverage.comparisons} saved damage comparisons · ${review.coverage.scoreEntries} effective score entries.</p><ul>${review.evidenceGaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></section>
   </article>`;
