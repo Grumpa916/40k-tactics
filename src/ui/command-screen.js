@@ -852,7 +852,7 @@ export function createCommandScreen(container, {
     ? bindLiveMapPositionCorrection(container, session, {
     if (target.hasAttribute("data-aquila-activate")) {
       try {
-        session.dispatch({ type: COMMAND_TYPES.USE_RULES_REMINDER, payload: { playerId: state.activePlayer, ruleId: "aquila-commander" } });
+        session.dispatch({ type: COMMAND_TYPES.RECORD_RULES_REMINDER_USE, payload: { playerId: state.activePlayer, ruleId: "aquila-commander" } });
         secondaryMissionMessage = "Aquila Commander activated: +1 CP added.";
       } catch (e) { secondaryMissionMessage = e.message; }
       render();
