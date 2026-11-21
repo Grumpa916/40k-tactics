@@ -506,7 +506,15 @@ export function createShootingScreen(container, {
         selectMapUnit(button.getAttribute?.("data-advisor-target"));
       }));
       container.querySelector?.("[data-finish-unit]")?.addEventListener?.("click", () => {
-        try { finishCombatUnit(session, selectedAttackerId); }
+        try {
+          finishCombatUnit(session, selectedAttackerId);
+          if (selectedAttackerId) {
+            try { session.dispatch({ type: COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, payload: {
+              unitId: selectedAttackerId, actionType: "shoot",
+              targetId: selectedTargetId, weaponName: selectedWeapon?.name ?? null
+            } }); } catch {}
+          }
+        }
         catch (cause) { attackError = cause?.message ?? String(cause); render(); return; }
         selectedAttackerId = null;
         selectedWeaponId = null;
