@@ -7,18 +7,18 @@ import { renderMissionReviewPanel } from '../../src/ui/mission-review-panel.js';
 
 test('verification attached-unit reference hydrates the full reviewed datasheet stat line', () => {
   const state = createFullGameVerificationState();
-  const guard = state.units.find(unit => unit.id === 'p1:guard');
-  assert.ok(guard);
-  const rosterUnit = getBattleRosterUnit(state, guard);
-  assert.equal(rosterUnit.datasheet.characteristics.Move, '8"');
-  assert.equal(rosterUnit.datasheet.characteristics.Toughness, 7);
+  const allarus = state.units.find(unit => unit.id === 'p1:allarus-1');
+  assert.ok(allarus);
+  const rosterUnit = getBattleRosterUnit(state, allarus);
+  assert.equal(rosterUnit.datasheet.characteristics.Move, '7"');
+  assert.equal(rosterUnit.datasheet.characteristics.Toughness, 8);
   assert.equal(rosterUnit.datasheet.characteristics.Save, '2+');
-  assert.equal(rosterUnit.datasheet.characteristics.Wounds, 5);
+  assert.equal(rosterUnit.datasheet.characteristics.Wounds, 6);
   assert.equal(rosterUnit.datasheet.characteristics.Leadership, '5+');
-  assert.equal(rosterUnit.datasheet.characteristics['Objective Control'], 3);
+  assert.equal(rosterUnit.datasheet.characteristics['Objective Control'], 2);
   assert.equal(rosterUnit.datasheet.characteristics['Invulnerable save'], '4+');
 
-  const html = renderArmyUnitDialog(state, guard.id);
+  const html = renderArmyUnitDialog(state, allarus.id);
   for (const label of ['Move', 'Toughness', 'Save', 'Wounds', 'Leadership', 'Objective Control', 'Invulnerable Save']) {
     assert.match(html, new RegExp(label.replace(' ', '\\s')));
   }
