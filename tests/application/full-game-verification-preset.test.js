@@ -27,7 +27,7 @@ test('full-game verification preset preloads two real rosters and repeatable mis
   const mine = state.armyRosters.p1;
   const opponent = state.armyRosters.p2;
   assert.equal(mine.faction, 'Adeptus Custodes');
-  assert.equal(mine.detachment, 'Guardians of the Throne');
+  assert.equal(mine.detachment, "Emperor's Chosen");
   assert.equal(opponent.faction, 'Tyranids');
   assert.equal(opponent.detachment, 'Vanguard Onslaught');
   assert.ok(mine.units.length >= 9);
@@ -38,11 +38,13 @@ test('full-game verification preset preloads two real rosters and repeatable mis
   assert.ok(rosterTotal(opponent) <= 2000);
 
   const trajann = mine.units.find(unit => unit.id === 'trajann');
-  const wardens = mine.units.find(unit => unit.id === 'wardens');
+  const allarus = mine.units.find(unit => unit.id === 'allarus-1');
   const prime = opponent.units.find(unit => unit.id === 'tyranid-prime');
   const hormagaunts = opponent.units.find(unit => unit.id === 'hormagaunts');
-  assert.equal(trajann.attachedToBodyguardId, 'wardens');
-  assert.deepEqual(wardens.attachedLeaderIds, ['trajann']);
+  assert.equal(trajann.attachedToBodyguardId, 'allarus-1');
+  assert.deepEqual(allarus.attachedLeaderIds, ['trajann']);
+  assert.equal(mine.units.length, 9);
+  assert.equal(rosterTotal(mine), 1995);
   assert.equal(prime.attachedToBodyguardId, 'hormagaunts');
   assert.deepEqual(hormagaunts.attachedLeaderIds, ['tyranid-prime']);
 
@@ -73,16 +75,15 @@ test('full-game verification preset supplies explicit legal quantity-aware comba
   assert.ok(rosters.every(unit => !['source-invalid', 'rules-invalid', 'manual-selection-required', 'unverified']
     .includes(unit.loadoutValidation?.status)));
 
-  const telemon = state.armyRosters.p1.units.find(unit => unit.id === 'telemon');
+  const telemon = state.armyRosters.p1.units.find(unit => unit.id === 'telemon-1');
   assert.equal(telemon.loadoutValidation.status, 'rules-reviewed-valid');
   assert.deepEqual(telemon.equippedWargear.map(item => [item.name, item.quantity]), [
     ['Spiculus Bolt Launcher', 1],
-    ['Caestus Fist', 1],
-    ['Twin Neutronium Cascade Projectors', 1],
-    ['Arachnus Storm Cannon', 1]
+    ['Dual Caestus Fists', 1],
+    ['Twin Neutronium Cascade Projectors', 2]
   ]);
   const telemonRanged = getDatasheetWeaponOptions(state, battleUnitFor(state, telemon), { type: 'ranged' });
-  assert.ok(telemonRanged.some(item => item.name === 'Arachnus Storm Cannon'));
+  assert.ok(!telemonRanged.some(item => item.name === 'Arachnus Storm Cannon'));
   assert.ok(telemonRanged.some(item => item.name === 'Twin Neutronium Cascade Projectors'));
   assert.ok(!telemonRanged.some(item => item.name === 'Adrathic Desolator'));
   assert.ok(!telemonRanged.some(item => item.name === 'Iliastus Accelerator Culverin'));
@@ -105,7 +106,7 @@ test('full-game verification preset supplies explicit legal quantity-aware comba
 });
 
 test('fixed-profile verification units lose per-model weapon quantities with casualties', () => {
-  for (const [playerId, rosterUnitId] of [['p2', 'hormagaunts'], ['p2', 'zoanthropes'], ['p1', 'prosecutors']]) {
+  for (const [playerId, rosterUnitId] of [['p2', 'hormagaunts'], ['p2', 'zoanthropes'], ['p1', 'prosecutors-1']]) {
     let state = createFullGameVerificationState();
     const rosterUnit = state.armyRosters[playerId].units.find(unit => unit.id === rosterUnitId);
     assert.ok(rosterUnit.modelCount > 1, `${rosterUnitId} must be multi-model for this regression`);
