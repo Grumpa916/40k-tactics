@@ -69,7 +69,7 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     selectedUnitId, selectableIds: state.phase === phase ? selectableIds : [], targetIds,
     sections: rosterSections, enableAdjust: state.phase === phase
   });
-  leftRail = rosterRail + (useTacticalPanel
+  leftRail = rosterRail + (useTacticalPanel && !leftRail
     ? renderLiveTacticalPanel(state, { playerId: perspectivePlayerId, selectedUnitId })
     : '');
   const hasLeftRail = Boolean(String(leftRail ?? '').trim());
