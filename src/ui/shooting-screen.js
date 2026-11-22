@@ -509,10 +509,14 @@ export function createShootingScreen(container, {
         try {
           finishCombatUnit(session, selectedAttackerId);
           if (selectedAttackerId) {
-            try { session.dispatch({ type: COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, payload: {
+            try {
+            const note = comparison?.cards?.[0]?.summary ?? comparison?.advisory ?? null;
+            session.dispatch({ type: COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, payload: {
               unitId: selectedAttackerId, actionType: "shoot",
-              targetId: selectedTargetId, weaponName: selectedWeapon?.name ?? null
-            } }); } catch {}
+              targetId: selectedTargetId, weaponName: selectedWeapon?.name ?? null,
+              advisorNote: note
+            } });
+          } catch {}
           }
         }
         catch (cause) { attackError = cause?.message ?? String(cause); render(); return; }
