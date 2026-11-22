@@ -31,6 +31,11 @@ test('Command shows a recordable Aquila gain only for an eligible Warlord and do
   screen.destroy();
   const marines=custodesReminderState({phase:'command',activePlayer:'p2'});
   marines.battle.firstPlayerId='p2';
+  const opponentFirst=createCommandScreen(root,{session:{getState:()=>marines,subscribe:()=>()=>{}},
+    perspectivePlayerId:'p1',layoutMode:'classic'});
+  assert.match(root.innerHTML,/data-aquila-player="p1"/,'Aquila is due even when the opponent plays first');
+  opponentFirst.destroy();
+  marines.armyRosters.p1.faction='Space Marines';
   const other=createCommandScreen(root,{session:{getState:()=>marines,subscribe:()=>()=>{}},
     perspectivePlayerId:'p2',layoutMode:'classic'});
   assert.doesNotMatch(root.innerHTML,/aquila-reminder|data-aquila-gain/);
