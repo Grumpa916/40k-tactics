@@ -59,6 +59,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
         if (def.id==='praesidium-shield' && !getRecordedCombatRules(state,unit).effects.includes('sentinel-shield')) continue;
         if (def.id==='quicksilver-execution' && !(getRecordedCombatRules(state,unit).effects.includes('quicksilver-execution') && getRecordedCombatRules(state,unit).chargedThisTurn)) continue;
         const used = def.limit && getReminderUse(state, {...def, ruleId:def.id, playerId, unitId:unit.id});
+        if (def.id === 'aquila-commander') continue; // Army-wide decision is added below, independently of selected unit.
         if (unit.status !== (def.reserves ? 'reserves' : 'deployed') && !(def.venatariControl && used)) continue;
         if (def.turn === 'own' && !ownTurn || def.turn === 'opponent' && ownTurn) continue;
         if (def.venatariControl && !used && getVenatariAbilityBlockReason(state, unit, def.id)) continue;
@@ -99,6 +100,15 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
     if(focusRoot && ['shooting','fight'].includes(state.phase) && !(getBattleUnitDatasheet(state,focusRoot)?.keywords??[]).some(keyword=>['Monster','Vehicle'].includes(keyword)) && !entries.some(entry=>entry.ruleId==='captain-general')) {
       const commander=(state.units??[]).find(unit=>unit.ownerId===playerId && unit.status==='deployed' && reviewedAbility(state,unit,'Captain-General (Aura)'));
       if(commander)entries.push(decorate(state,{ruleId:'captain-general-range-check',playerId,unitId:commander.id,unitName:focusRoot.name,title:'Captain-General aura · range check',kind:'unit',timing:'When attacking',effect:'Check whether this unit is within 6″ of '+commander.name+'. Eligible non-Monster/Vehicle Custodes units can re-roll Hit and Wound rolls of 1.'}));
+    }
+    const aquila = CUSTODES_REMINDER_DEFINITIONS.find(def => def.id === 'aquila-commander');
+    const warlord = (state.units ?? []).find(unit => unit.ownerId === playerId &&
+      ['deployed', 'reserves'].includes(unit.status) && getBattleRosterUnit(state, unit)?.isWarlord === true &&
+      reviewedAbility(state, unit, aquila.ability));
+    if (warlord && aquila.phases.includes(state.phase) &&
+      (!state.battle.firstPlayerId || activePlayer(state) === state.battle.firstPlayerId)) {
+      entries.push(decorate(state, {...aquila, ruleId:aquila.id, playerId, unitId:warlord.id,
+        unitName:warlord.name, title:aquila.ability, kind:'decision'}));
     }
     if (ownTurn && state.phase === 'command') entries.unshift(decorate(state, {ruleId:'katah-readiness', playerId, title:'Ka’tah readiness', kind:'army', timing:'Your Command phase', effect:'Eligible units become readied at the start of your Command phase. A use spends that unit’s readiness; check the Ka’tah panel for current status.'}));
     if (hasCustodesDetachment(state, playerId, 'Guardians of the Throne')) {
