@@ -1,3 +1,4 @@
+import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { renderTargetDefenseReminders, renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
