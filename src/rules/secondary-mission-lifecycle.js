@@ -517,6 +517,7 @@ export function releaseSecondaryMissionSelection(state, {
   round = state?.battle?.round ?? 0,
   turn = state?.turn ?? 0
 } = {}) {
+  const returnedEntry = missionList(state).find((item) => item.instanceId === instanceId && item.playerId === playerId);
   const returned = returnSecondaryMissionToDeck(state, { instanceId, playerId, round, turn });
   const scoring = { ...(returned.scoring ?? {}) };
   const choicePending = scoring.secondaryMissionCardChoicePendingByPlayer ?? {};
@@ -530,6 +531,14 @@ export function releaseSecondaryMissionSelection(state, {
     const next = { ...rulePending };
     delete next[playerId];
     scoring.secondaryMissionRuleReplacementPendingByPlayer = next;
+  }
+  const replacementStillActive = missionList(returned).some((item) =>
+    item.playerId === playerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE && item.isRedrawReplacement === true);
+  if (returnedEntry?.isRedrawReplacement === true && !replacementStillActive) {
+    scoring.secondaryMissionRedrawPendingByPlayer = {
+      ...(scoring.secondaryMissionRedrawPendingByPlayer ?? {}),
+      [playerId]: { round: returnedEntry.drawnRound ?? round, turn: returnedEntry.drawnTurn ?? turn }
+    };
   }
   return { ...returned, scoring };
 }

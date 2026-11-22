@@ -52,10 +52,17 @@ export function useSecondaryMissionRedraw(state, {
     turn
   });
   const discarded = discardSecondaryMission(spent, { instanceId, playerId, round, turn });
+  const scoring = { ...(discarded.scoring ?? {}) };
+  const choicePending = { ...(scoring.secondaryMissionCardChoicePendingByPlayer ?? {}) };
+  if (choicePending[playerId]?.instanceId === instanceId) delete choicePending[playerId];
+  const rulePending = { ...(scoring.secondaryMissionRuleReplacementPendingByPlayer ?? {}) };
+  if (rulePending[playerId]?.instanceId === instanceId) delete rulePending[playerId];
   const updated = {
     ...discarded,
     scoring: {
-      ...discarded.scoring,
+      ...scoring,
+      secondaryMissionCardChoicePendingByPlayer: choicePending,
+      secondaryMissionRuleReplacementPendingByPlayer: rulePending,
       secondaryMissionRedrawUsedByPlayer: { ...used, [playerId]: true },
       secondaryMissionRedrawPendingByPlayer: { ...pending, [playerId]: { round, turn } }
     }

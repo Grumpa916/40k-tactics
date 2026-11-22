@@ -477,6 +477,8 @@ export function createCommandScreen(container, {
   }
 
   function render() {
+    const secondaryMissionNotice = secondaryMissionMessage;
+    secondaryMissionMessage = "";
     const restoreView = captureViewContinuity(container);
     const state = session.getState();
     const playerId = scoringCheckpointPlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
@@ -750,7 +752,7 @@ export function createCommandScreen(container, {
     const secondaryMissionManager = state.phase === "command"
       ? '<section class="command-secondary-missions">' + secondaryEntryMarkup +
         secondaryHistoryMarkup +
-        (secondaryMissionMessage ? '<p role="status">' + escapeHtml(secondaryMissionMessage) + '</p>' : '') +
+        (secondaryMissionNotice ? '<p role="status">' + escapeHtml(secondaryMissionNotice) + '</p>' : '') +
         '</section>'
       : '';
 
