@@ -164,10 +164,10 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
             '<p>Sign in to save a battle before play or load a previous battle to resume it.</p>' +
             '<div class="setup-appearance-pref"><span>App colors</span>' + renderAppThemeToggle(appTheme) + '</div>' +
             '<div data-supabase-auth-panel></div><div data-battle-persistence-panel></div></section>' +
-            '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><div data-army-roster-panel></div></section>' +
+            '<section data-setup-workspace-panel="army-builder"' + (setupWorkspaceTab === "army-builder" ? '' : ' hidden') + '><nav class="battle-shell__builder-nav" aria-label="Army Builder navigation"><button type="button" data-setup-workspace-tab="army-selection">← Back to Select Armies</button></nav><div data-army-roster-panel></div></section>' +
             '<section data-setup-workspace-panel="army-selection"' + (setupWorkspaceTab === "army-selection" ? '' : ' hidden') + '><div data-army-selection-panel></div></section></section>'
           : '<section data-setup-workspace-panel="army-builder"><p>Army Builder requires the signed-in roster store.</p></section><section data-setup-workspace-panel="army-selection" hidden><p>Sign in to select saved army lists.</p></section>') +
-        '<style>.battle-shell__setup-bottom-nav [data-setup-workspace-continue]{width:auto;min-width:0;max-width:190px;padding:8px 12px;white-space:nowrap}</style><footer class="battle-shell__setup-bottom-nav"' + (setupScreenOwnsContinue(setupWorkspaceTab) ? ' hidden' : '') + '><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
+        '<style>.battle-shell__setup-bottom-nav [data-setup-workspace-continue]{width:auto;min-width:0;max-width:190px;padding:8px 12px;white-space:nowrap}</style><footer class="battle-shell__setup-bottom-nav"' + (setupScreenOwnsContinue(setupWorkspaceTab) || setupWorkspaceTab === "army-builder" ? ' hidden' : '') + '><div><span data-setup-step-label>' + setupTabLabel(setupWorkspaceTab) + '</span>' +
         '<p role="status" data-setup-navigation-message>' + escapeHtml(setupNavigationMessage) + '</p></div>' +
         '<button type="button" data-setup-workspace-continue>' + setupContinueLabel(setupWorkspaceTab) + '</button></footer>'
       : "") +
@@ -270,7 +270,7 @@ export function createBattleShell(container, {
     const next = container.querySelector?.("[data-setup-workspace-continue]");
     if (next) next.textContent = setupContinueLabel(tab);
     const setupFooter = container.querySelector?.('.battle-shell__setup-bottom-nav');
-    if (setupFooter) setupFooter.hidden = setupScreenOwnsContinue(tab);
+    if (setupFooter) setupFooter.hidden = setupScreenOwnsContinue(tab) || tab === "army-builder";
     mountedScreen?.setTab?.(tab === "battlefield" ? "battlefield" : tab === "mission-map" ? "mission-map" : "pre-game");
   }
 
