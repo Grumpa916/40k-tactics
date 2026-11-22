@@ -511,6 +511,29 @@ export function returnSecondaryMissionToDeck(state, {
   return withMissionList(state, existing.map((item, i) => i === index ? updated : item));
 }
 
+export function releaseSecondaryMissionSelection(state, {
+  instanceId,
+  playerId,
+  round = state?.battle?.round ?? 0,
+  turn = state?.turn ?? 0
+} = {}) {
+  const returned = returnSecondaryMissionToDeck(state, { instanceId, playerId, round, turn });
+  const scoring = { ...(returned.scoring ?? {}) };
+  const choicePending = scoring.secondaryMissionCardChoicePendingByPlayer ?? {};
+  if (choicePending[playerId]?.instanceId === instanceId) {
+    const next = { ...choicePending };
+    delete next[playerId];
+    scoring.secondaryMissionCardChoicePendingByPlayer = next;
+  }
+  const rulePending = scoring.secondaryMissionRuleReplacementPendingByPlayer ?? {};
+  if (rulePending[playerId]?.instanceId === instanceId) {
+    const next = { ...rulePending };
+    delete next[playerId];
+    scoring.secondaryMissionRuleReplacementPendingByPlayer = next;
+  }
+  return { ...returned, scoring };
+}
+
 export function getActiveSecondaryMissionDefinitions(state, playerId) {
   if (!playerId) throw new TypeError("A player id is required.");
   return missionList(state)

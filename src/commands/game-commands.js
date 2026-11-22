@@ -66,6 +66,7 @@ export const COMMAND_TYPES = Object.freeze({
   DRAW_SECONDARY_MISSION: "secondary_mission.draw",
   RECORD_SECONDARY_MISSION_CARD_CHOICE: "secondary_mission.record_card_choice",
   RETURN_SECONDARY_MISSION_FOR_RULE: "secondary_mission.return_for_rule_replacement",
+  RETURN_SECONDARY_MISSION: "secondary_mission.return_selection",
   SET_SECONDARY_MISSION_MODE: "secondary_mission.set_mode",
   RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score",
   USE_SECONDARY_MISSION_REDRAW: "secondary_mission.use_redraw",

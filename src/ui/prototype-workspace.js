@@ -35,7 +35,7 @@ export function removeRedundantLiveHelperCopy(container) {
   }
 }
 
-export function renderPrototypeWorkspaceTools({ missionReviewOpen = false, appTheme = 'custodes' } = {}) {
+export function renderPrototypeWorkspaceTools({ missionReviewOpen = false, appTheme = 'custodes', secondaryPlannerOpen = false } = {}) {
   const stylesheet = new URL('./styles/prototype-workspace.css', import.meta.url);
   stylesheet.searchParams.set('v', 'all-phase-unit-drawer-1');
   const href = stylesheet.href;
@@ -52,6 +52,7 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false, appTh
     <div class="prototype-phase-row">
       <div class="prototype-phase-chips" aria-label="Battle phases">${phases}</div>
       <button type="button" class="prototype-missions-button" data-toggle-mission-review aria-expanded="${String(missionReviewOpen)}">Missions</button>
+      <button type="button" class="prototype-cards-button" data-toggle-secondary-planner aria-expanded="${String(secondaryPlannerOpen)}">Cards</button>
       <button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button>
       <button type="button" data-movement-roster-toggle aria-controls="movement-units" aria-expanded="false" hidden>Units</button>
       <details class="prototype-phase-menu"><summary aria-label="More tools">⋯</summary><div><button type="button" data-battle-phase-button="review">Game review</button>${renderAppThemeToggle(appTheme)}</div></details>

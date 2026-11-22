@@ -31,6 +31,7 @@ import {
   renderStatusSummaryContent
 } from "./battle-shell-scoreboard.js";
 import { setupContinueLabel, setupTabLabel, setupScreenOwnsContinue } from "./setup-navigation-labels.js";
+import { bindSecondaryPlanner, createSecondaryPlannerState, renderSecondaryPlanner } from "./secondary-planner-panel.js";
 import { readAppTheme, saveAppTheme, nextAppTheme, renderAppThemeToggle, applyAppThemeToShell } from './app-theme-preference.js';
 
 
@@ -65,7 +66,8 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
   scoreAdjustCollapsed = false,
   scoreAdjustMessage = "",
   scoreAdjustKind = "both",
-  appTheme = "custodes"
+  appTheme = "custodes",
+  secondaryPlanner = null
 } = {}) {
   const setupTab = { id: "setup", label: "Setup & Saves", status: "live" };
   const visiblePhases = [setupTab, ...(state.battle?.status === "deployment"
@@ -146,10 +148,11 @@ function renderShell(container, state, viewedPhase, scoringReminder = null, show
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
 
+  if (secondaryPlanner && viewedPhase === "setup") secondaryPlanner.open = false;
   const missionReviewMarkup = renderMissionReviewPanel(persistentMissionSummary, { open: missionReviewOpen, openStates: missionOpenStates });
   container.innerHTML = '<main class="battle-shell' + (isReviewView ? ' is-review-view' : '') + (tabletopExperiment ? ' is-tabletop-experiment' : '') + (state.preparation?.mode === 'combined' && state.battle?.status === 'deployment' ? ' is-deploy-begin' : '') + ((isScrollablePreparationView || isScrollableLiveView) ? ' is-scrollable-preparation' : '') + '" data-app-theme="' + appTheme + '">' + reminderMarkup +
     '<div data-decision-reminder-host>' + decisionReminderMarkup + '</div><div data-rules-reminder-host></div>' +
-    shellLiveHeader + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen, appTheme }) : "") +
+    shellLiveHeader + (secondaryPlanner && viewedPhase !== "setup" ? renderSecondaryPlanner(secondaryPlanner) : "") + missionReviewMarkup + (tabletopExperiment ? renderPrototypeWorkspaceTools({ missionReviewOpen, appTheme, secondaryPlannerOpen: Boolean(secondaryPlanner?.open) }) : "") +
     clockPanel + '<div data-phase-progression-host>' + renderPhaseProgressionPanel(state, viewedPhase, '', phaseProgressionOwned) + '</div>' +
     (viewedPhase === "setup"
       ? '<nav class="battle-shell__setup-tabs" aria-label="Setup tasks">' +
@@ -236,6 +239,65 @@ export function createBattleShell(container, {
   let referenceOpenStates = { stratagems: true, "army-rules": false, detachments: false, terrain: false };
   let missionOpenStates = {};
   let missionReviewOpen = false;
+  const secondaryPlanner = createSecondaryPlannerState();
+  secondaryPlanner.linked = true;
+  secondaryPlanner.held = [];
+  function plannerPlayerId(state) {
+    return state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId ?? state.players?.[0]?.id ?? null;
+  }
+  function syncPlannerHand(state) {
+    const playerId = plannerPlayerId(state);
+    secondaryPlanner.held = playerId
+      ? getSecondaryMissionHistory(state)
+        .filter((item) => item.playerId === playerId && item.status === SECONDARY_MISSION_STATUS.ACTIVE)
+        .map((item) => item.definitionId)
+      : [];
+  }
+  function togglePlannerCard(definitionId) {
+    const state = session.getState();
+    const playerId = plannerPlayerId(state);
+    const active = getSecondaryMissionHistory(state).find((item) =>
+      item.playerId === playerId && item.definitionId === definitionId && item.status === SECONDARY_MISSION_STATUS.ACTIVE);
+    try {
+      if (!playerId) throw new Error("Choose your army before selecting secondary cards.");
+      if (active) {
+        session.dispatch({ type: COMMAND_TYPES.RETURN_SECONDARY_MISSION, payload: {
+          instanceId: active.instanceId, playerId, round: state.battle?.round ?? 0, turn: state.turn ?? 0
+        }});
+        secondaryPlanner.notice = "Removed from your Command phase secondaries.";
+      } else {
+        const missionMode = getSecondaryMissionMode(state, playerId);
+        if (!missionMode) throw new Error("Choose Fixed or Tactical mode before selecting secondary cards.");
+        if (missionMode === SECONDARY_MISSION_MODES.TACTICAL && state.phase !== "command") {
+          throw new Error("Tactical cards can only be selected during the Command phase.");
+        }
+        const definition = secondaryMissionCatalog.find((item) => item.id === definitionId && item.category === "secondary");
+        if (!definition) throw new Error("That card is not in the secondary catalog.");
+        if (definition.availableModes && !definition.availableModes.includes(missionMode)) {
+          throw new Error("That card is not available in " + missionMode + " mode.");
+        }
+        session.dispatch({ type: COMMAND_TYPES.DRAW_SECONDARY_MISSION, payload: {
+          definition: {
+            ...definition,
+            timing: definition.scoringWindows?.[0]?.timing,
+            conditions: definition.conditions ?? [],
+            manualEntry: true
+          },
+          playerId,
+          round: state.battle?.round ?? 0,
+          turn: state.turn ?? 0
+        }});
+        secondaryPlanner.notice = "Added to your Command phase secondaries.";
+      }
+    } catch (error) {
+      const message = error?.message ?? String(error);
+      secondaryPlanner.notice = message === "Fixed secondary cards cannot be returned to the deck."
+        ? "Fixed cards stay selected for the whole battle."
+        : message;
+    }
+    render();
+  }
+  const disposeSecondaryPlanner = bindSecondaryPlanner(container, secondaryPlanner, { onHoldToggle: togglePlannerCard });
   const disposeMissionReviewPanel = bindMissionReviewPanel(container, {
     open: missionReviewOpen,
     onOpenChange: value => { missionReviewOpen = value; }
@@ -376,6 +438,7 @@ export function createBattleShell(container, {
 
   function render() {
     const state = session.getState();
+    syncPlannerHand(state);
     const actualPhase = state?.phase ?? null;
     const decisionState = decisionReminders.synchronize(state);
     if (actualPhase !== observedGamePhase) {
@@ -418,7 +481,7 @@ export function createBattleShell(container, {
       mountedRosterPanel?.destroy();
       mountedRosterPanel = null;
       renderShell(container, state, viewedPhase, scoringReminder, showCloud, {
-        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind, selectedUnitId: unitSelection.get(state), appTheme
+        gameData, perspectivePlayerId, leftPanelCollapsed, rightPanelCollapsed, armyRosterPlayerId, clockPanelOpen, clockMessage, missionDefinitions, battleShockReminder: decisionState.battleShockReminder, scoringReviewCheckpoint, dismissedTyranidDecisionContextKey: decisionState.dismissedTyranidDecisionContextKey, factionDecisionMessage: decisionState.factionDecisionMessage, contextOpenStates, referenceOpenStates, missionOpenStates, missionReviewOpen, setupWorkspaceTab, setupNavigationMessage, layoutMode, phaseProgressionOwned: screenOwnsPhaseProgression(state, viewedPhase, screenFactories), scoreAdjustPlayerId, scoreAdjustCollapsed, scoreAdjustMessage, scoreAdjustKind, selectedUnitId: unitSelection.get(state), appTheme, secondaryPlanner
       });
       if (viewedPhase === 'setup') cloudPanelsPending = false;
 
@@ -872,6 +935,7 @@ export function createBattleShell(container, {
       clockTickInterval = null;
       container.removeEventListener?.("click", handleMissionSummaryToggle);
       disposeMissionReviewPanel();
+      disposeSecondaryPlanner();
       container.removeEventListener?.("click", handleScoreAdjust);
       container.removeEventListener?.("click", handleMapObjectiveToggle);
       container.removeEventListener?.("click", handleSetupWorkspaceNavigation);
