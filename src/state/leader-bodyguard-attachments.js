@@ -24,16 +24,15 @@ export function getEligibleBodyguards(roster, leaderId) {
     const bodyguardReviewStatus = bodyguardMetadata?.compatibilityReview?.status;
     const attachedLeaderIds = unit.attachedLeaderIds ?? [];
     const maxAttachedLeaders = bodyguardMetadata?.maxAttachedLeaders ?? 1;
-    // Only a reviewed Support pairing can occupy the second attachment slot.
-    // Cato's conditional Support is explicitly permitted with Calgar on Victrix;
-    // two ordinary Leaders must not be attached by the generic capacity rule.
+    // A second attachment must be the opposite role: one Leader and one Support.
+    // Cato's conditional Support with Calgar on Victrix is a reviewed exception.
     if (bodyguardId.startsWith('space-marines:') && attachedLeaderIds.length) {
       const present = roster.units.find(candidate => candidate.id === attachedLeaderIds[0]);
       const firstId=present?.datasheetId ?? present?.datasheet?.id;
       const secondId=leader.datasheetId ?? leader.datasheet?.id;
       if(bodyguardId==='space-marines:victrix-honour-guard'){
         if(!isReviewedVictrixLeaderPair(firstId,secondId)) return false;
-      } else if(!leaderMetadata?.support && !present?.datasheet?.leader?.support) return false;
+      } else if(!present || Boolean(leaderMetadata?.support) === Boolean(present.datasheet?.leader?.support)) return false;
     }
     return Boolean(bodyguardId && allowedIds.includes(bodyguardId) &&
       bodyguardMetadata?.canReceiveLeader === true &&
