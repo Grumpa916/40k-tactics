@@ -154,10 +154,17 @@ test('Aquila requires the living Warlord but works from reserves and with anothe
   const gained=recordRulesReminderUse(state,{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'});
   assert.equal(gained.commandPoints.p1,4);
   assert.throws(()=>recordRulesReminderUse(gained,{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'}));
-  state.armyRosters.p1.units.find(unit=>unit.id==='r-trajann').isWarlord=false;
+  const rosterWarlord=state.armyRosters.p1.units.find(unit=>unit.id==='r-trajann');
+  delete rosterWarlord.isWarlord;
+  rosterWarlord.warlord=true;
+  assert.ok(getBattleRulesReminders(state,{playerId:'p1'}).some(entry=>entry.ruleId==='aquila-commander'));
+  delete rosterWarlord.warlord;
+  assert.ok(getBattleRulesReminders(state,{playerId:'p1'}).some(entry=>entry.ruleId==='aquila-commander'),
+    'Trajann is Warlord by Supreme Commander even in older roster snapshots');
+  rosterWarlord.datasheet=structuredClone(sheets['adeptus-custodes:shield-captain']);
   assert.ok(!getBattleRulesReminders(state,{playerId:'p1'}).some(entry=>entry.ruleId==='aquila-commander'));
   assert.throws(()=>recordRulesReminderUse(state,{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'}));
-  state.armyRosters.p1.units.find(unit=>unit.id==='r-trajann').isWarlord=true;
+  rosterWarlord.datasheet=structuredClone(sheets['adeptus-custodes:trajann-valoris']);
   commander.status='destroyed';
   assert.ok(!getBattleRulesReminders(state,{playerId:'p1'}).some(entry=>entry.ruleId==='aquila-commander'));
 });
