@@ -801,7 +801,7 @@ export function createCommandScreen(container, {
     const aquilaControls = state.phase === "command" && (!state.battle?.firstPlayerId || state.activePlayer === state.battle.firstPlayerId)
       ? players.flatMap(player => getBattleRulesReminders(state, {playerId:player.id})
         .filter(entry => entry.ruleId === "aquila-commander" && entry.available && !entry.used)
-        .map(entry => '<button type="button" data-aquila-gain="' + escapeHtml(entry.unitId) +
+        .map(entry => '<button type="button" style="min-height:44px;padding:8px 12px;border:1px solid #55ad79;border-radius:7px;background:#1e3a2f;color:inherit;font:inherit;font-weight:700;cursor:pointer;touch-action:manipulation" data-aquila-gain="' + escapeHtml(entry.unitId) +
           '" data-aquila-player="' + escapeHtml(player.id) +
           '">Record Aquila Commander · +1 CP for ' + escapeHtml(player.name ?? "player") + '</button>')).join("")
       : "";
@@ -851,6 +851,7 @@ export function createCommandScreen(container, {
       return;
     }
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
+      (aquilaControls ? '<div class="aquila-reminder">' + aquilaControls + '</div>' : '') +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
