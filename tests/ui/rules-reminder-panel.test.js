@@ -6,6 +6,7 @@ import { createGameSession } from '../../src/application/game-session.js';
 import { clearCommandHandlers } from '../../src/engine/command-engine.js';
 import { registerCoreCommandHandlers } from '../../src/engine/register-core-commands.js';
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
+import { createCommandScreen } from '../../src/ui/command-screen.js';
 import { createFightTabletopScreen } from '../../src/ui/fight-tabletop-screen.js';
 import { renderTargetDefenseReminders, renderRulesReminderDialog, renderUnitRulesReminders, createRulesReminderController } from '../../src/ui/rules-reminder-panel.js';
 import { setUnitBattleNote, recordRulesReminderUse } from '../../src/engine/rules-reminder-transitions.js';
@@ -15,6 +16,25 @@ test('Aquila Commander is the first Command reminder when its CP decision is ava
   state.battle.firstPlayerId='p1';
   const html=renderUnitRulesReminders(state,{perspectivePlayerId:'p1'});
   assert.ok(html.indexOf('Aquila Commander') < html.indexOf('Ka’tah readiness'));
+});
+
+test('Command shows a recordable Aquila gain only for an eligible Warlord and does not grant CP on render',()=>{
+  clearCommandHandlers();registerCoreCommandHandlers();
+  const state=custodesReminderState({phase:'command',activePlayer:'p1'});
+  state.battle.firstPlayerId='p1';
+  const session=createGameSession(state);
+  const root={innerHTML:'',replaceChildren(){},contains(){return true;},addEventListener(){},removeEventListener(){},
+    querySelector(){return null;},querySelectorAll(){return [];}};
+  const screen=createCommandScreen(root,{session,perspectivePlayerId:'p1',layoutMode:'classic'});
+  assert.match(root.innerHTML,/data-aquila-gain="trajann"/);
+  assert.equal(session.getState().commandPoints.p1,3);
+  screen.destroy();
+  const marines=custodesReminderState({phase:'command',activePlayer:'p2'});
+  marines.battle.firstPlayerId='p2';
+  const other=createCommandScreen(root,{session:{getState:()=>marines,subscribe:()=>()=>{}},
+    perspectivePlayerId:'p2',layoutMode:'classic'});
+  assert.doesNotMatch(root.innerHTML,/aquila-reminder|data-aquila-gain/);
+  other.destroy();
 });
 
 test('an opponent shooter selecting Wardens displays their incoming AP reminder after target tile selection',async()=>{
