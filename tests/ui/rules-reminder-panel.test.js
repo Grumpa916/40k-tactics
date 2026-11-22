@@ -23,11 +23,17 @@ test('Command shows a recordable Aquila gain only for an eligible Warlord and do
   const state=custodesReminderState({phase:'command',activePlayer:'p1'});
   state.battle.firstPlayerId='p1';
   const session=createGameSession(state);
-  const root={innerHTML:'',replaceChildren(){},contains(){return true;},addEventListener(){},removeEventListener(){},
+  const listeners=new Map();
+  const root={innerHTML:'',replaceChildren(){},contains(){return true;},addEventListener(name,fn){listeners.set(name,fn);},removeEventListener(name){listeners.delete(name);},
     querySelector(){return null;},querySelectorAll(){return [];}};
   const screen=createCommandScreen(root,{session,perspectivePlayerId:'p1',layoutMode:'classic'});
   assert.match(root.innerHTML,/data-aquila-gain="trajann"/);
   assert.equal(session.getState().commandPoints.p1,3);
+  const button={hasAttribute(name){return name==='data-aquila-gain';},
+    getAttribute(name){return {'data-aquila-gain':'trajann','data-aquila-player':'p1'}[name]??null;}};
+  listeners.get('click')({target:{closest(){return button;}}});
+  assert.equal(session.getState().commandPoints.p1,4);
+  assert.doesNotMatch(root.innerHTML,/data-aquila-gain/);
   screen.destroy();
   const marines=custodesReminderState({phase:'command',activePlayer:'p2'});
   marines.battle.firstPlayerId='p2';
