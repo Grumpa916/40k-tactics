@@ -27,11 +27,11 @@ test('combat workspace supports the approved left roster rail without changing o
 test('Movement custom rail shows Secondary Missions once above the army list', () => {
   const leftRail = renderLiveTacticalPanel(state, {playerId:'p1'}) + renderMovementRosterRail(state, {playerId:'p1',perspectivePlayerId:'p1'});
   const html = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:'p1',selectedUnitId:'u1',leftRail,controls:'controls'});
-  assert.equal((html.match(/<h3>Secondary Missions<\\/h3>/g) ?? []).length, 1);
+  assert.equal(html.split('<h3>Secondary Missions</h3>').length - 1, 1);
   assert.ok(html.indexOf('Secondary Missions') < html.indexOf('data-movement-roster-view="mine"'));
   assert.match(html, /data-move-roster-unit="u1"/);
   const defaultRail = renderCombatWorkspace({state,phase:'charge',perspectivePlayerId:'p1',selectedUnitId:'u1',controls:'controls'});
-  assert.equal((defaultRail.match(/<h3>Secondary Missions<\\/h3>/g) ?? []).length, 1);
+  assert.equal(defaultRail.split('<h3>Secondary Missions</h3>').length - 1, 1);
 });
 
 test('Movement roster rail provides My Army and Opponent views with compact unit tokens', () => {
