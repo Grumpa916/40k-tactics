@@ -167,7 +167,8 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
             const note = advice ?? null;
             session.dispatch({ type: COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, payload: {
               unitId: attackerId, actionType: "fight",
-              targetId: targetId ?? null, weaponName: weapons.find(w => w.id === weaponId)?.name ?? null,
+              targetId: targetId ?? null,
+              weaponName: weapons.find(w => w.id === weaponId)?.name ?? null,
               advisorNote: note
             } });
           } catch {}
