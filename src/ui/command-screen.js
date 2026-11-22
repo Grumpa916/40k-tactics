@@ -16,6 +16,7 @@ import { renderSpaceMarineDoctrinePanel } from './space-marine-doctrines-panel.j
 import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-stratagem-opportunities.js";
 import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 import { captureViewContinuity } from './view-continuity.js';
+import { getBattleRulesReminders } from "../rules/battle-rules-reminders.js";
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -87,7 +88,7 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
-    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set], [data-marine-doctrine-use]");
+    const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-aquila-gain], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set], [data-marine-doctrine-use]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute('data-marine-doctrine-use')) {
       const state=session.getState();
@@ -180,6 +181,19 @@ export function createCommandScreen(container, {
         })[selectedControl] + ".";
       } catch (error) {
         objectiveMessage = error?.message ?? String(error);
+      }
+      render();
+      return;
+    }
+    if (target.hasAttribute("data-aquila-gain")) {
+      try {
+        session.dispatch({ type: COMMAND_TYPES.RECORD_RULES_REMINDER_USE, payload: {
+          playerId: target.getAttribute("data-aquila-player"),
+          unitId: target.getAttribute("data-aquila-gain"),
+          ruleId: "aquila-commander"
+        }});
+      } catch (error) {
+        secondaryMissionMessage = error?.message ?? String(error);
       }
       render();
       return;
@@ -465,20 +479,6 @@ export function createCommandScreen(container, {
   function render() {
     const restoreView = captureViewContinuity(container);
     const state = session.getState();
-    // Auto-apply Aquila Commander +1 CP once per round if not already recorded
-    if (state.phase === "command" && state.battle?.round) {
-      const already = (state.history ?? []).some(e =>
-        e.type === "rules.reminder_used" && e.payload?.ruleId === "aquila-commander" &&
-        e.payload?.round === state.battle.round
-      );
-      if (!already) {
-        try {
-          session.dispatch({ type: COMMAND_TYPES.RECORD_RULES_REMINDER_USE, payload: {
-            playerId: state.activePlayer, ruleId: "aquila-commander"
-          }});
-        } catch {}
-      }
-    }
     const playerId = scoringCheckpointPlayerId ?? state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId;
     const players = Array.isArray(state.players) ? state.players : [];
     const selectedSecondaryPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? perspectivePlayerId ?? players[0]?.id ?? null;
@@ -798,8 +798,15 @@ export function createCommandScreen(container, {
         capNotice + '</li>';
     }).join("") : '<li>No victory points recorded yet.</li>';
 
+    const aquilaControls = state.phase === "command" && (!state.battle?.firstPlayerId || state.activePlayer === state.battle.firstPlayerId)
+      ? players.flatMap(player => getBattleRulesReminders(state, {playerId:player.id})
+        .filter(entry => entry.ruleId === "aquila-commander" && entry.available && !entry.used)
+        .map(entry => '<button type="button" style="min-height:44px;padding:8px 12px;border:1px solid #55ad79;border-radius:7px;background:#1e3a2f;color:inherit;font:inherit;font-weight:700;cursor:pointer;touch-action:manipulation" data-aquila-gain="' + escapeHtml(entry.unitId) +
+          '" data-aquila-player="' + escapeHtml(player.id) +
+          '">Record Aquila Commander · +1 CP for ' + escapeHtml(player.name ?? "player") + '</button>')).join("")
+      : "";
     const commandControls = '<div class="command-screen command-screen--tabletop"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
-      '<div class="aquila-reminder" style="background:#1e3a2f;border:1px solid #2d5a45;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12px;"><strong>Aquila Commander</strong> · +1 CP available at start of battle round (if eligible commander is on the battlefield)</div>' +
+      (aquilaControls ? '<div class="aquila-reminder">' + aquilaControls + '</div>' : '') +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>CP</span><strong>' +
@@ -844,6 +851,7 @@ export function createCommandScreen(container, {
       return;
     }
     container.innerHTML = '<main class="command-screen"><header><div><div class="command-kicker">LIVE BATTLE</div>' +
+      (aquilaControls ? '<div class="aquila-reminder">' + aquilaControls + '</div>' : '') +
       '<h1>Command Phase</h1><p>Round ' + escapeHtml(state.battle?.round ?? "—") + ' · Turn ' +
       escapeHtml(state.turn ?? "—") + ' · ' + escapeHtml(playerName(state, playerId)) +
       '</p></div><div class="command-points"><span>Command Points</span><strong>' +
