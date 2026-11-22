@@ -159,7 +159,16 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     };
     container.querySelector('[data-fight-skip]')?.addEventListener('click', skip);
     container.querySelector('[data-fight-finish-entry]')?.addEventListener('click', () => {
-      try { dispatching = true; finishCombatUnit(session, attackerId); reset(); error = ''; }
+      try {
+        dispatching = true;
+        finishCombatUnit(session, attackerId);
+        if (attackerId) {
+          try { session.dispatch({ type: COMMAND_TYPES.RECORD_DECISION_SNAPSHOT, payload: {
+            unitId: attackerId, actionType: "fight",
+            targetId: selectedTargetId ?? null, weaponName: selectedWeapon?.name ?? null
+          } }); } catch {}
+        }
+        reset(); error = '';
       catch (cause) { error = cause?.message ?? String(cause); }
       finally { dispatching = false; }
       render();
