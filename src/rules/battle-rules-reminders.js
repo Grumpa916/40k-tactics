@@ -102,9 +102,13 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
       if(commander)entries.push(decorate(state,{ruleId:'captain-general-range-check',playerId,unitId:commander.id,unitName:focusRoot.name,title:'Captain-General aura · range check',kind:'unit',timing:'When attacking',effect:'Check whether this unit is within 6″ of '+commander.name+'. Eligible non-Monster/Vehicle Custodes units can re-roll Hit and Wound rolls of 1.'}));
     }
     const aquila = CUSTODES_REMINDER_DEFINITIONS.find(def => def.id === 'aquila-commander');
-    const warlord = (state.units ?? []).find(unit => unit.ownerId === playerId &&
-      ['deployed', 'reserves'].includes(unit.status) && getBattleRosterUnit(state, unit)?.isWarlord === true &&
-      reviewedAbility(state, unit, aquila.ability));
+    const warlord = (state.units ?? []).find(unit => {
+      const rosterUnit = getBattleRosterUnit(state, unit);
+      const designatedWarlord = rosterUnit?.isWarlord === true || rosterUnit?.warlord === true ||
+        reviewedAbility(state, unit, 'Supreme Commander');
+      return unit.ownerId === playerId && ['deployed', 'reserves'].includes(unit.status) &&
+        designatedWarlord && reviewedAbility(state, unit, aquila.ability);
+    });
     if (warlord && aquila.phases.includes(state.phase) &&
       (!state.battle.firstPlayerId || activePlayer(state) === state.battle.firstPlayerId)) {
       entries.push(decorate(state, {...aquila, ruleId:aquila.id, playerId, unitId:warlord.id,
