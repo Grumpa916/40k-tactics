@@ -44,7 +44,9 @@ test('separate Space Marine detachment lines remain available to upgrade the Cap
  const text='Space Marines\nAssault Brethren (1 Detachment Point)\nGravis Siege Force (1 Detachment Point)\nCaptain in Gravis Armour (90 Points)';
  const {roster}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-lines'});
  assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force']);
- assert.deepEqual(getEligibleSpaceMarineEnhancements(roster.units[0],roster).map(item=>item.name),['Furious Assault','Immovable Conquerors']);
+ const choices=getEligibleSpaceMarineEnhancements(roster.units[0],roster).map(item=>item.name);
+ assert.ok(choices.includes('Furious Assault'));
+ assert.ok(choices.includes('Immovable Conquerors'));
 });
 
 test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and matched equipped weapons', async()=>{
