@@ -171,9 +171,9 @@ export function renderSecondaryPlanner(state) {
   return `<div class="secondary-planner" data-secondary-planner${state.open ? "" : " hidden"}>
     <style>
       .battle-shell__cards-button,[data-toggle-secondary-planner].prototype-cards-button{min-height:44px;padding:8px 12px;border:1px solid #7d6a98;border-radius:8px;background:#2a2236;color:#f4efe6;font:inherit;font-weight:700;cursor:pointer}
-      .secondary-planner{position:fixed;inset:0;z-index:1300;display:grid;place-items:center;padding:12px;background:rgba(0,0,0,.78)}
+      .secondary-planner{position:fixed;inset:0;z-index:1300;box-sizing:border-box;display:grid;grid-template-rows:minmax(0,1fr);place-items:center;padding:max(64px, calc(env(safe-area-inset-top) + 44px)) 12px max(12px, env(safe-area-inset-bottom));background:rgba(0,0,0,.78)}
       .secondary-planner[hidden]{display:none}
-      .secondary-planner__dialog{box-sizing:border-box;display:flex;flex-direction:column;width:min(820px,100%);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;padding:14px;border:1px solid #697386;border-radius:12px;background:#151a22;color:#f2f4f8}
+      .secondary-planner__dialog{box-sizing:border-box;display:flex;flex-direction:column;width:min(820px,100%);height:100%;max-height:100%;overflow:hidden;padding:14px;border:1px solid #697386;border-radius:12px;background:#151a22;color:#f2f4f8}
       .secondary-planner__heading,.secondary-planner__lead,.secondary-planner__notice,.secondary-planner__hand,.secondary-planner__search,.secondary-planner__filters{flex:none}
       .secondary-planner__heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
       .secondary-planner__heading h2{margin:0;font-size:22px}
@@ -223,7 +223,7 @@ export function renderSecondaryPlanner(state) {
       .secondary-map__grid div{padding:10px;border-radius:6px;background:#10151c;text-align:center;font-size:13px;font-weight:700}
       .secondary-map__dead{grid-column:1 / -1;color:#d7c4ef;font-weight:600}
       .secondary-map__center{margin:0;text-align:center;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#d7c4ef}
-      @media (max-width:760px){.secondary-planner{padding:8px}.secondary-planner__dialog{height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:10px}.secondary-planner__hand,.secondary-planner__list{grid-template-columns:minmax(0,1fr)}}
+      @media (max-width:760px){.secondary-planner{padding-left:8px;padding-right:8px}.secondary-planner__dialog{padding:10px}.secondary-planner__hand,.secondary-planner__list{grid-template-columns:minmax(0,1fr)}}
     </style>
     <section class="secondary-planner__dialog" role="dialog" aria-modal="true" aria-labelledby="secondary-planner-title">
       <header class="secondary-planner__heading"><h2 id="secondary-planner-title">Secondary planner</h2>
