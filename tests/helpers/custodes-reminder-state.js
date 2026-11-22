@@ -4,6 +4,7 @@ import { ADEPTUS_CUSTODES_DATASHEET_DETAILS as sheets } from '../../src/data/ade
 export function custodesReminderState({phase='shooting',activePlayer='p2'}={}) {
   const entries=[['wardens','custodian-wardens'],['trajann','trajann-valoris'],['sentinel','sentinel-guard-sodality'],['allarus','allarus-custodians'],['galatus','contemptor-galatus-dreadnought'],['telemon','telemon-heavy-dreadnought'],['venatari','venatari-with-verutum-lances'],['venatari2','venatari-with-verutum-lances'],['prosecutors','prosecutor-squad']];
   const rosterUnits=entries.map(([id,sheet])=>({id:'r-'+id,name:id,modelCount:sheet.includes('dreadnought')||id==='trajann'?1:3,datasheet:structuredClone(sheets['adeptus-custodes:'+sheet])}));
+  rosterUnits.find(unit=>unit.id==='r-trajann').isWarlord=true;
   rosterUnits.find(unit=>unit.id==='r-trajann').attachedToBodyguardId='r-wardens';
   rosterUnits.find(unit=>unit.id==='r-wardens').attachedLeaderIds=['r-trajann'];
   return createGameState({phase,turn:1,activePlayer,players:[{id:'p1',name:'You'},{id:'p2',name:'Ultramarines'}],battle:{id:'b',status:'active',round:1,activePlayerId:activePlayer,firstPlayerId:'p2'},commandPoints:{p1:3,p2:3},
