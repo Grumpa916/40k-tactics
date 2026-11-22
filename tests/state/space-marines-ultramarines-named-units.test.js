@@ -132,6 +132,37 @@ test('reviewed Calgar/Cato/Victrix and Wardens attachment paths require legal ro
  assert.equal(getEligibleBodyguards(calgarOnTerm,'cs').some(x=>x.id==='ts'),false);
 });
 
+test('Apothecary Biologis joins an eligible Gravis Bodyguard alongside one Leader in either order',()=>{
+ const roster={faction:'Space Marines',units:[
+  make('Captain in Gravis Armour','captain'),
+  make('Marneus Calgar','calgar'),
+  make('Apothecary Biologis','biologis'),
+  make('Apothecary Biologis','second-biologis'),
+  make('Aggressor Squad','aggressors',6),
+  make('Eradicator Squad with Melta Rifles','eradicators',3),
+  make('Heavy Intercessor Squad','heavy',5),
+  make('Terminator Squad','terminators',5)
+ ]};
+ assert.equal(roster.units.find(x=>x.id==='biologis').datasheet.leader.support,true);
+ assert.deepEqual(getEligibleBodyguards(roster,'biologis').map(x=>x.id),['aggressors','eradicators','heavy']);
+ for(const bodyguardId of ['aggressors','eradicators','heavy']){
+  for(const first of ['captain','biologis']){
+   const second=first==='captain'?'biologis':'captain';
+   const once=attachLeaderToBodyguard(roster,first,bodyguardId);
+   assert.ok(getEligibleBodyguards(once,second).some(x=>x.id===bodyguardId));
+   assert.equal(getEligibleBodyguards(once,first==='captain'?'calgar':'second-biologis').some(x=>x.id===bodyguardId),false);
+   const twice=attachLeaderToBodyguard(once,second,bodyguardId);
+   assert.deepEqual(twice.units.find(x=>x.id===bodyguardId).attachedLeaderIds,[first,second]);
+   assert.equal(getEligibleBodyguards(twice,'second-biologis').some(x=>x.id===bodyguardId),false);
+  }
+ }
+ const calgarFirst=attachLeaderToBodyguard(roster,'calgar','aggressors');
+ assert.ok(getEligibleBodyguards(calgarFirst,'biologis').some(x=>x.id==='aggressors'));
+ assert.deepEqual(attachLeaderToBodyguard(calgarFirst,'biologis','aggressors')
+  .units.find(x=>x.id==='aggressors').attachedLeaderIds,['calgar','biologis']);
+ assert.equal(getEligibleBodyguards(roster,'biologis').some(x=>x.id==='terminators'),false);
+});
+
 test('pasted fixed-only named Ultramarines units enter battle without redundant equipment prompts',()=>{
  const imported=importWarhammerAppRoster({
   text:'Space Marines\nCHARACTERS\nMarneus Calgar (180 pts)\nCato Sicarius (115 pts)\nOTHER DATASHEETS\nWardens of Ultramar (115 pts)',
