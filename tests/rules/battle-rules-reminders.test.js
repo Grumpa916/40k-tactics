@@ -144,6 +144,24 @@ test('Aquila confirmation records one extra CP per army per round and rejects re
   assert.equal(state.commandPoints.p1,5);
 });
 
+test('Aquila requires the living Warlord but works from reserves and with another unit selected',()=>{
+  const state=custodesReminderState({phase:'command',activePlayer:'p1'});
+  state.battle.firstPlayerId='p1';
+  const commander=state.units.find(unit=>unit.id==='trajann');
+  commander.status='reserves';
+  assert.ok(getBattleRulesReminders(state,{playerId:'p1',unitId:'wardens'}).some(entry=>
+    entry.ruleId==='aquila-commander' && entry.unitId==='trajann'));
+  const gained=recordRulesReminderUse(state,{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'});
+  assert.equal(gained.commandPoints.p1,4);
+  assert.throws(()=>recordRulesReminderUse(gained,{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'}));
+  state.armyRosters.p1.units.find(unit=>unit.id==='r-trajann').isWarlord=false;
+  assert.ok(!getBattleRulesReminders(state,{playerId:'p1'}).some(entry=>entry.ruleId==='aquila-commander'));
+  assert.throws(()=>recordRulesReminderUse(state,{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'}));
+  state.armyRosters.p1.units.find(unit=>unit.id==='r-trajann').isWarlord=true;
+  commander.status='destroyed';
+  assert.ok(!getBattleRulesReminders(state,{playerId:'p1'}).some(entry=>entry.ruleId==='aquila-commander'));
+});
+
 test('Superhuman Focus spends CP, re-readies a formation once per round, and rejects wrong owner',()=>{
   let state=custodesReminderState({phase:'fight',activePlayer:'p1'});state.battle.firstPlayerId='p1';
   const spend=()=>state.history.push({type:'custodes.katah_expended',payload:{playerId:'p1',unitId:'wardens',cycleRound:1,katahName:'Salvus',round:1,turn:1,phase:'shooting'}});
