@@ -25,7 +25,7 @@ test('uses catalog points for newly supported Space Marine units',()=>{
 });
 
 test('Gravis Captain sees both detachment Upgrades after importing a multi-detachment Space Marine list',()=>{
- const text='Space Marines\\nDetachment: Assault Brethren / Gravis Siege Force / Terminator Storm Force\\nCaptain in Gravis Armour (90 Points)';
+ const text='Space Marines\nDetachment: Assault Brethren / Gravis Siege Force / Terminator Storm Force\nCaptain in Gravis Armour (90 Points)';
  const {roster}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-gravis'});
  assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force','Terminator Storm Force']);
  const captain=roster.units[0];
@@ -34,14 +34,14 @@ test('Gravis Captain sees both detachment Upgrades after importing a multi-detac
  const immovable=choices.find(item=>item.name==='Immovable Conquerors');
  assert.ok(furious);assert.ok(immovable);
  const html=renderUnitUpgradeEditor(captain,roster);
- assert.match(html,/Furious Assault · Assault Brethren · \\+10 pts · Upgrade/);
- assert.match(html,/Immovable Conquerors · Gravis Siege Force · \\+15 pts · Upgrade/);
+ assert.match(html,/Furious Assault · Assault Brethren · \+10 pts · Upgrade/);
+ assert.match(html,/Immovable Conquerors · Gravis Siege Force · \+15 pts · Upgrade/);
  assert.equal(setSpaceMarineEnhancement(roster,captain.id,furious.id).units[0].points,100);
  assert.equal(setSpaceMarineEnhancement(roster,captain.id,immovable.id).units[0].points,105);
 });
 
 test('separate Space Marine detachment lines remain available to upgrade the Captain',()=>{
- const text='Space Marines\\nAssault Brethren (1 Detachment Point)\\nGravis Siege Force (1 Detachment Point)\\nCaptain in Gravis Armour (90 Points)';
+ const text='Space Marines\nAssault Brethren (1 Detachment Point)\nGravis Siege Force (1 Detachment Point)\nCaptain in Gravis Armour (90 Points)';
  const {roster}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-lines'});
  assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force']);
  assert.deepEqual(getEligibleSpaceMarineEnhancements(roster.units[0],roster).map(item=>item.name),['Furious Assault','Immovable Conquerors']);
