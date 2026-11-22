@@ -1,3 +1,4 @@
+import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
 import { renderTargetDefenseReminders } from './rules-reminder-panel.js';
 import { renderFightTargetRuleStatus } from './fight-target-rule-status.js';
@@ -174,7 +175,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
           } catch {}
         }
         reset(); error = '';
-      catch (cause) { error = cause?.message ?? String(cause); }
+      } catch (cause) { error = cause?.message ?? String(cause); }
       finally { dispatching = false; }
       render();
     });
