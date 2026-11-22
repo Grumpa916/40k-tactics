@@ -17,3 +17,11 @@ test('Army Builder back navigation stays in normal flow instead of covering the 
   assert.match(css, /border-top:/);
   assert.match(css, /battle-shell__setup-bottom-nav\s*>\s*div[\s\S]*display:\s*none/);
 });
+
+test('Army Builder back action is above the roster and the floating footer is hidden', () => {
+  const shell = read('src/ui/battle-shell.js');
+  const html = read('battle.html');
+  assert.match(shell, /data-setup-workspace-panel=\\"army-builder\\"[\\s\\S]*battle-shell__builder-nav[\\s\\S]*data-army-roster-panel/);
+  assert.match(shell, /setupFooter\.hidden = setupScreenOwnsContinue\(tab\) \|\| tab === \\"army-builder\\"/);
+  assert.match(html, /\\.battle-shell__builder-nav \\{ display:flex/);
+});
