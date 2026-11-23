@@ -1,4 +1,5 @@
 import { importWarhammerAppRoster } from "../state/warhammer-app-roster-import.js";
+import { isUserEnteredUnit, withResolvedUnitContent } from "../rules/imported-roster-report.js";
 import { escapeHtml } from "./army-builder-html.js";
 import { importArmyRoster } from "../state/army-roster-import.js";
 import { renderArmyBuilder, renderCatalogResults } from "./army-builder-view.js";
@@ -18,6 +19,15 @@ import { createArmyUnitEditorController } from "./army-unit-editor-controller.js
 import { setTyranidEnhancement } from '../rules/tyranid-enhancements.js';
 import { setSpaceMarineEnhancement } from '../rules/space-marines-enhancements.js';
 
+function importFaction(values) {
+  const selected = String(values.faction ?? "").trim();
+  const other = String(values.otherFaction ?? "").trim();
+  if (selected === "__other__") {
+    if (!other) throw new Error("Type the faction name for an unlisted army.");
+    return other;
+  }
+  return selected;
+}
 function newId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -113,11 +123,14 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
     if (form.matches("[data-warhammer-import]")) {
       let importedSummary="Army list imported and saved.";
       await action(async()=>{
-        const imported=importWarhammerAppRoster({text:values.rosterText,faction:values.faction,name:values.rosterName,pointsLimit:values.pointsLimit===""?null:Number(values.pointsLimit),id:newId(),createdAt:now(),updatedAt:now()});
-        if(imported.unrecognized.length && values.acknowledgeUnmatched!=="yes") throw new Error("Review the unrecognized point lines below, then confirm they are preserved in the saved list notes.");
+        const faction=importFaction(values);
+        const imported=importWarhammerAppRoster({text:values.rosterText,faction,name:values.rosterName,pointsLimit:values.pointsLimit===""?null:Number(values.pointsLimit),id:newId(),createdAt:now(),updatedAt:now()});
+        if(imported.unrecognized.length && values.acknowledgeUnmatched!=="yes") throw new Error("Review the user-entered units below, then confirm they should be saved with this list.");
         const hydrated=hydrateReviewedFixedCustodesRoster(imported.roster);
         await store.save({roster:hydrated}); selectedId=hydrated.id; current=await loadRosterWithFixedWargear(selectedId); page="editor";
-        importedSummary=imported.unrecognized.length?`${imported.roster.units.length} units imported. ${imported.unrecognized.length} unrecognized point line(s) remain in list notes for review.`:`${imported.roster.units.length} units imported and saved.`;
+        const manual=imported.roster.units.filter(isUserEnteredUnit).length;
+        const report=imported.importReport?.summary;
+        importedSummary=`${imported.roster.units.length} units imported${manual?`, ${manual} user-entered`:""}. ${report?`${report.deduped} shared-content reference(s). `:""}${imported.unrecognized.length?imported.unrecognized.length+" unmatched line(s) were kept as user-entered units.":"Import report saved with the list."}`;
       }, ()=>importedSummary); return;
     }
     if (form.matches("[data-roster-create]")) {
@@ -149,23 +162,23 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   }
   async function handleClick(event) {
     if(!busy&&unitEditor.handleClick(event))return;
-    const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-roster-save], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment], [data-revalidate-rules]");
+    const button = event.target?.closest?.("[data-builder-page], [data-preview-unit], [data-builder-browse], [data-points-preset], [data-roster-import], [data-roster-export], [data-roster-load], [data-roster-rename], [data-roster-duplicate], [data-roster-delete], [data-roster-save], [data-remove-unit], [data-roster-apply], [data-add-catalog-unit], [data-save-points-limit], [data-save-unit], [data-view-unit-detail], [data-close-unit-detail], [data-attach-leader], [data-detach-leader], [data-save-detachment], [data-revalidate-rules], [data-refresh-roster-data]");
     if (!button || !container.contains(button) || busy) return;
     if (button.matches("[data-builder-page]")) { page = button.getAttribute("data-builder-page"); render(); return; }
     if (button.matches("[data-preview-unit]")) { previewId = button.getAttribute("data-preview-unit"); openUnitDetailId = ""; render(); return; }
     if (button.matches("[data-builder-browse]")) { previewId = ""; openUnitDetailId = ""; render(); return; }
     if (button.matches("[data-points-preset]")) { container.querySelector('[name="pointsLimit"]').value = button.getAttribute("data-points-preset"); return; }
-    if (button.matches("[data-revalidate-rules]")) {
+    if (button.matches("[data-revalidate-rules], [data-refresh-roster-data]")) {
       await action(async () => {
-        if (!current) throw new Error("Open a roster before revalidating it.");
+        if (!current) throw new Error("Open a roster before refreshing it.");
         const result = revalidateRosterRulesData(current, { updatedAt: now() });
-        if (result.status !== "current") {
+        if (result.status === "review-required") {
           const details = result.issues?.length ? result.issues.slice(0, 4).join(" ") : "This roster could not be revalidated automatically.";
           throw new Error(details);
         }
         await store.save({ id: result.roster.id, roster: result.roster });
         current = result.roster;
-      }, "Roster revalidated against the current tracked rules and points data.");
+      }, "Roster refreshed. Catalog mismatches were written to the saved import report.");
       return;
     }
     if (button.matches("[data-roster-save]")) {
@@ -362,16 +375,22 @@ export function createArmyRosterPanel(container, { store, players = [], onApplyR
   function updateWarhammerImportPreview() {
     const host=container.querySelector("[data-warhammer-import-preview]"); if(!host) return;
     const text=container.querySelector("[data-warhammer-import-text]")?.value??"";
-    const faction=container.querySelector("[data-warhammer-faction]")?.value??"";
+    const selected=container.querySelector("[data-warhammer-faction]")?.value??"";
+    const other=container.querySelector("[data-warhammer-other-faction]")?.value?.trim()??"";
+    const faction=selected==="__other__"?other:selected;
     if(!text.trim()){host.textContent="Paste the export to preview detected units.";return;}
+    if(!faction){host.textContent="Choose a faction, or type an unlisted faction, to preview the list.";return;}
     try {
       const parsed=importWarhammerAppRoster({text,faction,name:"Preview",pointsLimit:null,id:"preview",createdAt:null});
-      const detailed=parsed.roster.units.filter(unit=>unit.datasheet?.characteristics&&unit.datasheet?.weapons?.length).length;
-      host.innerHTML=`<strong>${parsed.roster.units.length} detected unit(s) · ${parsed.totalPoints} pts · ${detailed} with stats and weapon profiles</strong><ul>${parsed.roster.units.map(unit=>`<li>${escapeHtml(unit.modelCount)} × ${escapeHtml(unit.name)} · ${escapeHtml(unit.points??"points unknown")} pts${unit.attachedToBodyguardId?" · attached leader":""}${unit.isWarlord?" · Warlord":""}${unit.datasheet?.characteristics&&unit.datasheet?.weapons?.length?"":" · full profile unavailable"}${unit.dataSource.officialRulesCrossCheck==="verified"?"":" · source review pending"}</li>`).join("")}</ul>${parsed.roster.detachment?`<p>Detachment: ${escapeHtml(parsed.roster.detachment)}</p>`:""}${parsed.warnings.map(w=>`<p role="alert">${escapeHtml(w)}</p>`).join("")}${parsed.unrecognized.length?`<p role="alert">${parsed.unrecognized.length} point line(s) were not matched. They will be preserved in the list notes.</p><ul>${parsed.unrecognized.map(line=>`<li>${escapeHtml(line)}</li>`).join("")}</ul>`:""}`;
+      const views=parsed.roster.units.map(unit=>withResolvedUnitContent(unit,parsed.roster.units));
+      const detailed=views.filter(unit=>unit.datasheet?.characteristics&&unit.datasheet?.weapons?.length).length;
+      const manual=views.filter(isUserEnteredUnit).length;
+      const summary=parsed.importReport?.summary;
+      host.innerHTML=`<strong>${parsed.roster.units.length} detected unit(s) · ${manual} user-entered · ${parsed.totalPoints} pts · ${detailed} with stats and weapon profiles</strong><ul>${views.map(unit=>`<li>${escapeHtml(unit.modelCount)} × ${escapeHtml(unit.instanceLabel||unit.name)} · ${escapeHtml(unit.points??"costs unknown")} pts${isUserEnteredUnit(unit)?" · User-entered":""}${unit.attachedToBodyguardId?" · attached leader":""}${unit.isWarlord?" · Warlord":""}${unit.datasheet?.characteristics&&unit.datasheet?.weapons?.length?"":" · full profile unavailable"}${isUserEnteredUnit(unit)?"":unit.dataSource.officialRulesCrossCheck==="verified"?"":" · source review pending"}</li>`).join("")}</ul>${summary?`<p>Import report: ${summary.matched} matched, ${summary.unmatched} user-entered, ${summary.deduped} shared-content reference(s), ${summary.unmatchedWargear} unmatched wargear, ${summary.pointsMismatches} points mismatch(es), ${summary.staleDatasheets} stale datasheet(s).</p>`:""}${parsed.roster.detachment?`<p>Detachment: ${escapeHtml(parsed.roster.detachment)}</p>`:""}${parsed.warnings.map(w=>`<p role="alert">${escapeHtml(w)}</p>`).join("")}${parsed.unrecognized.length?`<p role="alert">${parsed.unrecognized.length} unit line(s) were not in the catalog. They will be saved as user-entered units.</p><ul>${parsed.unrecognized.map(line=>`<li>${escapeHtml(line)}</li>`).join("")}</ul>`:""}`;
     } catch(error) {host.textContent=error?.message??String(error);}
   }
   function handleInput(event) {
-    if(event.target?.matches?.("[data-warhammer-import-text], [data-warhammer-import] input[name='rosterName'], [data-warhammer-import] input[name='pointsLimit']")) updateWarhammerImportPreview();
+    if(event.target?.matches?.("[data-warhammer-import-text], [data-warhammer-other-faction], [data-warhammer-import] input[name='rosterName'], [data-warhammer-import] input[name='pointsLimit']")) updateWarhammerImportPreview();
     if(event.target?.matches?.("[data-unit-search]")) { unitSearch=event.target.value; updateCatalog(); }
   }
   function handleChange(event) {

@@ -53,8 +53,12 @@ test('legacy Calgar imports remain backwards-compatible; unverified Gravis varia
   assert.equal(short.roster.units[0].datasheetId,'space-marines:marneus-calgar');
   const unfamiliar=exportRoster('Marneus Calgar in Gravis Armour (180 pts)\nCaptain (90 pts)','unknown-calgar');
   assert.equal(unfamiliar.unrecognized.length,1,'Gravis must not be silently mapped to Antilochus');
-  assert.equal(unfamiliar.roster.units.length,1);
-  assert.equal(unfamiliar.roster.units[0].name,'Captain');
+  assert.equal(unfamiliar.roster.units.length,2);
+  const gravis=unfamiliar.roster.units.find(unit=>/gravis/i.test(unit.name));
+  assert.equal(gravis.datasheetId,null);
+  assert.equal(gravis.dataSource.origin,'import-unmatched');
+  assert.notEqual(gravis.datasheetId,'space-marines:marneus-calgar');
+  assert.equal(unfamiliar.roster.units.find(unit=>unit.name==='Captain').datasheetId,'space-marines:captain');
 });
 
 test('five officially designated Legendary Proxies are not presented as Legends datasheets',()=>{

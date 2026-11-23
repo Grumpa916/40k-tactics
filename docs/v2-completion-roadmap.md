@@ -34,6 +34,42 @@ This roadmap captures the seven remaining workstreams agreed after the primary-s
 
 - **All 18 Chapter Approved 2026–27 Secondary Mission printed rule/scoring faces directly checked against user photos.** Batch 1 (#560) corrected Fixed Bring It Down; Batch 2 (#562) corrected Fixed A Grievous Blow; Batch 3 (#563, merged) records six matching cards (see `secondary-physical-card-audit-batch3-2026-11-08.md`). [Issue #502](https://github.com/Grumpa916/40k-tactics/issues/502) is closed as completed. A new official FAQ/errata check remains separate; manual VP confirmation remains authoritative.
 
+## Session log — 2026-11-22/23 (post-battle vs Jared1221)
+
+Live-game feedback from the November 22 match (Custodes vs Space Marines, Inescapable Dominion vs Secure Asset, 27–47). All items below are scoped for 40k-tactics (not ono40k). GitLab references removed from repo text.
+
+### Done
+
+- **Opponent list import (PR #678, merged 2026-11-23):** unmatched unit headers become labeled manual entries instead of being dropped; Deathwatch allies stay faction-tagged and do not merge with Space Marine datasheets; content-signature dedupe (hash includes faction tag, model count, wargear); one-pass catalog validation at import with explicit refresh button; 1,628 tests passing. Net +836/−83 lines across 18 files.
+- **GitLab CI file and October leftover patch/zip files:** removed in six commits on main. GitLab mentions scrubbed from three docs.
+- **Custodes stat-card audit:** all 36 units match Wahapedia 11th-edition stats; card layout issues identified (placeholder strength field, missing invulnerable save) for the build.
+
+### Scoped, not started (build order recommended by Forge)
+
+1. Reserves + embarked placement regression — cause is commit `7624dd5`; fix is a fallback "confirm at the table" profile for transports outside the Space Marine list.
+2. Fight phase recheck — seven mismatches: pick order (app allowed double-picks), no Consolidate step, Pile In uses 10th-edition movement, Heroic Intervention and Counteroffensive absent, Overrun only triggers on chargers. Planned order: pick order, Pile In, Consolidate, stratagems, small fixes.
+3. Magna Imperator + Trajann aura — new "unit selected to attack" event separate from Trajann's 6-inch re-roll-ones aura; fixes missing opponent-turn reminder and makes re-rolls hit damage math. Open question: does Anathema Psykana carry the Adeptus Custodes keyword?
+4. Embarked Impulsor fire points — Firing Deck 7, Assault-only after Advancing; open question: who takes the Hazardous roll.
+5. Map labels — attached characters (`TE2+MC` style) and upgrade-bearing Dreadnoughts (Telemann vs Contemptor Gladius).
+6. Layout C objective labels — nearest-home-objective labeling disagrees with territory rules on 16 of 75 layouts.
+7. Overwatch — 1 CP step at end of opponent's Movement phase; records usage only since CP moves to Warmind.
+8. Full-screen map UI — part 1: layout, thin icon rails, saved panel state; part 2: remove scoring screens after Warmind role is settled. Command Points become read-only edge-rail ("see Warmind" or typed number) folded into part 1.
+9. Stat card build — fixed stat row, per-faction chips, filtered map key, long-press/info-icon trigger.
+10. Compact datasheet form for manual units — Toughness, Save, Wounds, short weapon row (range, attacks, skill, strength, AP, damage); base size and keywords next.
+
+### Blocked or awaiting input
+
+- **Warmind battle-report importer:** scoped ~600–850 lines. Needs the four full-report screenshots plus iPad Live Text pastes to verify struck-through undone lines and the 40-vs-27–47 score discrepancy. Text-paste first; Tesseract.js screenshot OCR optional.
+- **Manual secondary scoring with round backdating:** likely becomes removal of Tactics scoring screens rather than a feature — awaiting confirmation.
+- **Deathwatch Support validation:** catalog has no Deathwatch datasheets or points yet; PR keeps them as tagged manual entries.
+
+### Open questions
+
+- Anathema Psykana keyword (item 3).
+- Hazardous roll owner for Firing Deck weapons (item 4).
+- Exact error text for the "both fail" reserves/embarked case (item 1).
+- Game review screen still shows CP and End game confirmation — needs Warmind value once CP moves.
+
 ## Current priority
 
-Work through the roadmap in order unless a live-game blocker changes priority. Item 1, the full-game verification pass, is the active workstream.
+Work through the roadmap in order unless a live-game blocker changes priority. Item 1, the full-game verification pass, is the active workstream. Post-battle fixes from 2026-11-22 are queued behind it per the session log above.

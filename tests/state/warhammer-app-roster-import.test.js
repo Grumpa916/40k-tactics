@@ -11,11 +11,23 @@ test('imports matched Warhammer App unit lines with catalog datasheets and prese
  assert.equal(roster.units[0].name,'Termagants');assert.equal(roster.units[0].modelCount,10);assert.equal(roster.units[0].points,60);assert.ok(roster.units[0].datasheet?.characteristics);
  assert.equal(roster.units[1].modelCount,1);assert.equal(roster.units[1].points,115);assert.equal(roster.units[2].points,195);
 });
-test('reports unmatched point lines and refuses unsupported faction or empty match',()=>{
+test('keeps unmatched lines as user-entered units, including factions with no catalog',()=>{
  const parsed=importWarhammerAppRoster({text:'Tyranids\n10x Termagants 60 pts\nUnlisted Unit 42 points',faction:'Tyranids',name:'List',id:'r'});
- assert.equal(parsed.roster.units.length,1);assert.deepEqual(parsed.unrecognized,['Unlisted Unit 42 points']);
- assert.throws(()=>importWarhammerAppRoster({text:'Some army 100 points',faction:'Space Wolves',id:'r'}),/no unit names/i);
- assert.throws(()=>importWarhammerAppRoster({text:'Termagants 60 points',faction:'Space Marines',id:'r'}),/No unit names matched/);
+ assert.equal(parsed.roster.units.length,2);
+ assert.equal(parsed.roster.units[1].name,'Unlisted Unit');
+ assert.equal(parsed.roster.units[1].points,42);
+ assert.equal(parsed.roster.units[1].dataSource.status,'manual-entry');
+ assert.equal(parsed.roster.units[1].dataSource.origin,'import-unmatched');
+ assert.deepEqual(parsed.unrecognized,['Unlisted Unit 42 points']);
+ const wolves=importWarhammerAppRoster({text:'Space Wolves\nCHARACTERS\nWolf Guard (100 points)',faction:'Space Wolves',name:'Wolves',id:'wolves'});
+ assert.equal(wolves.roster.units[0].name,'Wolf Guard');
+ assert.equal(wolves.roster.units[0].dataSource.origin,'import-unmatched');
+ assert.match(wolves.warnings.join('\n'),/no reviewed catalog/i);
+ const marines=importWarhammerAppRoster({text:'Termagants 60 points',faction:'Space Marines',name:'Wrong faction',id:'marines'});
+ assert.equal(marines.roster.units[0].datasheetId,null);
+ assert.equal(marines.roster.units[0].name,'Termagants');
+ assert.match(marines.warnings.join('\n'),/user-entered/i);
+ assert.throws(()=>importWarhammerAppRoster({text:'Strike Force (2000 Points)\nNecrons',faction:'Necrons',name:'Empty',id:'empty'}),/No unit lines/i);
 });
 test('uses catalog points for newly supported Space Marine units',()=>{
  const parsed=importWarhammerAppRoster({text:'Neurotyrant',faction:'Tyranids',name:'Known cost',id:'r'});
@@ -25,10 +37,16 @@ test('uses catalog points for newly supported Space Marine units',()=>{
 });
 
 test('Gravis Captain sees both detachment Upgrades after importing a multi-detachment Space Marine list',()=>{
- const text='Space Marines\nDetachment: Assault Brethren / Gravis Siege Force / Terminator Storm Force\nCaptain in Gravis Armour (90 Points)';
- const {roster}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-gravis'});
+ const text='Space Marines\nCHARACTERS\nFaction: Deathwatch\nDetachment: Assault Brethren / Gravis Siege Force / Terminator Storm Force\nCaptain in Gravis Armour (90 Points)';
+ const {roster,unrecognized}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-gravis'});
  assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force','Terminator Storm Force']);
+ assert.deepEqual(unrecognized,[]);
+ assert.deepEqual(roster.units.map(unit=>unit.name),['Captain in Gravis Armour']);
  const captain=roster.units[0];
+ assert.equal(captain.factionTag,'Deathwatch');
+ assert.equal(captain.dataSource.factionTag,'Deathwatch');
+ assert.notEqual(captain.dataSource.status,'manual-entry');
+ assert.ok(captain.datasheetId);
  const choices=getEligibleSpaceMarineEnhancements(captain,roster);
  const furious=choices.find(item=>item.name==='Furious Assault');
  const immovable=choices.find(item=>item.name==='Immovable Conquerors');
@@ -41,10 +59,17 @@ test('Gravis Captain sees both detachment Upgrades after importing a multi-detac
 });
 
 test('separate Space Marine detachment lines remain available to upgrade the Captain',()=>{
- const text='Space Marines\nAssault Brethren (1 Detachment Point)\nGravis Siege Force (1 Detachment Point)\nCaptain in Gravis Armour (90 Points)';
- const {roster}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-lines'});
+ const text='Space Marines\nCHARACTERS\nFaction: Deathwatch\nAssault Brethren (1 Detachment Point)\nGravis Siege Force (1 Detachment Point)\nCaptain in Gravis Armour (90 Points)';
+ const {roster,unrecognized}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-lines'});
  assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force']);
- const choices=getEligibleSpaceMarineEnhancements(roster.units[0],roster).map(item=>item.name);
+ assert.deepEqual(unrecognized,[]);
+ assert.deepEqual(roster.units.map(unit=>unit.name),['Captain in Gravis Armour']);
+ const captain=roster.units[0];
+ assert.equal(captain.factionTag,'Deathwatch');
+ assert.equal(captain.dataSource.factionTag,'Deathwatch');
+ assert.notEqual(captain.dataSource.status,'manual-entry');
+ assert.ok(captain.datasheetId);
+ const choices=getEligibleSpaceMarineEnhancements(captain,roster).map(item=>item.name);
  assert.ok(choices.includes('Furious Assault'));
  assert.ok(choices.includes('Immovable Conquerors'));
 });
@@ -128,9 +153,19 @@ test('large App validation roster preserves source errors and marks affected war
  ]);
 });
 
-test('weapon lines cannot create units and an incomplete group or points mismatch is flagged',()=>{
+test('weapon lines cannot create units and an unmatched bodyguard stays attached',()=>{
  const {roster,warnings,unrecognized}=importWarhammerAppRoster({text:'Example (100 Points)\nATTACHED UNITS\nAttached unit 1\nLictor (60 Points)\n  • Attached as: Leader (Character)\n  • 1x Lictor claws and talons\nUncataloged bodyguard (40 Points)\n  • Attached as: Bodyguard (Battleline)',faction:'Tyranids',name:'Example',id:'r'});
- assert.equal(roster.units.length,1);assert.equal(roster.units[0].attachedToBodyguardId,undefined);
+ const leader=roster.units.find(unit=>unit.name==='Lictor');
+ const bodyguard=roster.units.find(unit=>unit.name==='Uncataloged bodyguard');
+ assert.equal(roster.units.length,2);
+ assert.equal(bodyguard.dataSource.origin,'import-unmatched');
+ assert.equal(bodyguard.points,40);
+ assert.equal(leader.attachedToBodyguardId,bodyguard.id);
+ assert.deepEqual(bodyguard.attachedLeaderIds,[leader.id]);
+ assert.equal(roster.units.some(unit=>/claws/i.test(unit.name)),false);
  assert.deepEqual(unrecognized,['Uncataloged bodyguard (40 Points)']);
- assert.ok(warnings.some(w=>w.includes('pairing')));assert.ok(warnings.some(w=>w.includes('100')));
+ assert.equal(warnings.some(warning=>warning.includes('pairing')),false);
+ const broken=importWarhammerAppRoster({text:'Example (50 Points)\nATTACHED UNITS\nAttached unit 1\nLictor (60 Points)\n  • Attached as: Leader (Character)',faction:'Tyranids',name:'Broken',id:'broken'});
+ assert.ok(broken.warnings.some(warning=>warning.includes('pairing')));
+ assert.ok(broken.warnings.some(warning=>warning.includes('50')));
 });

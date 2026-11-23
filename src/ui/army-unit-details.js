@@ -6,6 +6,7 @@ import { renderWargearEditor } from './army-wargear-editor.js';
 import { renderUnitUpgradeEditor } from './army-unit-upgrade-editor.js';
 import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
 import { getAdeptusCustodesBaseSize, modelBaseSizeLabel } from '../data/adeptus-custodes-base-sizes.js';
+import { isUserEnteredUnit, withResolvedUnitContent } from '../rules/imported-roster-report.js';
 
 function resolveUnitProfile(unit, faction = null) {
  if (unit?.datasheet || !faction) return unit;
@@ -68,9 +69,13 @@ function renderIndividualModelStats(unit) {
 }
 export function renderUnitDetails(unit, {current=null,busy=false,editable=false}={}) {
  if(!unit) return '';
- const displayUnit = resolveUnitProfile(unit, current?.faction);
+ unit = withResolvedUnitContent(unit, current?.units ?? []);
+ const entered = isUserEnteredUnit(unit);
+ if (!entered) {
+  const displayUnit = resolveUnitProfile(unit, current?.faction);
+  unit = { ...displayUnit, ...unit, datasheet: unit.datasheet ?? displayUnit.datasheet };
+ }
  const d=busy?'disabled':'';
- unit = { ...displayUnit, ...unit, datasheet: displayUnit.datasheet ?? unit.datasheet };
  const physicalBase = unit.baseSize ??
    getAdeptusCustodesBaseSize({...unit, faction:unit.faction ?? current?.faction ?? null});
  const baseSource = physicalBase?.source === 'event-guide' ? 'GW Event Companion (June 2026)' :
@@ -81,7 +86,7 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  const safeSource=typeof source==='string' && /^https?:\/\//i.test(source);
  const weapons=unit.datasheet?.weapons ?? [];
  const abilities=orderAbilitiesForDisplay(unit.datasheet?.abilities ?? []);
- return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button>${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}<h3>${e(unit.name)}</h3>${unitStats(unit)}
+ return `<section class="ab-detail"><button type="button" data-builder-browse>← Unit browser</button>${editable?`<button data-remove-unit="${e(unit.id)}" ${d}>Remove unit from list</button>`:''}<h3>${e(unit.instanceLabel || unit.name)}</h3>${entered?'<p class="ab-muted">User-entered · unverified</p>':''}${unitStats(unit)}
  ${physicalBase ? `<p class="ab-muted" data-unit-physical-base="${e(physicalBase.shape)}"><strong>Model base:</strong> ${e(modelBaseSizeLabel(physicalBase))} · ${e(baseSource)}${showBaseLink ? ` · <a href="${e(baseSourceUrl)}" target="_blank" rel="noopener noreferrer">Base source</a>` : ''}</p>` : ''}
  ${renderIndividualModelStats(unit)}
  ${editable?`${renderUnitSizeControls(unit,current)}${renderWargearEditor(unit)}${renderUnitUpgradeEditor(unit,current)}<label>Notes<textarea data-unit-notes="${e(unit.id)}" maxlength="2000">${e(unit.notes ?? '')}</textarea></label><button data-save-unit="${e(unit.id)}" ${d}>Save unit changes</button>${renderAttachmentControls(unit,current,busy)}`:`<button class="ab-primary" data-add-catalog-unit="${e(unit.id)}" ${d}>+ Add to list · ${e(unit.defaultPoints ?? 'Unknown')} pts</button>`}
@@ -93,7 +98,7 @@ export function renderUnitDetails(unit, {current=null,busy=false,editable=false}
  ${unit.officialDatasheetName ? `<p class="ab-muted"><strong>Official datasheet identity:</strong> ${e(unit.officialDatasheetName)}. Full October Codex weapon/points verification is outstanding; older saved rosters keep their original unit ID.</p>` : ''}
  ${unit.officialComposition?.permittedModels?.length ? `<p class="ab-muted"><strong>Published unit composition:</strong> ${unit.officialComposition.permittedModels.map(n=>e(n)).join(' or ')} models (official June 2026 Faction Pack). ${e(unit.officialComposition.sourceVersion ?? '')}. Only priced sizes shown below can currently be selected automatically.</p>` : ''}
  <h4>Published model / points options</h4>${(unit.pointsOptions ?? []).map(o=>`<p>${e(o.models)} models · ${e(o.points)} pts ${e(o.condition ?? '')}</p>`).join('')||'<p>No cost options available.</p>'}
- <p class="ab-muted">Data status: ${e(unit.dataSource?.status ?? unit.verificationStatus ?? 'manual-entry')}. Check current source rules; missing values are not treated as zero.</p>
+ <p class="ab-muted">Data status: ${entered ? 'User-entered · unverified. This unit was typed or imported and is not catalog data.' : e(unit.dataSource?.status ?? unit.verificationStatus ?? 'manual-entry') + '. Check current source rules; missing values are not treated as zero.'}</p>
  ${safeSource?`<p><a href="${e(source)}" target="_blank" rel="noopener noreferrer">Open datasheet source</a></p>`:''}
  </section>`;
 }

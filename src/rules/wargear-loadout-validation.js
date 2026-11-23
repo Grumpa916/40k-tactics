@@ -1,5 +1,6 @@
 import { getTyranidWargearRuleSet, getTyranidWargearSelections } from "../data/tyranid-wargear-rules.js";
 import { getOptionalWargearLimit } from "./wargear-quantity-limits.js";
+import { isUserEnteredUnit } from "./imported-roster-report.js";
 
 export function normalizeWargearName(value) {
   return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -202,7 +203,8 @@ export function buildManualWargearLoadout(unit, selections = []) {
 }
 
 export function summarizeWargearAudit(roster) {
-  const units = (roster?.units ?? []).map((unit) => ({
+  const excludedUserEntered = (roster?.units ?? []).filter(isUserEnteredUnit).length;
+  const units = (roster?.units ?? []).filter(unit => !isUserEnteredUnit(unit)).map((unit) => ({
     unitId: unit.id,
     name: unit.name,
     status: unit.loadoutValidation?.status ?? (unit.equippedWargear?.length ? "profile-matched" : "no-weapon-data"),
@@ -213,6 +215,7 @@ export function summarizeWargearAudit(roster) {
   }));
   return {
     units,
+    excludedUserEntered,
     totals: units.reduce((totals, item) => {
       totals.units += 1;
       totals[item.status] = (totals[item.status] ?? 0) + 1;

@@ -7,6 +7,7 @@ import { getTyranidWargearRuleSet } from "../data/tyranid-wargear-rules.js";
  * A profile or points option being present does not certify a current official
  * Codex/MFM match. Keep those separate from completeness of imported data.
  * This report never edits a roster, restricts battle play or guesses weapons.
+ * User-entered and import-unmatched units are not catalog entries and are not counted here.
  */
 export function auditArmyCatalogCompleteness(faction) {
   const candidates = findArmyUnitCandidates({ faction });

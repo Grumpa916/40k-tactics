@@ -2,8 +2,9 @@
  * Limited 11e Space Marine attachment eligibility checked against GW 2026
  * Faction Pack and the current Ultramarines datasheet reference.
  *
- * Distinguishes Cato's conditional Support status and Wardens' Support role.
- * Other named leaders are left unverified: no blanket Captain wildcard.
+ * Distinguishes Cato's conditional Support status, Wardens' Support role,
+ * and the reviewed Gravis Captain/Apothecary Biologis attachment pair.
+ * Other leaders remain unverified: no blanket Captain wildcard.
  */
 const review=Object.freeze({
  status:'source-reviewed', reviewedAt:'2026-11-03',
@@ -21,6 +22,10 @@ const calgarBodyguards=[
  'Sternguard Veteran Squad','Terminator Assault Squad','Terminator Squad',
  'Victrix Honour Guard'
 ];
+const gravisBodyguards=[
+ 'Aggressor Squad','Eradicator Squad with Heavy Bolters',
+ 'Eradicator Squad with Melta Rifles','Heavy Intercessor Squad'
+];
 const wardenBodyguards=[
  'Assault Intercessor Squad','Bladeguard Veteran Squad','Intercessor Squad',
  'Sternguard Veteran Squad','Vanguard Veteran Squad with Jump Packs'
@@ -33,13 +38,15 @@ const bodyguard=maxAttachedLeaders=>Object.freeze({
 });
 const record={
  'Marneus Calgar':Object.freeze({leader:leader(calgarBodyguards)}),
+ 'Captain in Gravis Armour':Object.freeze({leader:leader(gravisBodyguards)}),
+ 'Apothecary Biologis':Object.freeze({leader:leader(gravisBodyguards,true)}),
  'Cato Sicarius':Object.freeze({leader:leader(['Victrix Honour Guard'])}),
  'Wardens of Ultramar':Object.freeze({leader:leader(wardenBodyguards,true)}),
  'Victrix Honour Guard':Object.freeze({bodyguard:bodyguard(2)})
 };
-for(const name of new Set([...calgarBodyguards,...wardenBodyguards])){
+for(const name of new Set([...calgarBodyguards,...gravisBodyguards,...wardenBodyguards])){
  if(name==='Victrix Honour Guard')continue;
- record[name]=Object.freeze({bodyguard:bodyguard(wardenBodyguards.includes(name)?2:1)});
+ record[name]=Object.freeze({bodyguard:bodyguard(wardenBodyguards.includes(name)||gravisBodyguards.includes(name)?2:1)});
 }
 export const SPACE_MARINES_ULTRAMARINES_ATTACHMENTS=Object.freeze(record);
 export function addReviewedUltramarinesAttachmentMetadata(name,datasheet){
