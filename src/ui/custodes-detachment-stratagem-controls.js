@@ -1,4 +1,4 @@
-import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
+import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities, getImpenetrableBastionOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
 import { getBattleUnitDatasheet, getCombatFormationMembers, getBattleRosterUnit } from '../rules/battle-unit-reference.js';
 import { getRecordedStratagemUses, isGoldenLightActive } from '../rules/stratagem-use-state.js';
 
@@ -6,6 +6,22 @@ const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;'
 const check=(name,label)=>`<label class="venatari-confirm"><input type="checkbox" name="${name}" required><span>${label}</span></label>`;
 
 export function renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId}={}) {
+  if (stratagemId==='impenetrable-bastion') {
+    const entries=getImpenetrableBastionOpportunities(state,{playerId});
+    if (!entries.length) return '<p>Record control of an objective and select an eligible Custodes unit at the end of your Movement phase.</p>';
+    const available=entries.filter(entry=>entry.available);
+    const units=[...new Map(entries.map(entry=>[entry.unitId,entry])).values()];
+    const objectives=[...new Map(entries.map(entry=>[entry.objectiveId,entry])).values()];
+    return `<details class="venatari-ability-controls"><summary>${available.length?'Secure an objective · 1 CP':'Review eligibility'}</summary>`+
+      `<form data-custodes-detachment-stratagem-form data-detachment-stratagem-id="impenetrable-bastion" data-detachment-stratagem-player="${esc(playerId)}">`+
+      `<label>Custodes unit<select name="unitId" required>${units.map(entry=>`<option value="${esc(entry.unitId)}" ${entry===units[0]?'selected ':''}${entry.available?'':'disabled'}>${esc(entry.unitName)}${entry.blockedReason?' · '+esc(entry.blockedReason):''}</option>`).join('')}</select></label>`+
+      `<label>Objective to secure<select name="objectiveId" required>${objectives.map(entry=>`<option value="${esc(entry.objectiveId)}">${esc(entry.objectiveName)}</option>`).join('')}</select></label>`+
+      check('timingConfirmed','This is the end of my Movement phase')+
+      check('objectiveRangeConfirmed','This unit is within range of and controlling the selected objective on the tabletop')+
+      check('unitLimitConfirmed','No other Stratagem targeted this unit this phase, including one resolved at the table')+
+      '<small>The app records secured control and the CP spend. Confirm at each phase end whether the opponent has greater control; record any takeover on the map. VP remains player-confirmed.</small>'+
+      `<button type="submit" ${available.length?'':'disabled'}>Spend 1 CP · secure objective</button></form></details>`;
+  }
   if (stratagemId==='unleash-the-lions') {
     const entries=getUnleashTheLionsOpportunities(state,{playerId});
     if(!entries.length) return '<p>No deployed Allarus or Aquilon unit is eligible for this Command phase Stratagem.</p>';
@@ -67,6 +83,8 @@ export function readCustodesDetachmentStratagemForm(form) {
   const checked=name=>form.querySelector(`[name="${name}"]`)?.checked===true;
   return {playerId:form.getAttribute('data-detachment-stratagem-player'),stratagemId:form.getAttribute('data-detachment-stratagem-id'),
     unitId:form.querySelector('[name="unitId"]')?.value,timingConfirmed:checked('timingConfirmed'),unitLimitConfirmed:checked('unitLimitConfirmed'),
+    ...(form.getAttribute('data-detachment-stratagem-id')==='impenetrable-bastion'?{
+      objectiveId:form.querySelector('[name="objectiveId"]')?.value,objectiveRangeConfirmed:checked('objectiveRangeConfirmed')}:{}),
     ...(form.getAttribute('data-detachment-stratagem-id')==='unleash-the-lions'?{
       woundsByModel:String(form.querySelector('[name="woundsByModel"]')?.value??'').split(',').map(value=>Number(value.trim())),
       vexillaModelIndex:form.querySelector('[name="vexillaModelIndex"]') ? Number(form.querySelector('[name="vexillaModelIndex"]').value) : null}: {})};

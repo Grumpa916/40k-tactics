@@ -65,7 +65,11 @@ function missionOption(state, { playerId, perspectivePlayerId, recommendation, e
     primaryStrategy
   });
   if (!signal.active || signal.vpLeverage <= 0 && signal.score < 0.18) return null;
-  const score = clamp01(0.12 + reachBoost(entry.distance, recommendation.movement) + signal.score * ocFactor);
+  const objective=(state.objectives??[]).find(item=>item.id===entry.objectiveId);
+  const secured=control==='controlled' && objective?.securedByPlayerId===playerId;
+  // Secured control still counts for Dominion, but parking a formation here
+  // has less marginal value while the marker remains secured.
+  const score=clamp01((0.12 + reachBoost(entry.distance,recommendation.movement) + signal.score*ocFactor) * (secured ? 0.5 : 1));
   const objectiveName = objectiveAdvisorLabel(state, entry.objectiveId, perspectivePlayerId);
   const ocText = Number.isFinite(Number(recommendation?.effectiveOc))
     ? ` This formation currently contributes about ${Number(recommendation.effectiveOc)} usable OC.`
@@ -79,9 +83,9 @@ function missionOption(state, { playerId, perspectivePlayerId, recommendation, e
     distance: entry.distance,
     control,
     primaryStrategySignal: signal,
-    actionHint: actionHint(purpose, entry.distance, recommendation.movement),
+    actionHint: secured ? 'Secured objective: consider another scoring position; verify opposing OC at each phase end' : actionHint(purpose, entry.distance, recommendation.movement),
     confidence: Number.isFinite(recommendation.movement) ? "moderate" : "low",
-    reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map.${ocText} ${signal.reason}`
+    reason: `${objectiveName} is about ${entry.distance}\" away on the approximate map.${ocText} ${secured ? "Impenetrable Bastion keeps this objective under your control after this unit leaves, until the opponent has greater OC at a phase end. " : ""}${signal.reason}`
   });
 }
 

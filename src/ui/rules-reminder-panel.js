@@ -1,6 +1,6 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getLivePhaseReminderEntries } from './live-phase-reminder-filter.js';
-import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
+import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities, getImpenetrableBastionOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote } from '../rules/battle-rules-reminders.js';
 import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
@@ -55,7 +55,8 @@ function renderDetachmentStratagemReminders(state,playerId,{livePanel=false,sele
     'Preternatural Rapidity':getPreternaturalRapidityOpportunities,
     'Lightning Wrath':getLightningWrathOpportunities,
     'Golden Light of the Moiraides':getGoldenLightOpportunities,
-    'Unleash the Lions':getUnleashTheLionsOpportunities
+    'Unleash the Lions':getUnleashTheLionsOpportunities,
+    'Impenetrable Bastion':getImpenetrableBastionOpportunities
   };
   const entries=livePanel ? all.filter(entry => {
     if (!entry.affordable) return false;
@@ -70,6 +71,7 @@ function renderDetachmentStratagemReminders(state,playerId,{livePanel=false,sele
     (entry.title==='Lightning Wrath'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'lightning-wrath'}):'')+
     (entry.title==='Golden Light of the Moiraides'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'golden-light-of-the-moiraides'}):'')+
     (entry.title==='Unleash the Lions'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'unleash-the-lions'}):'')+
+    (entry.title==='Impenetrable Bastion'?renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'impenetrable-bastion'}):'')+
     '<a href="'+esc(entry.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Rule reference</a></article>'
   ).join('')+'</details>';
 }
@@ -212,7 +214,7 @@ export function createRulesReminderController(container,{session,perspectivePlay
       try {
         const payload=readCustodesDetachmentStratagemForm(event.target);
         session.dispatch({type:COMMAND_TYPES.RECORD_CUSTODES_DETACHMENT_STRATAGEM_USE,payload});
-        message=payload.stratagemId==='unleash-the-lions'?'Unleash the Lions recorded; 1 CP spent. Separate units are ready. Drag their markers to their tabletop positions.':payload.stratagemId==='lightning-wrath'?'Lightning Wrath recorded; 1 CP spent. Resolve this unit’s D3+3-inch pile-in at the table.':payload.stratagemId==='golden-light-of-the-moiraides'?'Golden Light recorded; 2 CP spent. Incoming attack estimates now apply -1 to Hit until your next turn.':'Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';
+        message=payload.stratagemId==='impenetrable-bastion'?'Impenetrable Bastion recorded; 1 CP spent. The selected objective is secured until the opponent has greater control at the end of a phase.':payload.stratagemId==='unleash-the-lions'?'Unleash the Lions recorded; 1 CP spent. Separate units are ready. Drag their markers to their tabletop positions.':payload.stratagemId==='lightning-wrath'?'Lightning Wrath recorded; 1 CP spent. Resolve this unit’s D3+3-inch pile-in at the table.':payload.stratagemId==='golden-light-of-the-moiraides'?'Golden Light recorded; 2 CP spent. Incoming attack estimates now apply -1 to Hit until your next turn.':'Preternatural Rapidity recorded; 1 CP spent. This unit can charge after its Advance this turn.';
       }
       catch(error){message=error.message;open=true;}
       refresh();return;

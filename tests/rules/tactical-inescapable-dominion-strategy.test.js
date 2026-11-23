@@ -8,6 +8,7 @@ import { getMovementStrategicRecommendations } from "../../src/rules/tactical-mo
 import { getMovementStrategicRecommendations as getBaseMovementStrategicRecommendations } from "../../src/rules/tactical-movement-opportunities.js";
 import { enhanceInescapableDominionMovementRecommendations } from "../../src/rules/tactical-inescapable-dominion-movement.js";
 import { getTargetStrategicContext } from "../../src/rules/tactical-target-context.js";
+import { renderMovementAdvisor } from "../../src/ui/movement-advisor.js";
 
 function control(controllerId) {
   return controllerId == null
@@ -229,4 +230,19 @@ test("Battle-shocked or zero-usable-OC formations receive no Dominion-specific m
   assert.ok(before && after);
   assert.equal(after.score, before.score);
   assert.equal(after.objectiveId, before.objectiveId);
+});
+
+
+test("secured objective still counts for Dominion and tells its former holder it can redeploy",()=>{
+  const s=state();
+  const before=getPrimaryStrategyContext(s,{playerId:'p1',perspectivePlayerId:'p1'});
+  const expansion=s.objectives.find(item=>item.id==='expansion-1');
+  expansion.securedByPlayerId='p1';expansion.securedByUnitId='holder';
+  const after=getPrimaryStrategyContext(s,{playerId:'p1',perspectivePlayerId:'p1'});
+  assert.equal(after.controlledObjectives,before.controlledObjectives);
+  assert.equal(after.rawRecordedVp,before.rawRecordedVp);
+  const html=renderMovementAdvisor(s,{playerId:'p1',perspectivePlayerId:'p1',selectedUnitId:'holder'});
+  assert.match(html,/data-secured-objective-advice/);
+  assert.match(html,/It can leave without immediately losing control/);
+  assert.match(html,/Check opposing OC at the end of each phase/);
 });

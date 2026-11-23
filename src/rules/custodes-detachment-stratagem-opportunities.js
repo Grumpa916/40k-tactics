@@ -124,3 +124,37 @@ export function getUnleashTheLionsOpportunities(state,{playerId,unitId=null}={})
       sourceUrl:'https://assets.warhammer-community.com/eng_may_2025_wh40k_adeptus_custodes_lions_of_the_emperor_detachment-5ej58wehjr-hin5cateh0.pdf'};
   });
 }
+
+/**
+ * Map positions are advisory, so the player confirms the target unit is within
+ * range of the selected objective at the table before recording this use.
+ */
+export function getImpenetrableBastionOpportunities(state,{playerId,unitId=null}={}) {
+  if (state?.battle?.status!=='active' || state.phase!=='movement' || !playerId ||
+      (state.activePlayer??state.battle?.activePlayerId)!==playerId) return [];
+  const roster=state.armyRosters?.[playerId];
+  if (!roster || !isAdeptusCustodesFaction(roster.faction) ||
+      !getRosterDetachmentNames(roster).includes("Emperor's Chosen")) return [];
+  const selected=unitId ? state.units?.find(unit=>unit.id===unitId) : null;
+  const focused=selected?.ownerId===playerId ? rootOf(state,selected) : null;
+  const objectives=(state.objectives??[]).filter(objective=>objective.control?.controlState==='controlled' &&
+    objective.control.controllerId===playerId && objective.securedByPlayerId!==playerId);
+  return (state.units??[]).filter(unit=>unit.ownerId===playerId && unit.status==='deployed' &&
+    rootOf(state,unit)===unit.id && (!focused || unit.id===focused)).flatMap(unit=>{
+    const members=getCombatFormationMembers(state,unit);
+    const keywords=members.flatMap(member=>getBattleUnitDatasheet(state,member)?.keywords??[])
+      .map(keyword=>String(keyword).toLowerCase());
+    if (!keywords.includes('adeptus custodes') || keywords.includes('anathema psykana') ||
+        keywords.includes('monster') || keywords.includes('vehicle')) return [];
+    let blockedReason=members.some(isUnitBattleShocked)?'Battle-shocked units cannot receive Stratagems.':null;
+    blockedReason??=getStratagemUseBlock(state,{playerId,unitId:unit.id,stratagemId:'impenetrable-bastion'});
+    if (!blockedReason && getCommandPointBalance(state,playerId)<1) blockedReason='Needs 1 CP.';
+    return objectives.map(objective=>({
+      stratagemId:'impenetrable-bastion',title:'Impenetrable Bastion',playerId,unitId:unit.id,
+      unitName:unit.name,objectiveId:objective.id,objectiveName:objective.name??objective.id,
+      cpCost:1,timing:'End of your Movement phase',
+      effect:'Secure the selected objective. It remains under your control without a unit in range until the opponent has greater control at the end of a phase.',
+      available:!blockedReason,blockedReason,sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference
+    }));
+  });
+}
