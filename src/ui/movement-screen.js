@@ -13,6 +13,7 @@ import { getCustodesKatahDefinition, getCustodesKatahState } from '../rules/cust
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
 import { renderBattlefieldMap } from "./battlefield-map.js";
+import { renderOverwatchInterrupt, overwatchInterruptCommand } from './overwatch-interrupt-controls.js';
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -212,7 +213,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
         refinementForUnit: unitId => movementRefinement(state, unitId)
       })}`;
       const selectedCard = renderMovementSelectedUnitCard(state, selectedAny, {action:selectedAction, refinement:selectedRefinement, perspectivePlayerId:perspectivePlayerId ?? state?.players?.[0]?.id ?? playerId});
-      const controls = `<div class="movement-screen movement-screen--dashboard">${selectedCard}${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details class="movement-advisor-drawer"><summary>Tactical Advisor</summary>${advisor}</details></div>`;
+      const controls = `<div class="movement-screen movement-screen--dashboard">${selectedCard}${renderOverwatchInterrupt(state,{selectedUnitId})}${errorMessage ? `<p class="move-error" role="alert">${escapeHtml(errorMessage)}</p>` : ''}${editor}<details class="movement-advisor-drawer"><summary>Tactical Advisor</summary>${advisor}</details></div>`;
       container.innerHTML = renderCombatWorkspace({state,phase:'movement',perspectivePlayerId:perspectivePlayerId ?? playerId,selectedUnitId,interactivePlayerId:playerId,mapView,
         leftRail,mapExtra:reserveTray,controls,footer:''});
       mapView.bind(container, undefined, undefined, session);
@@ -222,6 +223,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     container.innerHTML = `<main class="movement-screen">
       <header><div><div class="move-kicker">LIVE BATTLE</div><h1>Movement Phase</h1><p>Round ${escapeHtml(state.battle?.round ?? "—")} · Turn ${escapeHtml(state.turn ?? "—")}</p></div><strong>${eligible.length} deployed units</strong></header>
       <p class="move-note">Map positions are approximate and may be adjusted repeatedly. The app does not enforce movement distance. Each unit still records one gameplay movement choice per turn.</p>
+      ${renderOverwatchInterrupt(state,{selectedUnitId})}
       <section class="battlefield-map-section">
         <div class="move-heading"><h2>Live Battlefield</h2><span>Recorded positions · both armies</span></div>
         ${MAP_PLANNING_BUTTON}
@@ -318,6 +320,13 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
   }
 
   function handleClick(event) {
+    const overwatch = overwatchInterruptCommand(event);
+    if (overwatch) {
+      try { session.dispatch(overwatch); errorMessage = ''; }
+      catch (error) { errorMessage = error?.message ?? String(error); }
+      render();
+      return;
+    }
     const planningButton = event.target?.closest?.('[data-open-map-planning]');
     if (planningButton) {
       openMapPlanning(planningButton, { session, mode: 'movement', selectedUnitId, perspectivePlayerId });
