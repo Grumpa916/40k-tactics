@@ -53,5 +53,10 @@ test('Movement reserves are a compact popover on the map and retain their transf
   assert.match(movementSource,/leftRail,mapExtra:reserveTray,controls,footer:''/);
   assert.match(movementCSS,/\.movement-map-reserves\s*\{\s*position:absolute;/);
   assert.match(movementCSS,/\.movement-map-reserves__popover\s*\{\s*position:absolute;/);
+  const dockRule = movementCSS.match(/\.movement-map-reserves\s*\{([^}]+)\}/)?.[1] ?? '';
+  assert.match(dockRule,/right:6px;/);
+  assert.match(dockRule,/z-index:40;/);
+  assert.doesNotMatch(dockRule,/left:6px;/);
+  assert.match(movementSource,/movement-reserves-visible-1/);
   assert.match(movementCSS,/min-height:44px/);
 });
