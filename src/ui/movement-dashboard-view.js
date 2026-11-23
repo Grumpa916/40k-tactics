@@ -52,7 +52,7 @@ export function renderMovementRosterRail(state, {
   const labels = unitDisplayLabels(state?.units ?? [], state);
   const row = (unit, role = '') => {
     const activeArmy = unit.ownerId === playerId;
-    const selectable = activeArmy && ['deployed','reserves'].includes(unit.status);
+    const selectable = activeArmy && ['deployed','reserves','embarked'].includes(unit.status);
     const status = movementStatus(state, unit, actionForUnit(unit.id), refinementForUnit(unit.id));
     const selected = unit.id === selectedUnitId;
     const vitals = getLiveUnitVitals(state, unit);
