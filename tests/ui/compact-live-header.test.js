@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPrototypeWorkspace, renderPrototypeWorkspaceTools } from '../../src/ui/prototype-workspace.js';
 
-test('tabletop tools show five phase chips and retain the tools menu', () => {
+test('tabletop tools leave room for both scores and retain review access', () => {
   const html = renderPrototypeWorkspaceTools();
   assert.match(html, /battle-shell\.is-tabletop-experiment \.battle-shell__tabletop-header > \.battle-shell__phases\{display:none!important\}/);
-  assert.match(html, /class="prototype-phase-chips"/);
+  assert.doesNotMatch(html, /class="prototype-phase-chips"/);
   assert.match(html, /<details class="prototype-phase-menu"><summary aria-label="More tools">/);
-  assert.equal((html.match(/data-battle-phase-button=/g) ?? []).length, 6);
+  assert.equal((html.match(/data-battle-phase-button=/g) ?? []).length, 1);
   assert.match(html, /data-battle-phase-button="review">Game review/);
   assert.match(html, /data-movement-roster-toggle aria-controls="movement-units" aria-expanded="false" hidden>Units/);
 });
@@ -57,7 +57,7 @@ test('Movement selection keeps the phase panel closed and the roster drawer surv
   workspace.destroy();
 });
 
-test('live score moves into the visible HUD and phase chips mark the current phase', () => {
+test('live score moves into the visible HUD', () => {
   const shell = {
     attributes: {},
     setAttribute(name, value) { this.attributes[name] = value; },
@@ -67,7 +67,6 @@ test('live score moves into the visible HUD and phase chips mark the current pha
   const header = { prepend(child) { child.parentElement = this; } };
   const scoreHost = { append(child) { child.parentElement = this; } };
   const summary = { parentElement: header };
-  const chips = ['command', 'movement', 'shooting', 'charge', 'fight'].map(id => ({ id, attrs: {}, getAttribute() { return id; }, setAttribute(name, value) { this.attrs[name] = value; } }));
   const focusButton = { textContent: '', setAttribute() {} };
   const panelButton = { textContent: '', setAttribute() {} };
   const combat = {};
@@ -83,7 +82,7 @@ test('live score moves into the visible HUD and phase chips mark the current pha
   ]);
   const container = {
     querySelector(selector) { return selectors.get(selector) ?? null; },
-    querySelectorAll(selector) { return selector === '.prototype-phase-chips [data-battle-phase-button]' ? chips : []; },
+    querySelectorAll() { return []; },
     addEventListener() {},
     removeEventListener() {}
   };
@@ -105,7 +104,6 @@ test('live score moves into the visible HUD and phase chips mark the current pha
   workspace.refresh();
 
   assert.equal(summary.parentElement, scoreHost);
-  assert.deepEqual(chips.map(chip => chip.attrs['aria-pressed']), ['false', 'false', 'true', 'false', 'false']);
   assert.equal(shell.attributes['data-controls-collapsed'], 'true');
   workspace.destroy();
 });
