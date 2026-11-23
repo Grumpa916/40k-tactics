@@ -28,7 +28,7 @@ test('Overwatch records 1 CP and cannot be used twice in the same phase', () => 
   assert.throws(() => recordOverwatchUse(state, { triggerKey: offer.triggerKey, firingUnitId: 'guard', targetUnitId: 'enemy' }), /confirm|Confirm/i);
   const used = recordOverwatchUse(state, {
     triggerKey: offer.triggerKey, firingUnitId: 'guard', targetUnitId: 'enemy',
-    timingConfirmed: true, eligibilityConfirmed: true
+    timingConfirmed: true, inRangeConfirmed: true, visibilityConfirmed: true, unengagedConfirmed: true
   });
   assert.equal(used.commandPoints.p1, 2);
   assert.equal(getOverwatchOffer(used), null);
