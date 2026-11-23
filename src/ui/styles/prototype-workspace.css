@@ -541,7 +541,7 @@
   }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__footer,.combat-workspace__panel footer):has(
     :is([data-complete],[data-review-end-shooting],[data-confirm-end-shooting],[data-charge-complete],[data-fight-complete],[data-fight-confirm-end],[data-phase-end-disabled])
-  ) { padding-bottom:74px; }
+  ) { padding-bottom:126px; }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__footer,.combat-workspace__panel footer) .phase-end__primary:disabled {
     background:#233037 !important;
     border:1px solid #586b72 !important;
@@ -550,7 +550,7 @@
     box-shadow:none;
   }
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__control-scroll,.combat-workspace__scroll) {
-    scroll-padding-bottom:120px;
+    padding-bottom:130px;
   }
 }
 @media (orientation:landscape) and (min-width:1400px) {
