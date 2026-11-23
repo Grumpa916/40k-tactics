@@ -71,7 +71,9 @@ export const COMMAND_TYPES = Object.freeze({
   SET_SECONDARY_MISSION_MODE: "secondary_mission.set_mode",
   RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score",
   USE_SECONDARY_MISSION_REDRAW: "secondary_mission.use_redraw",
-  DISCARD_TACTICAL_SECONDARIES_FOR_CP: "secondary_mission.discard_for_cp"
+  DISCARD_TACTICAL_SECONDARIES_FOR_CP: "secondary_mission.discard_for_cp",
+  RECORD_OVERWATCH: "overwatch.record_use",
+  DECLINE_OVERWATCH: "overwatch.decline"
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));

@@ -38,6 +38,7 @@ import { recordCustodesKatahUse } from './custodes-katah-transitions.js';
 import { recordSpaceMarineDoctrineUse } from '../rules/space-marine-doctrines.js';
 import { recordSpaceMarineStratagemUse } from './space-marine-stratagem-transitions.js';
 import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.js";
+import { recordOverwatchUse, declineOverwatch } from "../rules/overwatch-interrupt.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordCommandPointChange } from "./command-points-ledger.js";
@@ -136,7 +137,9 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, (state, command) => setSecondaryMissionMode(state, command.payload)],
     [COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, (state, command) => recordSecondaryMissionScore(state, command.payload)],
     [COMMAND_TYPES.USE_SECONDARY_MISSION_REDRAW, (state, command) => useSecondaryMissionRedraw(state, command.payload)],
-    [COMMAND_TYPES.DISCARD_TACTICAL_SECONDARIES_FOR_CP, (state, command) => discardTacticalSecondariesForCommandPoint(state, command.payload)]
+    [COMMAND_TYPES.DISCARD_TACTICAL_SECONDARIES_FOR_CP, (state, command) => discardTacticalSecondariesForCommandPoint(state, command.payload)],
+    [COMMAND_TYPES.RECORD_OVERWATCH, (state, command) => recordOverwatchUse(state, command.payload)],
+    [COMMAND_TYPES.DECLINE_OVERWATCH, (state, command) => declineOverwatch(state, command.payload)]
   ];
 
   for (const [type, handler] of handlers) registerCommandHandler(type, handler);

@@ -52,7 +52,7 @@ Live-game feedback from the November 22 match (Custodes vs Space Marines, Inesca
 4. Embarked Impulsor fire points — Firing Deck 7, Assault-only after Advancing; open question: who takes the Hazardous roll.
 5. Map labels — attached characters (`TE2+MC` style) and upgrade-bearing Dreadnoughts (Telemann vs Contemptor Gladius). **In PR:** formation markers list each attached character, and dreadnought markers use datasheet designators plus saved Moritoi upgrade tags.
 6. Layout C objective labels — nearest-home-objective labeling disagrees with territory rules on 16 of 75 layouts.
-7. Overwatch — 1 CP step at end of opponent's Movement phase; records usage only since CP moves to Warmind.
+7. Overwatch — 1 CP step at end of opponent's Movement phase; records usage only since CP moves to Warmind. **In PR:** offered when an enemy is set up or starts or ends a move, and the record does not change CP.
 8. Full-screen map UI — part 1: layout, thin icon rails, saved panel state; part 2: remove scoring screens after Warmind role is settled. Confirmed 2026-11-23: Command Points move to Warmind as a read-only rail value, folded into part 1. Not built in the scoring-flag change.
 9. Stat card build — fixed stat row, per-faction chips, filtered map key, long-press/info-icon trigger.
 10. Compact datasheet form for manual units — Toughness, Save, Wounds, short weapon row (range, attacks, skill, strength, AP, damage); base size and keywords next.
