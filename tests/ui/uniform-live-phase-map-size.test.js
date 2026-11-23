@@ -44,7 +44,7 @@ test('Movement reserves are a compact popover on the map and retain their transf
   const html=renderMovementReserveDock(state,{selectedUnitId:'friendly',playerId:'p1'});
   assert.equal(getMapReserveUnits(state,{playerId:'p1'}).length,1);
   assert.match(html,/<details class="movement-map-reserves" data-movement-map-reserves>/);
-  assert.match(html,/<summary>Reserves · 1<\/summary>/);
+  assert.match(html,/<summary>Place units · 1 reserves · 0 embarked<\/summary>/);
   assert.match(html,/data-map-reserve-area/);
   assert.match(html,/data-map-send-reserve/);
   assert.match(html,/data-map-reserve-select="reserve"/);
