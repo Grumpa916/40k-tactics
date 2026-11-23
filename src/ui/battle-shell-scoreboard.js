@@ -1,3 +1,4 @@
+import { isManualScoringEnabled } from '../config/feature-flags.js';
 import { renderScoreReason, renderScoreTransactions } from './scoreboard-transactions.js';
 import { getCommandPointBalance } from "../engine/command-points-ledger.js";
 import { getVictoryPointScore } from "../engine/victory-points-ledger.js";
@@ -31,7 +32,7 @@ export function renderScoreAdjustOverlay(
 ) {
   const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
   if (!scorePlayer) return "";
-  const showVp = scoreAdjustKind === "both" || scoreAdjustKind === "vp";
+  const showVp = isManualScoringEnabled() && (scoreAdjustKind === "both" || scoreAdjustKind === "vp");
   const showCp = scoreAdjustKind === "both" || scoreAdjustKind === "cp";
   const current = (showVp ? '<strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong>' : '') +
     (showCp ? '<strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong>' : '');
@@ -57,10 +58,13 @@ export function renderStatusSummaryContent(state, viewedPhase) {
     const cp = getCommandPointBalance(state, player.id);
     const elapsed = formatElapsedTime(getTurnClockElapsedMs(state, player.id));
     const active = player.id === activePlayerId ? " is-active" : "";
+    const vpControl = isManualScoringEnabled()
+      ? '<button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) +
+        '" data-open-score-adjust-kind="vp" aria-label="Adjust Victory Points for ' + escapeHtml(player.name ?? player.id) + '">' + vp + ' VP</button>'
+      : '<span class="battle-shell__summary-value">' + vp + ' VP</span>';
     return '<div class="battle-shell__player-summary' + active + '">' +
       '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
-      '<button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) +
-      '" data-open-score-adjust-kind="vp" aria-label="Adjust Victory Points for ' + escapeHtml(player.name ?? player.id) + '">' + vp + ' VP</button>' +
+      vpControl +
       '<button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) +
       '" data-open-score-adjust-kind="cp" aria-label="Adjust Command Points for ' + escapeHtml(player.name ?? player.id) + '">' + cp + ' CP</button>' +
       '<button type="button" class="battle-shell__summary-time" data-toggle-turn-clock aria-label="Open turn clock"><time data-clock-player-elapsed="' +

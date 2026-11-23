@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from 'node:assert/strict';
 import { EVENT_COMPANION_MAP_CATALOG } from '../../src/data/event-companion-map-catalog.js';
 import { getBattlePrimaryMissionDefinitions } from '../../src/data/primary-mission-catalog.js';

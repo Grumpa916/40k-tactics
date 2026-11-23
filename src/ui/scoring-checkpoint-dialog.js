@@ -1,8 +1,9 @@
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES, SECONDARY_MISSION_STATUS } from '../rules/secondary-mission-lifecycle.js';
+import { isManualScoringEnabled } from '../config/feature-flags.js';
 import { renderScoringCheckpointGroups, bindScoringActionReview } from './scoring-checkpoint-review.js';
 const escapeHtml=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export function renderScoringCheckpointDialog(state,scoringReminder) {
-  if (!scoringReminder) return "";
+  if (!scoringReminder || !isManualScoringEnabled()) return "";
   const reminderPlayerId = state.activePlayer ?? state.battle?.activePlayerId ?? null;
   const tacticalDiscardCards = scoringReminder?.timing === "end-of-turn" &&
     getSecondaryMissionMode(state, reminderPlayerId) === SECONDARY_MISSION_MODES.TACTICAL && reminderPlayerId

@@ -1,5 +1,6 @@
 import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_RULE_SOURCES } from '../data/adeptus-custodes-faction-rules.js';
 import { getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
+import { isAdeptusCustodesKeywordUnit } from './custodes-keyword-eligibility.js';
 import { getCustodesKatahState } from './custodes-tactical-advisor.js';
 import { isRulesPhaseOpening } from './rules-phase-window.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
@@ -46,8 +47,11 @@ function liveStratagemTargetEligible(state, playerId, detachmentName, stratagemN
   if (root.id !== unit.id) return false;
   const keywords = formationKeywords(state, root);
   const has = keyword => keywords.some(value => value.includes(keyword));
-  if (!has('adeptus custodes')) return false;
-  if (has('anathema psykana') && !isAnathemaDetachment(detachmentName)) return false;
+  const anathemaUnit = has('anathema psykana');
+  const custodesUnit = has('adeptus custodes') && !anathemaUnit;
+  if (isAnathemaDetachment(detachmentName)) {
+    if (!anathemaUnit) return false;
+  } else if (!custodesUnit) return false;
   const anathemaTarget = {
     'Anathema Blademastery': 'vigilator',
     'Psy-Chaff Volley': 'prosecutor',
@@ -132,7 +136,7 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
       if (include && unit) {
         const keywords = formationKeywords(state, unit);
         const has = keyword => keywords.some(value => value.includes(keyword));
-        if (detachment.name === "Emperor's Chosen") include = has('adeptus custodes') && !has('anathema psykana');
+        if (detachment.name === "Emperor's Chosen") include = isAdeptusCustodesKeywordUnit(state, unit);
         if (detachment.name === 'Might of the Moritoi') include = has('dreadnought');
         if (['Lions of the Emperor', 'Grav-Assault Force'].includes(detachment.name)) {
           const required = detachment.name === 'Lions of the Emperor' ? 'terminator' : 'grav-assault';
@@ -140,6 +144,10 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
         }
         if (detachment.name === 'Lions of the Emperor' &&
             getFightEngagementState(state).engagedUnitIds.includes((getCombatFormationRoot(state, unit) ?? unit).id)) include = false;
+        if ([
+          'Shadowkeepers', 'Solar Watch', 'Aquilan Shield', 'Dread Host', 'Emissaries Imperatus',
+          "Emperor's Chosen", 'Auric Champions', 'Lions of the Emperor'
+        ].includes(detachment.name) && !isAdeptusCustodesKeywordUnit(state, unit)) include = false;
       }
       if (include) entries.push({
         ruleId: `detachment-rule:${detachment.name}`,

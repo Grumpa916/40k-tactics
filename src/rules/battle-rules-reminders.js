@@ -1,6 +1,7 @@
 import { CUSTODES_REMINDER_DEFINITIONS } from '../data/custodes-reminder-definitions.js';
 import { ADEPTUS_CUSTODES_RULE_SOURCES, ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
 import { getBattleUnitDatasheet, getBattleRosterUnit, getCombatFormationRoot } from './battle-unit-reference.js';
+import { isAdeptusCustodesKeywordUnit } from './custodes-keyword-eligibility.js';
 import { getCustodesKatahState, hasCustodesDetachment } from './custodes-tactical-advisor.js';
 import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
@@ -97,7 +98,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
           katahChoices: names.map(name=>({id:name,label:'Use '+name})),sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.officialArmyRulesPreview }));
       }
     }
-    if(focusRoot && ['shooting','fight'].includes(state.phase) && !(getBattleUnitDatasheet(state,focusRoot)?.keywords??[]).some(keyword=>['Monster','Vehicle'].includes(keyword)) && !entries.some(entry=>entry.ruleId==='captain-general')) {
+    if(focusRoot && isAdeptusCustodesKeywordUnit(state, focusRoot) && ['shooting','fight'].includes(state.phase) && !(getBattleUnitDatasheet(state,focusRoot)?.keywords??[]).some(keyword=>['Monster','Vehicle'].includes(keyword)) && !entries.some(entry=>entry.ruleId==='captain-general')) {
       const commander=(state.units??[]).find(unit=>unit.ownerId===playerId && unit.status==='deployed' && reviewedAbility(state,unit,'Captain-General (Aura)'));
       if(commander)entries.push(decorate(state,{ruleId:'captain-general-range-check',playerId,unitId:commander.id,unitName:focusRoot.name,title:'Captain-General aura · range check',kind:'unit',timing:'When attacking',effect:'Check whether this unit is within 6″ of '+commander.name+'. Eligible non-Monster/Vehicle Custodes units can re-roll Hit and Wound rolls of 1.'}));
     }
@@ -116,7 +117,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
     }
     if (ownTurn && state.phase === 'command') entries.unshift(decorate(state, {ruleId:'katah-readiness', playerId, title:'Ka’tah readiness', kind:'army', timing:'Your Command phase', effect:'Eligible units become readied at the start of your Command phase. A use spends that unit’s readiness; check the Ka’tah panel for current status.'}));
     if (hasCustodesDetachment(state, playerId, 'Guardians of the Throne')) {
-      if (state.phase === 'fight') entries.unshift(decorate(state, {ruleId:'martial-mastery', playerId, title:'Martial Mastery', kind:'army', timing:'Each eligible unit selected to fight', effect:'Choose Sustained Hits 1 or Lethal Hits for melee attacks. Check for existing Lethal/Sustained Hits on the unit or weapon before choosing.'}));
+      if (state.phase === 'fight' && (!focusRoot || isAdeptusCustodesKeywordUnit(state, focusRoot))) entries.unshift(decorate(state, {ruleId:'martial-mastery', playerId, title:'Martial Mastery', kind:'army', timing:'Each eligible Adeptus Custodes unit selected to fight', effect:'Choose Sustained Hits 1 or Lethal Hits for melee attacks. Anathema Psykana units do not have this rule. Check for existing Lethal/Sustained Hits on the unit or weapon before choosing.'}));
     }
   }
   const opponent = state.players?.find(player => player.id !== playerId);
@@ -153,7 +154,7 @@ export function getTargetDefenseReminders(state, { targetUnitId, allocationTarge
   if (getActiveGuardiansEffects(state,unit.id).some(use=>use.stratagemId==='in-auramite-clad' && use.enemyUnitId===attackerId)) {
     add('auramite-active','In Auramite Clad active','Worsen incoming AP by 1 against the recorded attacking unit only:'+apExample);
   }
-  if (Number.isFinite(ap) && ap===0 && hasCustodesDetachment(state,unit.ownerId,'Guardians of the Throne')) add('ap-zero','AP 0 weapon','Worsening AP does not change this weapon’s AP. Review the attacker’s other weapons before spending CP.',true);
+  if (Number.isFinite(ap) && ap===0 && hasCustodesDetachment(state,unit.ownerId,'Guardians of the Throne') && isAdeptusCustodesKeywordUnit(state, unit)) add('ap-zero','AP 0 weapon','Worsening AP does not change this weapon’s AP. Review the attacker’s other weapons before spending CP.',true);
   if (phase==='fight') {
     for (const use of getRecordedStratagemUses(state).filter(use=>use.stratagemId==='shield-of-honour' && use.playerId===unit.ownerId && use.contextKey===rulesContextKey(state))) {
       const protector=state.units.find(item=>item.id===use.unitId && item.status==='deployed');

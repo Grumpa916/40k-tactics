@@ -1,3 +1,4 @@
+import { isManualScoringEnabled } from '../config/feature-flags.js';
 import { scoreboardAdjustmentCommand } from './scoreboard-transactions.js';
 import { PHASES, SCREEN_FACTORIES } from './battle-screen-registry.js';
 import { createPhaseUnitSelection } from './phase-unit-selection.js';
@@ -425,7 +426,9 @@ export function createBattleShell(container, {
       scoreAdjustPlayerId = null;
       scoreAdjustCollapsed = false;
       scoreAdjustMessage = "";
-      const nextReminder = getScoringCheckpointReminder(state, {previousPhase, missionDefinitions, perspectivePlayerId});
+      const nextReminder = isManualScoringEnabled()
+        ? getScoringCheckpointReminder(state, {previousPhase, missionDefinitions, perspectivePlayerId})
+        : null;
       if (nextReminder) scoringReminder = {...nextReminder, id:++reminderSequence};
       else scoringReminder = null;
     }
@@ -540,7 +543,9 @@ export function createBattleShell(container, {
     const open = event.target?.closest?.("[data-open-score-adjust]");
     if (open && container.contains(open)) {
       event.preventDefault?.(); event.stopPropagation?.();
-      scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); scoreAdjustKind = open.getAttribute("data-open-score-adjust-kind") || "both"; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
+      const kind = open.getAttribute("data-open-score-adjust-kind") || "both";
+      if (!isManualScoringEnabled() && kind === "vp") return;
+      scoreAdjustPlayerId = open.getAttribute("data-open-score-adjust"); scoreAdjustKind = kind; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
     }
     const collapse = event.target?.closest?.("[data-toggle-score-adjust-collapse]");
     if (collapse && container.contains(collapse) && scoreAdjustPlayerId) {
@@ -814,6 +819,7 @@ export function createBattleShell(container, {
   function handlePhaseProgression(event) {
     const checkpointButton = event.target?.closest?.("[data-open-scoring-checkpoint]");
     if (checkpointButton && container.contains(checkpointButton)) {
+      if (!isManualScoringEnabled()) return;
       const state=session.getState();
       scoringReminder=getScoringCheckpointReminder(state,{previousPhase:state.phase === "movement" ? "command" : "fight",missionDefinitions,perspectivePlayerId});
       refreshPersistentPanels(); return;

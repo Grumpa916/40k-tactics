@@ -24,7 +24,7 @@ test('completion requires explicit confirmation, uses the engine, pauses clock, 
  clearCommandHandlers();registerCoreCommandHandlers();const session=createGameSession(seed()),root=fixture(),screen=createEndgameReviewScreen(root,{session});
  const original=session.getState();assert.equal(session.getState(),original);
  root.click('data-confirm-end-game');assert.equal(session.getState(),original);
- root.click('data-end-game');assert.match(root.innerHTML,/Record all final Primary/);
+ root.click('data-end-game');assert.match(root.innerHTML,/Scores come from Warmind/);assert.match(root.innerHTML,/does not calculate or award final points/);
  root.click('data-confirm-end-game');assert.equal(session.getState(),original);
  root.click('data-cancel-end-game');assert.equal(session.getState(),original);
  root.click('data-end-game');root.check(true);assert.equal(root.confirmButton.disabled,false);
@@ -54,7 +54,12 @@ test('review refreshes with saved scoring corrections and keeps the requested pe
  const root=fixture(),session=createGameSession(seed()),screen=createEndgameReviewScreen(root,{session,perspectivePlayerId:'p2'});
  assert.match(root.innerHTML,/Lessons to consider · Opponent/);
  session.replaceState({...session.getState(),victoryPoints:{p1:10,p2:10}});
- assert.match(root.innerHTML,/Recorded score is tied/);screen.destroy();
+ assert.match(root.innerHTML,/No local scoring entries were recorded/);
+ session.replaceState({...session.getState(),history:[
+  {type:'victory_points.awarded',payload:{playerId:'p1',amount:10,round:2,category:'primary',reason:'Objective'}},
+  {type:'victory_points.awarded',payload:{playerId:'p2',amount:10,round:2,category:'primary',reason:'Objective'}}
+ ]});
+ assert.match(root.innerHTML,/Recorded score is tied/);assert.match(root.innerHTML,/Scoring entries/);screen.destroy();
 });
 
 test('deeper review renders escaped evidence, stable duplicate labels and missing forecasts',()=>{

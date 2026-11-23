@@ -15,9 +15,14 @@ export function renderEndgameReview(state, { playerId, confirmEnd = false, messa
   const playerName=id=>review.players.find(p=>p.id===id)?.name ?? id;
   const totalsKnown=review.players.length===2 && review.players.every(p=>p.total!=null);
   const [first,second]=review.players;
-  const result=totalsKnown ? first.total===second.total ? 'Recorded score is tied.' : `${first.total>second.total?first.name:second.name} ${review.complete?'finished ahead':'leads'} by ${Math.abs(first.total-second.total)} recorded VP.` : 'A complete recorded score is not available.';
+  const hasLocalScores=review.scores.length>0;
+  const result=!hasLocalScores
+    ? (totalsKnown ? 'Saved totals are shown. No local scoring entries were recorded. Scores come from Warmind.' : 'No local score was recorded. Scores come from Warmind.')
+    : totalsKnown ? first.total===second.total ? 'Recorded score is tied.' : `${first.total>second.total?first.name:second.name} ${review.complete?'finished ahead':'leads'} by ${Math.abs(first.total-second.total)} recorded VP.` : 'A complete recorded score is not available.';
   const swing=review.largestSwing;
-  const scoreRows=review.players.map(p=>row([p.name,num(p.total),num(p.categories.primary),num(p.categories.secondary),num(p.categories.other),num(p.categories.adjustment),num(p.unallocated)]));
+  const scoreRows=review.players.map(p=>hasLocalScores
+    ? row([p.name,num(p.total),num(p.categories.primary),num(p.categories.secondary),num(p.categories.other),num(p.categories.adjustment),num(p.unallocated)])
+    : row([p.name,num(p.total),'—','—','—','—','—']));
   const roundRows=review.rounds.map(r=>row([r.round == null?'Unknown':r.round===0?'Setup':r.round,...r.players.map(p=>p.recorded?num(p.total):'—')]));
   const unitTables=review.players.map(p=>{
     const units=review.units.filter(u=>u.ownerId===p.id);
@@ -27,14 +32,14 @@ export function renderEndgameReview(state, { playerId, confirmEnd = false, messa
   }).join('');
   const endControls=state.battle?.status==='active'
     ? confirmEnd
-      ? '<section class="endgame-review__confirm" aria-label="Confirm end of game"><h3>Finish this game?</h3><p>Record all final Primary, Secondary and other VP before confirming. This marks the battle complete and pauses the clock; it does not calculate or award final points.</p><label><input type="checkbox" data-final-score-confirmed> I have checked both players’ final scores.</label><div><button type="button" data-confirm-end-game disabled>Confirm end game</button><button type="button" data-cancel-end-game>Keep playing</button></div></section>'
+      ? '<section class="endgame-review__confirm" aria-label="Confirm end of game"><h3>Finish this game?</h3><p>This marks the battle complete and pauses the clock. It does not calculate or award final points. Scores come from Warmind.</p><label><input type="checkbox" data-final-score-confirmed> I have checked both players’ final scores.</label><div><button type="button" data-confirm-end-game disabled>Confirm end game</button><button type="button" data-cancel-end-game>Keep playing</button></div></section>'
       : '<button type="button" data-end-game>End game…</button>'
     : '';
   return `<link rel="stylesheet" href="${new URL('./styles/endgame-review.css',import.meta.url).href}"><article class="endgame-review" data-endgame-review>
     <header><p class="endgame-review__eyebrow">Tactical Advisor · recorded evidence</p><h2>${review.complete?'Endgame review':'Game so far'}</h2><p>${review.complete?'Battle marked complete. Review the recorded result and lessons below.':'This is a provisional review. Opening it does not end the battle.'}</p><div class="endgame-review__actions">${!review.complete?'<button type="button" data-return-current-phase>Return to game</button>':''}${endControls}</div></header>
     ${message?`<p role="alert">${esc(message)}</p>`:''}
     <section><h3>Recorded score</h3><p><strong>${esc(result)}</strong></p>${table('VP totals and available breakdown',['Player','Total','Primary','Secondary','Other awards','Adjustments','Unallocated'],scoreRows)}<p>Other awards include uncategorised VP. Unallocated VP are the difference between the saved total and effective history; they are not assigned to a mission.</p></section>
-    <section><h3>Score by round</h3>${roundRows.length?table('Effective recorded VP, with undone entries excluded',['Round',...review.players.map(p=>p.name)],roundRows):'<p>No scoring history recorded yet.</p>'}<p>— means no entry for that player and round, not a confirmed zero.</p></section>
+    <section><h3>Score by round</h3>${hasLocalScores&&roundRows.length?table('Effective recorded VP, with undone entries excluded',['Round',...review.players.map(p=>p.name)],roundRows):'<p>No local round scores were recorded. Scores come from Warmind.</p>'}${hasLocalScores?'<p>— means no entry for that player and round, not a confirmed zero.</p>':''}</section>
     <section><h3>Lessons to consider · ${esc(playerName(review.playerId) ?? 'your army')}</h3>${review.lessons.length?review.lessons.map(l=>`<article class="endgame-review__lesson"><strong>${esc(l.kind)}</strong><p>${esc(l.evidence)}</p><p>${esc(l.advice)}</p>${l.eventIndices?.length?`<p>Evidence: ${l.eventIndices.map((index,i)=>`<a href="#endgame-event-${index}">entry ${i+1}</a>`).join(' · ')}</p>`:''}</article>`).join(''):'<p>Not enough recorded evidence for specific coaching yet. No mistakes inferred.</p>'}</section>
     ${renderEndgameEvidence(review)}
     ${renderEndgameContext(review)}
@@ -45,8 +50,8 @@ export function renderEndgameReview(state, { playerId, confirmEnd = false, messa
       if (!snaps.length) return '<p>No decision snapshots recorded.</p>';
       return '<ol>' + snaps.map(s => `<li><strong>R${s.round ?? '?'} · ${esc(s.phase ?? '')}</strong> · ${esc(s.unitName)} · ${esc(s.actionType)}${s.weaponName ? ' · ' + esc(s.weaponName) : ''}${s.advisorNote ? ' · ' + esc(s.advisorNote) : ''}</li>`).join('') + '</ol>';
     })()}</details>
-    <details><summary>Scoring entries</summary>${review.scores.length?table('Effective awards and manual adjustments',['When','Player','Category','VP','Reason'],review.scores.map(s=>row([when(s),playerName(s.playerId),s.category,num(s.amount),s.reason]))):'<p>No scoring entries recorded.</p>'}</details>
-    <section><h3>What this review can establish</h3><p>${review.coverage.attacks} attack entries · ${review.coverage.comparisons} saved damage comparisons · ${review.coverage.scoreEntries} effective score entries.</p><ul>${review.evidenceGaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></section>
+    ${hasLocalScores?`<details><summary>Scoring entries</summary>${table('Effective awards and manual adjustments',['When','Player','Category','VP','Reason'],review.scores.map(s=>row([when(s),playerName(s.playerId),s.category,num(s.amount),s.reason])))}</details>`:'<p data-warmind-scores>Scores come from Warmind. A Warmind battle-report importer is planned and is not built in this app.</p>'}
+    <section><h3>What this review can establish</h3><p>${review.coverage.attacks} attack entries · ${review.coverage.comparisons} saved damage comparisons.${hasLocalScores?` ${review.coverage.scoreEntries} saved local score entries remain readable.`:' Local score entry is not required.'}</p><ul>${review.evidenceGaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></section>
   </article>`;
 }
 

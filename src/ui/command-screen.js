@@ -1,3 +1,4 @@
+import { isManualScoringEnabled } from "../config/feature-flags.js";
 import { getScoringOpportunityAdvisories } from "../rules/tactical-scoring-opportunities.js";
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { getCommandPointBalance, getCommandPointHistory } from "../engine/command-points-ledger.js";
@@ -817,7 +818,7 @@ export function createCommandScreen(container, {
         ? renderCustodesDetachmentStratagemControls(state,{playerId,stratagemId:'unleash-the-lions'}) : '') +
       '<details class="command-tabletop-section"' + (secondaryMissionMode === 'tactical' && tacticalDrawCount < 2 ? ' open' : '') + '><summary>Secondaries</summary>' +
       secondaryMissionManager + secondaryRedrawMarkup + '</details>' +
-      '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details></div>';
+      (isManualScoringEnabled() ? '<details class="command-tabletop-section"><summary>Scoring review</summary><section>' + scoring + '</section>' + checkpointReview + '</details>' : '') + '</div>';
     if (layoutMode === "tabletop") {
       const currentPlayerId = state.activePlayer ?? state.battle?.activePlayerId;
       const selectableIds = [...new Set((state.units ?? [])
@@ -865,7 +866,7 @@ export function createCommandScreen(container, {
       '<section><h2>Live battlefield map</h2>' +
       renderBattlefieldMap(state, { mode: "live", perspectivePlayerId: perspectivePlayerId ?? playerId }) +
       '<p>Tap an objective label on the map to cycle Uncontrolled → My Army → Opponent → Contested.</p></section>' +
-      '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview + '</main>';
+      (isManualScoringEnabled() ? '<section><h2>Command-phase scoring review</h2>' + scoring + '</section>' + checkpointReview : '') + '</main>';
     restoreView();
   }
 

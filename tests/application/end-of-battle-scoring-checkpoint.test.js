@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from 'node:assert/strict';
 import { getScoringCheckpointReminder } from '../../src/application/scoring-checkpoint-reminders.js';
 import { renderScoringCheckpointDialog } from '../../src/ui/scoring-checkpoint-dialog.js';

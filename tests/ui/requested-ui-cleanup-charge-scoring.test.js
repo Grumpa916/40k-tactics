@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { recordChargeDeclined } from '../../src/engine/charge-transitions.js';
