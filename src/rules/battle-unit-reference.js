@@ -1,4 +1,5 @@
 import { ARMY_UNIT_CATALOG } from "../data/army-unit-catalog.js";
+import { isUserEnteredUnit, withResolvedUnitContent } from "./imported-roster-report.js";
 
 function normalizeWeaponName(value) {
   return String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -21,14 +22,17 @@ function catalogDatasheetFor({ datasheetId = null, name = null, faction = null }
 }
 
 export function getBattleRosterUnit(state, unit) {
-  const rosterUnit = state?.armyRosters?.[unit?.ownerId]?.units?.find(item => item.id === unit?.metadata?.rosterUnitId) ?? null;
-  if (!rosterUnit || rosterUnit.datasheet) return rosterUnit;
+  const roster = state?.armyRosters?.[unit?.ownerId];
+  const rosterUnit = roster?.units?.find(item => item.id === unit?.metadata?.rosterUnitId) ?? null;
+  if (!rosterUnit) return null;
+  const resolved = withResolvedUnitContent(rosterUnit, roster?.units ?? []);
+  if (resolved.datasheet || isUserEnteredUnit(resolved)) return resolved;
   const datasheet = catalogDatasheetFor({
-    datasheetId: rosterUnit.datasheetId ?? unit?.metadata?.datasheetId,
-    name: rosterUnit.name ?? unit?.name,
-    faction: state?.armyRosters?.[unit?.ownerId]?.faction
+    datasheetId: resolved.datasheetId ?? unit?.metadata?.datasheetId,
+    name: resolved.name ?? unit?.name,
+    faction: roster?.faction
   });
-  return datasheet ? { ...rosterUnit, datasheet } : rosterUnit;
+  return datasheet ? { ...resolved, datasheet } : resolved;
 }
 
 function findBattleUnitForRosterId(state, ownerId, rosterUnitId) {

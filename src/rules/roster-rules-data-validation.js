@@ -4,6 +4,7 @@ import { validateWargearLoadout } from "./wargear-loadout-validation.js";
 import { hydrateReviewedFixedCustodesLoadout } from "./custodes-fixed-wargear.js";
 import { getUnitUpgradeCost, validateRosterUnitUpgrades } from "./custodes-unit-upgrades.js";
 import { resolveBuilderUnitCost } from "./army-builder-cost.js";
+import { buildImportedRosterReport, isUserEnteredUnit } from "./imported-roster-report.js";
 
 function clone(value) {
   if (typeof structuredClone === "function") return structuredClone(value);
@@ -98,9 +99,27 @@ export function assessRosterRulesData(roster) {
   return { status: "review-required", current, saved, reasons };
 }
 
+function attachImportReport(roster, sourceRoster, updatedAt) {
+  return {
+    ...roster,
+    importReport: buildImportedRosterReport(sourceRoster, {
+      source: "refresh",
+      assessCost: assessSavedUnitCost,
+      generatedAt: updatedAt
+    })
+  };
+}
+
 export function revalidateRosterRulesData(roster, { updatedAt = roster?.updatedAt ?? null } = {}) {
   const current = getRulesDataRevisionForFaction(roster?.faction);
-  if (!current) return { status: "untracked", roster: clone(roster), issues: [], warnings: [] };
+  if (!current) {
+    return {
+      status: "untracked",
+      roster: attachImportReport(clone(roster), roster, updatedAt),
+      issues: [],
+      warnings: ["No tracked rules revision for this faction. User-entered units were not compared to a catalog."]
+    };
+  }
   const candidates = new Map(findArmyUnitCandidates({ faction: roster?.faction }).map((candidate) => [candidate.id, candidate]));
   const issues = [];
   const warnings = [];
@@ -108,8 +127,7 @@ export function revalidateRosterRulesData(roster, { updatedAt = roster?.updatedA
 
   for (const sourceUnit of roster?.units ?? []) {
     const unit = clone(sourceUnit);
-    if (!unit.datasheetId) {
-      warnings.push(`${unit.name}: manual entry has no catalog datasheet and was not revalidated.`);
+    if (isUserEnteredUnit(unit) || !unit.datasheetId) {
       refreshedUnits.push(unit);
       continue;
     }
@@ -173,17 +191,23 @@ export function revalidateRosterRulesData(roster, { updatedAt = roster?.updatedA
 
   issues.push(...validateRosterUnitUpgrades({...roster,units:refreshedUnits}));
   if (issues.length) {
-    return { status: "review-required", roster: clone(roster), issues, warnings, current: clone(current) };
+    return {
+      status: "review-required",
+      roster: attachImportReport(clone(roster), roster, updatedAt),
+      issues,
+      warnings,
+      current: clone(current)
+    };
   }
 
   return {
     status: "current",
-    roster: {
+    roster: attachImportReport({
       ...clone(roster),
       units: refreshedUnits,
       rulesDataRevision: createRulesDataRevisionStamp(roster.faction),
       updatedAt
-    },
+    }, roster, updatedAt),
     issues: [],
     warnings,
     current: clone(current)

@@ -1,3 +1,5 @@
+import { reassignSharedUnitContent } from "../rules/imported-roster-report.js";
+
 export const ARMY_ROSTER_SCHEMA_VERSION = 1;
 
 function requireText(value, label) {
@@ -36,6 +38,8 @@ export function createArmyRoster({
   units = [],
   notes = "",
   rulesDataRevision = null,
+  sharedUnitContent = null,
+  importReport = null,
   createdAt = null,
   updatedAt = createdAt
 } = {}) {
@@ -53,6 +57,8 @@ export function createArmyRoster({
     units: units.map(normalizeUnit),
     notes: String(notes ?? ""),
     rulesDataRevision: rulesDataRevision && typeof rulesDataRevision === "object" ? cloneData(rulesDataRevision) : null,
+    sharedUnitContent: sharedUnitContent && typeof sharedUnitContent === "object" ? cloneData(sharedUnitContent) : null,
+    importReport: importReport && typeof importReport === "object" ? cloneData(importReport) : null,
     createdAt,
     updatedAt
   };
@@ -89,6 +95,7 @@ export function removeUnitFromRoster(roster, unitId, { updatedAt = roster?.updat
   if (!roster.units.some((item) => item.id === unitId)) {
     throw new RangeError("Roster unit not found: " + unitId);
   }
+  const removed = cloneData(roster.units.find((item) => item.id === unitId));
   const units = cloneData(roster.units)
     .filter((item) => item.id !== unitId)
     .map((item) => {
@@ -100,7 +107,9 @@ export function removeUnitFromRoster(roster, unitId, { updatedAt = roster?.updat
       }
       return copy;
     });
-  return { ...cloneData(roster), units, updatedAt };
+  const next = { ...cloneData(roster), units, updatedAt };
+  if (roster.sharedUnitContent) next.sharedUnitContent = reassignSharedUnitContent(roster.sharedUnitContent, units, removed);
+  return next;
 }
 
 export function renameArmyRoster(roster, name, { updatedAt = roster?.updatedAt ?? null } = {}) {
@@ -134,9 +143,17 @@ export function remapRosterUnitIds(roster, { createId } = {}) {
     if (Array.isArray(unit.attachedLeaderIds)) {
       copy.attachedLeaderIds = unit.attachedLeaderIds.map((id) => idMap.get(id) ?? id);
     }
+    if (unit.contentOwnerId) copy.contentOwnerId = idMap.get(unit.contentOwnerId) ?? unit.contentOwnerId;
     return copy;
   });
-  return { ...cloneData(roster), units };
+  const sharedUnitContent = roster.sharedUnitContent && typeof roster.sharedUnitContent === "object"
+    ? Object.fromEntries(Object.entries(roster.sharedUnitContent).map(([signature, entry]) => [signature, {
+      ...cloneData(entry),
+      ownerUnitId: idMap.get(entry.ownerUnitId) ?? entry.ownerUnitId,
+      instanceIds: (entry.instanceIds ?? []).map((unitId) => idMap.get(unitId) ?? unitId)
+    }]))
+    : roster.sharedUnitContent ?? null;
+  return { ...cloneData(roster), units, sharedUnitContent };
 }
 
 export function deleteArmyRoster(rosters, rosterId) {

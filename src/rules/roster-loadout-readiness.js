@@ -1,6 +1,7 @@
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { validateWargearLoadout } from './wargear-loadout-validation.js';
 import { hydrateReviewedFixedCustodesLoadout } from './custodes-fixed-wargear.js';
+import { isUserEnteredUnit } from './imported-roster-report.js';
 
 const INVALID_STATUSES = new Set(['source-invalid', 'rules-invalid', 'unverified']);
 
@@ -21,6 +22,16 @@ function invalidAssessment(unit, { reviewedRules, fallback }) {
 }
 
 export function assessUnitLoadoutReadiness(unit) {
+  if (isUserEnteredUnit(unit)) {
+    return Object.freeze({
+      unitId: unit?.id ?? null,
+      name: unit?.name ?? 'Unit',
+      status: 'user-entered',
+      blocking: false,
+      reviewedRules: false,
+      reason: 'User-entered unit is excluded from catalog loadout checks.'
+    });
+  }
   unit = hydrateReviewedFixedCustodesLoadout(unit);
   const ruleSet = getTyranidWargearRuleSet(unit?.datasheetId);
   const recordedStatus = unit?.loadoutValidation?.status ?? null;
@@ -138,5 +149,6 @@ export function loadoutReadinessLabel(unit) {
   if (assessment.status === 'complete') return 'Loadout ready';
   if (assessment.status === 'needs-confirmation') return 'Loadout needs confirmation';
   if (assessment.status === 'invalid') return 'Loadout invalid';
+  if (assessment.status === 'user-entered') return 'User-entered';
   return 'Loadout rules coverage pending';
 }

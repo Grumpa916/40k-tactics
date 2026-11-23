@@ -6,9 +6,12 @@ import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout, b
 import { hydrateReviewedFixedCustodesLoadout } from '../rules/custodes-fixed-wargear.js';
 import { detectImportMoritoiUpgrade, reconcileUpgradePoints } from '../rules/custodes-unit-upgrades.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
+import { assessSavedUnitCost } from '../rules/roster-rules-data-validation.js';
+import { buildImportedRosterReport, foldDuplicateUnitContent, isUserEnteredUnit } from '../rules/imported-roster-report.js';
 
 const pointsPattern = /\b(\d[\d,]*)\s*(?:pts?\.?|points?)\b/i;
 const sections = /^(?:ATTACHED UNITS|CHARACTERS|BATTLELINE|OTHER DATASHEETS|DEDICATED TRANSPORTS|ALLIED UNITS)$/i;
+const metadataLine = /^(?:army roster|army list|warhammer|battle forge|battle size|strike force|incursion|onslaught|total|grand total|points limit|force disposition|exported (?:from|with)|configuration|game type|primary mission|secondary|deployment|show\b|hide\b|take and hold|search and destroy|purge the foe|priority assets|linchpin|scorched earth|supply drop|hidden supplies|the ritual)\b/i;
 function normalize(value) {
  return String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -17,7 +20,31 @@ function getPoints(line) {
  return match ? Number(match[1].replaceAll(',', '')) : null;
 }
 function headerName(line) {
- return normalize(line.replace(/\(?\d[\d,]*\s*(?:pts?\.?|points?)\)?/gi, '').replace(/^\s*\d+\s*[x×]\s*/i, '').replace(/\s*[x×]\s*\d+\s*$/i, '').replace(/\b\d+\s+models?\b/i, ''));
+ return normalize(displayHeaderName(line));
+}
+function displayHeaderName(line) {
+ return String(line ?? '')
+  .replace(/\(\s*\d[\d,]*\s*(?:pts?\.?|points?)\s*\)/gi, '')
+  .replace(/\b\d[\d,]*\s*(?:pts?\.?|points?)\b/gi, '')
+  .replace(/^\s*\d+\s*[x×]\s*/i, '')
+  .replace(/\s*[x×]\s*\d+\s*$/i, '')
+  .replace(/\b\d+\s+models?\b/i, '')
+  .replace(/[·•—–-]+\s*$/g, '')
+  .replace(/\s{2,}/g, ' ')
+  .trim();
+}
+function explicitModelCount(line) {
+ const match = String(line ?? '').match(/\b(\d+)\s+models?\b/i) ?? String(line ?? '').match(/^\s*(\d+)\s*[x×]\s*/i);
+ return match ? Number(match[1]) : null;
+}
+function isRoleHeading(line) {
+ if (getPoints(line) != null || explicitModelCount(line) != null || /[a-z]/.test(line)) return false;
+ return /^[A-Z0-9][A-Z0-9 /&'-]{1,40}$/.test(line);
+}
+function lineLooksLikeListTitle(line, lines) {
+ if (getPoints(line) == null || explicitModelCount(line) != null) return false;
+ return lines.map(item => item.trim()).filter(Boolean).slice(1)
+  .some(item => getPoints(item) != null || sections.test(item) || /^Attached unit\s+\d+$/i.test(item));
 }
 function modelCount(line, candidate) {
  const match = line.match(/\b(\d+)\s+models?\b/i) ?? line.match(/^\s*(\d+)\s*[x×]\s*/i);
@@ -171,19 +198,42 @@ function finalizeLoadoutValidation(unit) {
   : reviewed;
 }
 
+const NON_FACTION_LINE = /^(?:strike force|incursion|onslaught|battle size|take and hold|search and destroy|purge the foe|priority assets|linchpin|scorched earth|supply drop|hidden supplies|the ritual|deployment|configuration|show|hide|exported|attached unit|characters|battleline|other datasheets|dedicated transports|allied units|errors|detachment)\b/i;
+
+/** Best-effort faction for an opponent paste when the player did not choose one. */
+export function inferWarhammerAppFaction(text) {
+ const factions = [...new Set(ARMY_UNIT_CATALOG.map(unit => unit.faction).filter(Boolean))];
+ const sample = String(text ?? '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(0, 12);
+ let best = null, bestScore = 0;
+ for (const rawLine of sample) {
+  const line = normalize(rawLine);
+  for (const faction of factions) {
+   const key = normalize(faction);
+   const score = line === key ? 3 : line.startsWith(key + ' ') ? 2 : line.includes(' ' + key + ' ') ? 1 : 0;
+   if (score > bestScore) { best = faction; bestScore = score; }
+  }
+ }
+ if (best) return best;
+ for (const line of sample) {
+  if (getPoints(line) != null || NON_FACTION_LINE.test(line) || line.length < 3 || line.length > 40 || /\d/.test(line)) continue;
+  return line;
+ }
+ return null;
+}
+
 /** Read unit blocks so model, weapon and attachment lines never become extra units. */
 export function importWarhammerAppRoster({text, faction, name, pointsLimit = null, id, createdAt = null, updatedAt = createdAt} = {}) {
  if (typeof text !== 'string' || !text.trim()) throw new TypeError('Paste a Warhammer App army list first.');
  const selectedFaction = String(faction ?? '').trim();
  if (!selectedFaction) throw new TypeError('Choose the roster faction before importing.');
  const available = ARMY_UNIT_CATALOG.filter(unit => unit.faction.toLowerCase() === selectedFaction.toLowerCase());
- if (!available.length) throw new Error('The catalog has no unit names for ' + selectedFaction + ' yet.');
  const lines = text.split(/\r?\n/);
  const firstLine = lines.find(line => line.trim())?.trim() ?? '';
  const units = [], unrecognized = [], warnings = [], sourceErrors = [];
  const groups = new Map();
  const modelGroupTotals = new Map();
- let current = null, group = null, detachment = null, inErrors = false;
+ let current = null, group = null, detachment = null, inErrors = false, inUnitSection = false, sectionKind = '';
+ let factionTag = selectedFaction;
  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
   const raw = lines[lineIndex];
   const line = raw.trim();
@@ -193,8 +243,18 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    continue;
   }
   const groupMatch = line.match(/^Attached unit\s+(\d+)$/i);
-  if (groupMatch) { group = groupMatch[1]; current = null; inErrors = false; groups.set(group, []); continue; }
-  if (sections.test(line)) { group = null; current = null; inErrors = false; continue; }
+  if (groupMatch) {
+   group = groupMatch[1]; current = null; inErrors = false; inUnitSection = true; sectionKind = 'attached';
+   factionTag = selectedFaction; groups.set(group, []); continue;
+  }
+  if (/^ALLIED UNITS$/i.test(line)) {
+   group = null; current = null; inErrors = false; inUnitSection = true; sectionKind = 'allied';
+   factionTag = selectedFaction; continue;
+  }
+  if (sections.test(line)) {
+   group = null; current = null; inErrors = false; inUnitSection = true; sectionKind = 'core';
+   factionTag = selectedFaction; continue;
+  }
   if (inErrors) {
    const errorText = line.replace(/^[•◦*]\s*/, '').trim();
    if (errorText) sourceErrors.push(errorText);
@@ -203,6 +263,12 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  if (/^[•◦·*]/.test(line) || /^\s+/.test(raw)) {
    if (!current) continue;
    current.notes += '\n' + raw;
+   const factionBullet = line.match(/^[•◦·*]\s*Faction\s*[:–-]\s*(.+)$/i);
+   if (factionBullet) {
+    current.factionTag = factionBullet[1].trim();
+    if (current.dataSource) current.dataSource.factionTag = current.factionTag;
+    continue;
+   }
    const role = line.match(/Attached as:\s*(Leader|Bodyguard)\b/i);
    if (role) current.importedAttachmentRole = role[1].toLowerCase();
    if (/^[•*]\s*Warlord$/i.test(line)) current.isWarlord = true;
@@ -229,15 +295,49 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    detachment = line.replace(/^(?:army )?detachment\s*[:–-]\s*/i, '').replace(/\s*\(\d+\s+Detachment Points?\)/i, '').trim();
    current = null; continue;
   }
-  if (/^(?:army roster|army list|warhammer|battle forge|battle size|strike force|incursion|onslaught|total|grand total|points limit|force disposition|exported (?:from|with))\b/i.test(line)) { current = null; continue; }
+  if (metadataLine.test(line) || /^(?:warlord|enhancements?)$/i.test(line)) { current = null; continue; }
+  if (isRoleHeading(line)) {
+   if (normalize(line) !== normalize(selectedFaction)) {
+    group = null; inUnitSection = true; sectionKind = 'core'; factionTag = selectedFaction;
+   }
+   current = null; continue;
+  }
+  if (line === firstLine && lineLooksLikeListTitle(line, lines)) { current = null; continue; }
+  if (normalize(line) === normalize(selectedFaction)) { current = null; continue; }
+  const explicitFaction = line.match(/^(?:faction|ally faction|allied faction)\s*[:–-]\s*(.+)$/i);
+  if (explicitFaction) {
+   factionTag = explicitFaction[1].replace(/\s*\([^)]*\)\s*$/, '').trim() || factionTag;
+   current = null; continue;
+  }
+  if (sectionKind === 'allied' && getPoints(line) == null && explicitModelCount(line) == null) {
+   const next = nextNonblankRaw(lines, lineIndex).trim();
+   if ((getPoints(next) != null || explicitModelCount(next) != null) && displayHeaderName(line)) {
+    factionTag = displayHeaderName(line);
+    current = null; continue;
+   }
+  }
   const importedName=headerName(line);
   // Match only explicitly reviewed aliases; never guess a different
   // armour variant or silently substitute a Gravis Calgar datasheet.
   const candidate = available.find(unit => normalize(unit.name) === importedName ||
     (unit.importAliases ?? []).some(alias => normalize(alias) === importedName));
   if (!candidate) {
-   if (getPoints(line) != null && line !== firstLine) unrecognized.push(line);
-   current = null; continue;
+   const shaped = Boolean(displayHeaderName(line)) && (inUnitSection || getPoints(line) != null || explicitModelCount(line) != null);
+   const counted = explicitModelCount(line);
+   if (!shaped || (counted != null && (!Number.isInteger(counted) || counted < 1 || counted > 500))) {
+    if (getPoints(line) != null && line !== firstLine) unrecognized.push(line);
+    current = null; continue;
+   }
+   current = {id: id + '-unit-' + (units.length + 1), name: displayHeaderName(line),
+    modelCount: counted ?? 1, points: getPoints(line), pointsOptions: [], notes: line,
+    datasheet: null, datasheetId: null, factionTag,
+    equippedWargear: [], equippedWeapons: [], unmatchedWargear: [],
+    dataSource: {status: 'manual-entry', origin: 'import-unmatched', label: 'User-entered', factionTag,
+     rosterImport: 'warhammer-app-text'}};
+   unrecognized.push(line);
+   units.push(current);
+   if (group) groups.get(group).push(current);
+   continue;
   }
   const models = modelCount(line, candidate);
   if (!Number.isInteger(models) || models < 1 || models > 500) { unrecognized.push(line); current = null; continue; }
@@ -245,18 +345,18 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
     (candidate.importAliases ?? []).some(alias => normalize(alias) === importedName);
   current = {id: id + '-unit-' + (units.length + 1),
    name: usedVariantAlias ? candidate.officialDatasheetName : candidate.name, modelCount: models,
-   points: getPoints(line), pointsOptions: candidate.pointsOptions ?? [], notes: line,
+   points: getPoints(line), pointsOptions: candidate.pointsOptions ?? [], notes: line, factionTag,
    datasheet: candidate.datasheet ? structuredClone(candidate.datasheet) : null, datasheetId: candidate.id,
    dataSource: {status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
     reviewedAt: candidate.reviewedAt ?? null, pointsSourceName: candidate.pointsSourceName ?? null,
     pointsSourceUrl: candidate.pointsSourceUrl ?? null, rulesDataRevisionId: candidate.rulesDataRevisionId ?? null,
-    officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? 'pending', rosterImport: 'warhammer-app-text'}};
+    officialRulesCrossCheck: candidate.officialRulesCrossCheck ?? 'pending', rosterImport: 'warhammer-app-text', factionTag}};
   units.push(current);
   if (group) groups.get(group).push(current);
  }
- if (!units.length) throw new Error('No unit names matched the ' + selectedFaction + ' catalog. Check the faction and export text.');
+ if (!units.length) throw new Error('No unit lines found in the export. Check the faction and pasted text.');
  for (const unit of units) {
-  if (unit.points == null) unit.points = resolveInitialUnitPoints(available.find(c => c.id === unit.datasheetId), unit.modelCount);
+  if (unit.points == null && unit.datasheetId) unit.points = resolveInitialUnitPoints(available.find(c => c.id === unit.datasheetId), unit.modelCount);
  }
  for (const [number, members] of groups) {
   const leaders = members.filter(u => u.importedAttachmentRole === 'leader');
@@ -269,16 +369,22 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  attachSourceValidationErrors(units, sourceErrors);
  units.forEach(hydrateReviewedFixedEquipment);
  units.forEach((unit,index)=>{units[index]=hydrateReviewedFixedCustodesLoadout(unit);});
- units.forEach(finalizeLoadoutValidation);
+ units.forEach(unit => { if (!isUserEnteredUnit(unit)) finalizeLoadoutValidation(unit); });
  for(let index=0;index<units.length;index++){
    if(units[index].unitUpgrades?.length)units[index]=reconcileUpgradePoints(units[index]);
  }
+ const manualUnits = units.filter(isUserEnteredUnit);
+ if (!available.length) warnings.push(selectedFaction + ' has no reviewed catalog. Every imported unit is user-entered and unverified.');
+ else if (manualUnits.length && manualUnits.length === units.length) warnings.push('No unit names matched the ' + selectedFaction + ' catalog. The list was imported as user-entered units.');
+ else if (manualUnits.length) warnings.push(manualUnits.length + ' unit line(s) were not in the ' + selectedFaction + ' catalog and were kept as user-entered units.');
  warnings.push(...sourceErrors.map(error => 'Warhammer App export: ' + error));
  const declaredPoints = getPoints(firstLine);
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
+ const sharedUnitContent = foldDuplicateUnitContent(units);
+ const importReport = buildImportedRosterReport({faction: selectedFaction, units}, {source: 'import', assessCost: assessSavedUnitCost, generatedAt: createdAt});
  const roster = createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment, units,
   notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text,
-  rulesDataRevision: createRulesDataRevisionStamp(selectedFaction), createdAt, updatedAt});
- return {roster, unrecognized, warnings, sourceErrors, wargearAudit: summarizeWargearAudit(roster), declaredPoints, totalPoints};
+  rulesDataRevision: createRulesDataRevisionStamp(selectedFaction), sharedUnitContent, importReport, createdAt, updatedAt});
+ return {roster, unrecognized, warnings, sourceErrors, wargearAudit: summarizeWargearAudit(roster), declaredPoints, totalPoints, importReport: roster.importReport};
 }
