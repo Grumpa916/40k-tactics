@@ -44,6 +44,7 @@ import { recordFightActivation, completeFightPhase } from "./fight-transitions.j
 import { recordCommandPointChange } from "./command-points-ledger.js";
 import { adjustVictoryPoints, recordVictoryPointsAward, undoLatestVictoryPointsAward } from "./victory-points-ledger.js";
 import { recordSecondaryMissionScore } from "./secondary-mission-scoring.js";
+import { correctSecondaryMissionScore } from "./secondary-score-correction.js";
 import { useSecondaryMissionRedraw } from "./secondary-mission-redraw.js";
 import { discardTacticalSecondariesForCommandPoint } from "./tactical-secondary-discard.js";
 import { recordBattleShockTest } from "./battle-shock-transitions.js";
@@ -136,6 +137,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RETURN_SECONDARY_MISSION, (state, command) => releaseSecondaryMissionSelection(state, command.payload)],
     [COMMAND_TYPES.SET_SECONDARY_MISSION_MODE, (state, command) => setSecondaryMissionMode(state, command.payload)],
     [COMMAND_TYPES.RECORD_SECONDARY_MISSION_SCORE, (state, command) => recordSecondaryMissionScore(state, command.payload)],
+    [COMMAND_TYPES.CORRECT_SECONDARY_MISSION_SCORE, (state, command) => correctSecondaryMissionScore(state, command.payload)],
     [COMMAND_TYPES.USE_SECONDARY_MISSION_REDRAW, (state, command) => useSecondaryMissionRedraw(state, command.payload)],
     [COMMAND_TYPES.DISCARD_TACTICAL_SECONDARIES_FOR_CP, (state, command) => discardTacticalSecondariesForCommandPoint(state, command.payload)],
     [COMMAND_TYPES.RECORD_OVERWATCH, (state, command) => recordOverwatchUse(state, command.payload)],
