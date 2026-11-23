@@ -3,12 +3,14 @@ import { unitStats } from './army-unit-details.js';
 import { findArmyUnitCandidates } from '../data/army-unit-catalog.js';
 import { loadoutReadinessLabel } from '../rules/roster-loadout-readiness.js';
 import { getUnitUpgradeNames } from '../rules/custodes-unit-upgrades.js';
+import { isUserEnteredUnit, withResolvedUnitContent } from '../rules/imported-roster-report.js';
 
-function resolveRosterUnit(unit, faction = null) {
- if (unit?.datasheet || !faction) return unit;
- const candidate = findArmyUnitCandidates({ faction }).find(item => item.id === unit.datasheetId || item.name === unit.name);
- if (!candidate) return unit;
- return { ...candidate, ...unit, datasheet: unit.datasheet ?? candidate.datasheet };
+function resolveRosterUnit(unit, faction = null, units = []) {
+ const shared = withResolvedUnitContent(unit, units);
+ if (shared?.datasheet || isUserEnteredUnit(shared) || !faction) return shared;
+ const candidate = findArmyUnitCandidates({ faction }).find(item => item.id === shared.datasheetId || item.name === shared.name);
+ if (!candidate) return shared;
+ return { ...candidate, ...shared, datasheet: shared.datasheet ?? candidate.datasheet };
 }
 
 /** Group saved attachment IDs for display without changing the roster or stat lines. */
@@ -24,8 +26,11 @@ export function renderRosterRows(units, selectedId, faction = null) {
  const rendered = new Set();
  let groupNumber = 0;
  function row(rawUnit, role = '') {
-  const unit = resolveRosterUnit(rawUnit, faction);
+  const unit = resolveRosterUnit(rawUnit, faction, units);
   const models = unit.modelCount ?? 1;
+  const entered = isUserEnteredUnit(unit);
+  const shownName = unit.instanceLabel || unit.name;
+  const pointsText = unit.points == null ? (entered ? 'costs unknown' : 'Unknown') : unit.points;
   const loadoutLabel = loadoutReadinessLabel(unit);
   const selectedEquipment=(unit.equippedWargear??[])
     .filter(item=>item?.name && Number(item.quantity)>0)
@@ -37,7 +42,7 @@ export function renderRosterRows(units, selectedId, faction = null) {
   const upgrades=getUnitUpgradeNames(unit);
   const upgradeLine=upgrades.length?'<small class="ab-roster-equipment" aria-label="Unit Upgrade">'+
     e(upgrades.join(' · '))+' · upgrade included</small>':'';
-  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(unit.name)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(unit.points ?? 'Unknown')} pts${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${equipmentLine}${upgradeLine}${unitStats(unit)}</button>`;
+  return `<button type="button" class="ab-roster-row ${unit.id === selectedId ? 'is-selected' : ''}" data-view-unit-detail="${e(unit.id)}">${role ? `<span class="ab-unit-role">${e(role)}</span>` : ''}<strong>${e(shownName)}</strong><small>${e(models)} ${models === 1 ? 'model' : 'models'} · ${e(pointsText)} pts${entered ? ' · User-entered' : ''}${unit.attachedToBodyguardId && !role ? ' · Attachment needs review' : ''} · ${e(loadoutLabel)}</small>${equipmentLine}${upgradeLine}${unitStats(unit)}</button>`;
  }
  return units.map(unit => {
   if (rendered.has(unit.id)) return '';

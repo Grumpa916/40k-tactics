@@ -2,6 +2,7 @@ import { findArmyUnitCandidates } from "../data/army-unit-catalog.js";
 import { summarizeRosterPoints } from "../state/army-roster-points-summary.js";
 import { validateRosterUnitUpgrades } from "./custodes-unit-upgrades.js";
 import { assessRosterDetachmentSelection, getRosterDetachmentNames } from "./roster-detachment-selection.js";
+import { isUserEnteredUnit } from "./imported-roster-report.js";
 
 const text = (value) => String(value ?? "").trim().toLowerCase();
 const keywords = (unit) => (unit?.datasheet?.keywords ?? []).map(text);
@@ -48,6 +49,7 @@ export function validateArmyRoster(roster = {}) {
   }
   const counts = new Map();
   for (const unit of units) {
+    if (isUserEnteredUnit(unit)) continue;
     const key = unit?.datasheetId || `manual:${text(unit?.name)}`;
     counts.set(key, [...(counts.get(key) ?? []), unit]);
     if (unit?.attachedToBodyguardId && !ids.has(unit.attachedToBodyguardId)) issues.push(`${unit.name}: attached Bodyguard is missing.`);

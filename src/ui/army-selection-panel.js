@@ -1,6 +1,7 @@
 import { COMMAND_TYPES } from "../commands/game-commands.js";
 import { importArmyRoster } from "../state/army-roster-import.js";
-import { importWarhammerAppRoster } from "../state/warhammer-app-roster-import.js";
+import { importWarhammerAppRoster, inferWarhammerAppFaction } from "../state/warhammer-app-roster-import.js";
+import { isUserEnteredUnit } from "../rules/imported-roster-report.js";
 import { ARMY_UNIT_CATALOG } from "../data/army-unit-catalog.js";
 
 function escapeHtml(value) {
@@ -98,10 +99,12 @@ export function createArmySelectionPanel(container, { store, session, canApply =
           escapeHtml(rosterDetachmentLabel(record) ?? "Detachment not set") + '</option>').join("") +
         '</select></label>' +
         (index === 1 && players.length === 2
-          ? '<label>Text list faction (auto-detected when possible)<select data-army-selection-warmind-faction="' + escapeHtml(player.id) + '"' +
+          ?             '<label>Text list faction (auto-detected when possible)<select data-army-selection-warmind-faction="' + escapeHtml(player.id) + '"' +
             (!currentCanApply || busyPlayerId ? " disabled" : "") + '><option value="">Auto-detect</option>' +
             IMPORT_FACTIONS.map(faction => '<option value="' + escapeHtml(faction) + '">' + escapeHtml(faction) + '</option>').join("") +
             '</select></label>' +
+            '<label>Or type a faction with no catalog<input data-army-selection-warmind-faction-text="' + escapeHtml(player.id) + '"' +
+            (!currentCanApply || busyPlayerId ? " disabled" : "") + ' maxlength="80" placeholder="Necrons, Orks, Aeldari…"></label>' +
             '<label class="army-selection-card__import">Import list file (.json or .txt)<input type="file" accept=".json,.txt,application/json,text/plain" data-army-selection-import="' + escapeHtml(player.id) + '"' +
             (!currentCanApply || busyPlayerId ? " disabled" : "") + '></label>' +
             '<p class="army-selection-card__hint">Use a 40K Tactics JSON export or a Warmind Official App text export. Choose a faction above only if it is not detected automatically.</p>' +
@@ -173,7 +176,7 @@ export function createArmySelectionPanel(container, { store, session, canApply =
   }
 
   function importTextRoster(text, faction, name) {
-    const selectedFaction = faction || detectFaction(text);
+    const selectedFaction = faction || inferWarhammerAppFaction(text) || detectFaction(text);
     if (!selectedFaction) throw new Error("Choose the list faction; it could not be detected from the shared text.");
     const timestamp = new Date().toISOString();
     const parsed = importWarhammerAppRoster({
@@ -185,9 +188,10 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     for (const unit of roster.units) {
       if (unit.dataSource) unit.dataSource.rosterImport = "warmind-text";
     }
-    const warningCount = (parsed.warnings?.length ?? 0) + (parsed.unrecognized?.length ?? 0);
+    const manual = roster.units.filter(isUserEnteredUnit).length;
+    const warningCount = (parsed.warnings?.length ?? 0) + manual;
     const detail = warningCount
-      ? "Imported " + roster.units.length + " units from Warmind. Review the saved roster: " + warningCount + " unmatched or warning item(s) were preserved."
+      ? "Imported " + roster.units.length + " units from Warmind (" + manual + " user-entered). Review the saved import report."
       : "Imported " + roster.units.length + " units from Warmind, saved the list, and assigned it to the opponent.";
     return { roster, detail };
   }
@@ -219,8 +223,9 @@ export function createArmySelectionPanel(container, { store, session, canApply =
       const file = fileInput.files?.[0];
       const playerId = fileInput.getAttribute("data-army-selection-import");
       if (!file || busyPlayerId) return;
-      const faction = container.querySelector('[data-army-selection-warmind-faction="' + playerId + '"]')?.value ?? "";
-      await importRosterFile(file, playerId, faction);
+      const typed = container.querySelector('[data-army-selection-warmind-faction-text="' + playerId + '"]')?.value?.trim() ?? "";
+      const selected = container.querySelector('[data-army-selection-warmind-faction="' + playerId + '"]')?.value ?? "";
+      await importRosterFile(file, playerId, typed || selected);
       fileInput.value = "";
       return;
     }
@@ -244,7 +249,9 @@ export function createArmySelectionPanel(container, { store, session, canApply =
     if (warmindButton) {
       const playerId = warmindButton.getAttribute("data-army-selection-warmind-import");
       const text = container.querySelector('[data-army-selection-warmind-text="' + playerId + '"]')?.value ?? "";
-      const faction = container.querySelector('[data-army-selection-warmind-faction="' + playerId + '"]')?.value ?? "";
+      const typed = container.querySelector('[data-army-selection-warmind-faction-text="' + playerId + '"]')?.value?.trim() ?? "";
+      const selected = container.querySelector('[data-army-selection-warmind-faction="' + playerId + '"]')?.value ?? "";
+      const faction = typed || selected;
       if (!text.trim()) {
         message = "Paste the Warmind Official App text export first.";
         render();

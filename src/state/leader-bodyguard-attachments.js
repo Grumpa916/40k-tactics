@@ -1,4 +1,5 @@
 import { isReviewedVictrixLeaderPair } from '../data/space-marines-ultramarines-attachments.js';
+import { withResolvedUnitContent } from '../rules/imported-roster-report.js';
 
 /**
  * Leader attachment helpers for reusable army rosters.
@@ -10,29 +11,32 @@ export function getEligibleBodyguards(roster, leaderId) {
   assertRosterUnits(roster);
   const leader = roster.units.find((unit) => unit.id === leaderId);
   if (!leader) throw new RangeError("Leader unit not found: " + leaderId);
-  if (leader.datasheet?.leader?.isLeader !== true || leader.attachedToBodyguardId) return [];
+  const leaderView = withResolvedUnitContent(leader, roster.units);
+  if (leaderView.datasheet?.leader?.isLeader !== true || leader.attachedToBodyguardId) return [];
 
-  const leaderMetadata = leader.datasheet?.leader;
+  const leaderMetadata = leaderView.datasheet?.leader;
   const allowedIds = leaderMetadata?.allowedBodyguardDatasheetIds;
   const leaderReviewStatus = leaderMetadata?.compatibilityReview?.status;
   if (!Array.isArray(allowedIds) || !["accepted", "cross-checked", "source-reviewed"].includes(leaderReviewStatus)) return [];
 
   return roster.units.filter((unit) => {
     if (unit.id === leader.id) return false;
-    const bodyguardId = unit.datasheetId ?? unit.datasheet?.id;
-    const bodyguardMetadata = unit.datasheet?.bodyguard;
+    const view = withResolvedUnitContent(unit, roster.units);
+    const bodyguardId = view.datasheetId ?? view.datasheet?.id;
+    const bodyguardMetadata = view.datasheet?.bodyguard;
     const bodyguardReviewStatus = bodyguardMetadata?.compatibilityReview?.status;
     const attachedLeaderIds = unit.attachedLeaderIds ?? [];
     const maxAttachedLeaders = bodyguardMetadata?.maxAttachedLeaders ?? 1;
     // A second attachment must be the opposite role: one Leader and one Support.
     // Cato's conditional Support with Calgar on Victrix is a reviewed exception.
-    if (bodyguardId.startsWith('space-marines:') && attachedLeaderIds.length) {
+    if (String(bodyguardId ?? '').startsWith('space-marines:') && attachedLeaderIds.length) {
       const present = roster.units.find(candidate => candidate.id === attachedLeaderIds[0]);
-      const firstId=present?.datasheetId ?? present?.datasheet?.id;
-      const secondId=leader.datasheetId ?? leader.datasheet?.id;
+      const presentView = present ? withResolvedUnitContent(present, roster.units) : null;
+      const firstId=presentView?.datasheetId ?? presentView?.datasheet?.id;
+      const secondId=leaderView.datasheetId ?? leaderView.datasheet?.id;
       if(bodyguardId==='space-marines:victrix-honour-guard'){
         if(!isReviewedVictrixLeaderPair(firstId,secondId)) return false;
-      } else if(!present || Boolean(leaderMetadata?.support) === Boolean(present.datasheet?.leader?.support)) return false;
+      } else if(!presentView || Boolean(leaderMetadata?.support) === Boolean(presentView.datasheet?.leader?.support)) return false;
     }
     return Boolean(bodyguardId && allowedIds.includes(bodyguardId) &&
       bodyguardMetadata?.canReceiveLeader === true &&
