@@ -2,6 +2,7 @@ import { createEvent } from '../events/event.js';
 import { appendHistoryEntry } from '../state/history.js';
 import { recordCommandPointChange, getCommandPointBalance } from '../engine/command-points-ledger.js';
 import { adjustUnitWounds } from '../engine/unit-vitals-transitions.js';
+import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { isUnitBattleShocked } from './unit-status-summary.js';
 import { getBattleUnitDatasheet, getCombatFormationRoot } from './battle-unit-reference.js';
 
@@ -59,9 +60,21 @@ export function recordOverwatchUse(state,{
   if(!timingConfirmed || !inRangeConfirmed || !visibilityConfirmed || !unengagedConfirmed)
     throw new Error('Confirm the end-of-Movement timing, unengaged firing unit, and a visible eligible target within 24 inches.');
   if(!Number.isInteger(actualDamage) || actualDamage<0) throw new Error('Damage must be a non-negative whole number.');
+  const beforeTarget=state.units.find(unit=>unit.id===targetUnitId);
+  const woundsBefore=getLiveUnitVitals(state,beforeTarget).wounds;
   const cp=recordCommandPointChange(state,{playerId:offer.playerId,amount:-1,reason:'spend',note:'Fire Overwatch'});
   const damaged=actualDamage ? adjustUnitWounds(cp,{unitId:targetUnitId,amount:-actualDamage}) : cp;
-  return appendHistoryEntry(damaged,createEvent('overwatch.interrupt_answered',{
+  const afterTarget=damaged.units.find(unit=>unit.id===targetUnitId);
+  const woundsAfter=getLiveUnitVitals(damaged,afterTarget).wounds;
+  const exchanged=appendHistoryEntry(damaged,createEvent('combat.attack_resolved',{
+    attackerId:firingUnitId,sourceAttackerId:firingUnitId,targetId:targetUnitId,
+    weaponName:'Fire Overwatch (weapon not recorded)',weaponId:null,overwatch:true,
+    actualDamage:Number.isFinite(woundsBefore)&&Number.isFinite(woundsAfter)?woundsBefore-woundsAfter:actualDamage,
+    phase:'movement',round:state.battle.round,turn:state.turn,
+    stateDelta:{target:{unitId:targetUnitId,woundsBefore,woundsAfter,
+      statusBefore:beforeTarget.status,statusAfter:afterTarget.status}}
+  }));
+  return appendHistoryEntry(exchanged,createEvent('overwatch.interrupt_answered',{
     decision:'use',playerId:offer.playerId,firingUnitId,targetUnitId,enemyUnitId:targetUnitId,
     moment:'end-movement',triggerKey,round:state.battle.round,turn:state.turn,phase:state.phase,
     recordedCpChange:-1,actualDamage
