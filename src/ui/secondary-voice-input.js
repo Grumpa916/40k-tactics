@@ -18,11 +18,12 @@ export function previewSpokenSecondaryPair(state, transcript, definitions, persp
     throw new Error('This voice entry is for Tactical secondary cards only.');
   const names = spoken
     .replace(/^(?:the )?(?:opponent(?:'s)?|my|our|i drew|we drew)\s*/i, '')
-    .replace(/^(?:secondar(?:y|ies)|cards?|objectives?)\s*(?:drawn|were|are|was|is)?\s*/i, '')
+    .replace(/^(?:(?:secondary|secondaries)(?:\s+(?:objectives?|cards?))?|cards?|objectives?)\s*(?:drawn|were|are|was|is)?\s*/i, '')
     .replace(/^(?:drew|drawn|were|are|was|is)\s*/i, '')
     .split(/\s+and\s+|\s*,\s*/i).map(name => name.trim()).filter(Boolean);
   if (names.length !== 2) throw new Error('Say two card names, for example “Cleanse and Plunder”.');
-  const catalog = (definitions ?? []).filter(item => item?.category === 'secondary');
+  const catalog = (definitions ?? []).filter(item => item?.category === 'secondary')
+    .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index);
   const matches = names.map(name => {
     const found = catalog.filter(item => normalize(item.name) === normalize(name));
     if (found.length !== 1) throw new Error('Could not uniquely match “' + name + '” to the secondary catalog. Use manual entry.');
