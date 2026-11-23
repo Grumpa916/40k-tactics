@@ -6,6 +6,8 @@ import { getRosterDetachmentNames } from './roster-detachment-selection.js';
 import { getBattleRosterUnit, getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { getActiveGuardiansEffects } from './stratagem-use-state.js';
 import { rulesContextKey } from './rules-phase-window.js';
+import { isAdeptusCustodesKeywordUnit } from './custodes-keyword-eligibility.js';
+import { distanceBetween } from './tactical-context-utils.js';
 
 // Only these reviewed descriptions are modeled. An older saved datasheet with a
 // different rule bearing the same name must not silently receive today's effect.
@@ -31,6 +33,28 @@ const normalized = value => String(value ?? '').trim().toLowerCase();
 function matches(datasheet, rule) {
   return rule.description && (datasheet?.abilities ?? []).some(ability =>
     normalized(ability.name) === normalized(rule.name) && normalized(ability.description) === normalized(rule.description));
+}
+
+function modelPoint(unit) {
+  const models = (unit?.models ?? []).map(model => model?.position).filter(point =>
+    Number.isFinite(point?.x) && Number.isFinite(point?.y));
+  if (models.length) {
+    return {
+      x: models.reduce((sum, point) => sum + point.x, 0) / models.length,
+      y: models.reduce((sum, point) => sum + point.y, 0) / models.length
+    };
+  }
+  return Number.isFinite(unit?.position?.x) && Number.isFinite(unit?.position?.y) ? unit.position : null;
+}
+
+export function captainGeneralDistance(state, unit) {
+  const bearsAura = candidate => (getBattleUnitDatasheet(state, candidate)?.abilities ?? [])
+    .some(ability => ability.name === 'Captain-General (Aura)');
+  if (bearsAura(unit)) return 0;
+  const commander = (state?.units ?? []).find(candidate =>
+    candidate.ownerId === unit?.ownerId && candidate.status === 'deployed' && bearsAura(candidate));
+  if (!commander) return null;
+  return distanceBetween(modelPoint(unit), modelPoint(commander));
 }
 
 export function getRecordedCombatRules(state, unit) {
@@ -103,6 +127,14 @@ export function getRecordedCombatRules(state, unit) {
   const auramiteAttackers=getActiveGuardiansEffects(state,unit.id).filter(use=>use.stratagemId==='in-auramite-clad').map(use=>use.enemyUnitId);
   const kaptaris=state.phase==='fight' && (state.history??[]).some(event=>event.type==='custodes.katah_expended' && event.payload?.unitId===root?.id && event.payload.katahName==='Kaptaris' && event.payload.round===state.battle?.round && event.payload.turn===state.turn);
   const shackleSave=(state.history??[]).some(event=>event.type==='rules.reminder_used' && event.payload?.unitId===unit.id && event.payload.ruleId==='moment-shackle' && event.payload.choice==='save' && event.payload.contextKey===rulesContextKey(state));
+  if (['shooting', 'fight'].includes(state?.phase) && isAdeptusCustodesKeywordUnit(state, unit)) {
+    if (selectedDetachments.has("Emperor's Chosen")) effects.push('magna-imperator');
+    const keywords = (getBattleUnitDatasheet(state, unit)?.keywords ?? []).map(value => String(value).toLowerCase());
+    const distance = captainGeneralDistance(state, unit);
+    if (!keywords.includes('monster') && !keywords.includes('vehicle') && distance != null && distance <= 6) {
+      effects.push('captain-general-aura');
+    }
+  }
   return { effects, chargedThisTurn, formationRootId:root?.id??unit.id, auramiteAttackers,kaptaris,temporaryInvulnerableSave:shackleSave?3:null,
     unitToughness: Number.isFinite(Number(rootToughness)) && Number(rootToughness) > 0 ? Number(rootToughness) : null,
     feelNoPain: fnp.length ? Math.min(...fnp) : 0 };
