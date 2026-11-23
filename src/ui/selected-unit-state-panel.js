@@ -56,7 +56,7 @@ function renderMember(state, unit) {
 }
 
 export function renderSelectedUnitStatePanel(state, unitId, { perspectivePlayerId = null } = {}) {
-  const host = '<section class="unit-state" aria-label="Selected unit live state">';
+  const host = '<style>.unit-state__profile{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:8px 0}.unit-state__profile span{display:grid;text-align:center;border:1px solid #52606b;border-radius:6px;padding:4px 1px}.unit-state__profile small{opacity:.72}.unit-state__upgrades{padding-left:20px;margin:8px 0;color:#d9e7b5}</style><section class="unit-state" aria-label="Selected unit live state">';
   if (!unitId) return host + '<h3>Selected unit</h3><p>Select a unit on the map or in the phase list to adjust its live state.</p></section>';
   const unit = (state?.units ?? []).find(item => item.id === unitId);
   if (!unit || (perspectivePlayerId && unit.ownerId !== perspectivePlayerId)) {
