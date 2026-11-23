@@ -63,6 +63,12 @@ Live-game feedback from the November 22 match (Custodes vs Space Marines, Inesca
 - **Manual secondary scoring with round backdating:** likely becomes removal of Tactics scoring screens rather than a feature — awaiting confirmation.
 - **Deathwatch Support validation:** catalog has no Deathwatch datasheets or points yet; PR keeps them as tagged manual entries.
 
+### Owner decisions — 2026-11-23 (placement and Firing Deck)
+
+- **Reserves and embarked:** a unit that is both embarked and in reserves, or that fails both placement checks, shows `Confirm that unit [Unit Name] is embarked in vehicle [Vehicle Name] and in reserves.`
+- **Firing Deck Hazardous:** the embarked unit that fires takes the Hazardous test and the resulting damage. The transport does not. Impulsor uses the existing reviewed Firing Deck 7 note.
+- **Warmind endpoint:** left untouched. No API client, stub, or guessed response shape.
+
 ### Open questions
 
 - Anathema Psykana keyword (item 3).

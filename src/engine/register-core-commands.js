@@ -31,6 +31,7 @@ import {
   recordObjectiveControl
 } from "./state-transitions.js";
 import { resolveUnitAttack } from "./combat-transitions.js";
+import { resolveFiringDeckHazardous } from "./firing-deck-transitions.js";
 import { resolveNormalMove, resolveAdvance, recordFallBack, recordStationary, undoMovementAction } from "./movement-transitions.js";
 import { refineMovementAction, undoMovementRefinement } from './movement-refinement-transitions.js';
 import { recordCustodesKatahUse } from './custodes-katah-transitions.js';
@@ -118,6 +119,7 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.RESOLVE_ATTACK, (state, command, context) =>
       resolveUnitAttack(state, { ...command.payload, random: context.random ?? Math.random })
     ],
+    [COMMAND_TYPES.RESOLVE_FIRING_DECK_HAZARDOUS, (state, command) => resolveFiringDeckHazardous(state, command.payload)],
     [COMMAND_TYPES.RECORD_COMMAND_POINT_CHANGE, (state, command) => recordCommandPointChange(state, command.payload)],
     [COMMAND_TYPES.SET_MANUAL_BATTLE_SHOCK, (state, command) => setManualBattleShock(state, command.payload)],
     [COMMAND_TYPES.RECORD_BATTLE_SHOCK_TEST, (state, command) => recordBattleShockTest(state, command.payload)],
