@@ -7,9 +7,10 @@ const read = path => fs.readFileSync(new URL('../../' + path, import.meta.url), 
 test('Fight tabletop makes Overrun explicit and treats Charge targets as context only', () => {
   const source = read('src/ui/fight-tabletop-screen.js');
   const workflow = read('src/application/fight-workflow.js');
-  assert.match(source, /Overrun Fight available/);
-  assert.match(source, /choose an enemy within 5″/);
-  assert.match(source, /Pile In move of up to 3″/);
+  assert.match(source, /Charged, no recorded engagement/);
+  assert.match(source, /data-fight-pile-in/);
+  assert.match(source, /data-fight-consolidate/);
+  assert.doesNotMatch(source, /up to 3″|within 5″/);
   assert.doesNotMatch(source, /Other deployed formations: tap their map marker/);
   assert.doesNotMatch(source, /Choose weapon and target\. The first recorded attack/);
   assert.doesNotMatch(source, /Confirm Fight legality from the tabletop now/);
