@@ -25,7 +25,8 @@ export function previewSpokenSecondaryPair(state, transcript, definitions, persp
   const catalog = (definitions ?? []).filter(item => item?.category === 'secondary')
     .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index);
   const matches = names.map(name => {
-    const found = catalog.filter(item => normalize(item.name) === normalize(name));
+    const spokenName = normalize(name) === 'assassinate' ? 'assassination' : normalize(name);
+    const found = catalog.filter(item => normalize(item.name) === spokenName);
     if (found.length !== 1) throw new Error('Could not uniquely match “' + name + '” to the secondary catalog. Use manual entry.');
     return found[0];
   });
