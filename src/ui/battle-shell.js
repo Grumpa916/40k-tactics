@@ -558,6 +558,23 @@ export function createBattleShell(container, {
       event.preventDefault?.(); event.stopPropagation?.();
       scoreAdjustPlayerId = null; scoreAdjustKind = "both"; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
     }
+    const secondaryCorrection = event.target?.closest?.("[data-correct-secondary-score]");
+    if (secondaryCorrection && container.contains(secondaryCorrection) && scoreAdjustPlayerId && isManualScoringEnabled()) {
+      event.preventDefault?.(); event.stopPropagation?.();
+      try {
+        const selection=container.querySelector('[data-score-secondary-card]')?.value??'';
+        const separator=selection.lastIndexOf('|');
+        const instanceId=selection.slice(0,separator), selectedIndex=selection.slice(separator+1);
+        const amount=Number(container.querySelector('[data-score-secondary-amount]')?.value);
+        const round=Number(container.querySelector('[data-score-secondary-round]')?.value);
+        session.dispatch({type:COMMAND_TYPES.CORRECT_SECONDARY_MISSION_SCORE,payload:{
+          playerId:scoreAdjustPlayerId,instanceId,amount,round,
+          awardEventIndex:selectedIndex==='new'?null:Number(selectedIndex)
+        }});
+        scoreAdjustMessage='Secondary score corrected for round '+round+'.';
+      } catch(error) { scoreAdjustMessage=error?.message??String(error); }
+      render(); return;
+    }
     const adjust = event.target?.closest?.("[data-score-adjust-kind]");
     if (!adjust || !container.contains(adjust) || !scoreAdjustPlayerId) return;
     event.preventDefault?.(); event.stopPropagation?.();
