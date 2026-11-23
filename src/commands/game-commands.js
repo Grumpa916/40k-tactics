@@ -54,6 +54,7 @@ export const COMMAND_TYPES = Object.freeze({
   REVIEW_MISSION_ACTION: "mission_action.review",
   FINISH_COMBAT_ACTIVATION: "combat.finish_activation",
   RESOLVE_ATTACK: "combat.resolve_attack",
+  RESOLVE_FIRING_DECK_HAZARDOUS: "firing_deck.resolve_hazardous",
   RECORD_COMMAND_POINT_CHANGE: "command_points.record_change",
   SET_MANUAL_BATTLE_SHOCK: "battle_shock.set_status",
   RECORD_BATTLE_SHOCK_TEST: "battle_shock.record_test",

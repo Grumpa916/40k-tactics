@@ -3,6 +3,7 @@ import { deploymentUnits, formationFor } from '../rules/event-preparation.js';
 import { deploymentWorkspaceSummary, deploymentWorkspaceIssues } from '../rules/deployment-workspace.js';
 import { getSecondaryMissionMode } from '../rules/secondary-mission-lifecycle.js';
 import { getDeploymentTransports, getDeploymentTransportChoices, getDeploymentTransportOccupancy } from '../rules/deployment-transport-eligibility.js';
+import { assessReserveEmbarkedPlacement } from '../rules/reserve-embarked-placement.js';
 export const escapeDeploymentText = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const esc=escapeDeploymentText;
 
@@ -26,9 +27,14 @@ function renderTransportAssignments(state,open) {
       choices.map(t=>'<option value="'+esc(t.id)+'"'+(selected===t.id?' selected':'')+'>'+esc(t.name)+'</option>').join('')+
       '</select></label>';
   }).join('');
+  const confirmations = deploymentUnits(state)
+    .map(unit => assessReserveEmbarkedPlacement(state, unit).confirmation)
+    .filter(Boolean);
   return '<details data-deploy-transports'+(open?' open':'')+'><summary>Transport assignments</summary>'+
     '<p>Only eligible carriers and passengers are selectable. Full attached units count toward capacity. Confirm datasheet exceptions on the tabletop.</p>'+
-    capacity+(controls||'<p>No eligible passengers currently fit. Check each transport’s capacity and roster.</p>')+'</details>';
+    capacity+(controls||'<p>No eligible passengers currently fit. Check each transport’s capacity and roster.</p>')+
+    confirmations.map(note => '<p role="status" data-placement-confirmation>'+esc(note)+'</p>').join('')+
+    '</details>';
 }
 
 function armySummaryMarkup(state,summary) {

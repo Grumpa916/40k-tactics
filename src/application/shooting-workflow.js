@@ -5,6 +5,7 @@ import { executeCommand } from "../engine/command-engine.js";
 import { getShootingState } from "../rules/shooting-state.js";
 import { getShootingCandidates } from "../rules/shooting-candidates.js";
 import { getCombatFormationWeaponOptions } from "../rules/saved-roster-combat-profile.js";
+import { getFiringDeckWeaponOptions } from "../rules/firing-deck.js";
 import { getCombatFormationMembers, getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { unitDisplayLabels } from "../ui/map-unit-labels.js";
 import { getShootingEngagementContext } from '../rules/shooting-engagement-rules.js';
@@ -250,9 +251,10 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null, p
   const attacker = state?.units?.find((unit) => unit?.id === attackerId);
   if (!attacker) return [];
 
+  const withFiringDeck = weapons => [...weapons, ...getFiringDeckWeaponOptions(state, attacker)];
   const formationMembers = getCombatFormationMembers(state, attacker);
   if (formationMembers.length > 1) {
-    return getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
+    return withFiringDeck(getCombatFormationWeaponOptions(state, attacker, { type: "ranged" }));
   }
 
   const weaponIds = Array.isArray(attacker.profile?.weaponIds)
@@ -272,7 +274,7 @@ export function getShootingWeaponOptions(state, { attackerId, gameData = null, p
       formationUnitId: attacker.id,
       characteristics: { ...(weapon.characteristics ?? {}) }
     }));
-  return linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "ranged" });
+  return withFiringDeck(linkedWeapons.length ? linkedWeapons : getCombatFormationWeaponOptions(state, attacker, { type: "ranged" }));
 }
 
 export function getShootingTargetOptions(state, { attackerId, perspectivePlayerId = null, preview = false, weapon = null } = {}) {

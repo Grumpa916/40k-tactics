@@ -12,6 +12,7 @@ import { resolveAttack } from "../rules/attack-resolution.js";
 import { buildAttackProfile } from "../rules/combat-profile.js";
 import { getDamageOutcomeDistribution } from "../rules/damage-outcome-distribution.js";
 import { isFallBackActionRestricted } from "../rules/fall-back-permissions.js";
+import { weaponIsHazardous } from "../rules/firing-deck.js";
 
 function wasActivatedToShootThisTurn(state, unitId) {
   const history = Array.isArray(state?.history) ? state.history : [];
@@ -74,14 +75,27 @@ export function resolveUnitAttack(state, {
     throw new Error("Attacker and target units must be deployed.");
   }
 
+  const firingDeckShot = state.phase === "shooting" && weapon?.firingDeck === true;
   const sourceAttacker = weapon?.sourceUnitId
     ? state.units.find((unit) => unit.id === weapon.sourceUnitId)
     : attacker;
-  if (!sourceAttacker || sourceAttacker.status !== UNIT_STATUS.DEPLOYED) {
-    throw new Error("The selected weapon source must be deployed.");
-  }
-  if (sourceAttacker.ownerId !== attacker.ownerId || getCombatFormationRoot(state, sourceAttacker)?.id !== attacker.id) {
-    throw new Error("The selected weapon does not belong to this combat formation.");
+  if (firingDeckShot) {
+    if (!sourceAttacker || sourceAttacker.status !== UNIT_STATUS.EMBARKED || sourceAttacker.transportId !== attacker.id) {
+      throw new Error("A Firing Deck weapon must come from a unit embarked in this transport.");
+    }
+    if (sourceAttacker.ownerId !== attacker.ownerId) {
+      throw new Error("A Firing Deck weapon must belong to the transport's army.");
+    }
+    if (weaponIsHazardous(weapon) && weapon.hazardousBearerId && weapon.hazardousBearerId !== sourceAttacker.id) {
+      throw new Error("Firing Deck Hazardous damage is assigned to the embarked unit that fired.");
+    }
+  } else {
+    if (!sourceAttacker || sourceAttacker.status !== UNIT_STATUS.DEPLOYED) {
+      throw new Error("The selected weapon source must be deployed.");
+    }
+    if (sourceAttacker.ownerId !== attacker.ownerId || getCombatFormationRoot(state, sourceAttacker)?.id !== attacker.id) {
+      throw new Error("The selected weapon does not belong to this combat formation.");
+    }
   }
 
   // Fight target legality is confirmed on the physical tabletop. Recorded Charge
@@ -144,6 +158,8 @@ export function resolveUnitAttack(state, {
     expectedDamage,
     reviewSnapshot,
     actualDamage: recordedDamage,
+    firingDeck: firingDeckShot,
+    hazardousBearerId: firingDeckShot && weaponIsHazardous(weapon) ? sourceAttacker.id : null,
     stateDelta: {
       target: {
         unitId: damageTarget.id,

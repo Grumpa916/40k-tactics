@@ -66,6 +66,7 @@ export function renderShootingWeaponChoices(weapons, selectedWeaponId, {disabled
       `<button type="button" data-shoot-weapon-choice="${escapeHtml(weapon.id)}" aria-pressed="${String(weapon.id === selectedWeaponId)}" ${disabled ? 'disabled' : ''}>${escapeHtml(weapon.name)}</button>`
     ).join('')}</div>
     ${!options.length ? '<small>No confirmed ranged weapon profiles available for this unit.</small>' : ''}
+    ${selected?.firingDeck && selected?.hazardousBearerId ? `<p data-firing-deck-hazardous>Hazardous test and any resulting damage are taken by ${escapeHtml(selected.sourceUnitName)}, the embarked unit that fired. The transport does not take this test.</p>` : ''}
     ${selected ? `<div class="shoot-weapon-picker__effects" role="note" aria-label="Selected weapon special effects">
       <strong>Selected weapon · ${escapeHtml(selected.name)}</strong>
       ${effects.length ? '<ul>'+effects.map(({label,description}) =>
