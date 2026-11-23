@@ -165,7 +165,7 @@ export function createFightScreen(
         </header>
 
         <div class="fight-note">
-          Record whether each eligible unit Fights or Does not fight. The app records either side and does not enforce alternating selection order.
+          Record whether each eligible unit Fights or Does not fight. Chargers and Fights First units go first. Players then alternate, starting with the player whose turn it is not.
         </div>
 
         ${candidateSection("Fights First", model.candidates.fightsFirst, false)}
