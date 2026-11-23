@@ -73,17 +73,16 @@
 .movement-selected-unit__token.is-friendly{background:#213f60;border-color:#79bbff}
 .movement-selected-unit__token.is-opponent{background:#602e34;border-color:#ff8585}
 
-/* The inactive dock lives in the spare map gutter rather than taking height
-   from the 60 x 44 board. Expand it only when transferring reserves or placing
-   a pending Swift Ruin arrival; the map remains proportioned like Charge. */
+/* Keep the Reserves dock on the map's right edge, clear of the left Units
+   drawer. It must remain visible while the drawer is open during live play. */
 @media (min-width:761px) and (orientation:landscape) {
   .battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=movement] .combat-workspace__map {
     position:relative;
   }
   .battle-shell.is-tabletop-experiment .combat-workspace[data-combat-phase=movement] .movement-map-reserves {
     position:absolute;
-    z-index:24;
-    left:6px;
+    z-index:40;
+    right:6px;
     bottom:6px;
     max-width:calc(100% - 12px);
   }
