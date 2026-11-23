@@ -148,6 +148,7 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
+    handleVoiceClick(event);
     const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-aquila-gain], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set], [data-marine-doctrine-use]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute('data-marine-doctrine-use')) {
@@ -813,15 +814,16 @@ export function createCommandScreen(container, {
       '<section class="command-voice-secondary" aria-label="Speak Tactical secondary cards">' +
       '<h3>Speak drawn cards</h3><p>Warmind draws; record two cards for ' + escapeHtml(playerName(state, selectedSecondaryPlayerId)) + '.</p>' +
       '<button type="button" data-voice-secondary-start style="min-height:48px">' + (voiceListening ? 'Listening…' : '🎙 Tap to speak') + '</button>' +
+      '<details' + (voiceTranscript || voiceMessage ? ' open' : '') + '><summary>Transcript / type instead</summary>' +
       '<label>Heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
-      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button>' +
+      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></details>' +
       (voiceDraft ? '<p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
         voiceDraft.definitions.map(card => escapeHtml(card.name)).join(' and ') + '?</p>' +
         '<button type="button" data-voice-secondary-confirm style="min-height:48px">Confirm both cards</button>' +
         '<button type="button" data-voice-secondary-cancel>Cancel</button>' : '') +
       (voiceMessage ? '<p role="status">' + escapeHtml(voiceMessage) + '</p>' : '') + '</section>' : '';
     const secondaryMissionManager = state.phase === "command"
-      ? '<section class="command-secondary-missions">' + voiceMarkup + secondaryEntryMarkup +
+      ? '<section class="command-secondary-missions">' + voiceMarkup + '<details><summary>Enter card manually</summary>' + secondaryEntryMarkup + '</details>' +
         secondaryHistoryMarkup +
         (secondaryMissionNotice ? '<p role="status">' + escapeHtml(secondaryMissionNotice) + '</p>' : '') +
         '</section>'
@@ -941,7 +943,6 @@ export function createCommandScreen(container, {
   }
 
   container.addEventListener?.("click", handleClick);
-  container.addEventListener?.("click", handleVoiceClick);
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("submit", handleSubmit);
   const unbindMapCorrection = layoutMode === "tabletop"
@@ -954,7 +955,6 @@ export function createCommandScreen(container, {
     recognition?.abort?.();
     unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
-    container.removeEventListener?.("click", handleVoiceClick);
     container.removeEventListener?.("change", handleChange);
     container.removeEventListener?.("submit", handleSubmit);
     container.replaceChildren();
