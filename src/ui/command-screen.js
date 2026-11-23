@@ -84,8 +84,8 @@ export function createCommandScreen(container, {
   let voiceListening = false;
   let recognition = null;
 
-  function reviewVoiceCards() {
-    voiceTranscript = container.querySelector?.('[data-voice-secondary-text]')?.value ?? voiceTranscript;
+  function reviewVoiceCards(heard = null) {
+    voiceTranscript = heard ?? container.querySelector?.('[data-voice-secondary-text]')?.value ?? voiceTranscript;
     try {
       voiceDraft = previewSpokenSecondaryPair(session.getState(), voiceTranscript,
         [...missionDefinitions, ...secondaryMissionCatalog], perspectivePlayerId);
@@ -129,7 +129,7 @@ export function createCommandScreen(container, {
     recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1;
     recognition.onresult = result => {
       voiceTranscript = result.results?.[0]?.[0]?.transcript ?? "";
-      reviewVoiceCards();
+      reviewVoiceCards(voiceTranscript);
     };
     recognition.onerror = result => { voiceMessage = "Microphone: " + (result.error ?? "unavailable"); voiceListening = false; render(); };
     recognition.onend = () => { voiceListening = false; render(); };
