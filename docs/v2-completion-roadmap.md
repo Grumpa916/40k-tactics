@@ -50,7 +50,7 @@ Live-game feedback from the November 22 match (Custodes vs Space Marines, Inesca
 2. Fight phase recheck — seven mismatches: pick order (app allowed double-picks), no Consolidate step, Pile In uses 10th-edition movement, Heroic Intervention and Counteroffensive absent, Overrun only triggers on chargers. Planned order: pick order, Pile In, Consolidate, stratagems, small fixes.
 3. Magna Imperator + Trajann aura — new "unit selected to attack" event separate from Trajann's 6-inch re-roll-ones aura; fixes missing opponent-turn reminder and makes re-rolls hit damage math. Open question: does Anathema Psykana carry the Adeptus Custodes keyword?
 4. Embarked Impulsor fire points — Firing Deck 7, Assault-only after Advancing; open question: who takes the Hazardous roll.
-5. Map labels — attached characters (`TE2+MC` style) and upgrade-bearing Dreadnoughts (Telemann vs Contemptor Gladius).
+5. Map labels — attached characters (`TE2+MC` style) and upgrade-bearing Dreadnoughts (Telemann vs Contemptor Gladius). **In PR:** formation markers list each attached character, and dreadnought markers use datasheet designators plus saved Moritoi upgrade tags.
 6. Layout C objective labels — nearest-home-objective labeling disagrees with territory rules on 16 of 75 layouts.
 7. Overwatch — 1 CP step at end of opponent's Movement phase; records usage only since CP moves to Warmind.
 8. Full-screen map UI — part 1: layout, thin icon rails, saved panel state; part 2: remove scoring screens after Warmind role is settled. Command Points become read-only edge-rail ("see Warmind" or typed number) folded into part 1.

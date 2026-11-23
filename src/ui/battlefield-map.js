@@ -153,9 +153,9 @@ export function renderBattlefieldMap(state, {
   const plannedOrDeployed = positionsForMode(safeState, mode);
   const layoutGeometry = selectedLayoutGeometry(safeState);
   const units = Array.isArray(safeState.units) ? safeState.units : [];
-  const unitLabels = mapUnitLabels(units);
-  const fullUnitLabels = unitDisplayLabels(units);
-  const symbolLabels = mode === 'live' ? liveUnitSymbolLabels(units) : null;
+  const unitLabels = mapUnitLabels(units, safeState);
+  const fullUnitLabels = unitDisplayLabels(units, safeState);
+  const symbolLabels = mode === 'live' ? liveUnitSymbolLabels(units, safeState) : null;
   const unitNodes = [];
   const friendlyUnitKey = new Map();
   let positionedUnits = 0;
@@ -189,16 +189,16 @@ export function renderBattlefieldMap(state, {
       }
     }
     const percent = battlefieldPositionToPercent(position); if (!percent) continue; positionedUnits += 1;
-    if (mode === 'live' && friendly && symbolLabels?.has(unit.id)) {
-      const members = getCombatFormationMembers(safeState,unit);
-      const groupLabel = members.map(item=>fullUnitLabels.get(item.id) ?? item.name).join(' + ');
-      friendlyUnitKey.set(symbolLabels.get(unit.id), groupLabel);
-    }
-    const attached = mode === "live" ? getCombatFormationMembers(safeState, unit).slice(1) : [];
-    const formationSymbol = attached.length
-      ? (symbolLabels?.get(unit.id) ?? unitLabels.get(unit.id)) +
-        (attached.length === 1 ? '+' + (symbolLabels?.get(attached[0].id) ?? 'L') : '+' + attached.length)
+    const members = mode === 'live' ? getCombatFormationMembers(safeState, unit) : [];
+    const attached = members.slice(1);
+    const leaderSymbols = attached.map(member => symbolLabels?.get(member.id) ?? unitLabels.get(member.id)).filter(Boolean);
+    const formationSymbol = leaderSymbols.length
+      ? [symbolLabels?.get(unit.id) ?? unitLabels.get(unit.id), ...leaderSymbols].filter(Boolean).join('+')
       : null;
+    if (mode === 'live' && friendly && (formationSymbol || symbolLabels?.has(unit.id))) {
+      const groupLabel = (members.length ? members : [unit]).map(item => fullUnitLabels.get(item.id) ?? item.name).filter(Boolean).join(' + ');
+      friendlyUnitKey.set(formationSymbol ?? symbolLabels.get(unit.id), groupLabel);
+    }
     const formationName = [fullUnitLabels.get(unit.id), ...attached.map(member => fullUnitLabels.get(member.id) ?? member.name)].filter(Boolean).join(' + ');
     const sideClass = friendly ? "friendly" : "opponent";
     // Layer the army whose turn it is over the other army, independently of

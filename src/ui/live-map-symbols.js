@@ -17,8 +17,8 @@ function compactSymbol(label) {
   return symbol || 'U';
 }
 
-export function liveUnitSymbolLabels(units = []) {
-  const readable = mapUnitLabels(units);
+export function liveUnitSymbolLabels(units = [], state = null) {
+  const readable = mapUnitLabels(units, state);
   const result = new Map();
   for (const unit of units) {
     if (!unit?.id) continue;
@@ -62,7 +62,7 @@ function formatObjectiveMarkerLabels(html) {
 
 export function applyApprovedLiveMapSymbols(mapHtml, state, { preserveObjectiveLabels = false, numberedMarkers = false } = {}) {
   let html = String(mapHtml ?? '');
-  const labels = liveUnitSymbolLabels(Array.isArray(state?.units) ? state.units : []);
+  const labels = liveUnitSymbolLabels(Array.isArray(state?.units) ? state.units : [], state);
   let number = 0;
   for (const [unitId, symbol] of labels) {
     // Number only the markers currently rendered in the live battlefield.

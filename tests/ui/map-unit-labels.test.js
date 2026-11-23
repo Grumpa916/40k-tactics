@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { liveUnitSymbolLabels } from '../../src/ui/live-map-symbols.js';
 import { mapUnitLabels, shortMapUnitName, unitDisplayLabels } from '../../src/ui/map-unit-labels.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 
@@ -60,6 +61,51 @@ test('selected full name is visible and escaped; activation badge and unit ident
   assert.match(html, /data-map-unit-id="a"/);
   assert.match(html, /Activation complete/);
   assert.doesNotMatch(html, /<Emissary>/);
+});
+
+test('attached characters use bodyguard plus each leader, and dreadnought variants stay distinct', () => {
+  assert.equal(shortMapUnitName({name:'Telemon Dreadnought'}), 'TEL');
+  assert.equal(shortMapUnitName({name:'Galatus Dreadnought'}), 'CGD');
+  assert.equal(shortMapUnitName({name:'Ballistus Dreadnought'}), 'BAD');
+  assert.equal(shortMapUnitName({name:'Brutalis Dreadnought'}), 'BRD');
+  assert.notEqual(shortMapUnitName({name:'Ballistus Dreadnought'}), shortMapUnitName({name:'Brutalis Dreadnought'}));
+  const units = [
+    {id:'term-a',ownerId:'p1',name:'Terminator Squad',status:'deployed',position:{x:8,y:8},metadata:{rosterUnitId:'term-a-roster'}},
+    {id:'term-b',ownerId:'p1',name:'Terminator Squad',status:'deployed',position:{x:18,y:8},metadata:{rosterUnitId:'term-b-roster'}},
+    {id:'calgar',ownerId:'p1',name:'Marneus Calgar in Armour of Antilochus',status:'deployed',position:{x:19,y:10},metadata:{rosterUnitId:'calgar-roster'}},
+    {id:'honour',ownerId:'p1',name:'Victrix Honour Guard',status:'deployed',position:{x:30,y:8},metadata:{rosterUnitId:'honour-roster'}},
+    {id:'ancient',ownerId:'p1',name:'Ancient',status:'deployed',position:{x:32,y:9},metadata:{rosterUnitId:'ancient-roster'}},
+    {id:'lieutenant',ownerId:'p1',name:'Lieutenant',status:'deployed',position:{x:31,y:10},metadata:{rosterUnitId:'lieutenant-roster'}},
+    {id:'telemon',ownerId:'p1',name:'Telemon Dreadnought',status:'deployed',position:{x:12,y:20},metadata:{datasheetId:'adeptus-custodes:telemon-heavy-dreadnought',rosterUnitId:'telemon-roster'}},
+    {id:'galatus',ownerId:'p1',name:'Galatus Dreadnought',status:'deployed',position:{x:24,y:20},metadata:{datasheetId:'adeptus-custodes:contemptor-galatus-dreadnought',rosterUnitId:'galatus-roster'}}
+  ];
+  const state = {
+    units,
+    armyRosters:{p1:{units:[
+      {id:'term-a-roster',name:'Terminator Squad'},
+      {id:'term-b-roster',name:'Terminator Squad',attachedLeaderIds:['calgar-roster']},
+      {id:'calgar-roster',name:'Marneus Calgar in Armour of Antilochus',attachedToBodyguardId:'term-b-roster'},
+      {id:'honour-roster',name:'Victrix Honour Guard',attachedLeaderIds:['ancient-roster','lieutenant-roster']},
+      {id:'ancient-roster',name:'Ancient',attachedToBodyguardId:'honour-roster'},
+      {id:'lieutenant-roster',name:'Lieutenant',attachedToBodyguardId:'honour-roster'},
+      {id:'telemon-roster',name:'Telemon Heavy Dreadnought',unitUpgrades:[{name:'Memento Moritoi'}]},
+      {id:'galatus-roster',name:'Contemptor-Galatus Dreadnought',unitUpgrades:['Augury Uplink']}
+    ]}}
+  };
+  const symbols = liveUnitSymbolLabels(units, state);
+  assert.equal(symbols.get('term-b'), 'TE2');
+  assert.equal(symbols.get('calgar'), 'MC');
+  assert.equal(symbols.get('telemon'), 'TEL/MM');
+  assert.equal(symbols.get('galatus'), 'CGD/AU');
+  assert.equal(unitDisplayLabels(units, state).get('telemon'), 'Telemon Dreadnought · Memento Moritoi');
+  assert.equal(unitDisplayLabels(units, state).get('galatus'), 'Galatus Dreadnought · Augury Uplink');
+  const html = renderBattlefieldMap(state, {compactMarkers:true,perspectivePlayerId:'p1'});
+  assert.match(html, /data-map-formation-symbol="TE2\+MC"/);
+  assert.match(html, /data-map-formation-symbol="VH\+ANC\+LIE"/);
+  assert.doesNotMatch(html, /data-map-formation-symbol="[^"]*\+\d+"/);
+  assert.match(html, /<strong>TEL\/MM<\/strong> Telemon Dreadnought · Memento Moritoi/);
+  assert.match(html, /<strong>CGD\/AU<\/strong> Galatus Dreadnought · Augury Uplink/);
+  assert.doesNotMatch(html, /data-map-unit-id="calgar"|data-map-unit-id="ancient"|data-map-unit-id="lieutenant"/);
 });
 
 test('live map closes zoom wrappers before selected names, legends and notices', async () => {
