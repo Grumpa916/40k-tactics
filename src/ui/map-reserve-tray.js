@@ -57,7 +57,7 @@ export function renderMovementReserveDock(state, { selectedUnitId, playerId = nu
   const arrivals = getPendingVenatariIngress(state).length;
   const embarked = getMapEmbarkedUnits(state, { playerId }).length;
   const selectedStatus = state.units?.find(unit=>unit.id===selectedUnitId)?.status;
-  return `<details class="movement-map-reserves" data-movement-map-reserves ${['reserves','embarked'].includes(selectedStatus)?'open':''}>
+  return `<details class="movement-map-reserves" data-movement-map-reserves${['reserves','embarked'].includes(selectedStatus)?' open':''}>
     <summary>Place units · ${reserveCount} reserves · ${embarked} embarked${arrivals ? ' · arrivals' : ''}</summary>
     <div class="movement-map-reserves__popover">
       ${renderMapReserveTray(state, { selectedUnitId, playerId })}
