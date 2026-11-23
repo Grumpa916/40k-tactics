@@ -1,6 +1,7 @@
 import { getArmyUnitReference } from './army-unit-summary.js';
 import { renderRosterUnitEditor, rosterUnitEditorStylesheet } from './roster-unit-adjust.js';
 import { liveUnitSymbolLabels } from './live-map-symbols.js';
+import { unitDisplayLabels } from './map-unit-labels.js';
 import { getUnitActivationPresentation } from '../rules/unit-activation-presentation.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { isUnitBattleShocked } from '../rules/unit-status-summary.js';
@@ -48,6 +49,7 @@ export function renderMovementRosterRail(state, {
   const ownerId = rosterView === 'opponent' ? opponentId : myId;
   const units = (state?.units ?? []).filter(unit => unit.ownerId === ownerId);
   const symbols = liveUnitSymbolLabels(state?.units ?? [], state);
+  const labels = unitDisplayLabels(state?.units ?? [], state);
   const row = (unit, role = '') => {
     const activeArmy = unit.ownerId === playerId;
     const selectable = activeArmy && ['deployed','reserves'].includes(unit.status);
@@ -61,7 +63,7 @@ export function renderMovementRosterRail(state, {
       editor ? toggle : `data-open-unit-details="${esc(unit.id)}"`;
     return `<div class="movement-roster__item"><div class="movement-roster__entry"><button type="button" class="movement-roster__row${selected ? ' is-selected' : ''}" ${action} aria-pressed="${selected}">
       <span class="movement-roster__token ${unit.ownerId === myId ? 'is-friendly' : 'is-opponent'}">${esc(symbols.get(unit.id) ?? 'U')}</span>
-      <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}${isUnitBattleShocked(unit) ? ' · BS' : ''}</span><b>W ${esc(wounds)}</b></small></span>
+      <span class="movement-roster__identity">${role ? `<small class="movement-roster__role">${role}</small>` : ''}<strong>${esc(labels.get(unit.id) ?? unit.name ?? unit.id)}</strong><small class="movement-roster__vitals"><span>${esc(status)}${isUnitBattleShocked(unit) ? ' · BS' : ''}</span><b>W ${esc(wounds)}</b></small></span>
     </button>${selectable || editor ? `<button type="button" class="movement-roster__reference" data-open-unit-details="${esc(unit.id)}" aria-label="View ${esc(unit.name ?? unit.id)} details">ⓘ</button>` : ''}</div>
     ${editor}</div>`;
   };
@@ -81,6 +83,7 @@ export function renderMovementSelectedUnitCard(state, unit, { action = null, ref
   if (!unit) return `<section class="movement-selected-unit"><h2>Selected Unit</h2><p>Select one of your units on the map or in the army list.</p></section>`;
   const ref = getArmyUnitReference(state, unit);
   const symbols = liveUnitSymbolLabels(state?.units ?? [], state);
+  const labels = unitDisplayLabels(state?.units ?? [], state);
   const myId = perspectivePlayerId ?? state?.players?.[0]?.id ?? state?.activePlayer ?? unit.ownerId;
   const tokenSide = unit.ownerId === myId ? 'is-friendly' : 'is-opponent';
   const stats = [
@@ -95,7 +98,7 @@ export function renderMovementSelectedUnitCard(state, unit, { action = null, ref
   return `<section class="movement-selected-unit" data-movement-selected-unit>
     <div class="movement-selected-unit__heading">
       <span class="movement-selected-unit__token ${tokenSide}">${esc(symbols.get(unit.id) ?? 'U')}</span>
-      <span><small>SELECTED UNIT</small><strong>${esc(unit.name ?? unit.id)}</strong><em>${esc(ownerName(state, unit.ownerId))}</em></span>
+      <span><small>SELECTED UNIT</small><strong>${esc(labels.get(unit.id) ?? unit.name ?? unit.id)}</strong><em>${esc(ownerName(state, unit.ownerId))}</em></span>
       <b>${esc(status)}${battleShocked ? ' · BS' : ''}</b>
     </div>
     <div class="movement-selected-unit__stats">${stats.map(([key,value]) => `<span><small>${key}</small><strong>${esc(value)}</strong></span>`).join('')}</div>
