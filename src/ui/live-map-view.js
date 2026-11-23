@@ -188,8 +188,14 @@ function drawPrecision(container, state, options, preferences, selectedModelInde
       Number.isFinite(model?.position?.x) && Number.isFinite(model?.position?.y)) : [];
     const reportedCount = Number(unit.metadata?.modelCount ?? unit.startingStrength ??
       unit.currentStrength ?? unit.remainingStrength);
-    const isReference = recordedModels.length === 0 && reportedCount !== 1;
-    const models = recordedModels.length ? recordedModels : unitModelsForMap(unit, state);
+    // Collapsing a squad hides its individual base outlines as well as its
+    // numbered model handles. Keep one representative base at the squad marker.
+    const expanded = preferences.topDown && preferences.expandedUnits[unit.id] === true &&
+      reportedCount > 1;
+    const isReference = !expanded && reportedCount !== 1;
+    const models = expanded && recordedModels.length
+      ? recordedModels
+      : [{ id: unit.id, position: getLiveUnitPosition(state, unit) }];
     return models.map((model, index) => {
       const position = model.position ?? getLiveUnitPosition(state, unit);
       if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return '';
@@ -365,6 +371,7 @@ export function createLiveMapView() {
           Number(unit.currentStrength??unit.remainingStrength??unit.metadata?.currentModelCount??unit.metadata?.modelCount);
         event.currentTarget.setAttribute('aria-pressed',String(opening));
         drawIndividualModelHandles(container,state,preferences);
+        drawPrecision(container,state,options,preferences,selectedModelIndex);
       });
       container.querySelector('[data-live-map-oval-rotate]')?.addEventListener('click', event => {
         const unit = (state.units ?? []).find(item => item.id === options?.selectedUnitId);

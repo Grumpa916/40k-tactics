@@ -99,7 +99,7 @@ test('live map base editor automatically fills the verified size and leaves visu
   }
 });
 
-test('live base overlay draws recorded model positions and never treats a squad centre as one base', () => {
+test('live base overlay hides individual model bases when the squad is collapsed', () => {
   const prev=globalThis.localStorage;
   try {
     globalThis.localStorage={getItem:()=>null,setItem(){}};
@@ -129,9 +129,17 @@ test('live base overlay draws recorded model positions and never treats a squad 
     const withModels={...squad,models:[{id:'a1',position:{x:24,y:24}},{id:'a2',position:{x:26,y:24}}]};
     const stateWithModels={...state,units:[base,withModels]};
     view.bind(container,stateWithModels,{perspectivePlayerId:'p1'});
+    assert.match(bases.innerHTML,/data-live-map-model="allarus"/);
+    assert.doesNotMatch(bases.innerHTML,/data-live-map-model="a[12]"/,
+      'collapsed squad retains one representative base even after model positions are recorded');
+    globalThis.localStorage.getItem=()=>JSON.stringify({expandedUnits:{allarus:true}});
+    const expandedView=createLiveMapView();
+    expandedView.render(stateWithModels,{perspectivePlayerId:'p1'});
+    expandedView.bind(container,stateWithModels,{perspectivePlayerId:'p1'});
     assert.match(bases.innerHTML,/data-live-map-model="a1"/);
     assert.match(bases.innerHTML,/data-live-map-model="a2"/);
-    assert.doesNotMatch(bases.innerHTML,/data-live-base-kind="reference"/,'fully recorded model positions draw actual base rings');
+    assert.doesNotMatch(bases.innerHTML,/data-live-base-kind="reference"/,
+      'expanded squad draws the recorded individual bases');
   } finally {
     if(prev===undefined) delete globalThis.localStorage;
     else globalThis.localStorage=prev;
