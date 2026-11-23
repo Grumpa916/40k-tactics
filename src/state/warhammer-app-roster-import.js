@@ -6,6 +6,7 @@ import { matchWargearSelection, summarizeWargearAudit, validateWargearLoadout, b
 import { hydrateReviewedFixedCustodesLoadout } from '../rules/custodes-fixed-wargear.js';
 import { detectImportMoritoiUpgrade, reconcileUpgradePoints } from '../rules/custodes-unit-upgrades.js';
 import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
+import { getFactionDetachments } from '../data/faction-detachments.js';
 import { assessSavedUnitCost } from '../rules/roster-rules-data-validation.js';
 import { buildImportedRosterReport, foldDuplicateUnitContent, isUserEnteredUnit } from '../rules/imported-roster-report.js';
 
@@ -234,6 +235,9 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const modelGroupTotals = new Map();
  let current = null, group = null, detachment = null, inErrors = false, inUnitSection = false;
  let factionTag = selectedFaction;
+ const selectedDetachments = [];
+ const knownSpaceMarineDetachments = selectedFaction.toLowerCase() === 'space marines'
+  ? new Set(getFactionDetachments(selectedFaction).map(item => item.name)) : null;
  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
   const raw = lines[lineIndex];
   const line = raw.trim();
@@ -288,7 +292,12 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    continue;
   }
   if (/\(\d+\s+Detachment Points?\)/i.test(line) || /^(?:army )?detachment\s*[:–-]/i.test(line)) {
-   detachment = line.replace(/^(?:army )?detachment\s*[:–-]\s*/i, '').replace(/\s*\(\d+\s+Detachment Points?\)/i, '').trim();
+   const parsed = line.replace(/^(?:army )?detachment\s*[:–-]\s*/i, '').replace(/\s*\(\d+\s+Detachment Points?\)/i, '').trim();
+   if (knownSpaceMarineDetachments) {
+    const names = parsed.split(/\s*(?:\/|,|&)\s*|\s+and\s+/i).map(name => name.trim()).filter(Boolean);
+    for (const name of names) if (knownSpaceMarineDetachments.has(name) && !selectedDetachments.includes(name)) selectedDetachments.push(name);
+    detachment = selectedDetachments[0] ?? parsed;
+   } else detachment = parsed;
    current = null; continue;
   }
   if (metadataLine.test(line) || /^(?:warlord|enhancements?)$/i.test(line)) { current = null; continue; }
@@ -377,7 +386,8 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
  const sharedUnitContent = foldDuplicateUnitContent(units);
  const importReport = buildImportedRosterReport({faction: selectedFaction, units}, {source: 'import', assessCost: assessSavedUnitCost, generatedAt: createdAt});
- const roster = createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment, units,
+ const roster = createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment,
+  detachments: selectedDetachments.length ? selectedDetachments : null, units,
   notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text,
   rulesDataRevision: createRulesDataRevisionStamp(selectedFaction), sharedUnitContent, importReport, createdAt, updatedAt});
  return {roster, unrecognized, warnings, sourceErrors, wargearAudit: summarizeWargearAudit(roster), declaredPoints, totalPoints, importReport: roster.importReport};

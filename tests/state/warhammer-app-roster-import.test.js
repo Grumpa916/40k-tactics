@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { importWarhammerAppRoster } from '../../src/state/warhammer-app-roster-import.js';
+import { renderUnitUpgradeEditor } from '../../src/ui/army-unit-upgrade-editor.js';
+import { getEligibleSpaceMarineEnhancements, setSpaceMarineEnhancement } from '../../src/rules/space-marines-enhancements.js';
 
 test('imports matched Warhammer App unit lines with catalog datasheets and preserves source text',()=>{
  const source=`TYRANIDS\nInvasion Fleet\nBattle Size: Strike Force 2,000 points\n10x Termagants · 60 pts\n1x Neurotyrant (115 points)\nHive Tyrant — 195 points\nWargear: Heavy venom cannon`;
@@ -32,6 +34,44 @@ test('uses catalog points for newly supported Space Marine units',()=>{
  assert.equal(parsed.roster.units[0].points,120); // The exact catalog cost matches the catalog's default model count.
  const supported=importWarhammerAppRoster({text:'Captain',faction:'Space Marines',name:'Catalog cost',id:'r2'});
  assert.equal(supported.roster.units[0].points,90);
+});
+
+test('Gravis Captain sees both detachment Upgrades after importing a multi-detachment Space Marine list',()=>{
+ const text='Space Marines\nCHARACTERS\nFaction: Deathwatch\nDetachment: Assault Brethren / Gravis Siege Force / Terminator Storm Force\nCaptain in Gravis Armour (90 Points)';
+ const {roster,unrecognized}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-gravis'});
+ assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force','Terminator Storm Force']);
+ assert.deepEqual(unrecognized,[]);
+ assert.deepEqual(roster.units.map(unit=>unit.name),['Captain in Gravis Armour']);
+ const captain=roster.units[0];
+ assert.equal(captain.factionTag,'Deathwatch');
+ assert.equal(captain.dataSource.factionTag,'Deathwatch');
+ assert.notEqual(captain.dataSource.status,'manual-entry');
+ assert.ok(captain.datasheetId);
+ const choices=getEligibleSpaceMarineEnhancements(captain,roster);
+ const furious=choices.find(item=>item.name==='Furious Assault');
+ const immovable=choices.find(item=>item.name==='Immovable Conquerors');
+ assert.ok(furious);assert.ok(immovable);
+ const html=renderUnitUpgradeEditor(captain,roster);
+ assert.match(html,/Furious Assault · Assault Brethren · \+10 pts · Upgrade/);
+ assert.match(html,/Immovable Conquerors · Gravis Siege Force · \+15 pts · Upgrade/);
+ assert.equal(setSpaceMarineEnhancement(roster,captain.id,furious.id).units[0].points,100);
+ assert.equal(setSpaceMarineEnhancement(roster,captain.id,immovable.id).units[0].points,105);
+});
+
+test('separate Space Marine detachment lines remain available to upgrade the Captain',()=>{
+ const text='Space Marines\nCHARACTERS\nFaction: Deathwatch\nAssault Brethren (1 Detachment Point)\nGravis Siege Force (1 Detachment Point)\nCaptain in Gravis Armour (90 Points)';
+ const {roster,unrecognized}=importWarhammerAppRoster({text,faction:'Space Marines',name:'Jared',id:'sm-lines'});
+ assert.deepEqual(roster.detachments,['Assault Brethren','Gravis Siege Force']);
+ assert.deepEqual(unrecognized,[]);
+ assert.deepEqual(roster.units.map(unit=>unit.name),['Captain in Gravis Armour']);
+ const captain=roster.units[0];
+ assert.equal(captain.factionTag,'Deathwatch');
+ assert.equal(captain.dataSource.factionTag,'Deathwatch');
+ assert.notEqual(captain.dataSource.status,'manual-entry');
+ assert.ok(captain.datasheetId);
+ const choices=getEligibleSpaceMarineEnhancements(captain,roster).map(item=>item.name);
+ assert.ok(choices.includes('Furious Assault'));
+ assert.ok(choices.includes('Immovable Conquerors'));
 });
 
 test('real App v2.8.1 export imports 16 entries, 2000 points, attachments and matched equipped weapons', async()=>{
