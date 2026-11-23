@@ -67,9 +67,9 @@ test('switch updates only shell presentation and labels, without dispatching gam
   assert.equal(button.textContent,'Theme: Custodes');
 });
 
-test('landscape iPad phase HUD keeps five phase chips and places the theme only under More tools',()=>{
+test('landscape iPad HUD keeps the theme only under More tools',()=>{
   const html=renderPrototypeWorkspaceTools({appTheme:'custodes'});
-  assert.equal((html.match(/data-battle-phase-button=/g)??[]).length,6);
+  assert.equal((html.match(/data-battle-phase-button=/g)??[]).length,1);
   assert.match(html,/<details class="prototype-phase-menu">[\s\S]*data-app-theme-toggle/);
   assert.match(html,/More tools/);
   assert.match(html,/data-workspace-panel/);
