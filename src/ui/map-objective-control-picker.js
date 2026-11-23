@@ -63,6 +63,9 @@ export function renderMapObjectiveControlPicker(state, { objectiveId, label, per
   const current = selectedMapObjectiveControl(state, objectiveId, perspectivePlayerId);
   if (current === null) return '';
   const { mine, opponent } = playerIds(state, perspectivePlayerId);
+  const objective=(state?.objectives??[]).find(item=>item.id===objectiveId);
+  const securedNote=objective?.securedByPlayerId
+    ? '<small>Secured by Impenetrable Bastion. Confirm opposing OC is greater at the end of a phase before choosing Opponent. Contested and Uncontrolled are manual corrections that clear the secured marker.</small>' : '';
   const options = MAP_OBJECTIVE_CONTROL_CHOICES.map(option => {
     const available = option.id === 'mine' ? Boolean(mine) : option.id === 'opponent' || option.id === 'contested'
       ? Boolean(opponent) : true;
@@ -72,6 +75,6 @@ export function renderMapObjectiveControlPicker(state, { objectiveId, label, per
   }).join('');
   return '<div class="live-map__objective-picker-heading"><strong>' + esc(label || objectiveId) +
     '</strong><button type="button" data-map-objective-control-close aria-label="Close objective control choices">×</button></div>' +
-    '<small>Set objective control</small><div class="live-map__objective-choices">' + options + '</div>' +
+    '<small>Set objective control</small>' + securedNote + '<div class="live-map__objective-choices">' + options + '</div>' +
     '<small>Records tabletop control; does not award VP.</small><small role="alert" data-map-objective-control-error></small>';
 }
