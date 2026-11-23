@@ -1,4 +1,5 @@
 import { hasEffectiveVictoryPointOpportunity } from '../engine/victory-points-ledger.js';
+import { isManualScoringEnabled } from '../config/feature-flags.js';
 import { getSecondaryMissionHistory, getSecondaryMissionMode, SECONDARY_MISSION_MODES } from '../rules/secondary-mission-lifecycle.js';
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export const checkpointScoreKey = (state, playerId, checkpoint) => [state.battle?.round ?? 0, state.turn ?? 0, playerId, checkpoint].join(':');
@@ -127,6 +128,7 @@ function renderSecondaryTierChoices(mission, formAttrs, fixedCard = false) {
 }
 
 export function renderCheckpointScore(state, group, mission) {
+  if (!isManualScoringEnabled()) return '';
   const { definitionId, definitionName, instanceId, category } = mission;
   const card = instanceId ? getSecondaryMissionHistory(state, group.playerId).find(c => c.instanceId === instanceId) : null;
   const fixedCard = category === 'secondary' &&

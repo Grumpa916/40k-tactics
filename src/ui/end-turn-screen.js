@@ -1,3 +1,4 @@
+import { isManualScoringEnabled } from '../config/feature-flags.js';
 import { getConsecrateReviewState } from '../rules/consecrate-state.js';
 import { getScoringCheckpointReminder } from '../application/scoring-checkpoint-reminders.js';
 import { bindConsecrateReview, renderConsecrateReviewSection } from './consecrate-review.js';
@@ -9,7 +10,7 @@ import { bindConsecrateReview, renderConsecrateReviewSection } from './consecrat
  */
 export function renderEndTurnContent(state, { perspectivePlayerId = null } = {}) {
   const consecrate = getConsecrateReviewState(state);
-  const scoringDue = Boolean(getScoringCheckpointReminder(state, {
+  const scoringDue = isManualScoringEnabled() && Boolean(getScoringCheckpointReminder(state, {
     previousPhase: 'fight',
     perspectivePlayerId
   }));
@@ -33,7 +34,9 @@ export function renderEndTurnContent(state, { perspectivePlayerId = null } = {})
     '</style>' +
     '<section class="battle-end-turn" data-end-turn-screen aria-label="End of turn review">' +
     '<h2>End of turn</h2>' +
-    '<p>Confirm Primary and Secondary scores with your opponent. Scoring remains manual, and you can correct VP or CP from the scoreboard.</p>' +
+    '<p>' + (isManualScoringEnabled()
+      ? 'Confirm Primary and Secondary scores with your opponent. Scoring remains manual, and you can correct VP or CP from the scoreboard.'
+      : 'Scores come from Warmind. Finish the turn when the table is ready.') + '</p>' +
     (scoringDue ? '<div><button type="button" data-open-scoring-checkpoint>Review mission scoring</button></div>' : '') +
     consecrateContent +
     '<p>When you are ready, use <strong>Finish turn</strong> above to continue to the opponent. You may finish without recording a Consecrate selection; unrecorded objectives are not marked as consecrated.</p>' +

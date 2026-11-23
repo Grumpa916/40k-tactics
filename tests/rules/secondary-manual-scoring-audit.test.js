@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from 'node:assert/strict';
 import { COMPLETE_SECONDARY_MISSION_CATALOG } from '../../src/data/secondary-mission-complete-catalog.js';
 import { SECONDARY_MISSION_CATALOG_SOURCE } from '../../src/data/secondary-mission-catalog.js';

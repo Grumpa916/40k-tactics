@@ -116,7 +116,7 @@ export function getEndgameReview(state, { playerId = state.players?.[0]?.id, uni
   ];
   if(attacks !== comparisons) evidenceGaps.push(`${attacks-comparisons} of ${attacks} attack entries lack a usable expected-versus-actual comparison.`);
   if(unknownOwners) evidenceGaps.push(`${unknownOwners} attack entries have incomplete unit ownership; no side-specific conclusion is drawn from those entries.`);
-  if(players.some(p=>p.total == null || p.unallocated !== 0)) evidenceGaps.push('Some score totals are missing or do not reconcile with the scoring history. Unallocated VP are shown separately, without assigning them to a round or mission.');
+  if(scores.length && players.some(p=>p.entries > 0 && (p.total == null || p.unallocated !== 0))) evidenceGaps.push('Some saved score totals do not reconcile with the scoring history. Unallocated VP are shown separately, without assigning them to a round or mission.');
   return {largestSwing,complete:state.battle?.status === 'complete',playerId,players,rounds,scores,units:[...units.values()],moments,
     lessons:lessons.slice(0,6),evidence,context,evidenceGaps,coverage:{attacks,comparisons,scoreEntries:scores.length}};
 }

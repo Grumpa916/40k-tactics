@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from 'node:assert/strict';
 import { estimateCheckpointVp } from '../../src/rules/checkpoint-vp-estimate.js';
 import { renderCheckpointScore } from '../../src/ui/checkpoint-score-controls.js';

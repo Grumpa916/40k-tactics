@@ -9,6 +9,7 @@ import { getTyranidWargearRuleSet } from '../data/tyranid-wargear-rules.js';
 import { getFactionDetachments } from '../data/faction-detachments.js';
 import { assessSavedUnitCost } from '../rules/roster-rules-data-validation.js';
 import { buildImportedRosterReport, foldDuplicateUnitContent, isUserEnteredUnit } from '../rules/imported-roster-report.js';
+import { assessAlliedDetachments, classifyImportedAlliedUnit } from '../rules/allied-detachments.js';
 
 const pointsPattern = /\b(\d[\d,]*)\s*(?:pts?\.?|points?)\b/i;
 const sections = /^(?:ATTACHED UNITS|CHARACTERS|BATTLELINE|OTHER DATASHEETS|DEDICATED TRANSPORTS|ALLIED UNITS)$/i;
@@ -235,6 +236,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const modelGroupTotals = new Map();
  let current = null, group = null, detachment = null, inErrors = false, inUnitSection = false;
  let factionTag = selectedFaction;
+ let inAlliedSection = false;
  const selectedDetachments = [];
  const knownSpaceMarineDetachments = selectedFaction.toLowerCase() === 'space marines'
   ? new Set(getFactionDetachments(selectedFaction).map(item => item.name)) : null;
@@ -253,6 +255,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   }
   if (sections.test(line)) {
    group = null; current = null; inErrors = false; inUnitSection = true;
+   inAlliedSection = /^ALLIED UNITS$/i.test(line);
    factionTag = selectedFaction; continue;
   }
   if (inErrors) {
@@ -333,7 +336,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
    }
    current = {id: id + '-unit-' + (units.length + 1), name: displayHeaderName(line),
     modelCount: counted ?? 1, points: getPoints(line), pointsOptions: [], notes: line,
-    datasheet: null, datasheetId: null, factionTag,
+    datasheet: null, datasheetId: null, factionTag, importedFromAlliedSection: inAlliedSection,
     equippedWargear: [], equippedWeapons: [], unmatchedWargear: [],
     dataSource: {status: 'manual-entry', origin: 'import-unmatched', label: 'User-entered', factionTag,
      rosterImport: 'warhammer-app-text'}};
@@ -349,6 +352,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   current = {id: id + '-unit-' + (units.length + 1),
    name: usedVariantAlias ? candidate.officialDatasheetName : candidate.name, modelCount: models,
    points: getPoints(line), pointsOptions: candidate.pointsOptions ?? [], notes: line, factionTag,
+   importedFromAlliedSection: inAlliedSection,
    datasheet: candidate.datasheet ? structuredClone(candidate.datasheet) : null, datasheetId: candidate.id,
    dataSource: {status: candidate.verificationStatus, sourceName: candidate.sourceName, sourceUrl: candidate.sourceUrl,
     reviewedAt: candidate.reviewedAt ?? null, pointsSourceName: candidate.pointsSourceName ?? null,
@@ -384,10 +388,14 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const declaredPoints = getPoints(firstLine);
  const totalPoints = units.reduce((sum, unit) => sum + (unit.points ?? 0), 0);
  if (declaredPoints != null && (totalPoints !== declaredPoints || units.some(u => u.points == null))) warnings.push('Imported unit costs total ' + totalPoints + ' points; export declares ' + declaredPoints + '. Review missing units and costs.');
+ for (let index = 0; index < units.length; index += 1) units[index] = classifyImportedAlliedUnit(units[index], selectedFaction);
+ const alliedAssessment = assessAlliedDetachments({ faction: selectedFaction, units });
+ for (const issue of alliedAssessment.issues) warnings.push(issue.message);
  const sharedUnitContent = foldDuplicateUnitContent(units);
  const importReport = buildImportedRosterReport({faction: selectedFaction, units}, {source: 'import', assessCost: assessSavedUnitCost, generatedAt: createdAt});
  const roster = createArmyRoster({id, name, faction: selectedFaction, pointsLimit, detachment,
-  detachments: selectedDetachments.length ? selectedDetachments : null, units,
+  detachments: selectedDetachments.length ? selectedDetachments : null,
+  alliedDetachments: alliedAssessment.detachments.length ? alliedAssessment.detachments : null, units,
   notes: 'Imported from pasted Warhammer App text. Original export is preserved below for review.\n\n' + text,
   rulesDataRevision: createRulesDataRevisionStamp(selectedFaction), sharedUnitContent, importReport, createdAt, updatedAt});
  return {roster, unrecognized, warnings, sourceErrors, wargearAudit: summarizeWargearAudit(roster), declaredPoints, totalPoints, importReport: roster.importReport};

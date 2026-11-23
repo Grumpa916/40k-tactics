@@ -1,4 +1,6 @@
 import test from "node:test";
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from "node:assert/strict";
 import { renderConsecrateReviewSection } from "../../src/ui/consecrate-review.js";
 import { getPhaseProgressionAction, renderPhaseProgressionPanel } from "../../src/ui/phase-progression-panel.js";

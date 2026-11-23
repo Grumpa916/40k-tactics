@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { setManualScoringEnabledForTests } from '../../src/config/feature-flags.js';
+setManualScoringEnabledForTests(true);
 import assert from 'node:assert/strict';
 import { getLiveMissionActionOptions } from '../../src/rules/mission-action-state.js';
 import { createMissionActionPicker } from '../../src/ui/mission-action-picker.js';

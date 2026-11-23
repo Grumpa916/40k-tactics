@@ -53,19 +53,19 @@ Live-game feedback from the November 22 match (Custodes vs Space Marines, Inesca
 5. Map labels — attached characters (`TE2+MC` style) and upgrade-bearing Dreadnoughts (Telemann vs Contemptor Gladius).
 6. Layout C objective labels — nearest-home-objective labeling disagrees with territory rules on 16 of 75 layouts.
 7. Overwatch — 1 CP step at end of opponent's Movement phase; records usage only since CP moves to Warmind.
-8. Full-screen map UI — part 1: layout, thin icon rails, saved panel state; part 2: remove scoring screens after Warmind role is settled. Command Points become read-only edge-rail ("see Warmind" or typed number) folded into part 1.
+8. Full-screen map UI — part 1: layout, thin icon rails, saved panel state; part 2: remove scoring screens after Warmind role is settled. Confirmed 2026-11-23: Command Points move to Warmind as a read-only rail value, folded into part 1. Not built in the scoring-flag change.
 9. Stat card build — fixed stat row, per-faction chips, filtered map key, long-press/info-icon trigger.
 10. Compact datasheet form for manual units — Toughness, Save, Wounds, short weapon row (range, attacks, skill, strength, AP, damage); base size and keywords next.
 
 ### Blocked or awaiting input
 
 - **Warmind battle-report importer:** scoped ~600–850 lines. Needs the four full-report screenshots plus iPad Live Text pastes to verify struck-through undone lines and the 40-vs-27–47 score discrepancy. Text-paste first; Tesseract.js screenshot OCR optional.
-- **Manual secondary scoring with round backdating:** likely becomes removal of Tactics scoring screens rather than a feature — awaiting confirmation.
-- **Deathwatch Support validation:** catalog has no Deathwatch datasheets or points yet; PR keeps them as tagged manual entries.
+- **Manual secondary scoring:** confirmed 2026-11-23. Live score entry is hidden behind `MANUAL_SCORING_ENABLED` (`src/config/feature-flags.js`, default false). Scoring rules and saved history stay. Endgame review no longer expects local scoring; scores come from Warmind. Old saved entries remain readable.
+- **Deathwatch allies:** no Deathwatch datasheets or points in the catalog or its source pipeline. Imported `Faction: Deathwatch` units under ALLIED UNITS, and unmatched Deathwatch-tagged units, are allied units and cannot be the Warlord. Points cap and detachment cost are not in a repo source, so they are not enforced. A matched Space Marine chapter tag outside ALLIED UNITS stays a Space Marine unit.
 
 ### Open questions
 
-- Anathema Psykana keyword (item 3).
+- Anathema Psykana keyword (item 3). Decided 2026-11-23: Anathema Psykana units do not have the ADEPTUS CUSTODES keyword. Magna Imperator and other keyword-gated Custodes rules use the unit's datasheet keywords. Their own rules and legality in a Custodes army stay.
 - Hazardous roll owner for Firing Deck weapons (item 4).
 - Exact error text for the "both fail" reserves/embarked case (item 1).
 - Game review screen still shows CP and End game confirmation — needs Warmind value once CP moves.
