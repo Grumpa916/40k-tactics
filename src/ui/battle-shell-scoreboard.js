@@ -55,8 +55,9 @@ export function renderScoreAdjustOverlay(
   const scorePlayer = players.find((player) => player.id === scoreAdjustPlayerId);
   if (!scorePlayer) return "";
   const showVp = isManualScoringEnabled() && (scoreAdjustKind === "both" || scoreAdjustKind === "vp");
+  const showSecondary = scoreAdjustKind === "secondary" || showVp;
   const showCp = scoreAdjustKind === "both" || scoreAdjustKind === "cp";
-  const current = (showVp ? '<strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong>' : '') +
+  const current = (showSecondary ? '<strong>' + getVictoryPointScore(state, scorePlayer.id) + ' VP</strong>' : '') +
     (showCp ? '<strong>' + getCommandPointBalance(state, scorePlayer.id) + ' CP</strong>' : '');
   const controls = (showVp ? '<span>Victory Points</span><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="vp" data-score-adjust-amount="1">+1</button>' : '') +
     (showCp ? '<span>Command Points</span><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="-1">−1</button><button type="button" data-score-adjust-kind="cp" data-score-adjust-amount="1">+1</button>' : '');
@@ -68,7 +69,7 @@ export function renderScoreAdjustOverlay(
     (scoreAdjustCollapsed ? '□' : '−') +
     '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current">' +
     current + '</div>' + (showVp ? renderScoreReason('vp') : '') + (showCp ? renderScoreReason('cp') : '') + '<div class="battle-shell__score-adjust-grid">' + controls +
-    '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p>' + renderScoreTransactions(state, scorePlayer.id, scoreAdjustKind) + (showVp ? renderSecondaryCorrection(state,scorePlayer.id) : '') + '</section></div>';
+    '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p>' + renderScoreTransactions(state, scorePlayer.id, scoreAdjustKind) + (showSecondary ? renderSecondaryCorrection(state,scorePlayer.id) : '') + '</section></div>';
 }
 
 export function renderStatusSummaryContent(state, viewedPhase) {
@@ -83,7 +84,7 @@ export function renderStatusSummaryContent(state, viewedPhase) {
     const vpControl = isManualScoringEnabled()
       ? '<button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) +
         '" data-open-score-adjust-kind="vp" aria-label="Adjust Victory Points for ' + escapeHtml(player.name ?? player.id) + '">' + vp + ' VP</button>'
-      : '<span class="battle-shell__summary-value">' + vp + ' VP</span>';
+      : '<span class="battle-shell__summary-value">' + vp + ' VP</span><button type="button" class="battle-shell__summary-value" data-open-score-adjust="' + escapeHtml(player.id) + '" data-open-score-adjust-kind="secondary">Correct secondary</button>';
     return '<div class="battle-shell__player-summary' + active + '">' +
       '<strong>' + escapeHtml(player.name ?? player.id) + '</strong>' +
       vpControl +
