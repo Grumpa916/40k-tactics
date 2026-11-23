@@ -23,7 +23,7 @@ export function renderMapReserveTray(state,{selectedUnitId,playerId=null}={}) {
   const reserves=getMapReserveUnits(state,{playerId});
   const embarked=getMapEmbarkedUnits(state,{playerId});
   const selected=[...units,...embarked].find(unit=>unit.id===selectedUnitId);
-  const canSend=selected && !reserves.includes(selected);
+  const canSend=selected?.status==='deployed' && !reserves.includes(selected);
   const labels=unitDisplayLabels(state.units??[]);
   const labelFor=unit=>unit ? (labels.get(unit.id)??unit.name??unit.id) : '';
   return `<link rel="stylesheet" href="${new URL('./styles/map-reserve-tray.css',import.meta.url).href}"><div class="map-reserve-tray" data-map-reserve-area aria-label="Reserves tray">
