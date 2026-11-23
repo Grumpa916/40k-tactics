@@ -18,6 +18,7 @@ import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-st
 import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 import { captureViewContinuity } from './view-continuity.js';
 import { getBattleRulesReminders } from "../rules/battle-rules-reminders.js";
+import { previewSpokenSecondaryPair } from './secondary-voice-input.js';
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -77,6 +78,64 @@ export function createCommandScreen(container, {
   let objectiveMessage = "";
   let katahMessage = "";
   let doctrineMessage = "";
+  let voiceTranscript = "";
+  let voiceDraft = null;
+  let voiceMessage = "";
+  let voiceListening = false;
+  let recognition = null;
+
+  function reviewVoiceCards() {
+    voiceTranscript = container.querySelector?.('[data-voice-secondary-text]')?.value ?? voiceTranscript;
+    try {
+      voiceDraft = previewSpokenSecondaryPair(session.getState(), voiceTranscript,
+        [...missionDefinitions, ...secondaryMissionCatalog], perspectivePlayerId);
+      voiceMessage = "";
+    } catch (error) {
+      voiceDraft = null;
+      voiceMessage = error?.message ?? String(error);
+    }
+    render();
+  }
+
+  function handleVoiceClick(event) {
+    const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel]');
+    if (!target || !container.contains(target)) return;
+    if (target.hasAttribute('data-voice-secondary-cancel')) {
+      recognition?.abort?.(); voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
+    }
+    if (target.hasAttribute('data-voice-secondary-review')) { reviewVoiceCards(); return; }
+    if (target.hasAttribute('data-voice-secondary-confirm')) {
+      try {
+        const draft = previewSpokenSecondaryPair(session.getState(), voiceDraft?.transcript,
+          [...missionDefinitions, ...secondaryMissionCatalog], perspectivePlayerId);
+        voiceDraft = null;
+        for (const definition of draft.definitions) session.dispatch({
+          type: COMMAND_TYPES.DRAW_SECONDARY_MISSION,
+          payload: { definition, playerId: draft.playerId, round: draft.round, turn: draft.turn }
+        });
+        voiceTranscript = ""; voiceMessage = "Both Tactical cards recorded."; render();
+      } catch (error) {
+        voiceDraft = null;
+        voiceMessage = error?.message ?? String(error); render();
+      }
+      return;
+    }
+    const Recognition = globalThis.SpeechRecognition ?? globalThis.webkitSpeechRecognition;
+    if (!Recognition) {
+      voiceMessage = "Speech recognition is unavailable here. Dictate into the text field or use the catalog."; render(); return;
+    }
+    recognition?.abort?.();
+    recognition = new Recognition();
+    recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1;
+    recognition.onresult = result => {
+      voiceTranscript = result.results?.[0]?.[0]?.transcript ?? "";
+      reviewVoiceCards();
+    };
+    recognition.onerror = result => { voiceMessage = "Microphone: " + (result.error ?? "unavailable"); voiceListening = false; render(); };
+    recognition.onend = () => { voiceListening = false; render(); };
+    try { voiceListening = true; recognition.start(); render(); }
+    catch (error) { voiceListening = false; voiceMessage = error?.message ?? String(error); render(); }
+  }
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
@@ -750,8 +809,19 @@ export function createCommandScreen(container, {
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>' + secondaryAddLabel + '</button>' +
           secondaryModeStatusMarkup + '</div></form>';
+    const voiceMarkup = secondaryMissionMode === 'tactical' ?
+      '<section class="command-voice-secondary" aria-label="Speak Tactical secondary cards">' +
+      '<h3>Speak drawn cards</h3><p>Warmind draws; record two cards for ' + escapeHtml(playerName(state, selectedSecondaryPlayerId)) + '.</p>' +
+      '<button type="button" data-voice-secondary-start style="min-height:48px">' + (voiceListening ? 'Listening…' : '🎙 Tap to speak') + '</button>' +
+      '<label>Heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
+      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button>' +
+      (voiceDraft ? '<p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
+        voiceDraft.definitions.map(card => escapeHtml(card.name)).join(' and ') + '?</p>' +
+        '<button type="button" data-voice-secondary-confirm style="min-height:48px">Confirm both cards</button>' +
+        '<button type="button" data-voice-secondary-cancel>Cancel</button>' : '') +
+      (voiceMessage ? '<p role="status">' + escapeHtml(voiceMessage) + '</p>' : '') + '</section>' : '';
     const secondaryMissionManager = state.phase === "command"
-      ? '<section class="command-secondary-missions">' + secondaryEntryMarkup +
+      ? '<section class="command-secondary-missions">' + voiceMarkup + secondaryEntryMarkup +
         secondaryHistoryMarkup +
         (secondaryMissionNotice ? '<p role="status">' + escapeHtml(secondaryMissionNotice) + '</p>' : '') +
         '</section>'
@@ -871,6 +941,7 @@ export function createCommandScreen(container, {
   }
 
   container.addEventListener?.("click", handleClick);
+  container.addEventListener?.("click", handleVoiceClick);
   container.addEventListener?.("change", handleChange);
   container.addEventListener?.("submit", handleSubmit);
   const unbindMapCorrection = layoutMode === "tabletop"
@@ -880,8 +951,10 @@ export function createCommandScreen(container, {
   render();
   return { render, destroy() {
     unsubscribe();
+    recognition?.abort?.();
     unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
+    container.removeEventListener?.("click", handleVoiceClick);
     container.removeEventListener?.("change", handleChange);
     container.removeEventListener?.("submit", handleSubmit);
     container.replaceChildren();
