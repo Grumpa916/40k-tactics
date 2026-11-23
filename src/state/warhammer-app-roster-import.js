@@ -232,7 +232,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const units = [], unrecognized = [], warnings = [], sourceErrors = [];
  const groups = new Map();
  const modelGroupTotals = new Map();
- let current = null, group = null, detachment = null, inErrors = false, inUnitSection = false, sectionKind = '';
+ let current = null, group = null, detachment = null, inErrors = false, inUnitSection = false;
  let factionTag = selectedFaction;
  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
   const raw = lines[lineIndex];
@@ -244,15 +244,11 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   }
   const groupMatch = line.match(/^Attached unit\s+(\d+)$/i);
   if (groupMatch) {
-   group = groupMatch[1]; current = null; inErrors = false; inUnitSection = true; sectionKind = 'attached';
+   group = groupMatch[1]; current = null; inErrors = false; inUnitSection = true;
    factionTag = selectedFaction; groups.set(group, []); continue;
   }
-  if (/^ALLIED UNITS$/i.test(line)) {
-   group = null; current = null; inErrors = false; inUnitSection = true; sectionKind = 'allied';
-   factionTag = selectedFaction; continue;
-  }
   if (sections.test(line)) {
-   group = null; current = null; inErrors = false; inUnitSection = true; sectionKind = 'core';
+   group = null; current = null; inErrors = false; inUnitSection = true;
    factionTag = selectedFaction; continue;
   }
   if (inErrors) {
@@ -298,23 +294,21 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   if (metadataLine.test(line) || /^(?:warlord|enhancements?)$/i.test(line)) { current = null; continue; }
   if (isRoleHeading(line)) {
    if (normalize(line) !== normalize(selectedFaction)) {
-    group = null; inUnitSection = true; sectionKind = 'core'; factionTag = selectedFaction;
+    group = null; inUnitSection = true; factionTag = selectedFaction;
    }
    current = null; continue;
   }
-  if (line === firstLine && lineLooksLikeListTitle(line, lines)) { current = null; continue; }
+  if (line === firstLine && lineLooksLikeListTitle(line, lines)) {
+   const titleName = headerName(line);
+   const titleIsUnit = available.some(unit => normalize(unit.name) === titleName ||
+    (unit.importAliases ?? []).some(alias => normalize(alias) === titleName));
+   if (!titleIsUnit) { current = null; continue; }
+  }
   if (normalize(line) === normalize(selectedFaction)) { current = null; continue; }
   const explicitFaction = line.match(/^(?:faction|ally faction|allied faction)\s*[:–-]\s*(.+)$/i);
   if (explicitFaction) {
    factionTag = explicitFaction[1].replace(/\s*\([^)]*\)\s*$/, '').trim() || factionTag;
    current = null; continue;
-  }
-  if (sectionKind === 'allied' && getPoints(line) == null && explicitModelCount(line) == null) {
-   const next = nextNonblankRaw(lines, lineIndex).trim();
-   if ((getPoints(next) != null || explicitModelCount(next) != null) && displayHeaderName(line)) {
-    factionTag = displayHeaderName(line);
-    current = null; continue;
-   }
   }
   const importedName=headerName(line);
   // Match only explicitly reviewed aliases; never guess a different

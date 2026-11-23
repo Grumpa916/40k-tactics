@@ -207,6 +207,39 @@ Immortals (115 Points)
  assert.notEqual(unitContentSignature(base), unitContentSignature({ ...base, factionTag: 'Deathwatch' }));
 });
 
+test('a catalog unit on the first line is kept, and an unpriced allied line stays a unit', () => {
+ const opened = importWarhammerAppRoster({
+  text: 'Hive Tyrant (210 Points)\n10x Termagants (60 Points)',
+  faction: 'Tyranids', name: 'Starts with a unit', id: 'first-unit'
+ });
+ assert.deepEqual(opened.roster.units.map(unit => unit.name), ['Hive Tyrant', 'Termagants']);
+ assert.equal(opened.roster.units[0].datasheetId, 'tyranids:hive-tyrant');
+ assert.equal(opened.totalPoints, 270);
+ const titled = importWarhammerAppRoster({
+  text: 'Example (2,000 Points)\nCHARACTERS\nHive Tyrant (195 Points)',
+  faction: 'Tyranids', name: 'Titled', id: 'titled'
+ });
+ assert.deepEqual(titled.roster.units.map(unit => unit.name), ['Hive Tyrant']);
+ assert.equal(titled.declaredPoints, 2000);
+
+ const allied = importWarhammerAppRoster({
+  text: `Space Marines
+ALLIED UNITS
+Inquisitor
+Callidus Assassin (100 Points)
+  • 1x Neural shredder
+Faction: Deathwatch
+Deathwatch Terminator Squad (210 Points)`,
+  faction: 'Space Marines', name: 'Allies', id: 'unpriced-ally'
+ });
+ assert.deepEqual(allied.roster.units.map(unit => unit.name), ['Inquisitor', 'Callidus Assassin', 'Deathwatch Terminator Squad']);
+ assert.equal(allied.roster.units[0].dataSource.origin, 'import-unmatched');
+ assert.equal(allied.roster.units[0].points, null);
+ assert.equal(allied.roster.units[0].factionTag, 'Space Marines');
+ assert.equal(allied.roster.units[1].factionTag, 'Space Marines');
+ assert.equal(allied.roster.units[2].factionTag, 'Deathwatch');
+});
+
 test('import report records mismatches once, and only import or manual refresh validates', () => {
  const start = importedRosterValidationPasses();
  const parsed = importWarhammerAppRoster({
