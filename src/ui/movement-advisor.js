@@ -215,6 +215,12 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
   const priorities = context.recommendations;
   const selectedOptions = [selected, ...(selected.alternatives ?? [])].slice(0, 3);
   const selectedRank = activeHighlight?.unitId === selected.unitId ? activeHighlight.rank : null;
+  const secured=(state.objectives??[]).filter(objective=>objective.securedByPlayerId===playerId &&
+    objective.control?.controlState==='controlled' && objective.control.controllerId===playerId);
+  const securedBySelected=secured.filter(objective=>objective.securedByUnitId===selected.unitId);
+  const securedMessage=securedBySelected.length
+    ? 'This unit secured '+securedBySelected.map(objective=>objectivePickerLabel(state,objective.id,perspectivePlayerId)).join(', ')+'. It can leave without immediately losing control. Check opposing OC at the end of each phase; pursue another scoring position if the objective is safe.'
+    : secured.length?'Secured objectives: '+secured.map(objective=>objectivePickerLabel(state,objective.id,perspectivePlayerId)).join(', ')+'. They remain controlled without a unit in range until the opponent has greater OC at the end of a phase.':'';
 
   return `<aside class="movement-advisor" data-movement-advisor data-movement-advisor-unit-id="${escapeHtml(selected.unitId)}">
     <style>
@@ -237,6 +243,7 @@ export function renderMovementAdvisor(state, { playerId, selectedUnitId = null, 
       <p>${escapeHtml(primaryStrategy.reason)}</p>
       <ul>${(primaryStrategy.summary ?? []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </details>` : ""}
+    ${securedMessage ? `<p data-secured-objective-advice><strong>Impenetrable Bastion:</strong> ${escapeHtml(securedMessage)}</p>` : ''}
     <p><strong>${escapeHtml(selected.recommendation)}</strong></p>
     <div class="fight-advisory__grid movement-advisor__grid">
       <div><strong>${selected.movement == null ? "—" : `${escapeHtml(selected.movement)}\"`}</strong><span>saved Move</span></div>
