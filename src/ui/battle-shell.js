@@ -1,5 +1,6 @@
 import { isManualScoringEnabled } from '../config/feature-flags.js';
 import { scoreboardAdjustmentCommand } from './scoreboard-transactions.js';
+import { secondaryCorrectionCommand } from './secondary-score-correction-control.js';
 import { PHASES, SCREEN_FACTORIES } from './battle-screen-registry.js';
 import { createPhaseUnitSelection } from './phase-unit-selection.js';
 import { renderSelectedUnitStatePanel } from './selected-unit-state-panel.js';
@@ -559,18 +560,11 @@ export function createBattleShell(container, {
       scoreAdjustPlayerId = null; scoreAdjustKind = "both"; scoreAdjustCollapsed = false; scoreAdjustMessage = ""; render(); return;
     }
     const secondaryCorrection = event.target?.closest?.("[data-correct-secondary-score]");
-    if (secondaryCorrection && container.contains(secondaryCorrection) && scoreAdjustPlayerId && isManualScoringEnabled()) {
+    if (secondaryCorrection && container.contains(secondaryCorrection) && scoreAdjustPlayerId) {
       event.preventDefault?.(); event.stopPropagation?.();
       try {
-        const selection=container.querySelector('[data-score-secondary-card]')?.value??'';
-        const separator=selection.lastIndexOf('|');
-        const instanceId=selection.slice(0,separator), selectedIndex=selection.slice(separator+1);
-        const amount=Number(container.querySelector('[data-score-secondary-amount]')?.value);
         const round=Number(container.querySelector('[data-score-secondary-round]')?.value);
-        session.dispatch({type:COMMAND_TYPES.CORRECT_SECONDARY_MISSION_SCORE,payload:{
-          playerId:scoreAdjustPlayerId,instanceId,amount,round,
-          awardEventIndex:selectedIndex==='new'?null:Number(selectedIndex)
-        }});
+        session.dispatch(secondaryCorrectionCommand(container,scoreAdjustPlayerId));
         scoreAdjustMessage='Secondary score corrected for round '+round+'.';
       } catch(error) { scoreAdjustMessage=error?.message??String(error); }
       render(); return;
