@@ -47,7 +47,7 @@ export function renderMovementRosterRail(state, {
   const opponentId = players.find(player => player.id !== myId)?.id ?? null;
   const ownerId = rosterView === 'opponent' ? opponentId : myId;
   const units = (state?.units ?? []).filter(unit => unit.ownerId === ownerId);
-  const symbols = liveUnitSymbolLabels(state?.units ?? []);
+  const symbols = liveUnitSymbolLabels(state?.units ?? [], state);
   const row = (unit, role = '') => {
     const activeArmy = unit.ownerId === playerId;
     const selectable = activeArmy && ['deployed','reserves'].includes(unit.status);
@@ -80,7 +80,7 @@ export function renderMovementRosterRail(state, {
 export function renderMovementSelectedUnitCard(state, unit, { action = null, refinement = null, perspectivePlayerId = null } = {}) {
   if (!unit) return `<section class="movement-selected-unit"><h2>Selected Unit</h2><p>Select one of your units on the map or in the army list.</p></section>`;
   const ref = getArmyUnitReference(state, unit);
-  const symbols = liveUnitSymbolLabels(state?.units ?? []);
+  const symbols = liveUnitSymbolLabels(state?.units ?? [], state);
   const myId = perspectivePlayerId ?? state?.players?.[0]?.id ?? state?.activePlayer ?? unit.ownerId;
   const tokenSide = unit.ownerId === myId ? 'is-friendly' : 'is-opponent';
   const stats = [

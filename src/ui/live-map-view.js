@@ -301,7 +301,7 @@ export function createLiveMapView() {
       // Update only the marker text node so activation badges, selections,
       // drag listeners, map coordinates and formation metadata stay intact.
       const unitMarkers = Array.from(container.querySelectorAll?.('.live-map [data-map-unit-id]') ?? []);
-      const unitSymbols = liveUnitSymbolLabels(state.units ?? []);
+      const unitSymbols = liveUnitSymbolLabels(state.units ?? [], state);
       const markerUnitId = marker => marker.getAttribute('data-map-member-id') || marker.getAttribute('data-map-unit-id');
       const refreshUnitLabels = () => unitMarkers.forEach(marker => {
         const text = marker.firstChild;

@@ -10,8 +10,8 @@ export function renderPhaseArmyRoster(state, perspectivePlayerId, {
   selectableIds = [], selectedUnitId = null, targetIds = [], sections = [], enableAdjust = state?.battle?.status === 'active'
 } = {}) {
   const myId = perspectivePlayerId ?? state.players?.[0]?.id ?? state.activePlayer;
-  const symbols = liveUnitSymbolLabels(state.units ?? []);
-  const displayNames = unitDisplayLabels(state.units ?? []);
+  const symbols = liveUnitSymbolLabels(state.units ?? [], state);
+  const displayNames = unitDisplayLabels(state.units ?? [], state);
   const selectable = new Set(selectableIds), targets = new Set(targetIds);
   const row = (unit, side, role = '') => {
     const vitals = getLiveUnitVitals(state, unit);
