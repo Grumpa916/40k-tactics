@@ -107,7 +107,14 @@ export function recordObjectiveControl(state, {
   return transition(state, "objective.control_recorded", {...control,previousControl:objective.control ?? null,round:state.battle?.round ?? null,turn:state.turn ?? null,phase:state.phase ?? null}, (current) => ({
     ...current,
     objectives: current.objectives.map((item) =>
-      item.id === objectiveId ? { ...item, control, controlRecordedAt: { round: state.battle?.round ?? 0, turn: state.turn ?? 0, phase: state.phase } } : item
+      item.id === objectiveId ? {
+        ...item,control,
+        // A secured marker persists when its unit leaves. A newly confirmed
+        // controller (or an explicit correction) supersedes the old record.
+        ...(item.securedByPlayerId && control.controlState==='controlled' && control.controllerId===item.securedByPlayerId
+          ? {} : {securedByPlayerId:null,securedByUnitId:null,securedAt:null}),
+        controlRecordedAt:{round:state.battle?.round ?? 0,turn:state.turn ?? 0,phase:state.phase}
+      } : item
     )
   }));
 }
