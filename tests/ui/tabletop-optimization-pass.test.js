@@ -4,9 +4,9 @@ import fs from 'node:fs';
 
 const read = path => fs.readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
 
-test('Tabletop HUD exposes visible phase chips and reuses the score controls', () => {
+test('Tabletop HUD keeps score controls without duplicate phase buttons', () => {
   const src = read('src/ui/prototype-workspace.js');
-  assert.ok(src.includes('prototype-phase-chips'));
+  assert.equal(src.includes('prototype-phase-chips'), false);
   assert.ok(src.includes('data-workspace-score-host'));
   assert.ok(src.includes('scoreHost.append?.(summary)'));
   assert.equal(src.includes('data-workspace-focus'), false);
