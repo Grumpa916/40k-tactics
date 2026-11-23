@@ -72,6 +72,9 @@ export const COMMAND_TYPES = Object.freeze({
   RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score",
   USE_SECONDARY_MISSION_REDRAW: "secondary_mission.use_redraw",
   DISCARD_TACTICAL_SECONDARIES_FOR_CP: "secondary_mission.discard_for_cp",
+  RECORD_PILE_IN: "fight.record_pile_in",
+  RECORD_CONSOLIDATE: "fight.record_consolidate",
+  RECORD_HEROIC_INTERVENTION: "fight.record_heroic_intervention",
   RECORD_OVERWATCH: "overwatch.record_use",
   DECLINE_OVERWATCH: "overwatch.decline"
 });

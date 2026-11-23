@@ -17,6 +17,7 @@ import { renderCombatWorkspace, bindCombatMap, escapeHtml as esc } from './comba
 import { renderCustodesKatahPhasePanel, bindCustodesKatahActions } from './custodes-katah-panel.js';
 import { renderIncomingDamageForecast } from './incoming-damage-forecast-view.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
+import { fightManeuverCommand, renderFightManeuvers } from './fight-maneuver-controls.js';
 
 export function createFightTabletopScreen(container, { session, perspectivePlayerId = null, gameData = null, unitSelection = null }) {
   const mapView = createLiveMapView();
@@ -88,14 +89,15 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       ${!unit ? `<p>Choose a fighter on the map or open Units · ${fightsFirstIds.size} Fights First · ${unfinishedIds.size} unfinished.</p>` : ''}
       ${unit ? `        ${fightsFirstPending ? '<section class="combat-workspace__card" role="status"><strong>Fights First still pending</strong><p>Chargers and Fights First units are selected before other fights. Players alternate, and the player whose turn it is not chooses first when they have a unit in that step.</p></section>' : ''}
         ${selectedOption?.eligibilitySource === 'tabletop-confirmed' ? '<p><small>Tabletop-confirmed eligibility: this formation was not inferred as engaged by the saved app state. The physical table is authoritative.</small></p>' : ''}
-        ${options.overrunAvailable ? '<section class="combat-workspace__card" role="status"><strong>Overrun Fight available</strong><p>This formation charged this turn but has no remaining recorded engagement. On the tabletop, choose an enemy within 5″, make the legal Pile In move of up to 3″ and finish engaged. Then select that enemy below and resolve the Fight normally.</p></section>' : ''}
+        ${options.overrunAvailable ? '<section class="combat-workspace__card" role="status"><strong>Charged, no recorded engagement</strong><p>This formation charged this turn and has no remaining recorded engagement. Confirm the legal Pile In and the new target on the table. No universal distance is stored for that move.</p></section>' : ''}
+        ${renderFightManeuvers(state, attackerId)}
         <div class="combat-workspace__weapon-choice-set" role="group" aria-label="Melee weapon">
           <strong>Melee weapon</strong>
           <div class="combat-workspace__weapon-choices">${weapons.map(weapon => `<button type="button" data-fight-weapon-choice="${esc(weapon.id)}" aria-pressed="${String(weapon.id === weaponId)}">${esc(weapon.name)}${weapon.characteristics?.extraAttacks ? ' · Extra Attacks' : ''}</button>`).join('')}</div>
         </div>
         ${weaponNotice ? `<p class="combat-workspace__error" role="status">${esc(weaponNotice)}</p>` : ''}
         ${selectedWeapon?.characteristics?.extraAttacks ? '<p><strong>Extra Attacks:</strong> record this weapon in addition to the model’s main melee weapon during the same activation.</p>' : ''}
-        <label>${options.overrunAvailable ? 'Overrun target · confirm within 5″ on tabletop' : 'Target · confirm legal after Pile In'}<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
+        <label>Target · confirm legal after Pile In<select data-fight-target><option value="">Choose target…</option>${options.targets.map(target => `<option value="${esc(target.unitId)}" ${target.unitId === targetId ? 'selected' : ''}>${esc(target.name)}</option>`).join('')}</select></label>
         ${renderFightTargetRuleStatus(state, { attackerId, targetId })}
         ${precisionOptions.length ? `<label>Precision allocation · optional<select data-fight-precision><option value="">Normal allocation</option>${precisionOptions.map(option => `<option value="${esc(option.unitId)}" ${option.unitId === precisionAllocationId ? 'selected' : ''}>${esc(option.name)}</option>`).join('')}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ''}
         ${!options.targets.length ? '<p>No deployed enemy formations remain.</p>' : ''}
@@ -182,6 +184,15 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
     for (const [selector, delta] of [['[data-fight-damage-minus]', -1], ['[data-fight-damage-plus]', 1]]) {
       container.querySelector(selector)?.addEventListener('click', () => { damage = Math.max(0, damage + delta); const value = container.querySelector('[data-fight-damage-value]'); if (value) value.textContent = damage; });
     }
+    const maneuver = event => {
+      const command = fightManeuverCommand(event);
+      if (!command) return;
+      try { session.dispatch(command); error = ''; }
+      catch (cause) { error = cause?.message ?? String(cause); }
+      render();
+    };
+    container.querySelector('[data-fight-pile-in]')?.addEventListener('click', maneuver);
+    container.querySelector('[data-fight-consolidate]')?.addEventListener('click', maneuver);
     container.querySelector('[data-fight-attack]')?.addEventListener('click', () => {
       const weapon = weapons.find(item => item.id === weaponId);
       if (!attackerId || !targetId || !weapon) return;

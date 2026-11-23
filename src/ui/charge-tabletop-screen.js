@@ -8,6 +8,7 @@ import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getChargeOpportunity, getChargeTargetPriorities } from '../rules/tactical-charge-opportunity.js';
 import { getCombatFormationMembers } from '../rules/battle-unit-reference.js';
 import { isOpponentTurnFor } from '../rules/tactical-opponent-turn.js';
+import { fightManeuverCommand, renderHeroicIntervention } from './fight-maneuver-controls.js';
 import { renderOverwatchInterrupt, overwatchInterruptCommand } from './overwatch-interrupt-controls.js';
 
 function modelsFor(unit) {
@@ -153,7 +154,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       interactivePlayerId:state.phase === 'charge' ? activePlayerId : null,
       selectedUnitId, selectableIds, targetIds:[...targetIds], rosterSections, controls, topControls,
       adaptiveContext:{ targetId:[...targetIds][0] ?? null, measuredDistance:distances.get([...targetIds][0]) ?? null },
-      footer:`${renderOverwatchInterrupt(state,{selectedUnitId})}${renderActionReceipt(session, { compact:true })}${resultControls}<button class="phase-end__primary" type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
+      footer:`${renderHeroicIntervention(state)}${renderOverwatchInterrupt(state,{selectedUnitId})}${renderActionReceipt(session, { compact:true })}${resultControls}<button class="phase-end__primary" type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
     });
 
     restoreView();
@@ -197,6 +198,13 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
     container.querySelector('[data-charge-decline]')?.addEventListener('click', () => {
       if (!selectedUnitId) return;
       try { recordChargeDeclinedForSession(session, { unitId:selectedUnitId }); clearSelection(); error = ''; }
+      catch (cause) { error = cause?.message ?? String(cause); }
+      render();
+    });
+    container.querySelector('[data-heroic-record]')?.addEventListener('click', event => {
+      const command = fightManeuverCommand(event);
+      if (!command) return;
+      try { session.dispatch(command); error = ''; }
       catch (cause) { error = cause?.message ?? String(cause); }
       render();
     });
