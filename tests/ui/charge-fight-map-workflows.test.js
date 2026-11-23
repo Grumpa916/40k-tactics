@@ -163,18 +163,24 @@ test('Fight map preview does not activate; first attack and second weapon share 
   } finally { x.screen.destroy(); }
 });
 
-test('Fight map allows tabletop-confirmed activation while Fights First remains advisory', () => {
+test('Fight map blocks a normal activation while a Fights First unit is still waiting', () => {
   const x = setup('fight',engage(state('fight'),['enemy']));
   try {
     click(x,'data-map-unit-id','enemy');
     assert.match(x.root.innerHTML,/Fights First still pending/);
     x.root.click('[data-fight-weapon-choice]','blade'); click(x,'data-map-unit-id','fighter');
     click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
-    const activation=x.session.getState().history.find(e => e.type === 'fight.unit_activated' && e.payload.unitId === 'enemy');
-    assert.equal(activation.payload.tabletopConfirmed,true);
-    assert.equal(activation.payload.fightsFirst,false);
-    assert.equal(x.session.getState().units.find(u => u.id === 'fighter').wounds,19);
-    assert.ok(x.session.getState().history.every(e => e.type !== 'combat.activation_finished' || e.payload.unitId !== 'fighter'));
+    assert.match(x.root.innerHTML,/Fights First candidates must be activated/);
+    assert.equal(x.session.getState().history.some(e => e.type === 'fight.unit_activated'), false);
+    x.screen.destroy();
+    x.screen = createFightScreen(x.root, { session:x.session, perspectivePlayerId:'p1', gameData });
+    click(x,'data-map-unit-id','fighter');
+    x.root.click('[data-fight-weapon-choice]','blade'); click(x,'data-map-unit-id','enemy');
+    click(x,'data-fight-damage-plus'); click(x,'data-fight-attack');
+    const activation=x.session.getState().history.find(e => e.type === 'fight.unit_activated');
+    assert.equal(activation.payload.unitId,'fighter');
+    assert.equal(activation.payload.fightsFirst,true);
+    assert.equal(x.session.getState().units.find(u => u.id === 'enemy').wounds,19);
   } finally { x.screen.destroy(); }
 });
 
