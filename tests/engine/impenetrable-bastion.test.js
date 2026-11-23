@@ -12,6 +12,7 @@ import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 function battle() {
   const state=custodesReminderState({phase:'movement',activePlayer:'p1'});
   state.armyRosters.p1.detachments=["Emperor's Chosen",'Lions of the Emperor','Might of the Moritoi'];
+  state.victoryPoints={p1:0,p2:0};
   state.objectives=[{id:'home',name:'My Home',position:{x:20,y:20},
     control:{controlState:'controlled',controllerId:'p1',contestingPlayerIds:[]}},
     {id:'center',name:'Center 1',position:{x:30,y:22},
