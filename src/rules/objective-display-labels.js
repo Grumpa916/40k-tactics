@@ -1,4 +1,5 @@
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from './event-companion-map-catalog.js';
+import { getTerritoryStatusForPosition } from './battlefield-territory.js';
 
 const BATTLEFIELD_CENTER = Object.freeze({ x: 30, y: 22 });
 
@@ -20,8 +21,10 @@ function comparePositionEntries([nameA,a],[nameB,b]) {
 // The Event Companion extraction preserves stable canonical objective IDs, but a few
 // six-objective layouts use Central/Expansion source names that do not match the
 // player's visual meaning of those roles. Display roles therefore come from the
-// verified geometry: the objective(s) nearest battlefield centre are Center 1/2;
-// the two remaining non-home objectives are the player/opponent expansions.
+// verified geometry: the objective(s) nearest battlefield centre are Center 1/2.
+// Player expansions follow the same territory line as scoring when that line
+// puts one expansion in each half. Nearest-home is only the fallback, because
+// on Layout C (and other maps) the nearer home marker can sit across that line.
 function geometryDisplayRoles(state, perspectivePlayerId) {
  const positions=layoutGeometry(state)?.objectivePositions;
  if(!positions)return null;
@@ -56,18 +59,34 @@ function geometryDisplayRoles(state, perspectivePlayerId) {
   perspectivePlayerId===defender?'Defender Home':null;
  const myHome=myHomeName?positions[myHomeName]:null;
  if(myHome && expansionEntries.length){
-  const ranked=[...expansionEntries].sort((a,b)=>distanceSquared(a[1],myHome)-distanceSquared(b[1],myHome) || comparePositionEntries(a,b));
-  if (ranked.length === 1) {
-   const opponentHomeName=myHomeName==='Attacker Home'?'Defender Home':'Attacker Home';
-   const opponentHome=positions[opponentHomeName];
-   roles.set(ranked[0][0],opponentHome && distanceSquared(ranked[0][1],opponentHome)<distanceSquared(ranked[0][1],myHome)
-    ? 'Opponent Expansion':'My Expansion');
-  } else {
-   roles.set(ranked[0][0],'My Expansion');
-   for(const [name] of ranked.slice(1))roles.set(name,'Opponent Expansion');
-  }
+  assignExpansionRoles(roles,state,perspectivePlayerId,expansionEntries,positions,myHomeName,myHome);
  }
  return roles;
+}
+
+function territoryOf(state, playerId, point) {
+ return getTerritoryStatusForPosition(state,{playerId,position:point}).territory;
+}
+
+function assignExpansionRoles(roles,state,perspectivePlayerId,expansionEntries,positions,myHomeName,myHome) {
+ const statuses=expansionEntries.map(([name,point])=>({name,territory:territoryOf(state,perspectivePlayerId,point)}));
+ const mine=statuses.filter(item=>item.territory==='mine');
+ const opponent=statuses.filter(item=>item.territory==='opponent');
+ if(mine.length===1 && opponent.length===expansionEntries.length-1){
+  roles.set(mine[0].name,'My Expansion');
+  for(const item of opponent)roles.set(item.name,'Opponent Expansion');
+  return;
+ }
+ const ranked=[...expansionEntries].sort((a,b)=>distanceSquared(a[1],myHome)-distanceSquared(b[1],myHome) || comparePositionEntries(a,b));
+ if(ranked.length===1){
+  const opponentHomeName=myHomeName==='Attacker Home'?'Defender Home':'Attacker Home';
+  const opponentHome=positions[opponentHomeName];
+  roles.set(ranked[0][0],opponentHome && distanceSquared(ranked[0][1],opponentHome)<distanceSquared(ranked[0][1],myHome)
+   ? 'Opponent Expansion':'My Expansion');
+  return;
+ }
+ roles.set(ranked[0][0],'My Expansion');
+ for(const [name] of ranked.slice(1))roles.set(name,'Opponent Expansion');
 }
 
 export function perspectiveObjectiveName(name, state, perspectivePlayerId) {
