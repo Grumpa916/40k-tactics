@@ -28,7 +28,7 @@ test('historical award can be corrected without double-counting and retains an a
   assert.equal(getCorrectableSecondaryAwards(corrected,'p1').length,1);
   assert.equal(getCorrectableSecondaryAwards(corrected,'p1')[0].round,1);
   assert.ok(corrected.history.some(event=>event.type==='victory_points.award_undone'));
-  assert.match(renderScoreAdjustOverlay(corrected,corrected.players,'p1',false,'','vp'),/Correct a secondary card/);
+  assert.match(renderScoreAdjustOverlay(corrected,corrected.players,'p1',false,'','secondary'),/Correct a secondary card/);
 });
 test('cannot backdate before the card was drawn or beyond the played rounds',()=>{
   assert.throws(()=>correctSecondaryMissionScore(state(),{playerId:'p1',instanceId:'p1:cleanse:1',amount:5,round:4}),/played battle round/);
