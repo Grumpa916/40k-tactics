@@ -104,7 +104,7 @@ export function renderTargetDefenseReminders(state,options={}) {
   const entries=getTargetDefenseReminders(state,options);
   const target=state.units?.find(unit=>unit.id===(options.allocationTargetId??options.targetUnitId));
   const note=target?getUnitBattleNote(state,target.id):'';
-  const detachmentEntries=target?getCustodesDetachmentRuleReminders(state,{playerId:target.ownerId,unitId:target.id}):[];
+  const detachmentEntries=target?getCustodesDetachmentRuleReminders(state,{playerId:target.ownerId,unitId:target.id,selectedToAttack:false}):[];
   // Target defenses may describe an enemy, but only the viewing player may
   // operate a defensive Stratagem in the live sidebar.
   const ownDefense=options.viewingPlayerId==null || (target?.ownerId===options.viewingPlayerId &&

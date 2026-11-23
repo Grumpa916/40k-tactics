@@ -111,7 +111,7 @@ export function getCustodesDetachmentStratagemReminders(state, { playerId, unitI
     })));
 }
 
-export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = null } = {}) {
+export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = null, selectedToAttack = Boolean(unitId) } = {}) {
   if (state?.battle?.status !== 'active' || !playerId || String(state?.armyRosters?.[playerId]?.faction ?? '').toLowerCase() !== 'adeptus custodes') return [];
   const activePlayer = state.activePlayer ?? state.battle?.activePlayerId;
   const ownTurn = activePlayer === playerId;
@@ -133,10 +133,11 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
           event.payload?.round === state.battle?.round && event.payload?.turn === state.turn &&
           (!unit || event.payload?.unitId === unit.id) && state.units?.some(item => item.id === event.payload?.unitId && item.ownerId === playerId));
       }
+      if (detachment.name === "Emperor's Chosen" && !(selectedToAttack && unit)) include = false;
       if (include && unit) {
         const keywords = formationKeywords(state, unit);
         const has = keyword => keywords.some(value => value.includes(keyword));
-        if (detachment.name === "Emperor's Chosen") include = isAdeptusCustodesKeywordUnit(state, unit);
+        if (detachment.name === "Emperor's Chosen") include = selectedToAttack && ['shooting', 'fight'].includes(state.phase) && isAdeptusCustodesKeywordUnit(state, unit);
         if (detachment.name === 'Might of the Moritoi') include = has('dreadnought');
         if (['Lions of the Emperor', 'Grav-Assault Force'].includes(detachment.name)) {
           const required = detachment.name === 'Lions of the Emperor' ? 'terminator' : 'grav-assault';

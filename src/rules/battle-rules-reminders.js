@@ -2,8 +2,8 @@ import { CUSTODES_REMINDER_DEFINITIONS } from '../data/custodes-reminder-definit
 import { ADEPTUS_CUSTODES_RULE_SOURCES, ADEPTUS_CUSTODES_KATAH } from '../data/adeptus-custodes-faction-rules.js';
 import { getBattleUnitDatasheet, getBattleRosterUnit, getCombatFormationRoot } from './battle-unit-reference.js';
 import { isAdeptusCustodesKeywordUnit } from './custodes-keyword-eligibility.js';
+import { captainGeneralDistance, getRecordedCombatRules } from './recorded-combat-rules.js';
 import { getCustodesKatahState, hasCustodesDetachment } from './custodes-tactical-advisor.js';
-import { getRecordedCombatRules } from './recorded-combat-rules.js';
 import { getLiveUnitVitals } from './live-unit-vitals.js';
 import { getDatasheetWeaponOptions } from './saved-roster-combat-profile.js';
 import { ADEPTUS_CUSTODES_DATASHEET_DETAILS } from '../data/adeptus-custodes-datasheet-details.js';
@@ -100,7 +100,8 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
     }
     if(focusRoot && isAdeptusCustodesKeywordUnit(state, focusRoot) && ['shooting','fight'].includes(state.phase) && !(getBattleUnitDatasheet(state,focusRoot)?.keywords??[]).some(keyword=>['Monster','Vehicle'].includes(keyword)) && !entries.some(entry=>entry.ruleId==='captain-general')) {
       const commander=(state.units??[]).find(unit=>unit.ownerId===playerId && unit.status==='deployed' && reviewedAbility(state,unit,'Captain-General (Aura)'));
-      if(commander)entries.push(decorate(state,{ruleId:'captain-general-range-check',playerId,unitId:commander.id,unitName:focusRoot.name,title:'Captain-General aura · range check',kind:'unit',timing:'When attacking',effect:'Check whether this unit is within 6″ of '+commander.name+'. Eligible non-Monster/Vehicle Custodes units can re-roll Hit and Wound rolls of 1.'}));
+      const distance=captainGeneralDistance(state, focusRoot);
+      if(commander && distance!=null && distance<=6)entries.push(decorate(state,{ruleId:'captain-general-range-check',playerId,unitId:focusRoot.id,unitName:focusRoot.name,title:'Captain-General aura',kind:'unit',timing:'When attacking within 6″',effect:'This unit is within 6″ of '+commander.name+' and can re-roll Hit and Wound rolls of 1.'}));
     }
     const aquila = CUSTODES_REMINDER_DEFINITIONS.find(def => def.id === 'aquila-commander');
     const warlord = (state.units ?? []).find(unit => {
