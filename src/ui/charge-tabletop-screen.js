@@ -9,6 +9,7 @@ import { getChargeOpportunity, getChargeTargetPriorities } from '../rules/tactic
 import { getCombatFormationMembers } from '../rules/battle-unit-reference.js';
 import { isOpponentTurnFor } from '../rules/tactical-opponent-turn.js';
 import { fightManeuverCommand, renderHeroicIntervention } from './fight-maneuver-controls.js';
+import { renderOverwatchInterrupt, overwatchInterruptCommand } from './overwatch-interrupt-controls.js';
 
 function modelsFor(unit) {
   return Array.isArray(unit.models) && unit.models.length
@@ -153,7 +154,7 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       interactivePlayerId:state.phase === 'charge' ? activePlayerId : null,
       selectedUnitId, selectableIds, targetIds:[...targetIds], rosterSections, controls, topControls,
       adaptiveContext:{ targetId:[...targetIds][0] ?? null, measuredDistance:distances.get([...targetIds][0]) ?? null },
-      footer:`${renderHeroicIntervention(state)}${renderActionReceipt(session, { compact:true })}${resultControls}<button class="phase-end__primary" type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
+      footer:`${renderHeroicIntervention(state)}${renderOverwatchInterrupt(state,{selectedUnitId})}${renderActionReceipt(session, { compact:true })}${resultControls}<button class="phase-end__primary" type="button" data-charge-complete ${model.canComplete ? '' : 'disabled'}>End Charge · Fight →</button>`
     });
 
     restoreView();
@@ -207,6 +208,15 @@ export function createChargeTabletopScreen(container, { session, perspectivePlay
       catch (cause) { error = cause?.message ?? String(cause); }
       render();
     });
+    const overwatch = event => {
+      const command = overwatchInterruptCommand(event);
+      if (!command) return;
+      try { session.dispatch(command); error = ''; }
+      catch (cause) { error = cause?.message ?? String(cause); }
+      render();
+    };
+    container.querySelector('[data-overwatch-use]')?.addEventListener('click', overwatch);
+    container.querySelector('[data-overwatch-decline]')?.addEventListener('click', overwatch);
     container.querySelector('[data-charge-complete]')?.addEventListener('click', () => {
       try { finishChargePhase(session); } catch (cause) { error = cause?.message ?? String(cause); render(); }
     });

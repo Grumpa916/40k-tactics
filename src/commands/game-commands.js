@@ -74,7 +74,9 @@ export const COMMAND_TYPES = Object.freeze({
   DISCARD_TACTICAL_SECONDARIES_FOR_CP: "secondary_mission.discard_for_cp",
   RECORD_PILE_IN: "fight.record_pile_in",
   RECORD_CONSOLIDATE: "fight.record_consolidate",
-  RECORD_HEROIC_INTERVENTION: "fight.record_heroic_intervention"
+  RECORD_HEROIC_INTERVENTION: "fight.record_heroic_intervention",
+  RECORD_OVERWATCH: "overwatch.record_use",
+  DECLINE_OVERWATCH: "overwatch.decline"
 });
 
 export const commandTypeList = Object.freeze(Object.values(COMMAND_TYPES));

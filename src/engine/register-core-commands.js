@@ -38,6 +38,7 @@ import { recordCustodesKatahUse } from './custodes-katah-transitions.js';
 import { recordSpaceMarineDoctrineUse } from '../rules/space-marine-doctrines.js';
 import { recordSpaceMarineStratagemUse } from './space-marine-stratagem-transitions.js';
 import { recordChargeOutcome, recordChargeDeclined } from "./charge-transitions.js";
+import { recordOverwatchUse, declineOverwatch } from "../rules/overwatch-interrupt.js";
 import { recordShootingActivation, completeShootingPhase } from "./shooting-transitions.js";
 import { recordFightActivation, completeFightPhase } from "./fight-transitions.js";
 import { recordPileIn, recordConsolidate, recordHeroicIntervention } from "../rules/fight-maneuvers.js";
@@ -140,7 +141,9 @@ export function registerCoreCommandHandlers() {
     [COMMAND_TYPES.DISCARD_TACTICAL_SECONDARIES_FOR_CP, (state, command) => discardTacticalSecondariesForCommandPoint(state, command.payload)],
     [COMMAND_TYPES.RECORD_PILE_IN, (state, command) => recordPileIn(state, command.payload)],
     [COMMAND_TYPES.RECORD_CONSOLIDATE, (state, command) => recordConsolidate(state, command.payload)],
-    [COMMAND_TYPES.RECORD_HEROIC_INTERVENTION, (state, command) => recordHeroicIntervention(state, command.payload)]
+    [COMMAND_TYPES.RECORD_HEROIC_INTERVENTION, (state, command) => recordHeroicIntervention(state, command.payload)],
+    [COMMAND_TYPES.RECORD_OVERWATCH, (state, command) => recordOverwatchUse(state, command.payload)],
+    [COMMAND_TYPES.DECLINE_OVERWATCH, (state, command) => declineOverwatch(state, command.payload)]
   ];
 
   for (const [type, handler] of handlers) registerCommandHandler(type, handler);

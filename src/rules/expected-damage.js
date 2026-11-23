@@ -90,9 +90,12 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
   const attacks = expectedDice(profile.attacks);
 
   const hitTarget = targetAfterModifier(profile.hitTarget, profile.hitModifier + woundBracket.hitModifier);
-  const hitRoll = profile.torrent
+  const baseHitRoll = profile.torrent
     ? Object.freeze({ success: 1, critical: 0, nonCritical: 1, failure: 0, reroll: "none" })
     : getRollSuccessProbabilities({ successTarget: hitTarget, criticalTarget: 6, reroll: profile.hitReroll });
+  const hitRoll = profile.singleHitReroll && baseHitRoll.reroll === 'none' && attacks > 0
+    ? { ...baseHitRoll, success: Math.min(1, baseHitRoll.success + baseHitRoll.success * (1 - Math.pow(baseHitRoll.success, attacks)) / attacks) }
+    : baseHitRoll;
   const criticalHits = attacks * hitRoll.critical;
   const regularHits = attacks * hitRoll.success;
   const sustainedHits = criticalHits * profile.sustainedHits;
@@ -103,7 +106,10 @@ export function getExpectedDamage({ attacker, target, weapon, attackerRemainingW
     woundTarget(profile.strength, profile.toughness),
     profile.woundModifier
   );
-  const woundRoll = woundProbabilities(profile, woundTargetValue);
+  const baseWoundRoll = woundProbabilities(profile, woundTargetValue);
+  const woundRoll = profile.singleWoundReroll && baseWoundRoll.reroll === 'none' && normalHits > 0
+    ? { ...baseWoundRoll, success: Math.min(1, baseWoundRoll.success + baseWoundRoll.success * (1 - Math.pow(baseWoundRoll.success, normalHits)) / normalHits) }
+    : baseWoundRoll;
   const criticalWounds = normalHits * woundRoll.critical;
   const normalWoundsTotal = normalHits * woundRoll.success;
   const devastatingWounds = profile.devastatingWounds ? criticalWounds : 0;

@@ -133,6 +133,14 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   }
   apply(enemy.has('captain-shield'), 'Equipped Praesidium Shield: reduce Damage by 1', () => { result.damageReduction += 1; });
   apply(enemy.has('guardian-eternal') && profile.weaponType === 'ranged', 'Guardian Eternal: reduce ranged Damage by 1', () => { result.damageReduction += 1; });
+  apply(own.has('captain-general-aura'), 'Captain-General: re-roll Hit and Wound rolls of 1 within 6″', () => {
+    result.hitReroll = strongestReroll(result.hitReroll, 'ones');
+    result.woundReroll = strongestReroll(result.woundReroll, 'ones');
+  });
+  apply(own.has('magna-imperator'), 'Magna Imperator: re-roll one Hit roll and one Wound roll when selected to attack', () => {
+    result.singleHitReroll = true;
+    result.singleWoundReroll = true;
+  });
   const fnp = [result.damagePrevention, target?.combatRules?.feelNoPain].filter(value => Number.isInteger(value) && value >= 2 && value <= 6);
   result.damagePrevention = fnp.length ? Math.min(...fnp) : 0;
   if (result.damagePrevention) appliedRules.push(`Feel No Pain ${result.damagePrevention}+: wound prevention`);
