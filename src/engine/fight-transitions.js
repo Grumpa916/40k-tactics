@@ -6,6 +6,52 @@ import { getFightCandidates } from "../rules/fight-candidates.js";
 import { getCombatFormationRoot } from "../rules/battle-unit-reference.js";
 import { changePhase } from "./state-transitions.js";
 
+function ownerId(state, unitId) {
+  return state.units.find((unit) => unit.id === unitId)?.ownerId ?? null;
+}
+
+// Chargers and other Fights First units are selected first. Each step alternates,
+// starting with the non-active player when that player still has a unit in the step.
+export function nextFightSelection(state, candidates = getFightCandidates(state)) {
+  const active = state.activePlayer ?? state.battle?.activePlayerId ?? null;
+  const other = (state.players ?? []).find((player) => player.id !== active)?.id ?? null;
+  const step = candidates.fightsFirst.length ? "fightsFirst" : "normal";
+  const remaining = step === "fightsFirst" ? candidates.fightsFirst : candidates.normal;
+  if (!other) return { step, playerId: active, unitIds: remaining };
+  const activations = (state.history ?? []).filter((event) =>
+    event?.type === "fight.unit_activated" &&
+    event?.payload?.turn === state.turn &&
+    (event?.payload?.actionType ?? "fight") === "fight" &&
+    Boolean(event?.payload?.fightsFirst) === (step === "fightsFirst")
+  );
+  const initial = new Set([...remaining, ...activations.map((event) => event.payload.unitId)]);
+  const left = new Set(initial);
+  const has = (playerId) => [...left].some((id) => ownerId(state, id) === playerId);
+  let picker = has(other) ? other : active;
+  for (const event of activations) {
+    if (!has(picker)) picker = picker === active ? other : active;
+    left.delete(event.payload.unitId);
+    const switched = picker === active ? other : active;
+    picker = has(switched) ? switched : picker;
+  }
+  if (!has(picker)) picker = picker === active ? other : active;
+  return { step, playerId: picker, unitIds: remaining.filter((id) => ownerId(state, id) === picker) };
+}
+
+function assertFightPickOrder(state, unit, candidates, tabletopConfirmed) {
+  if (candidates.fightsFirst.length > 0 && !candidates.fightsFirst.includes(unit.id)) {
+    throw new Error("Fights First candidates must be activated before normal Fight candidates.");
+  }
+  const next = nextFightSelection(state, candidates);
+  if (next.playerId && unit.ownerId !== next.playerId) {
+    throw new Error("Players alternate Fight selections. The other player chooses the next unit.");
+  }
+  const isCandidate = candidates.fightsFirst.includes(unit.id) || candidates.normal.includes(unit.id);
+  if (!tabletopConfirmed && !isCandidate) {
+    throw new Error("Unit is not an available Fight candidate.");
+  }
+}
+
 export function recordFightActivation(state, {
   unitId,
   actionType = "fight",
@@ -45,13 +91,7 @@ export function recordFightActivation(state, {
     throw new Error("Unit is not an available Fight candidate.");
   }
 
-  if (
-    !tabletopConfirmed &&
-    candidates.fightsFirst.length > 0 &&
-    candidates.normal.includes(unitId)
-  ) {
-    throw new Error("Fights First candidates must be activated before normal Fight candidates.");
-  }
+  if (actionType === "fight") assertFightPickOrder(state, unit, candidates, tabletopConfirmed);
 
   const event = createEvent("fight.unit_activated", {
     unitId,
