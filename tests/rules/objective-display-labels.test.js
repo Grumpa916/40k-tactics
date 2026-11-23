@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { liveMapObjectiveLabel, perspectiveObjectiveName } from '../../src/rules/objective-display-labels.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 import { getBattlePrimaryMissions, getEventCompanionMapLayout } from '../../src/rules/event-companion-map-catalog.js';
+import { getTerritoryStatusForPosition } from '../../src/rules/battlefield-territory.js';
 
 const DISPOSITIONS = [
   'Take and Hold',
@@ -128,10 +129,62 @@ test('page 22 objective labels switch to player-owned expansion names after assi
     'My Home','Opponent Home','Center 1','Center 2','My Expansion','Opponent Expansion'
   ].sort());
   assert.deepEqual(playerTwo.slice().sort(),playerOne.slice().sort());
-  assert.equal(perspectiveObjectiveName('Central 2',state,'p1'),'Opponent Expansion');
+  assert.equal(perspectiveObjectiveName('Central 2',state,'p1'),'My Expansion');
+  assert.equal(perspectiveObjectiveName('Expansion 1',state,'p1'),'Opponent Expansion');
+  assert.equal(perspectiveObjectiveName('Central 2',state,'p2'),'Opponent Expansion');
+  assert.equal(perspectiveObjectiveName('Expansion 1',state,'p2'),'My Expansion');
+});
+
+test('Layout C Take and Hold vs Priority Assets labels expansions by territory, not the nearer home marker',()=>{
+  const missionSetup={myDisposition:'Take and Hold',opponentDisposition:'Priority Assets',layout:'C'};
+  const {myMission,opponentMission}=getBattlePrimaryMissions(missionSetup.myDisposition,missionSetup.opponentDisposition);
+  const geometry=getEventCompanionMapLayout(myMission,opponentMission,'C');
+  assert.equal(geometry.page,23);
+  assert.equal(myMission,'Inescapable Dominion');
+  assert.equal(opponentMission,'Secure Asset');
+  const state={
+    battlefieldMap:{missionSetup},
+    preGameSetup:{attackerPlayerId:'p1',defenderPlayerId:'p2'}
+  };
+  // Attacker home is the top marker. Expansion 1 is in the attacker's half
+  // even though Expansion 2 is closer to that home marker.
+  assert.equal(perspectiveObjectiveName('Attacker Home',state,'p1'),'My Home');
+  assert.equal(perspectiveObjectiveName('Defender Home',state,'p1'),'Opponent Home');
   assert.equal(perspectiveObjectiveName('Expansion 1',state,'p1'),'My Expansion');
-  assert.equal(perspectiveObjectiveName('Central 2',state,'p2'),'My Expansion');
+  assert.equal(perspectiveObjectiveName('Expansion 2',state,'p1'),'Opponent Expansion');
   assert.equal(perspectiveObjectiveName('Expansion 1',state,'p2'),'Opponent Expansion');
+  assert.equal(perspectiveObjectiveName('Expansion 2',state,'p2'),'My Expansion');
+  assert.equal(liveMapObjectiveLabel(state,'event-companion:Expansion 1','p1'),'mE');
+  assert.equal(liveMapObjectiveLabel(state,'event-companion:Expansion 2','p1'),'oE');
+  const html=renderBattlefieldMap({...state,objectives:[],units:[]},{mode:'live',perspectivePlayerId:'p1',showUnits:false});
+  const marker=id=>html.match(new RegExp('data-layout-objective="'+id+'"[^>]*>([^<]*)'))?.[1];
+  assert.equal(marker('Expansion 1'),'MY EXP');
+  assert.equal(marker('Expansion 2'),'OPP EXP');
+});
+
+test('assigned expansions follow territory whenever one expansion is in each half',()=>{
+  for(const myDisposition of DISPOSITIONS)for(const opponentDisposition of DISPOSITIONS)for(const layout of ['A','B','C']){
+    const missions=getBattlePrimaryMissions(myDisposition,opponentDisposition);
+    const geometry=getEventCompanionMapLayout(missions.myMission,missions.opponentMission,layout);
+    const state={
+      preGameSetup:{attackerPlayerId:'p1',defenderPlayerId:'p2'},
+      battlefieldMap:{missionSetup:{myDisposition,opponentDisposition,layout}}
+    };
+    const nonHome=Object.entries(geometry.objectivePositions).filter(([name])=>!/home/i.test(name));
+    const centerCount=Math.max(1,nonHome.length-2);
+    const centers=new Set([...nonHome].sort((a,b)=>distanceSquared(a[1],boardCenter)-distanceSquared(b[1],boardCenter)).slice(0,centerCount).map(([name])=>name));
+    const expansions=nonHome.filter(([name])=>!centers.has(name));
+    if(expansions.length<2)continue;
+    for(const playerId of ['p1','p2']){
+      const territories=expansions.map(([name,point])=>getTerritoryStatusForPosition(state,{playerId,position:point}).territory);
+      if(territories.filter(item=>item==='mine').length!==1 || territories.filter(item=>item==='opponent').length!==expansions.length-1)continue;
+      expansions.forEach(([name],index)=>{
+        const label=perspectiveObjectiveName(name,state,playerId);
+        assert.equal(label,territories[index]==='mine'?'My Expansion':'Opponent Expansion',
+          `${myDisposition} vs ${opponentDisposition} ${layout} ${name} ${playerId}`);
+      });
+    }
+  }
 });
 
 test('all Event Companion maps have distinct planning objective labels before player roles are assigned',()=>{
