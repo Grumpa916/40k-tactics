@@ -13,17 +13,24 @@ export function getMapReserveUnits(state, { playerId = null } = {}) {
     (state.battle?.status === 'active' || state.battlefieldMap?.declaredReserves?.[unit.id]));
 }
 
+export function getMapEmbarkedUnits(state,{playerId=null}={}) {
+  return (state?.units??[]).filter(unit=>unit.status==='embarked' && !attachmentParent(state,unit) &&
+    (!playerId || unit.ownerId===playerId));
+}
+
 export function renderMapReserveTray(state,{selectedUnitId,playerId=null}={}) {
   const units=getReserveCandidates(state,playerId);
   const reserves=getMapReserveUnits(state,{playerId});
-  const selected=units.find(unit=>unit.id===selectedUnitId);
-  const canSend=selected && !reserves.includes(selected);
+  const embarked=getMapEmbarkedUnits(state,{playerId});
+  const selected=[...units,...embarked].find(unit=>unit.id===selectedUnitId);
+  const canSend=selected?.status==='deployed' && !reserves.includes(selected);
   const labels=unitDisplayLabels(state.units??[]);
   const labelFor=unit=>unit ? (labels.get(unit.id)??unit.name??unit.id) : '';
   return `<link rel="stylesheet" href="${new URL('./styles/map-reserve-tray.css',import.meta.url).href}"><div class="map-reserve-tray" data-map-reserve-area aria-label="Reserves tray">
     <button type="button" data-map-send-reserve ${canSend?'':'disabled'}>Reserves · ${reserves.length}${canSend?' · Move '+esc(labelFor(selected))+' here':''}</button>
     <div class="map-reserve-tray__units">${reserves.map(unit=>`<button type="button" data-map-reserve-select="${esc(unit.id)}" aria-pressed="${unit.id===selectedUnitId}">${esc(labelFor(unit))}${playerId?'':' · '+esc(state.players?.find(p=>p.id===unit.ownerId)?.name??unit.ownerId)}</button>`).join('')||'<span>No units in reserves</span>'}</div>
-    <small>${reserves.includes(selected)?esc(labelFor(selected))+' selected · tap an empty map position to place.':'Select a battlefield unit, then tap this Reserves area. Select a reserve unit, then tap the map.'}</small>
+    <div class="map-reserve-tray__units"><strong>Embarked · ${embarked.length}</strong>${embarked.map(unit=>`<button type="button" data-map-reserve-select="${esc(unit.id)}" aria-pressed="${unit.id===selectedUnitId}">${esc(labelFor(unit))} · disembark</button>`).join('')||'<span>No passengers embarked</span>'}</div>
+    <small>${reserves.includes(selected)?esc(labelFor(selected))+' selected · tap an empty map position to place.':embarked.includes(selected)?esc(labelFor(selected))+' selected · tap the map within 3″ of its transport to disembark; confirm legal placement at the table.':'Select a unit here, then tap its battlefield destination. Tap Reserves to send a deployed unit off-board.'}</small>
   </div>`;
 }
 export function tappedMapPosition(event,board) {
@@ -48,8 +55,10 @@ export function renderVenatariIngressTray(state, {selectedUnitId}={}) {
 export function renderMovementReserveDock(state, { selectedUnitId, playerId = null } = {}) {
   const reserveCount = getMapReserveUnits(state, { playerId }).length;
   const arrivals = getPendingVenatariIngress(state).length;
-  return `<details class="movement-map-reserves" data-movement-map-reserves>
-    <summary>Reserves · ${reserveCount}${arrivals ? ' · arrivals' : ''}</summary>
+  const embarked = getMapEmbarkedUnits(state, { playerId }).length;
+  const selectedStatus = state.units?.find(unit=>unit.id===selectedUnitId)?.status;
+  return `<details class="movement-map-reserves" data-movement-map-reserves${['reserves','embarked'].includes(selectedStatus)?' open':''}>
+    <summary>Place units · ${reserveCount} reserves · ${embarked} embarked${arrivals ? ' · arrivals' : ''}</summary>
     <div class="movement-map-reserves__popover">
       ${renderMapReserveTray(state, { selectedUnitId, playerId })}
       ${renderVenatariIngressTray(state, { selectedUnitId })}

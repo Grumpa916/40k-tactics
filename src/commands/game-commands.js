@@ -70,6 +70,7 @@ export const COMMAND_TYPES = Object.freeze({
   RETURN_SECONDARY_MISSION: "secondary_mission.return_selection",
   SET_SECONDARY_MISSION_MODE: "secondary_mission.set_mode",
   RECORD_SECONDARY_MISSION_SCORE: "secondary_mission.record_score",
+  CORRECT_SECONDARY_MISSION_SCORE: "secondary_mission.correct_score",
   USE_SECONDARY_MISSION_REDRAW: "secondary_mission.use_redraw",
   DISCARD_TACTICAL_SECONDARIES_FOR_CP: "secondary_mission.discard_for_cp",
   RECORD_PILE_IN: "fight.record_pile_in",

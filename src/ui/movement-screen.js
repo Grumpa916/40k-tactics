@@ -130,7 +130,7 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const playerId = state.activePlayer ?? state.battle?.activePlayerId;
     const eligible = state.units.filter((unit) => unit.ownerId === playerId && unit.status === "deployed");
     const pendingIngressIds = new Set(getPendingVenatariIngress(state).map(unit => unit.id));
-    const selectable=state.units.filter(unit=>(unit.ownerId===playerId || pendingIngressIds.has(unit.id)) && ['deployed','reserves'].includes(unit.status) && !attachmentParent(state,unit));
+    const selectable=state.units.filter(unit=>(unit.ownerId===playerId || pendingIngressIds.has(unit.id)) && ['deployed','reserves','embarked'].includes(unit.status) && !attachmentParent(state,unit));
     if (!selectable.some((unit) => unit.id === selectedUnitId)) {
       selectedUnitId = eligible[0]?.id ?? selectable[0]?.id ?? null;
       advanceRoll = null;
@@ -196,6 +196,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
 
     const reserved=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='reserves');
     if(reserved)editor=`<div class="move-editor"><p class="move-editor__status"><strong>Reserves</strong></p><p>Tap an empty map position to place this unit on the battlefield.</p></div>`;
+    const embarked=selectable.find(unit=>unit.id===selectedUnitId && unit.status==='embarked');
+    if(embarked)editor=`<div class="move-editor"><p class="move-editor__status"><strong>Embarked</strong></p><p>Tap an empty map position within 3″ of its transport to place this passenger. Confirm the tabletop move is legal.</p></div>`;
     const reserveTray=renderMovementReserveDock(state,{selectedUnitId,playerId});
     const advisor=renderMovementAdvisor(state,{playerId,selectedUnitId,perspectivePlayerId:perspectivePlayerId ?? playerId});
     if (layoutMode === 'tabletop') {
@@ -353,8 +355,8 @@ export function createMovementScreen(container, { session, perspectivePlayerId =
     const board=event.target?.closest?.('[data-battlefield-map-board]');
     const state=session.getState();
     const selected=state.units.find(unit=>unit.id===selectedUnitId);
-    if(area || (board && selected?.status==='reserves' && !event.target?.closest?.('[data-map-unit-id]') && !event.target?.closest?.('[data-map-objective-id]'))) {
-      if(area && selected?.status==='reserves')return;
+    if(area || (board && ['reserves','embarked'].includes(selected?.status) && !event.target?.closest?.('[data-map-unit-id]') && !event.target?.closest?.('[data-map-objective-id]'))) {
+      if(area && ['reserves','embarked'].includes(selected?.status))return;
       try {
         const position=board?tappedMapPosition(event,board):null;
         errorMessage='';
