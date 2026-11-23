@@ -1,4 +1,6 @@
 import { isManualScoringEnabled } from '../config/feature-flags.js';
+import { getSecondaryMissionHistory, SECONDARY_MISSION_STATUS } from '../rules/secondary-mission-lifecycle.js';
+import { getCorrectableSecondaryAwards } from '../engine/secondary-score-correction.js';
 import { renderScoreReason, renderScoreTransactions } from './scoreboard-transactions.js';
 import { getCommandPointBalance } from "../engine/command-points-ledger.js";
 import { getVictoryPointScore } from "../engine/victory-points-ledger.js";
@@ -7,6 +9,26 @@ import { formatElapsedTime, getTurnClockElapsedMs } from "../state/turn-clock.js
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+function renderSecondaryCorrection(state,playerId) {
+  const awards=getCorrectableSecondaryAwards(state,playerId);
+  const cards=getSecondaryMissionHistory(state,playerId);
+  const choices=cards.flatMap(card=>{
+    const existing=awards.filter(award=>award.instanceId===card.instanceId);
+    const options=existing.map(award=>'<option value="'+escapeHtml(card.instanceId)+'|'+award.index+'">'+escapeHtml(card.definition?.name??card.definitionId)+' · round '+award.round+' · '+award.amount+' VP</option>');
+    if(!existing.length && card.status!==SECONDARY_MISSION_STATUS.SCORED)
+      options.push('<option value="'+escapeHtml(card.instanceId)+'|new">'+escapeHtml(card.definition?.name??card.definitionId)+' · '+escapeHtml(card.status)+' · unscored</option>');
+    return options;
+  }).join('');
+  if(!choices)return '';
+  const rounds=Array.from({length:Math.max(1,state.battle?.round??1)},(_,index)=>
+    '<option value="'+(index+1)+'" '+(index+1===(state.battle?.round??1)?'selected':'')+'>Round '+(index+1)+'</option>').join('');
+  return '<details class="score-secondary-correction"><summary>Correct a secondary card</summary><p>Choose a recorded card, enter its correct VP and scoring round. A discarded card can be scored if it was actually completed.</p>'+
+    '<label>Card<select data-score-secondary-card>'+choices+'</select></label>'+
+    '<label>Correct VP<input data-score-secondary-amount type="number" min="0" max="15" step="1" value="5"></label>'+
+    '<label>Scored in<select data-score-secondary-round>'+rounds+'</select></label>'+
+    '<button type="button" data-correct-secondary-score>Save secondary correction</button></details>';
 }
 
 export function phaseLabel(phase) {
@@ -46,7 +68,7 @@ export function renderScoreAdjustOverlay(
     (scoreAdjustCollapsed ? '□' : '−') +
     '</button><button type="button" data-close-score-adjust aria-label="Close">×</button></div></header><div class="battle-shell__score-adjust-current">' +
     current + '</div>' + (showVp ? renderScoreReason('vp') : '') + (showCp ? renderScoreReason('cp') : '') + '<div class="battle-shell__score-adjust-grid">' + controls +
-    '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p>' + renderScoreTransactions(state, scorePlayer.id, scoreAdjustKind) + '</section></div>';
+    '</div><p class="battle-shell__score-adjust-message" role="status">' + escapeHtml(scoreAdjustMessage) + '</p>' + renderScoreTransactions(state, scorePlayer.id, scoreAdjustKind) + (showVp ? renderSecondaryCorrection(state,scorePlayer.id) : '') + '</section></div>';
 }
 
 export function renderStatusSummaryContent(state, viewedPhase) {
