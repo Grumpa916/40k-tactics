@@ -28,7 +28,9 @@ export function renderShellHeader(state, { viewedPhase, layoutMode, missionRevie
   return tabletopExperiment
     ? '<header class="battle-shell__tabletop-header">' +
       '<div class="battle-shell__tabletop-topline">' + statusSummary + '</div>' +
-      '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
+      '<details class="battle-shell__live-menu"><summary aria-label="More battle views">⋯</summary><div>' +
+      '<button type="button" data-battle-phase-button="setup">Setup &amp; Saves</button>' +
+      '<button type="button" data-battle-phase-button="review">Game review</button></div></details>' +
       layoutSwitch + '</header>'
     : '<ol class="battle-shell__phases" aria-label="Battle phase navigation">' + phaseItems + '</ol>' +
       statusSummary + layoutSwitch;
