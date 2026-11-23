@@ -60,8 +60,10 @@ export function renderShootingWeaponChoices(weapons, selectedWeaponId, {disabled
   const options = Array.isArray(weapons) ? weapons : [];
   const selected = options.find(item => item.id === selectedWeaponId);
   const effects = getShootingWeaponEffects(selected);
+  const deck=options.filter(weapon=>weapon.firingDeck);
   return `<div class="shoot-weapon-picker" role="group" aria-label="Ranged weapon">
     <strong>Ranged weapon</strong>
+    ${deck.length ? '<p role="note" data-firing-deck-guide>Firing Deck: select the Impulsor as shooter, then choose an embarked unit’s weapon below. The transport makes the attack; the passenger remains embarked. Confirm the number of contributing models and weapon profiles on the tabletop.</p>' : ''}
     <div class="shoot-weapon-picker__choices">${options.map(weapon =>
       `<button type="button" data-shoot-weapon-choice="${escapeHtml(weapon.id)}" aria-pressed="${String(weapon.id === selectedWeaponId)}" ${disabled ? 'disabled' : ''}>${escapeHtml(weapon.name)}</button>`
     ).join('')}</div>
