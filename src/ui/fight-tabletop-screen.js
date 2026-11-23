@@ -115,7 +115,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       }).join('')}</ol><small>${model.activations.length} unit choices recorded</small></details>`;
     const endPrompt = endReview ? `<section class="combat-end-review phase-end__review" role="region" aria-label="End Fight confirmation"><strong>End Fight?</strong><p>Close all open activations.${available.length ? ' Record these remaining inferred combats as not fighting: ' + available.map(item => esc(item.name)).join(', ') + '.' : ''}</p><button class="phase-end__primary" type="button" data-fight-confirm-end>Confirm · End Fight</button><button class="phase-end__secondary" type="button" data-fight-cancel-end>Keep fighting</button></section>` : '';
     const finishUnitControl = active && unit ? '<button type="button" data-fight-finish-entry>Finish unit</button>' : '';
-    const endFightControl = active && unit || endReview ? '' : `<button class="phase-end__review-button" type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
+    const endFightControl = endReview ? '' : active && unit ? '<button class="phase-end__primary" type="button" data-phase-end-disabled disabled>End Fight · Review remaining →</button>' : `<button class="phase-end__review-button" type="button" data-fight-complete ${state.phase === 'fight' ? '' : 'disabled'}>End Fight · Review remaining →</button>`;
     const selectableIds = [...options.attackers, ...options.targets].map(unit => unit.unitId);
     const targetIds = targetId ? [targetId] : [];
     container.innerHTML = renderCombatWorkspace({
