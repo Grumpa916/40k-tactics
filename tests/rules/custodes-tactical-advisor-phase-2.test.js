@@ -343,7 +343,7 @@ test("Custodes optional reroll options preserve stronger weapon abilities", () =
   const setup = {
     custodesSheet: telemon,
     custodesOverrides: {
-      name: "Telemon Heavy Dreadnought", wounds: 7, maxWounds: 14,
+      name: "Telemon Heavy Dreadnought", wounds: 6, maxWounds: 14,
       startingWounds: 14, toughness: 11
     }
   };
