@@ -37,3 +37,68 @@ export function previewSpokenSecondaryPair(state, transcript, definitions, persp
   drawSecondaryMission(first, { definition: matches[1], playerId, round, turn });
   return { playerId, definitions: matches, round, turn, transcript: spoken };
 }
+
+/* Safari can leave a speech session open without result, error or end events.
+   Keep a bounded session and detach late callbacks before restoring the UI. */
+export function createSecondarySpeechCapture(Recognition, {
+  onTranscript = () => {}, onFailure = () => {}, onEnded = () => {},
+  timeoutMs = 15000, schedule = setTimeout, cancel = clearTimeout
+} = {}) {
+  let current = null;
+  let timer = null;
+  function release(abort = false) {
+    const session = current;
+    current = null;
+    if (timer !== null) { cancel(timer); timer = null; }
+    if (!session) return;
+    session.onresult = null;
+    session.onerror = null;
+    session.onend = null;
+    if (abort) {
+      try { session.abort?.(); } catch { /* Safari may already have closed it. */ }
+    }
+  }
+  return {
+    get listening() { return current !== null; },
+    start() {
+      release(true);
+      let session;
+      try {
+        session = new Recognition();
+        current = session;
+        session.lang = 'en-US';
+        session.interimResults = false;
+        session.maxAlternatives = 1;
+        session.onresult = result => {
+          if (current !== session) return;
+          const transcript = result.results?.[0]?.[0]?.transcript ?? '';
+          release(false);
+          onTranscript(transcript);
+        };
+        session.onerror = result => {
+          if (current !== session) return;
+          release(false);
+          onFailure('Microphone: ' + (result.error ?? 'unavailable'));
+        };
+        session.onend = () => {
+          if (current !== session) return;
+          release(false);
+          onEnded();
+        };
+        session.start();
+        if (current === session) timer = schedule(() => {
+          if (current !== session) return;
+          release(true);
+          onFailure('Safari did not respond to the microphone. Use iPad Dictation in the text field.');
+        }, timeoutMs);
+        return true;
+      } catch (error) {
+        release(true);
+        onFailure(error?.message ?? String(error));
+        return false;
+      }
+    },
+    stop() { release(true); },
+    destroy() { release(true); }
+  };
+}
