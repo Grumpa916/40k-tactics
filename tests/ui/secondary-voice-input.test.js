@@ -53,25 +53,34 @@ test('a silent Safari microphone session times out, aborts, and ignores late res
   }
   const pending = new Map();
   let nextId = 0;
-  const failures = [], transcripts = [];
+  const failures = [], transcripts = [], stages = [];
   const capture = createSecondarySpeechCapture(FakeRecognition, {
     onTranscript: text => transcripts.push(text),
     onFailure: message => failures.push(message),
+    onStage: stage => stages.push(stage),
     schedule: callback => { pending.set(++nextId, callback); return nextId; },
     cancel: id => pending.delete(id)
   });
   assert.equal(capture.start(), true);
   assert.equal(capture.listening, true);
+  instances[0].onstart();
+  instances[0].onaudiostart();
+  const staleAudio = instances[0].onaudiostart;
+  assert.deepEqual(stages, ['starting', 'started', 'audio']);
   const staleResult = instances[0].onresult;
   pending.get(1)();
   assert.equal(capture.listening, false);
   assert.equal(instances[0].aborted, true);
-  assert.match(failures[0], /Safari did not respond/);
+  assert.match(failures[0], /No transcript after 15 seconds \(audio\)/);
+  staleAudio();
+  assert.deepEqual(stages, ['starting', 'started', 'audio']);
   staleResult({results:[[ { transcript:'Cleanse and Plunder' } ]]});
   assert.deepEqual(transcripts, []);
 
   assert.equal(capture.start(), true);
+  instances[1].onspeechstart();
   instances[1].onresult({results:[[ { transcript:'Cleanse and Plunder' } ]]});
+  assert.deepEqual(stages, ['starting', 'started', 'audio', 'starting', 'speech']);
   assert.deepEqual(transcripts, ['Cleanse and Plunder']);
   assert.equal(capture.listening, false);
   assert.equal(pending.size, 0);
