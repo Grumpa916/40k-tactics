@@ -38,8 +38,9 @@ function replaceUnitMarkerText(html, unitId, symbol) {
   if (contentStart < 0) return html;
   const close = html.indexOf('</div>', contentStart + 1);
   if (close < 0) return html;
-  const badge = html.indexOf('<span class="unit-activation-badge"', contentStart + 1);
-  const contentEnd = badge >= 0 && badge < close ? badge : close;
+  // Preserve activation, OC and any later marker child badges.
+  const child = html.indexOf('<', contentStart + 1);
+  const contentEnd = child >= 0 && child < close ? child : close;
   return html.slice(0, contentStart + 1) + escapeHtml(symbol) + html.slice(contentEnd);
 }
 
