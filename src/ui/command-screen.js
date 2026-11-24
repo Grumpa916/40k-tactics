@@ -81,9 +81,12 @@ export function createCommandScreen(container, {
   let voiceTranscript = "";
   let voiceDraft = null;
   let voiceMessage = "";
+  let voiceStage = "";
   let voiceCapture = null;
 
   function reviewVoiceCards(heard = null) {
+    voiceCapture?.stop();
+    voiceStage = "";
     voiceTranscript = heard ?? container.querySelector?.('[data-voice-secondary-text]')?.value ?? voiceTranscript;
     try {
       voiceDraft = previewSpokenSecondaryPair(session.getState(), voiceTranscript,
@@ -100,7 +103,7 @@ export function createCommandScreen(container, {
     const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel]');
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute('data-voice-secondary-cancel')) {
-      voiceCapture?.stop(); voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
+      voiceCapture?.stop(); voiceStage = ""; voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
     }
     if (target.hasAttribute('data-voice-secondary-review')) { reviewVoiceCards(); return; }
     if (target.hasAttribute('data-voice-secondary-confirm')) {
@@ -121,6 +124,7 @@ export function createCommandScreen(container, {
     }
     if (voiceCapture?.listening) {
       voiceCapture.stop();
+      voiceStage = '';
       voiceMessage = 'Listening stopped. You can dictate into the text field.';
       render();
       return;
@@ -133,8 +137,22 @@ export function createCommandScreen(container, {
     voiceMessage = "";
     voiceCapture = createSecondarySpeechCapture(Recognition, {
       onTranscript: heard => reviewVoiceCards(heard),
-      onFailure: message => { voiceMessage = message; render(); },
-      onEnded: () => { voiceMessage = 'No speech heard. Try again or use iPad Dictation.'; render(); }
+      onFailure: message => { voiceStage = ''; voiceMessage = message; render(); },
+      onEnded: () => {
+        voiceMessage = 'No speech heard (' + (voiceStage || 'starting') + '). Try again or use iPad Dictation.';
+        voiceStage = ''; render();
+      },
+      onStage: stage => {
+        voiceStage = stage;
+        const label = {
+          starting: 'Starting Safari speech recognition…',
+          started: 'Speech recognition started; waiting for microphone…',
+          audio: 'Microphone open; waiting for speech…',
+          speech: 'Speech detected; waiting for transcript…'
+        }[stage] ?? stage;
+        const status = container.querySelector?.('[data-voice-secondary-status]');
+        if (status) status.textContent = label;
+      }
     });
     // Keep the tapped element mounted while Safari starts listening. A full
     // Command/map redraw here can interrupt the iPad's microphone handoff.
@@ -821,6 +839,12 @@ export function createCommandScreen(container, {
       '<section class="command-voice-secondary" aria-label="Speak Tactical secondary cards">' +
       '<h3>Speak drawn cards</h3><p>Warmind draws; record two cards for ' + escapeHtml(playerName(state, selectedSecondaryPlayerId)) + '.</p>' +
       '<button type="button" data-voice-secondary-start style="min-height:48px">' + (voiceCapture?.listening ? 'Stop listening' : '🎙 Tap to speak') + '</button>' +
+      '<p data-voice-secondary-status role="status">' + escapeHtml(({
+        starting: 'Starting Safari speech recognition…',
+        started: 'Speech recognition started; waiting for microphone…',
+        audio: 'Microphone open; waiting for speech…',
+        speech: 'Speech detected; waiting for transcript…'
+      })[voiceStage] ?? '') + '</p>' +
       '<details' + (voiceTranscript || voiceMessage ? ' open' : '') + '><summary>Transcript / type instead</summary>' +
       '<label>Heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
       '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></details>' +
