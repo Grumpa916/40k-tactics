@@ -1,7 +1,7 @@
 import { ADEPTUS_CUSTODES_DETACHMENTS, ADEPTUS_CUSTODES_RULE_SOURCES } from '../data/adeptus-custodes-faction-rules.js';
 import { getBattleUnitDatasheet, getCombatFormationMembers, getCombatFormationRoot } from './battle-unit-reference.js';
 import { isAdeptusCustodesKeywordUnit } from './custodes-keyword-eligibility.js';
-import { getCustodesKatahState } from './custodes-tactical-advisor.js';
+import { getCustodesKatahState, getCustodesMoritoiContext } from './custodes-tactical-advisor.js';
 import { isRulesPhaseOpening } from './rules-phase-window.js';
 import { getFightEngagementState } from './fight-engagement-state.js';
 import { getCommandPointBalance } from '../engine/command-points-ledger.js';
@@ -126,6 +126,8 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
       sourceUrl:ADEPTUS_CUSTODES_RULE_SOURCES.currentReference,available:true
     });
     const reminder = DETACHMENT_REMINDERS[detachment.name];
+    const moritoi = unit && detachment.name === 'Might of the Moritoi'
+      ? getCustodesMoritoiContext(state, { playerId, unitId: unit.id }) : null;
     if (reminder && reminder.phases.includes(state.phase) && !(reminder.turn === 'own' && !ownTurn || reminder.turn === 'opponent' && ownTurn)) {
       let include = true;
       if (detachment.name === 'Solar Watch') {
@@ -138,7 +140,7 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
         const keywords = formationKeywords(state, unit);
         const has = keyword => keywords.some(value => value.includes(keyword));
         if (detachment.name === "Emperor's Chosen") include = selectedToAttack && ['shooting', 'fight'].includes(state.phase) && isAdeptusCustodesKeywordUnit(state, unit);
-        if (detachment.name === 'Might of the Moritoi') include = has('dreadnought');
+        if (detachment.name === 'Might of the Moritoi') include = moritoi.active;
         if (['Lions of the Emperor', 'Grav-Assault Force'].includes(detachment.name)) {
           const required = detachment.name === 'Lions of the Emperor' ? 'terminator' : 'grav-assault';
           include = keywords.some(keyword => keyword.includes(required));
@@ -158,7 +160,7 @@ export function getCustodesDetachmentRuleReminders(state, { playerId, unitId = n
         title: detachment.ruleName,
         kind: 'detachment',
         timing: reminder.timing,
-        effect: reminder.effect,
+        effect: moritoi?.reason ?? reminder.effect,
         sourceUrl: 'https://www.warhammer-community.com/en-gb/articles/joz5iubm/your-first-look-at-13-new-adeptus-custodes-detachments/',
         available: true
       });

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGameState } from '../../src/state/game-state.js';
 import { drawSecondaryMission, getSecondaryMissionHistory, setSecondaryMissionMode } from '../../src/rules/secondary-mission-lifecycle.js';
-import { previewSpokenSecondaryPair } from '../../src/ui/secondary-voice-input.js';
+import { previewSpokenSecondaryPair, createSecondarySpeechCapture } from '../../src/ui/secondary-voice-input.js';
 
 const catalog = ['Cleanse', 'Plunder', 'Assassination'].map(name => ({
   id: 'secondary-' + name.toLowerCase(), name, category: 'secondary',
@@ -42,4 +42,58 @@ test('voice preview rejects a mismatched player, unknown card, duplicate, and fu
   assert.throws(()=>previewSpokenSecondaryPair(state,'Cleanse and Cleanse',catalog,'p1'),/different/);
   const one=drawSecondaryMission(state,{definition:catalog[0],playerId:'p2',round:1,turn:1});
   assert.throws(()=>previewSpokenSecondaryPair(one,'Cleanse and Plunder',catalog,'p1'),/already/);
+});
+
+test('a silent Safari microphone session times out, aborts, and ignores late results', () => {
+  const instances = [];
+  class FakeRecognition {
+    constructor() { this.aborted = false; instances.push(this); }
+    start() { this.started = true; }
+    abort() { this.aborted = true; }
+  }
+  const pending = new Map();
+  let nextId = 0;
+  const failures = [], transcripts = [];
+  const capture = createSecondarySpeechCapture(FakeRecognition, {
+    onTranscript: text => transcripts.push(text),
+    onFailure: message => failures.push(message),
+    schedule: callback => { pending.set(++nextId, callback); return nextId; },
+    cancel: id => pending.delete(id)
+  });
+  assert.equal(capture.start(), true);
+  assert.equal(capture.listening, true);
+  const staleResult = instances[0].onresult;
+  pending.get(1)();
+  assert.equal(capture.listening, false);
+  assert.equal(instances[0].aborted, true);
+  assert.match(failures[0], /Safari did not respond/);
+  staleResult({results:[[ { transcript:'Cleanse and Plunder' } ]]});
+  assert.deepEqual(transcripts, []);
+
+  assert.equal(capture.start(), true);
+  instances[1].onresult({results:[[ { transcript:'Cleanse and Plunder' } ]]});
+  assert.deepEqual(transcripts, ['Cleanse and Plunder']);
+  assert.equal(capture.listening, false);
+  assert.equal(pending.size, 0);
+});
+
+test('stop and destroy release the microphone without a late callback', () => {
+  const instances = [];
+  class FakeRecognition {
+    constructor() { this.aborted = false; instances.push(this); }
+    start() {}
+    abort() { this.aborted = true; }
+  }
+  const ended = [];
+  const capture = createSecondarySpeechCapture(FakeRecognition, {onEnded:()=>ended.push(true)});
+  capture.start();
+  const staleEnd = instances[0].onend;
+  capture.stop();
+  staleEnd();
+  assert.equal(instances[0].aborted, true);
+  assert.equal(capture.listening, false);
+  assert.deepEqual(ended, []);
+  capture.start();
+  capture.destroy();
+  assert.equal(instances[1].aborted, true);
 });

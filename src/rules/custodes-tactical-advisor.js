@@ -181,13 +181,17 @@ export function getCustodesMoritoiContext(state, { playerId, unitId } = {}) {
 
   const belowStarting = belowStartingStrength(state, unit);
   const strength = getUnitStrengthAssessment(unit);
-  let belowHalf = strength.known ? strength.belowHalfStrength : null;
+  // Below half-strength is strictly less than half; the generic strength
+  // assessment also serves at-or-below-half rules such as Battle-shock.
+  let belowHalf = Number.isFinite(strength.currentStrength) && Number.isFinite(strength.startingStrength)
+    ? strength.currentStrength * 2 < strength.startingStrength
+    : strength.source === "explicit" ? strength.belowHalfStrength : null;
   if (belowHalf == null) {
     const profile = getProbabilisticUnitProfile(state, unit);
     const startingWounds = Number(unit?.maxWounds ?? unit?.startingWounds ?? profile?.wounds);
     const currentWounds = Number(unit?.wounds);
     if (Number.isFinite(startingWounds) && startingWounds > 0 && Number.isFinite(currentWounds)) {
-      belowHalf = currentWounds * 2 <= startingWounds;
+      belowHalf = currentWounds * 2 < startingWounds;
     }
   }
 
