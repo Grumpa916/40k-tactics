@@ -506,6 +506,59 @@
   color:#17212b;
 }
 
+/* Live phase actions sit in the right-hand control column, leaving the map
+   usable down to the bottom safe area. Keep the touch target stable in every phase. */
+@media (orientation:landscape) and (min-width:761px) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] {
+    --live-phase-action-width:285px;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true]:has(.shoot-screen--tabletop) {
+    --live-phase-action-width:330px;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] > [data-phase-progression-host] {
+    left:auto;
+    right:calc(10px + env(safe-area-inset-right,0px));
+    width:var(--live-phase-action-width);
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools > [data-workspace-panel] {
+    bottom:calc(72px + env(safe-area-inset-bottom,0px));
+    height:44px;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__footer,.combat-workspace__panel footer)
+    :is([data-complete],[data-review-end-shooting],[data-confirm-end-shooting],[data-charge-complete],[data-fight-complete],[data-fight-confirm-end],[data-phase-end-disabled]) {
+    position:fixed;
+    right:calc(10px + env(safe-area-inset-right,0px));
+    bottom:calc(10px + env(safe-area-inset-bottom,0px));
+    z-index:1090;
+    box-sizing:border-box;
+    width:var(--live-phase-action-width) !important;
+    height:56px;
+    min-height:48px;
+    margin:0;
+    padding:6px 12px;
+    font-size:12px;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__footer,.combat-workspace__panel footer):has(
+    :is([data-complete],[data-review-end-shooting],[data-confirm-end-shooting],[data-charge-complete],[data-fight-complete],[data-fight-confirm-end],[data-phase-end-disabled])
+  ) { padding-bottom:126px; }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__footer,.combat-workspace__panel footer) .phase-end__primary:disabled {
+    background:#233037 !important;
+    border:1px solid #586b72 !important;
+    color:#91a0a7 !important;
+    opacity:1;
+    box-shadow:none;
+  }
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true] :is(.shoot-tabletop__control-scroll,.combat-workspace__scroll) {
+    padding-bottom:130px;
+  }
+}
+@media (orientation:landscape) and (min-width:1400px) {
+  .battle-shell.is-tabletop-experiment[data-battle-focus=true]:has(.shoot-screen--tabletop) {
+    --live-phase-action-width:360px;
+  }
+}
+
 /* Keep both score lines visible while the live controls share one iPad row. */
 @media (min-width:1024px) and (orientation:landscape) {
   .battle-shell.is-tabletop-experiment[data-battle-focus=true] .prototype-workspace-tools { grid-template-columns:minmax(0,1fr) auto; }

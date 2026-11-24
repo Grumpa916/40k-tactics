@@ -1,6 +1,7 @@
 import { getCombatFormationMembers, getBattleUnitDatasheet } from '../rules/battle-unit-reference.js';
 import { getEquippedWeaponReferences } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
+import { getCustodesObjectiveControlBonus } from '../rules/custodes-tactical-advisor.js';
 import { getArmyUnitReference } from './army-unit-summary.js';
 import { mapUnitUpgradeNames, unitDisplayLabels } from './map-unit-labels.js';
 import { ADEPTUS_CUSTODES_DETACHMENTS } from '../data/adeptus-custodes-faction-rules.js';
@@ -17,7 +18,7 @@ function objectiveControl(state, unit) {
   const raw = sheet?.characteristics?.['Objective Control'] ?? sheet?.characteristics?.OC ??
     unit?.profile?.characteristics?.['Objective Control'] ?? unit?.characteristics?.['Objective Control'];
   const match = String(raw ?? '').match(/\d+/);
-  return match ? Number(match[0]) : null;
+  return match ? Number(match[0]) + getCustodesObjectiveControlBonus(state, unit) : null;
 }
 
 function renderMember(state, unit) {
@@ -25,7 +26,8 @@ function renderMember(state, unit) {
   const ref = getArmyUnitReference(state,unit);
   const characteristics=ref.profile?.characteristics??{};
   const value=(...keys)=>keys.map(key=>characteristics[key]).find(item=>item!=null && item!=='')??'—';
-  const stats=[['M',value('movement','Move')],['T',value('toughness','Toughness')],['Sv',value('save','Save')],['W',value('wounds','Wounds')],['Ld',value('leadership','Leadership')],['OC',value('objectiveControl','Objective Control','oc')]];
+  const oc = objectiveControl(state, unit);
+  const stats=[['M',value('movement','Move')],['T',value('toughness','Toughness')],['Sv',value('save','Save')],['W',value('wounds','Wounds')],['Ld',value('leadership','Leadership')],['OC',oc ?? value('objectiveControl','Objective Control','oc')]];
   const upgrades=mapUnitUpgradeNames(unit,state);
   const enhancementRules=ADEPTUS_CUSTODES_DETACHMENTS.flatMap(detachment=>detachment.enhancements??[]);
   const upgradeMarkup=upgrades.length?'<ul class="unit-state__upgrades">'+upgrades.map(name=>{
@@ -41,7 +43,6 @@ function renderMember(state, unit) {
       (quantityUncertain || !Number.isFinite(activeQuantity) ? '—' : esc(activeQuantity)) +
       '</strong></li>').join('') + '</ul>'
     : '<p class="unit-state__unknown">Weapon counts unavailable</p>';
-  const oc = objectiveControl(state, unit);
   const currentWoundCap = vitals.woundCap;
   return '<section class="unit-state__member" data-state-unit="' + esc(unit.id) + '">' +
     '<h4>' + esc(unitDisplayLabels(state.units??[],state).get(unit.id)??unit.name) + '</h4>' +

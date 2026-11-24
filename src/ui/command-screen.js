@@ -18,6 +18,7 @@ import { getUnleashTheLionsOpportunities } from "../rules/custodes-detachment-st
 import { renderCustodesDetachmentStratagemControls } from "./custodes-detachment-stratagem-controls.js";
 import { captureViewContinuity } from './view-continuity.js';
 import { getBattleRulesReminders } from "../rules/battle-rules-reminders.js";
+import { previewSpokenSecondaryPair, createSecondarySpeechCapture } from './secondary-voice-input.js';
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
@@ -77,6 +78,71 @@ export function createCommandScreen(container, {
   let objectiveMessage = "";
   let katahMessage = "";
   let doctrineMessage = "";
+  let voiceTranscript = "";
+  let voiceDraft = null;
+  let voiceMessage = "";
+  let voiceCapture = null;
+
+  function reviewVoiceCards(heard = null) {
+    voiceTranscript = heard ?? container.querySelector?.('[data-voice-secondary-text]')?.value ?? voiceTranscript;
+    try {
+      voiceDraft = previewSpokenSecondaryPair(session.getState(), voiceTranscript,
+        [...missionDefinitions, ...secondaryMissionCatalog], perspectivePlayerId);
+      voiceMessage = "";
+    } catch (error) {
+      voiceDraft = null;
+      voiceMessage = error?.message ?? String(error);
+    }
+    render();
+  }
+
+  function handleVoiceClick(event) {
+    const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel]');
+    if (!target || !container.contains(target)) return;
+    if (target.hasAttribute('data-voice-secondary-cancel')) {
+      voiceCapture?.stop(); voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
+    }
+    if (target.hasAttribute('data-voice-secondary-review')) { reviewVoiceCards(); return; }
+    if (target.hasAttribute('data-voice-secondary-confirm')) {
+      try {
+        const draft = previewSpokenSecondaryPair(session.getState(), voiceDraft?.transcript,
+          [...missionDefinitions, ...secondaryMissionCatalog], perspectivePlayerId);
+        voiceDraft = null;
+        for (const definition of draft.definitions) session.dispatch({
+          type: COMMAND_TYPES.DRAW_SECONDARY_MISSION,
+          payload: { definition, playerId: draft.playerId, round: draft.round, turn: draft.turn }
+        });
+        voiceTranscript = ""; voiceMessage = "Both Tactical cards recorded."; render();
+      } catch (error) {
+        voiceDraft = null;
+        voiceMessage = error?.message ?? String(error); render();
+      }
+      return;
+    }
+    if (voiceCapture?.listening) {
+      voiceCapture.stop();
+      voiceMessage = 'Listening stopped. You can dictate into the text field.';
+      render();
+      return;
+    }
+    const Recognition = globalThis.SpeechRecognition ?? globalThis.webkitSpeechRecognition;
+    if (!Recognition) {
+      voiceMessage = "Speech recognition is unavailable here. Dictate into the text field or use the catalog."; render(); return;
+    }
+    voiceCapture?.destroy();
+    voiceMessage = "";
+    voiceCapture = createSecondarySpeechCapture(Recognition, {
+      onTranscript: heard => reviewVoiceCards(heard),
+      onFailure: message => { voiceMessage = message; render(); },
+      onEnded: () => { voiceMessage = 'No speech heard. Try again or use iPad Dictation.'; render(); }
+    });
+    // Keep the tapped element mounted while Safari starts listening. A full
+    // Command/map redraw here can interrupt the iPad's microphone handoff.
+    if (voiceCapture.start() && voiceCapture.listening) {
+      target.textContent = 'Stop listening';
+      target.setAttribute?.('aria-pressed', 'true');
+    }
+  }
 
   function recordCp(amount, reason, note) {
     const state = session.getState();
@@ -89,6 +155,7 @@ export function createCommandScreen(container, {
   }
 
   function handleClick(event) {
+    handleVoiceClick(event);
     const target = event.target?.closest?.("[data-cp-gain], [data-cp-spend], [data-aquila-gain], [data-mission-award], [data-secondary-mission-add], [data-secondary-rule-return], [data-vp-undo], [data-objective-control-set], [data-marine-doctrine-use]");
     if (!target || !container.contains(target)) return;
     if (target.hasAttribute('data-marine-doctrine-use')) {
@@ -750,8 +817,20 @@ export function createCommandScreen(container, {
           '<label>Mission from catalog<select data-secondary-definition>' + secondaryDefinitionOptions + '</select></label>' +
           '<button type="button" data-secondary-mission-add>' + secondaryAddLabel + '</button>' +
           secondaryModeStatusMarkup + '</div></form>';
+    const voiceMarkup = secondaryMissionMode === 'tactical' ?
+      '<section class="command-voice-secondary" aria-label="Speak Tactical secondary cards">' +
+      '<h3>Speak drawn cards</h3><p>Warmind draws; record two cards for ' + escapeHtml(playerName(state, selectedSecondaryPlayerId)) + '.</p>' +
+      '<button type="button" data-voice-secondary-start style="min-height:48px">' + (voiceCapture?.listening ? 'Stop listening' : '🎙 Tap to speak') + '</button>' +
+      '<details' + (voiceTranscript || voiceMessage ? ' open' : '') + '><summary>Transcript / type instead</summary>' +
+      '<label>Heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
+      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></details>' +
+      (voiceDraft ? '<p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
+        voiceDraft.definitions.map(card => escapeHtml(card.name)).join(' and ') + '?</p>' +
+        '<button type="button" data-voice-secondary-confirm style="min-height:48px">Confirm both cards</button>' +
+        '<button type="button" data-voice-secondary-cancel>Cancel</button>' : '') +
+      (voiceMessage ? '<p role="status">' + escapeHtml(voiceMessage) + '</p>' : '') + '</section>' : '';
     const secondaryMissionManager = state.phase === "command"
-      ? '<section class="command-secondary-missions">' + secondaryEntryMarkup +
+      ? '<section class="command-secondary-missions">' + voiceMarkup + '<details><summary>Enter card manually</summary>' + secondaryEntryMarkup + '</details>' +
         secondaryHistoryMarkup +
         (secondaryMissionNotice ? '<p role="status">' + escapeHtml(secondaryMissionNotice) + '</p>' : '') +
         '</section>'
@@ -880,6 +959,7 @@ export function createCommandScreen(container, {
   render();
   return { render, destroy() {
     unsubscribe();
+    voiceCapture?.destroy();
     unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
     container.removeEventListener?.("change", handleChange);
