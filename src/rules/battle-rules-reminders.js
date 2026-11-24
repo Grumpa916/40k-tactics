@@ -37,7 +37,7 @@ function decorate(state, entry) {
   return { ...entry, used, activeThisPhase: used?.contextKey===rulesContextKey(state), available: !used && (!entry.opening || isRulesPhaseOpening(state)), sourceUrl };
 }
 
-export function getBattleRulesReminders(state, { playerId, unitId = null, includeUsed = true } = {}) {
+export function getBattleRulesReminders(state, { playerId, unitId = null, includeUsed = true, includeContextual = false } = {}) {
   if (state?.battle?.status !== 'active' || !playerId) return [];
   const entries = [], ownTurn = activePlayer(state) === playerId;
   const engaged = new Set(getFightEngagementState(state).engagedUnitIds);
@@ -48,6 +48,7 @@ export function getBattleRulesReminders(state, { playerId, unitId = null, includ
   if (isCustodes(state, playerId)) {
     for (const unit of units) {
       for (const def of CUSTODES_REMINDER_DEFINITIONS) {
+        if (def.contextualOnly && !includeContextual) continue;
         if (!def.phases.includes(state.phase) || !reviewedAbility(state, unit, def.ability)) continue;
         if (def.venatariOnly && !reviewedAbility(state, unit, 'Take Wing')) continue;
         if (def.requiresIngress && !arrivedFromReservesThisTurn(state, unit.id)) continue;
