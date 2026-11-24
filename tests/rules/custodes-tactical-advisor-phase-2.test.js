@@ -8,6 +8,8 @@ import {
 } from "../../src/rules/custodes-tactical-advisor.js";
 import { getFormationObjectiveContribution } from "../../src/rules/tactical-objective-swing.js";
 import { getFightOpportunityRecommendations } from "../../src/rules/tactical-fight-opportunities.js";
+import { getCustodesDetachmentRuleReminders } from "../../src/rules/custodes-detachment-rule-reminders.js";
+import { renderSelectedUnitStatePanel } from "../../src/ui/selected-unit-state-panel.js";
 
 const katahAbilities = [
   { name: "Martial Ka'tah", description: "Readied in Command phase." },
@@ -221,6 +223,9 @@ test("Might of the Moritoi gives a starting-strength Dreadnought +2 OC in object
   assert.equal(contribution.totalOc, 6);
   assert.equal(contribution.members[0].basePerModel, 4);
   assert.equal(contribution.members[0].ruleBonus, 2);
+  const panel = renderSelectedUnitStatePanel(state, "custodes", { perspectivePlayerId: "p1" });
+  assert.match(panel, /Formation OC: 6/);
+  assert.match(panel, /OC 6/);
 });
 
 test("Might of the Moritoi changes from hit reroll 1s when damaged to hit+wound reroll 1s below half", () => {
@@ -248,14 +253,26 @@ test("Might of the Moritoi changes from hit reroll 1s when damaged to hit+wound 
   assert.equal(damagedContext.objectiveControlBonus, 0);
   assert.equal(damagedContext.hitReroll, "ones");
   assert.equal(damagedContext.woundReroll, "none");
+  assert.match(getCustodesDetachmentRuleReminders({ ...damaged, phase: "shooting" }, { playerId: "p1", unitId: "custodes" })
+    .find(reminder => reminder.title === "Moritoi Ancients").effect, /re-roll Hit rolls of 1/);
+  assert.match(renderSelectedUnitStatePanel(damaged, "custodes", { perspectivePlayerId: "p1" }), /Formation OC: 4/);
+
+  const exactlyHalf = { ...damaged, units: damaged.units.map(unit => unit.id === "custodes" ? { ...unit, wounds: 7 } : unit) };
+  const atHalfContext = getCustodesMoritoiContext(exactlyHalf, { playerId: "p1", unitId: "custodes" });
+  assert.equal(atHalfContext.hitReroll, "ones");
+  assert.equal(atHalfContext.woundReroll, "none", "exactly half is not below half-strength");
+  assert.doesNotMatch(getCustodesDetachmentRuleReminders({ ...exactlyHalf, phase: "fight" }, { playerId: "p1", unitId: "custodes" })
+    .find(reminder => reminder.title === "Moritoi Ancients").effect, /Wound rolls/);
 
   const belowHalf = {
     ...damaged,
-    units: damaged.units.map((unit) => unit.id === "custodes" ? { ...unit, wounds: 7 } : unit)
+    units: damaged.units.map((unit) => unit.id === "custodes" ? { ...unit, wounds: 6 } : unit)
   };
   const halfContext = getCustodesMoritoiContext(belowHalf, { playerId: "p1", unitId: "custodes" });
   assert.equal(halfContext.hitReroll, "ones");
   assert.equal(halfContext.woundReroll, "ones");
+  assert.match(getCustodesDetachmentRuleReminders({ ...belowHalf, phase: "fight" }, { playerId: "p1", unitId: "custodes" })
+    .find(reminder => reminder.title === "Moritoi Ancients").effect, /Hit rolls of 1 and Wound rolls of 1/);
 
   const fight = getCustodesFightAdvisorContext(belowHalf, {
     playerId: "p1",
