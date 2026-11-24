@@ -18,6 +18,8 @@ test('map OC reflects current models and battle-shock for either army', () => {
   assert.equal(getMapFormationOcPresentation(state, enemy).label, 'OC 10');
   enemy.currentStrength = 2;
   assert.equal(getMapFormationOcPresentation(state, enemy).label, 'OC 4');
+  enemy.battleShocked = true;
+  assert.equal(getMapFormationOcPresentation(state, enemy).label, 'OC 0');
   assert.match(renderBattlefieldMap(state,{showFormationOc:true}), /data-map-unit-oc/);
   assert.doesNotMatch(renderBattlefieldMap(state), /data-map-unit-oc/);
 });
@@ -41,6 +43,7 @@ test('missing enemy OC is not displayed as zero and toggle is available across p
     state.phase=phase;
     const html=view.render(state,{perspectivePlayerId:'p1'});
     assert.match(html,/data-live-map-oc-toggle/);
+    assert.match(html,/data-map-unit-oc/, 'symbol replacement preserves OC labels');
     assert.match(html,/data-show-formation-oc="(?:true|false)"/);
   }
 });
