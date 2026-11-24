@@ -30,7 +30,8 @@ test('Caladius conditional prompt only for known Monster or Vehicle targets duri
 test('Sanctified Flames uses completed own shooting and a surviving recorded target, even with zero damage',()=>{
   const state=custodesReminderState({phase:'shooting',activePlayer:'p1'});
   add(state,'witch','witchseeker-squad');
-  assert.ok(has(getBattleRulesReminders(state,{playerId:'p1',unitId:'witch'}),'sanctified-flames'));
+  assert.ok(!has(getBattleRulesReminders(state,{playerId:'p1',unitId:'witch'}),'sanctified-flames'),
+    'unconfirmed contextual abilities must not appear in generic Rules reminders');
   assert.ok(!has(prompts(state,'after-shooting','witch'),'sanctified-flames'));
   record(state,'shooting.unit_activated',{unitId:'witch',actionType:'shoot'});
   record(state,'combat.attack_resolved',{attackerId:'witch',targetId:'marine',actualDamage:0});
