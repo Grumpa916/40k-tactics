@@ -24,7 +24,7 @@ export function getUnitReminderPrompts(state, { playerId, window, unitId = null,
     event.payload.phase === 'shooting' && event.payload.attackerId === root.id)
     .map(event => event.payload.targetId))].filter(id => units.some(item => item.id === id &&
       item.ownerId !== playerId && item.status === 'deployed')) : [];
-  return getBattleRulesReminders(state, {playerId, unitId, includeUsed:false})
+  return getBattleRulesReminders(state, {playerId, unitId, includeUsed:false, includeContextual:true})
     .filter(entry => entry.available && entry.promptWindow === window)
     .flatMap(entry => {
       if (entry.ruleId === 'advanced-firepower' && (!target || !keywords.some(word => ['monster','vehicle'].includes(word)))) return [];
