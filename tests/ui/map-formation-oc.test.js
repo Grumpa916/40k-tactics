@@ -34,6 +34,38 @@ test('map displays a single formation total for an attached leader', () => {
   assert.equal(getMapFormationOcPresentation(state, leader).label,'OC 8');
 });
 
+test('Vexilla applies to all known survivors, including an attached Leader, but stays conditional after an unidentified casualty', () => {
+  const state = custodesReminderState();
+  const wardens = state.units.find(unit => unit.id === 'wardens');
+  const roster = state.armyRosters.p1.units.find(unit => unit.id === 'r-wardens');
+  roster.equippedWargear = [{name:'Vexilla',quantity:1}];
+  wardens.currentStrength = 3;
+  state.units.find(unit => unit.id === 'trajann').currentStrength = 1;
+  assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC 12');
+  wardens.currentStrength = 2;
+  assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC ~6');
+  wardens.liveWargear = {activeSelections:{Vexilla:1}};
+  assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC 9');
+  wardens.liveWargear.activeSelections.Vexilla = 0;
+  assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC 6');
+});
+
+test('Moritoi Dreadnought OC on map follows remaining wounds and Battle-shock', () => {
+  const state = custodesReminderState();
+  state.armyRosters.p1.detachments = ['Might of the Moritoi'];
+  const telemon = state.units.find(unit => unit.id === 'telemon');
+  telemon.startingStrength = 1;
+  telemon.currentStrength = 1;
+  telemon.startingWounds = 14;
+  telemon.maxWounds = 14;
+  telemon.wounds = 14;
+  assert.equal(getMapFormationOcPresentation(state, telemon).label, 'OC 6');
+  telemon.wounds = 13;
+  assert.equal(getMapFormationOcPresentation(state, telemon).label, 'OC 4');
+  telemon.battleShocked = true;
+  assert.equal(getMapFormationOcPresentation(state, telemon).label, 'OC 0');
+});
+
 test('missing enemy OC is not displayed as zero and toggle is available across phases', () => {
   const state = custodesReminderState();
   const enemy = state.units.find(unit => unit.id === 'marine');
