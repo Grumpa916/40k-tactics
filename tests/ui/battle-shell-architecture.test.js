@@ -5,6 +5,7 @@ import { setupContinueLabel, setupTabLabel } from "../../src/ui/setup-navigation
 import { phaseLabel, renderScoreAdjustStyles } from "../../src/ui/battle-shell-scoreboard.js";
 
 const shell = readFileSync(new URL("../../src/ui/battle-shell.js", import.meta.url), "utf8");
+const command = readFileSync(new URL("../../src/ui/command-screen.js", import.meta.url), "utf8");
 
 const BATTLE_SHELL_MAX_BYTES = 50 * 1024;
 
@@ -31,4 +32,12 @@ test("extracted shell helpers preserve phase and setup navigation labels", () =>
   assert.equal(setupTabLabel("battlefield"), "Step 3 · Terrain Setup");
   assert.equal(setupContinueLabel("army-selection"), "Continue to Prepare Game");
   assert.match(renderScoreAdjustStyles(), /battle-shell__score-adjust-backdrop/);
+});
+
+test("shell markup and Command secondary presentation stay in focused modules", () => {
+  assert.match(shell, /from ["']\.\/battle-shell-view\.js["']/);
+  assert.doesNotMatch(shell, /function renderShell\s*\(/);
+  assert.match(command, /from ["']\.\/command-secondary-view\.js["']/);
+  assert.ok(Buffer.byteLength(command, "utf8") <= 50 * 1024,
+    "Command screen should extract focused behavior before growing past 50 KiB");
 });
