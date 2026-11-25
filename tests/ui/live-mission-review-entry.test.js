@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { renderMissionReviewPanel } from "../../src/ui/mission-review-panel.js";
 
-const shell = fs.readFileSync(new URL("../../src/ui/battle-shell.js", import.meta.url), "utf8");
+const shell = fs.readFileSync(new URL("../../src/ui/battle-shell-view.js", import.meta.url), "utf8");
 const phaseHeader = fs.readFileSync(new URL("../../src/ui/battle-shell-phase-header.js", import.meta.url), "utf8");
 const panel = fs.readFileSync(new URL("../../src/ui/mission-review-panel.js", import.meta.url), "utf8");
 const page = fs.readFileSync(new URL("../../battle.html", import.meta.url), "utf8");
