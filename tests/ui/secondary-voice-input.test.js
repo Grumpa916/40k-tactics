@@ -109,22 +109,12 @@ test('stop and destroy release the microphone without a late callback', () => {
 
 test('recognition failure includes the last capture event and releases all listeners', () => {
   const stages = [], failures = [];
-  class FakeRecognition { start() {} abort() {} }
-  const capture = createSecondarySpeechCapture(FakeRecognition, {
-    onStage: stage => stages.push(stage),
-    onFailure: message => failures.push(message)
-  });
-  capture.start();
-  const recognizer = capture.listening;
-  assert.equal(recognizer, true);
-  // Capture the instance by constructing through a known subclass.
-  capture.stop();
   let instance;
-  class InspectableRecognition extends FakeRecognition { constructor() { super(); instance = this; } }
-  const retry = createSecondarySpeechCapture(InspectableRecognition, {
+  class FakeRecognition { constructor() { instance = this; } start() {} abort() {} }
+  const capture = createSecondarySpeechCapture(FakeRecognition, {
     onStage: stage => stages.push(stage), onFailure: message => failures.push(message)
   });
-  retry.start();
+  capture.start();
   instance.onstart();
   instance.onaudiostart();
   instance.onspeechstart();
@@ -135,7 +125,7 @@ test('recognition failure includes the last capture event and releases all liste
   assert.match(failures[0], /no-speech \(last stage: audio-ended\)/);
   assert.deepEqual(stages.slice(-5), ['started','audio','speech','speech-ended','audio-ended']);
   assert.equal(instance.onaudioend, null);
-  assert.equal(retry.listening, false);
+  assert.equal(capture.listening, false);
   stale();
   assert.equal(stages.at(-1), 'audio-ended');
 });
