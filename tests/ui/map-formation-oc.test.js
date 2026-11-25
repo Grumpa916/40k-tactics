@@ -4,6 +4,7 @@ import { custodesReminderState } from '../helpers/custodes-reminder-state.js';
 import { getMapFormationOcPresentation } from '../../src/ui/map-formation-oc.js';
 import { renderBattlefieldMap } from '../../src/ui/battlefield-map.js';
 import { createLiveMapView } from '../../src/ui/live-map-view.js';
+import { renderSelectedUnitStatePanel } from '../../src/ui/selected-unit-state-panel.js';
 
 test('map OC reflects current models and battle-shock for either army', () => {
   const state = custodesReminderState({phase:'shooting',activePlayer:'p1'});
@@ -42,8 +43,10 @@ test('Vexilla applies to all known survivors, including an attached Leader, but 
   wardens.currentStrength = 3;
   state.units.find(unit => unit.id === 'trajann').currentStrength = 1;
   assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC 12');
+  assert.match(renderSelectedUnitStatePanel(state, wardens.id, {perspectivePlayerId:'p1'}), /Formation OC: 12/);
   wardens.currentStrength = 2;
   assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC ~6');
+  assert.match(renderSelectedUnitStatePanel(state, wardens.id, {perspectivePlayerId:'p1'}), /Formation OC: ~6/);
   wardens.liveWargear = {activeSelections:{Vexilla:1}};
   assert.equal(getMapFormationOcPresentation(state, wardens).label, 'OC 9');
   wardens.liveWargear.activeSelections.Vexilla = 0;
@@ -60,8 +63,10 @@ test('Moritoi Dreadnought OC on map follows remaining wounds and Battle-shock', 
   telemon.maxWounds = 14;
   telemon.wounds = 14;
   assert.equal(getMapFormationOcPresentation(state, telemon).label, 'OC 6');
+  assert.match(renderSelectedUnitStatePanel(state, telemon.id, {perspectivePlayerId:'p1'}), /Formation OC: 6/);
   telemon.wounds = 13;
   assert.equal(getMapFormationOcPresentation(state, telemon).label, 'OC 4');
+  assert.match(renderSelectedUnitStatePanel(state, telemon.id, {perspectivePlayerId:'p1'}), /Formation OC: 4/);
   telemon.battleShocked = true;
   assert.equal(getMapFormationOcPresentation(state, telemon).label, 'OC 0');
 });
@@ -70,6 +75,7 @@ test('missing enemy OC is not displayed as zero and toggle is available across p
   const state = custodesReminderState();
   const enemy = state.units.find(unit => unit.id === 'marine');
   assert.equal(getMapFormationOcPresentation(state, enemy).label,'OC ?');
+  assert.match(renderSelectedUnitStatePanel(state, enemy.id), /Formation OC: \?/);
   const view = createLiveMapView();
   for (const phase of ['command','movement','shooting','charge','fight']) {
     state.phase=phase;
