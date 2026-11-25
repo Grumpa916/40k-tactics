@@ -8,7 +8,6 @@ import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 import { getCombatFormationRoot, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
-import { renderLiveMapKey } from './live-map-key.js';
 export { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -57,7 +56,6 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
       ${selectedUnitBanner}
       ${mapHtml}
       ${mapExtra}
-      ${renderLiveMapKey()}
     </section>`;
 }
 
