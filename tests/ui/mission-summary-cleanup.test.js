@@ -9,7 +9,7 @@ test("mission panels preserve explicit closed state across shell refreshes", () 
 });
 
 test("redundant secondary-manager copy is removed from the live Command view", () => {
-  const source = fs.readFileSync(new URL("../../src/ui/command-screen.js", import.meta.url), "utf8");
+  const source = fs.readFileSync(new URL("../../src/ui/command-secondary-view.js", import.meta.url), "utf8");
   assert.match(source, /const secondaryMissionManager = state\.phase === "command"/);
   assert.doesNotMatch(source, /<h2>Enter secondary mission cards<\/h2>/);
   assert.doesNotMatch(source, /<h3>Secondary mission history<\/h3>/);
