@@ -54,7 +54,10 @@ export function createSecondarySpeechCapture(Recognition, {
     if (!session) return;
     session.onstart = null;
     session.onaudiostart = null;
+    session.onaudioend = null;
     session.onspeechstart = null;
+    session.onspeechend = null;
+    session.onnomatch = null;
     session.onresult = null;
     session.onerror = null;
     session.onend = null;
@@ -83,9 +86,21 @@ export function createSecondarySpeechCapture(Recognition, {
           if (current !== session) return;
           stage = 'audio'; onStage(stage);
         };
+        session.onaudioend = () => {
+          if (current !== session) return;
+          stage = 'audio-ended'; onStage(stage);
+        };
         session.onspeechstart = () => {
           if (current !== session) return;
           stage = 'speech'; onStage(stage);
+        };
+        session.onspeechend = () => {
+          if (current !== session) return;
+          stage = 'speech-ended'; onStage(stage);
+        };
+        session.onnomatch = () => {
+          if (current !== session) return;
+          stage = 'no-match'; onStage(stage);
         };
         session.onresult = result => {
           if (current !== session) return;
@@ -95,8 +110,9 @@ export function createSecondarySpeechCapture(Recognition, {
         };
         session.onerror = result => {
           if (current !== session) return;
+          const lastStage = stage;
           release(false);
-          onFailure('Microphone: ' + (result.error ?? 'unavailable'));
+          onFailure('Microphone: ' + (result.error ?? 'unavailable') + ' (last stage: ' + lastStage + ').');
         };
         session.onend = () => {
           if (current !== session) return;
@@ -111,8 +127,9 @@ export function createSecondarySpeechCapture(Recognition, {
         }, timeoutMs);
         return true;
       } catch (error) {
+        const lastStage = stage;
         release(true);
-        onFailure(error?.message ?? String(error));
+        onFailure((error?.message ?? String(error)) + ' (last stage: ' + lastStage + ').');
         return false;
       }
     },

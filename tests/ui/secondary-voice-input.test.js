@@ -106,3 +106,26 @@ test('stop and destroy release the microphone without a late callback', () => {
   capture.destroy();
   assert.equal(instances[1].aborted, true);
 });
+
+test('recognition failure includes the last capture event and releases all listeners', () => {
+  const stages = [], failures = [];
+  let instance;
+  class FakeRecognition { constructor() { instance = this; } start() {} abort() {} }
+  const capture = createSecondarySpeechCapture(FakeRecognition, {
+    onStage: stage => stages.push(stage), onFailure: message => failures.push(message)
+  });
+  capture.start();
+  instance.onstart();
+  instance.onaudiostart();
+  instance.onspeechstart();
+  instance.onspeechend();
+  instance.onaudioend();
+  const stale = instance.onspeechstart;
+  instance.onerror({error:'no-speech'});
+  assert.match(failures[0], /no-speech \(last stage: audio-ended\)/);
+  assert.deepEqual(stages.slice(-5), ['started','audio','speech','speech-ended','audio-ended']);
+  assert.equal(instance.onaudioend, null);
+  assert.equal(capture.listening, false);
+  stale();
+  assert.equal(stages.at(-1), 'audio-ended');
+});
