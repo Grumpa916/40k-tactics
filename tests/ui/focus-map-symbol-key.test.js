@@ -28,9 +28,12 @@ test('Map key is in the shared live toolbar and not duplicated over the board', 
   const source = readFileSync(new URL('../../src/ui/live-map-view.js', import.meta.url), 'utf8');
   const nav = source.slice(source.indexOf('const controls = `<nav class="live-map__tools"'),
     source.indexOf('</nav>`;', source.indexOf('const controls = `<nav class="live-map__tools"')));
-  assert.match(nav, /\$\{renderLiveMapKey\(\)\}/);
+  assert.match(nav, /showMapKey \? renderLiveMapKey\(\)/);
   assert.ok(nav.indexOf('renderLiveMapKey()') < nav.indexOf('data-live-map-zoom'));
-  const mapView = { render: () => '<div class="battlefield-map__board" data-battlefield-map-board>map</div>' };
+  const mapView = { render: (_state, options) => {
+    assert.equal(options.showMapKey,true);
+    return '<div class="battlefield-map__board" data-battlefield-map-board>map</div>';
+  } };
   for (const phase of ['command','movement','shooting','charge','fight']) {
     const html = renderCombatMapPanel({state:{units:[]},phase,perspectivePlayerId:'p1',selectedUnitId:null,mapView});
     assert.match(html, /styles\/live-map-key\.css/);
