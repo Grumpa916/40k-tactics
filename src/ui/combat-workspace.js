@@ -50,7 +50,7 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
     : '';
   const mapHtml = formationAwareMapHtml(state, phase, mapView.render(state, {
     mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: false,
-    showMapPlanner: phase === 'movement'
+    showMapPlanner: phase === 'movement', showMapKey: true
   }));
   return `<link rel="stylesheet" href="${escapeHtml(styles)}"><link rel="stylesheet" href="${escapeHtml(mapKeyStyles)}"><section class="combat-workspace__map" data-tabletop-map-phase="${escapeHtml(phase)}">
       ${selectedUnitBanner}
