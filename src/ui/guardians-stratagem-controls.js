@@ -1,5 +1,6 @@
 import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
 import { getActiveGuardiansEffects } from '../rules/stratagem-use-state.js';
+import { hasCustodesDetachment } from '../rules/custodes-tactical-advisor.js';
 const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const check=(name,label)=>`<label class="venatari-confirm"><input type="checkbox" name="${name}" required><span>${label}</span></label>`;
 
@@ -22,7 +23,8 @@ export function renderGuardiansStratagemOpportunities(state,{playerId,unitId=nul
   const groups=new Map();
   for (const entry of entries) {if(!groups.has(entry.stratagemId))groups.set(entry.stratagemId,[]);groups.get(entry.stratagemId).push(entry);}
   const open=stratagemId||entries.some(entry=>entry.window==='start'&&entry.available);
-  return ongoing+'<details class="unit-rules-reminders guardians-opportunities"'+(open?' open':'')+'><summary>Guardians stratagem opportunities</summary>'+[...groups.values()].map(options=>{
+  const heading=hasCustodesDetachment(state,playerId,'Guardians of the Throne')?'Guardians stratagem opportunities':"Emperor's Chosen stratagem opportunities";
+  return ongoing+'<details class="unit-rules-reminders guardians-opportunities"'+(open?' open':'')+'><summary>'+esc(heading)+'</summary>'+[...groups.values()].map(options=>{
     const e=options[0], available=options.filter(option=>option.available), active=options.find(option=>option.active);
     const selected=available[0]??e;
     const enemyOptions=selected.enemies;

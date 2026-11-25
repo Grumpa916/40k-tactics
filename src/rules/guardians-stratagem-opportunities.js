@@ -35,18 +35,22 @@ export function getGuardiansEnemyOptions(state, playerId, stratagemId) {
 }
 
 export function getGuardiansStratagemOpportunities(state, {playerId,unitId=null,stratagemId=null}={}) {
-  if (state.battle?.status!=='active' || !hasCustodesDetachment(state,playerId,'Guardians of the Throne')) return [];
+  const guardians=hasCustodesDetachment(state,playerId,'Guardians of the Throne');
+  const chosen=hasCustodesDetachment(state,playerId,"Emperor's Chosen");
+  if (state.battle?.status!=='active' || (!guardians && !chosen)) return [];
   const own=(state.activePlayer??state.battle.activePlayerId)===playerId;
-  const focus=unitId && getCombatFormationRoot(state,state.units?.find(unit=>unit.id===unitId));
+  const selected=unitId && getCombatFormationRoot(state,state.units?.find(unit=>unit.id===unitId));
+  const focus=selected?.ownerId===playerId ? selected : null;
   const units=(state.units??[]).filter(unit=>unit.ownerId===playerId && unit.status==='deployed' && getCombatFormationRoot(state,unit)?.id===unit.id &&
     (!focus || unit.id===focus.id) && keywords(state,unit).includes('adeptus custodes'));
   const engaged=new Set(getFightEngagementState(state).engagedUnitIds);
-  const catalog=ADEPTUS_CUSTODES_DETACHMENTS.find(item=>item.name==='Guardians of the Throne');
+  const guardiansCatalog=ADEPTUS_CUSTODES_DETACHMENTS.find(item=>item.name==='Guardians of the Throne');
+  const chosenCatalog=ADEPTUS_CUSTODES_DETACHMENTS.find(item=>item.name==="Emperor's Chosen");
   const entries=[];
   for (const [id,name,phases,window] of definitions) {
-    if (stratagemId && id!==stratagemId || !phases.includes(state.phase)) continue;
+    if ((stratagemId && id!==stratagemId) || !phases.includes(state.phase) || (!guardians && id!=='superhuman-focus')) continue;
     if (window==='own'&&!own || window==='opponent'&&own || id==='in-auramite-clad'&&state.phase==='shooting'&&own) continue;
-    const rule=catalog.stratagems.find(item=>item.name===name);
+    const rule=(id==='superhuman-focus' && chosen ? chosenCatalog : guardiansCatalog).stratagems.find(item=>item.name===name);
     for (const unit of units) {
       const keys=keywords(state,unit);
       let reason=null;

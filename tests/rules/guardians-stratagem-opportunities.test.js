@@ -222,3 +222,16 @@ test('other AP modifiers also normalize saved string AP before arithmetic',()=> 
   const improved=getContextualWeaponProfile({attacker,target,profile:buildAttackProfile({attacker,target,weapon})});
   assert.equal(improved.ap,-3,'offensive AP improvement uses numeric -2 → -3, not a concatenated value');
 });
+
+
+test("Emperor's Chosen can re-ready an eligible Custodes unit at the end of the opponent's Command phase",()=>{
+  const state=custodesReminderState({phase:'command',activePlayer:'p2'});
+  state.armyRosters.p1.detachment="Emperor's Chosen";
+  const offered=opportunities(state,{playerId:'p1',unitId:'marine'});
+  assert.ok(offered.some(entry=>entry.stratagemId==='superhuman-focus' && entry.unitId==='sentinel' && entry.available));
+  assert.ok(offered.every(entry=>entry.stratagemId==='superhuman-focus'));
+  const used=use(state,{playerId:'p1',unitId:'sentinel',stratagemId:'superhuman-focus',timingConfirmed:true,unitLimitConfirmed:true});
+  assert.equal(used.commandPoints.p1,2);
+  assert.equal(getCustodesKatahState(used,{playerId:'p1',unitId:'sentinel'}).readied,true);
+  assert.throws(()=>use(used,{playerId:'p1',unitId:'sentinel',stratagemId:'superhuman-focus',timingConfirmed:true,unitLimitConfirmed:true}));
+});
