@@ -9,7 +9,7 @@ export function getLiveUnitVitals(state, unit) {
   // identify only that seeded battle; do not infer counts for real rosters.
   const demoModels = state.battle?.id === 'integrated-demo' && !state.armyRosters?.[unit.ownerId]
     ? ({ intercessors: { name: 'Intercessor Squad', count: 5 }, captain: { name: 'Captain', count: 1 }, enemy: { name: 'Enemy Guard', count: 10 } })[unit.id] : null;
-  const demoCount = demoModels?.name === unit.name ? demoModels.count : null;
+  const demoCount = demoModels && demoModels.name === unit.name ? demoModels.count : null;
   const startingModels = positive(unit.startingStrength ?? unit.strength?.starting ?? unit.metadata?.startingStrength ?? unit.metadata?.modelCount ?? roster?.modelCount ?? unit.modelCount ?? demoCount) ?? (unit.models?.length || null);
   const perModel = positive(unit.profile?.characteristics?.wounds ?? unit.characteristics?.wounds ?? sheet?.characteristics?.Wounds ?? sheet?.characteristics?.wounds);
   const startingWounds = positive(unit.startingWounds) ?? (perModel && startingModels ? perModel * startingModels : null);
