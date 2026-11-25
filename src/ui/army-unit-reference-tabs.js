@@ -4,6 +4,7 @@ import { getEquippedWeaponReferences } from '../rules/saved-roster-combat-profil
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { getArmyUnitDisplayGroup, armyUnitMemberRole } from './army-unit-display-groups.js';
 import { getRecordedCombatRules } from '../rules/recorded-combat-rules.js';
+import { getMapFormationOcPresentation } from './map-formation-oc.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -214,12 +215,18 @@ function renderMemberProfile(state, original, unit) {
   const battle = original.profile?.characteristics ?? original.characteristics;
   const characteristics = saved && Object.keys(saved).length ? saved
     : battle && Object.keys(battle).length ? battle : getBattleUnitDatasheet(state, original)?.characteristics;
+  // The demo's compact battle profile can omit OC even when its reviewed
+  // catalog datasheet contains it. Always show the OC field, including unknown.
+  const shown = { ...(characteristics ?? {}) };
+  const hasOc = Object.keys(shown).some(key => ['objectivecontrol', 'oc'].includes(key.replace(/[^a-z]/gi, '').toLowerCase()));
+  if (!hasOc) shown['Objective Control'] = getBattleUnitDatasheet(state, original)?.characteristics?.['Objective Control'] ??
+    getBattleUnitDatasheet(state, original)?.characteristics?.objectiveControl ?? '—';
   const sourceStatus = rosterUnit?.dataSource?.status ?? rosterUnit?.verificationStatus;
   const sourceLine = typeof sourceStatus === 'string' && sourceStatus
     ? 'Army data status · ' + escapeHtml(sourceStatus)
     : rosterUnit ? 'Reference from the saved army list' : 'Reference data attached to this battle';
   return '<p class="prototype-unit-data-status">' + sourceLine + '</p>' +
-    '<h4>Characteristics</h4>' + renderCharacteristics(characteristics, {
+    '<h4>Characteristics</h4>' + renderCharacteristics(shown, {
       singleLine: true, feelNoPain: getRecordedCombatRules(state, original).feelNoPain
     }) +
     '<h4>Keywords</h4>' + renderUnitKeywords(unit);
@@ -274,9 +281,11 @@ export function renderArmyUnitDialog(state, unitId, gameData = {}, selectedTab =
       group.members.map(member => renderMemberVitals(state, group, member)).join('') + '</ul>'
     : '<p>' + escapeHtml(pointLabel + (group.root.status ?? 'Status unavailable')) + ' · ' +
       escapeHtml(vitals.wounds ?? '—') + ' Wounds remaining</p>';
+  const formationOc = getMapFormationOcPresentation(state, group.root);
   return '<section class="battle-shell__army-dialog prototype-unit-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-unit-title">' +
     '<header class="battle-shell__army-dialog-header"><button type="button" data-army-back>← Army list</button>' +
     '<h2 id="prototype-unit-title">' + escapeHtml(group.name) + '</h2><button type="button" data-close-army-roster>Close</button></header>' +
-    summary + '<div class="prototype-unit-tabs" role="tablist" aria-label="' + escapeHtml(group.name) + ' army reference">' +
+    summary + '<p class="prototype-formation-oc" data-formation-oc><strong>Formation ' + escapeHtml(formationOc.label) + '</strong><small> ' + escapeHtml(formationOc.description) + '</small></p>' +
+    '<div class="prototype-unit-tabs" role="tablist" aria-label="' + escapeHtml(group.name) + ' army reference">' +
     tabButtons + '</div>' + panels + '</section>';
 }
