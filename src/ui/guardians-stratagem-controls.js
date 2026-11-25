@@ -36,7 +36,8 @@ export function renderGuardiansStratagemOpportunities(state,{playerId,unitId=nul
       'prime-target':'This unit was just selected to shoot; no attacks have been resolved',
       'swift-as-the-eagle':'This enemy just ended its move'
     }[e.stratagemId];
-    return `<article class="rules-reminder-card${active?' is-active':''}"><header><strong>${esc(e.title)} · ${e.cpCost} CP</strong><span>${active?'Recorded':available.length?'Opportunity':'Unavailable'}</span></header><small>${esc(e.timing)}</small><p>${esc(e.effect)}</p>`+
+    return `<article class="rules-reminder-card${active?' is-active':''}"><header><strong>${esc(e.title)} · ${e.cpCost} CP</strong><span>${active?'Recorded':available.length?(e.stratagemId==='superhuman-focus'?'At phase end':'Opportunity'):'Unavailable'}</span></header><small>${esc(e.timing)}</small><p>${esc(e.effect)}</p>`+
+      (e.stratagemId==='superhuman-focus'?'<small>At the end of either player’s phase. Finish phase actions before recording use.</small>':'')+
       (active?`<p>Recorded for ${esc(active.unitName)}${active.active.enemyUnitId?' against '+esc(state.units.find(u=>u.id===active.active.enemyUnitId)?.name??active.active.enemyUnitId):''}. Resolve conditional effects at the table.</p>`:'')+
       `<details class="venatari-ability-controls"><summary>${available.length?'Review & record use':'Review eligibility'}</summary>`+
       `<form data-guardians-stratagem-form data-guardians-id="${esc(e.stratagemId)}" data-guardians-player="${esc(playerId)}"><label>Friendly unit<select name="unitId" required>${options.map(option=>`<option value="${esc(option.unitId)}" ${option===selected?'selected ':''}${option.available?'':'disabled'}>${esc(option.unitName)}${option.blockedReason?' · '+esc(option.blockedReason):''}</option>`).join('')}</select></label>`+
