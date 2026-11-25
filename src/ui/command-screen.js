@@ -100,8 +100,14 @@ export function createCommandScreen(container, {
   }
 
   function handleVoiceClick(event) {
-    const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel]');
+    const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel], [data-voice-secondary-clear]');
     if (!target || !container.contains(target)) return;
+    if (target.hasAttribute('data-voice-secondary-clear')) {
+      voiceCapture?.stop(); voiceStage = ""; voiceDraft = null; voiceTranscript = ""; voiceMessage = "";
+      render();
+      container.querySelector?.('[data-voice-secondary-text]')?.focus?.();
+      return;
+    }
     if (target.hasAttribute('data-voice-secondary-cancel')) {
       voiceCapture?.stop(); voiceStage = ""; voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
     }
@@ -160,6 +166,14 @@ export function createCommandScreen(container, {
       target.textContent = 'Stop listening';
       target.setAttribute?.('aria-pressed', 'true');
     }
+  }
+
+  function handleVoiceInput(event) {
+    if (!event.target?.matches?.('[data-voice-secondary-text]')) return;
+    voiceTranscript = event.target.value;
+    voiceDraft = null;
+    const preview = container.querySelector?.('[data-voice-secondary-preview]');
+    if (preview) preview.hidden = true;
   }
 
   function recordCp(amount, reason, note) {
@@ -845,13 +859,14 @@ export function createCommandScreen(container, {
         audio: 'Microphone open; waiting for speech…',
         speech: 'Speech detected; waiting for transcript…'
       })[voiceStage] ?? '') + '</p>' +
-      '<details' + (voiceTranscript || voiceMessage ? ' open' : '') + '><summary>Transcript / type instead</summary>' +
-      '<label>Heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
-      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></details>' +
-      (voiceDraft ? '<p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
+      '<div class="command-voice-dictation"><label>Cards heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
+      '<p>Tap the field, then the iPad keyboard microphone. If it mishears you, clear and dictate again.</p>' +
+      '<button type="button" data-voice-secondary-clear style="min-height:44px">Clear and dictate again</button>' +
+      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></div>' +
+      (voiceDraft ? '<div data-voice-secondary-preview><p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
         voiceDraft.definitions.map(card => escapeHtml(card.name)).join(' and ') + '?</p>' +
         '<button type="button" data-voice-secondary-confirm style="min-height:48px">Confirm both cards</button>' +
-        '<button type="button" data-voice-secondary-cancel>Cancel</button>' : '') +
+        '<button type="button" data-voice-secondary-cancel>Cancel</button></div>' : '') +
       (voiceMessage ? '<p role="status">' + escapeHtml(voiceMessage) + '</p>' : '') + '</section>' : '';
     const secondaryMissionManager = state.phase === "command"
       ? '<section class="command-secondary-missions">' + voiceMarkup + '<details><summary>Enter card manually</summary>' + secondaryEntryMarkup + '</details>' +
@@ -975,6 +990,7 @@ export function createCommandScreen(container, {
 
   container.addEventListener?.("click", handleClick);
   container.addEventListener?.("change", handleChange);
+  container.addEventListener?.("input", handleVoiceInput);
   container.addEventListener?.("submit", handleSubmit);
   const unbindMapCorrection = layoutMode === "tabletop"
     ? bindLiveMapPositionCorrection(container, session, { phase:"command", onError:message => { objectiveMessage = message; render(); } })
@@ -987,6 +1003,7 @@ export function createCommandScreen(container, {
     unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
     container.removeEventListener?.("change", handleChange);
+    container.removeEventListener?.("input", handleVoiceInput);
     container.removeEventListener?.("submit", handleSubmit);
     container.replaceChildren();
   }};
