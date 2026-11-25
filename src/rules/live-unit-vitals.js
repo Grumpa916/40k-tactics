@@ -5,7 +5,12 @@ export function getLiveUnitVitals(state, unit) {
   const roster = state.armyRosters?.[unit.ownerId]?.units?.find(item => item.id === unit.metadata?.rosterUnitId);
   const sheet = getBattleUnitDatasheet(state, unit);
   const positive = value => Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : null;
-  const startingModels = positive(unit.startingStrength ?? unit.strength?.starting ?? unit.metadata?.startingStrength ?? unit.metadata?.modelCount ?? roster?.modelCount ?? unit.modelCount) ?? (unit.models?.length || null);
+  // Older saves of the built-in demo predate model-count tracking. These IDs
+  // identify only that seeded battle; do not infer counts for real rosters.
+  const demoModels = state.battle?.id === 'integrated-demo' && !state.armyRosters?.[unit.ownerId]
+    ? ({ intercessors: { name: 'Intercessor Squad', count: 5 }, captain: { name: 'Captain', count: 1 }, enemy: { name: 'Enemy Guard', count: 10 } })[unit.id] : null;
+  const demoCount = demoModels?.name === unit.name ? demoModels.count : null;
+  const startingModels = positive(unit.startingStrength ?? unit.strength?.starting ?? unit.metadata?.startingStrength ?? unit.metadata?.modelCount ?? roster?.modelCount ?? unit.modelCount ?? demoCount) ?? (unit.models?.length || null);
   const perModel = positive(unit.profile?.characteristics?.wounds ?? unit.characteristics?.wounds ?? sheet?.characteristics?.Wounds ?? sheet?.characteristics?.wounds);
   const startingWounds = positive(unit.startingWounds) ?? (perModel && startingModels ? perModel * startingModels : null);
   const damage = (state.history ?? []).filter(event => event.type === 'combat.attack_resolved' && event.payload?.targetId === unit.id)
