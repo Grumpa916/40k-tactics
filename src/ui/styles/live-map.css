@@ -909,3 +909,20 @@
   outline:3px solid #f5dda3;
   outline-offset:2px;
 }
+
+/* Potential formation OC: separate from the physical marker and touch target. */
+.live-map .battlefield-map__unit .battlefield-map__unit-oc {
+  position:absolute; top:calc(100% + 2px); left:50%; transform:translateX(-50%);
+  background:#101820; color:#f4f8ff; border:1px solid currentColor;
+  border-radius:3px; padding:1px 3px; font:700 10px/1.15 system-ui,sans-serif;
+  white-space:nowrap; pointer-events:none; visibility:visible;
+}
+.live-map .battlefield-map__unit .battlefield-map__unit-oc.is-above {
+  top:auto; bottom:calc(100% + 2px);
+}
+.live-map[data-show-formation-oc="false"] .battlefield-map__unit-oc {
+  display:none !important;
+}
+.live-map .battlefield-map__unit.is-battle-shocked .battlefield-map__unit-oc {
+  color:#ffce93;
+}

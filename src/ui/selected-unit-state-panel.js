@@ -1,4 +1,5 @@
 import { getCombatFormationMembers, getBattleUnitDatasheet } from '../rules/battle-unit-reference.js';
+import { getMapFormationOcPresentation } from './map-formation-oc.js';
 import { getEquippedWeaponReferences } from '../rules/saved-roster-combat-profile.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
 import { getCustodesObjectiveControlBonus } from '../rules/custodes-tactical-advisor.js';
@@ -66,17 +67,10 @@ export function renderSelectedUnitStatePanel(state, unitId, { perspectivePlayerI
   const members = getCombatFormationMembers(state, unit).filter(member =>
     !perspectivePlayerId || member.ownerId === perspectivePlayerId
   );
-  let totalOc = 0;
-  for (const member of members) {
-    if (isUnitBattleShocked(member)) continue;
-    const oc = objectiveControl(state, member);
-    const models = getLiveUnitVitals(state, member).models;
-    if (oc == null || !Number.isFinite(models)) { totalOc = null; break; }
-    totalOc += oc * models;
-  }
-  const ocText = totalOc == null ? 'unknown' : String(totalOc);
+  const formationOc = getMapFormationOcPresentation(state, unit);
+  const ocText = formationOc.label.replace(/^OC /, '');
   return host + '<h3>Selected unit</h3><p class="unit-state__formation">' + esc(unit.name) +
     '</p><p class="unit-state__formation-oc">Formation OC: ' + esc(ocText) +
-    ' <small>(Battle-shock applied; score manually.)</small></p>' +
+    ' <small>' + esc(formationOc.description) + '</small></p>' +
     members.map(member => renderMember(state, member)).join('') + '</section>';
 }
