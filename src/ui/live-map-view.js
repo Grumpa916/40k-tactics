@@ -118,7 +118,7 @@ function liveTools(state, options, preferences, zoomed = false) {
   // Compact live toolbar mirrors Map Planner without replacing battle state.
   // Display sizing is deliberately separate from physical tabletop coordinates.
   const controls = `<nav class="live-map__tools" aria-label="Live battlefield display controls">
-    ${renderLiveMapKey()}
+    ${options?.showMapKey ? renderLiveMapKey() : ''}
     <button type="button" data-live-map-zoom aria-pressed="${zoomed}">${zoomed ? 'Fit map' : '2× zoom'}</button>
     <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
     <details class="live-map__more-tools" name="live-map-tools" data-view-key="live-map-display-tools">
