@@ -9,6 +9,7 @@ import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js'
 import { getCombatFormationRoot, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
 import { renderLiveMapKey } from './live-map-key.js';
+import { getMapFormationOcPresentation } from './map-formation-oc.js';
 export { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -21,6 +22,13 @@ export function renderSelectedUnitActiveStatus(state, selectedUnitId) {
     <strong>Active Status</strong>
     <ul>${statuses.map(status => `<li><span class="combat-workspace__status-icon" aria-hidden="true">${escapeHtml(status.icon)}</span><span>${escapeHtml(status.label)}</span></li>`).join('')}</ul>
   </section>`;
+}
+
+export function renderSelectedFormationOc(state, selectedUnitId) {
+  const unit = (state?.units ?? []).find(item => item.id === selectedUnitId);
+  if (!unit) return '';
+  const oc = getMapFormationOcPresentation(state, unit);
+  return `<section class="combat-workspace__formation-oc" data-selected-formation-oc aria-label="Selected formation objective control"><strong>Formation ${escapeHtml(oc.label)}</strong><small>${escapeHtml(oc.description)}</small></section>`;
 }
 
 function formationAwareMapHtml(state, phase, mapHtml) {
@@ -78,7 +86,7 @@ export function renderCombatWorkspace({ state, phase, perspectivePlayerId, selec
     ${renderCombatMapPanel({ state, phase, perspectivePlayerId, selectedUnitId, interactivePlayerId, mapView, mapExtra })}
     <section class="combat-workspace__panel" aria-label="${phase.charAt(0).toUpperCase() + phase.slice(1)} controls and Tactical Advisor">
       ${topControls ? `<div class="combat-workspace__top-controls">${topControls}</div>` : ''}
-      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, livePanel:true}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${state.phase === phase ? renderEarlyTurnPlanPanel(state, {selectedUnitId, playerId:perspectivePlayerId}) : ''}${state.phase === phase ? renderAdaptiveExecutionPanel(state, {selectedUnitId, playerId:perspectivePlayerId, ...adaptiveContext}) : ''}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, includeStratagems:false, livePanel:true, suppressFightKatah:phase==='fight'}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
+      <div class="combat-workspace__scroll">${state.phase === phase ? renderStratagemOpportunityReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, livePanel:true}) : ''}${renderSelectedUnitActiveStatus(state, selectedUnitId)}${renderSelectedFormationOc(state, selectedUnitId)}${state.phase === phase ? renderEarlyTurnPlanPanel(state, {selectedUnitId, playerId:perspectivePlayerId}) : ''}${state.phase === phase ? renderAdaptiveExecutionPanel(state, {selectedUnitId, playerId:perspectivePlayerId, ...adaptiveContext}) : ''}${controls}${state.phase === phase ? renderUnitRulesReminders(state, {perspectivePlayerId, selectedUnitId:reminderUnitId, includeStratagems:false, livePanel:true, suppressFightKatah:phase==='fight'}) : ''}${afterRuleReminders}</div>${footer ? `<footer>${footer}</footer>` : ''}
     </section></main>`;
 }
 
