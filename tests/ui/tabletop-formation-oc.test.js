@@ -45,6 +45,13 @@ test('visible Profile + Weapons displays model OC and formation OC for both play
   assert.match(captain, /Objective Control<\/dt><dd>1<\/dd>/);
   assert.match(opponent, /Formation OC \?/);
   assert.match(opponent, /Objective Control<\/dt><dd>—<\/dd>/);
+
+  state.units.push({ id: 'opponent-marines', ownerId: 'p2', name: 'Intercessor Squad',
+    status: 'deployed', metadata: { modelCount: 5 },
+    profile: { characteristics: { movement: 6, toughness: 4 } } });
+  const knownOpponent = renderArmyUnitDialog(state, 'opponent-marines');
+  assert.match(knownOpponent, /Formation OC 10/);
+  assert.match(knownOpponent, /Objective Control<\/dt><dd>2<\/dd>/);
 });
 
 test('selected formation OC is visible across tabletop phases, including Command', () => {
