@@ -8,7 +8,8 @@ import { registerCoreCommandHandlers } from '../../src/engine/register-core-comm
 import { createShootingScreen } from '../../src/ui/shooting-screen.js';
 import { createCommandScreen } from '../../src/ui/command-screen.js';
 import { createFightTabletopScreen } from '../../src/ui/fight-tabletop-screen.js';
-import { renderTargetDefenseReminders, renderRulesReminderDialog, renderUnitRulesReminders, createRulesReminderController } from '../../src/ui/rules-reminder-panel.js';
+import { renderTargetDefenseReminders, renderRulesReminderDialog, renderUnitRulesReminders, renderContextualUnitPrompts, createRulesReminderController } from '../../src/ui/rules-reminder-panel.js';
+import { ADEPTUS_CUSTODES_DATASHEET_DETAILS as sheets } from '../../src/data/adeptus-custodes-datasheet-details.js';
 import { setUnitBattleNote, recordRulesReminderUse } from '../../src/engine/rules-reminder-transitions.js';
 
 test('Aquila Commander is the first Command reminder when its CP decision is available',()=>{
@@ -104,4 +105,23 @@ test('a tracked reminder use and its CP transaction can be undone together',()=>
   session.dispatch({type:'rules.record_reminder_use',payload:{playerId:'p1',unitId:'trajann',ruleId:'aquila-commander'}});
   assert.equal(session.getState().commandPoints.p1,4);assert.equal(session.getLastCorrection().label,'rule reminder use');
   assert.equal(session.undoLastAction(),true);assert.equal(session.getState().commandPoints.p1,3);assert.equal(session.getState().history.length,0);
+});
+
+test('live conditional cards appear only at recorded attack and selection windows',()=>{
+  const state=custodesReminderState({phase:'shooting',activePlayer:'p1'});
+  const add=(id,sheet,ownerId='p1')=>{
+    state.armyRosters[ownerId].units.push({id:'r-'+id,name:id,modelCount:1,datasheet:structuredClone(sheets['adeptus-custodes:'+sheet])});
+    state.units.push({id,name:id,ownerId,status:'deployed',position:{x:20,y:20},metadata:{rosterUnitId:'r-'+id}});
+  };
+  add('tank','caladius-annihilator-grav-tank');
+  add('enemy-tank','caladius-annihilator-grav-tank','p2');
+  assert.equal(renderContextualUnitPrompts(state,{playerId:'p1',window:'before-attack',unitId:'tank'}),'');
+  assert.match(renderContextualUnitPrompts(state,{playerId:'p1',window:'before-attack',unitId:'tank',targetId:'enemy-tank'}),/Advanced Firepower/);
+  assert.doesNotMatch(renderUnitRulesReminders(state,{perspectivePlayerId:'p1',selectedUnitId:'tank',livePanel:true}),/Advanced Firepower/);
+  add('witch','witchseeker-squad');
+  const history=(type,payload)=>state.history.push({type,payload:{round:state.battle.round,turn:state.turn,phase:'shooting',...payload}});
+  history('combat.attack_resolved',{attackerId:'witch',targetId:'marine',actualDamage:0});
+  assert.equal(renderContextualUnitPrompts(state,{playerId:'p1',window:'after-shooting',unitId:'witch'}),'');
+  history('combat.activation_finished',{unitId:'witch'});
+  assert.match(renderContextualUnitPrompts(state,{playerId:'p1',window:'after-shooting',unitId:'witch'}),/Sanctified Flames/);
 });

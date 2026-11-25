@@ -1,6 +1,6 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
-import { renderTargetDefenseReminders } from './rules-reminder-panel.js';
+import { renderTargetDefenseReminders, renderContextualUnitPrompts } from './rules-reminder-panel.js';
 import { renderFightTargetRuleStatus } from './fight-target-rule-status.js';
 import { createLiveMapView } from './live-map-view.js';
 import { bindLiveMapPositionCorrection } from './live-map-position-correction.js';
@@ -122,6 +122,7 @@ export function createFightTabletopScreen(container, { session, perspectivePlaye
       state, mapView, phase:'fight', perspectivePlayerId:perspectivePlayerId ?? state.activePlayer,
       selectedUnitId:attackerId, selectableIds, targetIds, rosterSections, reminderUnitId:incomingAttackMode?targetId:attackerId, controls,
       adaptiveContext:{targetId},
+      afterRuleReminders:endReview ? renderContextualUnitPrompts(state,{playerId:viewingPlayerId,window:'phase-end'}) : '',
       footer:`${renderActionReceipt(session, { compact:true })}${attackControls}${finishUnitControl}${endPrompt}${endFightControl}`
     });
 

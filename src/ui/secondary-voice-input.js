@@ -41,16 +41,20 @@ export function previewSpokenSecondaryPair(state, transcript, definitions, persp
 /* Safari can leave a speech session open without result, error or end events.
    Keep a bounded session and detach late callbacks before restoring the UI. */
 export function createSecondarySpeechCapture(Recognition, {
-  onTranscript = () => {}, onFailure = () => {}, onEnded = () => {},
+  onTranscript = () => {}, onFailure = () => {}, onEnded = () => {}, onStage = () => {},
   timeoutMs = 15000, schedule = setTimeout, cancel = clearTimeout
 } = {}) {
   let current = null;
   let timer = null;
+  let stage = 'starting';
   function release(abort = false) {
     const session = current;
     current = null;
     if (timer !== null) { cancel(timer); timer = null; }
     if (!session) return;
+    session.onstart = null;
+    session.onaudiostart = null;
+    session.onspeechstart = null;
     session.onresult = null;
     session.onerror = null;
     session.onend = null;
@@ -66,9 +70,23 @@ export function createSecondarySpeechCapture(Recognition, {
       try {
         session = new Recognition();
         current = session;
+        stage = 'starting';
+        onStage(stage);
         session.lang = 'en-US';
         session.interimResults = false;
         session.maxAlternatives = 1;
+        session.onstart = () => {
+          if (current !== session) return;
+          stage = 'started'; onStage(stage);
+        };
+        session.onaudiostart = () => {
+          if (current !== session) return;
+          stage = 'audio'; onStage(stage);
+        };
+        session.onspeechstart = () => {
+          if (current !== session) return;
+          stage = 'speech'; onStage(stage);
+        };
         session.onresult = result => {
           if (current !== session) return;
           const transcript = result.results?.[0]?.[0]?.transcript ?? '';
@@ -89,7 +107,7 @@ export function createSecondarySpeechCapture(Recognition, {
         if (current === session) timer = schedule(() => {
           if (current !== session) return;
           release(true);
-          onFailure('Safari did not respond to the microphone. Use iPad Dictation in the text field.');
+          onFailure('No transcript after 15 seconds (' + stage + '). Use iPad Dictation in the text field. If Safari remains deaf, fully close and reopen Safari.');
         }, timeoutMs);
         return true;
       } catch (error) {

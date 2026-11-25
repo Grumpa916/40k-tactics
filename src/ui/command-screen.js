@@ -81,9 +81,12 @@ export function createCommandScreen(container, {
   let voiceTranscript = "";
   let voiceDraft = null;
   let voiceMessage = "";
+  let voiceStage = "";
   let voiceCapture = null;
 
   function reviewVoiceCards(heard = null) {
+    voiceCapture?.stop();
+    voiceStage = "";
     voiceTranscript = heard ?? container.querySelector?.('[data-voice-secondary-text]')?.value ?? voiceTranscript;
     try {
       voiceDraft = previewSpokenSecondaryPair(session.getState(), voiceTranscript,
@@ -97,10 +100,16 @@ export function createCommandScreen(container, {
   }
 
   function handleVoiceClick(event) {
-    const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel]');
+    const target = event.target?.closest?.('[data-voice-secondary-start], [data-voice-secondary-review], [data-voice-secondary-confirm], [data-voice-secondary-cancel], [data-voice-secondary-clear]');
     if (!target || !container.contains(target)) return;
+    if (target.hasAttribute('data-voice-secondary-clear')) {
+      voiceCapture?.stop(); voiceStage = ""; voiceDraft = null; voiceTranscript = ""; voiceMessage = "";
+      render();
+      container.querySelector?.('[data-voice-secondary-text]')?.focus?.();
+      return;
+    }
     if (target.hasAttribute('data-voice-secondary-cancel')) {
-      voiceCapture?.stop(); voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
+      voiceCapture?.stop(); voiceStage = ""; voiceDraft = null; voiceTranscript = ""; voiceMessage = ""; render(); return;
     }
     if (target.hasAttribute('data-voice-secondary-review')) { reviewVoiceCards(); return; }
     if (target.hasAttribute('data-voice-secondary-confirm')) {
@@ -121,6 +130,7 @@ export function createCommandScreen(container, {
     }
     if (voiceCapture?.listening) {
       voiceCapture.stop();
+      voiceStage = '';
       voiceMessage = 'Listening stopped. You can dictate into the text field.';
       render();
       return;
@@ -133,8 +143,22 @@ export function createCommandScreen(container, {
     voiceMessage = "";
     voiceCapture = createSecondarySpeechCapture(Recognition, {
       onTranscript: heard => reviewVoiceCards(heard),
-      onFailure: message => { voiceMessage = message; render(); },
-      onEnded: () => { voiceMessage = 'No speech heard. Try again or use iPad Dictation.'; render(); }
+      onFailure: message => { voiceStage = ''; voiceMessage = message; render(); },
+      onEnded: () => {
+        voiceMessage = 'No speech heard (' + (voiceStage || 'starting') + '). Try again or use iPad Dictation.';
+        voiceStage = ''; render();
+      },
+      onStage: stage => {
+        voiceStage = stage;
+        const label = {
+          starting: 'Starting Safari speech recognition…',
+          started: 'Speech recognition started; waiting for microphone…',
+          audio: 'Microphone open; waiting for speech…',
+          speech: 'Speech detected; waiting for transcript…'
+        }[stage] ?? stage;
+        const status = container.querySelector?.('[data-voice-secondary-status]');
+        if (status) status.textContent = label;
+      }
     });
     // Keep the tapped element mounted while Safari starts listening. A full
     // Command/map redraw here can interrupt the iPad's microphone handoff.
@@ -142,6 +166,14 @@ export function createCommandScreen(container, {
       target.textContent = 'Stop listening';
       target.setAttribute?.('aria-pressed', 'true');
     }
+  }
+
+  function handleVoiceInput(event) {
+    if (!event.target?.matches?.('[data-voice-secondary-text]')) return;
+    voiceTranscript = event.target.value;
+    voiceDraft = null;
+    const preview = container.querySelector?.('[data-voice-secondary-preview]');
+    if (preview) preview.hidden = true;
   }
 
   function recordCp(amount, reason, note) {
@@ -821,13 +853,20 @@ export function createCommandScreen(container, {
       '<section class="command-voice-secondary" aria-label="Speak Tactical secondary cards">' +
       '<h3>Speak drawn cards</h3><p>Warmind draws; record two cards for ' + escapeHtml(playerName(state, selectedSecondaryPlayerId)) + '.</p>' +
       '<button type="button" data-voice-secondary-start style="min-height:48px">' + (voiceCapture?.listening ? 'Stop listening' : '🎙 Tap to speak') + '</button>' +
-      '<details' + (voiceTranscript || voiceMessage ? ' open' : '') + '><summary>Transcript / type instead</summary>' +
-      '<label>Heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
-      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></details>' +
-      (voiceDraft ? '<p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
+      '<p data-voice-secondary-status role="status">' + escapeHtml(({
+        starting: 'Starting Safari speech recognition…',
+        started: 'Speech recognition started; waiting for microphone…',
+        audio: 'Microphone open; waiting for speech…',
+        speech: 'Speech detected; waiting for transcript…'
+      })[voiceStage] ?? '') + '</p>' +
+      '<div class="command-voice-dictation"><label>Cards heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
+      '<p>Tap the field, then the iPad keyboard microphone. If it mishears you, clear and dictate again.</p>' +
+      '<button type="button" data-voice-secondary-clear style="min-height:44px">Clear and dictate again</button>' +
+      '<button type="button" data-voice-secondary-review style="min-height:44px">Review cards</button></div>' +
+      (voiceDraft ? '<div data-voice-secondary-preview><p role="status">Record for ' + escapeHtml(playerName(state, voiceDraft.playerId)) + ': ' +
         voiceDraft.definitions.map(card => escapeHtml(card.name)).join(' and ') + '?</p>' +
         '<button type="button" data-voice-secondary-confirm style="min-height:48px">Confirm both cards</button>' +
-        '<button type="button" data-voice-secondary-cancel>Cancel</button>' : '') +
+        '<button type="button" data-voice-secondary-cancel>Cancel</button></div>' : '') +
       (voiceMessage ? '<p role="status">' + escapeHtml(voiceMessage) + '</p>' : '') + '</section>' : '';
     const secondaryMissionManager = state.phase === "command"
       ? '<section class="command-secondary-missions">' + voiceMarkup + '<details><summary>Enter card manually</summary>' + secondaryEntryMarkup + '</details>' +
@@ -951,6 +990,7 @@ export function createCommandScreen(container, {
 
   container.addEventListener?.("click", handleClick);
   container.addEventListener?.("change", handleChange);
+  container.addEventListener?.("input", handleVoiceInput);
   container.addEventListener?.("submit", handleSubmit);
   const unbindMapCorrection = layoutMode === "tabletop"
     ? bindLiveMapPositionCorrection(container, session, { phase:"command", onError:message => { objectiveMessage = message; render(); } })
@@ -963,6 +1003,7 @@ export function createCommandScreen(container, {
     unbindMapCorrection();
     container.removeEventListener?.("click", handleClick);
     container.removeEventListener?.("change", handleChange);
+    container.removeEventListener?.("input", handleVoiceInput);
     container.removeEventListener?.("submit", handleSubmit);
     container.replaceChildren();
   }};

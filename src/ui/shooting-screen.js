@@ -1,6 +1,6 @@
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { renderPhaseSelectedVitals } from './phase-selected-vitals.js';
-import { renderTargetDefenseReminders, renderUnitRulesReminders, renderStratagemOpportunityReminders } from './rules-reminder-panel.js';
+import { renderTargetDefenseReminders, renderUnitRulesReminders, renderStratagemOpportunityReminders, renderContextualUnitPrompts } from './rules-reminder-panel.js';
 import { renderPhaseArmyRoster, bindPhaseArmySelection } from './phase-army-roster.js';
 import { renderLiveTacticalPanel } from './live-tactical-panel.js';
 import { getLiveUnitVitals } from '../rules/live-unit-vitals.js';
@@ -279,6 +279,18 @@ export function createShootingScreen(container, {
       const targetComparison = incomingAttackMode
         ? renderIncomingDamageForecast(state, { attackerId, targetId: selectedTargetId, weapon: selectedWeapon })
         : shootingTargetComparisonCards(attackerId, selectedWeaponId, selectedTargetId, state, weapons, perspectivePlayerId, comparison);
+      const currentEvent = event => event.payload?.round === state.battle?.round &&
+        event.payload?.turn === state.turn && event.payload?.phase === 'shooting';
+      const finished = (state.history ?? []).findLast(event => event.type === 'combat.activation_finished' && currentEvent(event));
+      const afterShootingPrompt = finished && !incomingAttackMode
+        ? renderContextualUnitPrompts(state, {playerId:viewingPlayerId,window:'after-shooting',unitId:finished.payload.unitId}) : '';
+      const incoming = (state.history ?? []).findLast(event => event.type === 'combat.attack_resolved' && currentEvent(event));
+      const afterIncomingPrompt = incoming && incomingAttackMode
+        ? renderContextualUnitPrompts(state, {playerId:viewingPlayerId,window:'after-incoming-attack',
+          unitId:incoming.payload.allocationTargetId ?? incoming.payload.targetId}) : '';
+      const beforeAttackPrompt = activeActivation && selectedTargetId && selectedWeapon
+        ? renderContextualUnitPrompts(state, {playerId:model.activePlayerId,window:'before-attack',
+          unitId:selectedAttackerId,targetId:selectedTargetId}) : '';
       container.innerHTML = `<link rel="stylesheet" href="${new URL('./styles/shooting-panel.css', import.meta.url).href}"><main class="shoot-screen shoot-screen--tabletop has-army-roster${selectedTargetId ? ' is-target-selected' : ''}">
         <aside class="combat-workspace__rail" id="live-units" aria-label="Shooting units and targets">
           ${renderLiveTacticalPanel(state, { playerId: perspectivePlayerId, selectedUnitId: activeUnitId })}
@@ -299,6 +311,7 @@ export function createShootingScreen(container, {
 
             ${activeActivation ? renderTargetDefenseReminders(state, {targetUnitId:selectedTargetId,allocationTargetId:precisionAllocationId,attackerId:selectedAttackerId,weapon:selectedWeapon,phase:'shooting',viewingPlayerId}) : ''}
             ${state.phase === 'shooting' ? renderUnitRulesReminders(state, {perspectivePlayerId,selectedUnitId:reminderUnitId,includeStratagems:false,livePanel:true}) : ''}
+            ${state.phase === 'shooting' ? afterShootingPrompt + afterIncomingPrompt : ''}
             ${phaseNotice}
             ${!incomingAttackMode && state.phase === 'shooting' ? renderSecondaryShootingIntelligence(state,model.activePlayerId) : ''}
             ${attackError ? `<p class="shoot-error" role="alert">${escapeHtml(attackError)}</p>` : ""}
@@ -313,6 +326,7 @@ export function createShootingScreen(container, {
               ${preview ? '<small>Preview · choose Shoot to start recording.</small>' : ''}
               ${renderShootingWeaponChoices(weapons, selectedWeaponId)}
               ${renderShootingTargetChoices(targets, selectedTargetId, { hasWeapon: Boolean(selectedWeapon) })}
+              ${beforeAttackPrompt}
               ${activeActivation && precisionOptions.length ? `<label>Precision allocation · optional<select data-shoot-precision><option value="">Normal allocation</option>${precisionOptions.map((option) => `<option value="${escapeHtml(option.unitId)}" ${option.unitId === precisionAllocationId ? "selected" : ""}>${escapeHtml(option.name)}</option>`).join("")}</select><small>Choose an attached Leader only if you allocated this Precision weapon’s wounds to that Character on the tabletop.</small></label>` : ""}
 
             </div>` : ""}
