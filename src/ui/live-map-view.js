@@ -4,6 +4,7 @@ import { mapObjectiveMarkerLabel } from '../rules/objective-display-labels.js';
 import { getLiveUnitPosition } from '../rules/spatial-context.js';
 import { getCombatFormationRoot } from '../rules/battle-unit-reference.js';
 import { renderBattlefieldMap } from './battlefield-map.js';
+import { renderLiveMapKey } from './live-map-key.js';
 import { applyApprovedLiveMapSymbols, liveUnitSymbolLabels } from './live-map-symbols.js';
 import { applyLiveMapStatusBadges } from './live-map-status-badges.js';
 import { BOARD_HEIGHT, BOARD_WIDTH, baseDimensions, planningVisibility } from './map-planning-geometry.js';
@@ -117,6 +118,7 @@ function liveTools(state, options, preferences, zoomed = false) {
   // Compact live toolbar mirrors Map Planner without replacing battle state.
   // Display sizing is deliberately separate from physical tabletop coordinates.
   const controls = `<nav class="live-map__tools" aria-label="Live battlefield display controls">
+    ${options?.showMapKey ? renderLiveMapKey() : ''}
     <button type="button" data-live-map-zoom aria-pressed="${zoomed}">${zoomed ? 'Fit map' : '2× zoom'}</button>
     <button type="button" data-live-map-style aria-pressed="${preferences.topDown}">${preferences.topDown ? 'Standard map' : 'Top-down map'}</button>
     <details class="live-map__more-tools" name="live-map-tools" data-view-key="live-map-display-tools">

@@ -1,28 +1,27 @@
-/* Focus-only map key, over the otherwise unused left gutter.
-   The existing phase-panel state controls visibility: no new persistence
-   or map geometry adjustment, no changes to map tap/drag targets. */
+/* The key lives in the map toolbar. Its expanded contents take toolbar space
+   and scroll independently, so neither state overlays or intercepts the board. */
 .live-map-key { display:none; }
 @media (min-width:761px) and (orientation:landscape) {
-  .battle-shell.is-tabletop-experiment[data-battle-focus="true"][data-controls-collapsed="true"][data-live-roster-open="false"] .combat-workspace__map > .live-map-key {
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools {
+    flex-wrap:wrap !important;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools > .live-map-key {
     display:block;
     box-sizing:border-box;
-    position:absolute;
-    z-index:24;
-    left:9px;
-    top:63px;
-    width:clamp(128px,14vw,205px);
-    max-height:calc(100% - 76px);
-    overflow:hidden;
-    padding:0;
-    margin:0;
+    order:-1;
+    flex:0 0 auto;
+    min-width:124px;
+    margin:0 auto 0 0;
     border:1px solid #9f8255;
     border-radius:9px;
     background:#1b2022f5;
     color:#f7eedc;
-    box-shadow:0 5px 20px #0007;
+  }
+  .battle-shell.is-tabletop-experiment .combat-workspace__map .live-map__tools > .live-map-key[open] {
+    flex-basis:100%;
+    margin-right:0;
   }
 }
-.battle-shell.is-tabletop-experiment .combat-workspace__map { position:relative; }
 .live-map-key > summary {
   display:flex;
   align-items:center;
@@ -40,20 +39,24 @@
 .live-map-key > summary:focus-visible { outline:2px solid #f5dca6; outline-offset:-2px; }
 .live-map-key__body {
   box-sizing:border-box;
-  max-height:min(455px,calc(100dvh - 355px));
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:start;
+  gap:12px;
+  max-height:min(190px,25dvh);
   padding:6px 8px 9px;
   overflow-y:auto;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
 }
-.live-map-key__body > strong {
+.live-map-key__group > strong {
   display:block;
   margin:8px 0 4px;
   color:#f0d18f;
   font-size:10px;
   letter-spacing:.02em;
 }
-.live-map-key__body > strong:first-child { margin-top:2px; }
+.live-map-key__group > strong { margin-top:2px; }
 .live-map-key__list { display:grid; gap:5px; list-style:none; padding:0; margin:0; }
 .live-map-key__list li {
   display:grid;
@@ -121,6 +124,6 @@
 .live-map-key__mark.is-base { width:20px; height:14px; border:2px dashed #9eecff; border-radius:50%; }
 .live-map-key__body small { display:block; margin-top:9px; color:#c7cbc6; font-size:10px; line-height:1.3; }
 @media (max-width:1040px) and (orientation:landscape) {
+  .live-map-key__body { grid-template-columns:repeat(2,minmax(0,1fr)); padding:4px 5px 7px; }
   .live-map-key__list li { gap:3px; font-size:10px; }
-  .live-map-key__body { padding:4px 5px 7px; }
 }

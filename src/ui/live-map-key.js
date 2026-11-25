@@ -38,16 +38,16 @@ function rows(items, type) {
 }
 
 export function renderLiveMapKey() {
-  return '<details class="live-map-key" data-live-map-key open>' +
+  return '<details class="live-map-key" data-live-map-key>' +
     '<summary>Map key</summary>' +
     '<div class="live-map-key__body">' +
-      '<strong>Units and objectives</strong>' + rows(SYMBOLS,'unit') +
-      '<strong>Status badges</strong>' + rows(BADGES,'badge') +
-      '<strong>Map markings</strong>' +
+      '<section class="live-map-key__group"><strong>Units and objectives</strong>' + rows(SYMBOLS,'unit') + '</section>' +
+      '<section class="live-map-key__group"><strong>Status badges</strong>' + rows(BADGES,'badge') + '</section>' +
+      '<section class="live-map-key__group"><strong>Map markings</strong>' +
       '<ul class="live-map-key__list">' +
         '<li><span class="live-map-key__mark is-terrain" aria-hidden="true"></span><span>Terrain area</span></li>' +
         '<li><span class="live-map-key__mark is-territory" aria-hidden="true"></span><span>Territory boundary</span></li>' +
         '<li><span class="live-map-key__mark is-base" aria-hidden="true"></span><span>Physical base outline (dashed = reference)</span></li>' +
-      '</ul><small>Marker positions are approximate. Check actual tabletop measurements.</small>' +
+      '</ul><small>Marker positions are approximate. Check actual tabletop measurements.</small></section>' +
     '</div></details>';
 }

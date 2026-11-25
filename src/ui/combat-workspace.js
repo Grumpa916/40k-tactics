@@ -8,7 +8,6 @@ import { renderAdaptiveExecutionPanel } from './adaptive-execution-panel.js';
 import { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 import { getCombatFormationRoot, getCombatFormationRootId } from '../rules/battle-unit-reference.js';
 import { unitDisplayLabels } from './map-unit-labels.js';
-import { renderLiveMapKey } from './live-map-key.js';
 export { getSelectedUnitActiveStatuses } from '../rules/unit-active-statuses.js';
 
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -51,13 +50,12 @@ export function renderCombatMapPanel({ state, phase, perspectivePlayerId, select
     : '';
   const mapHtml = formationAwareMapHtml(state, phase, mapView.render(state, {
     mode: 'live', perspectivePlayerId, interactivePlayerId, selectedUnitId, showZoomControls: false,
-    showMapPlanner: phase === 'movement'
+    showMapPlanner: phase === 'movement', showMapKey: true
   }));
   return `<link rel="stylesheet" href="${escapeHtml(styles)}"><link rel="stylesheet" href="${escapeHtml(mapKeyStyles)}"><section class="combat-workspace__map" data-tabletop-map-phase="${escapeHtml(phase)}">
       ${selectedUnitBanner}
       ${mapHtml}
       ${mapExtra}
-      ${renderLiveMapKey()}
     </section>`;
 }
 
