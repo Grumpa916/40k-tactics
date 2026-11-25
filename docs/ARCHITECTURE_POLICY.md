@@ -21,7 +21,7 @@ Before adding substantial behavior to `battle-shell.js`, prefer a focused module
 - Session/application orchestration belongs in `src/application/`.
 - Phase-specific rendering and touch interaction belong in the corresponding `src/ui/*-screen.js` module or a small extracted helper.
 - Static catalogs belong in `src/data/`; large data files do not by themselves constitute an application monolith.
-- `battle-shell.js` must remain at or below 50 KiB. `tests/ui/battle-shell-architecture.test.js` enforces this boundary in CI.
+- `battle-shell.js` and `command-screen.js` must each remain at or below 50 KiB. `tests/ui/battle-shell-architecture.test.js` enforces these boundaries in CI.
 - When another UI file approaches roughly 50–60 KB, new feature work should normally include or precede an extraction unless the added code is purely declarative/static.
 - `battle-shell.js` should not grow for a phase-local fix when the behavior can be implemented in the phase module.
 
@@ -36,7 +36,7 @@ When shell work would push against the size boundary:
 5. Do not offset shell growth with unrelated deletions. The extraction must move a real responsibility to a focused owner.
 6. Treat a shell-size CI failure as an architecture failure: extract before merge rather than raising the limit.
 
-Current examples include scoreboard/VP/CP presentation in `src/ui/battle-shell-scoreboard.js` and setup navigation labels in `src/ui/setup-navigation-labels.js`.
+Current examples include scoreboard/VP/CP presentation in `src/ui/battle-shell-scoreboard.js`, setup navigation labels in `src/ui/setup-navigation-labels.js`, shared shell markup in `src/ui/battle-shell-view.js`, and Command secondary card presentation in `src/ui/command-secondary-view.js`.
 
 ## Change review question
 

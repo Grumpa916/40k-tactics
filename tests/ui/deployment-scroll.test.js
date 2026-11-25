@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 test('deployment remains vertically scrollable while live Tabletop phases keep viewport lock', () => {
-  const shell = readFileSync(new URL('../../src/ui/battle-shell.js', import.meta.url), 'utf8');
+  const shell = readFileSync(new URL('../../src/ui/battle-shell-view.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../../battle.html', import.meta.url), 'utf8');
   const pwa = readFileSync(new URL('../../src/ui/styles/pwa.css', import.meta.url), 'utf8');
   assert.match(shell, /isScrollablePreparationView = viewedPhase === "deployment"/);
