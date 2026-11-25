@@ -154,7 +154,10 @@ export function createCommandScreen(container, {
           starting: 'Starting Safari speech recognition…',
           started: 'Speech recognition started; waiting for microphone…',
           audio: 'Microphone open; waiting for speech…',
-          speech: 'Speech detected; waiting for transcript…'
+          speech: 'Speech detected; waiting for transcript…',
+          'speech-ended': 'Speech ended; waiting for transcript…',
+          'audio-ended': 'Microphone closed; waiting for result…',
+          'no-match': 'Speech heard but no transcript matched…'
         }[stage] ?? stage;
         const status = container.querySelector?.('[data-voice-secondary-status]');
         if (status) status.textContent = label;
@@ -857,7 +860,10 @@ export function createCommandScreen(container, {
         starting: 'Starting Safari speech recognition…',
         started: 'Speech recognition started; waiting for microphone…',
         audio: 'Microphone open; waiting for speech…',
-        speech: 'Speech detected; waiting for transcript…'
+        speech: 'Speech detected; waiting for transcript…',
+        'speech-ended': 'Speech ended; waiting for transcript…',
+        'audio-ended': 'Microphone closed; waiting for result…',
+        'no-match': 'Speech heard but no transcript matched…'
       })[voiceStage] ?? '') + '</p>' +
       '<div class="command-voice-dictation"><label>Cards heard <input data-voice-secondary-text value="' + escapeHtml(voiceTranscript) + '" placeholder="Cleanse and Plunder" style="min-height:44px"></label>' +
       '<p>Tap the field, then the iPad keyboard microphone. If it mishears you, clear and dictate again.</p>' +
