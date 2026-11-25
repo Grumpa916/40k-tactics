@@ -2,6 +2,7 @@ import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { getLivePhaseReminderEntries } from './live-phase-reminder-filter.js';
 import { getPreternaturalRapidityOpportunities, getLightningWrathOpportunities, getGoldenLightOpportunities, getUnleashTheLionsOpportunities, getImpenetrableBastionOpportunities } from '../rules/custodes-detachment-stratagem-opportunities.js';
 import { getBattleRulesReminders, getTargetDefenseReminders, getUnitBattleNote } from '../rules/battle-rules-reminders.js';
+import { getUnitReminderPrompts } from '../rules/unit-reminder-prompts.js';
 import { renderVenatariAbilityControls, readVenatariAbilityForm } from './venatari-ability-controls.js';
 import { renderGuardiansStratagemOpportunities, readGuardiansStratagemForm } from './guardians-stratagem-controls.js';
 import { getGuardiansStratagemOpportunities } from '../rules/guardians-stratagem-opportunities.js';
@@ -84,6 +85,20 @@ export function renderStratagemOpportunityReminders(state,{perspectivePlayerId=n
   return guardians||detachment||marine?style()+guardians+detachment+marine:'';
 }
 
+// Show conditional reminders only at the recorded interaction that supplies
+// their trigger. These cards never apply a rule or record a result.
+export function renderContextualUnitPrompts(state, {playerId, window, unitId=null, targetId=null}={}) {
+  const entries=getUnitReminderPrompts(state,{playerId,window,unitId,targetId});
+  if(!entries.length)return '';
+  return style()+'<section class="unit-rules-reminders contextual-unit-prompts" role="status" aria-label="Current unit ability prompts" data-contextual-window="'+esc(window)+'">'+
+    '<strong>Check unit ability</strong>'+entries.map(entry=>
+      '<article class="rules-reminder-card" data-contextual-rule="'+esc(entry.ruleId)+'"><header><strong>'+esc(entry.title)+'</strong></header>'+
+      '<small>'+esc(entry.unitName??'')+' · '+esc(entry.timing)+'</small><p>'+esc(entry.effect)+'</p>'+
+      (entry.candidateTargetIds?.length?'<small>Recorded surviving targets: '+entry.candidateTargetIds.map(id=>esc(state.units?.find(unit=>unit.id===id)?.name??id)).join(', ')+'</small>':'')+
+      '<small>Confirm this rule and its conditions at the table.</small></article>'
+    ).join('')+'</section>';
+}
+
 export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selectedUnitId=null,includeStratagems=true,livePanel=false,suppressFightKatah=false}={}) {
   const playerId=perspective(state,perspectivePlayerId);
   const sourceEntries=getBattleRulesReminders(state,{playerId,unitId:selectedUnitId})
@@ -95,11 +110,12 @@ export function renderUnitRulesReminders(state,{perspectivePlayerId=null,selecte
   const detachmentEntries=livePanel?getLivePhaseReminderEntries(state,{playerId,selectedUnitId,entries:sourceDetachment}):sourceDetachment;
   const stratagemHtml=includeStratagems?renderStratagemOpportunityReminders(state,{perspectivePlayerId,selectedUnitId,livePanel}):'';
   const note=selectedUnitId?getUnitBattleNote(state,selectedUnitId):'';
-  if(!entries.length&&!detachmentEntries.length&&!note)return stratagemHtml;
+  const contextual=livePanel&&selectedUnitId?renderContextualUnitPrompts(state,{playerId,window:'unit-selection',unitId:selectedUnitId}):'';
+  if(!entries.length&&!detachmentEntries.length&&!note)return contextual+stratagemHtml;
   const opening=entries.some(entry=>entry.kind==='decision');
   return style()+'<details class="unit-rules-reminders" data-view-key="unit-rules-reminders"'+(opening?' open':'')+'><summary>Rules reminders · '+(entries.length+detachmentEntries.length)+'</summary>'+
     (note?'<div class="rules-personal-note"><strong>My notes</strong><p>'+esc(note)+'</p></div>':'')+
-    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+stratagemHtml;
+    entries.map(entry=>renderEntry(entry,state)).join('')+detachmentEntries.map(entry=>renderEntry(entry,state)).join('')+'</details>'+contextual+stratagemHtml;
 }
 
 export function renderTargetDefenseReminders(state,options={}) {
