@@ -102,3 +102,17 @@ test('end-phase re-readiness does not offer a Ka’tah action in the phase that 
   assert.equal(renderCustodesKatahPhasePanel(next,{phase:'fight',unitId:'sentinel'}),'');
   assert.doesNotMatch(renderUnitRulesReminders(next,{perspectivePlayerId:'p1',selectedUnitId:'sentinel'}),/data-record-katah-reminder/);
 });
+
+
+test("Emperor's Chosen Superhuman Focus has a spend control while opponent Command is active",()=>{
+  const state=custodesReminderState({phase:'command',activePlayer:'p2'});
+  state.armyRosters.p1.detachment="Emperor's Chosen";
+  const html=renderCombatWorkspace({state,phase:'command',perspectivePlayerId:'p1',selectedUnitId:'marine',
+    controls:'<h1>Command controls</h1>',mapView:{render:()=>'<div>map</div>'}});
+  assert.match(html,/data-guardians-id="superhuman-focus"/);
+  assert.match(html,/Emperor&#039;s Chosen stratagem opportunities/);
+  assert.match(html,/At phase end/);
+  assert.match(html,/At the end of either player’s phase/);
+  assert.match(html,/This phase has ended/);
+  assert.match(html,/Spend 1 CP · Superhuman Focus/);
+});
