@@ -103,7 +103,7 @@
   }
   .battle-shell.is-tabletop-experiment .movement-map-reserves__popover {
     position:absolute;
-    left:0;
+    right:0;
     bottom:calc(100% + 6px);
     box-sizing:border-box;
     width:min(385px,calc(100vw - 48px));
@@ -117,7 +117,13 @@
     -webkit-overflow-scrolling:touch;
   }
   .battle-shell.is-tabletop-experiment .movement-map-reserves__popover .map-reserve-tray {
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
     margin:0 0 6px;
+  }
+  .battle-shell.is-tabletop-experiment .movement-map-reserves__popover .map-reserve-tray__units {
+    min-width:0;
   }
   .battle-shell.is-tabletop-experiment .movement-map-reserves__popover .map-reserve-tray button {
     min-height:44px !important;
