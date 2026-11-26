@@ -119,6 +119,7 @@ export const SPACE_MARINES_BASE_CATALOG = Object.freeze([
   round('Tactical Squad',32),
   round('Techmarine',40),
   round('Terminator Assault Squad',40),
+  record('Deathwatch Terminator Squad','round',40,40,'player-screenshot','https://warmind.online/d/deathwatch/codex-terminator-squad'),
   round('Terminator Squad',40),
   round('Tor Garadon',40),
   round('Vanguard Veteran Squad with Jump Packs',32),
