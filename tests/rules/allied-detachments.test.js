@@ -5,9 +5,9 @@ import { importWarhammerAppRoster } from '../../src/state/warhammer-app-roster-i
 import { assessAlliedDetachments, ALLIED_DETACHMENT_RULES } from '../../src/rules/allied-detachments.js';
 import { isUserEnteredUnit } from '../../src/rules/imported-roster-report.js';
 
-test('the catalog has no Deathwatch datasheets to import', () => {
-  assert.equal(ARMY_UNIT_CATALOG.some(unit => /deathwatch/i.test(unit.name)), false);
-  assert.equal(ARMY_UNIT_CATALOG.some(unit => /deathwatch/i.test(unit.faction ?? '')), false);
+test('the catalog includes the reviewed Deathwatch Terminator datasheet but keeps allied limits unconfirmed', () => {
+  assert.equal(ARMY_UNIT_CATALOG.some(unit => unit.id === 'deathwatch:deathwatch-terminator-squad'), true);
+  assert.equal(ARMY_UNIT_CATALOG.some(unit => /deathwatch/i.test(unit.faction ?? '')), true);
   assert.equal(ALLIED_DETACHMENT_RULES.deathwatch.pointsCap, null);
   assert.equal(ALLIED_DETACHMENT_RULES.deathwatch.detachmentCost, null);
   assert.equal(ALLIED_DETACHMENT_RULES.deathwatch.warlordAllowed, false);
