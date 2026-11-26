@@ -31,6 +31,22 @@ export function matchWargearSelection({ datasheetId, datasheet, sourceName } = {
   const sourceKey = normalizeWargearName(sourceName);
   if (!sourceKey) return null;
 
+  // The Deathwatch card has paired weapons and alternate firing modes.
+  // Imported text names the equipment, not each mode shown on the card.
+  if (datasheetId === 'deathwatch:deathwatch-terminator-squad') {
+    const modes = {
+      'cyclone missile launcher': ['Cyclone Missile Launcher - Frag','Cyclone Missile Launcher - Krak'],
+      'cyclone missile launcher and storm bolter': ['Cyclone Missile Launcher - Frag','Cyclone Missile Launcher - Krak','Storm Bolter'],
+      'plasma cannon': ['Plasma Cannon - Standard','Plasma Cannon - Supercharge'],
+      'chainfist': ['Chainfist - Standard','Chainfist - Hunter'],
+      'thunder hammer and storm shield': ['Thunder Hammer'],
+      'storm shield': []
+    };
+    if (Object.hasOwn(modes, sourceKey)) return {
+      name: String(sourceName).trim(), profileNames: modes[sourceKey], match: 'reviewed-deathwatch-equipment'
+    };
+  }
+
   const reviewedSelections = getTyranidWargearSelections(datasheetId);
   const reviewed = reviewedSelections.find((item) => normalizeWargearName(item.name) === sourceKey)
     ?? uniqueFlexibleMatch(reviewedSelections, sourceName);
@@ -111,6 +127,36 @@ function matchesAllowedCombination(counts, constraint) {
 }
 
 export function validateWargearLoadout(unit) {
+  // Flat opponent exports do not retain which model carries each weapon pair.
+  // Permit a combat profile only if all expected weapons are accounted for,
+  // while keeping per-model legal pairing explicitly uncertified.
+  if (unit?.datasheetId === 'deathwatch:deathwatch-terminator-squad' &&
+      unit?.dataSource?.rosterImport &&
+      (unit.equippedWargear ?? []).some(item => item.match !== 'reviewed-rule')) {
+    const counts = selectionCounts(unit);
+    const n = Number(unit.modelCount);
+    const count = name => quantity(counts,name);
+    const melee = count('Power Fist') + count('Power Weapon') +
+      count('Chainfist') + count('Thunder Hammer') +
+      count('Twin Lightning Claws') + count('Thunder Hammer and Storm Shield');
+    const ranged = count('Storm Bolter') + count('Assault Cannon') +
+      count('Heavy Flamer') + count('Plasma Cannon') +
+      count('Cyclone Missile Launcher') + count('Cyclone Missile Launcher and Storm Bolter');
+    const unarmedRanged = count('Thunder Hammer') + count('Twin Lightning Claws') +
+      count('Thunder Hammer and Storm Shield');
+    const heavy = count('Assault Cannon') + count('Heavy Flamer') +
+      count('Plasma Cannon') + count('Cyclone Missile Launcher') +
+      count('Cyclone Missile Launcher and Storm Bolter');
+    const complete = Number.isInteger(n) && n >= 5 && n <= 10 &&
+      melee === n && ranged + unarmedRanged === n &&
+      heavy <= 3 * Math.floor(n / 5);
+    return {
+      status: complete ? 'profile-matched' : 'manual-selection-required',
+      reviewedRules: false,
+      sourceName: 'Imported flat Deathwatch weapon counts; model pairing requires review',
+      errors: complete ? [] : ['Deathwatch weapon counts or model count are incomplete; confirm each model loadout.']
+    };
+  }
   const ruleSet = getTyranidWargearRuleSet(unit?.datasheetId);
   if (!ruleSet) return { status: "profile-matched", reviewedRules: false, errors: [] };
   const modelCount = Number.isInteger(unit?.modelCount) && unit.modelCount > 0 ? unit.modelCount : 1;

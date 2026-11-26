@@ -136,7 +136,7 @@ const changes=Object.freeze({
       ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
   }),
   "Roboute Guilliman":Object.freeze({
-    characteristics:Object.freeze({"Move":"8\"","Toughness":"10","Save":"2+","Wounds":"16","Leadership":"5+","Objective Control":"4"}),
+    characteristics:Object.freeze({"Move":"8\"","Toughness":"10","Save":"2+","Invulnerable save":"4+","Wounds":"16","Leadership":"5+","Objective Control":"4"}),
     weapons:Object.freeze([ranged("Hand of Dominion - Ranged","36\"","4","2+","6","-2","2","Rapid Fire 2, Sustained Hits 1"),
       melee("Emperor’s Sword","10","2+","10","-3","2","Devastating Wounds, Cleave 2"),
       melee("Hand of Dominion - Melee","7","2+","14","-4","4","Lethal Hits")]),
@@ -145,6 +145,7 @@ const changes=Object.freeze({
       ability("Primarch of the XIII","Aura: friendly Astartes units within 6 inches can re-roll hit rolls of 1 and wound rolls of 1."),
       ability("Author of the Codex","In own Movement phase choose visible friendly Astartes within 12 inches and one doctrine, active for that unit until next Command in ADDITION to other doctrines."),
       ability("Leader of Astartes","This unit is Lone Operative only within 3 inches of friendly Astartes Infantry. 4++ invulnerable, FNP5+."),
+      ability("Feel No Pain 5+","This model has Feel No Pain 5+."),
       ability("Invulnerable Save","The model has 4+ invulnerable save unless a conditional ability says otherwise.")])
   }),
   "Suboden Khan":Object.freeze({

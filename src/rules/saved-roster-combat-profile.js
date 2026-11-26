@@ -264,6 +264,9 @@ export function getEquippedWeaponReferences(state, unit, profiles = getBattleUni
 export function getDatasheetWeaponOptions(state, unit, { type = null } = {}) {
   const rosterUnit = getBattleRosterUnit(state, unit);
   if (isInvalidLoadout(rosterUnit)) return [];
+  // A datasheet lists every alternative; none is equipped until recorded.
+  if (rosterUnit?.datasheetId === 'deathwatch:deathwatch-terminator-squad' &&
+      !rosterUnit?.equippedWeapons?.length) return [];
 
   const weapons = getBattleUnitDatasheet(state, unit)?.weapons;
   if (!Array.isArray(weapons)) return [];
