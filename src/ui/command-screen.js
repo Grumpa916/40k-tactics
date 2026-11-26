@@ -55,6 +55,39 @@ function vpCapDescription(cap) {
   })[cap] ?? "mission scoring cap";
 }
 
+// Opt-in Safari experiment: a short spoken cue can reset WebKit's audio session
+// before the browser speech recognizer opens. Keep the cue in the tap gesture.
+function prepareSafariSpeechCue({ready, fail}) {
+  const synthesis = globalThis.speechSynthesis;
+  const Utterance = globalThis.SpeechSynthesisUtterance;
+  if (!synthesis || !Utterance) {
+    fail('Safari audio cue is unavailable. Use iPad Dictation in the text field.');
+    return;
+  }
+  const utterance = new Utterance('Ready');
+  utterance.lang = 'en-US';
+  utterance.rate = 1.2;
+  let active = true;
+  utterance.onend = () => {
+    if (!active) return;
+    active = false;
+    ready();
+  };
+  utterance.onerror = () => {
+    if (!active) return;
+    active = false;
+    fail('Safari audio cue failed. Use iPad Dictation in the text field.');
+  };
+  synthesis.cancel();
+  synthesis.speak(utterance);
+  return () => {
+    active = false;
+    utterance.onend = null;
+    utterance.onerror = null;
+    synthesis.cancel();
+  };
+}
+
 export function createCommandScreen(container, {
   session,
   perspectivePlayerId = null,
@@ -142,7 +175,10 @@ export function createCommandScreen(container, {
     }
     voiceCapture?.destroy();
     voiceMessage = "";
+    // Append ?voiceCue=1 to the battle URL for the iPad Safari experiment.
+    const voiceCueEnabled = new URLSearchParams(globalThis.location?.search ?? '').get('voiceCue') === '1';
     voiceCapture = createSecondarySpeechCapture(Recognition, {
+      preflight: voiceCueEnabled ? prepareSafariSpeechCue : null,
       onTranscript: heard => reviewVoiceCards(heard),
       onFailure: message => { voiceStage = ''; voiceMessage = message; render(); },
       onEnded: () => {
@@ -152,6 +188,7 @@ export function createCommandScreen(container, {
       onStage: stage => {
         voiceStage = stage;
         const label = {
+          preparing: 'Playing Safari microphone cue… Speak after “Ready”.',
           starting: 'Starting Safari speech recognition…',
           started: 'Speech recognition started; waiting for microphone…',
           audio: 'Microphone open; waiting for speech…',

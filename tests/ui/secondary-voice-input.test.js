@@ -106,3 +106,60 @@ test('stop and destroy release the microphone without a late callback', () => {
   capture.destroy();
   assert.equal(instances[1].aborted, true);
 });
+
+test('opt-in Safari cue starts recognition only after the cue and lets results end naturally', () => {
+  const instances = [];
+  class FakeRecognition {
+    constructor() { this.aborted = false; instances.push(this); }
+    start() { this.started = true; }
+    abort() { this.aborted = true; }
+  }
+  let ready;
+  const stages = [], transcripts = [];
+  const capture = createSecondarySpeechCapture(FakeRecognition, {
+    preflight: callbacks => { ready = callbacks.ready; return () => {}; },
+    onStage: stage => stages.push(stage),
+    onTranscript: transcript => transcripts.push(transcript)
+  });
+  assert.equal(capture.start(), true);
+  assert.equal(capture.listening, true);
+  assert.deepEqual(stages, ['preparing']);
+  assert.equal(instances.length, 0);
+  ready();
+  assert.equal(instances.length, 1);
+  assert.equal(instances[0].started, true);
+  assert.equal(instances[0].continuous, false);
+  instances[0].onresult({results:[[ { transcript:'Cleanse and Plunder' } ]]});
+  assert.deepEqual(transcripts, ['Cleanse and Plunder']);
+  assert.equal(instances[0].aborted, false);
+  assert.equal(capture.listening, false);
+});
+
+test('stopping during the Safari cue cancels it and ignores late completion', () => {
+  let ready;
+  let canceled = 0;
+  class FakeRecognition { constructor() { throw new Error('recognition must not open'); } }
+  const capture = createSecondarySpeechCapture(FakeRecognition, {
+    preflight: callbacks => { ready = callbacks.ready; return () => { canceled++; }; }
+  });
+  capture.start();
+  capture.stop();
+  ready();
+  assert.equal(canceled, 1);
+  assert.equal(capture.listening, false);
+});
+
+test('a stalled Safari cue is bounded and reports a useful failure', () => {
+  const pending = new Map();
+  const failures = [];
+  const capture = createSecondarySpeechCapture(class {}, {
+    preflight: () => () => {},
+    onFailure: message => failures.push(message),
+    schedule: callback => { pending.set(1, callback); return 1; },
+    cancel: id => pending.delete(id)
+  });
+  capture.start();
+  pending.get(1)();
+  assert.equal(capture.listening, false);
+  assert.match(failures[0], /audio cue stalled/);
+});
