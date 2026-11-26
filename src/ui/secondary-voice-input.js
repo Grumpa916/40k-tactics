@@ -39,18 +39,27 @@ export function previewSpokenSecondaryPair(state, transcript, definitions, persp
 }
 
 /* Safari can leave a speech session open without result, error or end events.
-   Keep a bounded session and detach late callbacks before restoring the UI. */
+   Keep a bounded session and detach late callbacks before restoring the UI.
+   An optional preflight lets iPad Safari try its speechSynthesis audio-session reset
+   before recognition, while retaining the normal path for everyone else. */
 export function createSecondarySpeechCapture(Recognition, {
   onTranscript = () => {}, onFailure = () => {}, onEnded = () => {}, onStage = () => {},
-  timeoutMs = 15000, schedule = setTimeout, cancel = clearTimeout
+  timeoutMs = 15000, preflightTimeoutMs = 4000, preflight = null,
+  schedule = setTimeout, cancel = clearTimeout
 } = {}) {
   let current = null;
+  let preparing = false;
+  let preflightCleanup = null;
   let timer = null;
   let stage = 'starting';
   function release(abort = false) {
     const session = current;
     current = null;
+    preparing = false;
     if (timer !== null) { cancel(timer); timer = null; }
+    const cleanup = preflightCleanup;
+    preflightCleanup = null;
+    try { cleanup?.(); } catch { /* The cue may already have ended. */ }
     if (!session) return;
     session.onstart = null;
     session.onaudiostart = null;
@@ -62,54 +71,89 @@ export function createSecondarySpeechCapture(Recognition, {
       try { session.abort?.(); } catch { /* Safari may already have closed it. */ }
     }
   }
+  function openRecognition() {
+    let session;
+    try {
+      session = new Recognition();
+      current = session;
+      stage = 'starting';
+      onStage(stage);
+      session.lang = 'en-US';
+      session.continuous = false;
+      session.interimResults = false;
+      session.maxAlternatives = 1;
+      session.onstart = () => {
+        if (current !== session) return;
+        stage = 'started'; onStage(stage);
+      };
+      session.onaudiostart = () => {
+        if (current !== session) return;
+        stage = 'audio'; onStage(stage);
+      };
+      session.onspeechstart = () => {
+        if (current !== session) return;
+        stage = 'speech'; onStage(stage);
+      };
+      session.onresult = result => {
+        if (current !== session) return;
+        const transcript = result.results?.[0]?.[0]?.transcript ?? '';
+        // Let a successful one-shot recognition end naturally in Safari.
+        release(false);
+        onTranscript(transcript);
+      };
+      session.onerror = result => {
+        if (current !== session) return;
+        release(false);
+        onFailure('Microphone: ' + (result.error ?? 'unavailable'));
+      };
+      session.onend = () => {
+        if (current !== session) return;
+        release(false);
+        onEnded();
+      };
+      session.start();
+      if (current === session) timer = schedule(() => {
+        if (current !== session) return;
+        release(true);
+        onFailure('No transcript after 15 seconds (' + stage + '). Use iPad Dictation in the text field. If Safari remains deaf, fully close and reopen Safari.');
+      }, timeoutMs);
+      return true;
+    } catch (error) {
+      release(true);
+      onFailure(error?.message ?? String(error));
+      return false;
+    }
+  }
   return {
-    get listening() { return current !== null; },
+    get listening() { return preparing || current !== null; },
     start() {
       release(true);
-      let session;
+      if (!preflight) return openRecognition();
+      preparing = true;
+      stage = 'preparing';
+      onStage(stage);
+      timer = schedule(() => {
+        if (!preparing) return;
+        release(true);
+        onFailure('Safari audio cue stalled. Use iPad Dictation in the text field.');
+      }, preflightTimeoutMs);
       try {
-        session = new Recognition();
-        current = session;
-        stage = 'starting';
-        onStage(stage);
-        session.lang = 'en-US';
-        session.interimResults = false;
-        session.maxAlternatives = 1;
-        session.onstart = () => {
-          if (current !== session) return;
-          stage = 'started'; onStage(stage);
-        };
-        session.onaudiostart = () => {
-          if (current !== session) return;
-          stage = 'audio'; onStage(stage);
-        };
-        session.onspeechstart = () => {
-          if (current !== session) return;
-          stage = 'speech'; onStage(stage);
-        };
-        session.onresult = result => {
-          if (current !== session) return;
-          const transcript = result.results?.[0]?.[0]?.transcript ?? '';
-          release(false);
-          onTranscript(transcript);
-        };
-        session.onerror = result => {
-          if (current !== session) return;
-          release(false);
-          onFailure('Microphone: ' + (result.error ?? 'unavailable'));
-        };
-        session.onend = () => {
-          if (current !== session) return;
-          release(false);
-          onEnded();
-        };
-        session.start();
-        if (current === session) timer = schedule(() => {
-          if (current !== session) return;
-          release(true);
-          onFailure('No transcript after 15 seconds (' + stage + '). Use iPad Dictation in the text field. If Safari remains deaf, fully close and reopen Safari.');
-        }, timeoutMs);
-        return true;
+        const cleanup = preflight({
+          ready: () => {
+            if (!preparing) return;
+            preparing = false;
+            if (timer !== null) { cancel(timer); timer = null; }
+            preflightCleanup = null;
+            openRecognition();
+          },
+          fail: message => {
+            if (!preparing) return;
+            release(true);
+            onFailure(message || 'Safari audio cue failed. Use iPad Dictation in the text field.');
+          }
+        });
+        if (preparing && typeof cleanup === 'function') preflightCleanup = cleanup;
+        return this.listening;
       } catch (error) {
         release(true);
         onFailure(error?.message ?? String(error));
