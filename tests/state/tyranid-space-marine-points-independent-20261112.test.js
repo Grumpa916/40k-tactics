@@ -38,9 +38,12 @@ test('All 57 Tyranid first-copy and 87 current Space Marine default-size prices 
  for(const faction of ['Tyranids','Space Marines']){
    const result=auditIndependentFirstCopyPoints(faction);
    assert.equal(result.benchmarks,faction==='Tyranids'?57:87);
-   assert.equal(result.rows,result.benchmarks);
+   // This dated 8-Nov benchmark predates the separately supplied Deathwatch datasheet.
+   assert.equal(result.rows,result.benchmarks+(faction==='Space Marines'?1:0));
    assert.equal(result.matched,result.benchmarks,
-      faction+' mismatches: '+JSON.stringify(result.mismatches));
+      faction+' benchmark mismatches: '+JSON.stringify(result.mismatches));
+   if(faction==='Space Marines') assert.deepEqual(result.mismatches.map(row=>[row.name,row.status]),
+      [['Deathwatch Terminator Squad','missing-benchmark']]);
    assert.deepEqual(result.missingCatalog,[]);
    assert.equal(result.GWPrimaryRowsChecked,0);
    assert.equal(result.officialPointsFullyCertified,false);
