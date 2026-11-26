@@ -133,6 +133,10 @@ export function applyRecordedCombatEffects({ attacker, target, profile }) {
   }
   apply(enemy.has('captain-shield'), 'Equipped Praesidium Shield: reduce Damage by 1', () => { result.damageReduction += 1; });
   apply(enemy.has('guardian-eternal') && profile.weaponType === 'ranged', 'Guardian Eternal: reduce ranged Damage by 1', () => { result.damageReduction += 1; });
+  apply(own.has('marine-primarch-xiii-aura'), 'Primarch of the XIII: re-roll Hit and Wound rolls of 1 within 6″', () => {
+    result.hitReroll = strongestReroll(result.hitReroll, 'ones');
+    result.woundReroll = strongestReroll(result.woundReroll, 'ones');
+  });
   apply(own.has('captain-general-aura'), 'Captain-General: re-roll Hit and Wound rolls of 1 within 6″', () => {
     result.hitReroll = strongestReroll(result.hitReroll, 'ones');
     result.woundReroll = strongestReroll(result.woundReroll, 'ones');

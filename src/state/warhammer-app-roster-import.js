@@ -229,6 +229,9 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  const selectedFaction = String(faction ?? '').trim();
  if (!selectedFaction) throw new TypeError('Choose the roster faction before importing.');
  const available = ARMY_UNIT_CATALOG.filter(unit => unit.faction.toLowerCase() === selectedFaction.toLowerCase());
+ const deathwatchAllies = selectedFaction.toLowerCase() === 'space marines'
+  ? ARMY_UNIT_CATALOG.filter(unit => unit.faction === 'Deathwatch') : [];
+ const matchable = [...available, ...deathwatchAllies];
  const lines = text.split(/\r?\n/);
  const firstLine = lines.find(line => line.trim())?.trim() ?? '';
  const units = [], unrecognized = [], warnings = [], sourceErrors = [];
@@ -325,7 +328,8 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
   const importedName=headerName(line);
   // Match only explicitly reviewed aliases; never guess a different
   // armour variant or silently substitute a Gravis Calgar datasheet.
-  const candidate = available.find(unit => normalize(unit.name) === importedName ||
+  const candidates = factionTag.toLowerCase() === 'deathwatch' ? matchable : available;
+  const candidate = candidates.find(unit => normalize(unit.name) === importedName ||
     (unit.importAliases ?? []).some(alias => normalize(alias) === importedName));
   if (!candidate) {
    const shaped = Boolean(displayHeaderName(line)) && (inUnitSection || getPoints(line) != null || explicitModelCount(line) != null);
@@ -363,7 +367,7 @@ export function importWarhammerAppRoster({text, faction, name, pointsLimit = nul
  }
  if (!units.length) throw new Error('No unit lines found in the export. Check the faction and pasted text.');
  for (const unit of units) {
-  if (unit.points == null && unit.datasheetId) unit.points = resolveInitialUnitPoints(available.find(c => c.id === unit.datasheetId), unit.modelCount);
+  if (unit.points == null && unit.datasheetId) unit.points = resolveInitialUnitPoints(matchable.find(c => c.id === unit.datasheetId), unit.modelCount);
  }
  for (const [number, members] of groups) {
   const leaders = members.filter(u => u.importedAttachmentRole === 'leader');

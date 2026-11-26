@@ -106,7 +106,23 @@ export function getRecordedCombatRules(state, unit) {
       if (!effects.includes(code)) effects.push(code);
     }
   }
+  // Guilliman's reviewed aura is an attack bonus for nearby friendly Astartes.
+  // Require his actual deployed model and the reviewed ability text; do not
+  // project a same-named older saved rule onto the current calculation.
   const ownDatasheet = getBattleUnitDatasheet(state, unit);
+  const ownKeywords = (ownDatasheet?.keywords ?? []).map(normalized);
+  if (ownKeywords.some(keyword => keyword === 'adeptus astartes' || keyword === 'faction: adeptus astartes')) {
+    const primarch = (state?.units ?? []).find(candidate => {
+      if (candidate.ownerId !== unit?.ownerId || candidate.status !== 'deployed' ||
+          getBattleRosterUnit(state, candidate)?.datasheetId !== 'space-marines:roboute-guilliman') return false;
+      return (getBattleUnitDatasheet(state, candidate)?.abilities ?? []).some(ability =>
+        ability.name === 'Primarch of the XIII' &&
+        ability.description === 'Aura: friendly Astartes units within 6 inches can re-roll hit rolls of 1 and wound rolls of 1.');
+    });
+    const primarchDistance = primarch ? distanceBetween(modelPoint(root ?? unit), modelPoint(primarch)) : null;
+    if (primarchDistance != null && primarchDistance <= 6)
+      effects.push('marine-primarch-xiii-aura');
+  }
   const rosterUnit = getBattleRosterUnit(state, unit);
   const shield = ADEPTUS_CUSTODES_DATASHEET_DETAILS['adeptus-custodes:shield-captain'].abilities.find(ability => ability.name === 'Praesidium Shield');
   const validEquipment = !['source-invalid','rules-invalid','manual-selection-required','unverified'].includes(rosterUnit?.loadoutValidation?.status);

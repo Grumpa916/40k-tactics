@@ -5,15 +5,15 @@ import { importWarhammerAppRoster } from '../../src/state/warhammer-app-roster-i
 import { assessAlliedDetachments, ALLIED_DETACHMENT_RULES } from '../../src/rules/allied-detachments.js';
 import { isUserEnteredUnit } from '../../src/rules/imported-roster-report.js';
 
-test('the catalog has no Deathwatch datasheets to import', () => {
-  assert.equal(ARMY_UNIT_CATALOG.some(unit => /deathwatch/i.test(unit.name)), false);
-  assert.equal(ARMY_UNIT_CATALOG.some(unit => /deathwatch/i.test(unit.faction ?? '')), false);
+test('the catalog includes the reviewed Deathwatch Terminator datasheet but keeps allied limits unconfirmed', () => {
+  assert.equal(ARMY_UNIT_CATALOG.some(unit => unit.id === 'deathwatch:deathwatch-terminator-squad'), true);
+  assert.equal(ARMY_UNIT_CATALOG.some(unit => /deathwatch/i.test(unit.faction ?? '')), true);
   assert.equal(ALLIED_DETACHMENT_RULES.deathwatch.pointsCap, null);
   assert.equal(ALLIED_DETACHMENT_RULES.deathwatch.detachmentCost, null);
   assert.equal(ALLIED_DETACHMENT_RULES.deathwatch.warlordAllowed, false);
 });
 
-test('Faction Deathwatch units under ALLIED UNITS become allied manual units and cannot be Warlord', () => {
+test('explicit Deathwatch Terminators alias maps to the reviewed allied datasheet and cannot be Warlord', () => {
   const parsed = importWarhammerAppRoster({
     text: `Space Marines
 CHARACTERS
@@ -26,12 +26,13 @@ Deathwatch Terminators (210 Points)
     faction: 'Space Marines', name: 'Allies', id: 'dw'
   });
   const captain = parsed.roster.units.find(unit => unit.name === 'Captain in Gravis Armour');
-  const terminators = parsed.roster.units.find(unit => unit.name === 'Deathwatch Terminators');
+  const terminators = parsed.roster.units.find(unit => unit.datasheetId === 'deathwatch:deathwatch-terminator-squad');
   assert.ok(captain.datasheetId);
   assert.equal(captain.alliedFaction, undefined);
-  assert.equal(isUserEnteredUnit(terminators), true);
+  assert.equal(isUserEnteredUnit(terminators), false);
+  assert.equal(terminators.datasheetId, 'deathwatch:deathwatch-terminator-squad');
   assert.equal(terminators.alliedFaction, 'Deathwatch');
-  assert.equal(terminators.dataSource.origin, 'import-unmatched');
+  assert.equal(terminators.dataSource.status, 'current-datasheet-cross-check');
   assert.equal(parsed.roster.alliedDetachments[0].faction, 'Deathwatch');
   assert.match(parsed.warnings.join('\n'), /cannot be the army Warlord/);
   assert.match(parsed.warnings.join('\n'), /not confirmed from a rules source/);
