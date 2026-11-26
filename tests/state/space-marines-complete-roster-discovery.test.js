@@ -27,7 +27,7 @@ const currentNames=[
   'Eradicator Squad with Melta Rifles','Eradicator Squad with Heavy Bolters',
   'Hellblaster Squad','Inceptor Squad','Incursor Squad','Infernus Squad',
   'Infiltrator Squad','Reiver Squad','Scout Squad','Sternguard Veteran Squad',
-  'Terminator Assault Squad','Terminator Squad',
+  'Terminator Assault Squad','Terminator Squad','Deathwatch Terminator Squad',
   'Vanguard Veteran Squad with Jump Packs','Victrix Honour Guard',
   'Outrider Squad','Invader ATVs','Astraeus','Ballistus Dreadnought',
   'Brutalis Dreadnought','Firestrike Servo-turrets','Gladiator Lancer',
@@ -42,12 +42,12 @@ const current=()=>findArmyUnitCandidates({faction:'Space Marines'}).filter(unit=
 const roster={id:'marine-roster',name:'Ultramarines',faction:'Space Marines',
   pointsLimit:2000,units:[]};
 
-test('all 87 current 11e Space Marines names are discoverable without Legends, with no duplicates',()=>{
+test('the 87-unit baseline and Deathwatch Terminators are discoverable without Legends, with no duplicates',()=>{
  const units=current();
- assert.equal(currentNames.length,87);
- assert.equal(units.length,87);
+ assert.equal(currentNames.length,88);
+ assert.equal(units.length,88);
  assert.deepEqual(new Set(units.map(unit=>unit.name)),new Set(currentNames));
- assert.equal(new Set(units.map(unit=>unit.id)).size,87);
+ assert.equal(new Set(units.map(unit=>unit.id)).size,88);
  assert.equal(SPACE_MARINES_COVERAGE_SOURCE.expectedDatasheetNames,176);
  assert.equal(SPACE_MARINES_COVERAGE_SOURCE.officialRulesVerified,false);
  for(const unit of units)assert.ok(unit.defaultPoints!=null,unit.name+' needs a referenced points figure');
@@ -56,7 +56,7 @@ test('all 87 current 11e Space Marines names are discoverable without Legends, w
 test('Legends remain available only by explicit request and cannot masquerade as verified current units',()=>{
  const all=findArmyUnitCandidates({faction:'Space Marines'});
  const legends=all.filter(unit=>unit.legends);
- assert.equal(all.length,176,'name-only reference coverage against Nov 2 list');
+ assert.equal(all.length,177,'Nov 2 reference plus the separately reviewed Deathwatch squad');
  assert.equal(legends.length,89);
  assert.equal(legends.filter(unit=>unit.legendaryProxy).length,5);
  assert.equal(legends.filter(unit=>!unit.legendaryProxy).length,84);
@@ -64,8 +64,8 @@ test('Legends remain available only by explicit request and cannot masquerade as
  assert.ok(legends.every(unit=>unit.defaultPoints==null));
  assert.ok(legends.every(unit=>!unit.datasheet));
  assert.ok(getArmyUnitCandidateLabel(legends[0]).includes('Legends'));
- assert.equal(filterCatalog({current:roster}).length,87);
- assert.equal(filterCatalog({current:roster,includeLegends:true}).length,176);
+ assert.equal(filterCatalog({current:roster}).length,88);
+ assert.equal(filterCatalog({current:roster,includeLegends:true}).length,177);
 });
 
 test('Calgar appears in the visible Army Builder search and among Epic Heroes',()=>{
