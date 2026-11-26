@@ -4,6 +4,7 @@ import { getRulesDataRevisionForFaction } from "./rules-data-revisions.js";
 import { PRICE_RECONCILIATION_SOURCES } from "./mfm-points-independent-reconciliation-20261112.js";
 import { ADEPTUS_CUSTODES_ARMY_CATALOG } from "./adeptus-custodes-army-catalog.js";
 import { SPACE_MARINES_ARMY_CATALOG } from "./space-marines-army-catalog.js";
+import { DEATHWATCH_TERMINATOR_CATALOG } from "./deathwatch-terminator-squad.js";
 import { SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES, SPACE_MARINES_LEGENDS_CANDIDATES } from "./space-marines-catalog-coverage.js";
 
 const TYRANID_RULES_REVISION = getRulesDataRevisionForFaction("Tyranids");
@@ -26,6 +27,7 @@ function applyReviewedTyranidCorrections(id, details) {
 export const ARMY_UNIT_CATALOG = Object.freeze([
   ...ADEPTUS_CUSTODES_ARMY_CATALOG,
   ...SPACE_MARINES_ARMY_CATALOG,
+  DEATHWATCH_TERMINATOR_CATALOG,
   ...SPACE_MARINES_ADDITIONAL_CURRENT_CANDIDATES,
   ...SPACE_MARINES_LEGENDS_CANDIDATES,
   ...[
