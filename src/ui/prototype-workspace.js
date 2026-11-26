@@ -5,14 +5,6 @@ import { createCommand } from '../commands/command.js';
 import { COMMAND_TYPES } from '../commands/game-commands.js';
 import { renderAppThemeToggle } from './app-theme-preference.js';
 
-const LIVE_PHASES = Object.freeze([
-  ['command', 'Command'],
-  ['movement', 'Movement'],
-  ['shooting', 'Shooting'],
-  ['charge', 'Charge'],
-  ['fight', 'Fight']
-]);
-
 // Live-play cleanup policy: when headings and controls already explain the action,
 // omit repeated helper prose. Keep warnings, timing/legality text and decision support.
 const REDUNDANT_LIVE_HELPER_PREFIXES = Object.freeze([
@@ -41,16 +33,12 @@ export function renderPrototypeWorkspaceTools({ missionReviewOpen = false, appTh
   const href = stylesheet.href;
   const navigationHref = new URL('./styles/army-builder-navigation.css', import.meta.url).href;
   const planningMapHref = new URL('./styles/planning-map-fit.css', import.meta.url).href;
-  const phases = LIVE_PHASES.map(([id, label]) =>
-    `<button type="button" data-battle-phase-button="${id}" aria-pressed="false">${label}</button>`
-  ).join('');
   return `<link rel="stylesheet" href="${href}"><link rel="stylesheet" href="${navigationHref}"><link rel="stylesheet" href="${planningMapHref}"><style>
     .battle-shell.is-tabletop-experiment .battle-shell__tabletop-header > .battle-shell__phases{display:none!important}
     .prototype-unit-weapon-count,.prototype-unit-weapon-keywords{font-size:.82em!important}
   </style><nav class="prototype-workspace-tools" data-prototype-tools aria-label="Tabletop controls">
     <div class="prototype-score-host" data-workspace-score-host></div>
     <div class="prototype-phase-row">
-      <div class="prototype-phase-chips" aria-label="Battle phases">${phases}</div>
       <button type="button" class="prototype-missions-button" data-toggle-mission-review aria-expanded="${String(missionReviewOpen)}">Missions</button>
       <button type="button" class="prototype-cards-button" data-toggle-secondary-planner aria-expanded="${String(secondaryPlannerOpen)}">Cards</button>
       <button type="button" data-toggle-rules-reminders aria-expanded="false">Rules</button>
@@ -111,9 +99,6 @@ export function createPrototypeWorkspace(container, {session, gameData = {}}) {
     const scoreHost = container.querySelector('[data-workspace-score-host]');
     if (summary && combat && scoreHost && summary.parentElement !== scoreHost) scoreHost.append?.(summary);
     refreshUnitsRoster();
-    container.querySelectorAll?.('.prototype-phase-chips [data-battle-phase-button]').forEach(button => {
-      button.setAttribute('aria-pressed', String(button.getAttribute('data-battle-phase-button') === state.phase));
-    });
     const panelButton = container.querySelector('[data-workspace-panel]');
     if (panelButton) {
       panelButton.textContent = collapsed ? 'Panel' : 'Close panel';
