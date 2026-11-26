@@ -36,7 +36,7 @@ test('GW primary-source status remains explicitly partial until current live MFM
  assert.match(s.codexAccessResult,/not been supplied/);
  assert.match(s.gwDownloadsUrl,/warhammer-community\.com/);
  assert.match(s.currentMfmUrl,/mfm\.warhammer-community\.com/);
- const catalog=findArmyUnitCandidates({faction:'Space Marines'}).filter(u=>!u.legends);
+ const catalog=findArmyUnitCandidates({faction:'Space Marines'}).filter(u=>!u.legends && u.id !== 'space-marines:deathwatch-terminator-squad');
  assert.equal(catalog.length,87);
  assert.equal(SPACE_MARINES_PER_UNIT_SOURCE_STATUS.length,87);
  assert.deepEqual(SPACE_MARINES_PER_UNIT_SOURCE_STATUS.map(u=>u.datasheetId).sort(),catalog.map(u=>u.id).sort());

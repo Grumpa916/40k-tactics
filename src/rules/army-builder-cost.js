@@ -52,6 +52,22 @@ export function resolveBuilderUnitCost(unit, roster, selections = unit?.equipped
   });
   return option ? { points: option.points, reason: option.condition } : { points: null, reason: 'No matching reviewed weapon price.' };
  }
+ // Deathwatch Terminators have their own size prices and two per-model upgrades.
+ // A cyclone includes its storm bolter; its Frag/Krak profiles are one gun.
+ if (unit.datasheetId === 'space-marines:deathwatch-terminator-squad') {
+  const quantity = name => selections.filter(item => item.name === name)
+    .reduce((sum, item) => sum + Number(item.quantity ?? 0), 0);
+  const launchers = quantity('Cyclone Missile Launcher and Storm Bolter');
+  const shields = quantity('Thunder Hammer and Storm Shield');
+  if (!Number.isInteger(launchers) || launchers < 0 || launchers > 3 * Math.floor(unit.modelCount / 5))
+   return { points: null, reason: 'Deathwatch Cyclone limit: up to three per five models.' };
+  if (!Number.isInteger(shields) || shields < 0 || shields > unit.modelCount)
+   return { points: null, reason: 'Storm Shield quantity exceeds the unit model count.' };
+  const base = options.find(option => !option.condition);
+  if (!base) return { points: null, reason: 'No reviewed Deathwatch Terminator base price.' };
+  return { points: base.points + 10 * launchers + 5 * shields,
+   reason: `${unit.modelCount} models; ${launchers} Cyclone Launcher(s) at 10 pts; ${shields} shield(s) at 5 pts` };
+ }
  // Assault Terminators have a per-model Storm Shield upgrade. Apply it on
  // top of the applicable 1st/2nd or 3rd+ base size price; never assume all
  // models carry a shield or silently upgrade saved army points.

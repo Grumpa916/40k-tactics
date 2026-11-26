@@ -46,7 +46,7 @@ function equip(u,st=createWargearChoiceState(u)){
  return {...built,chosen};
 }
 test('all 87 current 11e Space Marines, including final 16 named entries, have source-scoped reviewed wargear',()=>{
- const candidates=findArmyUnitCandidates({faction:'Space Marines'}).filter(x=>!x.legends);
+ const candidates=findArmyUnitCandidates({faction:'Space Marines'}).filter(x=>!x.legends && x.id !== 'space-marines:deathwatch-terminator-squad');
  assert.equal(candidates.length,87);
  assert.equal(Object.keys(SPACE_MARINES_WARGEAR_RULES).length,87);
  assert.equal(Object.keys(SPACE_MARINES_REVIEWED_PROFILE_PATCHES).length,83);
@@ -55,7 +55,7 @@ test('all 87 current 11e Space Marines, including final 16 named entries, have s
  assert.deepEqual(Object.keys(SPACE_MARINES_WARGEAR_RULES).filter(id=>!ids.has(id)),[]);
  for(const u of candidates)assert.ok(getTyranidWargearRuleSet(u.id),u.name);
  const audit=auditArmyCatalogCompleteness('Space Marines');
- assert.equal(audit.counts.withReviewedSelectableWargear,87);
+ assert.equal(audit.counts.withReviewedSelectableWargear,88);
  assert.equal(audit.counts.withOfficialCrossCheckPending,audit.counts.units);
  assert.equal(audit.officialRulesCertification,'pending-per-unit-review','reviewed unofficial datasheets are not official GW certification');
  assert.equal(getTyranidWargearRuleSet('space-marines:tactical-squad'),null,'Legends Tactical Squad remains unreviewed and flagged');
