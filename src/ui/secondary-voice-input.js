@@ -3,6 +3,13 @@ import { drawSecondaryMission, getSecondaryMissionMode } from '../rules/secondar
 const normalize = value => String(value ?? '').toLowerCase().normalize('NFKD')
   .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
+// Only correct observed dictation variants of known Tactical card names.
+const spokenCardAliases = new Map([
+  ['assassinate', 'assassination'],
+  ['attempting target', 'a tempting target'],
+  ['display of mike', 'display of might']
+]);
+
 export function previewSpokenSecondaryPair(state, transcript, definitions, perspectivePlayerId) {
   if (state?.phase !== 'command') throw new Error('Record Tactical cards during Command phase.');
   const spoken = String(transcript ?? '').trim().replace(/[.!?]+$/, '');
@@ -25,8 +32,10 @@ export function previewSpokenSecondaryPair(state, transcript, definitions, persp
   const catalog = (definitions ?? []).filter(item => item?.category === 'secondary')
     .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index);
   const matches = names.map(name => {
-    const spokenName = normalize(name) === 'assassinate' ? 'assassination' : normalize(name);
-    const found = catalog.filter(item => normalize(item.name) === spokenName);
+    const spokenName = normalize(name);
+    const exact = catalog.filter(item => normalize(item.name) === spokenName);
+    const canonical = spokenCardAliases.get(spokenName);
+    const found = exact.length ? exact : catalog.filter(item => normalize(item.name) === canonical);
     if (found.length !== 1) throw new Error('Could not uniquely match “' + name + '” to the secondary catalog. Use manual entry.');
     return found[0];
   });
