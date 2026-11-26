@@ -4,7 +4,7 @@ import { createGameState } from '../../src/state/game-state.js';
 import { drawSecondaryMission, getSecondaryMissionHistory, setSecondaryMissionMode } from '../../src/rules/secondary-mission-lifecycle.js';
 import { previewSpokenSecondaryPair, createSecondarySpeechCapture } from '../../src/ui/secondary-voice-input.js';
 
-const catalog = ['Cleanse', 'Plunder', 'Assassination'].map(name => ({
+const catalog = ['Cleanse', 'Plunder', 'Assassination', 'A Tempting Target', 'Display of Might'].map(name => ({
   id: 'secondary-' + name.toLowerCase(), name, category: 'secondary',
   availableModes: ['tactical'], scoringWindows: [{
     timing: 'end-of-turn', timingLabel: 'End of your turn',
@@ -33,6 +33,17 @@ test('spoken opponent cards resolve to the active opponent and can enter the sha
   const next=drawSecondaryMission(first,{definition:pair.definitions[1],playerId:pair.playerId,round:1,turn:1});
   assert.deepEqual(getSecondaryMissionHistory(next,'p2').map(item=>item.definitionId),
     ['secondary-cleanse','secondary-assassination']);
+});
+
+test('dictation variants resolve to exact card names for review without recording them', () => {
+  const state = battle();
+  const before = JSON.stringify(state);
+  const pair = previewSpokenSecondaryPair(state, 'Attempting Target and Display of Mike', catalog, 'p1');
+  assert.deepEqual(pair.definitions.map(item => item.name), ['A Tempting Target', 'Display of Might']);
+  assert.equal(JSON.stringify(state), before);
+  const exact = previewSpokenSecondaryPair(state, 'A Tempting Target and Display of Might', catalog, 'p1');
+  assert.deepEqual(exact.definitions.map(item => item.name), pair.definitions.map(item => item.name));
+  assert.throws(() => previewSpokenSecondaryPair(state, 'A Tempting Tower and Display of Mic', catalog, 'p1'), /catalog/);
 });
 
 test('voice preview rejects a mismatched player, unknown card, duplicate, and full hand', () => {
