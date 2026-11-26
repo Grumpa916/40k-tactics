@@ -11,6 +11,8 @@ export const DEATHWATCH_TERMINATOR_CATALOG = Object.freeze([
   Object.freeze({
     id: 'deathwatch:deathwatch-terminator-squad',
     name: 'Deathwatch Terminator Squad',
+    officialDatasheetName: 'Deathwatch Terminator Squad',
+    importAliases: Object.freeze(['Deathwatch Terminators']),
     faction: 'Deathwatch',
     defaultModelCount: 5,
     defaultPoints: 190,
