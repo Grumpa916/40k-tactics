@@ -26,7 +26,7 @@ Deathwatch Terminators (210 Points)
     faction: 'Space Marines', name: 'Allies', id: 'dw'
   });
   const captain = parsed.roster.units.find(unit => unit.name === 'Captain in Gravis Armour');
-  const terminators = parsed.roster.units.find(unit => unit.name === 'Deathwatch Terminators');
+  const terminators = parsed.roster.units.find(unit => unit.datasheetId === 'deathwatch:deathwatch-terminator-squad');
   assert.ok(captain.datasheetId);
   assert.equal(captain.alliedFaction, undefined);
   assert.equal(isUserEnteredUnit(terminators), false);
